@@ -5,7 +5,7 @@
 import { Keyring } from '@dxos/credentials';
 
 import { Credential } from './proto';
-import { getSignData } from './signing';
+import { getSignaturePayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 
@@ -37,7 +37,7 @@ const verifySignature = async (credential: Credential): Promise<VerificationResu
     return { kind: 'fail', errors: [`Invalid signature type: ${credential.proof.type}`] };
   }
 
-  const signData = getSignData(credential);
+  const signData = getSignaturePayload(credential);
   if (!Keyring.cryptoVerify(Buffer.from(signData), Buffer.from(credential.proof.value), credential.proof.signer.asBuffer())) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }

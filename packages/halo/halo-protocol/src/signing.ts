@@ -8,7 +8,10 @@ import { PublicKey } from '@dxos/protocols';
 
 import { Credential } from './proto';
 
-export const getSignData = (credential: Credential): Uint8Array => {
+/**
+ * @returns The input message to be signed for a given credential.
+ */
+export const getSignaturePayload = (credential: Credential): Uint8Array => {
   const copy = {
     ...credential,
     proof: {

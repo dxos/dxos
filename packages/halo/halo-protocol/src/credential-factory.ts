@@ -9,11 +9,11 @@ import { PublicKey } from '@dxos/protocols';
 
 import { ComplexMap } from '../../../common/util/src';
 import { Credential } from './proto';
-import { getSignData, sign } from './signing';
+import { getSignaturePayload, sign } from './signing';
 import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519 } from './verifier';
 
-export interface CredentialCreationOpts {
+export type CreateCredentialParams = {
   subject: PublicKey
   assertion: MessageType,
   issuer: PublicKey,
@@ -30,9 +30,9 @@ export interface CredentialCreationOpts {
   nonce?: Uint8Array
 }
 
-export const createCredential = async (opts: CredentialCreationOpts): Promise<Credential> => {
+export const createCredential = async (opts: CreateCredentialParams): Promise<Credential> => {
   assert(opts.assertion['@type'], 'Invalid assertion.');
-  assert(!!opts.signingKey === !!opts.chain, 'Chain must be provided if and only if the signing key differs from the issuer');
+  assert(!!opts.signingKey === !!opts.chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
 
   // TODO(dmaretskyi): Verify chain.
 
@@ -56,7 +56,7 @@ export const createCredential = async (opts: CredentialCreationOpts): Promise<Cr
     }
   };
 
-  const signData = getSignData(credential);
+  const signData = getSignaturePayload(credential);
   const signature = await sign(opts.keyring, signingKey, signData);
 
   credential.proof.value = signature;
