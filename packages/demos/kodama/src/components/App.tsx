@@ -2,15 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Box, Text } from 'ink';
 import * as process from 'process';
 import React, { useMemo } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
 
-import { ModuleProvider } from '../hooks';
+import { ModuleProvider, useAppState } from '../hooks';
 import { Config } from './Config';
 import { createEchoMenu } from './echo';
 import { createHaloMenu } from './halo';
+import { createKubeMenu } from './kube';
+import { createMeshMenu } from './mesh';
 import { MenuItem, Module, Panel } from './util';
 
 /**
@@ -19,12 +22,15 @@ import { MenuItem, Module, Panel } from './util';
 export const App = () => {
   const client = useClient();
   const profile = useProfile();
+  const [{ error }] = useAppState();
 
   // TODO(burdon): Allow selection of menu item within menu.
   // TODO(burdon): Change focus when profile created (and menu changes).
   const items = useMemo<MenuItem[]>(() => [
     createHaloMenu(client),
     profile && createEchoMenu(),
+    createMeshMenu(),
+    createKubeMenu(),
     {
       id: 'config',
       label: 'Config',
@@ -49,6 +55,12 @@ export const App = () => {
         id='root'
         items={items}
       />
+
+      {error && (
+        <Box borderStyle='single' borderColor='red'>
+          <Text>{error}</Text>
+        </Box>
+      )}
     </ModuleProvider>
   );
 };

@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import * as process from 'process';
 import yargs from 'yargs';
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -20,6 +20,8 @@ import { showVersion } from './version';
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
+
+// TODO(burdon): Global error handler.
 
 /**
  * Command line parser.

@@ -8,8 +8,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@dxos/esbuild-plugins": "~2.28.11",
-    "@dxos/esbuild-server": "~2.28.11",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protobuf-compiler": "workspace:*",
     "@swc-node/register": "~1.4.2",

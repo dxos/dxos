@@ -797,6 +797,10 @@
       "projectFolder": "packages/demos/hello-world"
     },
     {
+      "packageName": "@dxos/kai",
+      "projectFolder": "packages/demos/kai"
+    },
+    {
       "packageName": "@dxos/kitchen-sink",
       "projectFolder": "packages/demos/kitchen-sink"
     },
