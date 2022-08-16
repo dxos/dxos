@@ -73,12 +73,6 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  offer (msg: NetworkMessage) {
-    assert(msg.remoteId);
-    assert(state.connections.has(msg.remoteId), 'Peer not connected');
-    return state.connections.get(msg.remoteId)!._onOffer(msg);
-  }
-
   async message (msg: NetworkMessage) {
     assert(msg.remoteId);
     assert(state.connections.get(msg.remoteId), 'Peer not connected');
