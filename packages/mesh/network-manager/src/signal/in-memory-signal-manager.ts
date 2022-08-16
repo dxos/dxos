@@ -10,12 +10,12 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
+import { CommandTrace, Status } from './signal-client';
 
 export class InMemorySignalManager implements SignalManager {
-  readonly statusChanged = new Event<SignalApi.Status[]>();
-  readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly statusChanged = new Event<Status[]>();
+  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
 
@@ -23,7 +23,7 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
   }
 
-  getStatus (): SignalApi.Status[] {
+  getStatus (): Status[] {
     return [];
   }
 

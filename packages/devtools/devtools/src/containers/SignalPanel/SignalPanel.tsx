@@ -7,23 +7,23 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
-import { SignalApi } from '@dxos/network-manager';
+import { State, Status } from '@dxos/network-manager';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { SubscribeToSignalStatusResponse } from '../../proto';
 
-const stringToState = (state: string): SignalApi.State => {
-  const dict: Record<string, SignalApi.State> = {
-    CONNECTING: SignalApi.State.CONNECTING,
-    RE_CONNECTING: SignalApi.State.RE_CONNECTING,
-    CONNECTED: SignalApi.State.CONNECTED,
-    DISCONNECTED: SignalApi.State.DISCONNECTED,
-    CLOSED: SignalApi.State.CLOSED
+const stringToState = (state: string): State => {
+  const dict: Record<string, State> = {
+    CONNECTING: State.CONNECTING,
+    RE_CONNECTING: State.RE_CONNECTING,
+    CONNECTED: State.CONNECTED,
+    DISCONNECTED: State.DISCONNECTED,
+    CLOSED: State.CLOSED
   };
   return dict[state];
 };
 
-const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
+const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Status => {
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,

@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalApi } from './signal-api';
+import { Status } from './signal-client';
 
 /**
  * Signal peer discovery interface.
@@ -25,12 +25,12 @@ export interface SignalConnection {
 }
 
 export interface SignalManager extends SignalConnection {
-  statusChanged: Event<SignalApi.Status[]>
-  commandTrace: Event<SignalApi.CommandTrace>
+  statusChanged: Event<Status[]>
+  commandTrace: Event<CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
   onMessage: Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>;
 
-  getStatus (): SignalApi.Status[]
+  getStatus (): Status[]
   destroy(): Promise<void>
   /**
    * Send message to peer.

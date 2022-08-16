@@ -13,14 +13,13 @@ import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 import { schema } from '../proto/gen';
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
 
 const log = debug('dxos:network-manager:signal-client');
 
 const DEFAULT_RECONNECT_TIMEOUT = 1000;
 
-enum State {
+export enum State {
   /** Connection is being established. */
   CONNECTING = 'CONNECTING',
 
@@ -46,6 +45,16 @@ export type Status = {
   lastStateChange: number
 }
 
+export type CommandTrace = {
+  messageId: string
+  host: string
+  incoming: boolean
+  time: number
+  method: string
+  payload: any
+  response?: any
+  error?: string
+}
 /**
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
@@ -76,7 +85,7 @@ export class SignalClient {
   private _cleanupSubscriptions = new SubscriptionGroup();
   readonly statusChanged = new Event<Status>();
 
-  readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
 
   private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
@@ -186,7 +195,7 @@ export class SignalClient {
     log('Closed.');
   }
 
-  getStatus (): SignalApi.Status {
+  getStatus (): Status {
     return {
       host: this._host,
       state: this._state,

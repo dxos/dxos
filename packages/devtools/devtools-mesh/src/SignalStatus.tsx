@@ -4,24 +4,24 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { SignalApi } from '@dxos/network-manager';
+import { State, Status } from '@dxos/network-manager';
 
-const getColor = (state: SignalApi.State) => {
+const getColor = (state: State) => {
   switch (state) {
-    case SignalApi.State.CONNECTING:
-    case SignalApi.State.RE_CONNECTING:
+    case State.CONNECTING:
+    case State.RE_CONNECTING:
       return 'orange';
-    case SignalApi.State.CONNECTED:
+    case State.CONNECTED:
       return 'green';
-    case SignalApi.State.DISCONNECTED:
+    case State.DISCONNECTED:
       return 'red';
-    case SignalApi.State.CLOSED:
+    case State.CLOSED:
       return 'darkgray';
   }
 };
 
 export interface SignalStatusProps {
-  status: SignalApi.Status[]
+  status: Status[]
 }
 
 export const SignalStatus = ({ status }: SignalStatusProps) => {
@@ -45,9 +45,9 @@ export const SignalStatus = ({ status }: SignalStatusProps) => {
         >
           {status.host} {status.state}
           {status.error && <div>{status.error}</div>}
-          {status.state === SignalApi.State.DISCONNECTED &&
+          {status.state === State.DISCONNECTED &&
             <div>Will reconnect in {format(Math.floor((status.lastStateChange + status.reconnectIn - time) / 1000))}</div>}
-          {status.state === SignalApi.State.CONNECTED &&
+          {status.state === State.CONNECTED &&
             <div>Connected for {format(Math.floor((time - status.connectionStarted) / 1000))}</div>}
         </div>
       ))}

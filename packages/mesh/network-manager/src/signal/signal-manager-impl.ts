@@ -11,8 +11,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalApi } from './signal-api';
-import { SignalClient } from './signal-client';
+import { CommandTrace, SignalClient, Status } from './signal-client';
 import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:network-manager:signal-manager-impl');
@@ -29,8 +28,8 @@ export class SignalManagerImpl implements SignalManager {
   private _reconcileTimeoutId?: NodeJS.Timeout;
   private _destroyed = false;
 
-  readonly statusChanged = new Event<SignalApi.Status[]>();
-  readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly statusChanged = new Event<Status[]>();
+  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
   readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
 
@@ -54,7 +53,7 @@ export class SignalManagerImpl implements SignalManager {
     }
   }
 
-  getStatus (): SignalApi.Status[] {
+  getStatus (): Status[] {
     return Array.from(this._servers.values()).map(server => server.getStatus());
   }
 
