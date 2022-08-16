@@ -11,7 +11,7 @@ module.exports = {
     'src/singleton/main.ts',
     'src/singleton/shared-worker.ts'
   ],
-  outdir: 'out',
+  outdir: 'dist/singleton',
   overrides: {
     sourcemap: true
   },
