@@ -12,6 +12,7 @@ import { afterTest } from '@dxos/testutils';
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
+import { SignalMessage } from './signal-messaging';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;
@@ -26,11 +27,11 @@ describe('Signal Integration Test', () => {
 
   const setup = () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
-    signalManager.onMessage.on(msg => messageRouter.receiveMessage(msg));
+    signalManager.onMessage.on(data => messageRouter.receiveMessage(...data));
 
-    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const messageRouter = new MessageRouter({
-      sendMessage: msg => signalManager.message(msg),
+      sendMessage: signalManager.message.bind(signalManager),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true })
     });
@@ -62,8 +63,8 @@ describe('Signal Integration Test', () => {
 
     expect(await peerNetworking1.messageRouter.offer({
       topic,
-      id: peer1,
-      remoteId: peer2,
+      author: peer1,
+      recipient: peer2,
       sessionId: PublicKey.random(),
       data: {
         offer: {}
@@ -72,8 +73,8 @@ describe('Signal Integration Test', () => {
 
     expect(await peerNetworking2.messageRouter.offer({
       topic,
-      id: peer2,
-      remoteId: peer1,
+      author: peer2,
+      recipient: peer1,
       sessionId: PublicKey.random(),
       data: {
         offer: {}
@@ -81,10 +82,10 @@ describe('Signal Integration Test', () => {
     })).toBeAnObjectWith({ accept: true });
 
     {
-      const message: NetworkMessage = {
+      const message: SignalMessage = {
         topic,
-        id: peer1,
-        remoteId: peer2,
+        author: peer1,
+        recipient: peer2,
         sessionId: PublicKey.random(),
         data: {
           signal: { json: JSON.stringify({ 'foo': 'bar' }) }
@@ -98,10 +99,10 @@ describe('Signal Integration Test', () => {
     }
 
     {
-      const message: NetworkMessage = {
+      const message: SignalMessage = {
         topic,
-        id: peer2,
-        remoteId: peer1,
+        author: peer2,
+        recipient: peer1,
         sessionId: PublicKey.random(),
         data: {
           signal: { json: JSON.stringify({ 'foo': 'bar' }) }
