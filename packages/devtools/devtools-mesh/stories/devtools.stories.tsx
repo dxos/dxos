@@ -14,14 +14,15 @@ import {
   MMSTTopology,
   StarTopology,
   NetworkManager,
-  SignalApi,
   SignalManager,
   SwarmMapper,
   transportProtocolProvider,
   PeerInfo,
   Topology,
   SwarmInfo,
-  ConnectionLog
+  ConnectionLog,
+  CommandTrace,
+  Status
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
@@ -110,12 +111,12 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     controlPeer && setPeerMap(controlPeer.map.peers);
   }, [controlPeer]);
 
-  const [signalStatus, setSignalStatus] = useState<SignalApi.Status[]>([]);
+  const [signalStatus, setSignalStatus] = useState<Status[]>([]);
   useEffect(() => controlPeer?.signal.statusChanged.on(status => {
     setSignalStatus(status);
   }), [controlPeer]);
 
-  const [signalTrace, setSignalTrace] = useState<SignalApi.CommandTrace[]>([]);
+  const [signalTrace, setSignalTrace] = useState<CommandTrace[]>([]);
   useEffect(() => controlPeer?.signal.commandTrace.on(msg => {
     setSignalTrace(msgs => [...msgs, msg]);
   }), [controlPeer]);
