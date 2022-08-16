@@ -1,0 +1,36 @@
+@startuml
+!theme superhero
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "Iframe A"      as frameA
+entity      "Shared Worker" as worker
+entity      "Iframe B"      as frameB
+entity      "App B"         as appB
+autonumber 1.1
+
+== App A starts ==
+appA -> frameA:       <i>open</i>
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Setup Client
+frameA -> worker:     Client Ready
+frameA -> appA:       Client Ready
+
+...later on...
+autonumber inc A
+== App B starts ==
+appB -> frameB:       <i>open</i>
+frameB -> worker:     <i>connect</i>
+worker -> frameA:     Setup Port
+frameA -> worker:     Port Ready
+worker -> frameB:     Port Ready
+frameB -> appB:       Client Ready
+
+...eventually...
+== App A closes ==
+appA -> frameA:       <i>unload</i>
+frameA -> worker:     Port Closing
+worker -> frameB:     Setup Client
+frameB -> worker:     Client Ready
+frameB -> appB:       Client Ready
+@enduml

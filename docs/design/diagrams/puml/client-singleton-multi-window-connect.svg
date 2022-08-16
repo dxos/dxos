@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1060.4167px" preserveAspectRatio="none" style="width:712px;height:1060px;background:#000000;" version="1.1" viewBox="0 0 712 1060" width="712.5px" zoomAndPan="magnify"><defs/><g><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="42.7083" x2="42.7083" y1="68.7174" y2="331.0221"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="42.7083" x2="42.7083" y1="331.0221" y2="385.1563"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="42.7083" x2="42.7083" y1="385.1563" y2="676.5951"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="42.7083" x2="42.7083" y1="676.5951" y2="730.7292"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="42.7083" x2="42.7083" y1="730.7292" y2="993.0339"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="194.2708" x2="194.2708" y1="68.7174" y2="331.0221"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="194.2708" x2="194.2708" y1="331.0221" y2="385.1563"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="194.2708" x2="194.2708" y1="385.1563" y2="676.5951"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="194.2708" x2="194.2708" y1="676.5951" y2="730.7292"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="194.2708" x2="194.2708" y1="730.7292" y2="993.0339"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="346.3542" x2="346.3542" y1="68.7174" y2="331.0221"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="346.3542" x2="346.3542" y1="331.0221" y2="385.1563"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="346.3542" x2="346.3542" y1="385.1563" y2="676.5951"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="346.3542" x2="346.3542" y1="676.5951" y2="730.7292"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="346.3542" x2="346.3542" y1="730.7292" y2="993.0339"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="506.7708" x2="506.7708" y1="68.7174" y2="331.0221"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="506.7708" x2="506.7708" y1="331.0221" y2="385.1563"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="506.7708" x2="506.7708" y1="385.1563" y2="676.5951"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="506.7708" x2="506.7708" y1="676.5951" y2="730.7292"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="506.7708" x2="506.7708" y1="730.7292" y2="993.0339"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="667.7083" x2="667.7083" y1="68.7174" y2="331.0221"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="667.7083" x2="667.7083" y1="331.0221" y2="385.1563"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="667.7083" x2="667.7083" y1="385.1563" y2="676.5951"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:1.0,4.0;" x1="667.7083" x2="667.7083" y1="676.5951" y2="730.7292"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;stroke-dasharray:5.0,5.0;" x1="667.7083" x2="667.7083" y1="730.7292" y2="993.0339"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="20.8333" y="60.5611">App A</text><ellipse cx="42.7083" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="30.2083" x2="55.2083" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="20.8333" y="1008.8033">App A</text><ellipse cx="42.7083" cy="1033.6263" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="30.2083" x2="55.2083" y1="1048.2096" y2="1048.2096"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="165.1042" y="60.5611">Iframe A</text><ellipse cx="194.7917" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="182.2917" x2="207.2917" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="165.1042" y="1008.8033">Iframe A</text><ellipse cx="194.7917" cy="1033.6263" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="182.2917" x2="207.2917" y1="1048.2096" y2="1048.2096"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="96.875" x="295.3125" y="60.5611">Shared Worker</text><ellipse cx="346.875" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="334.375" x2="359.375" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="96.875" x="295.3125" y="1008.8033">Shared Worker</text><ellipse cx="346.875" cy="1033.6263" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="334.375" x2="359.375" y1="1048.2096" y2="1048.2096"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="477.6042" y="60.5611">Iframe B</text><ellipse cx="507.2917" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="494.7917" x2="519.7917" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="53.125" x="477.6042" y="1008.8033">Iframe B</text><ellipse cx="507.2917" cy="1033.6263" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="494.7917" x2="519.7917" y1="1048.2096" y2="1048.2096"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="645.8333" y="60.5611">App B</text><ellipse cx="667.7083" cy="27.0833" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="655.2083" x2="680.2083" y1="41.6667" y2="41.6667"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="37.5" x="645.8333" y="1008.8033">App B</text><ellipse cx="667.7083" cy="1033.6263" fill="#DF691A" rx="12.5" ry="12.5" style="stroke:#E58748;stroke-width:1.0416666666666667;"/><line style="stroke:#E58748;stroke-width:1.0416666666666667;" x1="655.2083" x2="680.2083" y1="1048.2096" y2="1048.2096"/><rect fill="#4E5D6C" height="3.125" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" width="689.5833" x="10.4167" y="105.1595"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="105.1595" y2="105.1595"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="108.2845" y2="108.2845"/><rect fill="#4E5D6C" height="33.3008" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:2.0833333333333335;" width="119.7917" x="295.3125" y="89.5508"/><text fill="#ABB6C2" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="90.625" x="306.7708" y="110.5286">App A starts</text><polygon fill="#DF691A" points="182.2917,160.319,192.7083,164.4857,182.2917,168.6523,186.4583,164.4857" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="188.5417" y1="164.4857" y2="164.4857"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="154.246">1.1</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="33.3333" x="91.6667" y="154.246">open</text><polygon fill="#DF691A" points="334.375,199.8698,344.7917,204.0365,334.375,208.2031,338.5417,204.0365" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="194.7917" x2="340.625" y1="204.0365" y2="204.0365"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="207.2917" y="193.7968">1.2</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="53.125" x="243.75" y="193.7968">connect</text><polygon fill="#DF691A" points="206.25,239.4206,195.8333,243.5872,206.25,247.7539,202.0833,243.5872" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="200" x2="345.8333" y1="243.5872" y2="243.5872"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="217.7083" y="233.3476">1.3</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="79.1667" x="254.1667" y="233.3476">Setup Client</text><polygon fill="#DF691A" points="334.375,278.9714,344.7917,283.138,334.375,287.3047,338.5417,283.138" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="194.7917" x2="340.625" y1="283.138" y2="283.138"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="207.2917" y="272.8984">1.4</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="243.75" y="272.8984">Client Ready</text><polygon fill="#DF691A" points="54.1667,318.5221,43.75,322.6888,54.1667,326.8555,50,322.6888" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="47.9167" x2="193.75" y1="322.6888" y2="322.6888"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="65.625" y="312.4491">1.5</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="102.0833" y="312.4491">Client Ready</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="51.0417" x="329.6875" y="362.4166">later on</text><rect fill="#4E5D6C" height="3.125" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" width="689.5833" x="10.4167" y="411.1816"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="411.1816" y2="411.1816"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="414.3066" y2="414.3066"/><rect fill="#4E5D6C" height="33.3008" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:2.0833333333333335;" width="119.7917" x="295.3125" y="395.5729"/><text fill="#ABB6C2" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="90.625" x="306.7708" y="416.5507">App B starts</text><polygon fill="#DF691A" points="518.75,466.3411,508.3333,470.5078,518.75,474.6745,514.5833,470.5078" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="512.5" x2="666.6667" y1="470.5078" y2="470.5078"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="530.2083" y="460.2681">2.1</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="33.3333" x="566.6667" y="460.2681">open</text><polygon fill="#DF691A" points="358.3333,505.8919,347.9167,510.0586,358.3333,514.2253,354.1667,510.0586" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="352.0833" x2="506.25" y1="510.0586" y2="510.0586"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="369.7917" y="499.8189">2.2</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="53.125" x="406.25" y="499.8189">connect</text><polygon fill="#DF691A" points="206.25,545.4427,195.8333,549.6094,206.25,553.776,202.0833,549.6094" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="200" x2="345.8333" y1="549.6094" y2="549.6094"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="217.7083" y="539.3697">2.3</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="69.7917" x="254.1667" y="539.3697">Setup Port</text><polygon fill="#DF691A" points="334.375,584.9935,344.7917,589.1602,334.375,593.3268,338.5417,589.1602" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="194.7917" x2="340.625" y1="589.1602" y2="589.1602"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="207.2917" y="578.9205">2.4</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="70.8333" x="243.75" y="578.9205">Port Ready</text><polygon fill="#DF691A" points="494.7917,624.5443,505.2083,628.7109,494.7917,632.8776,498.9583,628.7109" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="346.875" x2="501.0417" y1="628.7109" y2="628.7109"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="359.375" y="618.4713">2.5</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="70.8333" x="395.8333" y="618.4713">Port Ready</text><polygon fill="#DF691A" points="655.2083,664.0951,665.625,668.2617,655.2083,672.4284,659.375,668.2617" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="507.2917" x2="661.4583" y1="668.2617" y2="668.2617"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="519.7917" y="658.0221">2.6</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="556.25" y="658.0221">Client Ready</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="65.625" x="322.3958" y="707.9895">eventually</text><rect fill="#4E5D6C" height="3.125" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" width="689.5833" x="10.4167" y="756.7546"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="756.7546" y2="756.7546"/><line style="stroke:#4E5D6C;stroke-width:1.0416666666666667;" x1="10.4167" x2="700" y1="759.8796" y2="759.8796"/><rect fill="#4E5D6C" height="33.3008" rx="4.1667" ry="4.1667" style="stroke:#4E5D6C;stroke-width:2.0833333333333335;" width="121.875" x="294.2708" y="741.1458"/><text fill="#ABB6C2" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="92.7083" x="305.7292" y="762.1236">App A closes</text><polygon fill="#DF691A" points="182.2917,811.9141,192.7083,816.0807,182.2917,820.2474,186.4583,816.0807" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="42.7083" x2="188.5417" y1="816.0807" y2="816.0807"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="55.2083" y="805.8411">2.7</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-style="italic" lengthAdjust="spacing" textLength="44.7917" x="91.6667" y="805.8411">unload</text><polygon fill="#DF691A" points="334.375,851.4648,344.7917,855.6315,334.375,859.7982,338.5417,855.6315" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="194.7917" x2="340.625" y1="855.6315" y2="855.6315"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="207.2917" y="845.3918">2.8</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="78.125" x="243.75" y="845.3918">Port Closing</text><polygon fill="#DF691A" points="494.7917,891.0156,505.2083,895.1823,494.7917,899.349,498.9583,895.1823" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="346.875" x2="501.0417" y1="895.1823" y2="895.1823"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="21.875" x="359.375" y="884.9426">2.9</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="79.1667" x="395.8333" y="884.9426">Setup Client</text><polygon fill="#DF691A" points="358.3333,930.5664,347.9167,934.7331,358.3333,938.8997,354.1667,934.7331" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="352.0833" x2="506.25" y1="934.7331" y2="934.7331"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="30.2083" x="369.7917" y="924.4934">2.10</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="414.5833" y="924.4934">Client Ready</text><polygon fill="#DF691A" points="655.2083,970.1172,665.625,974.2839,655.2083,978.4505,659.375,974.2839" style="stroke:#DF691A;stroke-width:1.0416666666666667;"/><line style="stroke:#DF691A;stroke-width:3.125;" x1="507.2917" x2="661.4583" y1="974.2839" y2="974.2839"/><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" font-weight="bold" lengthAdjust="spacing" textLength="30.2083" x="519.7917" y="964.0442">2.11</text><text fill="#FFFFFF" font-family="&quot;Verdana&quot;" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="564.5833" y="964.0442">Client Ready</text><!--MD5=[36049c6778727b2c383c251b617d96be]
+@startuml
+!theme superhero
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "Iframe A"      as frameA
+entity      "Shared Worker" as worker
+entity      "Iframe B"      as frameB
+entity      "App B"         as appB
+autonumber 1.1
+
+== App A starts ==
+appA -> frameA:       <i>open</i>
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Setup Client
+frameA -> worker:     Client Ready
+frameA -> appA:       Client Ready
+
+...later on...
+autonumber inc A
+== App B starts ==
+appB -> frameB:       <i>open</i>
+frameB -> worker:     <i>connect</i>
+worker -> frameA:     Setup Port
+frameA -> worker:     Port Ready
+worker -> frameB:     Port Ready
+frameB -> appB:       Client Ready
+
+...eventually...
+== App A closes ==
+appA -> frameA:       <i>unload</i>
+frameA -> worker:     Port Closing
+worker -> frameB:     Setup Client
+frameB -> worker:     Client Ready
+frameB -> appB:       Client Ready
+@enduml
+
+@startuml
+
+
+
+skinparam backgroundColor transparent
+skinparam useBetaStyle false
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor transparent
+    FontColor #FFF
+    HyperLinkColor #f0ad4e
+    LineColor #e58748
+    LineThickness 1
+    Margin 10
+    Padding 6
+    Shadowing 0.0
+  }
+  node {
+   Padding 15
+   roundcorner 20
+   BackgroundColor #DF691A-#e58748
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  groupHeader {
+    BackgroundColor #4E5D6C
+    FontColor #5bc0de
+    FontStyle bold
+  }
+  header {
+    LineThickness 0
+  }
+  referenceHeader {
+    BackgroundColor transparent
+    FontColor #4E5D6C
+    FontStyle bold
+  }
+  separator {
+    BackgroundColor #FFF
+    FontColor transparent
+    FontStyle bold
+  }
+  title {
+	FontSize 20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor  #3e4a56-#4E5D6C
+	FontColor #DF691A
+	BorderColor #4E5D6C
+  }
+  nwdiagDiagram {
+	network {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A    
+		LineColor #DF691A
+		LineThickness 1.0
+		FontColor #b25415
+	}
+	server {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	}
+	arrow {
+		FontColor #b25415
+		LineColor #b25415
+	}
+	group {
+		BackGroundColor #abb6c2
+		LineColor #bcc5ce
+		LineThickness 2.0
+		Margin 5
+		Padding 5
+	}
+  }
+  ganttDiagram {
+	task {
+			FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+		LineColor #DF691A
+		Margin 10
+		Padding 6
+	}
+	note {
+		FontColor #FFF
+		LineColor #7ccde5
+		BackGroundColor #5bc0de
+	}
+	separator {
+		LineColor #4E5D6C
+		BackGroundColor #4E5D6C-#717d89
+		FontColor #FFF
+	}
+	milestone {
+		FontColor #5bc0de
+		FontSize 16
+		FontStyle italic
+		BackGroundColor #4E5D6C
+		LineColor #717d89
+	}
+	timeline {
+		BackgroundColor #4E5D6C
+		FontColor #FFF
+	}
+	closed {
+		BackgroundColor #f3bd71
+		FontColor #FFF
+	}
+  }
+</style>
+skinparam defaultFontName       "Verdana"
+skinparam defaultFontSize       12
+skinparam dpi                   100
+skinparam shadowing             false
+skinparam roundcorner           8
+skinparam ParticipantPadding    40
+skinparam BoxPadding            40
+skinparam Padding               5
+skinparam ArrowColor            #4E5D6C
+skinparam stereotype {
+    CBackgroundColor #3e4a56
+    CBorderColor #717d89
+    ABackgroundColor #5F8F00
+    ABorderColor #4a934a
+    IBackgroundColor #AE423F
+    IBorderColor #e17572
+    EBackgroundColor #C08A3E
+    EBorderColor #f3bd71
+    NBackgroundColor #499AB2
+    NBorderColor #7ccde5
+}
+skinparam title {
+	FontColor	                 #DF691A
+	BorderColor	                 #717d89
+	FontSize	    	         20
+	BorderRoundCorner            8
+	BorderThickness 	         1
+	BackgroundColor              #3e4a56-#4E5D6C
+}
+
+skinparam legend {
+	BackgroundColor #4E5D6C
+	BorderColor #717d89
+	FontColor #abb6c2
+}
+
+skinparam swimlane {
+	BorderColor #5bc0de
+	BorderThickness 2
+	TitleBackgroundColor  #3e4a56-#4E5D6C
+	TitleFontColor #DF691A
+}
+
+
+skinparam activity {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BarColor #5cb85c
+	StartColor #5bc0de
+	EndColor #5bc0de
+	DiamondBackgroundColor #3e4a56
+  	DiamondBorderColor #717d89
+  	DiamondFontColor #FFF
+}
+
+
+skinparam participant {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BorderThickness 2
+}
+
+
+skinparam actor {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam arrow {
+	Thickness 3
+	Color #DF691A
+	FontColor #FFF
+}
+
+
+skinparam sequence {
+	BorderColor #DF691A
+	TitleFontColor #DF691A
+	BackgroundColor transparent
+	StartColor #DF691A
+	EndColor #DF691A
+	BoxBackgroundColor transparent
+	BoxBorderColor #4E5D6C
+	BoxFontColor #4E5D6C
+	DelayFontColor #4E5D6C
+	LifeLineBorderColor #4E5D6C
+	LifeLineBorderThickness 2
+	LifeLineBackgroundColor #717d89
+	GroupBackgroundColor #4E5D6C
+	GroupBorderColor #4E5D6C
+	GroupFontColor #4E5D6C
+	GroupHeaderFontColor #5bc0de
+	GroupHeaderBackgroundColor transparent
+	DividerBackgroundColor #4E5D6C
+    DividerBorderColor #4E5D6C
+    DividerBorderThickness 2
+    DividerFontColor #abb6c2
+	ReferenceBackgroundColor transparent
+	ReferenceBorderColor #4E5D6C
+	ReferenceFontColor #4E5D6C
+	ReferenceHeaderFontColor #5bc0de
+	ReferenceHeaderBackgroundColor #4E5D6C
+	StereotypeFontColor #FFF
+}
+
+
+skinparam partition {
+	BorderColor #DF691A
+	FontColor #DF691A
+	BackgroundColor transparent
+}
+
+
+skinparam collections {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam control {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam entity {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam boundary {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam agent {
+	BackgroundColor #f0ad4e
+	BorderColor #C08A3E
+	FontColor #4E5D6C
+}
+
+
+skinparam note {
+	BorderThickness 1
+	BackgroundColor #5bc0de
+	BorderColor #7ccde5
+	FontColor #FFF
+}
+
+
+skinparam artifact {
+	BackgroundColor #4E5D6C
+	BorderColor #717d89
+	FontColor #abb6c2
+}
+
+
+skinparam component {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam interface {
+	BackgroundColor  #e17572
+	BorderColor  #d9534f
+	FontColor #4E5D6C
+}
+
+
+skinparam storage {
+	BackgroundColor #f0ad4e
+  	BorderColor #f3bd71
+	FontColor #FFF
+}
+
+
+skinparam node {
+	BackgroundColor  #4E5D6C
+	BorderColor #abb6c2
+	FontColor #abb6c2
+}
+
+
+skinparam cloud {
+	BackgroundColor #abb6c2-black
+	BorderColor #abb6c2
+	FontColor #4E5D6C
+}
+
+
+skinparam database {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam class {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	HeaderBackgroundColor #b25415
+	StereotypeFontColor #4E5D6C
+	BorderThickness 1
+	AttributeFontColor #4E5D6C
+	AttributeFontSize 11
+}
+
+
+skinparam object {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	StereotypeFontColor #4E5D6C
+	BorderThickness 1
+	AttributeFontColor #FFF
+	AttributeFontSize 11
+}
+
+
+skinparam usecase {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BorderThickness 2
+	StereotypeFontColor #DF691A
+}
+
+
+skinparam rectangle {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	BackgroundColor #3e4a56
+	BorderThickness 2
+	StereotypeFontColor #DF691A
+}
+
+
+skinparam package {
+	BackgroundColor #4E5D6C
+  	BorderColor #DF691A
+	FontColor #DF691A
+	BorderThickness 2
+}
+
+
+skinparam folder {
+	BackgroundColor #3e4a56
+  	BorderColor #f0ad4e
+	FontColor #f0ad4e
+	BorderThickness 2
+}
+
+
+skinparam frame {
+	BackgroundColor #3e4a56
+  	BorderColor #5bc0de
+	FontColor #5bc0de
+	BorderThickness 2
+}
+
+
+skinparam state {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+	StartColor #5bc0de
+	EndColor #5bc0de
+	AttributeFontColor #FFF
+	AttributeFontSize 11
+}
+
+
+skinparam queue {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+
+
+skinparam card {
+	BackgroundColor #5bc0de
+	BorderColor #7ccde5
+	FontColor #FFF
+}
+
+
+skinparam file {
+	BackgroundColor #717d89
+	BorderColor #abb6c2
+	FontColor #abb6c2
+}
+
+
+skinparam stack {
+		FontColor #FFF
+	BorderColor #e58748
+	BackgroundColor #DF691A
+}
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "Iframe A"      as frameA
+entity      "Shared Worker" as worker
+entity      "Iframe B"      as frameB
+entity      "App B"         as appB
+autonumber 1.1
+
+== App A starts ==
+appA -> frameA:       <i>open</i>
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Setup Client
+frameA -> worker:     Client Ready
+frameA -> appA:       Client Ready
+
+...later on...
+autonumber inc A
+== App B starts ==
+appB -> frameB:       <i>open</i>
+frameB -> worker:     <i>connect</i>
+worker -> frameA:     Setup Port
+frameA -> worker:     Port Ready
+worker -> frameB:     Port Ready
+frameB -> appB:       Client Ready
+
+...eventually...
+== App A closes ==
+appA -> frameA:       <i>unload</i>
+frameA -> worker:     Port Closing
+worker -> frameB:     Setup Client
+frameB -> worker:     Client Ready
+frameB -> appB:       Client Ready
+@enduml
+
+PlantUML version 1.2022.6(Tue Jun 21 13:34:49 EDT 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>
