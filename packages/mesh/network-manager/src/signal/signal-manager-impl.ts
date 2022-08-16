@@ -147,10 +147,10 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (msg: NetworkMessage) {
-    log(`Signal ${msg.remoteId}`);
+  async message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage) {
+    log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
-      server.signal(msg).catch(err => {
+      server.signal(author, recipient, msg).catch(err => {
         log(`Error signaling: ${err}`);
       });
     }
