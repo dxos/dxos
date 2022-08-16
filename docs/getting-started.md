@@ -3,7 +3,7 @@ title: Getting started
 description: DXOS SDK
 ---
 
-The project is developed using [Nx](https://nx.nev/) and NodeJS version `16.14.0`.
+The project is developed using [Nx](https://nx.dev/) and NodeJS version `16.14.0`.
 
 Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
 
