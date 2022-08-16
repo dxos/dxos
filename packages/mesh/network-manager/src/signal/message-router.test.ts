@@ -16,7 +16,7 @@ import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 import { OfferMessage, SignalMessage } from './signal-messaging';
 
-describe.only('MessageRouter', () => {
+describe('MessageRouter', () => {
   let topic: PublicKey;
   let peer1: PublicKey;
   let peer2: PublicKey;

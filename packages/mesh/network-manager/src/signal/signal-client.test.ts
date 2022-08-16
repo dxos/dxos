@@ -33,8 +33,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock1 = mockFn<(msg: NetworkMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock1 = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
@@ -44,15 +43,13 @@ describe('SignalClient', () => {
     await api2.join(topic, peer2);
 
     const msg: NetworkMessage = {
-      id: peer2,
-      remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
-    await api2.message(msg);
+    await api2.message(peer2, peer1, msg);
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg]);
+      expect(signalMock1).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(500);
 
@@ -79,24 +76,21 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
     await api1.join(topic, peer1);
 
     const msg: NetworkMessage = {
-      id: peer2,
-      remoteId: peer1,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
     };
-    await api1.message(msg);
+    await api1.message(peer2, peer1, msg);
 
     await waitForExpect(() => {
-      expect(signalMock).toHaveBeenCalledWith([msg]);
+      expect(signalMock).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(500);
 
@@ -129,8 +123,8 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: NetworkMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
+
 
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
@@ -144,16 +138,14 @@ describe('SignalClient', () => {
     const sessionId = PublicKey.random();
 
     const msg: NetworkMessage = {
-      id: peer2,
-      remoteId: peer1,
       sessionId,
       topic,
       data: { offer: { json: 'bar' } }
     };
-    await api1.message(msg);
+    await api1.message(peer2, peer1, msg);
 
     await waitForExpect(() => {
-      expect(signalMock).toHaveBeenCalledWith([msg]);
+      expect(signalMock).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(5_000);
 });
