@@ -83,11 +83,10 @@ export class SignalClient {
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(key => key.toHex());
   /**
    * @param _host Signal server websocket URL.
-   * @param _onSignal See `SignalApi.signal`.
    */
   constructor (
     private readonly _host: string,
-    private readonly _onSignal: (message: NetworkMessage) => Promise<void>
+    private readonly _onMessage: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>
   ) {
     this._setState(State.CONNECTING);
     this._createClient();
@@ -245,11 +244,11 @@ export class SignalClient {
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
     messageStream.subscribe(async (message: Message) => {
-      if (message.payload.type_url === 'dxos.mesh.signalMessage.SignalMessage') {
-        const signalMessage = schema.getCodecForType('dxos.mesh.signalMessage.SignalMessage').decode(message.payload.value);
-        log('Message received: ' + JSON.stringify(signalMessage));
-        assert(signalMessage.remoteId.equals(peerId));
-        await this._onSignal(signalMessage);
+      if (message.payload.type_url === 'dxos.mesh.networkMessage.NetworkMessage') {
+        const networkMessage = schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').decode(message.payload.value);
+        log('Message received: ' + JSON.stringify(networkMessage));
+        assert(peerId.equals(message.author));
+        await this._onMessage(message.author, message.recipient, networkMessage);
       } else {
         log('Unknown message type: ' + message.payload.type_url);
       }
