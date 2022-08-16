@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Status } from './signal-client';
+import { CommandTrace, Status } from './signal-client';
 
 /**
  * Signal peer discovery interface.
