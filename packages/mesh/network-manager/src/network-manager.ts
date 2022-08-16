@@ -12,7 +12,6 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { NetworkMessage } from './proto/gen/dxos/mesh/networkMessage';
 import { InMemorySignalManager, OfferMessage, SignalManager, SignalManagerImpl } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';

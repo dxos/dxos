@@ -10,7 +10,6 @@ import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup }
 
 import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
-import { sleep } from '@dxos/async';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -90,7 +89,7 @@ export class MessageRouter implements SignalMessaging {
 
   async offer (message: OfferMessage): Promise<Answer> {
     message.messageId = PublicKey.random();
-    return new Promise<Answer>(async (resolve, reject) => {
+    return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
       // TODO(mykola): need  to cast OfferMessage to NetworkMessage?
       return this._sendReliableMessage(message.author, message.recipient, message);
@@ -178,7 +177,7 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(author, recipient, ackMessage);
   }
 
-  private _castNetworkMessage(author: PublicKey, recipient: PublicKey, message: NetworkMessage) {
+  private _castNetworkMessage (author: PublicKey, recipient: PublicKey, message: NetworkMessage) {
     return {
       author,
       recipient,

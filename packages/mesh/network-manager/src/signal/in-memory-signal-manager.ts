@@ -8,11 +8,10 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
-import { OfferMessage } from './signal-messaging';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();

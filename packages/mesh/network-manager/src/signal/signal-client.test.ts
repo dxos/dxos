@@ -125,7 +125,6 @@ describe('SignalClient', () => {
     const peer2 = PublicKey.random();
     const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
 
-
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker2.url(), signalMock);

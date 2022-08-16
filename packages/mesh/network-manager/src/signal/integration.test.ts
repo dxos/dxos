@@ -9,7 +9,6 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { MessageRouter } from './message-router';
 import { SignalManagerImpl } from './signal-manager-impl';
 import { SignalMessage } from './signal-messaging';

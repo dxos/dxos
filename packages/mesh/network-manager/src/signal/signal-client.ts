@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { schema } from '../proto/gen';
-import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 import { SignalRPCClient } from './signal-rpc-client';
 

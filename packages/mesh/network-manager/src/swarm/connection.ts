@@ -11,8 +11,8 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
-import { Transport, TransportFactory } from '../transport';
 import { SignalMessage } from '../signal';
+import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
 

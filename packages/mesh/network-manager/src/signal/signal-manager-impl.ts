@@ -9,8 +9,8 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalApi } from './signal-api';
 import { SignalClient } from './signal-client';
 import { SignalManager } from './signal-manager';

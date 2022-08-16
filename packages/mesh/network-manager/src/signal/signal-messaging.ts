@@ -1,6 +1,10 @@
-import { PublicKey } from '@dxos/protocols';
-import { Answer, NetworkMessage, Offer, Signal } from '../proto/gen/dxos/mesh/networkMessage';
+//
+// Copyright 2022 DXOS.org
+//
 
+import { PublicKey } from '@dxos/protocols';
+
+import { Answer, NetworkMessage, Offer, Signal } from '../proto/gen/dxos/mesh/networkMessage';
 
 export interface OfferMessage extends NetworkMessage {
   author: PublicKey;
