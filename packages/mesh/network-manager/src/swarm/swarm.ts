@@ -19,6 +19,7 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
+import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
 
 const log = debug('dxos:network-manager:swarm');
 
@@ -100,13 +101,13 @@ export class Swarm {
     this._topology.update();
   }
 
-  async onOffer (message: NetworkMessage): Promise<Answer> {
+  async onOffer (message: OfferMessage): Promise<Answer> {
     log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
-    assert(message.id);
-    const remoteId = message.id;
-    if (!message.remoteId?.equals(this._ownPeerId)) {
-      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`);
+    assert(message.author);
+    const remoteId = message.author;
+    if (!message.recipient?.equals(this._ownPeerId)) {
+      log(`Rejecting offer with incorrect peerId: ${message.author}`);
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
@@ -133,7 +134,7 @@ export class Swarm {
     if (await this._topology.onOffer(remoteId)) {
       if (!this._connections.has(remoteId)) { // Connection might have been already established.
         assert(message.sessionId);
-        const connection = this._createConnection(false, message.id, message.sessionId);
+        const connection = this._createConnection(false, message.author, message.sessionId);
         try {
           connection.connect();
         } catch (err: any) {
@@ -146,14 +147,14 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: NetworkMessage): Promise<void> {
+  async onSignal (message: SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
-    assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
+    assert(message.recipient?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`);
     assert(message.topic?.equals(this._topic));
-    assert(message.id);
-    const connection = this._connections.get(message.id);
+    assert(message.author);
+    const connection = this._connections.get(message.author);
     if (!connection) {
-      log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.id}`);
+      log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.author}`);
       return;
     }
 
@@ -207,8 +208,8 @@ export class Swarm {
     log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
     const connection = this._createConnection(true, remoteId, sessionId);
     this._signalMessaging.offer({
-      id: this._ownPeerId,
-      remoteId,
+      author: this._ownPeerId,
+      recipient: remoteId,
       sessionId,
       topic: this._topic,
       data: { offer: {} }

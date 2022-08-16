@@ -12,16 +12,15 @@ import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalApi } from './signal-api';
 import { SignalManager } from './signal-manager';
+import { OfferMessage } from './signal-messaging';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalApi.Status[]>();
   readonly commandTrace = new Event<SignalApi.CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<NetworkMessage>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
 
-  constructor (
-    private readonly _onOffer: (message: NetworkMessage) => Promise<Answer>
-  ) {
+  constructor () {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
   }
 
@@ -76,7 +75,7 @@ export class InMemorySignalManager implements SignalManager {
   async message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage) {
     assert(recipient);
     assert(state.connections.get(recipient), 'Peer not connected');
-    state.connections.get(recipient)!.onMessage.emit(msg);
+    state.connections.get(recipient)!.onMessage.emit([author, recipient, msg]);
   }
 
   async destroy () {}

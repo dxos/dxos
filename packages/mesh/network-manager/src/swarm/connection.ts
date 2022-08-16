@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { Transport, TransportFactory } from '../transport';
+import { SignalMessage } from '../signal';
 
 const log = debug('dxos:network-manager:swarm:connection');
 
@@ -62,7 +63,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _sendSignal: (msg: NetworkMessage) => Promise<void>,
+    private readonly _sendSignal: (msg: SignalMessage) => Promise<void>,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -116,15 +117,15 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal (msg: NetworkMessage) {
+  async signal (msg: SignalMessage) {
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
     }
     assert(msg.data.signal);
-    assert(msg.id?.equals(this.remoteId));
-    assert(msg.remoteId?.equals(this.ownId));
+    assert(msg.author?.equals(this.remoteId));
+    assert(msg.recipient?.equals(this.ownId));
 
     if (this._state === ConnectionState.INITIAL) {
       log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data}`);
