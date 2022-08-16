@@ -19,7 +19,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get install libxtst-dev libpng++-dev
-          npx playwright install-deps
+          npx playwright install --with-deps
 
       - uses: nrwl/nx-set-shas@v2
 
