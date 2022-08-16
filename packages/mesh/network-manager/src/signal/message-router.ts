@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet, exponentialBackoffInterval, SubscriptionGroup } from '@dxos/util';
 
 import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
-import { SignalMessaging } from './signal-manager';
+import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -17,9 +17,9 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (message: NetworkMessage) => Promise<void>;
-  onOffer?: (message: NetworkMessage) => Promise<Answer>;
-  onSignal?: (message: NetworkMessage) => Promise<void>;
+  sendMessage?: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>;
+  onOffer?: (message: OfferMessage) => Promise<Answer>;
+  onSignal?: (message: SignalMessage) => Promise<void>;
   retryDelay?: number;
   timeout?: number;
 }
@@ -30,11 +30,11 @@ const log = debug('dxos:network-manager:message-router');
  */
 // TODO(mykola): https://github.com/dxos/protocols/issues/1316
 export class MessageRouter implements SignalMessaging {
-  private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
-  private readonly _onSignal: (message: NetworkMessage) => Promise<void>;
-  private readonly _sendMessage: (message: NetworkMessage) => Promise<void>;
-  private readonly _onOffer: (message: NetworkMessage) => Promise<Answer>;
+  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
+  private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>;
+  private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
 
+  private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>(key => key.toHex());
   private readonly _retryDelay: number;
@@ -59,7 +59,7 @@ export class MessageRouter implements SignalMessaging {
     this._timeout = timeout;
   }
 
-  async receiveMessage (message: NetworkMessage): Promise<void> {
+  async receiveMessage (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
     log(`receive message: ${JSON.stringify(message)}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
@@ -67,35 +67,36 @@ export class MessageRouter implements SignalMessaging {
       }
 
       this._receivedMessages.add(message.messageId!);
-      await this._sendAcknowledgement(message);
+      await this._sendAcknowledgement(author, recipient, message);
     }
 
     if (message.data?.offer) {
-      await this._handleOffer(message);
+      await this._handleOffer(author, recipient, message);
     } else if (message.data?.answer) {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
-      await this._handleSignal(message);
+      await this._handleSignal(author, recipient, message);
     } else if (message.data?.ack) {
       await this._handleAcknowledgement(message);
     }
   }
 
-  async signal (message: NetworkMessage): Promise<void> {
+  async signal (message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
-    await this._sendReliableMessage(message);
+    // TODO(mykola): need  to cast SignalMessage to NetworkMessage?
+    await this._sendReliableMessage(message.author, message.recipient, message);
   }
 
-  async offer (message: NetworkMessage): Promise<Answer> {
+  async offer (message: OfferMessage): Promise<Answer> {
     message.messageId = PublicKey.random();
-    const promise = new Promise<Answer>((resolve, reject) => {
+    return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(message.messageId!, { resolve, reject });
-      return this._sendReliableMessage(message);
+      // TODO(mykola): need  to cast OfferMessage to NetworkMessage?
+      return this._sendReliableMessage(message.author, message.recipient, message);
     });
-    return promise;
   }
 
-  private async _sendReliableMessage (message: NetworkMessage): Promise<PublicKey> {
+  private async _sendReliableMessage (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<PublicKey> {
     // Setting unique messageId if it not specified yet.
     message.messageId = message.messageId ?? PublicKey.random();
     log(`sent message: ${JSON.stringify(message)}`);
@@ -104,7 +105,7 @@ export class MessageRouter implements SignalMessaging {
     const cancelRetry = exponentialBackoffInterval(async () => {
       log(`retrying message: ${JSON.stringify(message)}`);
       try {
-        await this._sendMessage(message);
+        await this._sendMessage(author, recipient, message);
       } catch (error) {
         log(`ERROR failed to send message: ${error}`);
       }
@@ -125,7 +126,7 @@ export class MessageRouter implements SignalMessaging {
     this._subscriptions.push(cancelRetry);
     this._subscriptions.push(() => clearTimeout(timeout));
 
-    await this._sendMessage(message);
+    await this._sendMessage(author, recipient, message);
     return message.messageId;
   }
 
@@ -140,22 +141,24 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  private async _handleOffer (message: NetworkMessage): Promise<void> {
-    const answer = await this._onOffer(message);
+  private async _handleOffer (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+    assert(message.data?.offer, 'No offer');
+    // TODO(mykola): ugly cast.
+    const offerMessage = this._castNetworkMessage(author, recipient, message) as OfferMessage;
+    const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
     const answerMessage: NetworkMessage = {
-      id: message.remoteId,
-      remoteId: message.id,
       topic: message.topic,
       sessionId: message.sessionId,
       data: { answer }
     };
-    await this._sendReliableMessage(answerMessage);
+    await this._sendReliableMessage(author, recipient, answerMessage);
   }
 
-  private async _handleSignal (message: NetworkMessage): Promise<void> {
+  private async _handleSignal (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
     assert(message.messageId);
-    await this._onSignal(message);
+    const signalMessage = this._castNetworkMessage(author, recipient, message) as SignalMessage;
+    await this._onSignal(signalMessage);
   }
 
   private async _handleAcknowledgement (message: NetworkMessage): Promise<void> {
@@ -163,17 +166,26 @@ export class MessageRouter implements SignalMessaging {
     this._onAckCallbacks.get(message.data.ack.messageId)?.();
   }
 
-  private async _sendAcknowledgement (message: NetworkMessage): Promise<void> {
+  private async _sendAcknowledgement (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
     assert(message.messageId);
     const ackMessage = {
-      id: message.remoteId,
-      remoteId: message.id,
       topic: message.topic,
       sessionId: message.sessionId,
       data: { ack: { messageId: message.messageId } }
     };
     log(`sent ack: ${JSON.stringify(ackMessage)}`);
-    await this._sendMessage(ackMessage);
+    await this._sendMessage(author, recipient, ackMessage);
+  }
+
+  private _castNetworkMessage(author: PublicKey, recipient: PublicKey, message: NetworkMessage) {
+    return {
+      author,
+      recipient,
+      messageId: message.messageId,
+      data: message.data,
+      topic: message.topic,
+      sessionId: message.sessionId
+    };
   }
 
   destroy (): void {

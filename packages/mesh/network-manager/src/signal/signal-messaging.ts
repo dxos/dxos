@@ -3,10 +3,14 @@ import { Answer, NetworkMessage, Offer, Signal } from '../proto/gen/dxos/mesh/ne
 
 
 export interface OfferMessage extends NetworkMessage {
+  author: PublicKey;
+  recipient: PublicKey;
   data: { offer: Offer };
 }
 
 export interface SignalMessage extends NetworkMessage {
+  author: PublicKey;
+  recipient: PublicKey;
   data: { signal: Signal };
 }
 
@@ -18,10 +22,10 @@ export interface SignalMessaging {
   /**
    * Offer/answer RPC.
    */
-  offer(author: PublicKey, recipient: PublicKey, msg: OfferMessage): Promise<Answer>;
+  offer(msg: OfferMessage): Promise<Answer>;
 
   /**
    * Reliably send a signal to a peer.
    */
-  signal(author: PublicKey, recipient: PublicKey, msg: SignalMessage): Promise<void>;
+  signal(msg: SignalMessage): Promise<void>;
 }
