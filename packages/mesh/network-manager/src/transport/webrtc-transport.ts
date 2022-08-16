@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { Transport, TransportFactory } from './transport';
+import { SignalMessage } from '../signal';
 
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
@@ -35,7 +36,7 @@ export class WebRTCTransport implements Transport {
     private readonly _remoteId: PublicKey,
     private readonly _sessionId: PublicKey,
     private readonly _topic: PublicKey,
-    private readonly _sendSignal: (msg: NetworkMessage) => void,
+    private readonly _sendSignal: (msg: SignalMessage) => void,
     private readonly _webrtcConfig?: any
   ) {
     log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
@@ -49,8 +50,8 @@ export class WebRTCTransport implements Transport {
     this._peer.on('signal', async data => {
       try {
         await this._sendSignal({
-          id: this._ownId,
-          remoteId: this._remoteId,
+          author: this._ownId,
+          recipient: this._remoteId,
           sessionId: this._sessionId,
           topic: this._topic,
           data: { signal: { json: JSON.stringify(data) } }

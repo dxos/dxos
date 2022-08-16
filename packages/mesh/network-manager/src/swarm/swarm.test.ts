@@ -12,8 +12,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
-import { SignalMessaging } from '../signal';
+import { OfferMessage, SignalMessage, SignalMessaging } from '../signal';
 import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
@@ -28,12 +27,12 @@ describe('Swarm', () => {
       readonly _delay = 10
     ) {}
 
-    async offer (msg: NetworkMessage) {
+    async offer (msg: OfferMessage) {
       await sleep(this._delay);
       return this._swarm().onOffer(msg);
     }
 
-    async signal (msg: NetworkMessage) {
+    async signal (msg: SignalMessage) {
       await sleep(this._delay);
       await this._swarm().onSignal(msg);
     }
@@ -49,14 +48,14 @@ describe('Swarm', () => {
     let swarm2: Swarm;
 
     const mr1: MessageRouter = new MessageRouter({
-      sendMessage: msg => mr2.receiveMessage(msg),
+      sendMessage: (...data) => mr2.receiveMessage(...data),
       onSignal: msg => swarm1.onSignal(msg),
       onOffer: msg => swarm1.onOffer(msg)
     });
     afterTest(() => mr1.destroy());
 
     const mr2: MessageRouter = new MessageRouter({
-      sendMessage: msg => mr1.receiveMessage(msg),
+      sendMessage: (...data) => mr1.receiveMessage(...data),
       onSignal: msg => swarm2.onSignal(msg),
       onOffer: msg => swarm2.onOffer(msg)
     });
