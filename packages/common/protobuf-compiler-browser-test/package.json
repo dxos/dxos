@@ -13,7 +13,7 @@
     "build:test": "toolchain lint",
     "lint": "toolchain lint",
     "test": "true",
-    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium"
+    "test:browser": "true"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
