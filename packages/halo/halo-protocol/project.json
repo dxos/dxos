@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/halo/halo-protocol/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/halo/halo-protocol/dist",
+        "packages/halo/halo-protocol/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

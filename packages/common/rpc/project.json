@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/common/rpc/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/rpc/dist",
+        "packages/common/rpc/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

@@ -24,7 +24,7 @@ describe('Echo Bot', () => {
     const command = PublicKey.random().asUint8Array();
     await bot.command({
       botId: PublicKey.random().toHex(),
-      command: command
+      command
     });
 
     const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });

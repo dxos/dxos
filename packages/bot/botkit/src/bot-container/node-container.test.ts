@@ -111,7 +111,7 @@ describe('Node container', function () {
         invitation
       });
       const command = PublicKey.random().asUint8Array();
-      await rpcClient.rpc.command({ command: command });
+      await rpcClient.rpc.command({ command });
 
       const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.get('payload');

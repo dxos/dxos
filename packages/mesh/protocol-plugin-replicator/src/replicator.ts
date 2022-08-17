@@ -61,7 +61,7 @@ export class Replicator {
   private readonly _peers = new Map<Protocol, Peer>();
   private _options: {timeout: number};
   private _load: LoadFunction;
-  private _subscribe: SubscribeFunction
+  private _subscribe: SubscribeFunction;
   private _replicate: ReplicateFunction;
 
   constructor (middleware: ReplicatorMiddleware, options?: {timeout: number}) {

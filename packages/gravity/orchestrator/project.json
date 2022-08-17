@@ -1,0 +1,19 @@
+{
+  "sourceRoot": "packages/gravity/orchestrator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/gravity/orchestrator/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "bot-factory-client",
+    "botkit"
+  ]
+}

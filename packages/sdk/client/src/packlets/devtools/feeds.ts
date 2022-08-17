@@ -46,7 +46,7 @@ export const subscribeToFeeds = (
             .wrap(createBatchStream(feed.feed, {
               live: true,
               start: 0
-            }));
+            }) as any);
 
           feedStream.on('data', blocks => {
             feedInfo!.length += blocks.length;
@@ -103,7 +103,7 @@ export const subscribeToFeedBlocks = (
       .wrap(createBatchStream(descriptor.feed, {
         live: true,
         start: Math.max(0, descriptor.feed.length - maxBlocks)
-      }));
+      }) as any);
 
     feedStream.on('data', blocks => {
       next({ blocks });

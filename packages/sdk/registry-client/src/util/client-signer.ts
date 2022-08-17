@@ -38,7 +38,7 @@ export class ClientSignerAdapter implements HaloSigner {
 export class ClientSigner implements Partial<Signer> {
   private id = 0;
 
-  private readonly publicKey: PublicKey
+  private readonly publicKey: PublicKey;
 
   constructor (
     private client: Client,

@@ -18,7 +18,7 @@ export class Schema<T, S = {}> {
 
   private readonly _mapping: BidirectionalMapingDescriptors;
 
-  private readonly _codecCache: Record<string, ProtoCodec> = {}
+  private readonly _codecCache: Record<string, ProtoCodec> = {};
 
   constructor (
     private _typesRoot: protobufjs.Root,

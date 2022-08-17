@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
@@ -43,7 +43,7 @@
     "react": "^18.1.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@oclif/test": "^2.1.1",
     "@types/chai": "^4.2.15",
@@ -52,7 +52,7 @@
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "chai": "^4.3.4",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "eslint-config-oclif": "^4.0.0",
     "eslint-config-oclif-typescript": "^1.0.2",
     "eslint-plugin-node": "^11.1.0",

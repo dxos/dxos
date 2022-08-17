@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
+import { expect, test } from '@playwright/test';
 
 import { Launcher } from '../util';
 
@@ -13,22 +13,19 @@ const config = {
 
 const baseUrl = `${config.baseUrl}__story/stories-playwright-Sanity-stories-tsx`;
 
-describe('Sanity test.', function () {
-  this.timeout(30000);
-  this.retries(0);
-
+test.describe('Sanity test.', () => {
   let launcher: Launcher;
 
-  before(async () => {
+  test.beforeAll(async () => {
     launcher = new Launcher(baseUrl);
     await launcher.open();
   });
 
-  after(async () => {
+  test.afterAll(async () => {
     await launcher.close();
   });
 
-  it('Starts the test', async () => {
+  test('Starts the test', async () => {
     const page = await launcher.browser.newPage();
     await page.goto(launcher.url('/Primary'));
 

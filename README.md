@@ -29,7 +29,7 @@ To run the demo:
 
 ```bash
 cd packages/demos/kichchen-sink
-rushx demo:grid
+pnpm run demo:grid
 ```
 
 

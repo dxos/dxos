@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/mesh/network-manager/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/network-manager/dist",
+        "packages/mesh/network-manager/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}
