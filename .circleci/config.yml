@@ -1,0 +1,40 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.5.1
+
+aliases:
+  - &cache_restore
+    restore_cache:
+      keys:
+        - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-v1-{{ arch }}-
+  - &cache_save
+    save_cache:
+      paths:
+        - ~/.local/share/pnpm/store/v3
+      key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+  - &install_dependencies
+    run: pnpm install
+
+jobs:
+  main:
+    docker:
+      - image: ghcr.io/dxos/circleci-node:latest
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
+    steps:
+      - checkout
+      - *cache_restore
+      - *install_dependencies
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
+
+workflows:
+  build:
+    jobs:
+      - main:
+          context:
+            - Github
