@@ -1,5 +1,41 @@
 # Change Log
 
+### [2.33.9](https://www.github.com/dxos/protocols/compare/v2.33.8...v2.33.9) (2022-08-17)
+
+
+### Features
+
+* Add more authenticator tests & color public keys ([#1366](https://www.github.com/dxos/protocols/issues/1366)) ([b6f4ca1](https://www.github.com/dxos/protocols/commit/b6f4ca19aecb2056253e80839674ff68d751166b))
+* Add option to disable handshake in RPC ([#1355](https://www.github.com/dxos/protocols/issues/1355)) ([2960253](https://www.github.com/dxos/protocols/commit/2960253584d5b83852e8a441026cf3c671fd00c2))
+* Add stream confirmation for dxRPC ([#1420](https://www.github.com/dxos/protocols/issues/1420)) ([cf61edd](https://www.github.com/dxos/protocols/commit/cf61eddc6a77473215a68b37e5e7e7e90ad64c93))
+* **client:** Singleton client port ([#1424](https://www.github.com/dxos/protocols/issues/1424)) ([46220a1](https://www.github.com/dxos/protocols/commit/46220a19060d71a2e6819b1ae466786bb8741599))
+* **devtools:** Add registry panel ([#1305](https://www.github.com/dxos/protocols/issues/1305)) ([3ef0844](https://www.github.com/dxos/protocols/commit/3ef0844d7ea50bd2085d56eed4edbd6a4c3522e1))
+* Kodama restructuring ([#1419](https://www.github.com/dxos/protocols/issues/1419)) ([9246a07](https://www.github.com/dxos/protocols/commit/9246a07b1b168448b96701f988088e59102d2b5e))
+* Make signals reliable ([#1364](https://www.github.com/dxos/protocols/issues/1364)) ([0628f3a](https://www.github.com/dxos/protocols/commit/0628f3ab770f26726914324c9eb0b6603ea719d0))
+* Markdown parser. ([#1378](https://www.github.com/dxos/protocols/issues/1378)) ([392a1c2](https://www.github.com/dxos/protocols/commit/392a1c2bc98b8e03fa3d81e000e230c4ad44a62c))
+* New signal client ([#1406](https://www.github.com/dxos/protocols/issues/1406)) ([227ba79](https://www.github.com/dxos/protocols/commit/227ba79dc440dc6bb19c2fa60f19bce4b3c73a78))
+* oclif cli starter ([#1449](https://www.github.com/dxos/protocols/issues/1449)) ([d0dce35](https://www.github.com/dxos/protocols/commit/d0dce35f365638babd6acff2e09a08537a1e3881))
+* Pass offers and answers through generic messaging API from signal servers  ([#1338](https://www.github.com/dxos/protocols/issues/1338)) ([553a954](https://www.github.com/dxos/protocols/commit/553a954610b7de1cfb2465fcbc075219b5bcea5a))
+* **react-components:** Add Skeleton with render delay ([#1411](https://www.github.com/dxos/protocols/issues/1411)) ([0f3eebc](https://www.github.com/dxos/protocols/commit/0f3eebce9fbb66868132330335bf14e2b71ab7e0))
+* Record party genesis feed and use it for feed selection ([#1341](https://www.github.com/dxos/protocols/issues/1341)) ([4fdd8bc](https://www.github.com/dxos/protocols/commit/4fdd8bc493114cbac71a43331e9e506840aac845))
+* Treat protobuf fields not marked with optional as required ([#1394](https://www.github.com/dxos/protocols/issues/1394)) ([6efa8dd](https://www.github.com/dxos/protocols/commit/6efa8ddf82cbb63525e981b4763eb469c3562914))
+* UX upgrade and clipboard fix for linux. ([#1435](https://www.github.com/dxos/protocols/issues/1435)) ([37a7739](https://www.github.com/dxos/protocols/commit/37a7739a1a0794da5553615603900b8e4b1ab619))
+* **wallet:** Create initial wallet app ([#1388](https://www.github.com/dxos/protocols/issues/1388)) ([a6069cb](https://www.github.com/dxos/protocols/commit/a6069cb47995fd148af4e351b2a869c693e3e74c))
+* **wallet:** Improve empty states ([#1408](https://www.github.com/dxos/protocols/issues/1408)) ([4cd62ca](https://www.github.com/dxos/protocols/commit/4cd62ca5efea492d72a15b19ef34bed94887bed0))
+
+
+### Bug Fixes
+
+* Add retries in browser tests ([#1444](https://www.github.com/dxos/protocols/issues/1444)) ([845d4f3](https://www.github.com/dxos/protocols/commit/845d4f3e8c273cb55594cfcada0b632a5b655e6c))
+* **client:** Fix types for full client ([#1427](https://www.github.com/dxos/protocols/issues/1427)) ([9dc0139](https://www.github.com/dxos/protocols/commit/9dc013975f5c166b08db8bb8361fbb886c2f5044))
+* Fix field presense in protobuf ([#1418](https://www.github.com/dxos/protocols/issues/1418)) ([0cfaca1](https://www.github.com/dxos/protocols/commit/0cfaca1bc2b8ee99189f08fe04f220bb3a978251))
+* Fix ridoculus ([#1396](https://www.github.com/dxos/protocols/issues/1396)) ([2637427](https://www.github.com/dxos/protocols/commit/2637427f4faafc8936db7b91b6bf1589bc4002b3))
+* Increase test timeout ([#1376](https://www.github.com/dxos/protocols/issues/1376)) ([e3d68a2](https://www.github.com/dxos/protocols/commit/e3d68a2481bc5ee110c5b94e23c615e5ba5afa8c))
+* Metadata store persistence ([#1393](https://www.github.com/dxos/protocols/issues/1393)) ([002e891](https://www.github.com/dxos/protocols/commit/002e8917f88a73058b63f51f1cd0e6528b8082fa))
+* **ordered-list:** Ordered lists now listen to model updates. ([#1314](https://www.github.com/dxos/protocols/issues/1314)) ([16ba5b2](https://www.github.com/dxos/protocols/commit/16ba5b288e780223ee0041655364f30686d9d93f))
+* Remove kitchen sync from publish list ([e605934](https://www.github.com/dxos/protocols/commit/e605934d1670fe375880aed0da7b60b5a2e5c567))
+* Unref not defined in browsers ([#1417](https://www.github.com/dxos/protocols/issues/1417)) ([bba8fc0](https://www.github.com/dxos/protocols/commit/bba8fc001530a1ef6f6d808596fead3034b00909))
+
 ### [2.33.8](https://www.github.com/dxos/protocols/compare/v2.33.7...v2.33.8) (2022-07-15)
 
 
