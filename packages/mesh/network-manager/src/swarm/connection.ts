@@ -52,7 +52,7 @@ export enum ConnectionState {
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
-  private _bufferedSignals: NetworkMessage[] = [];
+  private _bufferedSignals: SignalMessage[] = [];
 
   public readonly peerNotFound = new Event<boolean>();
   public readonly receivedAnswer = new Event<boolean>();

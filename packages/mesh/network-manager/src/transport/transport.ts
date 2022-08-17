@@ -16,7 +16,7 @@ export interface Transport {
   closed: Event
   connected: Event
   errors: ErrorStream
-  signal (msg: NetworkMessage): Promise<void> // TODO(burdon): Remove async?
+  signal (msg: SignalMessage): Promise<void> // TODO(burdon): Remove async?
   close (): Promise<void>
 }
 

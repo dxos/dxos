@@ -13,6 +13,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { Transport, TransportFactory } from './transport';
+import { SignalMessage } from '../signal';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
@@ -79,7 +80,7 @@ export class InMemoryTransport implements Transport {
     return this._sessionId;
   }
 
-  async signal (msg: NetworkMessage) {
+  async signal (msg: SignalMessage) {
     // No-op.
   }
 

@@ -90,7 +90,7 @@ export class WebRTCTransport implements Transport {
     return this._peer;
   }
 
-  async signal (msg: NetworkMessage) {
+  async signal (msg: SignalMessage) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(msg.data?.signal?.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(msg.data.signal.json));
