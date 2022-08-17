@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/mesh/signal/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/signal/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

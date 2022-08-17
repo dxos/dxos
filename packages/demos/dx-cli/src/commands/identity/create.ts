@@ -13,7 +13,7 @@ export default class Create extends BaseCommand {
     {
       name: 'username'
     }
-  ]
+  ];
 
   async run (): Promise<any> {
     const { args } = await this.parse(Create);

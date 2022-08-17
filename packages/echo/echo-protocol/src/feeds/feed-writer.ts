@@ -45,9 +45,9 @@ export const createMockFeedWriterFromStream = (strem: NodeJS.WritableStream): Fe
 });
 
 export class MockFeedWriter<T> implements FeedWriter<T> {
-  readonly messages: T[] = []
+  readonly messages: T[] = [];
 
-  readonly written = new Event<[T, WriteReceipt]>()
+  readonly written = new Event<[T, WriteReceipt]>();
 
   constructor (
     readonly feedKey = PublicKey.random()

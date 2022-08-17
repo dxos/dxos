@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/gravity/browser-tests/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/gravity/browser-tests/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

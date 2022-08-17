@@ -30,8 +30,8 @@ const createLink = (id: ItemID, type: ItemType, source: Item<any>, target: Item<
   const link = new Link(null as any, id, type, createModel(id), {
     sourceId: source.id,
     targetId: target.id,
-    source: source,
-    target: target
+    source,
+    target
   });
 
   source._links.add(link);

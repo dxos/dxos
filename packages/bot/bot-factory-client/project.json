@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/bot/bot-factory-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/bot/bot-factory-client/dist",
+        "packages/bot/bot-factory-client/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

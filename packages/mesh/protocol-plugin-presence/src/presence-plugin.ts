@@ -76,7 +76,7 @@ export class PresencePlugin {
   private readonly _neighborAlreadyConnected = new Event<string>();
   private readonly _neighborJoined = new Event<NeighborJoinedEventDetails>();
   private readonly _neighborLeft = new Event<string>();
-  readonly graphUpdated = new Event<GraphUpdatedEventDetails>()
+  readonly graphUpdated = new Event<GraphUpdatedEventDetails>();
 
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;

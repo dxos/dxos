@@ -13,7 +13,7 @@ export default class Recover extends BaseCommand {
     {
       name: 'seedphrase'
     }
-  ]
+  ];
 
   async run (): Promise<any> {
     const { args } = await this.parse(Recover);

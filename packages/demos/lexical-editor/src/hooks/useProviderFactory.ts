@@ -3,7 +3,7 @@
 //
 
 import {
-  ProviderAwareness, ProviderFactory, UserState
+  ProviderAwareness, UserState
 } from '@lexical/react/LexicalCollaborationPlugin';
 import { Provider } from '@lexical/yjs';
 import debug from 'debug';
@@ -67,7 +67,7 @@ class TestProvider implements Provider {
   }
 }
 
-export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
+export const useProviderFactory = (item: Item<TextModel>) => useMemo(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
   log('constructed', id, yjsDocMap);
 
   // TODO(burdon): Get from text model (create ID externally).

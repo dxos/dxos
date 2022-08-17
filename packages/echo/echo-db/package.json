@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
@@ -61,7 +61,7 @@
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "memdown": "^5.1.0",
