@@ -122,7 +122,7 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   test('signaling between 3 clients', async () => {
-    const signalMock1 = mockFn<(msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -130,7 +130,7 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock2 = mockFn<(msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock2 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -138,7 +138,7 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock3 = mockFn<(msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock3 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -241,8 +241,8 @@ describe('MessageRouter', () => {
       // Imitates signal network disruptions (e. g. message doubling, ).
       messageDisruption = data => [data]
     }: {
-      onSignal1?: (msg: NetworkMessage) => Promise<void>;
-      onSignal2?: (msg: NetworkMessage) => Promise<void>;
+      onSignal1?: (msg: SignalMessage) => Promise<void>;
+      onSignal2?: (msg: SignalMessage) => Promise<void>;
       messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[];
     }): {mr1: MessageRouter; mr2: MessageRouter} => {
 
@@ -275,8 +275,8 @@ describe('MessageRouter', () => {
         return [];
       };
 
-      const received: NetworkMessage[] = [];
-      const signalMock1 = async (msg: NetworkMessage) => {
+      const received: SignalMessage[] = [];
+      const signalMock1 = async (msg: SignalMessage) => {
         received.push(msg);
       };
 
@@ -306,8 +306,8 @@ describe('MessageRouter', () => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: SendMessageArgs) => [data, data];
 
-      const received: NetworkMessage[] = [];
-      const signalMock1 = async (msg: NetworkMessage) => {
+      const received: SignalMessage[] = [];
+      const signalMock1 = async (msg: SignalMessage) => {
         received.push(msg);
       };
 
