@@ -66,6 +66,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case '@octokit/plugin-paginate-rest': {
+      packageJson.peerDependencies['@octokit/core'] = '>=3.6.0'
+      break;
+    }
+
     case 'eslint-plugin-unused-imports': {
       packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^4.14.2 || ^5.0.0'
       break;

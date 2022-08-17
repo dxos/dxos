@@ -5,7 +5,7 @@
 import { render } from 'ink';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ClientProvider } from '@dxos/react-client';
 
 import { App } from './components';

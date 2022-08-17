@@ -793,8 +793,16 @@
     //
 
     {
+      "packageName": "@dxos/dx-cli",
+      "projectFolder": "packages/demos/dx-cli"
+    },
+    {
       "packageName": "@dxos/hello-world",
       "projectFolder": "packages/demos/hello-world"
+    },
+    {
+      "packageName": "@dxos/kai",
+      "projectFolder": "packages/demos/kai"
     },
     {
       "packageName": "@dxos/kitchen-sink",
