@@ -69,11 +69,11 @@ const FocusPlugin: FC<{
 export const Editor: FC<{
   id: string,
   item: Item<TextModel>,
-  children?: JSX.Element
+  children?: JSX.Element | string
 }> = ({
   id,
   item,
-  children
+  children = ''
 }) => {
   const eventHandler = useMemo(() => new Event(), []);
 

@@ -24,7 +24,7 @@ const Menu = () => {
     const root = editor.getRootElement();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isInsertFrame(event)) {
-        editor.dispatchCommand(INSERT_FRAME_COMMAND, {});
+        editor.dispatchCommand(INSERT_FRAME_COMMAND, undefined);
       }
     };
 
@@ -42,7 +42,7 @@ const Menu = () => {
         // See FloatingCharacterStylesEditor
         const selection = $getSelection();
         const rootElement = editor.getRootElement();
-        const nativeSelection = window.getSelection();
+        const nativeSelection = window.getSelection()!;
 
         if (
           selection !== null &&
@@ -54,7 +54,7 @@ const Menu = () => {
           if (nativeSelection.anchorNode === rootElement) {
             let inner = rootElement;
             while (inner.firstElementChild !== null) {
-              inner = inner.firstElementChild;
+              inner = inner.firstElementChild as any;
             }
             rect = inner.getBoundingClientRect();
           } else {
