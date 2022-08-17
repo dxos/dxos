@@ -3,16 +3,17 @@
 //
 
 import { PublicKey } from '@dxos/protocols';
+import { MakeOptional } from '@dxos/util';
 
 import { Answer, NetworkMessage, Offer, Signal } from '../proto/gen/dxos/mesh/networkMessage';
 
-export interface OfferMessage extends NetworkMessage {
+export interface OfferMessage extends MakeOptional<NetworkMessage, 'messageId'> {
   author: PublicKey;
   recipient: PublicKey;
   data: { offer: Offer };
 }
 
-export interface SignalMessage extends NetworkMessage {
+export interface SignalMessage extends MakeOptional<NetworkMessage, 'messageId'> {
   author: PublicKey;
   recipient: PublicKey;
   data: { signal: Signal };

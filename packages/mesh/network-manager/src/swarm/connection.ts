@@ -10,7 +10,6 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 

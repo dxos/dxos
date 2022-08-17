@@ -15,6 +15,7 @@ import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 import { OfferMessage, SignalMessage } from './signal-messaging';
+import { json } from 'stream/consumers';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -70,7 +71,8 @@ describe('MessageRouter', () => {
   };
 
   test('signaling between 2 clients', async () => {
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received: SignalMessage[] = [];
+    const signalMock1 = async (msg: SignalMessage) => { received.push(msg) };
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url(), onSignal: signalMock1 });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url() });
 
@@ -87,7 +89,7 @@ describe('MessageRouter', () => {
     await router2.signal(msg);
 
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg]);
+      expect(received[0]).toBeAnObjectWith(msg);
     }, 4_000);
   }).timeout(5_000);
 
@@ -122,7 +124,8 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   test('signaling between 3 clients', async () => {
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received1: SignalMessage[] = [];
+    const signalMock1 = async (msg: SignalMessage) => { received1.push(msg) };
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -130,7 +133,8 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock2 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received2: SignalMessage[] = [];
+    const signalMock2 = async (msg: SignalMessage) => { received2.push(msg) };
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -138,7 +142,8 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock3 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received3: SignalMessage[] = [];
+    const signalMock3 = async (msg: SignalMessage) => { received3.push(msg) };
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -162,7 +167,7 @@ describe('MessageRouter', () => {
     };
     await router1.signal(msg1to3);
     await waitForExpect(() => {
-      expect(signalMock3).toHaveBeenCalledWith([msg1to3]);
+      expect(received3[0]).toBeAnObjectWith(msg1to3);
     }, 4_000);
 
     // sending signal from peer2 to peer3.
@@ -175,7 +180,7 @@ describe('MessageRouter', () => {
     };
     await router2.signal(msg2to3);
     await waitForExpect(() => {
-      expect(signalMock3).toHaveBeenCalledWith([msg2to3]);
+      expect(received3[1]).toBeAnObjectWith(msg2to3);
     }, 4_000);
 
     // sending signal from peer3 to peer1.
@@ -188,7 +193,7 @@ describe('MessageRouter', () => {
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg3to1]);
+      expect(received1[0]).toBeAnObjectWith(msg3to1);
     }, 4_000);
   }).timeout(5_000);
 

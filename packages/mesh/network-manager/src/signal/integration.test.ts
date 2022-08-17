@@ -28,7 +28,8 @@ describe('Signal Integration Test', () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
     signalManager.onMessage.on(data => messageRouter.receiveMessage(...data));
 
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const receivedSignals: SignalMessage[] = [] 
+    const signalMock = async (msg: SignalMessage) => { receivedSignals.push(msg); };
     const messageRouter = new MessageRouter({
       sendMessage: signalManager.message.bind(signalManager),
       onSignal: signalMock,
@@ -38,7 +39,7 @@ describe('Signal Integration Test', () => {
 
     return {
       signalManager,
-      signalMock,
+      receivedSignals,
       messageRouter
     };
   };
@@ -93,7 +94,7 @@ describe('Signal Integration Test', () => {
       await peerNetworking1.messageRouter.signal(message);
 
       await waitForExpect(() => {
-        expect(peerNetworking2.signalMock).toHaveBeenCalledWith([message]);
+        expect(peerNetworking2.receivedSignals[0]).toBeAnObjectWith(message);
       });
     }
 
@@ -110,7 +111,7 @@ describe('Signal Integration Test', () => {
       await peerNetworking2.messageRouter.signal(message);
 
       await waitForExpect(() => {
-        expect(peerNetworking1.signalMock).toHaveBeenCalledWith([message]);
+        expect(peerNetworking1.receivedSignals[0]).toBeAnObjectWith(message);
       });
     }
   });

@@ -16,7 +16,7 @@ message NetworkMessage {
   /// Message payload.
   MessageData data = 5;
   /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
-  optional PubKey messageId = 6;
+  PubKey messageId = 6;
 }
 
 message MessageData {

@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { SignalMessage } from '../signal';
 
 /**

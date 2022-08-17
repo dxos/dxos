@@ -45,7 +45,8 @@ describe('SignalClient', () => {
     const msg: NetworkMessage = {
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
+      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
+      messageId: PublicKey.random()
     };
     await api2.message(peer2, peer1, msg);
     await waitForExpect(() => {
@@ -85,7 +86,8 @@ describe('SignalClient', () => {
     const msg: NetworkMessage = {
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
+      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
+      messageId: PublicKey.random()
     };
     await api1.message(peer2, peer1, msg);
 
@@ -139,7 +141,8 @@ describe('SignalClient', () => {
     const msg: NetworkMessage = {
       sessionId,
       topic,
-      data: { offer: { json: 'bar' } }
+      data: { offer: { json: 'bar' } },
+      messageId: PublicKey.random()
     };
     await api1.message(peer2, peer1, msg);
 
