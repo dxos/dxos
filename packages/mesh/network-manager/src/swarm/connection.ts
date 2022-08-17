@@ -11,7 +11,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
-import { SignalMessage } from '../signal';
+import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
@@ -54,6 +54,9 @@ export class Connection {
   private _transport: Transport | undefined;
   private _bufferedSignals: NetworkMessage[] = [];
 
+  public readonly peerNotFound = new Event<boolean>();
+  public readonly receivedAnswer = new Event<boolean>();
+
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
 
@@ -63,7 +66,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _sendSignal: (msg: SignalMessage) => Promise<void>,
+    private readonly _signalMessaging: SignalMessaging,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -80,6 +83,38 @@ export class Connection {
     return this._protocol;
   }
 
+  initiate () {
+    this._signalMessaging.offer({
+      author: this.ownId,
+      recipient: this.remoteId,
+      sessionId: this.sessionId,
+      topic: this.topic,
+      data: { offer: {} }
+    })
+      .then(answer => {
+        log(`Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`);
+        if (this.state !== ConnectionState.INITIAL) {
+          log('Ignoring answer.');
+          return;
+        }
+
+        if (answer.accept) {
+          try {
+            this.connect();
+          } catch (err: any) {
+            this.errors.raise(err);
+          }
+        } else {
+          // If the peer rejected our connection remove it from the set of candidates.
+          this.peerNotFound.emit(true);
+        }
+        this.receivedAnswer.emit(true);
+      })
+      .catch(err => {
+        this.errors.raise(err);
+      });
+  }
+
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
 
@@ -94,7 +129,7 @@ export class Connection {
       sessionId: this.sessionId,
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: this._sendSignal
+      sendSignal: this._signalMessaging.signal.bind(this._signalMessaging)
     });
 
     this._transport.connected.once(() => {

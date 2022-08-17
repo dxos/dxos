@@ -207,35 +207,7 @@ export class Swarm {
 
     log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
     const connection = this._createConnection(true, remoteId, sessionId);
-    this._signalMessaging.offer({
-      author: this._ownPeerId,
-      recipient: remoteId,
-      sessionId,
-      topic: this._topic,
-      data: { offer: {} }
-    })
-      .then(answer => {
-        log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
-        if (connection.state !== ConnectionState.INITIAL) {
-          log('Ignoring answer.');
-          return;
-        }
-
-        if (answer.accept) {
-          try {
-            connection.connect();
-          } catch (err: any) {
-            this.errors.raise(err);
-          }
-        } else {
-          // If the peer rejected our connection remove it from the set of candidates.
-          this._discoveredPeers.delete(remoteId);
-        }
-        this._topology.update();
-      })
-      .catch(err => {
-        this.errors.raise(err);
-      });
+    connection.initiate();
 
     this._topology.update();
   }
@@ -250,7 +222,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: SignalMessage) => this._signalMessaging.signal(msg),
+      this._signalMessaging,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
@@ -274,6 +246,10 @@ export class Swarm {
         this.connectionRemoved.emit(connection);
       }
     });
+
+    // If the peer rejected our connection remove it from the set of candidates.
+    connection.peerNotFound.on(() => this._discoveredPeers.delete(remoteId));
+    connection.receivedAnswer.on(() => this._topology.update());
 
     return connection;
   }
