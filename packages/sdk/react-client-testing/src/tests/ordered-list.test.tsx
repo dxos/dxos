@@ -28,6 +28,7 @@ const createTestComponents = async () => {
       name: faker.name.firstName()
     }
   })));
+
   return { client, party, items };
 };
 

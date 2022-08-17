@@ -62,7 +62,7 @@
     "@types/level-js": "~4.0.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/memdown": "^3.0.0",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/readable-stream": "^2.3.9",
@@ -71,7 +71,7 @@
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
     "jsonify": "^0.0.0",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "react": "^18.1.0",
     "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"
