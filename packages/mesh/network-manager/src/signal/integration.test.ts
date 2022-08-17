@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, mockFn } from 'earljs';
+import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/protocols';
@@ -28,8 +28,10 @@ describe('Signal Integration Test', () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
     signalManager.onMessage.on(data => messageRouter.receiveMessage(...data));
 
-    const receivedSignals: SignalMessage[] = [] 
-    const signalMock = async (msg: SignalMessage) => { receivedSignals.push(msg); };
+    const receivedSignals: SignalMessage[] = [];
+    const signalMock = async (msg: SignalMessage) => {
+      receivedSignals.push(msg);
+    };
     const messageRouter = new MessageRouter({
       sendMessage: signalManager.message.bind(signalManager),
       onSignal: signalMock,

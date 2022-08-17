@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, mockFn } from 'earljs';
+import { expect } from 'earljs';
 import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
@@ -15,7 +15,6 @@ import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
 import { OfferMessage, SignalMessage } from './signal-messaging';
-import { json } from 'stream/consumers';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -72,7 +71,9 @@ describe('MessageRouter', () => {
 
   test('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
-    const signalMock1 = async (msg: SignalMessage) => { received.push(msg) };
+    const signalMock1 = async (msg: SignalMessage) => {
+      received.push(msg);
+    };
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url(), onSignal: signalMock1 });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url() });
 
@@ -125,7 +126,9 @@ describe('MessageRouter', () => {
 
   test('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
-    const signalMock1 = async (msg: SignalMessage) => { received1.push(msg) };
+    const signalMock1 = async (msg: SignalMessage) => {
+      received1.push(msg);
+    };
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -134,7 +137,9 @@ describe('MessageRouter', () => {
           async () => ({ accept: true })
       });
     const received2: SignalMessage[] = [];
-    const signalMock2 = async (msg: SignalMessage) => { received2.push(msg) };
+    const signalMock2 = async (msg: SignalMessage) => {
+      received2.push(msg);
+    };
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -143,7 +148,9 @@ describe('MessageRouter', () => {
           async () => ({ accept: true })
       });
     const received3: SignalMessage[] = [];
-    const signalMock3 = async (msg: SignalMessage) => { received3.push(msg) };
+    const signalMock3 = async (msg: SignalMessage) => {
+      received3.push(msg);
+    };
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
