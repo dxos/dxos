@@ -67,7 +67,9 @@ class TestProvider implements Provider {
   }
 }
 
-export const useProviderFactory = (item: Item<TextModel>): ProviderFactory => useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
+export const useProviderFactory = (
+  item: Item<TextModel>
+): ProviderFactory => useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
   log('constructed', id, yjsDocMap);
 
   // TODO(burdon): Get from text model (create ID externally).

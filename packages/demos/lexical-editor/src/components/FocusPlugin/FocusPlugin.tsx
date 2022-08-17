@@ -3,7 +3,7 @@
 //
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import React, { FC, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 
 import { Event } from '@dxos/async';
 

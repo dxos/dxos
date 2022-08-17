@@ -3,10 +3,10 @@
 //
 
 import { css } from '@emotion/css';
-import LexicalComposer from '@lexical/react/LexicalComposer';
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
-import LexicalPlainTextPlugin from '@lexical/react/LexicalPlainTextPlugin';
+import { ContentEditable as LexicalContentEditable } from '@lexical/react/LexicalContentEditable';
+import { PlainTextPlugin as LexicalPlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import React, { FC, useEffect, useMemo } from 'react';
 
 import { Event } from '@dxos/async';
@@ -79,7 +79,7 @@ export const Editor: FC<{
 
   const handleClick = () => {
     eventHandler.emit();
-  }
+  };
 
   // https://github.com/facebook/lexical
   return (
@@ -97,7 +97,7 @@ export const Editor: FC<{
         }}
       >
         <LexicalPlainTextPlugin
-          placeholder={null}
+          placeholder=''
           contentEditable={(
             <LexicalContentEditable
               spellCheck={false}

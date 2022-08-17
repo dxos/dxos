@@ -3,7 +3,7 @@
 //
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getSelection, $isRangeSelection } from 'lexical';
+import { $getSelection } from 'lexical';
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -13,7 +13,7 @@ import { INSERT_FRAME_COMMAND } from '../FramePlugin';
 const isInsertFrame = (event: KeyboardEvent) => {
   const { key, metaKey } = event;
   return metaKey && key === 'i';
-}
+};
 
 const Menu = () => {
   const [editor] = useLexicalComposerContext();
@@ -31,7 +31,7 @@ const Menu = () => {
     root?.addEventListener('keydown', handleKeyDown);
     return () => {
       root?.removeEventListener('keydown', handleKeyDown);
-    }
+    };
   }, [editor]);
 
   // TODO(burdon): Show menu in sidebar.

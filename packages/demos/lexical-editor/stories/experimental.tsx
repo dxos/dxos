@@ -4,10 +4,10 @@
 
 import { css } from '@emotion/css';
 import { HashtagNode } from '@lexical/hashtag';
-import LexicalComposer from '@lexical/react/LexicalComposer';
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import LexicalContentEditable from '@lexical/react/LexicalContentEditable';
-import LexicalRichTextPlugin from '@lexical/react/LexicalRichTextPlugin';
+import { ContentEditable as LexicalContentEditable } from '@lexical/react/LexicalContentEditable';
+import { RichTextPlugin as LexicalRichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { $getRoot, $getSelection } from 'lexical';
 import type { EditorState } from 'lexical';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
@@ -194,8 +194,8 @@ const _Editor: FC<{
     >
       <div className={editorStyles}>
         <LexicalRichTextPlugin
-          contentEditable={<LexicalContentEditable spellcheck={false} />}
-          placeholder={null}
+          contentEditable={<LexicalContentEditable spellCheck={false} />}
+          placeholder=''
         />
         {/*
         <LexicalRichTextPlugin

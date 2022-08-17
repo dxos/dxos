@@ -9,7 +9,8 @@ import React, { FC, useEffect, useState } from 'react';
 
 import { Item, InvitationDescriptor, Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import { useClient, ClientProvider } from '@dxos/react-client';
+import { ProfileInitializer } from '@dxos/react-client-testing';
 import { TextModel } from '@dxos/text-model';
 
 import { Editor, useProviderFactory } from '../src';
