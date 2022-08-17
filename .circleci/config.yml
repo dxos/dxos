@@ -30,7 +30,8 @@ jobs:
       - *install_dependencies
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
+      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
+      - run: pnpm nx run-many --target=check --skip-nx-cache
 
 workflows:
   build:
