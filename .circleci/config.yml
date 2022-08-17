@@ -31,8 +31,7 @@ jobs:
       - run: pnpx playwright install
       - *cache_save
       - nx/set-shas
-      # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
-      - run: pnpm nx run kitchen-sink:check --skip-nx-cache
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
 
 workflows:
   build:
