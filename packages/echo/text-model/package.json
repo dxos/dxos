@@ -34,7 +34,7 @@
     "@dxos/model-factory": "workspace:*",
     "@types/node": "^16.11.27",
     "assert": "^2.0.0",
-    "yjs": "^13.4.1"
+    "yjs": "^13.5.41"
   },
   "devDependencies": {
     "@dxos/eslint-plugin": "~1.0.34",
