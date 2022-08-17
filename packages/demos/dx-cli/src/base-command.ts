@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import * as path from 'path';
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
 const ENV_DX_CONFIG = 'DX_CONFIG';
