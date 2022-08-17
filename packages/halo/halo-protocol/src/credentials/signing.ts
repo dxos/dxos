@@ -6,7 +6,7 @@ import { canonicalStringify, Keyring } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
-import { Credential } from './proto';
+import { Credential } from '../proto';
 
 /**
  * @returns The input message to be signed for a given credential.

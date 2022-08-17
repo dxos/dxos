@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexSet } from '@dxos/util';
 import { isValidAuthorizedDeviceCredential } from './assertions';
 
-import { Chain, Credential } from './proto';
+import { Chain, Credential } from '../proto';
 import { getSignaturePayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';

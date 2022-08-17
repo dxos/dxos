@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Keyring } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 
-import { Credential } from './proto';
+import { Credential } from '../proto';
 import { getSignaturePayload, sign } from './signing';
 import { getCredentialAssertion, MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519 } from './verifier';
