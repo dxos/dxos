@@ -37,14 +37,11 @@ export const useAsyncEffect = <T> (
   destructor?: ((value?: T) => void) | any[],
   deps?: any[]
 ) => {
-  const [
-    effectDestructor,
-    effectDeps
-  ] = typeof destructor === 'function' ? [destructor, deps] : [undefined, destructor];
+  const [effectDestructor, effectDeps] =
+    typeof destructor === 'function' ? [destructor, deps] : [undefined, destructor];
 
   useEffect(() => {
     let mounted = true;
-
     let value: T | undefined;
     const asyncResult = callback(() => mounted);
 

@@ -8,14 +8,17 @@ import { PublicKey } from '@dxos/protocols';
 
 export type AppState = {
   debug?: boolean
+  error?: string
   partyKey?: PublicKey
 }
 
 export interface ActionHandler {
+  setError (error: Error | string): void
   setPartyKey (partyKey: PublicKey): void
 }
 
 enum ActionType {
+  SET_ERROR,
   SET_PARTY_KEY
 }
 
@@ -26,6 +29,12 @@ type Action = {
 
 const appStateReducer = (state: AppState, action: Action) => {
   switch (action.type) {
+    case ActionType.SET_ERROR: {
+      return {
+        ...state,
+        error: action.value
+      };
+    }
     case ActionType.SET_PARTY_KEY: {
       return {
         ...state,
@@ -48,6 +57,9 @@ export const AppStateProvider: FC<{
 }) => {
   const [state, dispatch] = useReducer(appStateReducer, { debug });
   const handler = useMemo<ActionHandler>(() => ({
+    setError: (error: Error | string) => {
+      dispatch({ type: ActionType.SET_ERROR, value: error });
+    },
     setPartyKey: (partyKey: PublicKey) => {
       dispatch({ type: ActionType.SET_PARTY_KEY, value: partyKey });
     }

@@ -37,10 +37,10 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "eslint": "^7.12.1",
     "expect": "~27.0.2",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "typescript": "^4.7.2"
   },
   "publishConfig": {
