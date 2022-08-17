@@ -5,10 +5,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
     "build:test": "toolchain build:test",

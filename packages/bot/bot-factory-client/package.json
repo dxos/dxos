@@ -5,11 +5,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "./dist/src/index.js": "./dist/browser.js",
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain bundle:library",
     "build:test": "toolchain build:test --bundle",

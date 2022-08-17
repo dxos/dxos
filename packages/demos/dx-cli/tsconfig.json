@@ -9,13 +9,10 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../sdk/client"
     },
     {
-      "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/crypto"
+      "path": "../../sdk/config"
     }
   ],
   "types": [

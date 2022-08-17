@@ -67,7 +67,13 @@
       "path": "../../sdk/react-components"
     },
     {
+      "path": "../../sdk/react-registry-client"
+    },
+    {
       "path": "../../sdk/react-toolkit"
+    },
+    {
+      "path": "../../sdk/registry-client"
     },
     {
       "path": "../devtools-mesh"

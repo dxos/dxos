@@ -36,12 +36,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
       "path": "../client"
     },
     {

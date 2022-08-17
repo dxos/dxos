@@ -4,10 +4,10 @@
   "description": "A consistent store for your hypercore feeds.",
   "license": "MIT",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "src",
     "dist"

@@ -26,6 +26,9 @@
       "path": "../../common/protocols"
     },
     {
+      "path": "../../common/react-async"
+    },
+    {
       "path": "../../common/util"
     },
     {

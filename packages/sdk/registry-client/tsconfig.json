@@ -41,9 +41,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../client"
     },
     {

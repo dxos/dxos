@@ -37,9 +37,9 @@
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "fs-extra": "^8.1.0",
-    "js-yaml": "^4.1.0",
-    "inquirer": "~9.0.2",
     "ink": "^3.2.0",
+    "inquirer": "~9.0.2",
+    "js-yaml": "^4.1.0",
     "react": "^18.1.0"
   },
   "devDependencies": {

@@ -4,10 +4,10 @@
   "description": "ECHO database.",
   "license": "MIT",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"

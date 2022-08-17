@@ -24,12 +24,6 @@
       "path": "../../common/rpc"
     },
     {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
-    {
       "path": "../../mesh/network-manager"
     },
     {

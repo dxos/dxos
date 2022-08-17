@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../echo/object-model"
-    },
-    {
       "path": "../../sdk/client"
     },
     {

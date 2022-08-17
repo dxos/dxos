@@ -5,12 +5,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:fs": "./dist/src/loaders/empty-module-stub.js",
     "node:path": "path-browserify"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "esbuild-plugin.js",

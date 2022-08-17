@@ -23,6 +23,9 @@
       "path": "../../common/codec-protobuf"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -30,6 +33,9 @@
     },
     {
       "path": "../../common/random-access-multi-storage"
+    },
+    {
+      "path": "../../common/react-async"
     },
     {
       "path": "../../common/rpc"

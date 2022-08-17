@@ -1,26 +1,31 @@
 {
   "name": "@dxos/ridoculous",
-  "description": "Markdown processing CLI and library.",
   "version": "2.33.8",
+  "description": "Markdown processing CLI and library.",
   "license": "MIT",
   "type": "module",
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "ridoculous": "./bin/ridoculous.js"
   },
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "build:test": "pnpm build && pnpm lint",
     "info": "tsc --showConfig | jq",
     "lint": "eslint .",
+    "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
-    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose",
-    "test": "mocha"
+    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
+  },
+  "mocha": {
+    "loader": "ts-node/esm",
+    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
     "array-iterate": "~2.0.1",
+    "chalk": "^4.1.0",
     "debug": "^4.3.3",
     "glob": "~7.1.6",
     "js-yaml": "^4.1.0",
@@ -35,8 +40,7 @@
     "to-vfile": "~7.2.3",
     "unist-builder": "~3.0.0",
     "unist-util-visit": "^4.1.0",
-    "yargs": "~16.2.0",
-    "chalk": "^4.1.0"
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
@@ -48,7 +52,7 @@
     "@types/jest": "^28.1.6",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.11.27",
-    "@types/protocol-buffers-schema":  "^3.4.1",
+    "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
     "diff": "~5.1.0",
     "eslint": "^7.12.1",
@@ -58,9 +62,5 @@
     "ts-jest": "^28.0.7",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
-  },
-  "mocha": {
-    "spec": "src/**/*.test.ts",
-    "loader": "ts-node/esm"
   }
 }

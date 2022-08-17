@@ -13,6 +13,12 @@
       "path": "../../common/crypto"
     },
     {
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/random-access-multi-storage"
+    },
+    {
       "path": "../../echo/echo-db"
     },
     {
