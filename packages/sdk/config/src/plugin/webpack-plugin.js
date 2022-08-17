@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import yaml from 'js-yaml';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import { DefinePlugin, NormalModuleReplacementPlugin } from 'webpack';
 
 import { mapFromKeyValues } from '../config';

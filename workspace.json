@@ -69,6 +69,7 @@
     "util": "packages/common/util",
     "wallet-extension": "packages/wallet/wallet-extension",
     "wallet-playground": "packages/wallet/wallet-playground",
-    "wallet": "packages/wallet/wallet"
+    "wallet": "packages/wallet/wallet",
+    "vite-project": "packages/demos/vite-project"
   }
 }

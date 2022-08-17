@@ -7,7 +7,7 @@ import type { Plugin } from 'esbuild';
 import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
 import assert from 'node:assert';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 const log = debug('dxos:config:plugin');
 
