@@ -554,10 +554,10 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/eslint-plugin': ~1.0.34
       '@dxos/protocols-toolchain': workspace:*
-      '@oclif/core': ^1.12.0
+      '@oclif/core': ^1.14.1
       '@oclif/plugin-help': ^5.1.12
-      '@oclif/plugin-plugins': ^2.0.1
-      '@oclif/test': ^2.1.0
+      '@oclif/plugin-plugins': ^2.1.0
+      '@oclif/test': ^2.1.1
       '@octokit/core': ^4.0.4
       '@types/chai': ^4.2.15
       '@types/fs-extra': ^9.0.4
@@ -576,7 +576,7 @@ importers:
       inquirer: ~9.0.2
       js-yaml: ^4.1.0
       mocha: ^8.4.0
-      oclif: ^3.1.1
+      oclif: ^3.1.2
       react: ^18.1.0
       shx: ^0.3.3
       ts-node: ^10.8.2
@@ -17233,7 +17233,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       at-least-node: 1.0.0
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
       jsonfile: 6.1.0
       universalify: 2.0.0
 
@@ -17332,7 +17332,7 @@ packages:
       console-control-strings: 1.1.0
       has-unicode: 2.0.1
       object-assign: 4.1.1
-      signal-exit: 3.0.6
+      signal-exit: 3.0.7
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wide-align: 1.1.5
@@ -19435,7 +19435,7 @@ packages:
       has-tostringtag: 1.0.0
 
   /is-typedarray/1.0.0:
-    resolution: {integrity: sha1-5HnICFjfDBsR3dppQPlgEfzaSpo=}
+    resolution: {integrity: sha512-cyA56iCMHAh5CdzjJIa4aohJyeO1YbwLi3Jc35MmRU6poroFjIGZzUzupGiRPOjgHg9TLu43xbpwXk523fMxKA==}
 
   /is-unc-path/0.1.2:
     resolution: {integrity: sha1-arBTpyVzwQJQ/0FqOBTDUXivObk=}
@@ -26147,7 +26147,7 @@ packages:
     dev: false
 
   /remove-trailing-separator/1.1.0:
-    resolution: {integrity: sha1-wkvOKig62tW8P1jg1IJJuSN52O8=}
+    resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
 
   /renderkid/2.0.7:
     resolution: {integrity: sha512-oCcFyxaMrKsKcTY59qnCAtmDVSLfPbrv6A3tVbPdFMMrv5jaK10V6m40cKsoPNhAqN6rmHW9sswW4o3ruSrwUQ==}
@@ -29932,7 +29932,7 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       is-typedarray: 1.0.0
-      signal-exit: 3.0.6
+      signal-exit: 3.0.7
       typedarray-to-buffer: 3.1.5
 
   /write-file-atomic/4.0.1:
@@ -30290,7 +30290,7 @@ packages:
       is-scoped: 2.1.0
       isbinaryfile: 4.0.10
       lodash: 4.17.21
-      log-symbols: 4.0.0
+      log-symbols: 4.1.0
       mem-fs: 2.2.1
       mem-fs-editor: 9.5.0_mem-fs@2.2.1
       minimatch: 3.1.2

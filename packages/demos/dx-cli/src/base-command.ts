@@ -11,13 +11,15 @@ import * as path from 'path';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 
+const ENV_DX_CONFIG = 'DX_CONFIG';
+
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigObject;
   private _client?: Client;
 
   static override globalFlags = {
     config: Flags.string({
-      env: 'DX_CONFIG',
+      env: ENV_DX_CONFIG,
       description: 'Specify config file',
       helpGroup: 'GLOBAL',
       default: async (context: any) => {
@@ -38,9 +40,12 @@ export abstract class BaseCommand extends Command {
 
     // Load user config file.
     const { flags } = await this.parse();
-    const { config: configFile } = flags;
+    const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
+    } else {
+      console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
+      process.exit(1);
     }
   }
 
