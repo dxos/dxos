@@ -13,6 +13,7 @@ import path from 'path';
 // @ts-ignore
 // import config from '../../../config/config.yml';
 
+// TODO(burdon): SecurityError: localStorage is not available for opaque origins
 describe('config', () => {
   const config = yaml.load(String(fs.readFileSync(path.join(__dirname, '../../../config/config.yml')))) as any;
 

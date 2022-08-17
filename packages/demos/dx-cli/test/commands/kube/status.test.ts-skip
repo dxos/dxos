@@ -4,6 +4,7 @@
 
 import { expect, test } from '@oclif/test';
 
+// TODO(burdon): SecurityError: localStorage is not available for opaque origins
 describe('kube:status', () => {
   test
     .stdout()
