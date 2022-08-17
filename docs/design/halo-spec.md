@@ -467,7 +467,7 @@ The protocol protocol buffer schema are defined [here](./refs/credentials.proto)
 
 ### 8.1. Protocol Schema
 
-<!-- @code(./refs/credentials.proto) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto) -->
 
 ```protobuf
 //
@@ -555,8 +555,13 @@ message Proof {
   Timestamp creationDate = 2;
   PubKey signer = 3;        // Entity that created the proof (e.g., Agent, Device, Party).
   optional bytes nonce = 4; // Used in Presentations to protect against replay attacks.
-  bytes value = 5; // Signature.
+
+  /// Signature. 
+  /// Excluded from signed data.
+  bytes value = 5; 
   /// Must be present if signer is not credential issuer. Establishes the authority of the signer. Proves that the signer can issue such credentials.
+  /// Excluded from signed data.
+  // TODO(dmaretskyi): Should we sign the chain?
   optional Chain chain = 6;
 }
 
@@ -573,7 +578,7 @@ message Proof {
  */
 message Chain {
   /// A mapping from the key to the credential that establishes it's authority. Keys must be encoded to string in lowercase hex with leading '0x'.
-  map<string, Credential> keys = 1;
+  map<string, Credential> credentials = 1;
 }
 
 //
@@ -584,11 +589,11 @@ message Chain {
 //
 
 message Credential {
-  PubKey id = 1; // Credential identifier (e.g., for storage indexing).
+  optional PubKey id = 1; // Credential identifier (e.g., for storage indexing).
   PubKey issuer = 2; // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
   Timestamp issuanceDate = 3;
-  Timestamp expirationDate = 4;
-  bytes expirationRef = 5; // Could reference blockchain or epoch number.
+  optional Timestamp expirationDate = 4;
+  optional bytes expirationRef = 5; // Could reference blockchain or epoch number.
   Claim subject = 10;
   Proof proof = 11;
 }
