@@ -7,15 +7,15 @@ aliases:
   - &cache_restore
     restore_cache:
       keys:
-        - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
-        - pnpm-store-v1-{{ arch }}-
+        - Xpnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - Xpnpm-store-v1-{{ arch }}-
   - &cache_save
     save_cache:
       paths:
+        - node_modules
         - ~/.local/share/pnpm/store/v3
-      key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
-  - &install_dependencies
-    run: pnpm install
+        - ~/.cache/ms-playwright
+      key: Xpnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
   main:
@@ -27,11 +27,12 @@ jobs:
     steps:
       - checkout
       - *cache_restore
-      - *install_dependencies
+      - run: pnpm install
+      - run: pnpx playwright install
       - *cache_save
       - nx/set-shas
       # - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=check
-      - run: pnpm nx run-many --target=check --skip-nx-cache
+      - run: pnpm nx run kitchen-sink:check --skip-nx-cache
 
 workflows:
   build:
