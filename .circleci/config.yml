@@ -7,15 +7,13 @@ aliases:
   - &cache_restore
     restore_cache:
       keys:
-        - Xpnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
-        - Xpnpm-store-v1-{{ arch }}-
+        - pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+        - pnpm-store-v1-{{ arch }}-
   - &cache_save
     save_cache:
       paths:
-        - node_modules
         - ~/.local/share/pnpm/store/v3
-        - ~/.cache/ms-playwright
-      key: Xpnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+      key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
   main:
