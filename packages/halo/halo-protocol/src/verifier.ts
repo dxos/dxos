@@ -3,8 +3,11 @@
 //
 
 import { Keyring } from '@dxos/credentials';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexSet } from '@dxos/util';
+import { isValidAuthorizedDeviceCredential } from './assertions';
 
-import { Credential } from './proto';
+import { Chain, Credential } from './proto';
 import { getSignaturePayload } from './signing';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
@@ -15,7 +18,14 @@ export type VerificationResult =
 
 export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
   if (!credential.issuer.equals(credential.proof.signer)) {
-    return { kind: 'fail', errors: ['Chain credentials are not yet supported'] };
+    if(!credential.proof.chain) {
+      return { kind: 'fail', errors: [`Delegated credential is missing credential chain.`]}
+    }
+
+    const result = await verifyChain(credential.proof.chain, credential.issuer, credential.proof.signer);
+    if (result.kind === 'fail') {
+      return result;
+    }
   }
 
   {
@@ -44,3 +54,42 @@ const verifySignature = async (credential: Credential): Promise<VerificationResu
 
   return { kind: 'pass' };
 };
+
+/**
+ * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
+ */
+const verifyChain = async (chain: Chain, issuer: PublicKey, signer: PublicKey): Promise<VerificationResult> => {
+  // Keep track of process keys to avoid infinite recursion.
+  const seenKeys = new ComplexSet<PublicKey>(x => x.toHex())
+
+  const verify = async (key: PublicKey): Promise<VerificationResult> => {
+    if(seenKeys.has(key)) {
+      return { kind: 'fail', errors: [`Invalid credential chain: cyclic chain detected.`] };
+    }
+    seenKeys.add(key);
+
+    const credential = chain.credentials?.[key.toHex()];
+    if(!credential) {
+      return { kind: 'fail', errors: [`Invalid credential chain: missing credential for key: ${key}`] };
+    }
+
+    {
+      const result = await verifyCredential(credential);
+      if (result.kind === 'fail') {
+        return result;
+      }
+    }
+
+    if(!isValidAuthorizedDeviceCredential(credential, key, issuer)) {
+      return { kind: 'fail', errors: [`Invalid credential chain: invalid assertion for key: ${key}`] };
+    }
+
+    if(!credential.issuer.equals(issuer)) {
+      return verify(credential.issuer);
+    }
+
+    return { kind: 'pass' }
+  }
+
+  return verify(signer)
+}
