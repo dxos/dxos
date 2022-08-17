@@ -1,7 +1,8 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["DOM"] 
   },
   "include": [
     "src",
@@ -16,6 +17,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/testutils"

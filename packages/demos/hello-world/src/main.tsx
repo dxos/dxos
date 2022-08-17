@@ -3,20 +3,23 @@
 //
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 
 import { App } from './App';
 
+const root = createRoot(document.getElementById('root') as HTMLElement);
+const configProvider = async () => new Config(await Dynamics(), Defaults());
+
 (() => {
-  ReactDOM.render(
-    <ClientProvider>
+  root.render(
+    <ClientProvider config={configProvider}>
       <ProfileInitializer>
         <App />
       </ProfileInitializer>
-    </ClientProvider>,
-    document.getElementById('root')
+    </ClientProvider>
   );
 })();

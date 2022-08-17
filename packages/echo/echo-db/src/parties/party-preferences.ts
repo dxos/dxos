@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { PARTY_TITLE_PROPERTY, DataParty } from '.';
 import { Preferences } from '../halo/preferences';
+import { PARTY_TITLE_PROPERTY, DataParty } from './data-party';
 
 export interface ActivationOptions {
-  global?: boolean;
-  device?: boolean;
+  global?: boolean
+  device?: boolean
 }
 
 /**

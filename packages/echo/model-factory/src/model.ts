@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { ItemID } from '@dxos/echo-protocol';
+import type { ItemID } from '@dxos/echo-protocol';
 
 import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
 

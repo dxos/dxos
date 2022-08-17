@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
@@ -21,8 +21,7 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 export class InvitationFactory {
   constructor (
     private readonly _partyProcessor: PartyStateProvider,
-    // This needs to be a provider in case this is a backend for the HALO party.
-    // Then the identity would be changed after this is instantiated.
+    private readonly _genesisFeedKey: PublicKey,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _credentialsWriter: FeedWriter<HaloMessage>,
     private readonly _networkManager: NetworkManager
@@ -62,6 +61,7 @@ export class InvitationFactory {
     const responder = new GreetingResponder(
       this._networkManager,
       this._partyProcessor,
+      this._genesisFeedKey,
       this._credentialsSigner,
       this._credentialsWriter
     );

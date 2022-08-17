@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/crypto';
 import { failUndefined, raise } from '@dxos/debug';
 import {
   EchoEnvelope,
@@ -17,6 +16,7 @@ import {
   SubscribeEntityStreamRequest,
   SubscribeEntityStreamResponse
 } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { EntityNotFoundError } from '../errors';
 import { Item } from './item';

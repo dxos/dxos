@@ -2,7 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage } from '@dxos/credentials';
+import {
+  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
+  KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
+} from '@dxos/credentials';
+import { humanize } from '@dxos/util';
 
 import { ContactManager, Preferences } from '../halo';
 import { CredentialsSigner } from './credentials-signer';
@@ -23,8 +27,6 @@ export interface IdentityCredentials {
   contacts: ContactManager | undefined
 }
 
-export type IdentityCredentialsProvider = () => IdentityCredentials | undefined
-
 export const createTestIdentityCredentials = async (keyring: Keyring): Promise<IdentityCredentials> => {
   const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
@@ -38,7 +40,7 @@ export const createTestIdentityCredentials = async (keyring: Keyring): Promise<I
   messageMap.set(deviceKey.publicKey.toHex(), partyGenesis);
   const deviceKeyChain = Keyring.buildKeyChain(deviceKey.publicKey, messageMap, [feedKey.publicKey]);
 
-  const displayName = identityKey.publicKey.humanize();
+  const displayName = humanize(identityKey.publicKey);
   const identityInfo = createIdentityInfoMessage(keyring, displayName, identityKey);
 
   return {

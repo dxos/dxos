@@ -3,37 +3,52 @@
 //
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
+import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { SignalApi } from './signal-api';
 
-// TODO(burdon): Document methods.
+/**
+ * Signal peer discovery interface.
+ */
 export interface SignalConnection {
   /**
-   * Find peers (triggers async event).
+   * Join topic on signal network, to be discoverable by other peers.
    */
-  lookup (topic: PublicKey): void
+  join (topic: PublicKey, peerId: PublicKey): void
 
   /**
-   *
+   * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  // TODO(burdon): Document.
-  offer (msg: SignalApi.SignalMessage): Promise<SignalApi.Answer>
+  leave (topic: PublicKey, peerId: PublicKey): void
+}
+
+/**
+ * Signal peer messaging interface.
+ */
+export interface SignalMessaging {
+  /**
+   * Offer/answer RPC.
+   */
+  offer (msg: SignalMessage): Promise<Answer>
 
   /**
-   * Send message to peer.
+   * Reliably send a signal to a peer.
    */
-  signal (msg: SignalApi.SignalMessage): Promise<void>
+  signal (msg: SignalMessage): Promise<void>
 }
 
 export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalApi.Status[]>
   commandTrace: Event<SignalApi.CommandTrace>
-  peerCandidatesChanged: Event<[topic: PublicKey, candidates: PublicKey[]]>
-  onSignal: Event<SignalApi.SignalMessage>
+  swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
+  onMessage: Event<SignalMessage>
 
   getStatus (): SignalApi.Status[]
-  join (topic: PublicKey, peerId: PublicKey): void
-  leave (topic: PublicKey, peerId: PublicKey): void
   destroy(): Promise<void>
+  /**
+   * Send message to peer.
+   */
+  message (msg: SignalMessage): Promise<void>
 }

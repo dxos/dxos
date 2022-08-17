@@ -4,12 +4,11 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*",
-    "./package.json"
+    "src/**/*"
   ],
   "references": [
     {
-      "path": "../../common/crypto"
+      "path": "../../common/protocols"
     },
     {
       "path": "../broadcast"

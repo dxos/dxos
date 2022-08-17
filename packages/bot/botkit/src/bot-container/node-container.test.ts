@@ -2,14 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 import { existsSync } from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
@@ -165,7 +166,10 @@ describe('Node container', function () {
         await rpc.open();
 
         const command = PublicKey.random().asUint8Array();
-        const { response } = await rpc.rpc.command({ command });
+        const { response } = await rpc.rpc.command({
+          botId: PublicKey.random().toHex(),
+          command
+        });
         assert(response);
         expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
 

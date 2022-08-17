@@ -8,6 +8,7 @@ syntax = "proto3";
 package dxos.echo.feed;
 
 import "google/protobuf/any.proto";
+
 import "./snapshot.proto";
 import "./timeframe.proto";
 
@@ -39,16 +40,16 @@ message EchoEnvelope {
   string itemId = 1;
 
   // Create item.
-  ItemGenesis genesis = 10;
+  optional ItemGenesis genesis = 10;
 
   // Item system mutations.
-  ItemMutation itemMutation = 11;
+  optional ItemMutation itemMutation = 11;
 
   // Model-specific mutations.
-  bytes mutation = 12;
+  optional bytes mutation = 12;
 
   /// Set the model to the provided snapshot.
-  ModelSnapshot snapshot = 13;
+  optional ModelSnapshot snapshot = 13;
 }
 
 // TODO(burdon): Document (different from parent/child).?
@@ -63,10 +64,10 @@ message LinkData {
  */
 // TODO(burdon): EntityGenesis?
 message ItemGenesis {
-  string itemType = 1;
+  optional string itemType = 1;
   string modelType = 2;
-  string modelVersion = 3;
-  LinkData link = 4;
+  optional string modelVersion = 3;
+  optional LinkData link = 4;
 }
 
 /**
@@ -79,6 +80,6 @@ message ItemMutation {
     RESTORE = 2;
   }
 
-  string parentId = 1;  // TODO(burdon): Define Action type?
-  Action action = 2;
+  optional string parentId = 1;  // TODO(burdon): Define Action type?
+  optional Action action = 2;
 }

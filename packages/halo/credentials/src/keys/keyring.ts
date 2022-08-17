@@ -2,13 +2,14 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import memdown from 'memdown';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import {
-  PublicKey, PublicKeyLike, KeyPair, keyToBuffer, randomBytes, sign as cryptoSign, verify as cryptoVerify
+  KeyPair, randomBytes, sign as cryptoSign, verify as cryptoVerify
 } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { arraysEqual } from '@dxos/util';
 
 import { isSignedMessage, unwrapMessage } from '../party';
@@ -582,7 +583,7 @@ export class Keyring implements Signer {
         item.publicKey = PublicKey.from(item.publicKey);
       }
       if (item.secretKey) {
-        item.secretKey = keyToBuffer(item.secretKey);
+        item.secretKey = PublicKey.bufferize(item.secretKey);
       }
 
       if (item.secretKey) {

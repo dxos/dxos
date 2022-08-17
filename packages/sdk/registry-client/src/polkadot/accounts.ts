@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Account, AccountKey, AccountsClientBackend } from '../api';
 import { PolkadotClient } from './polkadot-client';

@@ -4,7 +4,7 @@
 
 import { SignalData } from 'simple-peer';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 // TODO(burdon): Define message types as protobuf.
 
@@ -47,7 +47,13 @@ export namespace SignalApi {
   }
 
   export type SignalMessage = {
+    /**
+     *  Sender's public key.
+     */
     id: PublicKey
+    /**
+     *  Receiver`s public key.
+     */
     remoteId: PublicKey
     topic: PublicKey
     sessionId: PublicKey

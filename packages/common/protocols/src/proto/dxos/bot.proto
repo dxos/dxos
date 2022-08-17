@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
@@ -34,25 +38,25 @@ message Bot {
   }
 
   string id = 1;
-  Status status = 2; // TODO: Rename to state.
+  optional Status status = 2; // TODO: Rename to state.
 
   /// The state that the bot aims to be in. Can be only either RUNNING or STOPPED.
-  Status desired_state = 55;
-  int32 attempts_to_achieve_desired_state = 56;
+  optional Status desired_state = 55;
+  optional int32 attempts_to_achieve_desired_state = 56;
 
-  BotPackageSpecifier package_specifier = 3;
-  Timestamp last_start = 4;
-  dxos.halo.keys.PubKey party_key = 5;
+  optional BotPackageSpecifier package_specifier = 3;
+  optional Timestamp last_start = 4;
+  optional dxos.halo.keys.PubKey party_key = 5;
 
   message Runtime {
-    int32 exit_code = 1;
-    string exit_signal = 2;
-    string error = 3;
+    optional int32 exit_code = 1;
+    optional string exit_signal = 2;
+    optional string error = 3;
   }
 
-  Runtime runtime = 6;
+  optional Runtime runtime = 6;
 
-  BotReport report = 7;
+  optional BotReport report = 7;
 }
 
 message GetBotsResponse {
@@ -60,23 +64,23 @@ message GetBotsResponse {
 }
 
 message SpawnBotRequest {
-  BotPackageSpecifier package = 1;
+  optional BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  dxos.echo.InvitationDescriptor invitation = 2;
+  optional dxos.echo.InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
-  dxos.halo.keys.PubKey party_key = 3;
+  optional dxos.halo.keys.PubKey party_key = 3;
 }
 
 message SendCommandRequest {
-  string bot_id = 1;
+  optional string bot_id = 1;
 
-  bytes command = 2;
+  optional bytes command = 2;
 }
 
 message SendCommandResponse {
-  bytes response = 1;
+  optional bytes response = 1;
 }
 
 message GetLogsResponse {
@@ -89,7 +93,7 @@ message GetLogsRequest {
 
 message BotReport {
   /// Details of the party the bot was spawned for.
-  dxos.client.PartyDetails party_details = 1;
+  optional dxos.client.PartyDetails party_details = 1;
 }
 
 /// Service that is used by clients to communicate with bot factory.
@@ -114,13 +118,13 @@ service BotFactoryService {
 
 message InitializeRequest {
   /// Bot runtime configuration.
-  dxos.config.Config config = 1;
+  optional dxos.config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  dxos.echo.InvitationDescriptor invitation = 2;
+  optional dxos.echo.InvitationDescriptor invitation = 2;
 
   /// ID of the bot.
-  string id = 3;
+  optional string id = 3;
 }
 
 message StartRequest {

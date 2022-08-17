@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import {
   createEnvelopeMessage,
@@ -13,12 +13,13 @@ import {
   SecretProvider,
   wrapMessage
 } from '@dxos/credentials';
-import { humanize, keyToString, PublicKey } from '@dxos/crypto';
 import { failUndefined, raise, timed } from '@dxos/debug';
-import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
+import { humanize, Provider } from '@dxos/util';
 
 import {
   createDataPartyAdmissionMessages,
@@ -26,7 +27,7 @@ import {
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
 import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
-import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
@@ -37,7 +38,7 @@ const log = debug('dxos:echo-db:party-factory');
  */
 export class PartyFactory {
   constructor (
-    private readonly _identityProvider: IdentityCredentialsProvider,
+    private readonly _identityProvider: Provider<IdentityCredentials | undefined>,
     private readonly _networkManager: NetworkManager,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
@@ -58,8 +59,10 @@ export class PartyFactory {
     const party = await this.constructParty(partyKey.publicKey);
 
     const writableFeed = await party.getWriteFeed();
-    // Hint at the newly created writable feed so that we can start replicating from it.
-    party._setFeedHints([writableFeed.key]);
+    party._setGenesisFeedKey(writableFeed.key);
+
+    await this._metadataStore.addParty(partyKey.publicKey);
+    await this._metadataStore.setGenesisFeed(partyKey.publicKey, writableFeed.key);
 
     // Connect the pipeline.
     await party.open();
@@ -110,8 +113,6 @@ export class PartyFactory {
 
   /**
    * Constructs a party object from an existing set of feeds.
-   * @param partyKey
-   * @param hints
    */
   async constructParty (partyKey: PartyKey, initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
@@ -153,8 +154,8 @@ export class PartyFactory {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();
-      log(`Party invitation ${keyToString(originalInvitation.invitation)} triggered interactive Greeting`,
-        `at ${keyToString(invitationDescriptor.invitation)}`);
+      log(`Party invitation ${PublicKey.stringify(originalInvitation.invitation)} triggered interactive Greeting`,
+        `at ${PublicKey.stringify(invitationDescriptor.invitation)}`);
       await invitationClaimer.destroy();
     }
 
@@ -171,9 +172,14 @@ export class PartyFactory {
     );
 
     await initiator.connect();
-    const { partyKey, hints } = await initiator.redeemInvitation(secretProvider);
+    const { partyKey, genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
     const party = await this.constructParty(partyKey);
-    party._setFeedHints(hints);
+
+    await this._metadataStore.addParty(partyKey);
+    await this._metadataStore.setGenesisFeed(partyKey, genesisFeedKey);
+
+    party._setGenesisFeedKey(genesisFeedKey);
+
     await party.open();
     await initiator.destroy();
 
@@ -200,7 +206,10 @@ export class PartyFactory {
 
     const writableFeed = await party.getWriteFeed();
     // Hint at the newly created writable feed so that we can start replicating from it.
-    party._setFeedHints([writableFeed.key]);
+    party._setGenesisFeedKey(writableFeed.key);
+
+    await this._metadataStore.addParty(partyKey.publicKey);
+    await this._metadataStore.setGenesisFeed(partyKey.publicKey, writableFeed.key);
 
     // Connect the pipeline.
     await party.open();

@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
-import { SignalApi } from '../signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
@@ -51,7 +51,7 @@ export enum ConnectionState {
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
-  private _bufferedSignals: SignalApi.SignalMessage[] = [];
+  private _bufferedSignals: SignalMessage[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
@@ -62,7 +62,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+    private readonly _sendSignal: (msg: SignalMessage) => Promise<void>,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -116,25 +116,24 @@ export class Connection {
     this._bufferedSignals = [];
   }
 
-  async signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalMessage) {
+    assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
     }
-    if (msg.data.type === 'offer' && this._state === ConnectionState.INITIATING_CONNECTION) {
-      throw new Error('Invalid state: Cannot send offer to an initiating peer.');
-    }
-    assert(msg.id.equals(this.remoteId));
-    assert(msg.remoteId.equals(this.ownId));
+    assert(msg.data.signal);
+    assert(msg.id?.equals(this.remoteId));
+    assert(msg.remoteId?.equals(this.ownId));
 
     if (this._state === ConnectionState.INITIAL) {
-      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data.type}`);
+      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data}`);
       this._bufferedSignals.push(msg);
       return;
     }
 
     assert(this._transport, 'Connection not ready to accept signals.');
-    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data.type}`);
+    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data}`);
     await this._transport.signal(msg);
   }
 

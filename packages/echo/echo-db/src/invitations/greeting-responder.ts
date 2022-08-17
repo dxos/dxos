@@ -2,23 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, waitForCondition } from '@dxos/async';
 import {
   admitsKeys,
   createEnvelopeMessage, Greeter,
-  GreetingCommandPlugin, KeyHint,
+  GreetingCommandPlugin,
   Keyring,
-  KeyType,
   SecretProvider,
-  SecretValidator
-  , Message as HaloMessage
+  SecretValidator,
+  Message as HaloMessage
 } from '@dxos/credentials';
-import { keyToString, randomBytes, PublicKey } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
@@ -59,13 +59,14 @@ export class GreetingResponder {
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _partyProcessor: PartyStateProvider,
+    private readonly _genesisFeedKey: PublicKey,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _credentialsWriter: FeedWriter<HaloMessage>
   ) {
     this._greeter = new Greeter(
       this._partyProcessor.partyKey,
-      async (messages: any) => this._writeCredentialsToParty(messages),
-      async () => this._gatherHints()
+      this._genesisFeedKey,
+      async (messages: any) => this._writeCredentialsToParty(messages)
     );
 
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(this._swarmKey), this._greeter.createMessageHandler());
@@ -129,11 +130,11 @@ export class GreetingResponder {
     // TODO(dboreham): Add tests for idempotence and transactional integrity over the greet flow.
     (this._greeterPlugin as any).once('peer:joined', (joinedPeerId: Buffer) => {
       if (joinedPeerId.equals(invitation.id)) {
-        log(`Initiator connected: ${keyToString(joinedPeerId)}`);
+        log(`Initiator connected: ${PublicKey.stringify(joinedPeerId)}`);
         this._state = GreetingState.CONNECTED;
         this.connected.emit(invitation.id);
       } else {
-        log(`Unexpected initiator connected: ${keyToString(joinedPeerId)}`);
+        log(`Unexpected initiator connected: ${PublicKey.stringify(joinedPeerId)}`);
       }
     });
 
@@ -157,7 +158,7 @@ export class GreetingResponder {
       label: 'Greeting responder'
     });
 
-    log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${keyToString(this._swarmKey)}`);
+    log(`Greeting for: ${this._partyProcessor.partyKey.toHex()} on swarmKey ${PublicKey.stringify(this._swarmKey)}`);
 
     this._state = GreetingState.LISTENING;
     log('Listening');
@@ -209,6 +210,7 @@ export class GreetingResponder {
     // Place the self-signed messages inside an Envelope, sign then write the signed Envelope to the Party.
     const envelopes = [];
     for (const message of messages) {
+      // TODO(dmaretskyi): Refactor to pass in a callback: `await admitKeys(messages)`.
       const admittedKeys = admitsKeys(message);
 
       // TODO(telackey): Add hasKey/isMember to PartyProcessor?
@@ -236,25 +238,5 @@ export class GreetingResponder {
     log('Wrote messages to local party feed');
     // Return the signed messages to the caller because copies are sent back to the invitee.
     return envelopes;
-  }
-
-  /**
-   * Callback to gather member key and feed "hints" for the Invitee.
-   * @private
-   */
-  _gatherHints (): KeyHint[] {
-    assert(this._state === GreetingState.SUCCEEDED);
-
-    const memberKeys = this._partyProcessor.memberKeys.map((publicKey) => ({
-      publicKey,
-      type: KeyType.UNKNOWN
-    }));
-
-    const memberFeeds = this._partyProcessor.feedKeys.map((publicKey) => ({
-      publicKey,
-      type: KeyType.FEED
-    }));
-
-    return [...memberKeys, ...memberFeeds];
   }
 }

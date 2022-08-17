@@ -6,11 +6,10 @@ import PolkadotKeyring from '@polkadot/keyring';
 import { Registry, Signer, SignerPayloadRaw, SignerResult } from '@polkadot/types/types';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { Client, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
-import { KeyRecord, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { Client, KeyRecord, KeyType, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Plugin to sign HALO messages.

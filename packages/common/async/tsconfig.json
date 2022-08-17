@@ -1,7 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "node",
+      "jest"
+    ]
   },
   "exclude": [
     "node_modules"

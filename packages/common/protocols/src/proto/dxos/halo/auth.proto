@@ -6,25 +6,25 @@ syntax = "proto3";
 
 package dxos.credentials.auth;
 
-import "keys.proto";
-import "signed.proto";
+import "./keys.proto";
+import "./signed.proto";
 
 /**
  * The payload for a SignedMessage sent during handshake for replication authentication.
  */
 message Auth {
   /// The publicKey of the target Party for these credentials.
-  PubKey partyKey = 1;     
-  
+  PubKey partyKey = 1;
+
   /// The publicKey of the authenticating Device.
-  PubKey deviceKey = 2;    
-  
+  PubKey deviceKey = 2;
+
   /// The publicKey of the authenticating Identity.
-  PubKey identityKey = 3;  
-  
+  PubKey identityKey = 3;
+
   /// The publicKey of the authenticating Identity.
-  PubKey feedKey = 4;      
+  optional PubKey feedKey = 4;
 
   /// FeedAdmit message to the should be written to a control feed in case the `feedKey` is not admitted to the party.
-  google.protobuf.Any feed_admit = 5;
+  optional google.protobuf.Any feed_admit = 5;
 }

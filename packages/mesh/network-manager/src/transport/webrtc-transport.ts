@@ -3,15 +3,15 @@
 //
 
 import wrtc from '@koush/wrtc';
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 
-import { SignalApi } from '../signal';
+import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
 import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
@@ -35,7 +35,7 @@ export class WebRTCTransport implements Transport {
     private readonly _remoteId: PublicKey,
     private readonly _sessionId: PublicKey,
     private readonly _topic: PublicKey,
-    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => void,
+    private readonly _sendSignal: (msg: SignalMessage) => void,
     private readonly _webrtcConfig?: any
   ) {
     log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
@@ -53,7 +53,7 @@ export class WebRTCTransport implements Transport {
           remoteId: this._remoteId,
           sessionId: this._sessionId,
           topic: this._topic,
-          data
+          data: { signal: { json: JSON.stringify(data) } }
         });
       } catch (err: any) {
         this.errors.raise(err);
@@ -89,9 +89,10 @@ export class WebRTCTransport implements Transport {
     return this._peer;
   }
 
-  async signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalMessage) {
     assert(this._peer, 'Connection not ready to accept signals.');
-    this._peer.signal(msg.data);
+    assert(msg.data?.signal?.json, 'Signal message must contain signal data.');
+    this._peer.signal(JSON.parse(msg.data.signal.json));
   }
 
   async close () {

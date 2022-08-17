@@ -4,5 +4,4 @@
 
 export * from './feeds';
 export * from './proto';
-export * from './spacetime';
 export * from './types';

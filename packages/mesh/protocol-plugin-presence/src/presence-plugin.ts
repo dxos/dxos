@@ -2,18 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import bufferJson from 'buffer-json-encoding';
 import debug from 'debug';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
+import assert from 'node:assert';
 import pLimit from 'p-limit';
 import queueMicrotask from 'queue-microtask';
 
 import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
-import { keyToBuffer } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { schema } from './proto/gen';
 import { Alive } from './proto/gen/dxos/protocol/presence';
@@ -232,7 +232,7 @@ export class PresencePlugin {
           const { peerId } = peer.getSession();
 
           return {
-            id: keyToBuffer(peerId),
+            id: PublicKey.bufferize(peerId),
             protocol: peer
           };
         });
@@ -410,9 +410,9 @@ export class PresencePlugin {
     this._limit.clearQueue();
 
     try {
-      const message = {
+      const message: Alive = {
         peerId: this._peerId,
-        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: keyToBuffer(peer.getSession().peerId) })),
+        connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
       await this._broadcast.publish(this._codec.encode(message));

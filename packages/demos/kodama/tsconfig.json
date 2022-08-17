@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "esModuleInterop": true,
     "jsx": "react",
     "lib": [
       "DOM",
@@ -15,6 +16,15 @@
     "src"
   ],
   "references": [
+    {
+      "path": "../../common/codec-protobuf"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
+    },
     {
       "path": "../../common/react-async"
     },

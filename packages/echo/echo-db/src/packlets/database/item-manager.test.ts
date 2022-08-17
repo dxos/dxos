@@ -5,10 +5,11 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { ItemManager } from './item-manager';
 

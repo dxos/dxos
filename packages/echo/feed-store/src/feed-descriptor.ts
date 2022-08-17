@@ -2,13 +2,13 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
 import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import type { PublicKey } from '@dxos/protocols';
 import type { Directory } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';

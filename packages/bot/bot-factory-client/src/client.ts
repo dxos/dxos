@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
-import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { PublicKey } from '@dxos/protocols';
 import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';

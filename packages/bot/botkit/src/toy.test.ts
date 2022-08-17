@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { RegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer, NodeContainer } from './bot-container';

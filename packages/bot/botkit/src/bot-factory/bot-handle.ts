@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import fs from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 
 import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocol-plugin-presence",
-  "version": "2.33.6",
+  "version": "2.33.8",
   "description": "Protocol plugin presence.",
   "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-plugin-presence#readme",
   "bugs": {
@@ -14,6 +14,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
   "files": [
     "dist",
     "index.js"
@@ -27,10 +30,9 @@
   "dependencies": {
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/crypto": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
-    "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.27",
+    "@dxos/protocols": "workspace:*",
+    "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "ngraph.graph": "^19.0.1",
@@ -42,7 +44,9 @@
     "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^26.0.7",
+    "@types/debug": "^4.1.7",
+    "@types/jest": "^28.1.6",
+    "@types/node": "^16.11.27",
     "eslint": "^7.12.1",
     "ngraph.path": "~1.3.1",
     "typescript": "^4.7.2",

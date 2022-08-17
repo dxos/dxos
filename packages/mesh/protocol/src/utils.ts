@@ -2,16 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { HumanHasher } from '@dxos/crypto';
-
-const hasher = new HumanHasher();
+import { humanize } from '@dxos/util';
 
 export const keyToHuman = (key: Buffer, prefix?: string) => {
   assert(Buffer.isBuffer(key));
 
-  const name = hasher.humanize(key.toString('hex'));
+  const name = humanize(key.toString('hex'));
   if (prefix) {
     return `${prefix}(${name})`;
   }

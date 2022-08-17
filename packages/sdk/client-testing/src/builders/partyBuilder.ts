@@ -4,9 +4,7 @@
 
 import faker from 'faker';
 
-import { Party } from '@dxos/client';
-import { Item } from '@dxos/echo-db';
-import { ObjectModel } from '@dxos/object-model';
+import { Item, ObjectModel, Party } from '@dxos/client';
 
 import { NumberRange, capitalize, getNumber } from '../util';
 

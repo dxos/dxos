@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
-import { PublicKeyLike } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import type { PublicKeyLike } from '@dxos/protocols';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';

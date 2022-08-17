@@ -2,23 +2,24 @@
   "compilerOptions": {
     "allowJs": true,
     "composite": true,
-    "incremental": true,
     "declarationMap": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "jsx": "react",
     "lib": [
       "ESNext"
     ],
-    "jsx": "react",
     "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitOverride": true,
+    "outDir": "./dist",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2018",
-    "experimentalDecorators": true,
-    "stripInternal": true
+    "stripInternal": true,
+    "target": "ES2018"
   },
   "include": [
     "**/src/**/*.ts",
@@ -26,6 +27,7 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "out"
   ]
 }

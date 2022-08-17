@@ -4,7 +4,7 @@
 
 import matches from 'lodash.matches';
 
-import { PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 export type FilterFunction = (obj: any) => boolean;
 

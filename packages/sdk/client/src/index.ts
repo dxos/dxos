@@ -2,9 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+export { generateSeedPhrase } from '@dxos/credentials';
+
 export {
   PARTY_ITEM_TYPE, // TODO(burdon): Remove?
+<<<<<<< HEAD
   Database,
+=======
+  TYPE_SCHEMA,
+>>>>>>> origin/main
   Entity,
   Item,
   ItemFilterDeleted,
@@ -13,9 +19,17 @@ export {
   Link,
   OpenProgress,
   PartyMember,
+<<<<<<< HEAD
   ResultSet, // TODO(burdon): Remove?
   Selection,
   SelectionResult
+=======
+  ResultSet,
+  Schema,
+  SchemaDef,
+  SchemaField,
+  SchemaRef
+>>>>>>> origin/main
 } from '@dxos/echo-db';
 
 export {
@@ -24,17 +38,33 @@ export {
 } from '@dxos/echo-protocol';
 
 export {
+<<<<<<< HEAD
   Model
 } from '@dxos/model-factory';
 
 export {
   ObjectModel
+=======
+  ObjectModel,
+  OrderedList
+>>>>>>> origin/main
 } from '@dxos/object-model';
 
-export * as proto from './proto/gen';
+// TODO(wittjosiah): Remove.
+export {
+  NetworkManager
+} from '@dxos/network-manager';
 
-export * from './api';
-export * from './devtools';
-export * from './services';
-export * from './util';
-export * from './version';
+export {
+  proto,
+  KeyRecord,
+  KeyType,
+  Profile,
+  SignRequest,
+  SignResponse
+} from './packlets/proto';
+
+export * from './packlets/api';
+export * from './packlets/devtools';
+export * from './packlets/proxy';
+export * from './packlets/services';

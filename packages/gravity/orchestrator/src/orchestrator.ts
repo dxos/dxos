@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
@@ -41,7 +42,7 @@ export class Orchestrator {
       runtime: {
         services: {
           signal: {
-            server: `ws://localhost:${port}`
+            server: this._broker.url()
           }
         }
       }

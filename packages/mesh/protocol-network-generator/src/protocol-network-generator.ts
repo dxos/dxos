@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { EventEmitter } from 'events';
+import assert from 'node:assert';
 import pump from 'pump';
 import { Stream } from 'stream';
 

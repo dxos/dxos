@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import expect from 'expect';
+import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcClient } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 

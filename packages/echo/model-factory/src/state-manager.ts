@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import {
+import type {
   FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
 } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';

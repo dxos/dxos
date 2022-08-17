@@ -3,32 +3,30 @@
 //
 
 import fs from 'fs';
-import { render } from 'ink';
 import yaml from 'js-yaml';
 import * as process from 'process';
-import React from 'react';
 import yargs from 'yargs';
 
+import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
-import { ClientProvider } from '@dxos/react-client';
 
-import { App } from './App';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { name, version } from '../package.json';
+import { start } from './start';
+import { clear, versionCheck } from './util';
+import { showVersion } from './version';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
 // https://www.npmjs.com/package/ink
 
-// TODO(burdon): Util to clear screen.
-const clear = () => {
-  process.stdout.write(
-    process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H'
-  );
-};
+// TODO(burdon): Global error handler.
 
 /**
  * Command line parser.
  */
-const main = () => {
+const main = async () => {
   yargs
     .scriptName('kodama')
     .option('config', {
@@ -36,20 +34,52 @@ const main = () => {
       type: 'string',
       default: `${process.cwd()}/config/config.yml`
     })
+    .option('debug', {
+      description: 'Debug mode (run in-memory)',
+      type: 'boolean'
+    })
+    .option('username', {
+      description: 'Create initial profile',
+      type: 'string'
+    })
+    .option('skip-version-check', {
+      description: 'Don\'t check for new NPM version',
+      type: 'boolean',
+      default: false
+    })
     .command({
       command: '*',
-      handler: async ({ config: configFile }: { config: string }) => {
-        // TODO(burdon): Config persistent profile.
+      handler: async ({
+        config: configFile,
+        username,
+        debug,
+        skipVersionCheck
+      }: {
+        config: string,
+        username: string
+        debug: boolean,
+        skipVersionCheck: boolean
+      }) => {
+        if (!skipVersionCheck) {
+          console.log('Checking version...');
+          const newVersion = await versionCheck(name, version);
+          if (newVersion) {
+            showVersion(name, newVersion);
+            process.exit();
+          }
+        }
+
+        // Create client.
         const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
+        const client = new Client(config);
+        await client.initialize();
+
+        if (username) {
+          await client.halo.createProfile({ username });
+        }
+
         clear();
-
-        const { waitUntilExit } = render((
-          <ClientProvider config={config}>
-            <App />
-          </ClientProvider>
-        ));
-
-        await waitUntilExit();
+        await start(client, { debug });
         process.exit();
       }
     })
@@ -57,4 +87,4 @@ const main = () => {
     .argv;
 };
 
-main();
+void main();

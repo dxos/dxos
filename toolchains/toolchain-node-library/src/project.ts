@@ -9,6 +9,8 @@ import { sync as pkgDir } from 'pkg-dir';
 import { Config } from './config';
 
 export interface ToolchainConfig {
+  bundlePackages?: string[]
+  protoBase?: string
   forceCloseTests?: boolean
   testingFramework?: 'mocha' | 'jest'
   additionalTestSteps?: string[]
