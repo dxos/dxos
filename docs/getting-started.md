@@ -19,7 +19,7 @@ Install pnpm and its dependencies:
 ```bash
 npm install -g pnpm@7.9.0
 nodenv rehash
-alias pnx = 'pnpm exec nx'
+alias pnx = 'pnpm nx'
 ```
 
 ## Nx monorepo
@@ -33,13 +33,13 @@ pnpm install # From root
 2. To build all packages:
 
 ```bash
-nx run-many --target=build
+pnpm nx run-many --target=build
 ```
 
 3. To build one package:
 
 ```bash
-nx run <target>:build
+pnpm nx run <target>:build
 ```
 
 ### Adding new dependencies
