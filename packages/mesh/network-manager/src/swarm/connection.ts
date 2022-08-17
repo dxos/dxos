@@ -53,8 +53,8 @@ export class Connection {
   private _transport: Transport | undefined;
   private _bufferedSignals: SignalMessage[] = [];
 
-  public readonly peerNotFound = new Event<boolean>();
-  public readonly receivedAnswer = new Event<boolean>();
+  public readonly peerNotFound = new Event<void>();
+  public readonly receivedAnswer = new Event<void>();
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
@@ -105,9 +105,9 @@ export class Connection {
           }
         } else {
           // If the peer rejected our connection remove it from the set of candidates.
-          this.peerNotFound.emit(true);
+          this.peerNotFound.emit();
         }
-        this.receivedAnswer.emit(true);
+        this.receivedAnswer.emit();
       })
       .catch(err => {
         this.errors.raise(err);
