@@ -616,6 +616,9 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@emotion/css': ^11.7.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/faker': ^5.5.1
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
@@ -623,6 +626,7 @@ importers:
       esbuild: ^0.14.49
       eslint: ^7.12.1
       expect: ~27.0.2
+      faker: ^5.1.0
       mocha: ~8.4.0
       react: ^18.1.0
       react-dom: ^18.1.0
@@ -638,12 +642,15 @@ importers:
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@emotion/css': 11.7.1_@babel+core@7.13.16
+      '@mui/icons-material': 5.8.4_3qrniyd4fth4fdw4jngl7l7ure
+      '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/eslint-plugin': 1.0.34_hxadhbs2xogijvk7vq4t2azzbu
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
@@ -651,6 +658,7 @@ importers:
       esbuild: 0.14.54
       eslint: 7.32.0
       expect: 27.0.6
+      faker: 5.5.3
       mocha: 8.4.0
       supervisor: 0.12.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -3554,19 +3562,19 @@ packages:
     resolution: {integrity: sha512-sXHpixBiWWFti0AV2Zq7avpTasr6sIAu7Y396c608541qAU2ui4a193m0KSQmfPSKFZLnQ3cvlKDOm3XkuXm3Q==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.16.0
-      '@babel/generator': 7.16.5
-      '@babel/helper-compilation-targets': 7.16.3_@babel+core@7.13.16
-      '@babel/helper-module-transforms': 7.16.5
-      '@babel/helpers': 7.16.5
-      '@babel/parser': 7.16.6
-      '@babel/template': 7.16.0
-      '@babel/traverse': 7.16.5
-      '@babel/types': 7.16.0
+      '@babel/code-frame': 7.18.6
+      '@babel/generator': 7.18.7
+      '@babel/helper-compilation-targets': 7.18.6_@babel+core@7.13.16
+      '@babel/helper-module-transforms': 7.18.6
+      '@babel/helpers': 7.18.6
+      '@babel/parser': 7.18.6
+      '@babel/template': 7.18.6
+      '@babel/traverse': 7.18.6
+      '@babel/types': 7.18.7
       convert-source-map: 1.8.0
       debug: 4.3.4
       gensync: 1.0.0-beta.2
-      json5: 2.2.0
+      json5: 2.2.1
       semver: 6.3.0
       source-map: 0.5.7
     transitivePeerDependencies:
@@ -3725,7 +3733,6 @@ packages:
       '@babel/helper-validator-option': 7.18.6
       browserslist: 4.21.1
       semver: 6.3.0
-    dev: false
 
   /@babel/helper-compilation-targets/7.18.6_@babel+core@7.18.6:
     resolution: {integrity: sha512-vFjbfhNCzqdeAtZflUFrG5YIFqGTqsctrtkZ1D/NB0mDW9TwW3GmmUepYY4G9wCET5rY5ugz4OGTcLd614IzQg==}
@@ -19742,7 +19749,7 @@ packages:
   /jsonfile/4.0.0:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
-      graceful-fs: 4.2.8
+      graceful-fs: 4.2.10
 
   /jsonfile/6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
