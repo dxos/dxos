@@ -17,7 +17,7 @@
     "build:test": "toolchain build:test",
     "lint": "toolchain lint",
     "prepublishOnly": "npm run test && npm run build",
-    "start": "toolchain start --https",
+    "start": "toolchain start",
     "test": "toolchain test"
   },
   "dependencies": {
