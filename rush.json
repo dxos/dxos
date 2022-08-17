@@ -793,6 +793,10 @@
     //
 
     {
+      "packageName": "@dxos/dx-cli",
+      "projectFolder": "packages/demos/dx-cli"
+    },
+    {
       "packageName": "@dxos/hello-world",
       "projectFolder": "packages/demos/hello-world"
     },

@@ -15,6 +15,8 @@ import { Actions } from './Actions';
 import { ItemCard } from './ItemCard';
 import { Searchbar } from './Searchbar';
 
+// TODO(burdon): Storybook for App.
+
 const styles = css`
   display: flex;
   flex-direction: row;
