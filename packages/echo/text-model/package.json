@@ -43,7 +43,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/jest": "^28.1.6",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",

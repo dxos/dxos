@@ -26,7 +26,7 @@
     "@types/faker": "^5.5.1",
     "@types/jest": "^28.1.6",
     "@types/lodash.times": "^4.3.6",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "abstract-leveldown": "~7.0.0",
     "eslint": "^8.21.0",

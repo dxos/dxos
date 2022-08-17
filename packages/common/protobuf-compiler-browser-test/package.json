@@ -13,7 +13,7 @@
     "check": "toolchain lint",
     "lint": "toolchain lint",
     "test": "true",
-    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium"
+    "test:browser": "true"
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
@@ -21,11 +21,11 @@
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "browser-mocha": "^1.4.8",
     "eslint": "^8.21.0",
     "expect": "~27.0.2",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "typescript": "^4.7.2"
   }
 }

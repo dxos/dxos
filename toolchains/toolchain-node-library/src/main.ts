@@ -187,9 +187,9 @@ export const execBook = async (userArgs?: string[]) => {
 /**
  * Runs a dev server for the current package.
  */
-export const execStart = async (userArgs?: string[]) => {
+export const execServer = async (userArgs?: string[]) => {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
-  await execTool('esbuild-server', ['dev', ...userArgs ?? []]);
+  await execTool('esbuild-server', ['server', ...userArgs ?? []]);
 };
 
 /**
@@ -276,17 +276,23 @@ export const setupCoreCommands = (yargs: Argv) => (
       'check',
       'lint and test the package',
       yargs => yargs
+        .options('additional', {
+          type: 'boolean',
+          default: false
+        })
         .strict(),
-      handler('Tests', async () => {
+      handler<{ additional: boolean }>('Tests', async (argv) => {
         const project = Project.load(defaults);
         await execLint(project); // TODO(burdon): Make optional.
         await execTest(defaults);
 
         // Additional test steps execution placed here to allow to run tests without additional steps.
-        // Additional test steps are executed by default only when check is run.
-        for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
-          log(chalk`\n{green.bold ${step}}`);
-          await execScript(project, step, []);
+        // Additional test steps are executed by default only when build:test is run.
+        if (argv.additional) {
+          for (const step of project.toolchainConfig.additionalTestSteps ?? []) {
+            log(chalk`\n{green.bold ${step}}`);
+            await execScript(project, step, []);
+          }
         }
       }, true)
     )
@@ -320,12 +326,11 @@ export const setupCoreCommands = (yargs: Argv) => (
     )
 
     .command(
-      'start',
+      'start', // TODO(burdon): Rename server (or alias).
       'Run a dev server for the package.',
-      yargs => yargs
-        .strict(),
+      yargs => yargs.parserConfiguration({ 'unknown-options-as-args': true }),
       async ({ _ }) => {
-        await execStart(_.slice(1).map(String));
+        await execServer(_.slice(1).map(String));
       }
     )
 

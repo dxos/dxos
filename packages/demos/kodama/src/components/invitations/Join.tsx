@@ -9,7 +9,7 @@ import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 import { useClient, useParty } from '@dxos/react-client';
 
-import { PartyInfo, Status, StatusState, TextInput } from '../../components';
+import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
@@ -97,7 +97,7 @@ export const Join: FC<{
         />
       )}
 
-      <Status
+      <ActionStatus
         status={status}
         marginTop={1}
       />

@@ -29,7 +29,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "eslint": "^8.21.0",
     "expect": "~27.0.2",

@@ -29,7 +29,7 @@
     "react-dom": "^18.1.0"
   },
   "devDependencies": {
-    "@dxos/esbuild-plugins": "~2.28.12",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/react": "^18.0.9",
