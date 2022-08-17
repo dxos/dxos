@@ -2,37 +2,37 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Terminology](#2-terminology)
-- [3. Specification](#3-specification)
-- [4. Design](#4-design)
-  - [4.1. HALO](#41-halo)
-    - [4.1.1. Protocol Definitions](#411-protocol-definitions)
-    - [4.1.2. Credentials](#412-credentials)
-    - [4.1.3. HALO Genesis](#413-halo-genesis)
-    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
-    - [4.1.5. HALO Recovery](#415-halo-recovery)
-    - [4.1.6. Profiles](#416-profiles)
-    - [4.1.7. Circles](#417-circles)
-    - [4.1.8. DID Documents](#418-did-documents)
-  - [4.2. ECHO Spaces](#42-echo-spaces)
-    - [4.2.1. Protocol Definitions](#421-protocol-definitions)
-    - [4.2.2. Genesis](#422-genesis)
-    - [4.2.3. Agent Authorization](#423-agent-authorization)
-    - [4.2.4. Device Authentication](#424-device-authentication)
-  - [4.3. Design Issues](#43-design-issues)
-- [5. Implementation Details](#5-implementation-details)
-  - [5.1. Credential message](#51-credential-message)
-  - [5.2. Keychain](#52-keychain)
-  - [5.3. HALO creation](#53-halo-creation)
-  - [5.4. ECHO Space creation](#54-echo-space-creation)
-- [6. Security Concerns](#6-security-concerns)
-  - [6.1. Aspects of Trust](#61-aspects-of-trust)
-  - [6.2. Trust Models](#62-trust-models)
-- [7. References](#7-references)
-- [8. Appendix](#8-appendix)
-  - [8.1. Protocol Schema](#81-protocol-schema)
-  - [8.2. Example](#82-example)
+*   [1. Introduction](#1-introduction)
+*   [2. Terminology](#2-terminology)
+*   [3. Specification](#3-specification)
+*   [4. Design](#4-design)
+    *   [4.1. HALO](#41-halo)
+        *   [4.1.1. Protocol Definitions](#411-protocol-definitions)
+        *   [4.1.2. Credentials](#412-credentials)
+        *   [4.1.3. HALO Genesis](#413-halo-genesis)
+        *   [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
+        *   [4.1.5. HALO Recovery](#415-halo-recovery)
+        *   [4.1.6. Profiles](#416-profiles)
+        *   [4.1.7. Circles](#417-circles)
+        *   [4.1.8. DID Documents](#418-did-documents)
+    *   [4.2. ECHO Spaces](#42-echo-spaces)
+        *   [4.2.1. Protocol Definitions](#421-protocol-definitions)
+        *   [4.2.2. Genesis](#422-genesis)
+        *   [4.2.3. Agent Authorization](#423-agent-authorization)
+        *   [4.2.4. Device Authentication](#424-device-authentication)
+    *   [4.3. Design Issues](#43-design-issues)
+*   [5. Implementation Details](#5-implementation-details)
+    *   [5.1. Credential message](#51-credential-message)
+    *   [5.2. Keychain](#52-keychain)
+    *   [5.3. HALO creation](#53-halo-creation)
+    *   [5.4. ECHO Space creation](#54-echo-space-creation)
+*   [6. Security Concerns](#6-security-concerns)
+    *   [6.1. Aspects of Trust](#61-aspects-of-trust)
+    *   [6.2. Trust Models](#62-trust-models)
+*   [7. References](#7-references)
+*   [8. Appendix](#8-appendix)
+    *   [8.1. Protocol Schema](#81-protocol-schema)
+    *   [8.2. Example](#82-example)
 
 ## 1. Introduction
 
@@ -527,8 +527,9 @@ message AuthorizedDevice {
 // Feed is admitted to the Party for replication.
 // NOTE: Feeds are Admitted to Parties.
 message AdmittedFeed {
-  PubKey partyKey = 1;
-  PubKey deviceKey = 2;
+  PubKey identityKey = 1; // Could be derived.
+  PubKey partyKey = 2;
+  PubKey deviceKey = 3;
 }
 
 //
@@ -539,7 +540,7 @@ message AdmittedFeed {
 
 message Claim {
   PubKey id = 1; // Subject of claim (e.g., Agent, Device, Feed).
-  google.protobuf.any assertion = 2;
+  google.protobuf.Any assertion = 2;
 }
 
 //
@@ -552,8 +553,27 @@ message Claim {
 message Proof {
   string type = 1; // Type of proof (e.g., "Ed25519Signature2020").
   Timestamp creationDate = 2;
-  bytes nonce = 3; // Used in Presentations to protect against replay attacks.
-  bytes value = 4; // Signature.
+  PubKey signer = 3;        // Entity that created the proof (e.g., Agent, Device, Party).
+  optional bytes nonce = 4; // Used in Presentations to protect against replay attacks.
+  bytes value = 5; // Signature.
+  /// Must be present if signer is not credential issuer. Establishes the authority of the signer. Proves that the signer can issue such credentials.
+  optional Chain chain = 6;
+}
+
+/**
+ * A chain of credentials that establishes the delegated authority to issue new credentials.
+ * Each key in the chain has an assotiated credential that establishes the authrity of that specific key.
+ *
+ * For example: 
+ *    Alice/Device-2 => Alice/Device-1 => Alice
+ *
+ * This chain would include 2 credentials:
+ *   1. Giving Alice/Device-2 the authority to issue credentials on behalf of Alice, signed by Alice/Device-1.
+ *   2. Giving Alice/Device-1 the authority to issue credentials on behalf of Alice, signed by Alice.
+ */
+message Chain {
+  /// A mapping from the key to the credential that establishes it's authority. Keys must be encoded to string in lowercase hex with leading '0x'.
+  map<string, Credential> keys = 1;
 }
 
 //
@@ -605,14 +625,14 @@ feed:
     - id: 1
       data:
         # Self-signed Credential by the Party.
-        @type: halo.party.PartyGenesis
+        @type: dxos.halo.party.PartyGenesis
         partyKey: Alice-Halo # ISSUE: Different from IdentityKey?
         identityKey: Alice
     - id: 2
       data:
         # Authorizes device to sign on behalf of Identity
         # NOTE: This Credential SHOULD be Presented on joining a Party.
-        @type: halo.credential.SignedAssertion
+        @type: halo.credential.Credential
         issuer: Alice # Self-signed.
         subject:
           id: Alice/Device-1
@@ -622,12 +642,12 @@ feed:
     - id: 3
       data:
         # Admits the feed to the feed graph.
-        @type: halo.credential.SignedAssertion
+        @type halo.credential.Credential
         issuer: Alice/Device-1
         subject:
           id: Alice/Device-1/Feed-1
           assertion:
-            @type: halo.credentials.AdmittedFeed
+            @type halo.credentials.AdmittedFeed
             partyKey: Alice-Halo
             deviceKey: Alice/Device-1
 
@@ -641,22 +661,22 @@ feed:
   messages:
     - id: 100
       data:
-        @type: halo.credential.SignedAssertion
+        @type halo.credential.Credential
         issuer: Alice/Device-1
         subject:
           id: Alice/Device-2
           assertion:
-            @type: halo.credentials.AuthorizedDevice
+            @type halo.credentials.AuthorizedDevice
             identityKey: Alice
     - id: 101
       data:
         # NOTE: This MUST have been Presented from an authorized Device.
-        @type: halo.credential.SignedAssertion
+        @type halo.credential.Credential
         issuer: Alice/Device-2
         subject:
           id: Alice/Device-2/Feed-2 # New Feed.
           assertion:
-            @type: halo.credentials.AdmittedFeed
+            @type halo.credentials.AdmittedFeed
             partyKey: Alice-Halo
             deviceKey: Alice/Device-2
 
@@ -665,7 +685,7 @@ feed:
 #
 
 feed:
-  key: Party-1/Alice/Device-2/Feed-3
+  key: Alice/Device-1/Feed-3
   messages:
     - id: 1
       data:
@@ -676,12 +696,12 @@ feed:
     - id: 2
       data:
         # Authorizes Agent.
-        @type: halo.credential.SignedAssertion
+        @type halo.credential.Credential
         issuer: Alice # Self-signed.
         subject:
           id: Alice
           assertion:
-            @type: halo.credentials.PartyMember
+            @type halo.credentials.PartyMember
             partyKey: Party-1
             role: ADMIN
 
@@ -697,41 +717,42 @@ feed:
   key: Alice/Device-2/Feed-3
     - id: 3
       data:
-        # Admits Feed.
-        # Credential by Alice/Device-2
-        # Records chain-of-trust from Alice's Halo: Alice => Alice/Device-1 => Alice/Device-2
         @type: halo.credential.Credential
         issuer: Alice
         subject:
-          id: Alice/Device-2
-          assertion:
-            @type: halo.credentials.AuthorizedDevice
-            identityKey: Alice
-        # Credential is proven by a chain of signed assertions (copied from HALO).
-        proof:
-          - @type: halo.credential.SignedAssertion
-            issuer: Alice/Device-1
-            subject:
-              id: Alice/Device-2
-              assertion:
-                @type: halo.credentials.AuthorizedDevice
-                identityKey: Alice
-          - @type: halo.credential.SignedAssertion
-            issuer: Alice # Self-signed.
-            subject:
-              id: Alice/Device-1
-              assertion:
-                @type: halo.credentials.AuthorizedDevice
-                identityKey: Alice
-    - id: 4
-      data:
-        issuer: Alice/Device-2
-        subject:
           id: Alice/Device-2/Feed-3 # NOTE: This Feed.
           assertion:
-            @type halo.credentials.AdmittedFeed
+            @type: halo.credentials.AdmittedFeed
             partyKey: Party-1
-            deviceKey: Alice/Device-2
+            identityKey: Alice
+            deviceKey: Alice/Device-1
+        proofs:
+          - type: 'ECDSASignature'
+            value: 0x1ba37..3125ab
+            signer: Alice/Device-2
+            # Mapping from the signing key to the credential that establishes it's authority 
+            chain:
+              Alice/Device-2:
+                @type: halo.credential.Credential
+                issuer: Alice/Device-1
+                subject:
+                  id: Alice/Device-2
+                  assertion:
+                    @type halo.credentials.AuthorizedDevice
+                    identityKey: Alice
+                proof:
+                  - type: 'ECDSASignature'
+                    value: eyJhbGci...yHUdBBPM
+              Alice/Device-1:
+                issuer: Alice
+                  subject:
+                    id: Alice/Device-1
+                    assertion:
+                      @type halo.credentials.AuthorizedDevice
+                      identityKey: Alice
+                  proof:
+                    - type: 'ECDSASignature'
+                      value: eyJhbGci...yHUdBBPM
 
 #
 # Member Admission: Adding a new Member to a Space.

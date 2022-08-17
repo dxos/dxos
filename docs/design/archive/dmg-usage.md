@@ -2,17 +2,16 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Basic Concepts](#2-basic-concepts)
-  - [2.1. Decentralized Identity (HALO)](#21-decentralized-identity-halo)
-    - [2.1.1. Self-Sovereign Identity](#211-self-sovereign-identity)
-    - [2.1.2. Social Networks](#212-social-networks)
-  - [2.2. Decentralized Data (ECHO)](#22-decentralized-data-echo)
-  - [2.3. Decentralized Services (KUBE + MESH)](#23-decentralized-services-kube--mesh)
-  - [2.4. Decentralized Naming Service (DXNS)](#24-decentralized-naming-service-dxns)
-- [3. Reference](#3-reference)
-- [4. Notes](#4-notes)
-    - [4.1. 2022-07-13](#41-2022-07-13)
+*   [1. Introduction](#1-introduction)
+*   [2. Basic Concepts](#2-basic-concepts)
+    *   [2.1. Decentralized Identity (HALO)](#21-decentralized-identity-halo)
+        *   [2.1.1. Self-Sovereign Identity](#211-self-sovereign-identity)
+        *   [2.1.2. Social Networks](#212-social-networks)
+    *   [2.2. Decentralized Data (ECHO)](#22-decentralized-data-echo)
+    *   [2.3. Decentralized Services (KUBE + MESH)](#23-decentralized-services-kube--mesh)
+    *   [2.4. Decentralized Naming Service (DXNS)](#24-decentralized-naming-service-dxns)
+*   [3. Reference](#3-reference)
+*   [4. Notes](#4-notes)
 
 ## 1. Introduction
 

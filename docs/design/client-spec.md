@@ -2,13 +2,13 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Specification](#2-specification)
-  - [2.1. 1 - Identity and Device Management](#21-1---identity-and-device-management)
-  - [2.2. 2 - Circles and Collaboration](#22-2---circles-and-collaboration)
-  - [2.3. 3 - Branespace Exploration](#23-3---branespace-exploration)
-- [3. Implementation](#3-implementation)
-  - [3.1. Development](#31-development)
+*   [1. Introduction](#1-introduction)
+*   [2. Specification](#2-specification)
+    *   [2.1. 1 - Identity and Device Management](#21-1---identity-and-device-management)
+    *   [2.2. 2 - Circles and Collaboration](#22-2---circles-and-collaboration)
+    *   [2.3. 3 - Branespace Exploration](#23-3---branespace-exploration)
+*   [3. Implementation](#3-implementation)
+    *   [3.1. Development](#31-development)
 
 ## 1. Introduction
 
