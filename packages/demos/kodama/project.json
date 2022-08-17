@@ -11,5 +11,8 @@
         "script": "build"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "clipboardy"
+  ]
 }

@@ -24,19 +24,21 @@ alias pnx='pnpm nx'
 
 ## Nx monorepo
 
-1. To install dependencies (from the root directory):
+1). To install dependencies (from the root directory):
 
 ```bash
 pnpm install 
 ```
 
-2. To build all packages:
+2). To build all packages:
 
 ```bash
 pnpm nx run-many --target=build
 ```
 
-3. To build one package:
+NOTE: All commands must be run from the root directory.
+
+3). To build one package:
 
 ```bash
 pnpm nx run <target>:build
@@ -44,15 +46,7 @@ pnpm nx run <target>:build
 
 ### Adding new dependencies
 
-Currently you must manually edit the individual `package.json` files.
-Once the required changes have been made, re-run `pnpm install` from the project root.
-
-### Running scripts in individual packages
-
-```
-cd package/directory
-pnpm <script name>
-```
+Manually edit the local `package.json` file, then re-run `pnpm install`.
 
 ### Adding a new package to the monorepo
 
@@ -88,12 +82,12 @@ Add TS config to support browser globals.
 ```
 
 ### Upgrading packages across the monorepo
+
 To upgrade all `dxos` packages you can trigger [Upgrade DXOS dependencies](https://github.com/dxos/protocols/actions/workflows/upgrade-deps.yml) job.
 
-If you want to upgrade some specific package or all packages that match specific regexp, you can run
-```
-ncu --deep -u '<PACKAGE>'
-# e.g.
+Packages can be specified by a regex, for example:
+
+```bash
 ncu --deep -u '@storybook/*'
 ```
 
@@ -101,21 +95,10 @@ ncu --deep -u '@storybook/*'
 
 The Release process is described [here](https://github.com/dxos/eng/wiki/Build-System-~-Releases).
 
-### Updating typescript project references and sort `package.json`
+### Updating Typescript project references 
 
 Trigger [Standardize configs](https://github.com/dxos/protocols/actions/workflows/sort-deps.yml) job.
-
-### Troubleshooting Storybooks
-
-1. `Cannot GET /"` when running `pnpm run storybook`
-
-Solution:
-
-```bash
-pnpm run storybook --no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+Note, this also sorts `package.json`.
 
 ## Snippets
 
@@ -124,10 +107,19 @@ pnpm run storybook --no-manager-cache
 pnpm ls -r --depth -1
 ```
 
-## FAQ
+## Troubleshooting
 
-1. Issue with `data.copy is not a function`
+1). Issue with `data.copy is not a function`.
 
 This is caused by incomplete browser polyfills for Node (specifically for Buffer).
-
 Fixed by adding different polyfill for Buffer such as [here](https://github.com/dxos/protocols/blob/551f5592384f5af69f6d46960d5c895050f1f211/packages/sdk/demos/.storybook/main.js#L33).
+
+2). `Cannot GET /` when running `pnpm run storybook`
+
+Solution:
+
+```bash
+pnpm run storybook --no-manager-cache
+```
+
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
