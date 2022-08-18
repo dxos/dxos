@@ -227,7 +227,7 @@ that can be used to recover the identity in case no devices are available.
   b. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
   c. HaloSpace credential is created and signed by the identity key. It links the space key with the identity.
 5. Device keypair is generated. AuthorizedDevice credential is created.
-7. Optional IdentityInfo message can be written to set the profile information, such as username.
+7. Optional IdentityProfile message can be written to set the profile information, such as username.
 6.  **NOTE**: The identity private key is only used to generate the HALO.
 
 #### 4.1.4. Device Authorization and Authentication
@@ -263,7 +263,7 @@ The diagram below illustrates the chain of trust formed when a HALO is construct
 
 *   New Decices can be admitted to the Halo using the authorization mechanism below.
 *   Alternatively, Agents with the recovery key can self-admit a Device to the Halo.
-*   The Identity private key can be used to create an `Device Auth` message allowing the Device to connect to the Halo swarm.
+*   The Recovery key can be used to create an `Device Auth` message allowing the Device to connect to the Halo swarm.
 *   Another Device can then issue a `Feed Admit` message to enable replication to begin.
 
 #### 4.1.6. Profiles
@@ -377,6 +377,15 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 > Q: What's the difference between including KeyChain as a parent of a different KeyChain vs having the credential message of that KeyChain entry be signed with the first KeyChain.
 
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
+
+### 5.4. Space (party) state machines
+
+- Each space comes with a set of control feeds that can store credential message.
+- Some types of credentials are processed by the space internally:
+  - PartyMember - updates the list of party members (IDENTITY keys) and sets permissions.
+  - AdmittedFeed - party will maintain a set of associated feeds.
+- All credentials that are processed by the space must either be issued by the Space genesis key or by one of the member identities with proper permissions.
+- Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO party to build the device KeyChain. 
 
 ### 5.3. HALO creation
 
