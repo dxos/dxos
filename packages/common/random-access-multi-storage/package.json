@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test",
     "test:browser": "true"
@@ -34,12 +34,12 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "mocha": "^8.4.0",
     "source-map-support": "^0.5.12",

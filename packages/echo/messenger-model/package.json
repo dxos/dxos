@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -20,10 +20,10 @@
     "@dxos/model-factory": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "^8.2.2",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "typescript": "^4.7.2"
   },

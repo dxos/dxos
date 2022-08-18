@@ -62,10 +62,10 @@ export interface NetworkOptions {
 }
 
 export class Network extends EventEmitter {
-  private _createPeer: CreatePeerCallback
-  private _createConnection: CreateConnectionCallback
+  private _createPeer: CreatePeerCallback;
+  private _createConnection: CreateConnectionCallback;
   private _connectionsOpening: Map<any, any>;
-  private _graph: Graph<any, any> & EventedType
+  private _graph: Graph<any, any> & EventedType;
 
   constructor (options: NetworkOptions = {}) {
     super();

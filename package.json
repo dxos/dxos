@@ -1,4 +1,7 @@
 {
+  "name": "dxos-protocols",
+  "version": "0.1.0",
+  "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "homepage": "https://github.com/dxos/protocols",
   "bugs": {
@@ -9,10 +12,14 @@
     "url": "git+https://github.com/dxos/protocols.git"
   },
   "license": "MIT",
+  "scripts": {
+    "nx": "nx"
+  },
   "workspaces": [
     "packages/*/*"
   ],
-  "scripts": {
-    "preinstall": "echo 'This project is using the Rush Stack. More details in the README.' && false"
+  "devDependencies": {
+    "nx": "14.5.4",
+    "@nrwl/nx-cloud": "^14.3.0"
   }
 }

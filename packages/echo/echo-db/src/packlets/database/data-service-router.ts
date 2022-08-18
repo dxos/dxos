@@ -28,7 +28,7 @@ const log = debug('dxos:echo-db:data-service-router');
  * Routes DataService requests to different DataServiceHost instances based on party id.
  */
 export class DataServiceRouter implements DataService {
-  private readonly _trackedParties = new ComplexMap<PartyKey, DataServiceHost>(x => x.toHex())
+  private readonly _trackedParties = new ComplexMap<PartyKey, DataServiceHost>(x => x.toHex());
 
   trackParty (key: PartyKey, host: DataServiceHost) {
     log(`Tracking party: ${key}`);

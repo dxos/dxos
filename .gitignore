@@ -56,6 +56,9 @@ jspm_packages/
 # next.js build output
 .next
 
+# oclif build output
+oclif.manifest.json
+
 # OS X temporary files
 .DS_Store
 

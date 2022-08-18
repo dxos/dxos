@@ -97,7 +97,7 @@ export class TextModel extends Model<Doc, Mutation> {
     }
 
     return textContentNodes.join('\n');
-  }
+  };
 
   private _insertInner = (node: unknown, index: number, text: string) => {
     if (node instanceof XmlText) {

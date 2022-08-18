@@ -23,7 +23,7 @@ export class Entity<M extends Model | null = Model> {
   /**
    * @internal
    */
-  public _stateManager!: StateManager<NonNullable<M>>
+  public _stateManager!: StateManager<NonNullable<M>>;
 
   constructor (
     protected readonly _itemManager: ItemManager,

@@ -7,7 +7,7 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -19,7 +19,7 @@
     "lodash.times": "^4.3.2"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
@@ -29,7 +29,7 @@
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "abstract-leveldown": "~7.0.0",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "jsondown": "dxos/jsondown#main",
     "ts-node": "^10.8.2",
