@@ -477,6 +477,27 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 
 > *   TODO: Document trust model and threats.
 
+### Credential compression
+
+Since credentials will often be issued via delegated authority, e.g. with device KeyChains, they might include repeating credentials.
+To compress the data on the feeds, writers might replace full credentials with references by their CID, as long as they appear in the feeds messages included by the timeframe.
+
+> * TODO: Define semantics of what credentials are indexed. Credentials from chains are also indexed.
+
+### Invitations
+
+This spec does not define protocols to invite new Agents/Devices to a space.
+The concrete invitation processes will be implemented on a higher level, possibly within the app.
+They can still use the Space facilities such as credential storage and networking.
+
+Space membership is defined by the PartyMember credential. All protocols must eventually write a PartyMember credential to finialize the process.
+
+Examples of possible invitation processes:
+
+- Direct admission by key.
+- Invitation process with redeeming: a temporary credential (possibly with expiration is written to the space). An invitation token is sent to the invitee via a side channel (e.g. email). Invitee can claim an invitation later on.
+- Interactive real-time invitation: Inviter and invitee will connect directly over the network to perform the invitation process.
+
 ## 7. References
 
 1.  [Decentralized Identifiers (DIDs)](https://www.w3.org/TR/did-core)
