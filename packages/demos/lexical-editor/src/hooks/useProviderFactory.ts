@@ -58,7 +58,7 @@ export type ProviderFactory = (
  */
 class TestAwareness implements ProviderAwareness {
   private _state?: UserState;
-  private _states = new Map<number, UserState>()
+  private _states = new Map<number, UserState>();
 
   getStates () {
     return this._states;

@@ -4,7 +4,7 @@ runtime:
   client:
     storage:
       persistent: true
-      path: '/tmp/dx/cli'
+      path: '/tmp/user-2/dx/cli'
 
   # TODO(burdon): Configure local kube.
   services:

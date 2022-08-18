@@ -4,6 +4,7 @@
 
 import { Command, Flags } from '@oclif/core';
 import assert from 'assert';
+import debug from 'debug';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import * as path from 'path';
@@ -11,13 +12,16 @@ import * as path from 'path';
 import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
+const log = debug('dxos:cli:main');
+const error = log.extend('error');
+
 const ENV_DX_CONFIG = 'DX_CONFIG';
 
 export abstract class BaseCommand extends Command {
   private _clientConfig?: ConfigObject;
   private _client?: Client;
 
-  static override globalFlags = {
+  static override flags = {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
@@ -28,8 +32,14 @@ export abstract class BaseCommand extends Command {
     })
   };
 
+  flags: any;
+
   get clientConfig () {
     return this._clientConfig;
+  }
+
+  ok () {
+    this.log('ok');
   }
 
   /**
@@ -39,15 +49,32 @@ export abstract class BaseCommand extends Command {
     await super.init();
 
     // Load user config file.
-    const { flags } = await this.parse();
+    const { flags } = await this.parse(this.constructor as any);
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
-      this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
+      try {
+        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
+      } catch (err) {
+        console.error(`Invalid config file: ${configFile}`);
+      }
     } else {
-      console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
+      if (configFile) {
+        console.error(`Config file not found: ${configFile}`);
+      } else {
+        console.error(`Set config via ${ENV_DX_CONFIG} env variable or config flag.`);
+      }
+
       process.exit(1);
     }
   }
+
+  override async catch (err: Error) {
+    error(err);
+    // process.exit(1);
+  }
+
+  // Called after each run.
+  override async finally () {}
 
   /**
    * Lazily create the client.
@@ -55,8 +82,10 @@ export abstract class BaseCommand extends Command {
   async getClient () {
     assert(this._clientConfig);
     if (!this._client) {
+      log('Creating client...');
       this._client = new Client(this._clientConfig);
       await this._client.initialize();
+      log('Initialized');
     }
 
     return this._client;
