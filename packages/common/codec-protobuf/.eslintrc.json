@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "../../../.eslintrc.base.json"
+  ],
+  "parserOptions": {
+    "project": "./packages/common/codec-protobuf/tsconfig.json"
+  },
+  "ignorePatterns": [
+    "build.ts"
+  ]
+}

@@ -10,6 +10,17 @@
       "options": {
         "script": "build"
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/protobuf-compiler/**/*.{ts,js}"
+        ]
+      }
     }
   }
 }

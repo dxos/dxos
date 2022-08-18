@@ -19,7 +19,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/common/protocols/**/*.ts"
+          "packages/common/protocols/**/*.{ts,js}"
         ]
       }
     }

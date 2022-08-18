@@ -3,6 +3,6 @@
     "../../../.eslintrc.base.json"
   ],
   "parserOptions": {
-    "project": "./packages/common/protocols/tsconfig.json"
+    "project": "./packages/common/util/tsconfig.json"
   }
 }
