@@ -19,7 +19,14 @@
     "packages/*/*"
   ],
   "devDependencies": {
-    "nx": "14.5.4",
-    "@nrwl/nx-cloud": "^14.3.0"
+    "@nrwl/eslint-plugin-nx": "14.5.7",
+    "@nrwl/js": "14.5.7",
+    "@nrwl/linter": "14.5.7",
+    "@nrwl/nx-cloud": "^14.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "eslint": "^8.21.0",
+    "nx": "14.5.7",
+    "typescript": "^4.7.2"
   }
 }
