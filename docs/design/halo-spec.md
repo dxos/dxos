@@ -109,7 +109,7 @@ DXOS network devices running the KUBE daemon process and services.
 ***MESH*** -
 Peer-to-peer network supported by KUBE nodes.
 
-***Keychain*** -
+***Credential chain*** -
 Set of credential messages establishing a linear chain of trust between credentials.
 TOOD: Example.
 
@@ -191,7 +191,7 @@ The HALO protocol definitions are defined in the [References](#8-appendix) secti
     The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 *   Claims may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
 
-<!-- @code(./refs/credentials.proto#Credential) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential) -->
 
 ```protobuf
 message Credential {
@@ -205,14 +205,30 @@ message Credential {
 }
 ```
 
+#### Keypair types
+
+- IDENTITY - Agent's root of authority. The private key is only used during Identity creation and destroyed immediately afterwards.
+  - Can issue credentials: IdentityGenesis, IdentityRecovery, HaloSpace, AuthorizedDevice, PartyMember.
+- DEVICE - Individual device keys used to sign credential. Obtain delegated credentials to issue credentials on behalf of IDENTITY via AuthorizedDevice credentials.
+  - Can issue credentials: AdmittedFeed.
+  - Can sign credentials on behalf of IDENTITY: PartyMember.
+- SPACE - (Also called PARTY) Space's root of authority. The private key is only used during genesis and destroyed immediately afterwards.
+- FEED - Used to identity feeds, and sign feed messages. Associated with a single device and identity.
+- RECOVERY - Can be used to create a new HALO Space and admit a new device to an identity.
+
 #### 4.1.3. HALO Genesis
 
 1.  Agents first create an Ed25519 key pair that represents an Identity key.
-2.  The key pair can be recovered from a \[TODO: 24-word] seed phrase.
-3.  The key pair is used to construct a special ECHO Space, which implements the Agent's HALO.
-4.  A second key pair is generated for the Space and both this key and the Identity are used to sign Genesis messages (see below).
-5.  A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
-6.  **NOTE**: The identity private key is only used to generate the HALO and to recover an identity.
+2.  An IdentityGenesis credential is created an signed by the Identity key.
+3.  One or more IdentityRecovery credentials are signed by the Identity key, they setup the keys (with 24-word seed-phrases)
+that can be used to recover the identity in case no devices are available.
+4.  A space keypair is generated for the ECHO Space. It acts as a communication medium between Agent's devices and a credentials store. All of the mentioned credentials are recorded in that space.
+  a. Normal space-creation credential sequence is written to the space: SpaceGenesis, PartyMember, AdmittedFeed.
+  b. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
+  c. HaloSpace credential is created and signed by the identity key. It links the space key with the identity.
+5. Device keypair is generated. AuthorizedDevice credential is created.
+7. Optional IdentityInfo message can be written to set the profile information, such as username.
+6.  **NOTE**: The identity private key is only used to generate the HALO.
 
 #### 4.1.4. Device Authorization and Authentication
 
