@@ -53,6 +53,7 @@ const actions = [
  * @constructor
  */
 export const Container = () => {
+  // TODO(burdon): Use client-testing.
   const items = useTestItems(10);
 
   return (
@@ -61,6 +62,7 @@ export const Container = () => {
         <div className='header'>
           <Searchbar />
         </div>
+
         <div className='items'>
           {items.map(item => (
             <ItemCard
@@ -69,6 +71,7 @@ export const Container = () => {
             />
           ))}
         </div>
+
         <div>
           <Actions
             actions={actions}
