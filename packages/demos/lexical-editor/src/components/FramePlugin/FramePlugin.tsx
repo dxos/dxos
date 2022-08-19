@@ -4,7 +4,7 @@
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand, LexicalEditor } from 'lexical';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 export const INSERT_FRAME_COMMAND: LexicalCommand<void> = createCommand();
 
