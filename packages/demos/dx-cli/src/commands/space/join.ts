@@ -23,7 +23,8 @@ export default class Join extends BaseCommand {
 
   async run (): Promise<any> {
     const { flags } = await this.parse(Join);
-    let { invitation: encoded, secret } = flags; // TODO(burdon): Prompt.
+    let { invitation: encoded, secret } = flags;
+    // TODO(burdon): Use inquirer.
     if (!encoded) {
       encoded = await CliUx.ux.prompt('Invitation');
     }

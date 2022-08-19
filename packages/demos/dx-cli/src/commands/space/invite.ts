@@ -71,6 +71,9 @@ export default class Invite extends BaseCommand {
         CliUx.ux.action.start('Waiting for peer to connect');
         await promise;
         CliUx.ux.action.stop();
+        // TODO(burdon): Ends with abort.
+        const { value } = party.queryMembers();
+        console.log(value);
       } catch (err: any) {
         invitation.cancel();
         CliUx.ux.action.stop(String(err));

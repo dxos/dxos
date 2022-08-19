@@ -6,12 +6,11 @@ runtime:
       persistent: true
       path: '/tmp/user-2/dx/cli'
 
-  # TODO(burdon): Configure local kube.
   services:
     ipfs:
       server: 'https://ipfs-pub1.kube.dxos.network'
     signal:
-      server: 'wss://demo.kube.dxos.network/dxos/signal'
+      server: 'ws://localhost:8888/.well-known/dx/signal'
     ice:
       - urls: 'turn:demo.kube.dxos.network:3478'
         username: 'dxos'
