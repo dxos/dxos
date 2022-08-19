@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../../.eslintrc.base.json"
+  ],
+  "parserOptions": {
+    "project": "./packages/bot/bot-factory-client/tsconfig.json"
+  }
+}

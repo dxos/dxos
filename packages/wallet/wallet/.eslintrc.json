@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "../../../.eslintrc.react.json"
+  ],
+  "parserOptions": {
+    "project": "./packages/wallet/wallet/tsconfig.json"
+  }
+}

@@ -1,5 +1,6 @@
 {
   "extends": [
+    "../../../.eslintrc.base.json",
     "../../../.eslintrc.jest.json"
   ],
   "parserOptions": {

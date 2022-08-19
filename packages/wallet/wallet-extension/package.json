@@ -37,7 +37,6 @@
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/mocha": "^8.2.2",
@@ -51,7 +50,6 @@
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
     "esbuild": "^0.14.49",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "playwright": "^1.23.4",

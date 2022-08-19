@@ -15,9 +15,6 @@
   "scripts": {
     "nx": "nx"
   },
-  "workspaces": [
-    "packages/*/*"
-  ],
   "devDependencies": {
     "@nrwl/eslint-plugin-nx": "14.5.7",
     "@nrwl/js": "14.5.7",

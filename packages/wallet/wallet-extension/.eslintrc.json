@@ -4,6 +4,6 @@
     "../../../.eslintrc.jest.json"
   ],
   "parserOptions": {
-    "project": "./packages/common/debug/tsconfig.json"
+    "project": "./packages/wallet/wallet-extension/tsconfig.json"
   }
 }

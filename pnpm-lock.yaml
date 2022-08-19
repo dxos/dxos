@@ -33,7 +33,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
@@ -45,7 +44,6 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       jsonify: ^0.0.0
       typescript: ^4.7.2
@@ -59,14 +57,12 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      eslint: 8.22.0
       expect: 27.0.6
       jsonify: 0.0.0
       typescript: 4.7.4
@@ -81,7 +77,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -103,7 +98,6 @@ importers:
       debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       node-fetch: ^2.6.0
       source-map-support: ^0.5.12
@@ -134,7 +128,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/credentials': link:../../halo/credentials
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/signal': link:../../mesh/signal
@@ -146,7 +139,6 @@ importers:
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
       '@types/tail': 2.2.1
-      eslint: 8.22.0
       expect: 27.0.6
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
@@ -3216,7 +3208,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -3231,7 +3222,6 @@ importers:
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       '@types/url-join': ~4.0.1
-      eslint: ^8.21.0
       react: ^18.1.0
       react-dom: ^18.1.0
       react-router-dom: ^6.3.0
@@ -3256,14 +3246,12 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       '@types/url-join': 4.0.1
-      eslint: 8.22.0
       typescript: 4.7.4
 
   packages/wallet/wallet-extension:
@@ -3275,7 +3263,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -3298,7 +3285,6 @@ importers:
       chalk: ^4.1.0
       copy: ~0.3.2
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       mocha: ^8.4.0
@@ -3333,7 +3319,6 @@ importers:
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
@@ -3347,7 +3332,6 @@ importers:
       chalk: 4.1.2
       copy: 0.3.2
       esbuild: 0.14.49
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       playwright: 1.24.0
@@ -3360,7 +3344,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -3369,7 +3352,6 @@ importers:
       '@mui/material': ^5.8.1
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
-      eslint: ^8.21.0
       react: ^18.1.0
       react-dom: ^18.1.0
       typescript: ^4.7.2
@@ -3385,11 +3367,9 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
-      eslint: 8.22.0
       typescript: 4.7.4
 
   toolchains/eslint-plugin:

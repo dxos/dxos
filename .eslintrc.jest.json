@@ -1,6 +1,5 @@
 {
   "extends": [
-    "./.eslintrc.base.json",
     "plugin:jest/recommended"
   ],
   "rules": {
