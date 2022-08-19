@@ -44,7 +44,7 @@ export const ItemCard: FC<{
         </Typography>
       </CardContent>
       <CardActions>
-        <Button size='small'>Learn More</Button>
+        <Button size='small'>Edit</Button>
       </CardActions>
     </Card>
   );

@@ -14,7 +14,8 @@ const {
 module.exports = {
   entryPoints: [
     'src/main.tsx',
-    'src/sw.ts'
+    'src/sw.ts',
+    'src/test.tsx'
   ],
   outdir: 'out',
   overrides: {

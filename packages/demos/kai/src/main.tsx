@@ -20,9 +20,8 @@ if ('serviceWorker' in navigator) {
   console.error('Service workers are not supported.');
 }
 
-const root = createRoot(document.getElementById('root') as HTMLElement);
-
 (() => {
+  const root = createRoot(document.getElementById('root') as HTMLElement);
   root.render(
     <App />
   );
