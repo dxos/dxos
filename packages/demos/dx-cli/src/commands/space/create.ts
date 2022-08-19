@@ -9,6 +9,7 @@ import { Client } from '@dxos/client';
 import { BaseCommand } from '../../base-command';
 
 export default class Create extends BaseCommand {
+  static override enableJsonFlag = true;
   static override description = 'Create space.';
   static override args = [
     {

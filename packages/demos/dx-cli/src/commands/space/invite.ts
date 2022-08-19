@@ -5,7 +5,7 @@
 import { CliUx } from '@oclif/core';
 import chalk from 'chalk';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
@@ -58,6 +58,8 @@ export default class Invite extends BaseCommand {
 
         const { value: members } = party.queryMembers();
         printMembers(members);
+
+        await sleep(10_000);
       } catch (err: any) {
         invitation.cancel();
         CliUx.ux.action.stop(String(err));
