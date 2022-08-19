@@ -3,6 +3,7 @@
 //
 
 import { CliUx, Flags } from '@oclif/core';
+import chalk from 'chalk';
 
 import { Client, InvitationDescriptor } from '@dxos/client';
 
@@ -24,12 +25,11 @@ export default class Join extends BaseCommand {
   async run (): Promise<any> {
     const { flags } = await this.parse(Join);
     let { invitation: encoded, secret } = flags;
-    // TODO(burdon): Use inquirer.
     if (!encoded) {
-      encoded = await CliUx.ux.prompt('Invitation');
+      encoded = await CliUx.ux.prompt(chalk`\n{blue Invitation}`);
     }
     if (!secret) {
-      secret = await CliUx.ux.prompt('Secret');
+      secret = await CliUx.ux.prompt(chalk`\n{red Secret}`);
     }
 
     return await this.execWithClient(async (client: Client) => {

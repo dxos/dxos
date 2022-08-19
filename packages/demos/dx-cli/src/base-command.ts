@@ -9,6 +9,7 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import * as path from 'path';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
@@ -98,11 +99,20 @@ export abstract class BaseCommand extends Command {
   /**
    * Convenience function to wrap command passing in client object.
    */
-  // TODO(burdon): Error handling.
   async execWithClient <T> (callback: (client: Client) => Promise<T | undefined>): Promise<T | undefined> {
-    const client = await this.getClient();
-    const value = await callback(client);
-    await client.destroy();
-    return value;
+    try {
+      const client = await this.getClient();
+      const value = await callback(client);
+      log('Destroying...');
+      await client.destroy();
+      log('Destroyed');
+
+      // TODO(burdon): Ends with abort signal without sleep (threads still open?)
+      await sleep(10_000);
+
+      return value;
+    } catch (err: any) {
+      this.error(err);
+    }
   }
 }

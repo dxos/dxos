@@ -6,28 +6,12 @@ import { CliUx } from '@oclif/core';
 import chalk from 'chalk';
 
 import { latch } from '@dxos/async';
-import { Client, Party } from '@dxos/client';
-import { truncateKey } from '@dxos/debug';
+import { Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
+import { printMembers, selectSpace } from '../../util';
 
-// TODO(burdon): Factor out.
-const selectParty = async (parties: Party[]) => {
-  // eslint-disable-next-line no-eval
-  const inquirer = (await eval('import("inquirer")')).default;
-  const { key } = await inquirer.prompt([{
-    name: 'key',
-    type: 'list',
-    message: 'Select a space:',
-    choices: parties.map(party => ({
-      name: `[${truncateKey(party.key, 8)}] ${party.getProperty('name')}`,
-      value: party.key
-    }))
-  }]);
-
-  return key;
-};
-
+// TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {
   static override description = 'Create space invitation.';
   static override args = [
@@ -44,7 +28,7 @@ export default class Invite extends BaseCommand {
     return await this.execWithClient(async (client: Client) => {
       const { value: parties = [] } = await client.echo.queryParties();
       if (!key) {
-        key = await selectParty(parties);
+        key = await selectSpace(parties);
       }
 
       const party = parties.find(party => party.key.toHex().startsWith(key));
@@ -60,7 +44,7 @@ export default class Invite extends BaseCommand {
       this.log(chalk`\n{blue Invitation}: ${descriptor}`);
       this.log(chalk`\n{red Secret}: ${secret}\n`);
 
-      const [promise, resolve, reject] = latch({ timeout: timeout * 1000 });
+      const [promise, resolve, reject] = latch({ timeout: timeout * 1_000 });
 
       // TODO(burdon): Async error handling (see kodama).
       invitation.canceled.on(resolve);
@@ -71,9 +55,9 @@ export default class Invite extends BaseCommand {
         CliUx.ux.action.start('Waiting for peer to connect');
         await promise;
         CliUx.ux.action.stop();
-        // TODO(burdon): Ends with abort.
-        const { value } = party.queryMembers();
-        console.log(value);
+
+        const { value: members } = party.queryMembers();
+        printMembers(members);
       } catch (err: any) {
         invitation.cancel();
         CliUx.ux.action.stop(String(err));
