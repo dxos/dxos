@@ -28,6 +28,7 @@
     "halo-protocol": "packages/halo/halo-protocol",
     "hello-world": "packages/demos/hello-world",
     "kai": "packages/demos/kai",
+    "dx-diary": "packages/demos/dx-diary",
     "kitchen-sink": "packages/demos/kitchen-sink",
     "kodama": "packages/demos/kodama",
     "lexical-editor": "packages/demos/lexical-editor",
