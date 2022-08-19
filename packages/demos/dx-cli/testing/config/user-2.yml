@@ -4,7 +4,7 @@ runtime:
   client:
     storage:
       persistent: true
-      path: '/tmp/user-2/dx/cli'
+      path: '/tmp/dxos/dx-cli/user-2'
 
   services:
     ipfs:
