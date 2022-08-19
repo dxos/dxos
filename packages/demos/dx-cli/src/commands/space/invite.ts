@@ -59,7 +59,8 @@ export default class Invite extends BaseCommand {
         const { value: members } = party.queryMembers();
         printMembers(members);
 
-        await sleep(10_000);
+        // TODO(burdon): Wait to replicate.
+        await sleep(5_000);
       } catch (err: any) {
         invitation.cancel();
         CliUx.ux.action.stop(String(err));

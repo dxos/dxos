@@ -12,9 +12,9 @@ fi
 
 # Create Profile
 PUBLIC_KEY=$($dx halo --json | jq --raw-output '.publicKey' 2>/dev/null)
-if [ -z "$PUBLIC_KEY" ];
+if [ "$PUBLIC_KEY" = 'null' ];
 then
-  # TODO(burdon): Error if reset above, then check halo, then create halo. Need to reset.
+  # TODO(burdon): Error attempt to create space with null halo before creating profile.
   #   Error [OpenError]: Error parsing JSON in /tmp/dxos/dx-cli/user-1/keystore/data.json: Unexpected end of JSON input
   $dx reset
   $dx halo create
@@ -26,3 +26,6 @@ echo $KEY > /tmp/dx-cli/testing/party_key.txt
 
 # Create Invitation
 $dx space invite $KEY
+
+# List spaces
+$dx space list

@@ -19,6 +19,7 @@ export default class List extends BaseCommand {
 
   async run (): Promise<any> {
     const { flags } = await this.parse(List);
+
     return await this.execWithClient(async (client: Client) => {
       const { value: parties = [] } = await client.echo.queryParties();
       if (!flags.json) {
