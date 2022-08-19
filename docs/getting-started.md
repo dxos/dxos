@@ -3,7 +3,11 @@ title: Getting started
 description: DXOS SDK
 ---
 
+## Nx Monorepos
+
 The project is developed using [Nx](https://nx.dev/) and NodeJS version `16.14.0`.
+
+### Toolchain
 
 Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
 
@@ -22,24 +26,30 @@ nodenv rehash
 alias pnx = 'pnpm nx'
 ```
 
-## Nx monorepo
+### Building
 
-1. To install dependencies:
+To Install dependencies from the root directory:
 
 ```bash
-pnpm install # From root
+pnpm install
 ```
 
-2. To build all packages:
+To build all packages:
 
 ```bash
 pnpm nx run-many --target=build
 ```
 
-3. To build one package:
+To check all tests pass (this is run by CI):
 
 ```bash
-pnpm nx run <target>:build
+pnpm nx run-many --target=check
+```
+
+To build an individual package (optionally with the `watch` flag):
+
+```bash
+pnpm nx build <target> --watch
 ```
 
 ### Adding new dependencies
