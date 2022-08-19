@@ -4,6 +4,8 @@ A simple DXOS progressive web app (PWA).
 
 The word kai (貝) is the Japanese word for shell.
 
+> - TODO(burdon): https://preactjs.com/guide/v10/switching-to-preact
+
 ### PWA Refs
 
 - https://w3c.github.io/manifest
