@@ -9,7 +9,6 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import * as path from 'path';
 
-import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client/client';
 import { ConfigObject } from '@dxos/config';
 
@@ -106,10 +105,6 @@ export abstract class BaseCommand extends Command {
       log('Destroying...');
       await client.destroy();
       log('Destroyed');
-
-      // TODO(burdon): Ends with abort signal without sleep (threads still open?)
-      await sleep(10_000);
-
       return value;
     } catch (err: any) {
       this.error(err);
