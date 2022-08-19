@@ -3,7 +3,11 @@ title: Getting started
 description: DXOS SDK
 ---
 
+## Nx Monorepos
+
 The project is developed using [Nx](https://nx.dev/) and NodeJS version `16.14.0`.
+
+### Toolchain
 
 Update the required version of Node required by `.node-version` (e.g., via `nodenv`).
 
@@ -22,24 +26,30 @@ nodenv rehash
 alias pnx = 'pnpm nx'
 ```
 
-## Nx monorepo
+### Building
 
-1. To install dependencies:
+To Install dependencies from the root directory:
 
 ```bash
-pnpm install # From root
+pnpm install
 ```
 
-2. To build all packages:
+To build all packages:
 
 ```bash
 pnpm nx run-many --target=build
 ```
 
-3. To build one package:
+To check all tests pass (this is run by CI):
 
 ```bash
-pnpm nx run <target>:build
+pnpm nx run-many --target=check
+```
+
+To build an individual package (optionally with the `watch` flag):
+
+```bash
+pnpm nx build <target> --watch
 ```
 
 ### Adding new dependencies
@@ -101,21 +111,11 @@ ncu --deep -u '@storybook/*'
 
 The Release process is described [here](https://github.com/dxos/eng/wiki/Build-System-~-Releases).
 
-### Updating typescript project references and sort `package.json`
+### Updating Typescript Project References
 
 Trigger [Standardize configs](https://github.com/dxos/protocols/actions/workflows/sort-deps.yml) job.
 
-### Troubleshooting Storybooks
-
-1. `Cannot GET /"` when running `pnpm run storybook`
-
-Solution:
-
-```bash
-pnpm run storybook --no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+Note, this also sorts `package.json`.
 
 ## Snippets
 
@@ -124,10 +124,19 @@ pnpm run storybook --no-manager-cache
 pnpm ls -r --depth -1
 ```
 
-## FAQ
+## Troubleshooting
 
-1. Issue with `data.copy is not a function`
+1). Issue with `data.copy is not a function`.
 
 This is caused by incomplete browser polyfills for Node (specifically for Buffer).
-
 Fixed by adding different polyfill for Buffer such as [here](https://github.com/dxos/protocols/blob/551f5592384f5af69f6d46960d5c895050f1f211/packages/sdk/demos/.storybook/main.js#L33).
+
+2). `Cannot GET /` when running `pnpm run storybook`
+
+Solution:
+
+```bash
+pnpm run storybook --no-manager-cache
+```
+
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
