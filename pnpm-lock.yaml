@@ -571,12 +571,12 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
       '@types/fs-extra': ^9.0.4
+      '@types/inquirer': ^9.0.1
       '@types/js-yaml': ^4.0.5
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       chai: ^4.3.4
       chalk: ^4.1.0
-      commander: ^9.4.0
       debug: ^4.3.3
       eslint: ^8.21.0
       eslint-config-oclif: ^4.0.0
@@ -585,7 +585,6 @@ importers:
       faker: ^5.1.0
       fs-extra: ^8.1.0
       globby: ^11.1.0
-      ink: ^3.2.0
       inquirer: ~9.0.2
       js-yaml: ^4.1.0
       mocha: ^8.4.0
@@ -606,11 +605,9 @@ importers:
       '@oclif/plugin-plugins': 2.1.0
       '@octokit/core': 4.0.5
       chalk: 4.1.2
-      commander: 9.4.0
       debug: 4.3.4
       faker: 5.5.3
       fs-extra: 8.1.0
-      ink: 3.2.0_react@18.2.0
       inquirer: 9.0.2
       js-yaml: 4.1.0
       oclif: 3.1.2
@@ -623,6 +620,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
+      '@types/inquirer': 9.0.1
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
       '@types/node': 16.11.47
@@ -640,6 +638,7 @@ importers:
 
   packages/demos/dx-cli/dist:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -680,6 +679,7 @@ importers:
       tslib: ^2.3.1
       typescript: ^4.7.2
     dependencies:
+      '@dxos/async': link:../../../common/async
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
       '@dxos/debug': link:../../../common/debug
@@ -1039,6 +1039,95 @@ importers:
     devDependencies:
       '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.47
+      '@types/node-fetch': 2.6.2
+      '@types/qrcode-terminal': 0.12.0
+      '@types/react': 18.0.15
+      '@types/yargs': 16.0.4
+      esbuild: 0.14.53
+      eslint: 8.21.0
+      expect: 27.0.6
+      mocha: 8.4.0
+      supervisor: 0.12.0
+      ts-node: 10.9.1_ow5yu25silzxcp7pmv7jv4j54m
+      typescript: 4.7.4
+
+  packages/demos/kodama/dist:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/eslint-plugin': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
+      '@types/node-fetch': ^2.5.10
+      '@types/qrcode-terminal': ^0.12.0
+      '@types/react': ^18.0.9
+      '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
+      clipboardy: ^3.0.0
+      compare-semver: ~1.1.0
+      date-format: ~4.0.11
+      esbuild: ^0.14.49
+      eslint: ^8.21.0
+      expect: ~27.0.2
+      ink: ^3.2.0
+      ink-select-input: ~4.2.1
+      ink-spinner: ~4.0.3
+      ink-syntax-highlight: ~1.0.1
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
+      mocha: ^8.4.0
+      node-fetch: ^2.6.0
+      npm-api: ~1.0.1
+      qrcode-terminal: ~0.12.0
+      react: ^18.1.0
+      supervisor: ~0.12.0
+      ts-node: ^10.8.2
+      typescript: ^4.7.2
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/client-testing': link:../../../sdk/client-testing
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/protocols': link:../../../common/protocols
+      '@dxos/react-async': link:../../../common/react-async
+      '@dxos/react-client': link:../../../sdk/react-client
+      chalk: 4.1.2
+      clipboardy: 3.0.0
+      compare-semver: 1.1.0
+      date-format: 4.0.13
+      ink: 3.2.0_3hx2ussxxho4jajbwrd6gq34qe
+      ink-select-input: 4.2.1_ink@3.2.0+react@18.2.0
+      ink-spinner: 4.0.3_ink@3.2.0+react@18.2.0
+      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@18.2.0
+      ink-table: 3.0.0_ink@3.2.0+react@18.2.0
+      ink-text-input: 4.0.3_ink@3.2.0+react@18.2.0
+      js-yaml: 4.1.0
+      node-fetch: 2.6.7
+      npm-api: 1.0.1
+      qrcode-terminal: 0.12.0
+      react: 18.2.0
+      yargs: 16.2.0
+    devDependencies:
+      '@dxos/eslint-plugin': link:../../../../toolchains/eslint-plugin
+      '@dxos/protocols-toolchain': link:../../../../toolchains/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
@@ -9000,6 +9089,13 @@ packages:
   /@types/html-minifier-terser/5.1.2:
     resolution: {integrity: sha512-h4lTMgMJctJybDp8CQrxTUiiYmedihHWkjnF/8Pxseu2S6Nlfcy8kwboQ8yejh456rP2yWoEVm1sS/FVsfM48w==}
 
+  /@types/inquirer/9.0.1:
+    resolution: {integrity: sha512-I4eZdYXpFHj0pAzMndJFQMu/4hCc6Z340au9lvxHofGJnFmVgckxR/t9jRzsOVviajsOmEL+OABx+e0e28IbNw==}
+    dependencies:
+      '@types/through': 0.0.30
+      rxjs: 7.5.6
+    dev: true
+
   /@types/istanbul-lib-coverage/2.0.4:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
 
@@ -9326,6 +9422,12 @@ packages:
     resolution: {integrity: sha512-ggn3ws+yRbOHog9GxnXiEZ/35Mow6YtPZpd7Z5mKDeZS/o7zx3yAle0ov/wjhVB5QT4N2Dt+GNoGCdqkBGCajQ==}
     dependencies:
       '@types/jest': 28.1.6
+    dev: true
+
+  /@types/through/0.0.30:
+    resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
+    dependencies:
+      '@types/node': 16.11.47
     dev: true
 
   /@types/through2/2.0.36:
@@ -25748,7 +25850,6 @@ packages:
     resolution: {integrity: sha512-dnyv2/YsXhnm461G+R/Pe5bWP41Nm6LBXEYWI6eiFP4fiwx6WRI/CD0zbdVAudd9xwLEF2IDcKXLHit0FYjUzw==}
     dependencies:
       tslib: 2.4.0
-    dev: false
 
   /sade/1.8.1:
     resolution: {integrity: sha512-xal3CZX1Xlo/k4ApwCFrHVACi9fBqJ7V+mwhBsuf/1IOKbBy098Fex+Wa/5QMubw09pSZ/u8EY8PWgevJsXp1A==}

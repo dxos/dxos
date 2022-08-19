@@ -25,10 +25,14 @@ export abstract class BaseCommand extends Command {
     config: Flags.string({
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
-      helpGroup: 'GLOBAL',
       default: async (context: any) => {
         return path.join(context.config.configDir, 'config.json');
       }
+    }),
+
+    timeout: Flags.integer({
+      description: 'Timeout in seconds',
+      default: 30
     })
   };
 

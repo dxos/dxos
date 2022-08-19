@@ -42,11 +42,9 @@
     "chalk": "^4.1.0",
     "debug": "^4.3.3",
     "faker": "^5.1.0",
-    "commander": "^9.4.0",
     "fs-extra": "^8.1.0",
     "js-yaml": "^4.1.0",
     "inquirer": "~9.0.2",
-    "ink": "^3.2.0",
     "oclif": "^3.1.2",
     "react": "^18.1.0"
   },
@@ -58,6 +56,7 @@
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
     "@types/fs-extra": "^9.0.4",
+    "@types/inquirer": "^9.0.1",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
@@ -89,22 +88,10 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
-    "macos": {
-      "identifier": "org.dxos.dx.cli"
-    },
     "topicSeparator": " ",
     "topics": {
       "config": {
         "description": "Configuration information."
-      },
-      "identity": {
-        "description": "Manage your decentralized identity."
-      },
-      "shell": {
-        "description": "Interactive shell."
-      },
-      "space": {
-        "description": "Manage your Brane spaces."
       }
     }
   },

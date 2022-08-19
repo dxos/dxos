@@ -1,5 +1,22 @@
 # DX CLI
 
+DXOS command line interface.
+
+# Development
+
+Run the build script from the root directory.
+
+```bash
+$ nx run kodama:build --watch=true
+```
+
+Run the CLI in the local directory.
+
+```bash
+$ export DX_CONFIG=./config/config.yml
+$ ./bin/run config --json
+```
+
 # Usage
 
 <!-- usage -->
