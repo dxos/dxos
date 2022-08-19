@@ -111,21 +111,11 @@ ncu --deep -u '@storybook/*'
 
 The Release process is described [here](https://github.com/dxos/eng/wiki/Build-System-~-Releases).
 
-### Updating typescript project references and sort `package.json`
+### Updating Typescript Project References
 
 Trigger [Standardize configs](https://github.com/dxos/protocols/actions/workflows/sort-deps.yml) job.
 
-### Troubleshooting Storybooks
-
-1. `Cannot GET /"` when running `pnpm run storybook`
-
-Solution:
-
-```bash
-pnpm run storybook --no-manager-cache
-```
-
-[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
+Note, this also sorts `package.json`.
 
 ## Snippets
 
@@ -134,10 +124,19 @@ pnpm run storybook --no-manager-cache
 pnpm ls -r --depth -1
 ```
 
-## FAQ
+## Troubleshooting
 
-1. Issue with `data.copy is not a function`
+1). Issue with `data.copy is not a function`.
 
 This is caused by incomplete browser polyfills for Node (specifically for Buffer).
-
 Fixed by adding different polyfill for Buffer such as [here](https://github.com/dxos/protocols/blob/551f5592384f5af69f6d46960d5c895050f1f211/packages/sdk/demos/.storybook/main.js#L33).
+
+2). `Cannot GET /` when running `pnpm run storybook`
+
+Solution:
+
+```bash
+pnpm run storybook --no-manager-cache
+```
+
+[Source](https://github.com/storybookjs/storybook/issues/14672#issuecomment-824627909)
