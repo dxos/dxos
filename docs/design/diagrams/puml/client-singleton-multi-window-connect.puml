@@ -16,6 +16,12 @@ worker -> frameA:     Setup Client
 frameA -> worker:     Client Ready
 frameA -> appA:       Client Ready
 
+...afterward...
+autonumber inc A
+== App A runs with client in frame ==
+appA -> frameA:       Window Message
+frameA -> appA:       Window Message
+
 ...later on...
 autonumber inc A
 == App B starts ==
@@ -26,6 +32,16 @@ frameA -> worker:     Port Ready
 worker -> frameB:     Port Ready
 frameB -> appB:       Client Ready
 
+...afterward...
+autonumber inc A
+== App B runs with proxy in frame ==
+appB -> frameB:       Window Message
+frameB -> worker:     Proxy Message
+worker -> frameA:     Proxy Message
+frameA -> worker:     Client Message
+worker -> frameB:     Client Message
+frameB -> appB:       Window Message
+
 ...eventually...
 == App A closes ==
 appA -> frameA:       <i>unload</i>
@@ -33,4 +49,10 @@ frameA -> worker:     Port Closing
 worker -> frameB:     Setup Client
 frameB -> worker:     Client Ready
 frameB -> appB:       Client Ready
+
+...afterward...
+autonumber inc A
+== App B runs with client in frame ==
+appB -> frameB:       Window Message
+frameB -> appB:       Window Message
 @enduml
