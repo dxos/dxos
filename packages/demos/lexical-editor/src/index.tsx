@@ -2,4 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Editor';
+export * from './hooks';
+export * from './components';

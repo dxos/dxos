@@ -4,5 +4,5 @@ require('@dxos/eslint-plugin/eslint-patch')
 module.exports = {
   extends: [
     'plugin:@dxos/react',
-  ],
+  ]
 }
