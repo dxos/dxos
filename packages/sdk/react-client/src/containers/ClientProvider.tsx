@@ -5,7 +5,8 @@
 import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useState } from 'react';
 
-import { Client, ClientOptions } from '@dxos/client';
+import type { ClientOptions } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigProvider } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util'; // TODO(burdon): Deprecate "util"?
@@ -79,11 +80,13 @@ export const ClientProvider = ({
       if (clientProvider) {
         // Asynchornously request client.
         const client = await getAsyncValue(clientProvider);
+        (window as any).dxos = client;
         await done(client);
       } else {
         // Asynchronously construct client (config may be undefined).
         const config = await getAsyncValue(configProvider);
         const client = new Client(config, options);
+        (window as any).dxos = client;
         await client.initialize();
         await done(client);
       }

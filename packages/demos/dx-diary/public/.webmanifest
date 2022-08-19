@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "Kai",
-  "short_name": "kai",
-  "description": "Kai Web shell.",
+  "name": "Dx-diary",
+  "short_name": "dx-diary",
+  "description": "Diary app built on DXOS platform.",
   "display": "fullscreen",
   "start_url": ".",
   "icons": [
