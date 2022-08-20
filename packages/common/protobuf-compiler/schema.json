@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "basePath": {
+      "type": "string",
+      "description": ""
+    },
+    "srcPath": {
+      "type": "string",
+      "description": ""
+    },
+    "outputPath": {
+      "type": "string",
+      "description": ""
+    },
+    "substitutionsPath": {
+      "type": "string",
+      "description": ""
+    }
+  }
+}
