@@ -2,6 +2,8 @@
 
 DXOS command line interface.
 
+TODO(wittjosiah): Add oclif-specific linting rules.
+
 # Development
 
 Run the build script from the root directory.

@@ -16,6 +16,8 @@
     "nx": "nx"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "workspace:*",
+    "@dxos/eslint-plugin-rules": "workspace:*",
     "@nrwl/eslint-plugin-nx": "14.5.7",
     "@nrwl/js": "14.5.7",
     "@nrwl/linter": "14.5.7",

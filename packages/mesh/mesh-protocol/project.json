@@ -1,0 +1,25 @@
+{
+  "sourceRoot": "packages/mesh/mesh-protocol/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/mesh-protocol/dist",
+        "packages/mesh/mesh-protocol/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/mesh-protocol/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

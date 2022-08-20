@@ -1,55 +1,28 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 module.exports = {
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    project: './tsconfig.json'
-  },
   extends: [
-    'semistandard',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:@rushstack/eslint-plugin-packlets/recommended'
+    'semistandard'
   ],
   plugins: [
-    '@typescript-eslint/eslint-plugin',
     'unused-imports',
     '@stayradiated/prefer-arrow-functions',
     '@dxos/rules'
   ],
-  ignorePatterns: [
-    // Binaries
-    'bin',
-    'main.js',
-
-    // Build Artifacts
-    'dist',
-    'src/proto/gen/*',
-
-    // Config
-    '.eslintrc.js',
-    '.mocharc.js',
-    'jest.config.js',
-
-    // Dependencies
-    'node_modules'
-  ],
   rules: {
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
-    '@typescript-eslint/ban-types': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/func-call-spacing': ['error'],
-    '@typescript-eslint/no-empty-function': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-extra-parens': 'off',
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/no-namespace': 'off',
-    '@typescript-eslint/no-non-null-assertion': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
-    '@typescript-eslint/no-use-before-define': 'off',
-    '@typescript-eslint/no-useless-constructor': ['error'],
+    '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': [
+      'error',
+      {
+        classPropertiesAllowed: false,
+        disallowPrototype: false,
+        returnStyle: 'unchanged',
+        singleReturnOnly: false
+      }
+    ],
     'curly': ['error', 'all'],
     'brace-style': ['error', '1tbs'],
     'func-call-spacing': 'off',
@@ -77,6 +50,7 @@ module.exports = {
       }
     }],
     'multiline-ternary': 'off',
+    'no-unused-vars': 'off',
     'no-unused-expressions': 'off',
     'no-useless-constructor': 'off',
     'no-void': [
@@ -111,19 +85,8 @@ module.exports = {
       {
         'vars': 'all',
         'varsIgnorePattern': '^_',
-        'args': 'none',
+        'args': 'none'
       }
-    ],
-    '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': [
-      'error',
-      {
-        classPropertiesAllowed: false,
-        disallowPrototype: false,
-        returnStyle: 'unchanged',
-        singleReturnOnly: false
-      }
-    ],
-    '@rushstack/packlets/mechanics': ['error'],
-    '@rushstack/packlets/circular-deps': ['error'],
+    ]
   }
 };

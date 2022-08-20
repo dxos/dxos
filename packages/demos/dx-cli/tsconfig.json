@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src",
@@ -17,8 +20,5 @@
     {
       "path": "../../common/crypto"
     }
-  ],
-  "types": [
-    "mocha"
   ]
 }

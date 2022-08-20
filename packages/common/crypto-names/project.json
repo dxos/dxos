@@ -2,15 +2,6 @@
   "sourceRoot": "packages/common/crypto-names/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/common/crypto-names/dist"
-      ],
-      "options": {
-        "script": "build"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

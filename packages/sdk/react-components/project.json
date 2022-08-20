@@ -2,23 +2,12 @@
   "sourceRoot": "packages/sdk/react-components/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/sdk/react-components/dist"
-      ],
-      "options": {
-        "script": "build"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/react-components/**/*.{ts,tsx}"
+          "packages/sdk/react-components/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

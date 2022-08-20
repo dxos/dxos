@@ -2,15 +2,6 @@
   "sourceRoot": "packages/common/codec-protobuf/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/common/codec-protobuf/dist"
-      ],
-      "options": {
-        "script": "build"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

@@ -17,8 +17,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test",
     "test:browser": "true"
   },

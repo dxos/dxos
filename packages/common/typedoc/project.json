@@ -2,15 +2,6 @@
   "sourceRoot": "packages/common/typedoc/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/common/typedoc/dist"
-      ],
-      "options": {
-        "script": "build"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

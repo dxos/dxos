@@ -11,6 +11,15 @@
       "options": {
         "script": "build"
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/echo/messenger-model/**/*.{ts,js}"
+        ]
+      }
     }
   }
 }

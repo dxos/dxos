@@ -54,7 +54,7 @@ afterEach(() => {
   rootContainer = null;
 });
 
-describe.only('useSelection', () => {
+describe('useSelection', () => {
   it('gets updated items selection', async () => {
     const { party } = await createTestComponents();
     act(() => {

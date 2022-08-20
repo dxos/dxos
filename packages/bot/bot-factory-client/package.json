@@ -12,8 +12,7 @@
   },
   "scripts": {
     "build": "toolchain bundle:library",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {

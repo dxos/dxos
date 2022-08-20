@@ -14,8 +14,7 @@
     "book": "toolchain book",
     "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {

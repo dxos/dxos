@@ -2,15 +2,6 @@
   "sourceRoot": "packages/common/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/common/protobuf-compiler/dist"
-      ],
-      "options": {
-        "script": "build"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

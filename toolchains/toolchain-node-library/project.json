@@ -2,13 +2,13 @@
   "sourceRoot": "toolchains/toolchain-node-library/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "toolchains/toolchain-node-library/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "toolchains/toolchain-node-library/**/*.{ts,js}"
+        ]
       }
     }
   }

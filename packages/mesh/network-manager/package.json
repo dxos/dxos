@@ -16,8 +16,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test",
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
   },
@@ -43,7 +42,6 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
@@ -53,7 +51,6 @@
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "fast-check": "~2.14.0",
     "mocha": "^8.4.0",

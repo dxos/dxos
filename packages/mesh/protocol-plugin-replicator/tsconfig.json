@@ -30,7 +30,7 @@
       "path": "../../echo/feed-store"
     },
     {
-      "path": "../protocol"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-network-generator"

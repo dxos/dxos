@@ -4,6 +4,8 @@ importers:
 
   .:
     specifiers:
+      '@dxos/eslint-plugin': workspace:*
+      '@dxos/eslint-plugin-rules': workspace:*
       '@nrwl/eslint-plugin-nx': 14.5.7
       '@nrwl/js': 14.5.7
       '@nrwl/linter': 14.5.7
@@ -16,6 +18,8 @@ importers:
       nx: 14.5.7
       typescript: ^4.7.2
     devDependencies:
+      '@dxos/eslint-plugin': link:toolchains/eslint-plugin
+      '@dxos/eslint-plugin-rules': link:toolchains/eslint-plugin-rules
       '@nrwl/eslint-plugin-nx': 14.5.7_5ajuhbouekabgvce7zxu72hya4
       '@nrwl/js': 14.5.7_ekplozetgxqhy2mupbsub3i3wi
       '@nrwl/linter': 14.5.7_yqf6mqtodhk4dygdp5fgmhxhii
@@ -513,7 +517,6 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@oclif/core': ^1.14.1
@@ -532,10 +535,6 @@ importers:
       chai: ^4.3.4
       chalk: ^4.1.0
       debug: ^4.3.3
-      eslint: ^8.21.0
-      eslint-config-oclif: ^4.0.0
-      eslint-config-oclif-typescript: ^1.0.2
-      eslint-plugin-node: ^11.1.0
       faker: ^5.1.0
       fs-extra: ^8.1.0
       globby: ^11.1.0
@@ -567,7 +566,6 @@ importers:
       oclif: 3.1.2
       react: 18.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@oclif/test': 2.1.1
       '@types/chai': 4.3.0
@@ -579,10 +577,6 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       chai: 4.3.4
-      eslint: 8.22.0
-      eslint-config-oclif: 4.0.0_eslint@8.22.0
-      eslint-config-oclif-typescript: 1.0.2_4rv7y5c6xz3vfxwhbrcxxi73bq
-      eslint-plugin-node: 11.1.0_eslint@8.22.0
       globby: 11.1.0
       mocha: 8.4.0
       shx: 0.3.4
@@ -597,7 +591,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
@@ -609,7 +602,6 @@ importers:
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
-      eslint: ^8.21.0
       expect: ~27.0.2
       mocha: ^8.4.0
       playwright: ^1.23.4
@@ -631,14 +623,12 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       playwright: 1.24.0
@@ -653,7 +643,6 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -666,7 +655,6 @@ importers:
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       mocha: ^8.4.0
@@ -690,7 +678,6 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.13.16
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/mocha': 8.2.3
@@ -698,7 +685,6 @@ importers:
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       esbuild: 0.14.49
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       mocha: 8.4.0
@@ -719,7 +705,6 @@ importers:
       '@dxos/echo-testing': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
       '@dxos/object-model': workspace:*
@@ -755,7 +740,6 @@ importers:
       dotenv: ^8.2.0
       electron: ~18.0.4
       esbuild-plugin-yaml: ~0.0.1
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       immutability-helper: ^3.0.2
@@ -808,7 +792,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@playwright/test': 1.24.0
       '@types/d3': 7.0.0
@@ -824,7 +807,6 @@ importers:
       dotenv: 8.6.0
       electron: 18.0.4
       esbuild-plugin-yaml: 0.0.1
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       mocha: 8.4.0
@@ -843,7 +825,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -861,7 +842,6 @@ importers:
       compare-semver: ~1.1.0
       date-format: ~4.0.11
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       ink: ^3.2.0
       ink-select-input: ~4.2.1
@@ -906,7 +886,6 @@ importers:
       react: 18.2.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
@@ -917,7 +896,6 @@ importers:
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
       esbuild: 0.14.49
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       supervisor: 0.12.0
@@ -933,7 +911,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
@@ -958,7 +935,6 @@ importers:
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       lexical: ~0.3.11
       mocha: ^8.4.0
@@ -994,7 +970,6 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
       '@emotion/css': 11.7.1_@babel+core@7.13.16
@@ -1007,7 +982,6 @@ importers:
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       debug: 4.3.4
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       playwright: 1.24.0
@@ -1025,7 +999,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -1041,7 +1014,6 @@ importers:
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       buffer: ^6.0.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       mocha: ^8.4.0
       playwright: ^1.23.4
@@ -1075,12 +1047,10 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       playwright: 1.24.0
@@ -1101,7 +1071,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -1128,7 +1097,6 @@ importers:
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.5
       color-hash: ^1.0.3
-      eslint: ^8.21.0
       faker: ^5.1.0
       moment: ^2.24.0
       protobufjs: ^6.9.0
@@ -1170,7 +1138,6 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -1182,7 +1149,6 @@ importers:
       '@types/react': 18.0.15
       '@types/react-copy-to-clipboard': 5.0.2
       '@types/react-dom': 18.0.6
-      eslint: 8.22.0
       typescript: 4.7.4
 
   packages/devtools/devtools-extension:
@@ -1197,7 +1163,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/devtools': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-toolkit': workspace:*
@@ -1222,7 +1187,6 @@ importers:
       debug: ^4.3.3
       download: ^8.0.0
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       express: 4.17.1
       moment: ^2.24.0
       react: ^18.1.0
@@ -1261,7 +1225,6 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/chrome': 0.0.125
       '@types/debug': 4.1.7
@@ -1275,7 +1238,6 @@ importers:
       crx: 5.0.1
       download: 8.0.0
       esbuild: 0.14.49
-      eslint: 8.22.0
       express: 4.17.1
       rmdir: 1.2.0
       safe-compare: 1.1.4
@@ -1287,7 +1249,6 @@ importers:
       '@babel/core': ~7.13.15
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
       '@dxos/network-manager': workspace:*
@@ -1304,7 +1265,6 @@ importers:
       '@mui/material': ^5.8.1
       '@types/react': ^18.0.9
       '@types/react-copy-to-clipboard': ~5.0.1
-      eslint: ^8.21.0
       react: ^18.1.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.1.0
@@ -1330,12 +1290,10 @@ importers:
     devDependencies:
       '@babel/core': 7.13.16
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/react': 18.0.15
       '@types/react-copy-to-clipboard': 5.0.2
-      eslint: 8.22.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.3.0_biqbaboplfbrettd7655fr4n2y
@@ -1350,7 +1308,6 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1379,7 +1336,6 @@ importers:
       chalk: ^4.1.0
       columnify: ^1.6.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       json-stable-stringify: ^1.0.1
@@ -1397,7 +1353,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/feed-store': link:../feed-store
-      '@dxos/mesh-protocol': link:../../mesh/protocol
+      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/model-factory': link:../model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../object-model
@@ -1416,7 +1372,6 @@ importers:
       pify: 5.0.0
     devDependencies:
       '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
       '@types/columnify': 1.5.1
@@ -1431,7 +1386,6 @@ importers:
       '@types/pify': 3.0.2
       chalk: 4.1.2
       columnify: 1.6.0
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       memdown: 5.1.0
@@ -1444,7 +1398,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -1460,7 +1413,6 @@ importers:
       '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       faker: ^5.1.0
       pify: ~5.0.0
       readable-stream: ^3.6.0
@@ -1479,7 +1431,6 @@ importers:
       pify: 5.0.0
       readable-stream: 3.6.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@types/chance': 1.1.3
@@ -1490,7 +1441,6 @@ importers:
       '@types/pify': 3.0.2
       '@types/pumpify': 1.4.1
       '@types/readable-stream': 2.3.9
-      eslint: 8.22.0
       faker: 5.5.3
       tempy: 1.0.1
       typescript: 4.7.4
@@ -1499,7 +1449,6 @@ importers:
     specifiers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
@@ -1509,7 +1458,6 @@ importers:
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       abstract-leveldown: ~7.0.0
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       jsondown: dxos/jsondown#main
@@ -1523,7 +1471,6 @@ importers:
       faker: 5.5.3
       lodash.times: 4.3.2
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@types/faker': 5.5.9
@@ -1532,7 +1479,6 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       abstract-leveldown: 7.0.0
-      eslint: 8.22.0
       expect: 27.0.6
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -1544,7 +1490,6 @@ importers:
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
@@ -1562,7 +1507,6 @@ importers:
       debug: ^4.3.3
       end-of-stream: ^1.4.1
       end-of-stream-promise: ^1.0.0
-      eslint: ^8.21.0
       from2: ^2.3.0
       hypercore: ^9.10.0
       hypertrie: 5.1.1
@@ -1588,7 +1532,6 @@ importers:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -1601,7 +1544,6 @@ importers:
       '@types/pump': 1.1.1
       '@types/through2': 2.0.36
       end-of-stream-promise: 1.0.0
-      eslint: 8.22.0
       hypertrie: 5.1.1
       tempy: 1.0.1
       typescript: 4.7.4
@@ -1611,11 +1553,9 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/mocha': ^8.2.2
-      eslint: ^8.21.0
       expect: ~27.0.2
       typescript: ^4.7.2
     dependencies:
@@ -1623,10 +1563,8 @@ importers:
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/mocha': 8.2.3
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
 
@@ -1636,7 +1574,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -1646,7 +1583,6 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       typescript: ^4.7.2
     dependencies:
@@ -1659,13 +1595,11 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@dxos/echo-protocol': link:../echo-protocol
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/jest': 28.1.6
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
 
@@ -1674,7 +1608,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -1687,7 +1620,6 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       lodash.clonedeep: ^4.5.0
@@ -1708,7 +1640,6 @@ importers:
       lodash.set: 4.3.2
       minisearch: 3.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -1717,7 +1648,6 @@ importers:
       '@types/lodash.set': 4.3.6
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       typescript: 4.7.4
@@ -1727,7 +1657,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
@@ -1737,7 +1666,6 @@ importers:
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       assert: ^2.0.0
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       typescript: ^4.7.2
@@ -1751,14 +1679,12 @@ importers:
       assert: 2.0.0
       yjs: 13.5.41
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/object-model': link:../object-model
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/faker': 5.5.9
       '@types/jest': 28.1.6
       '@types/mocha': 8.2.3
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       typescript: 4.7.4
@@ -1768,7 +1694,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/glob': ~7.1.3
       '@types/node': ^16.11.27
@@ -1777,7 +1702,6 @@ importers:
       assert: ^2.0.0
       chalk: ^4.1.0
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       glob: ~7.1.6
       pkg-up: ^3.1.0
       playwright: ^1.23.4
@@ -1796,13 +1720,11 @@ importers:
       playwright: 1.24.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/glob': 7.1.4
       '@types/node': 16.11.27
       '@types/uuid': 8.3.3
       '@types/yargs': 16.0.4
-      eslint: 8.22.0
       typescript: 4.7.4
       uuid: 8.3.2
 
@@ -1813,14 +1735,12 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
       '@dxos/signal': workspace:*
       '@types/mocha': ^8.2.2
-      eslint: ^8.21.0
       expect: ~27.0.2
       mocha: ^8.4.0
       source-map-support: ^0.5.12
@@ -1834,13 +1754,11 @@ importers:
       source-map-support: 0.5.21
     devDependencies:
       '@dxos/browser-mocha': link:../browser-mocha
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/signal': link:../../mesh/signal
       '@types/mocha': 8.2.3
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       typescript: 4.7.4
@@ -1856,7 +1774,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -1872,7 +1789,6 @@ importers:
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       node-fetch: ^2.6.0
       source-map-support: ^0.5.12
@@ -1901,12 +1817,10 @@ importers:
       source-map-support: 0.5.21
     devDependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
 
@@ -1916,7 +1830,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
@@ -1943,7 +1856,6 @@ importers:
       debug: ^4.3.3
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
-      eslint: ^8.21.0
       expect: ~27.0.2
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
@@ -1962,7 +1874,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../echo/feed-store
-      '@dxos/mesh-protocol': link:../../mesh/protocol
+      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -1981,7 +1893,6 @@ importers:
       pump: 3.0.0
       stream-to-array: 2.3.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -1998,7 +1909,6 @@ importers:
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
       '@types/stream-to-array': 2.3.0
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
       wait-for-expect: 3.0.2
@@ -2009,14 +1919,12 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/mocha': ^8.2.2
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       typescript: ^4.7.2
     dependencies:
@@ -2028,11 +1936,9 @@ importers:
       '@dxos/util': link:../../common/util
       debug: 4.3.4
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/mocha': 8.2.3
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
 
@@ -2041,7 +1947,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/debug': ^4.1.7
@@ -2049,7 +1954,6 @@ importers:
       '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       tiny-lru: ^7.0.6
       typescript: ^4.7.2
     dependencies:
@@ -2060,132 +1964,17 @@ importers:
       debug: 4.3.4
       tiny-lru: 7.0.6
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/network-generator': link:../network-generator
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/jest': 28.1.6
       '@types/node': 16.11.27
-      eslint: 8.22.0
       typescript: 4.7.4
 
-  packages/mesh/network-generator:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/eslint-plugin': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/assert': ^1.5.4
-      '@types/end-of-stream': ^1.4.0
-      '@types/jest': ^28.1.6
-      '@types/node': ^16.11.27
-      '@types/pump': ^1.1.0
-      assert: ^2.0.0
-      end-of-stream: ^1.4.1
-      eslint: ^8.21.0
-      ngraph.generators: ^19.0.1
-      ngraph.graph: ^19.0.1
-      typescript: ^4.7.2
-      wait-for-expect: ^3.0.2
-    dependencies:
-      '@dxos/async': link:../../common/async
-      assert: 2.0.0
-      end-of-stream: 1.4.4
-      ngraph.generators: 19.3.1
-      ngraph.graph: 19.1.0
-    devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
-      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@types/assert': 1.5.6
-      '@types/end-of-stream': 1.4.1
-      '@types/jest': 28.1.6
-      '@types/node': 16.11.27
-      '@types/pump': 1.1.1
-      eslint: 8.22.0
-      typescript: 4.7.4
-      wait-for-expect: 3.0.2
-
-  packages/mesh/network-manager:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/browser-mocha': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/protocol-plugin-presence': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      '@koush/wrtc': ^0.5.3
-      '@swc-node/register': ~1.4.2
-      '@types/debug': ^4.1.7
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.27
-      '@types/simple-peer': 9.11.3
-      '@types/ws': ^7.4.0
-      assert: ^2.0.0
-      debug: ^4.3.3
-      earljs: ~0.1.10
-      eslint: ^8.21.0
-      expect: ~27.0.2
-      fast-check: ~2.14.0
-      isomorphic-ws: ^4.0.1
-      mocha: ^8.4.0
-      nanomessage-rpc: ^3.0.0
-      simple-peer: 9.11.0
-      typescript: ^4.7.2
-      wait-for-expect: ^3.0.2
-      ws: ^7.4.4
-      xor-distance: ^2.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/mesh-protocol': link:../protocol
-      '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/rpc': link:../../common/rpc
-      '@dxos/util': link:../../common/util
-      '@koush/wrtc': 0.5.3
-      assert: 2.0.0
-      debug: 4.3.4
-      isomorphic-ws: 4.0.1_ws@7.5.6
-      nanomessage-rpc: 3.2.0
-      simple-peer: 9.11.0
-      ws: 7.5.6
-      xor-distance: 2.0.0
-    devDependencies:
-      '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
-      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
-      '@dxos/signal': link:../signal
-      '@dxos/testutils': link:../../common/testutils
-      '@swc-node/register': 1.4.2
-      '@types/debug': 4.1.7
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.27
-      '@types/simple-peer': 9.11.3
-      '@types/ws': 7.4.7
-      earljs: 0.1.12_typescript@4.7.4
-      eslint: 8.22.0
-      expect: 27.0.6
-      fast-check: 2.14.0
-      mocha: 8.4.0
-      typescript: 4.7.4
-      wait-for-expect: 3.0.2
-
-  packages/mesh/protocol:
+  packages/mesh/mesh-protocol:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -2198,7 +1987,6 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
-      eslint: ^8.21.0
       expect: ~27.0.2
       hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: ^1.2.1
@@ -2220,7 +2008,6 @@ importers:
       nanomessage: 8.4.0
       signal-promise: 1.0.3
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
@@ -2228,15 +2015,117 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/pump': 1.1.1
-      eslint: 8.22.0
       expect: 27.0.6
       pump: 3.0.0
       typescript: 4.7.4
       wait-for-expect: 3.0.2
 
+  packages/mesh/network-generator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@types/assert': ^1.5.4
+      '@types/end-of-stream': ^1.4.0
+      '@types/jest': ^28.1.6
+      '@types/node': ^16.11.27
+      '@types/pump': ^1.1.0
+      assert: ^2.0.0
+      end-of-stream: ^1.4.1
+      ngraph.generators: ^19.0.1
+      ngraph.graph: ^19.0.1
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+    dependencies:
+      '@dxos/async': link:../../common/async
+      assert: 2.0.0
+      end-of-stream: 1.4.4
+      ngraph.generators: 19.3.1
+      ngraph.graph: 19.1.0
+    devDependencies:
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@types/assert': 1.5.6
+      '@types/end-of-stream': 1.4.1
+      '@types/jest': 28.1.6
+      '@types/node': 16.11.27
+      '@types/pump': 1.1.1
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
+
+  packages/mesh/network-manager:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/browser-mocha': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/protocol-plugin-presence': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@koush/wrtc': ^0.5.3
+      '@swc-node/register': ~1.4.2
+      '@types/debug': ^4.1.7
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
+      '@types/simple-peer': 9.11.3
+      '@types/ws': ^7.4.0
+      assert: ^2.0.0
+      debug: ^4.3.3
+      earljs: ~0.1.10
+      expect: ~27.0.2
+      fast-check: ~2.14.0
+      isomorphic-ws: ^4.0.1
+      mocha: ^8.4.0
+      nanomessage-rpc: ^3.0.0
+      simple-peer: 9.11.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+      ws: ^7.4.4
+      xor-distance: ^2.0.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
+      '@koush/wrtc': 0.5.3
+      assert: 2.0.0
+      debug: 4.3.4
+      isomorphic-ws: 4.0.1_ws@7.5.6
+      nanomessage-rpc: 3.2.0
+      simple-peer: 9.11.0
+      ws: 7.5.6
+      xor-distance: 2.0.0
+    devDependencies:
+      '@dxos/browser-mocha': link:../../gravity/browser-mocha
+      '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
+      '@dxos/signal': link:../signal
+      '@dxos/testutils': link:../../common/testutils
+      '@swc-node/register': 1.4.2
+      '@types/debug': 4.1.7
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
+      '@types/simple-peer': 9.11.3
+      '@types/ws': 7.4.7
+      earljs: 0.1.12_typescript@4.7.4
+      expect: 27.0.6
+      fast-check: 2.14.0
+      mocha: 8.4.0
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
+
   packages/mesh/protocol-network-generator:
     specifiers:
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2244,7 +2133,6 @@ importers:
       '@types/node': ^16.11.27
       '@types/pump': ^1.1.0
       assert: ^2.0.0
-      eslint: ^8.21.0
       pump: ^3.0.0
       typescript: ^4.7.2
     dependencies:
@@ -2252,13 +2140,11 @@ importers:
       assert: 2.0.0
       pump: 3.0.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
-      '@dxos/mesh-protocol': link:../protocol
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/jest': 28.1.6
       '@types/node': 16.11.27
       '@types/pump': 1.1.1
-      eslint: 8.22.0
       typescript: 4.7.4
 
   packages/mesh/protocol-plugin-presence:
@@ -2266,7 +2152,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
@@ -2277,7 +2162,6 @@ importers:
       assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
-      eslint: ^8.21.0
       ngraph.graph: ^19.0.1
       ngraph.path: ~1.3.1
       p-limit: ^3.1.0
@@ -2287,7 +2171,7 @@ importers:
     dependencies:
       '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/mesh-protocol': link:../protocol
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
@@ -2297,13 +2181,11 @@ importers:
       queue-microtask: 1.2.3
     devDependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/jest': 28.1.6
       '@types/node': 16.11.27
-      eslint: 8.22.0
       ngraph.path: 1.3.1
       typescript: 4.7.4
       wait-for-expect: 3.0.2
@@ -2313,7 +2195,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
@@ -2329,7 +2210,6 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
-      eslint: ^8.21.0
       jest: ^28.1.3
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
@@ -2338,14 +2218,13 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/mesh-protocol': link:../protocol
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
     devDependencies:
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/protocols': link:../../common/protocols
@@ -2356,7 +2235,6 @@ importers:
       '@types/jest': 28.1.6
       '@types/pify': 3.0.2
       end-of-stream: 1.4.4
-      eslint: 8.22.0
       jest: 28.1.3
       multi-read-stream: 2.0.0
       pify: 5.0.0
@@ -2367,7 +2245,6 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
@@ -2378,26 +2255,23 @@ importers:
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       assert: ^2.0.0
-      eslint: ^8.21.0
       expect: ~27.0.2
       typescript: ^4.7.2
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/mesh-protocol': link:../protocol
+      '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       assert: 2.0.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/network-manager': link:../network-manager
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
       wait-for-expect: 3.0.2
@@ -2405,7 +2279,6 @@ importers:
   packages/mesh/signal:
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -2414,7 +2287,6 @@ importers:
       '@types/node': ^16.11.27
       '@types/node-fetch': ^2.5.10
       debug: ^4.3.3
-      eslint: ^7.12.1
       node-fetch: ^2.6.0
       pkg-up: ^3.1.0
       typescript: ^4.7.2
@@ -2424,7 +2296,6 @@ importers:
       node-fetch: 2.6.7
       pkg-up: 3.1.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/util': link:../../common/util
@@ -2432,7 +2303,6 @@ importers:
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
-      eslint: 7.32.0
       typescript: 4.7.4
 
   packages/sdk/client:
@@ -2446,7 +2316,6 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -2474,7 +2343,6 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       del: ^5.1.0
-      eslint: ^8.21.0
       expect: ~27.0.2
       jsondown: dxos/jsondown#main
       jsonify: ^0.0.0
@@ -2512,7 +2380,6 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -2532,7 +2399,6 @@ importers:
       '@types/readable-stream': 2.3.9
       '@types/sharedworker': 0.0.80
       '@types/uuid': 8.3.3
-      eslint: 8.22.0
       expect: 27.0.6
       jsonify: 0.0.0
       mocha: 8.4.0
@@ -2547,7 +2413,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/random-access-multi-storage': workspace:*
@@ -2564,7 +2429,6 @@ importers:
       chalk: ^4.1.0
       columnify: ^1.6.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       js-yaml: ^4.1.0
@@ -2585,7 +2449,6 @@ importers:
       faker: 5.5.3
       js-yaml: 4.1.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
       '@dxos/testutils': link:../../common/testutils
@@ -2598,7 +2461,6 @@ importers:
       '@types/node': 16.11.27
       chalk: 4.1.2
       columnify: 1.6.0
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -2609,7 +2471,6 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -2624,7 +2485,6 @@ importers:
       boolean: ^3.0.1
       debug: ^4.3.3
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       js-yaml: ^4.1.0
       lodash.defaultsdeep: ^4.6.1
@@ -2648,7 +2508,6 @@ importers:
       node-fetch: 2.6.7
       path-browserify: 1.0.1
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/js-yaml': 4.0.5
@@ -2658,7 +2517,6 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       esbuild: 0.14.49
-      eslint: 8.22.0
       expect: 27.0.6
       typescript: 4.7.4
 
@@ -2671,7 +2529,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -2690,7 +2547,6 @@ importers:
       '@types/use-subscription': ^1.0.0
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       expect: ~27.0.2
       level-js: ^5.0.2
       playwright: ^1.23.4
@@ -2716,7 +2572,6 @@ importers:
       use-subscription: 1.8.0_react@18.2.0
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
       '@playwright/test': 1.24.0
@@ -2730,7 +2585,6 @@ importers:
       '@types/react-dom': 18.0.6
       '@types/testing-library__jest-dom': 5.9.5
       '@types/use-subscription': 1.0.0
-      eslint: 8.22.0
       expect: 27.0.6
       level-js: 5.0.2
       playwright: 1.24.0
@@ -2753,7 +2607,6 @@ importers:
       '@dxos/client-testing': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -2770,7 +2623,6 @@ importers:
       '@types/mocha': ^8.2.2
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
-      eslint: ^8.21.0
       expect: ~27.0.2
       faker: ^5.1.0
       raf: ^3.4.1
@@ -2789,7 +2641,6 @@ importers:
       '@dxos/client-testing': link:../client-testing
       '@dxos/debug': link:../../common/debug
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../react-client
@@ -2806,7 +2657,6 @@ importers:
       '@types/mocha': 8.2.3
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
-      eslint: 8.22.0
       expect: 27.0.6
       faker: 5.5.3
       raf: 3.4.1
@@ -2902,7 +2752,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
       '@dxos/protocols-toolchain': workspace:*
@@ -2920,7 +2769,6 @@ importers:
       '@types/faker': ^5.5.1
       '@types/react': ^18.0.9
       clsx: ^1.1.0
-      eslint: ^8.21.0
       faker: ^5.1.0
       react: ^18.1.0
       react-dom: ^18.1.0
@@ -2933,7 +2781,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../client
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../react-client
@@ -2949,7 +2796,6 @@ importers:
       '@types/faker': 5.5.9
       '@types/react': 18.0.15
       clsx: 1.2.1
-      eslint: 8.22.0
       faker: 5.5.3
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -2959,12 +2805,10 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
-      eslint: ^8.21.0
       ipfs-http-client: ~56.0.1
       node-fetch: ^2.6.0
       react: ^18.1.0
@@ -2975,11 +2819,9 @@ importers:
       ipfs-http-client: 56.0.2_node-fetch@2.6.7
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/node': 16.11.27
       '@types/react': 18.0.15
-      eslint: 8.22.0
       node-fetch: 2.6.7
       react: 18.2.0
       typescript: 4.7.4
@@ -2991,7 +2833,6 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/util': workspace:*
@@ -3000,7 +2841,6 @@ importers:
       '@types/react': ^18.0.9
       assert: ^2.0.0
       debug: ^4.3.3
-      eslint: ^8.21.0
       react: ^18.1.0
       react-dom: ^18.1.0
       typescript: ^4.7.2
@@ -3015,12 +2855,10 @@ importers:
       '@babel/core': 7.13.16
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       '@types/react': 18.0.15
-      eslint: 8.22.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       typescript: 4.7.4
@@ -3036,7 +2874,6 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -3063,7 +2900,6 @@ importers:
       assert: ^2.0.0
       babel-plugin-add-module-exports: ^1.0.4
       debug: ^4.3.3
-      eslint: ^8.21.0
       lodash.defaultsdeep: ^4.6.1
       lodash.isplainobject: ^4.0.6
       mobile-detect: ~1.4.5
@@ -3096,7 +2932,6 @@ importers:
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@dxos/react-client': link:../react-client
       '@dxos/react-client-testing': link:../react-client-testing
@@ -3117,7 +2952,6 @@ importers:
       '@types/url-join': 4.0.1
       '@types/uuid': 8.3.3
       babel-plugin-add-module-exports: 1.0.4
-      eslint: 8.22.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       typescript: 4.7.4
@@ -3128,7 +2962,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
@@ -3151,7 +2984,6 @@ importers:
       bn.js: 4.12.0
       chai: ^4.3.4
       chai-as-promised: ^7.1.1
-      eslint: ^8.21.0
       faker: ^5.1.0
       fs-extra: ^8.1.0
       mocha: ^8.4.0
@@ -3176,7 +3008,6 @@ importers:
       util: 0.12.4
     devDependencies:
       '@dxos/client': link:../client
-      '@dxos/eslint-plugin': link:../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../toolchains/protocols-toolchain
       '@polkadot/api': 4.17.1
       '@polkadot/keyring': 6.11.1
@@ -3195,7 +3026,6 @@ importers:
       '@types/randombytes': 2.0.0
       chai: 4.3.4
       chai-as-promised: 7.1.1_chai@4.3.4
-      eslint: 8.22.0
       mocha: 8.4.0
       protobufjs: 6.11.2
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -3375,7 +3205,6 @@ importers:
   toolchains/eslint-plugin:
     specifiers:
       '@dxos/eslint-plugin-rules': workspace:*
-      '@rushstack/eslint-patch': ^1.1.4
       '@rushstack/eslint-plugin-packlets': ^0.4.1
       '@stayradiated/eslint-plugin-prefer-arrow-functions': ^4.4.0
       '@typescript-eslint/eslint-plugin': ^5.11.0
@@ -3393,7 +3222,6 @@ importers:
       typescript: ^4.5.5
     dependencies:
       '@dxos/eslint-plugin-rules': link:../eslint-plugin-rules
-      '@rushstack/eslint-patch': 1.1.4
       '@rushstack/eslint-plugin-packlets': 0.4.1_4rv7y5c6xz3vfxwhbrcxxi73bq
       '@stayradiated/eslint-plugin-prefer-arrow-functions': 4.4.0_eslint@8.22.0
       '@typescript-eslint/eslint-plugin': 5.30.5_w2rm4vxqmxmdgpb5j2ovmr5hve
@@ -3416,11 +3244,9 @@ importers:
 
   toolchains/protocols-toolchain:
     specifiers:
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/toolchain-node-library': workspace:*
       '@types/node': ^16.11.27
       '@types/yargs': ~16.0.1
-      eslint: ^8.21.0
       ts-node: ^10.8.2
       typescript: ^4.7.2
       yargs: ~16.2.0
@@ -3429,17 +3255,14 @@ importers:
       typescript: 4.7.4
       yargs: 16.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../eslint-plugin
       '@types/node': 16.11.27
       '@types/yargs': 16.0.4
-      eslint: 8.22.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
 
   toolchains/ridoculous:
     specifiers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@microsoft/tsdoc': ~0.14.1
       '@types/debug': ^4.1.7
@@ -3453,7 +3276,6 @@ importers:
       chalk: ^4.1.0
       debug: ^4.3.3
       diff: ~5.1.0
-      eslint: ^8.21.0
       expect: ~27.0.2
       glob: ~7.1.6
       jest: ^28.1.3
@@ -3496,7 +3318,6 @@ importers:
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0
-      '@dxos/eslint-plugin': link:../eslint-plugin
       '@dxos/protobuf-compiler': link:../../packages/common/protobuf-compiler
       '@types/debug': 4.1.7
       '@types/glob': 7.1.4
@@ -3506,7 +3327,6 @@ importers:
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
-      eslint: 8.22.0
       expect: 27.0.6
       jest: 28.1.3_n5iwv4rvtvnpm3zoiig6d6yksu
       mocha: 8.4.0
@@ -3593,6 +3413,7 @@ packages:
     resolution: {integrity: sha512-Zt1yodBx1UcyiePMSkWnU4hPqhwq7hGi2nFL1LeA3EUl+q2LQx16MISgJ0+z7dnmgvP9QtIleuETGOiOH1RcIw==}
     dependencies:
       '@babel/highlight': 7.18.6
+    dev: false
 
   /@babel/code-frame/7.18.6:
     resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}
@@ -3671,20 +3492,6 @@ packages:
       semver: 6.3.0
     transitivePeerDependencies:
       - supports-color
-
-  /@babel/eslint-parser/7.18.9_ytna2mgiwkkb4tk5sdduaahzei:
-    resolution: {integrity: sha512-KzSGpMBggz4fKbRbWLNyPVTuQr6cmCcBhOyXTw/fieOVaw5oYAwcAj4a7UKcDYCPxQq+CG1NCDZH9e2JTXquiQ==}
-    engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
-    peerDependencies:
-      '@babel/core': '>=7.11.0'
-      eslint: ^7.5.0 || ^8.0.0
-    dependencies:
-      '@babel/core': 7.18.6
-      eslint: 8.22.0
-      eslint-scope: 5.1.1
-      eslint-visitor-keys: 2.1.0
-      semver: 6.3.0
-    dev: true
 
   /@babel/generator/7.18.7:
     resolution: {integrity: sha512-shck+7VLlY72a2w9c3zYWuE1pwOKEiQHV7GTUbSnhyl5eu3i04t30tBY82ZRWrDfo3gkakCFtevExnxbkf2a3A==}
@@ -6523,6 +6330,7 @@ packages:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@eslint/eslintrc/1.3.0:
     resolution: {integrity: sha512-UWW0TMTmk2d7hLcWD1/e2g5HDM/HQ3csaLSqXCfqwh4uNDuNqlaKWXmEsL4Cs41Z0KnILNvwbHAah3C2yt06kw==}
@@ -6610,6 +6418,7 @@ packages:
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@humanwhocodes/config-array/0.6.0:
     resolution: {integrity: sha512-JQlEKbcgEUjBFhLIF4iqM7u/9lwgHRBcpHrmUNCALK0Q3amXN6lxdoXLnF0sm11E9VqTmBALR87IlUg1bZ8A9A==}
@@ -9159,10 +8968,6 @@ packages:
       node-forge: 1.3.1
       sudo: 1.0.3
 
-  /@rushstack/eslint-patch/1.1.4:
-    resolution: {integrity: sha512-LwzQKA4vzIct1zNZzBmRKI9QuNpLgTQMEjsQLf3BXuGYb3QPTP4Yjf6mkdX+X1mYttZ808QpOwAzZjv28kq7DA==}
-    dev: false
-
   /@rushstack/eslint-plugin-packlets/0.4.1_4rv7y5c6xz3vfxwhbrcxxi73bq:
     resolution: {integrity: sha512-A+mb+45fAUV6SRRlRy5EXrZAHNTnvOO3ONxw0hmRDcvyPAJwoX0ClkKQriz56QQE5SL4sPxhYoqbkoKbBmsxcA==}
     peerDependencies:
@@ -10832,6 +10637,7 @@ packages:
       typescript: 4.7.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@typescript-eslint/eslint-plugin/5.30.5_w2rm4vxqmxmdgpb5j2ovmr5hve:
     resolution: {integrity: sha512-lftkqRoBvc28VFXEoRgyZuztyVUQ04JvUnATSPtIRFAccbXTWL6DEtXGYMcbg998kXw1NLUJm7rTQ9eUt+q6Ig==}
@@ -10891,6 +10697,7 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - typescript
+    dev: false
 
   /@typescript-eslint/experimental-utils/4.33.0_hxadhbs2xogijvk7vq4t2azzbu:
     resolution: {integrity: sha512-zeQjOoES5JFjTnAhI5QY7ZviczMzDptls15GFsI6jyUOq0kOf9+WonkhtlIhh0RgHRnqj5gdNxW5j1EvAyYg6Q==}
@@ -10940,6 +10747,7 @@ packages:
       typescript: 4.7.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@typescript-eslint/parser/5.30.5_typescript@4.7.4:
     resolution: {integrity: sha512-zj251pcPXI8GO9NDKWWmygP6+UjwWmrdf9qMW/L/uQJBM/0XbU2inxe5io/234y/RCvwpKEYjZ6c1YrXERkK4Q==}
@@ -10965,6 +10773,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 4.33.0
       '@typescript-eslint/visitor-keys': 4.33.0
+    dev: false
 
   /@typescript-eslint/scope-manager/5.20.0:
     resolution: {integrity: sha512-h9KtuPZ4D/JuX7rpp1iKg3zOH0WNEa+ZIXwpW/KWmEFDxlA/HSfCMhiyF1HS/drTICjIbpA6OqkAhrP/zkCStg==}
@@ -11007,6 +10816,7 @@ packages:
   /@typescript-eslint/types/4.33.0:
     resolution: {integrity: sha512-zKp7CjQzLQImXEpLt2BUw1tvOMPfNoTAfb8l51evhYbOEEzdWyQNmHWWGPR6hwKJDAi+1VXSBmnhL9kyVTTOuQ==}
     engines: {node: ^8.10.0 || ^10.13.0 || >=11.10.1}
+    dev: false
 
   /@typescript-eslint/types/5.20.0:
     resolution: {integrity: sha512-+d8wprF9GyvPwtoB4CxBAR/s0rpP25XKgnOvMf/gMXYDvlUC3rPFHupdTQ/ow9vn7UDe5rX02ovGYQbv/IUCbg==}
@@ -11058,6 +10868,7 @@ packages:
       typescript: 4.7.4
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@typescript-eslint/typescript-estree/5.20.0_typescript@4.7.4:
     resolution: {integrity: sha512-36xLjP/+bXusLMrT9fMMYy1KJAGgHhlER2TqpUVDYUQg4w0q/NW/sg4UGAgVwAqb8V4zYg43KMUpM8vV2lve6w==}
@@ -11148,6 +10959,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 4.33.0
       eslint-visitor-keys: 2.1.0
+    dev: false
 
   /@typescript-eslint/visitor-keys/5.20.0:
     resolution: {integrity: sha512-1flRpNF+0CAQkMNlTJ6L/Z5jiODG/e5+7mk6XwtPOUS3UrTz3UOiAg9jG2VtKsWI6rZQfy4C6a232QNRZTRGlg==}
@@ -11363,6 +11175,7 @@ packages:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       acorn: 7.4.1
+    dev: false
 
   /acorn-jsx/5.3.2_acorn@8.8.0:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -11558,6 +11371,7 @@ packages:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
+    dev: false
 
   /alphanum-sort/1.0.2:
     resolution: {integrity: sha512-0FcBfdcmaumGPQ0qPn7Q5qTgz/ooXgIyp1rf8ik5bGX8mpE2YHjC0P/eyQvxu1GURYQgq9ozf2mteQ5ZD9YiyQ==}
@@ -11924,6 +11738,7 @@ packages:
   /astral-regex/2.0.0:
     resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
+    dev: false
 
   /astring/1.8.1:
     resolution: {integrity: sha512-Aj3mbwVzj7Vve4I/v2JYOPFkCGM2YS7OqQTNSxmUR+LECRpokuPgAYghePgr6SALDo5bD5DlfbSaYjOzGJZOLQ==}
@@ -12921,6 +12736,7 @@ packages:
   /builtin-modules/3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
+    dev: false
 
   /builtin-status-codes/3.0.0:
     resolution: {integrity: sha512-HpGFw18DgFWlncDfjTa2rcQ4W88O1mC8e8yZ2AvQY5KDaktSTwo+KRf6nHK6FRI5FyRyb/5T6+TSxfP7QyGsmQ==}
@@ -13443,13 +13259,6 @@ packages:
     engines: {node: '>= 4.0'}
     dependencies:
       source-map: 0.6.1
-
-  /clean-regexp/1.0.0:
-    resolution: {integrity: sha512-GfisEZEJvzKrmGWkvfhgzcz/BllN1USeqD2V6tg14OAOgaCD2Z/PUEuxnAZ/nPvmaHRG7a8y77p1T/IRQ4D1Hw==}
-    engines: {node: '>=4'}
-    dependencies:
-      escape-string-regexp: 1.0.5
-    dev: true
 
   /clean-stack/2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
@@ -15943,34 +15752,6 @@ packages:
     optionalDependencies:
       source-map: 0.6.1
 
-  /eslint-config-oclif-typescript/1.0.2_4rv7y5c6xz3vfxwhbrcxxi73bq:
-    resolution: {integrity: sha512-QUldSp+y0C7tVT3pVNFUUeN53m2IqiY0VvWQNYt5LJoFcaFvrpEB8G3x17LFFku4jy9bg8d+MbkMG1alPwzm1w==}
-    engines: {node: '>=12.0.0'}
-    dependencies:
-      '@typescript-eslint/eslint-plugin': 4.33.0_fbj72r5z6h6jitkzmq7h3yhr4i
-      '@typescript-eslint/parser': 4.33.0_typescript@4.7.4
-      eslint-config-xo-space: 0.29.0_eslint@8.22.0
-      eslint-plugin-mocha: 9.0.0_eslint@8.22.0
-      eslint-plugin-node: 11.1.0_eslint@8.22.0
-    transitivePeerDependencies:
-      - eslint
-      - supports-color
-      - typescript
-    dev: true
-
-  /eslint-config-oclif/4.0.0_eslint@8.22.0:
-    resolution: {integrity: sha512-5tkUQeC33rHAhJxaGeBGYIflDLumeV2qD/4XLBdXhB/6F/+Jnwdce9wYHSvkx0JUqUQShpQv8JEVkBp/zzD7hg==}
-    engines: {node: '>=12.0.0'}
-    dependencies:
-      eslint-config-xo-space: 0.27.0_eslint@8.22.0
-      eslint-plugin-mocha: 9.0.0_eslint@8.22.0
-      eslint-plugin-node: 11.1.0_eslint@8.22.0
-      eslint-plugin-unicorn: 36.0.0_eslint@8.22.0
-    transitivePeerDependencies:
-      - eslint
-      - supports-color
-    dev: true
-
   /eslint-config-react-app/6.0.0_utgqu6xh6agjg25ks2nopscsny:
     resolution: {integrity: sha512-bpoAAC+YRfzq0dsTk+6v9aHm/uqnDwayNAXleMypGl6CpxI9oXXscVHo4fk3eJPIn+rsbtNetB4r/ZIidFIE8A==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -16039,46 +15820,6 @@ packages:
       eslint-plugin-n: 15.2.5_eslint@8.22.0
       eslint-plugin-promise: 6.0.0_eslint@8.22.0
     dev: false
-
-  /eslint-config-xo-space/0.27.0_eslint@8.22.0:
-    resolution: {integrity: sha512-b8UjW+nQyOkhiANVpIptqlKPyE7XRyQ40uQ1NoBhzVfu95gxfZGrpliq8ZHBpaOF2wCLZaexTSjg7Rvm99vj4A==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      eslint: '>=7.20.0'
-    dependencies:
-      eslint: 8.22.0
-      eslint-config-xo: 0.35.0_eslint@8.22.0
-    dev: true
-
-  /eslint-config-xo-space/0.29.0_eslint@8.22.0:
-    resolution: {integrity: sha512-emUZVHjmzl3I1aO2M/2gEpqa/GHXTl7LF/vQeAX4W+mQIU+2kyqY97FkMnSc2J8Osoq+vCSXCY/HjFUmFIF/Ag==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      eslint: '>=7.32.0'
-    dependencies:
-      eslint: 8.22.0
-      eslint-config-xo: 0.38.0_eslint@8.22.0
-    dev: true
-
-  /eslint-config-xo/0.35.0_eslint@8.22.0:
-    resolution: {integrity: sha512-+WyZTLWUJlvExFrBU/Ldw8AB/S0d3x+26JQdBWbcqig2ZaWh0zinYcHok+ET4IoPaEcRRf3FE9kjItNVjBwnAg==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      eslint: '>=7.20.0'
-    dependencies:
-      confusing-browser-globals: 1.0.10
-      eslint: 8.22.0
-    dev: true
-
-  /eslint-config-xo/0.38.0_eslint@8.22.0:
-    resolution: {integrity: sha512-G2jL+VyfkcZW8GoTmqLsExvrWssBedSoaQQ11vyhflDeT3csMdBVp0On+AVijrRuvgmkWeDwwUL5Rj0qDRHK6g==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      eslint: '>=7.20.0'
-    dependencies:
-      confusing-browser-globals: 1.0.10
-      eslint: 8.22.0
-    dev: true
 
   /eslint-import-resolver-node/0.3.6:
     resolution: {integrity: sha512-0En0w03NRVMn9Uiyn8YRPDKvWjxCWkslUEhGNTdGx15RvPJYQ+lbOlqrlNI2vEAs4pDYK4f/HN2TbDmk5TP0iw==}
@@ -16150,6 +15891,7 @@ packages:
       eslint: 8.22.0
       eslint-utils: 2.1.0
       regexpp: 3.2.0
+    dev: false
 
   /eslint-plugin-es/4.1.0_eslint@8.22.0:
     resolution: {integrity: sha512-GILhQTnjYE2WorX5Jyi5i4dz5ALWxBIdQECVQavL6s7cI76IZTDWleTHkxz/QT3kvcs2QlGHvKLYsSlPOlPXnQ==}
@@ -16295,17 +16037,6 @@ packages:
       minimatch: 3.1.2
     dev: false
 
-  /eslint-plugin-mocha/9.0.0_eslint@8.22.0:
-    resolution: {integrity: sha512-d7knAcQj1jPCzZf3caeBIn3BnW6ikcvfz0kSqQpwPYcVGLoJV5sz0l0OJB2LR8I7dvTDbqq1oV6ylhSgzA10zg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      eslint: '>=7.0.0'
-    dependencies:
-      eslint: 8.22.0
-      eslint-utils: 3.0.0_eslint@8.22.0
-      ramda: 0.27.2
-    dev: true
-
   /eslint-plugin-n/15.2.5_eslint@8.22.0:
     resolution: {integrity: sha512-8+BYsqiyZfpu6NXmdLOXVUfk8IocpCjpd8nMRRH0A9ulrcemhb2VI9RSJMEy5udx++A/YcVPD11zT8hpFq368g==}
     engines: {node: '>=12.22.0'}
@@ -16344,6 +16075,7 @@ packages:
       minimatch: 3.1.2
       resolve: 1.22.1
       semver: 6.3.0
+    dev: false
 
   /eslint-plugin-promise/6.0.0_eslint@8.22.0:
     resolution: {integrity: sha512-7GPezalm5Bfi/E22PnQxDWH2iW9GTvAlUNTztemeHb6c1BniSyoeTrM87JkC0wYdi6aQrZX9p2qEiAno8aTcbw==}
@@ -16422,29 +16154,6 @@ packages:
       - typescript
     dev: false
 
-  /eslint-plugin-unicorn/36.0.0_eslint@8.22.0:
-    resolution: {integrity: sha512-xxN2vSctGWnDW6aLElm/LKIwcrmk6mdiEcW55Uv5krcrVcIFSWMmEgc/hwpemYfZacKZ5npFERGNz4aThsp1AA==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      eslint: '>=7.32.0'
-    dependencies:
-      '@babel/helper-validator-identifier': 7.18.6
-      ci-info: 3.3.2
-      clean-regexp: 1.0.0
-      eslint: 8.22.0
-      eslint-template-visitor: 2.3.2_eslint@8.22.0
-      eslint-utils: 3.0.0_eslint@8.22.0
-      is-builtin-module: 3.2.0
-      lodash: 4.17.21
-      pluralize: 8.0.0
-      read-pkg-up: 7.0.1
-      regexp-tree: 0.1.24
-      safe-regex: 2.1.1
-      semver: 7.3.7
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /eslint-plugin-unused-imports/2.0.0_4r7ifn23lgigtmow52eo6kpeqm:
     resolution: {integrity: sha512-3APeS/tQlTrFa167ThtP0Zm0vctjr4M44HMpeg1P4bK6wItarumq0Ma82xorMKdFsWpphQBlRPzw/pxiVELX1A==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -16486,26 +16195,12 @@ packages:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
-  /eslint-template-visitor/2.3.2_eslint@8.22.0:
-    resolution: {integrity: sha512-3ydhqFpuV7x1M9EK52BPNj6V0Kwu0KKkcIAfpUhwHbR8ocRln/oUHgfxQupY8O1h4Qv/POHDumb/BwwNfxbtnA==}
-    peerDependencies:
-      eslint: '>=7.0.0'
-    dependencies:
-      '@babel/core': 7.18.6
-      '@babel/eslint-parser': 7.18.9_ytna2mgiwkkb4tk5sdduaahzei
-      eslint: 8.22.0
-      eslint-visitor-keys: 2.1.0
-      esquery: 1.4.0
-      multimap: 1.1.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
   /eslint-utils/2.1.0:
     resolution: {integrity: sha512-w94dQYoauyvlDc43XnGB8lU3Zt713vNChgt4EWwhXAP2XkBvndfxF0AgIqKOOasjPIPzj9JqgwkwbCYD0/V3Zg==}
     engines: {node: '>=6'}
     dependencies:
       eslint-visitor-keys: 1.3.0
+    dev: false
 
   /eslint-utils/3.0.0_eslint@7.32.0:
     resolution: {integrity: sha512-uuQC43IGctw68pJA1RgbQS8/NP7rch6Cwd4j3ZBtgo4/8Flj4eGE7ZYSZRN3iq5pVUv6GPdW5Z1RFleo84uLDA==}
@@ -16539,6 +16234,7 @@ packages:
   /eslint-visitor-keys/1.3.0:
     resolution: {integrity: sha512-6J72N8UNa462wa/KFODt/PJ3IU60SDpC3QXC1Hjc1BXXpfL2C9R5+AU7jhe0F6GREqVMh4Juu+NY7xn+6dipUQ==}
     engines: {node: '>=4'}
+    dev: false
 
   /eslint-visitor-keys/2.1.0:
     resolution: {integrity: sha512-0rSmRBzXgDzIsD6mGdJgevzgezI534Cer5L/vyMX0kHzT/jiB43jRhd9YUlMGYLQy2zprNmoT8qasCGtY+QaKw==}
@@ -16617,6 +16313,7 @@ packages:
       v8-compile-cache: 2.3.0
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /eslint/8.22.0:
     resolution: {integrity: sha512-ci4t0sz6vSRKdmkOGmprBo6fmI4PrphDFMy5JEq/fNS0gQkJM3rLmrqcp8ipMcdobH3KtUP40KniAE9W19S4wA==}
@@ -16719,6 +16416,7 @@ packages:
       acorn: 7.4.1
       acorn-jsx: 5.3.2_acorn@7.4.1
       eslint-visitor-keys: 1.3.0
+    dev: false
 
   /espree/9.1.0:
     resolution: {integrity: sha512-ZgYLvCS1wxOczBYGcQT9DDWgicXwJ4dbocr9uYN+/eresBAUuBu+O4WzB21ufQ/JqQT8gyp7hJ3z8SHii32mTQ==}
@@ -19513,13 +19211,6 @@ packages:
     resolution: {integrity: sha512-i2R6zNFDwgEHJyQUtJEk0XFi1i0dPFn/oqjK3/vPCcDeJvW5NQ83V8QbicfF1SupOaB0h8ntgBC2YiE7dfyctQ==}
     engines: {node: '>=4'}
 
-  /is-builtin-module/3.2.0:
-    resolution: {integrity: sha512-phDA4oSGt7vl1n5tJvTWooWWAsXLY+2xCnxNqvKhGEzujg+A43wPlPOyDg3C8XQHN+6k/JTQWJ/j0dQh/qr+Hw==}
-    engines: {node: '>=6'}
-    dependencies:
-      builtin-modules: 3.3.0
-    dev: true
-
   /is-callable/1.2.4:
     resolution: {integrity: sha512-nsuwtxZfMX67Oryl9LCQ+upnC0Z0BgpwntpS89m1H/TLF0zNfzfLMV/9Wa/6MZsj0acpEjAO0KF1xT6ZdLl95w==}
     engines: {node: '>= 0.4'}
@@ -21727,6 +21418,7 @@ packages:
 
   /json-schema-traverse/1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+    dev: false
 
   /json-schema/0.4.0:
     resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
@@ -22342,6 +22034,7 @@ packages:
 
   /lodash.truncate/4.4.2:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
+    dev: false
 
   /lodash.union/4.6.0:
     resolution: {integrity: sha512-c4pB2CdGrGdjMKYLA+XiRDO7Y0PRQbm/Gzg8qMj+QH+pFVAoTp5sBpO0odL3FjoPCGjK96p6qsP+yQoiLoOBcw==}
@@ -23615,10 +23308,6 @@ packages:
       uint8arrays: 3.0.0
       varint: 5.0.2
     dev: false
-
-  /multimap/1.1.0:
-    resolution: {integrity: sha512-0ZIR9PasPxGXmRsEF8jsDzndzHDj7tIav+JUmvIFB/WHswliFnquxECT/De7GR4yg99ky/NlRKJT82G1y271bw==}
-    dev: true
 
   /multimatch/5.0.0:
     resolution: {integrity: sha512-ypMKuglUrZUD99Tk2bUQ+xNQj43lPEfAeX2o9cTteAmShXy2VHDJpuwu1o0xqoKCt9jLVAvwyFKdLTPXKAfJyA==}
@@ -25148,11 +24837,6 @@ packages:
     dependencies:
       playwright-core: 1.24.0
 
-  /pluralize/8.0.0:
-    resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
-    engines: {node: '>=4'}
-    dev: true
-
   /pnp-webpack-plugin/1.6.4_typescript@4.7.4:
     resolution: {integrity: sha512-7Wjy+9E3WwLOEL30D+m8TSTF7qJJUJLONBnwQp0518siuMxUQUbgZwssaFX+QKlZkjHZcw/IpZCt/H0srrntSg==}
     engines: {node: '>=6'}
@@ -26286,10 +25970,6 @@ packages:
     dependencies:
       performance-now: 2.1.0
 
-  /ramda/0.27.2:
-    resolution: {integrity: sha512-SbiLPU40JuJniHexQSAgad32hfwd+DRUdwF2PlVuI5RZD0/vahUco7R8vD86J/tcEKKF9vZrUVwgtmGCqlCKyA==}
-    dev: true
-
   /random-access-chrome-file/1.2.0:
     resolution: {integrity: sha512-M1NOdkHEcjRB+acKrdQkwf8aMTnZUIGboiH6i2PMNkjfChBIJiB4j4MuhpOn+u+XU2n7GqpocPN4bzfv0jrBsg==}
     dependencies:
@@ -26871,11 +26551,6 @@ packages:
     resolution: {integrity: sha512-jbD/FT0+9MBU2XAZluI7w2OBs1RBi6p9M83nkoZayQXXU9e8Robt69FcZc7wU4eJD/YFTjn1JdCk3rbMJajz8Q==}
     dev: false
 
-  /regexp-tree/0.1.24:
-    resolution: {integrity: sha512-s2aEVuLhvnVJW6s/iPgEGK6R+/xngd2jNQ+xy4bXNDKxZKJH6jpPHY6kVeVv1IeLCHgswRj+Kl3ELaDjG6V1iw==}
-    hasBin: true
-    dev: true
-
   /regexp.prototype.flags/1.4.3:
     resolution: {integrity: sha512-fjggEOO3slI6Wvgjwflkc4NFRCTZAu5CnNfBd5qOMYhWdn67nJBBu34/TkD++eeFmd8C9r9jfXJ27+nSiRkSUA==}
     engines: {node: '>= 0.4'}
@@ -27100,6 +26775,7 @@ packages:
   /require-from-string/2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
+    dev: false
 
   /require-main-filename/1.0.1:
     resolution: {integrity: sha512-IqSUtOVP4ksd1C/ej5zeEh/BIP2ajqpn8c5x+q99gvcIG/Qf0cud5raVnE/Dwd0ua9TXYDoDc0RE5hBSdz22Ug==}
@@ -27438,12 +27114,6 @@ packages:
     resolution: {integrity: sha512-aJXcif4xnaNUzvUuC5gcb46oTS7zvg4jpMTnuqtrEPlR3vFr4pxtdTwaF1Qs3Enjn9HK+ZlwQui+a7z0SywIzg==}
     dependencies:
       ret: 0.1.15
-
-  /safe-regex/2.1.1:
-    resolution: {integrity: sha512-rx+x8AMzKb5Q5lQ95Zoi6ZbJqwCLkqi3XuJXp5P3rT8OEc6sZCJG5AE5dU3lsgRr/F4Bs31jSlVN+j5KrsGu9A==}
-    dependencies:
-      regexp-tree: 0.1.24
-    dev: true
 
   /safe-stable-stringify/2.3.1:
     resolution: {integrity: sha512-kYBSfT+troD9cDA85VDnHZ1rpHC50O0g1e6WlGHVCz/g+JS+9WKLj+XwFYyR8UbrZN8ll9HUpDAAddY58MGisg==}
@@ -27994,6 +27664,7 @@ packages:
       ansi-styles: 4.3.0
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
+    dev: false
 
   /smart-buffer/4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
@@ -28859,6 +28530,7 @@ packages:
       slice-ansi: 4.0.0
       string-width: 4.2.3
       strip-ansi: 6.0.1
+    dev: false
 
   /tail/2.2.4:
     resolution: {integrity: sha512-PX8klSxW1u3SdgDrDeewh5GNE+hkJ4h02JvHfV6YrHqWOVJ88nUdSQqtsUf/gWhgZlPAws3fiZ+F1f8euspcuQ==}
