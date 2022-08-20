@@ -1,11 +1,11 @@
 {
-  "sourceRoot": "packages/common/protobuf-test/src",
+  "sourceRoot": "toolchains/protobuf-test/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "nx:run-script",
       "outputs": [
-        "packages/common/protobuf-test/dist"
+        "toolchains/protobuf-test/dist"
       ],
       "options": {
         "script": "build"

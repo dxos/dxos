@@ -1,8 +1,11 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src",
@@ -10,16 +13,13 @@
   ],
   "references": [
     {
-      "path": "../../gravity/browser-mocha"
+      "path": "../../packages/gravity/browser-mocha"
     },
     {
-      "path": "../codec-protobuf"
+      "path": "../../packages/common/codec-protobuf"
     },
     {
       "path": "../protobuf-compiler"
     }
-  ],
-  "types": [
-    "mocha"
   ]
 }
