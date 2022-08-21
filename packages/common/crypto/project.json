@@ -23,6 +23,16 @@
           "packages/common/crypto/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/common/crypto"
+      ],
+      "options": {
+        "jestConfig": "packages/common/crypto/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

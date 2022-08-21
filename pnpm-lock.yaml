@@ -247,137 +247,89 @@ importers:
   packages/common/async:
     specifiers:
       '@dxos/debug': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/jest': ^27.4.1
-      '@types/node': ^16.11.27
       assert: ^2.0.0
-      typescript: ^4.7.2
     dependencies:
       '@dxos/debug': link:../debug
       assert: 2.0.0
-    devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.27
-      typescript: 4.7.4
 
   packages/common/codec-protobuf:
     specifiers:
       '@types/debug': ^4.1.7
-      '@types/jest': ^27.4.1
       '@types/lodash.merge': ^4.6.6
-      '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
-      jest: ^28.1.3
       lodash.merge: ^4.6.2
       protobufjs: ^6.9.0
-      ts-jest: ^28.0.7
-      typescript: ^4.7.2
     dependencies:
       assert: 2.0.0
       debug: 4.3.4
       lodash.merge: 4.6.2
     devDependencies:
       '@types/debug': 4.1.7
-      '@types/jest': 27.5.2
       '@types/lodash.merge': 4.6.6
-      '@types/node': 16.11.27
-      jest: 28.1.3_@types+node@16.11.27
       protobufjs: 6.11.2
-      ts-jest: 28.0.7_bi2kohzqnxavgozw3csgny5hju
-      typescript: 4.7.4
 
   packages/common/crypto:
     specifiers:
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@types/crypto-js': ~4.0.2
-      '@types/jest': ^27.4.1
-      '@types/node': ^16.11.27
       assert: ^2.0.0
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
-      typescript: ^4.7.2
     dependencies:
       '@dxos/protocols': link:../protocols
       assert: 2.0.0
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/crypto-js': 4.0.2
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.27
-      typescript: 4.7.4
 
   packages/common/crypto-names:
     specifiers:
-      '@dxos/protocols-toolchain': workspace:*
       '@types/binary-parser': ^1.5.1
       '@types/crypto-js': ~4.0.2
       '@types/faker': ^5.5.1
-      '@types/jest': ^27.4.1
       '@types/js-yaml': ^4.0.5
-      '@types/node': ^16.11.27
       '@types/uniq': ^0.0.27
       binary-parser: ^2.0.2
       crypto-js: ^3.1.9-1
       faker: ^5.1.0
       hypercore-crypto: ^2.3.0
       js-yaml: ^4.1.0
-      ts-node: ^10.8.2
-      typescript: ^4.7.2
       uniq: ^1.0.1
     dependencies:
       binary-parser: 2.0.2
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/binary-parser': 1.5.1
       '@types/crypto-js': 4.0.2
       '@types/faker': 5.5.9
-      '@types/jest': 27.5.2
       '@types/js-yaml': 4.0.5
-      '@types/node': 16.11.27
       '@types/uniq': 0.0.27
       faker: 5.5.3
       js-yaml: 4.1.0
-      ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
-      typescript: 4.7.4
       uniq: 1.0.1
 
   packages/common/debug:
     specifiers:
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/jest': ^27.4.1
-      '@types/node': ^16.11.27
       debug: ^4.3.3
       events: ^3.3.0
-      typescript: ^4.7.2
     dependencies:
       debug: 4.3.4
       events: 3.3.0
     devDependencies:
       '@dxos/protocols': link:../protocols
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.27
-      typescript: 4.7.4
 
   packages/common/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@types/debug': ^4.1.7
-      '@types/jest': ^27.4.1
-      '@types/node': ^16.11.27
       '@types/randombytes': ^2.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       randombytes: ^2.1.0
-      typescript: ^4.7.2
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -386,11 +338,8 @@ importers:
       util: 0.12.4
     devDependencies:
       '@types/debug': 4.1.7
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.27
       '@types/randombytes': 2.0.0
       debug: 4.3.4
-      typescript: 4.7.4
 
   packages/common/random-access-multi-storage:
     specifiers:
@@ -591,11 +540,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/jest': ^27.4.1
-      '@types/node': ^16.11.27
       assert: ^2.0.0
-      typescript: ^4.7.2
       util: ^0.12.4
     dependencies:
       '@dxos/debug': link:../debug
@@ -604,10 +549,6 @@ importers:
       util: 0.12.4
     devDependencies:
       '@dxos/crypto': link:../crypto
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.27
-      typescript: 4.7.4
 
   packages/demos/dx-cli:
     specifiers:
@@ -15721,7 +15662,7 @@ packages:
       mississippi: 3.0.0
       mkdirp: 0.5.5
       move-concurrently: 1.0.1
-      promise-inflight: 1.0.1_bluebird@3.7.2
+      promise-inflight: 1.0.1
       rimraf: 2.7.1
       ssri: 6.0.2
       unique-filename: 1.1.1
@@ -23639,34 +23580,6 @@ packages:
       - ts-node
     dev: true
 
-  /jest-cli/28.1.3_@types+node@16.11.27:
-    resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    hasBin: true
-    peerDependencies:
-      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/types': 28.1.3
-      chalk: 4.1.2
-      exit: 0.1.2
-      graceful-fs: 4.2.10
-      import-local: 3.0.3
-      jest-config: 28.1.3_@types+node@16.11.27
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      prompts: 2.4.2
-      yargs: 17.5.1
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-    dev: true
-
   /jest-cli/28.1.3_n5iwv4rvtvnpm3zoiig6d6yksu:
     resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
@@ -24934,26 +24847,6 @@ packages:
       '@jest/types': 28.1.3
       import-local: 3.0.3
       jest-cli: 28.1.3
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-    dev: true
-
-  /jest/28.1.3_@types+node@16.11.27:
-    resolution: {integrity: sha512-N4GT5on8UkZgH0O5LUavMRV1EDEhNTL0KEfRmDIeZHSV7p2XgLoY9t9VDUgL6o+yfdgYHVxuz81G8oB9VG5uyA==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    hasBin: true
-    peerDependencies:
-      node-notifier: ^8.0.1 || ^9.0.0 || ^10.0.0
-    peerDependenciesMeta:
-      node-notifier:
-        optional: true
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/types': 28.1.3
-      import-local: 3.0.3
-      jest-cli: 28.1.3_@types+node@16.11.27
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -29582,16 +29475,6 @@ packages:
       bluebird:
         optional: true
 
-  /promise-inflight/1.0.1_bluebird@3.7.2:
-    resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}
-    peerDependencies:
-      bluebird: '*'
-    peerDependenciesMeta:
-      bluebird:
-        optional: true
-    dependencies:
-      bluebird: 3.7.2
-
   /promise-retry/2.0.1:
     resolution: {integrity: sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==}
     engines: {node: '>=10'}
@@ -33329,39 +33212,6 @@ packages:
       semver: 7.3.7
       typescript: 4.7.4
       yargs-parser: 20.2.9
-    dev: true
-
-  /ts-jest/28.0.7_bi2kohzqnxavgozw3csgny5hju:
-    resolution: {integrity: sha512-wWXCSmTwBVmdvWrOpYhal79bDpioDy4rTT+0vyUnE3ZzM7LOAAGG9NXwzkEL/a516rQEgnMmS/WKP9jBPCVJyA==}
-    engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
-    hasBin: true
-    peerDependencies:
-      '@babel/core': '>=7.0.0-beta.0 <8'
-      '@jest/types': ^28.0.0
-      babel-jest: ^28.0.0
-      esbuild: '*'
-      jest: ^28.0.0
-      typescript: '>=4.3'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      '@jest/types':
-        optional: true
-      babel-jest:
-        optional: true
-      esbuild:
-        optional: true
-    dependencies:
-      bs-logger: 0.2.6
-      fast-json-stable-stringify: 2.1.0
-      jest: 28.1.3_@types+node@16.11.27
-      jest-util: 28.1.3
-      json5: 2.2.1
-      lodash.memoize: 4.1.2
-      make-error: 1.3.6
-      semver: 7.3.7
-      typescript: 4.7.4
-      yargs-parser: 21.0.1
     dev: true
 
   /ts-jest/28.0.7_e4vlsll2vsrxuwy4jhlvxjbksa:

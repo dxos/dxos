@@ -23,6 +23,16 @@
           "packages/common/debug/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/common/debug/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/common/debug/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

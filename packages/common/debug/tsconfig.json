@@ -4,11 +4,12 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "exclude": [
-    "node_modules"
-  ],
   "include": [
     "src",
     "test"
@@ -16,10 +17,9 @@
   "references": [
     {
       "path": "../protocols"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
-  ],
-  "types": [
-    "jest",
-    "node"
   ]
 }

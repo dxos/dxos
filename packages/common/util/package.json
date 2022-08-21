@@ -15,8 +15,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
@@ -26,11 +25,7 @@
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^27.4.1",
-    "@types/node": "^16.11.27",
-    "typescript": "^4.7.2"
+    "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
