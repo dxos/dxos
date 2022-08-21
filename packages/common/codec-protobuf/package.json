@@ -14,7 +14,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc && ts-node build.ts",
+    "build": "tsc && ts-node ./scripts/build.ts",
     "check": "true",
     "test": "jest 2>&1"
   },

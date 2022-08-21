@@ -20,9 +20,15 @@
     }
   },
   "targetDefaults": {
-    "build": {
+    "proto": {
       "dependsOn": [
         "^build"
+      ]
+    },
+    "build": {
+      "dependsOn": [
+        "^build",
+        "proto"
       ]
     },
     "test": {
@@ -35,6 +41,12 @@
         "lint",
         "test"
       ]
+    }
+  },
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
     }
   }
 }

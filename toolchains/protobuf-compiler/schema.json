@@ -9,15 +9,19 @@
     },
     "srcPath": {
       "type": "string",
-      "description": ""
+      "description": "",
+      "default": "**/*.proto"
     },
     "outputPath": {
       "type": "string",
-      "description": ""
+      "description": "",
+      "default": "gen"
     },
     "substitutionsPath": {
       "type": "string",
-      "description": ""
+      "description": "",
+      "default": "substitutions.ts"
     }
-  }
+  },
+  "required": ["basePath"]
 }

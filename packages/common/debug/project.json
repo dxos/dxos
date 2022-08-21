@@ -2,11 +2,20 @@
   "sourceRoot": "packages/common/debug/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/common/debug/dist",
+        "tsConfig": "packages/common/debug/tsconfig.json",
+        "main": "packages/common/debug/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/common/debug/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/common/debug/**/*.{ts,js}"

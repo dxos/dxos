@@ -5,6 +5,9 @@
   "repository": "git@github.com:dxos/eslint-config.git",
   "author": "Dmytro Maretskyi <maretskii@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "true"
+  },
   "dependencies": {
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@rushstack/eslint-plugin-packlets": "^0.4.1",
