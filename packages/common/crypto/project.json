@@ -2,11 +2,20 @@
   "sourceRoot": "packages/common/crypto/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/common/crypto/dist",
+        "tsConfig": "packages/common/crypto/tsconfig.json",
+        "main": "packages/common/crypto/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/common/crypto/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/common/crypto/**/*.{ts,js}"

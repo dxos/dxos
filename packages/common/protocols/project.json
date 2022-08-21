@@ -2,21 +2,27 @@
   "sourceRoot": "packages/common/protocols/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/common/protocols/dist",
-        "packages/common/protocols/src/proto/gen"
-      ],
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": ["{options.basePath}{options.outputPath}"],
       "options": {
-        "script": "build"
+        "basePath": "packages/common/protocols/src/proto/"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/common/protocols/dist",
+        "tsConfig": "packages/common/protocols/tsconfig.json",
+        "main": "packages/common/protocols/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/common/protocols/*.md"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
           "packages/common/protocols/**/*.{ts,js}"
