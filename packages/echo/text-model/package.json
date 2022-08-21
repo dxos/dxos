@@ -34,7 +34,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^27.4.1",
     "@types/mocha": "^8.2.2",
     "expect": "~27.0.2",
     "faker": "^5.1.0",

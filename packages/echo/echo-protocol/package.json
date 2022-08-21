@@ -35,7 +35,7 @@
     "@types/chance": "^1.1.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^27.4.1",
     "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "@types/pumpify": "~1.4.1",

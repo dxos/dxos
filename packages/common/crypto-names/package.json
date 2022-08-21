@@ -25,7 +25,7 @@
     "@types/binary-parser": "^1.5.1",
     "@types/crypto-js": "~4.0.2",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^27.4.1",
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.11.27",
     "@types/uniq": "^0.0.27",

@@ -21,7 +21,7 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^27.4.1",
     "@types/lodash.times": "^4.3.6",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",

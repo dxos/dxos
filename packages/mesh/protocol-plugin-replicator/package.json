@@ -38,7 +38,7 @@
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^27.4.1",
     "@types/pify": "^3.0.2",
     "end-of-stream": "^1.4.1",
     "jest": "^28.1.3",
