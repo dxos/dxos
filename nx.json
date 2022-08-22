@@ -28,6 +28,7 @@
     "build": {
       "dependsOn": [
         "^build",
+        "^bundle",
         "proto"
       ]
     },

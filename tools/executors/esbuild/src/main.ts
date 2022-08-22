@@ -1,0 +1,41 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import type { ExecutorContext } from '@nrwl/devkit';
+import { build } from 'esbuild';
+import { nodeExternalsPlugin } from 'esbuild-node-externals';
+
+import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
+
+export interface EsbuildExecutorOptions {
+  entryPoints: string[]
+  outfile: string
+  bundlePackages?: string[]
+}
+
+export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+  console.info('Executing "esbuild"...');
+  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+
+  const result = await build({
+    entryPoints: options.entryPoints,
+    outfile: options.outfile,
+    format: 'cjs',
+    write: true,
+    bundle: true,
+    // https://esbuild.github.io/api/#log-override
+    logOverride: {
+      // @polkadot/api/augment/rpc was generating this warning.
+      // It is specifically type related and has no effect on the final bundle behavior.
+      'ignored-bare-import': 'info'
+    },
+    plugins: [
+      nodeExternalsPlugin({ allowList: options.bundlePackages }),
+      FixMemdownPlugin(),
+      NodeModulesPlugin()
+    ]
+  });
+
+  return { success: result.errors.length === 0 };
+};
