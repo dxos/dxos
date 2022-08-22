@@ -1,0 +1,5 @@
+{
+  "name": "@dxos/esbuild",
+  "private": true,
+  "executors": "./executor.json"
+}

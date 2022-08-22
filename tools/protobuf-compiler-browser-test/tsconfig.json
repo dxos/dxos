@@ -19,7 +19,7 @@
       "path": "../../packages/common/codec-protobuf"
     },
     {
-      "path": "../protobuf-compiler"
+      "path": "../executors/protobuf-compiler"
     }
   ]
 }

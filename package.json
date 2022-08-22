@@ -16,6 +16,8 @@
     "nx": "nx"
   },
   "devDependencies": {
+    "@dxos/esbuild": "workspace:*",
+    "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
@@ -29,6 +31,8 @@
     "@types/node": "^16.11.27",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",
+    "esbuild": "~0.14.1",
+    "esbuild-node-externals": "^1.4.1",
     "eslint": "^8.21.0",
     "nx": "14.5.7",
     "typescript": "^4.7.2"
