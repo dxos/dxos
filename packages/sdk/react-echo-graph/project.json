@@ -2,6 +2,19 @@
   "sourceRoot": "packages/sdk/react-echo-graph/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-echo-graph/dist",
+        "tsConfig": "packages/sdk/react-echo-graph/tsconfig.json",
+        "main": "packages/sdk/react-echo-graph/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/sdk/react-echo-graph/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

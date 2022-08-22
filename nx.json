@@ -9,7 +9,9 @@
       "runner": "@nrwl/nx-cloud",
       "options": {
         "cacheableOperations": [
+          "proto",
           "build",
+          "bundle",
           "check",
           "lint",
           "test"
@@ -29,6 +31,13 @@
       "dependsOn": [
         "^build",
         "^bundle",
+        "proto"
+      ]
+    },
+    "bundle": {
+      "dependsOn": [
+        "^bundle",
+        "build",
         "proto"
       ]
     },

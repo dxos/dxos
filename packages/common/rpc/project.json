@@ -6,9 +6,7 @@
       "executor": "@dxos/protobuf-compiler:generate",
       "outputs": ["{options.basePath}{options.outputPath}"],
       "options": {
-        "basePath": "packages/common/rpc/src/proto/",
-        "srcPath": "**/*.proto",
-        "outputPath": "gen"
+        "basePath": "packages/common/rpc/src/proto/"
       }
     },
     "build": {
