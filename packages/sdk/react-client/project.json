@@ -2,6 +2,19 @@
   "sourceRoot": "packages/sdk/react-client/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-client/dist",
+        "tsConfig": "packages/sdk/react-client/tsconfig.json",
+        "main": "packages/sdk/react-client/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/sdk/react-client/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

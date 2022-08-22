@@ -2,6 +2,19 @@
   "sourceRoot": "packages/echo/echo-db/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/echo/echo-db/dist",
+        "tsConfig": "packages/echo/echo-db/tsconfig.json",
+        "main": "packages/echo/echo-db/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/echo/echo-db/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

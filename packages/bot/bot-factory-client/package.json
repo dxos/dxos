@@ -11,7 +11,7 @@
     "node:assert": "assert"
   },
   "scripts": {
-    "build": "toolchain bundle:library",
+    "bundle": "toolchain bundle:library",
     "check": "true",
     "test": "toolchain test"
   },
@@ -40,9 +40,6 @@
     "access": "public"
   },
   "toolchain": {
-    "bundlePackages": [
-      "@dxos/network-manager"
-    ],
     "testingFramework": "mocha",
     "forceCloseTests": true
   }

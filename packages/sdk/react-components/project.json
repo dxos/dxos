@@ -2,6 +2,19 @@
   "sourceRoot": "packages/sdk/react-components/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-components/dist",
+        "tsConfig": "packages/sdk/react-components/tsconfig.json",
+        "main": "packages/sdk/react-components/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/sdk/react-components/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

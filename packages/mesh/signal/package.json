@@ -17,7 +17,6 @@
     "node:assert": "assert"
   },
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "start": "./bin/signal.js",
     "test": "toolchain test"

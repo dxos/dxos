@@ -6,7 +6,6 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "book": "toolchain book",
-    "build": "toolchain build",
     "build:book": "toolchain build:book",
     "check": "true"
   },

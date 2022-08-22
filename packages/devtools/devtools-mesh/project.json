@@ -2,6 +2,19 @@
   "sourceRoot": "packages/devtools/devtools-mesh/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/devtools/devtools-mesh/dist",
+        "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json",
+        "main": "packages/devtools/devtools-mesh/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/devtools/devtools-mesh/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

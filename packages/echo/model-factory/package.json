@@ -9,7 +9,6 @@
     "node:assert": "assert"
   },
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "test": "toolchain test"
   },

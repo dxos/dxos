@@ -2,6 +2,19 @@
   "sourceRoot": "packages/mesh/network-generator/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/network-generator/dist",
+        "tsConfig": "packages/mesh/network-generator/tsconfig.json",
+        "main": "packages/mesh/network-generator/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/mesh/network-generator/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

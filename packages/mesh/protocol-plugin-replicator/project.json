@@ -2,14 +2,26 @@
   "sourceRoot": "packages/mesh/protocol-plugin-replicator/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/mesh/protocol-plugin-replicator/dist",
-        "packages/mesh/protocol-plugin-replicator/src/proto/gen"
+        "{options.basePath}{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/mesh/protocol-plugin-replicator/src/proto/"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/protocol-plugin-replicator/dist",
+        "tsConfig": "packages/mesh/protocol-plugin-replicator/tsconfig.json",
+        "main": "packages/mesh/protocol-plugin-replicator/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/mesh/protocol-plugin-replicator/*.md"]
       }
     },
     "lint": {
@@ -21,5 +33,8 @@
         ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
 }

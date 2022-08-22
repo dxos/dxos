@@ -22,9 +22,7 @@
     "index.js"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "toolchain check",
-    "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {

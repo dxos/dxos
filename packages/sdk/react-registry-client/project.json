@@ -2,6 +2,19 @@
   "sourceRoot": "packages/sdk/react-registry-client/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-registry-client/dist",
+        "tsConfig": "packages/sdk/react-registry-client/tsconfig.json",
+        "main": "packages/sdk/react-registry-client/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["packages/sdk/react-registry-client/*.md"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

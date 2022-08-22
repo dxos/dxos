@@ -106,10 +106,10 @@ export const execLibraryBundle = async (config: Config, options: BundleOptions =
   const outdir = 'dist';
   const bundlePackages = project.toolchainConfig.bundlePackages ?? [];
 
-  fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
+  // fs.rmSync(join(project.packageRoot, outdir), { recursive: true, force: true });
 
-  await buildProto(config, project);
-  await execTool('tsc', []);
+  // await buildProto(config, project);
+  // await execTool('tsc', []);
 
   // TODO(wittjosiah): Bundle for node as well.
 
