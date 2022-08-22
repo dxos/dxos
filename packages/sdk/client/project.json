@@ -30,34 +30,33 @@
         "prebuild"
       ]
     },
-    // TODO(wittjosiah): Failing to resolve config browser mapping for some reason.
-    // "bundle": {
-    //   "executor": "@dxos/esbuild:bundle",
-    //   "outputs": [
-    //     "{options.outfile}"
-    //   ],
-    //   "options": {
-    //     "entryPoints": [
-    //       "packages/sdk/client/src/index.ts"
-    //     ],
-    //     "outfile": "packages/sdk/client/dist/browser.js",
-    //     "bundlePackages": [
-    //       "@dxos/credentials",
-    //       "@dxos/crypto",
-    //       "@dxos/echo-db",
-    //       "@dxos/echo-protocol",
-    //       "@dxos/feed-store",
-    //       "@dxos/network-manager",
-    //       "@dxos/object-model"
-    //     ]
-    //   },
-    //   "dependsOn": [
-    //     "^build",
-    //     "^bundle",
-    //     "proto",
-    //     "prebuild"
-    //   ]
-    // },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/client/src/index.ts"
+        ],
+        "outfile": "packages/sdk/client/dist/browser.js",
+        "bundlePackages": [
+          "@dxos/credentials",
+          "@dxos/crypto",
+          "@dxos/echo-db",
+          "@dxos/echo-protocol",
+          "@dxos/feed-store",
+          "@dxos/network-manager",
+          "@dxos/object-model"
+        ]
+      },
+      "dependsOn": [
+        "^bundle",
+        "build",
+        "proto",
+        "prebuild"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

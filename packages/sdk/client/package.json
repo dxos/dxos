@@ -16,7 +16,6 @@
   "scripts": {
     "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "book": "toolchain book",
-    "bundle": "toolchain bundle:library",
     "build-singleton": "toolchain bundle:app",
     "check": "true",
     "start": "toolchain start",
