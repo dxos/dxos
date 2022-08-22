@@ -24,28 +24,27 @@
         "assets": ["packages/sdk/registry-client/*.md"]
       }
     },
-    // TODO(wittjosiah): Failing to resolve config browser mapping for some reason.
-    // "bundle": {
-    //   "executor": "@dxos/esbuild:bundle",
-    //   "outputs": [
-    //     "{options.outfile}"
-    //   ],
-    //   "options": {
-    //     "entryPoints": [
-    //       "packages/sdk/registry-client/src/index.ts"
-    //     ],
-    //     "outfile": "packages/sdk/registry-client/dist/browser.js",
-    //     "bundlePackages": [
-    //       "@polkadot/api",
-    //       "@polkadot/keyring",
-    //       "@polkadot/metadata",
-    //       "@polkadot/rpc-core",
-    //       "@polkadot/types",
-    //       "@polkadot/util",
-    //       "@polkadot/util-crypto"
-    //     ]
-    //   }
-    // },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/registry-client/src/index.ts"
+        ],
+        "outfile": "packages/sdk/registry-client/dist/browser.js",
+        "bundlePackages": [
+          "@polkadot/api",
+          "@polkadot/keyring",
+          "@polkadot/metadata",
+          "@polkadot/rpc-core",
+          "@polkadot/types",
+          "@polkadot/util",
+          "@polkadot/util-crypto"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

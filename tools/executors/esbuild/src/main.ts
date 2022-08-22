@@ -5,6 +5,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import { join } from 'path';
 
 import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
@@ -17,6 +18,8 @@ export interface EsbuildExecutorOptions {
 export default async (options: EsbuildExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing "esbuild"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+
+  const packagePath = join(context.workspace.projects[context.projectName!].root, 'package.json');
 
   const result = await build({
     entryPoints: options.entryPoints,
@@ -31,7 +34,10 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
       'ignored-bare-import': 'info'
     },
     plugins: [
-      nodeExternalsPlugin({ allowList: options.bundlePackages }),
+      nodeExternalsPlugin({
+        packagePath,
+        allowList: options.bundlePackages
+      }),
       FixMemdownPlugin(),
       NodeModulesPlugin()
     ]
