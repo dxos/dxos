@@ -31,6 +31,10 @@ export class MemberStateMachine {
     return this._members;
   }
 
+  getRoles(member: PublicKey): PartyMember.Role[] {
+    return this._members.get(member)?.assertion.roles ?? [];
+  }
+
   /**
    * Processes the PartyMember credential.
    * Assumes the credential is already pre-verified
