@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
@@ -29,7 +29,7 @@ const Test = () => {
   );
 };
 
-let rootContainer: any;
+let rootContainer: HTMLElement;
 
 beforeEach(() => {
   rootContainer = document.createElement('div');
@@ -37,19 +37,18 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.body.removeChild(rootContainer);
-  rootContainer = null;
+  document.body.removeChild(rootContainer!);
 });
 
 describe('useAsyncEffect', () => {
   it('gets async value.', async () => {
     act(() => {
-      ReactDOM.render(<Test />, rootContainer);
+      createRoot(rootContainer).render(<Test />);
     });
 
     const h1 = rootContainer.querySelector('h1');
     await waitForExpect(() => {
-      expect(h1.textContent).toEqual('DXOS');
+      expect(h1?.textContent).toEqual('DXOS');
     });
   });
 });

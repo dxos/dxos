@@ -23,6 +23,19 @@
           "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha-executor:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "jsdom": true,
+        "forceExit": true
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha-executor"
+  ]
 }

@@ -23,6 +23,17 @@
           "packages/common/random-access-multi-storage/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha-executor:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/random-access-multi-storage/src/**/*.test.{ts,js}"
+        ]
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha-executor"
+  ]
 }

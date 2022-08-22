@@ -26,6 +26,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
+      '@dxos/mocha': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
@@ -59,10 +60,15 @@ importers:
       esbuild: ~0.14.1
       esbuild-node-externals: ^1.4.1
       eslint: ^8.21.0
+      expect: ^27.0.2
       husky: ^8.0.0
       jest: 27.5.1
+      jsdom: ~18.0.1
+      jsdom-global: ^3.0.2
+      mocha: ^8.4.0
       nx: 14.5.7
       playwright: ^1.25.1
+      raf: ^3.4.1
       react: ^18.1.0
       react-dom: ^18.1.0
       require-from-string: ^2.0.2
@@ -81,6 +87,7 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
+      '@dxos/mocha': link:tools/executors/mocha
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@mdx-js/react': 2.1.3_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
@@ -114,10 +121,15 @@ importers:
       esbuild: 0.14.49
       esbuild-node-externals: 1.4.1_esbuild@0.14.49
       eslint: 8.22.0
+      expect: 27.5.1
       husky: 8.0.1
       jest: 27.5.1_ts-node@10.9.1
+      jsdom: 18.0.1
+      jsdom-global: 3.0.2_jsdom@18.0.1
+      mocha: 8.4.0
       nx: 14.5.7_@swc-node+register@1.5.1
       playwright: 1.25.1
+      raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       require-from-string: 2.0.2
@@ -343,15 +355,9 @@ importers:
 
   packages/common/random-access-multi-storage:
     specifiers:
-      '@dxos/browser-mocha': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.27
       '@types/pify': ^3.0.2
       assert: ^2.0.0
       del: ^5.1.0
-      expect: ~27.0.2
-      mocha: ^8.4.0
       path-browserify: ^1.0.1
       pify: ~5.0.0
       random-access-file: ^2.2.1
@@ -359,7 +365,6 @@ importers:
       random-access-memory: ~3.1.2
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
-      typescript: ^4.7.2
     dependencies:
       assert: 2.0.0
       del: 5.1.0
@@ -370,43 +375,30 @@ importers:
       random-access-memory: 3.1.4
       random-access-web: 2.0.3
     devDependencies:
-      '@dxos/browser-mocha': link:../../gravity/browser-mocha
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.27
       '@types/pify': 3.0.2
-      expect: 27.0.6
-      mocha: 8.4.0
       source-map-support: 0.5.21
-      typescript: 4.7.4
 
   packages/common/react-async:
     specifiers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/protocols-toolchain': workspace:*
-      '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       expect: ~27.0.2
       immutability-helper: ^3.0.2
-      raf: ^3.4.1
       react: ^18.1.0
       react-dom: ^18.1.0
-      typescript: ^4.7.2
       wait-for-expect: ^3.0.2
     dependencies:
       immutability-helper: 3.1.1
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       expect: 27.0.6
-      raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      typescript: 4.7.4
       wait-for-expect: 3.0.2
 
   packages/common/rpc:
@@ -415,11 +407,8 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.27
       assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
@@ -433,10 +422,7 @@ importers:
       assert: 2.0.0
       debug: 4.3.4
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/debug': 4.1.7
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.27
       earljs: 0.1.12_typescript@4.7.4
       typescript: 4.7.4
 
@@ -3442,6 +3428,9 @@ importers:
     specifiers: {}
 
   tools/executors/esbuild:
+    specifiers: {}
+
+  tools/executors/mocha:
     specifiers: {}
 
   tools/executors/protobuf-compiler:
@@ -12265,7 +12254,6 @@ packages:
   /@tootallnate/once/2.0.0:
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
-    dev: false
 
   /@ts-morph/common/0.9.2:
     resolution: {integrity: sha512-IPyg+c3Am0EBoa63W0f/AKeLrJhvzMzQ4BIvD1baxLopmiHOj1HFTXYxC6e8iTZ+UYtN+/WFM9UyGRnoA20b8g==}
@@ -16590,7 +16578,7 @@ packages:
     dev: false
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /concat-stream/1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -17193,7 +17181,6 @@ packages:
 
   /cssom/0.5.0:
     resolution: {integrity: sha512-iKuQcq+NdHqlAcwUY0o/HL69XQrUaQdMjmStJ8JFmUaiiQErlhrmuigkg/CU4E2J0IyUKUrMAgl36TvN67MqTw==}
-    dev: false
 
   /cssstyle/2.3.0:
     resolution: {integrity: sha512-AZL67abkUzIuvcHqk7c09cezpGNcxUxU4Ioi/05xHk4DQeTkWmGYftIE6ctU6AEt+Gn4n1lDStOtj7FKycP71A==}
@@ -17561,7 +17548,6 @@ packages:
       abab: 2.0.5
       whatwg-mimetype: 3.0.0
       whatwg-url: 10.0.0
-    dev: false
 
   /date-fns/2.28.0:
     resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
@@ -18178,7 +18164,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       webidl-conversions: 7.0.0
-    dev: false
 
   /domhandler/3.3.0:
     resolution: {integrity: sha512-J1C5rIANUbuYK+FuFL98650rihynUOEzRLxW+90bKZRWB6A1X1Tf82GxR1qAWLyfNPRvjqfip3Q5tdYlmAa9lA==}
@@ -20739,7 +20724,6 @@ packages:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.34
-    dev: false
 
   /format/0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
@@ -21761,7 +21745,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       whatwg-encoding: 2.0.0
-    dev: false
 
   /html-entities/1.4.0:
     resolution: {integrity: sha512-8nxjcBcd8wovbeKx7h3wTji4e6+rhaVuPNpMqwWgnHh+N9ToqsCs6XztWRBPQ+UtzsoMAdKZtUENoVzU/EMtZA==}
@@ -21930,7 +21913,6 @@ packages:
       debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /http-proxy-middleware/0.19.1_tmpgdztspuwvsxzgjkhoqk7duq:
     resolution: {integrity: sha512-yHYTgWMQO8VvwNS22eLLloAkvungsKdKTLO8AJlftYIKNfJr3GK3zK0ZCfzDDGUBttdGc8xFy1mCitvNKQtC3Q==}
@@ -22140,7 +22122,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       safer-buffer: 2.1.2
-    dev: false
 
   /icss-utils/4.1.1:
     resolution: {integrity: sha512-4aFq7wvWyMHKgxsH8QQtGpvbASCf+eM3wPRLI6R+MgAnTCZ6STYsRvttLvRWK0Nfif5piF394St3HeJDaljGPA==}
@@ -24922,7 +24903,6 @@ packages:
       jsdom: '>=10.0.0'
     dependencies:
       jsdom: 18.0.1
-    dev: false
 
   /jsdom/16.7.0:
     resolution: {integrity: sha512-u9Smc2G1USStM+s/x1ru5Sxrl6mPYCbByG1U/hUmqaVsm4tbNyS7CicOSRyuGQYZhTu0h84qkZZQ/I+dzizSVw==}
@@ -25005,7 +24985,6 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
-    dev: false
 
   /jsesc/0.5.0:
     resolution: {integrity: sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==}
@@ -33124,7 +33103,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       punycode: 2.1.1
-    dev: false
 
   /tree-kill/1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
@@ -34309,7 +34287,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       xml-name-validator: 4.0.0
-    dev: false
 
   /wait-for-expect/3.0.2:
     resolution: {integrity: sha512-cfS1+DZxuav1aBYbaO/kE06EOS8yRw7qOFoD3XtjTkYvCvh3zUvNST8DXK/nPaeqIzIv3P3kL3lRJn8iwOiSag==}
@@ -34452,7 +34429,6 @@ packages:
   /webidl-conversions/7.0.0:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
-    dev: false
 
   /webpack-dev-middleware/3.7.3_webpack@4.44.2:
     resolution: {integrity: sha512-djelc/zGiz9nZj/U7PTBi2ViorGJXEWo/3ltkPbDyxCXhhEXkW0ce99falaok4TPj+AsxLiXJR0EBOb0zh9fKQ==}
@@ -34704,7 +34680,6 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       iconv-lite: 0.6.3
-    dev: false
 
   /whatwg-fetch/3.6.2:
     resolution: {integrity: sha512-bJlen0FcuU/0EMLrdbJ7zOnW6ITZLrZMIarMUVmdKtsGvZna8vxKYaexICWPfZ8qwf9fzNq+UEIZrnSaApt6RA==}
@@ -34716,7 +34691,6 @@ packages:
   /whatwg-mimetype/3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
     engines: {node: '>=12'}
-    dev: false
 
   /whatwg-url/10.0.0:
     resolution: {integrity: sha512-CLxxCmdUby142H5FZzn4D8ikO1cmypvXVQktsgosNy4a4BHrDHeciBBGZhb0bNoR5/MltoCatso+vFjjGx8t0w==}
@@ -34724,7 +34698,6 @@ packages:
     dependencies:
       tr46: 3.0.0
       webidl-conversions: 7.0.0
-    dev: false
 
   /whatwg-url/5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
@@ -35135,7 +35108,6 @@ packages:
   /xml-name-validator/4.0.0:
     resolution: {integrity: sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw==}
     engines: {node: '>=12'}
-    dev: false
 
   /xml2js/0.4.19:
     resolution: {integrity: sha512-esZnJZJOiJR9wWKMyuvSE1y6Dq5LCuJanqhxslH2bxM6duahNZ+HMpCLhBQGZkbX6xRf8x1Y2eJlgt2q3qo49Q==}

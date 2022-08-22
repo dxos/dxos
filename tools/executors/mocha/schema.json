@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "testPatterns": {
+      "type": "array",
+      "description": "Globs of tests"
+    },
+    "ignorePatterns": {
+      "type": "array",
+      "description": "Globs of tests to ignore"
+    },
+    "jsdom": {
+      "type": "boolean",
+      "description": "Register jsdom environment",
+      "default": false
+    },
+    "forceExit": {
+      "type": "boolean",
+      "description": "Force process to exit once tests have run",
+      "default": false
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Rerun tests on source file changes",
+      "default": false
+    },
+    "watchFiles": {
+      "type": "array",
+      "description": "Glob of files to watch"
+    }
+  },
+  "required": ["testPatterns"]
+}

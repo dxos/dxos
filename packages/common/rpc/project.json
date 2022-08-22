@@ -32,6 +32,17 @@
           "packages/common/rpc/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha-executor:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/rpc/src/**/*.test.{ts,js}"
+        ]
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha-executor"
+  ]
 }
