@@ -3,7 +3,10 @@
     "allowSyntheticDefaultImports": true,
     "module": "ES2020",
     "moduleResolution": "node",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
   },
   "exclude": [
     "node_modules",

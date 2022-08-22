@@ -16,6 +16,7 @@ importers:
       '@nrwl/nx-cloud': ^14.3.0
       '@swc-node/register': 1.5.1
       '@types/jest': ^28.1.6
+      '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       '@typescript-eslint/eslint-plugin': ^5.29.0
       '@typescript-eslint/parser': ^5.29.0
@@ -37,6 +38,7 @@ importers:
       '@nrwl/nx-cloud': 14.4.1
       '@swc-node/register': 1.5.1_typescript@4.7.4
       '@types/jest': 28.1.6
+      '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@typescript-eslint/eslint-plugin': 5.30.5_w2rm4vxqmxmdgpb5j2ovmr5hve
       '@typescript-eslint/parser': 5.30.5_typescript@4.7.4
@@ -355,7 +357,6 @@ importers:
     specifiers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/protocols-toolchain': workspace:*
-      '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
@@ -371,7 +372,6 @@ importers:
     devDependencies:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
@@ -3337,7 +3337,6 @@ importers:
       '@microsoft/tsdoc': ~0.14.1
       '@types/debug': ^4.1.7
       '@types/glob': ~7.1.3
-      '@types/jest': ^28.1.6
       '@types/js-yaml': ^4.0.5
       '@types/node': ^16.11.27
       '@types/protocol-buffers-schema': ^3.4.1
@@ -3348,7 +3347,6 @@ importers:
       diff: ~5.1.0
       expect: ~27.0.2
       glob: ~7.1.6
-      jest: ^28.1.3
       js-yaml: ^4.1.0
       mdast-util-to-markdown: ~1.3.0
       mocha: ^8.4.0
@@ -3360,7 +3358,6 @@ importers:
       remark-normalize-headings: ~3.0.1
       remark-rehype: ~10.1.0
       to-vfile: ~7.2.3
-      ts-jest: ^28.0.7
       ts-node: ^10.8.2
       typescript: ^4.7.2
       unist-builder: ~3.0.0
@@ -3391,16 +3388,13 @@ importers:
       '@dxos/protobuf-compiler': link:../executors/protobuf-compiler
       '@types/debug': 4.1.7
       '@types/glob': 7.1.4
-      '@types/jest': 28.1.6
       '@types/js-yaml': 4.0.5
       '@types/node': 16.11.27
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
       expect: 27.0.6
-      jest: 28.1.3_n5iwv4rvtvnpm3zoiig6d6yksu
       mocha: 8.4.0
-      ts-jest: 28.0.7_bi2kohzqnxavgozw3csgny5hju
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
 
@@ -6656,6 +6650,7 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - ts-node
+    dev: false
 
   /@jest/environment/26.6.2:
     resolution: {integrity: sha512-nFy+fHl28zUrRsCeMB61VDThV1pVTtlEokBRgqPrcT1JNq4yRNIyTHfyht6PqtUvY9IsuLGTrbG8kPXjSZIZwA==}
@@ -19863,6 +19858,7 @@ packages:
       - '@types/node'
       - supports-color
       - ts-node
+    dev: false
 
   /jest-config/26.6.3_ts-node@10.8.2:
     resolution: {integrity: sha512-t5qdIj/bCj2j7NFVHb2nFB4aUdfucDn3JRKgrZnplb8nieAirAzRSHP8uDEd+qV6ygzg9Pz4YG7UTJf94LPSyg==}
@@ -20054,6 +20050,7 @@ packages:
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /jest-diff/26.6.2:
     resolution: {integrity: sha512-6m+9Z3Gv9wN0WFVasqjCL/06+EFCMTqDEUl/b87HYK2rAPTyfz4ZIuSlPhY51PIQRWx5TaxeF1qmXKe9gfN3sA==}
@@ -21103,6 +21100,7 @@ packages:
       - '@types/node'
       - supports-color
       - ts-node
+    dev: false
 
   /jju/1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}

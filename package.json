@@ -20,6 +20,7 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
+    "@types/mocha": "^8.2.2",
     "@dxos/protobuf-compiler": "workspace:*",
     "@nrwl/eslint-plugin-nx": "14.5.7",
     "@nrwl/devkit": "14.5.7",
