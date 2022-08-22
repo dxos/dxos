@@ -34,6 +34,10 @@ export class PartyStateMachine {
     return this._feeds.feeds;
   }
 
+  get credentials(): Credential[] {
+    return this._credentials;
+  }
+
   /**
    * @param fromFeed Key of the feed where this credential is recorded.
    */
