@@ -66,8 +66,8 @@ export interface TypeRecordMetadata extends RecordMetadata {
  * Main API for DXNS registry.
  */
 export class RegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
-  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String());
+  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String());
 
   constructor (
     private readonly _backend: RegistryClientBackend

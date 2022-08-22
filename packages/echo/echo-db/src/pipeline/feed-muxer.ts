@@ -43,7 +43,7 @@ export class FeedMuxer {
    */
   private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
 
-  private _echoProcessor: EchoProcessor | undefined
+  private _echoProcessor: EchoProcessor | undefined;
 
   /**
    * @param _partyProcessor Processes HALO messages to update party state.

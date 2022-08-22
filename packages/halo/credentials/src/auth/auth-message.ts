@@ -36,7 +36,7 @@ export const createAuthMessage = (
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,
-    feedKey: feedKey,
+    feedKey,
     feedAdmit
   };
 

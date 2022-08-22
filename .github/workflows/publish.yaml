@@ -25,7 +25,7 @@ jobs:
         echo "::endgroup::"
 
         # Build with tests
-        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js build:test --verbose
+        node common/scripts/github-actions-folding.js node common/scripts/install-run-rush.js check --verbose
     - name: Run prerelease scripts
       run: |
         \. "$NVM_DIR/nvm.sh" && nvm use

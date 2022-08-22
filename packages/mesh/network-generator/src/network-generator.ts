@@ -22,7 +22,8 @@ export class NetworkGenerator {
 
   constructor (options: NetworkOptions = {}) {
     const self = this; // eslint-disable-line
-    this.generator = graphGenerators.factory(() => {
+    // TODO(wittjosiah): Use typing here.
+    this.generator = (graphGenerators as any).factory(() => {
       const idGenerator = new IdGenerator();
 
       const network = new Network(options);

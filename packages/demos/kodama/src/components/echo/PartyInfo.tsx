@@ -28,12 +28,12 @@ export const PartyInfo: FC<{
       ]}
       rows={[
         {
-          property: 'Public key',
-          value: truncateKey(party.key, 4)
-        },
-        {
           property: 'Name',
           value: party.getProperty('title')
+        },
+        {
+          property: 'Public key',
+          value: truncateKey(party.key, 4)
         }
       ]}
     />

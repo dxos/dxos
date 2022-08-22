@@ -60,7 +60,7 @@ export class ItemDemuxer {
 
         const modelOpts: ModelConstructionOptions = {
           itemId,
-          modelType: modelType,
+          modelType,
           snapshot: {
             mutations: mutation ? [{ mutation, meta }] : undefined
           }

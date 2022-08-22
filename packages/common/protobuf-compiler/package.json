@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "pnpm run gen && tsc",
-    "build:test": "pnpm run build && pnpm run lint && pnpm run test",
+    "check": "pnpm run build && pnpm run lint && pnpm run test",
     "gen": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "lint": "eslint 'src/**/*.ts'",
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
@@ -30,16 +30,16 @@
     "ts-morph": "~10.0.2"
   },
   "devDependencies": {
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "^2.0.0",
     "@types/node": "^16.11.27",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2",
-    "mocha": "~8.4.0",
-    "@types/mocha": "~8.2.2",
+    "mocha": "^8.4.0",
+    "@types/mocha": "^8.2.2",
     "expect": "~27.0.2",
     "@swc-node/register": "~1.4.2"
   },

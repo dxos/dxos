@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/sdk/react-components/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/sdk/react-components/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

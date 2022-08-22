@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/gravity/browser-mocha/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/gravity/browser-mocha/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

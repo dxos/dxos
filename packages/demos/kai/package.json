@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/kai",
+  "version": "2.33.8",
+  "description": "Kai Web shell.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "bin",
+    "config",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain build",
+    "check": "toolchain check",
+    "lint": "toolchain lint",
+    "prepublishOnly": "npm run test && npm run build",
+    "start": "toolchain start",
+    "test": "toolchain test"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-testing": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@emotion/css": "^11.7.1",
+    "@mui/material": "^5.8.1",
+    "@mui/icons-material": "^5.8.0",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "~7.13.15",
+    "@dxos/eslint-plugin": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/faker": "^5.5.1",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^16.11.27",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.5",
+    "esbuild": "^0.14.49",
+    "eslint": "^8.21.0",
+    "expect": "~27.0.2",
+    "faker": "^5.1.0",
+    "mocha": "^8.4.0",
+    "supervisor": "~0.12.0",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "forceCloseTests": true,
+    "testingFramework": "mocha"
+  }
+}

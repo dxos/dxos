@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/mesh/broadcast/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/broadcast/dist",
+        "packages/mesh/broadcast/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

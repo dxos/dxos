@@ -63,7 +63,7 @@ describe('FeedMuxer', () => {
     // TODO(burdon): Check order (re-use feed-store-iterator test logic).
     //
     const numMessages = 5;
-    const [counter, updateCounter] = latch(numMessages);
+    const [counter, updateCounter] = latch({ count: numMessages });
     const echoProcessor = async (message: IEchoStream) => {
       log('Processed:', JSON.stringify(message, jsonReplacer, 2));
       updateCounter();

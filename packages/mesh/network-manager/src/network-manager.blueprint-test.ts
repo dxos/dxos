@@ -76,7 +76,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     });
     await nm1.destroy();
     await nm2.destroy();
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000).retries(10);
 
   it('join and leave swarm', async () => {
     const topic = PublicKey.random();
@@ -110,7 +110,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }).timeout(10_000);
+  }).timeout(10_000).retries(10);
 
   it('join and leave swarm and reconnect', async () => {
     const topic = PublicKey.random();
@@ -152,7 +152,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }).timeout(10_000);
+  }).timeout(10_000).retries(10);
 };
 
 // eslint-disable-next-line jest/no-export
@@ -193,7 +193,7 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
 
     await networkManager1.destroy();
     await networkManager2.destroy();
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000).retries(10);
 
   describe('StarTopology', () => {
     it('two peers connect to each other', async () => {
@@ -216,7 +216,7 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('Foo');
       });
-    }).timeout(10_000).retries(3);
+    }).timeout(10_000).retries(10);
   });
 };
 
@@ -278,7 +278,7 @@ export function inMemoryTests () {
         const peerId = PublicKey.random();
         const { plugin } = await createPeer({ topic, peerId });
 
-        const [done, pongReceived] = latch(peersPerTopic - 1);
+        const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
 
         plugin.on('connect', async (protocol: Protocol) => {
           const { peerId } = protocol.getSession() ?? {};
@@ -490,5 +490,5 @@ export function inMemoryTests () {
         ]
       }
     );
-  }).timeout(30_000).retries(3);
+  }).timeout(30_000).retries(10);
 }

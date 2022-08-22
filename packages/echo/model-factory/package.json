@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -25,13 +25,13 @@
   },
   "devDependencies": {
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.6",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "typescript": "^4.7.2"
   },

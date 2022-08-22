@@ -48,7 +48,7 @@ describe('Client - persistent', () => {
       });
       expect(client2.echo.queryParties().value.length).toBe(0);
     }
-  }).timeout(10_000).retries(2);
+  }).timeout(10_000).retries(10);
 
   it('MetadataStore save/load', async () => {
     const storage = createStorage('', StorageType.IDB);
@@ -68,5 +68,5 @@ describe('Client - persistent', () => {
       const partyLoaded = metadataStore.getParty(partyKey);
       expect(partyLoaded?.key).toEqual(partyKey);
     }
-  });
+  }).retries(10);
 });

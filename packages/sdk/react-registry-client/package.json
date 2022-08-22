@@ -13,7 +13,7 @@
     "book": "toolchain book",
     "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -28,13 +28,13 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.11",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "typescript": "^4.7.2"

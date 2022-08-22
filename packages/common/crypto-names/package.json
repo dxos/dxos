@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -23,7 +23,7 @@
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/binary-parser": "^1.5.1",
     "@types/crypto-js": "~4.0.2",
@@ -32,7 +32,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/node": "^16.11.27",
     "@types/uniq": "^0.0.27",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "faker": "^5.1.0",
     "js-yaml": "^4.1.0",
     "ts-node": "^10.8.2",

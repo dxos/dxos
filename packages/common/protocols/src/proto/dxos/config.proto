@@ -89,10 +89,10 @@ message Runtime {
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1;
-      optional StorageDriver storage_type = 2;
-      optional StorageDriver key_storage = 3;
-      optional string path = 4;
+      optional bool persistent = 1; // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3; // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2; // TODO(burdon): Rename data_store.
+      optional string path = 4; // TODO(burdon): Rename data_path.
     }
 
     optional string debug = 1 [(env) = "DEBUG"];
@@ -105,7 +105,10 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
+    // TODO(wittjosiah): Remove.
     optional Mode mode = 6;
+
+    optional string singleton_source = 7;
   }
 
   message App {

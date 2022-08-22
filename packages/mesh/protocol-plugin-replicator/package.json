@@ -23,7 +23,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "lint": "toolchain lint",
     "test": "toolchain test"
   },
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -49,7 +49,7 @@
     "@types/jest": "^28.1.6",
     "@types/pify": "^3.0.2",
     "end-of-stream": "^1.4.1",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "jest": "^28.1.3",
     "multi-read-stream": "^2.0.0",
     "pify": "~5.0.0",

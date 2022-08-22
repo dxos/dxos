@@ -10,7 +10,7 @@
     "build": "toolchain build",
     "build:book": "toolchain build:book",
     "build:bundle": "toolchain bundle:app --minify",
-    "build:test": "toolchain build:test",
+    "check": "toolchain check",
     "config": "toolchain config",
     "demo:grid": "concurrently --kill-others \"npm run book\" \"npm run demo:grid-start\"",
     "demo:grid-start": "mocha --require ts-node/register/transpile-only './playwright/demos/grid.test.ts'",
@@ -20,7 +20,7 @@
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test",
-    "test:playwright": "mocha --require ts-node/register/transpile-only './playwright/tests/*.test.ts'",
+    "test:playwright": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [
@@ -33,8 +33,8 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-testing": "workspace:*",
-    "@dxos/gem-core": "~2.2.1-beta.11",
-    "@dxos/gem-spore": "~2.2.1-beta.11",
+    "@dxos/gem-core": "2.2.1-beta.11",
+    "@dxos/gem-spore": "2.2.1-beta.11",
     "@dxos/object-model": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
@@ -63,14 +63,15 @@
     "@babel/core": "~7.13.15",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/esbuild-plugins": "~2.28.11",
-    "@dxos/esbuild-server": "~2.28.11",
-    "@dxos/eslint-plugin": "~1.0.34",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
+    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@playwright/test": "^1.14.1",
     "@types/d3": "~7.0.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
@@ -80,15 +81,20 @@
     "dotenv": "^8.2.0",
     "electron": "~18.0.4",
     "esbuild-plugin-yaml": "~0.0.1",
-    "eslint": "^7.12.1",
+    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "playwright": "^1.23.4",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "robotjs": "~0.6.0",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
+  },
+  "toolchain": {
+    "additionalTestSteps": [
+      "test:playwright"
+    ]
   }
 }

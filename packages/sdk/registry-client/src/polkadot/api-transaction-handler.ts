@@ -22,7 +22,7 @@ interface SendTransactionResult {
  * TODO(burdon): Comment.
  */
 export class ApiTransactionHandler {
-  private signFn: SignTxFunction
+  private signFn: SignTxFunction;
 
   constructor (
     private api: ApiPromise,

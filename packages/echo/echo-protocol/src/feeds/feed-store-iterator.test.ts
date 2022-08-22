@@ -134,7 +134,7 @@ describe('feed store iterator', () => {
     iterator.addFeedDescriptor(descriptor1);
     iterator.addFeedDescriptor(descriptor2);
 
-    const [counter, updateCounter] = latch(3);
+    const [counter, updateCounter] = latch({ count: 3 });
     const messages: any[] = [];
     setImmediate(async () => {
       for await (const message of iterator) {
