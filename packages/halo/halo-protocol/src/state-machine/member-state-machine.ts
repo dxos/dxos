@@ -1,9 +1,15 @@
-import { PublicKey } from "@dxos/protocols";
-import { AdmittedFeed, Credential, PartyMember } from "../proto";
-import assert from 'assert'
-import { getCredentialAssertion } from "../credentials";
-import { ComplexMap } from "@dxos/util";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexMap } from '@dxos/util';
+
+import { getCredentialAssertion } from '../credentials';
+import { Credential, PartyMember } from '../proto';
 
 export interface MemberInfo {
   key: PublicKey
@@ -19,19 +25,19 @@ export class MemberStateMachine {
   /**
    * Member IDENTITY key => info
    */
-  private _members = new ComplexMap<PublicKey, MemberInfo>(x => x.toHex())
+  private _members = new ComplexMap<PublicKey, MemberInfo>(x => x.toHex());
 
   readonly memberAdmitted = new Event<MemberInfo>();
 
-  constructor(
+  constructor (
     private readonly _partyKey: PublicKey
   ) {}
 
-  get members(): ReadonlyMap<PublicKey, MemberInfo> {
+  get members (): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members;
   }
 
-  getRoles(member: PublicKey): PartyMember.Role[] {
+  getRoles (member: PublicKey): PartyMember.Role[] {
     return this._members.get(member)?.assertion.roles ?? [];
   }
 
@@ -41,18 +47,18 @@ export class MemberStateMachine {
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  process(credential: Credential) {
-    const assertion = getCredentialAssertion(credential)
-    assert(assertion["@type"] === 'dxos.halo.credentials.PartyMember')
+  process (credential: Credential) {
+    const assertion = getCredentialAssertion(credential);
+    assert(assertion['@type'] === 'dxos.halo.credentials.PartyMember');
     assert(assertion.partyKey.equals(this._partyKey));
     assert(!this._members.has(credential.subject.id));
 
     const info: MemberInfo = {
       key: credential.subject.id,
       credential,
-      assertion,
+      assertion
     };
-    this._members.set(credential.subject.id, info)
-    this.memberAdmitted.emit(info)
+    this._members.set(credential.subject.id, info);
+    this.memberAdmitted.emit(info);
   }
 }

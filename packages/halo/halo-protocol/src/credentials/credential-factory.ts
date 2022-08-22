@@ -5,15 +5,15 @@
 import assert from 'assert';
 
 import { Keyring } from '@dxos/credentials';
+import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
+import { ComplexMap } from '@dxos/util';
 
 import { Credential } from '../proto';
-import { getSignaturePayload, sign } from './signing';
-import { getCredentialAssertion, MessageType } from './types';
-import { SIGNATURE_TYPE_ED25519 } from './verifier';
-import { raise } from '@dxos/debug';
-import { ComplexMap } from '@dxos/util';
 import { isValidAuthorizedDeviceCredential } from './assertions';
+import { getSignaturePayload, sign } from './signing';
+import { MessageType } from './types';
+import { SIGNATURE_TYPE_ED25519 } from './verifier';
 
 export type CreateCredentialParams = {
   subject: PublicKey
@@ -63,8 +63,8 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
 
   credential.proof.value = signature;
   if (opts.chain) {
-    credential.proof.chain = { 
-      credentials: Object.fromEntries(Array.from(opts.chain.entries()).map(([key, cred]) => [key.toHex(), cred])),
+    credential.proof.chain = {
+      credentials: Object.fromEntries(Array.from(opts.chain.entries()).map(([key, cred]) => [key.toHex(), cred]))
     };
   }
 
@@ -78,26 +78,26 @@ export type BuildDeviceChainParams = {
 }
 
 /**
- * Recursively build a credential chain to prove delegated authority of a given device. 
+ * Recursively build a credential chain to prove delegated authority of a given device.
  */
 export const buildDeviceChain = ({ credentials, device, identity }: BuildDeviceChainParams): ComplexMap<PublicKey, Credential> => {
-  const result = new ComplexMap<PublicKey, Credential>(x => x.toHex())
+  const result = new ComplexMap<PublicKey, Credential>(x => x.toHex());
 
   const insertCredentials = (key: PublicKey) => {
-    const credential = credentials.find(c => isValidAuthorizedDeviceCredential(c, key, identity))
-      ?? raise(new Error(`Unable to build device credential chain: Missing credential for device: ${key}`));
+    const credential = credentials.find(c => isValidAuthorizedDeviceCredential(c, key, identity)) ??
+      raise(new Error(`Unable to build device credential chain: Missing credential for device: ${key}`));
 
     result.set(key, credential);
 
-    if(result.has(credential.issuer)) {
-      throw new Error(`Cyclic credential chain detected for keys: ${Array.from(result.keys())}`)
+    if (result.has(credential.issuer)) {
+      throw new Error(`Cyclic credential chain detected for keys: ${Array.from(result.keys())}`);
     }
 
     if (!credential.issuer.equals(identity)) {
       insertCredentials(credential.issuer);
     }
-  }
+  };
 
   insertCredentials(device);
   return result;
-}
+};

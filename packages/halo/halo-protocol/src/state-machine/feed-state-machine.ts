@@ -1,9 +1,15 @@
-import { PublicKey } from "@dxos/protocols";
-import { AdmittedFeed, Credential } from "../proto";
-import assert from 'assert'
-import { getCredentialAssertion } from "../credentials";
-import { ComplexMap } from "@dxos/util";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexMap } from '@dxos/util';
+
+import { getCredentialAssertion } from '../credentials';
+import { AdmittedFeed, Credential } from '../proto';
 
 export interface FeedInfo {
   key: PublicKey
@@ -12,7 +18,7 @@ export interface FeedInfo {
   /**
    * Parent feed from the feed tree.
    * This is the feed where the AdmittedFeed assertion is written.
-   * 
+   *
    * The genesis feed will have itself as a parent.
    */
   parent: PublicKey
@@ -23,15 +29,15 @@ export interface FeedInfo {
  * Provides a list of admitted feeds.
  */
 export class FeedStateMachine {
-  private _feeds = new ComplexMap<PublicKey, FeedInfo>(x => x.toHex())
+  private _feeds = new ComplexMap<PublicKey, FeedInfo>(x => x.toHex());
 
   readonly feedAdmitted = new Event<FeedInfo>();
 
-  constructor(
+  constructor (
     private readonly _partyKey: PublicKey
   ) {}
 
-  get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
+  get feeds (): ReadonlyMap<PublicKey, FeedInfo> {
     return this._feeds;
   }
 
@@ -41,9 +47,9 @@ export class FeedStateMachine {
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  process(credential: Credential, fromFeed: PublicKey) {
-    const assertion = getCredentialAssertion(credential)
-    assert(assertion["@type"] === 'dxos.halo.credentials.AdmittedFeed')
+  process (credential: Credential, fromFeed: PublicKey) {
+    const assertion = getCredentialAssertion(credential);
+    assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     assert(assertion.partyKey.equals(this._partyKey));
     assert(!this._feeds.has(credential.subject.id));
 
@@ -51,9 +57,9 @@ export class FeedStateMachine {
       key: credential.subject.id,
       credential,
       assertion,
-      parent: fromFeed,
+      parent: fromFeed
     };
-    this._feeds.set(credential.subject.id, info)
-    this.feedAdmitted.emit(info)
+    this._feeds.set(credential.subject.id, info);
+    this.feedAdmitted.emit(info);
   }
 }

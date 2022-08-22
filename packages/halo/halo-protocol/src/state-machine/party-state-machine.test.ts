@@ -1,5 +1,11 @@
-import { Keyring, KeyType } from '@dxos/credentials';
+//
+// Copyright 2022 DXOS.org
+//
+
 import expect from 'expect';
+
+import { Keyring, KeyType } from '@dxos/credentials';
+
 import { buildDeviceChain, createCredential } from '../credentials';
 import { AdmittedFeed, PartyMember } from '../proto';
 import { PartyStateMachine } from './party-state-machine';
@@ -13,16 +19,16 @@ describe('PartyStateMachine', () => {
     const { publicKey: feed } = await keyring.createKeyRecord({ type: KeyType.FEED });
 
     const partyState = new PartyStateMachine(party);
-    
+
     expect(await partyState.process(await createCredential({
       issuer: party,
       subject: party,
       assertion: {
         '@type': 'dxos.halo.credentials.PartyGenesis',
-        partyKey: party,
+        partyKey: party
       },
-      keyring,
-    }), feed)).toEqual(true)
+      keyring
+    }), feed)).toEqual(true);
 
     expect(await partyState.process(await createCredential({
       issuer: party,
@@ -30,10 +36,10 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
       },
-      keyring,
-    }), feed)).toEqual(true)
+      keyring
+    }), feed)).toEqual(true);
 
     const chain = buildDeviceChain({
       credentials: [
@@ -41,16 +47,16 @@ describe('PartyStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity,
+            identityKey: identity
           },
           subject: device,
           issuer: identity,
-          keyring,
+          keyring
         })
       ],
       device,
-      identity,
-    })
+      identity
+    });
 
     expect(await partyState.process(await createCredential({
       issuer: identity,
@@ -60,23 +66,23 @@ describe('PartyStateMachine', () => {
         partyKey: party,
         identityKey: identity,
         deviceKey: device,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
       keyring,
       signingKey: device,
-      chain,
-    }), feed)).toEqual(true)
+      chain
+    }), feed)).toEqual(true);
 
-    expect(partyState.genesisCredential).toBeDefined()
+    expect(partyState.genesisCredential).toBeDefined();
     expect(Array.from(partyState.members.values())).toMatchObject([
       {
         key: identity,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
         }
       }
-    ])
+    ]);
     expect(Array.from(partyState.feeds.values())).toMatchObject([
       {
         key: feed,
@@ -84,11 +90,11 @@ describe('PartyStateMachine', () => {
           partyKey: party,
           identityKey: identity,
           deviceKey: device,
-          designation: AdmittedFeed.Designation.CONTROL,
+          designation: AdmittedFeed.Designation.CONTROL
         }
       }
-    ])
-    expect(partyState.credentials).toHaveLength(3)
+    ]);
+    expect(partyState.credentials).toHaveLength(3);
   });
 
   it('admitting a member', async () => {
@@ -100,16 +106,16 @@ describe('PartyStateMachine', () => {
     const { publicKey: identity2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const partyState = new PartyStateMachine(party);
-    
+
     expect(await partyState.process(await createCredential({
       issuer: party,
       subject: party,
       assertion: {
         '@type': 'dxos.halo.credentials.PartyGenesis',
-        partyKey: party,
+        partyKey: party
       },
-      keyring,
-    }), feed)).toEqual(true)
+      keyring
+    }), feed)).toEqual(true);
 
     expect(await partyState.process(await createCredential({
       issuer: party,
@@ -117,27 +123,27 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
       },
-      keyring,
-    }), feed)).toEqual(true)
-    
+      keyring
+    }), feed)).toEqual(true);
+
     const chain = buildDeviceChain({
       credentials: [
         await createCredential({
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             deviceKey: device,
-            identityKey: identity,
+            identityKey: identity
           },
           subject: device,
           issuer: identity,
-          keyring,
+          keyring
         })
       ],
       device,
-      identity,
-    })
+      identity
+    });
 
     expect(await partyState.process(await createCredential({
       issuer: identity,
@@ -145,31 +151,31 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+        roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
       },
       keyring,
       signingKey: device,
-      chain,
-    }), feed)).toEqual(true)
-    
-    expect(partyState.genesisCredential).toBeDefined()
+      chain
+    }), feed)).toEqual(true);
+
+    expect(partyState.genesisCredential).toBeDefined();
     expect(Array.from(partyState.members.values())).toMatchObject([
       {
         key: identity,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
         }
       },
       {
         key: identity2,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER],
+          roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
         }
       }
-    ])
-    expect(Array.from(partyState.feeds.values())).toMatchObject([])
-    expect(partyState.credentials).toHaveLength(3)
-  })
+    ]);
+    expect(Array.from(partyState.feeds.values())).toMatchObject([]);
+    expect(partyState.credentials).toHaveLength(3);
+  });
 });
