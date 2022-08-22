@@ -36,7 +36,6 @@
 
 ## 1. Introduction
 
-HALO is a set of protocols and components used to secure decentralized networks.
 The HALO protocols enable self-sovereign identity, decentralized identifiers, verifiable credentials, and other mechanisms relating to the security of decentralized systems.
 HALO is implemented useing cryptographically secure, privacy respecting, and machine-verifiable messages.
 
@@ -138,46 +137,91 @@ Entity that is able to verify a Credential (or Presentation).
 
 ## 3. Specification
 
-A HALO is a secure, replicated, peer-to-peer database containing an Agent's decentralized credentials.
+A HALO is a secure, replicated, peer-to-peer dataset containing an Agent's decentralized credentials.
 The HALO is used to manage identity, credentials, Devices, and the Agent's Circle.
+The HALO protocols are implemented by components that form part of smart clients that can run securely cross-platform (e.g., Web browser, Mobile app, Terminal client, backend service.)
 
-The HALO protocols are implemented by components that form part of smart clients that can run securely  cross-platform (e.g., Web browser, Mobile app, Terminal client, backend service.)
+- **Identity**
+    * Agents can create and manage multiple identities.
+    * Agents can recover an identity from a 24-word seed phrase.
+    * Identities can be used across Devices without sharing private keys.
+    * Agents can manage and use multiple isolated identities on a single Device.
+    * Agents have a public decentralized identifier that can be shared with others.
+    * Identities can be used to establish connections between Devices belongong to Agents on the MESH network.
 
-1.  ***Identity***
-    *   Agents can create and manage multiple identities.
-    *   Agents can recover an identity from a 24-word seed phrase.
-    *   Identities can be used across Devices without sharing private keys.
-    *   Agents can manage and use multiple isolated identities on a single Device.
-    *   Agents have a public decentralized identifier that can be shared with others.
-    *   Identities can be used to establish connections between Devices belongong to Agents on the MESH network.
+- **Profiles**
+    * Agents can manage a globally accessible public document that contains metadata they wish to share (e.g., display name).
+    * Profiles can be discovered across the network by the agent's public identifier.
 
-2.  ***Profiles***
-    *   Agents can manage a globally accessible public document that contains metadata they wish to share (e.g., display name).
-    *   Profiles can be discovered across the network by the agent's public identifier.
+- **Credential Management**
+    * Entities can create and share credentials that can represent an extensible set of verifiable claims.
+    * Agents can manage a decentralized set of credentials.
 
-3.  ***Credential Management***
-    *   Entities can create and share credentials that can represent an extensible set of verifiable claims.
-    *   Agents can manage a decentralized set of credentials.
+- **Device Management**
+    * Agents can manage a set of verified Devices.
+    * Devices can be revoked.
+    * Devices can be used to recover identity.
 
-4.  ***Device Management***
-    *   Agents can manage a set of verified Devices.
-    *   Devices can be revoked.
-    *   Devices can be used to recover identity.
-
-5.  ***Circles***
-    *   Agents can maintain a decentralized set of contacts and profile documents for other agents across the network.
+- **Circles**
+    * Agents can maintain a decentralized set of contacts and profile documents for other agents across the network.
 
 ## 4. Design
 
-### 4.1. HALO
+All Agents maintain a HALO, which represents their identity and decentralized credentials.
 
-The HALO consists of a secure Device-local key store and a peer-to-peer replicated graph database implemented by the ECHO protocols.
+A HALO consists of a device-local **key store** and a **metadata store** replicated across the Agent's Devices.
 
 The HALO contains:
 
-*   A set of Credentials that represent various decentralized claims (e.g., Blockchain accounts, KUBE access control, ECHO Spaces, external Web2 tokens).
-*   A set of Device public keys (and other metadata).
-*   A set of third-party Agent public keys and metadata (e.g., cached DID Profile documents) representing the Agent's Circle.
+*   A set of device-local private keys used for signing messages.
+*   A set of credentials that represent various decentralized claims (e.g., ECHO Spaces, KUBE access control, Blockchain accounts, external Web2 tokens).
+*   A set of public keys and metadata (e.g., cached DID Profile documents) representing the Agent's Circle.
+
+### Public and Private Key Types
+
+The HALO manages the following keys.
+
+| Key      | Type    | Description                              |
+|----------|---------|------------------------------------------|
+| Identity | Public  | Represents the Agent's public identity.  |
+| Recovery | Private | Used to recover a HALO.                  |
+| Device   | Private | Signing key used to create credentials.  |
+| Space    | Public  | Public key representing an ECHO Space.   |
+| Feed     | Private | Signing key used to write feed messages. |
+
+NOTE: All private keys are stored in a device-local encrypted key store and should never exported outside of the device.
+
+#### Identity
+
+  - Agent's root of authority.
+  - The private key is only used during Identity creation and destroyed immediately afterwards. 
+  - Used to issue credentials: `IdentityGenesis`, `IdentityRecovery`, `HaloSpace`, `AuthorizedDevice`, `PartyMember`.
+  - Initially ondisk before recovery.
+
+
+
+#### Recovery
+  - Used to create a new HALO Space and admit a new device to an identity.
+
+
+#### Space
+  - Space's root of authority. The private key is only used during genesis and destroyed immediately afterwards.
+
+
+
+#### Device
+  - Individual device keys used to sign credential. 
+    Obtain delegated credentials to issue credentials on behalf of **Indentity** via AuthorizedDevice credentials.
+  - Can issue credentials: `AdmittedFeed`.
+  - Can sign credentials on behalf of **Indentity** PartyMember.
+
+
+#### Feed
+
+  - Used to identity feeds, and sign feed messages. Associated with a single device and identity.
+
+
+
 
 #### 4.1.1. Protocol Definitions
 
@@ -205,16 +249,6 @@ message Credential {
 }
 ```
 
-#### Keypair types
-
-- IDENTITY - Agent's root of authority. The private key is only used during Identity creation and destroyed immediately afterwards.
-  - Can issue credentials: IdentityGenesis, IdentityRecovery, HaloSpace, AuthorizedDevice, PartyMember.
-- DEVICE - Individual device keys used to sign credential. Obtain delegated credentials to issue credentials on behalf of IDENTITY via AuthorizedDevice credentials.
-  - Can issue credentials: AdmittedFeed.
-  - Can sign credentials on behalf of IDENTITY: PartyMember.
-- SPACE - (Also called PARTY) Space's root of authority. The private key is only used during genesis and destroyed immediately afterwards.
-- FEED - Used to identity feeds, and sign feed messages. Associated with a single device and identity.
-- RECOVERY - Can be used to create a new HALO Space and admit a new device to an identity.
 
 #### 4.1.3. HALO Genesis
 
@@ -387,7 +421,7 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 - All credentials that are processed by the space must either be issued by the Space genesis key or by one of the member identities with proper permissions.
 - Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO party to build the device KeyChain. 
 
-### 5.3. HALO creation
+### 5.3. HALO Creation
 
 > *   TODO(burdon): Reconcile with above.
 
