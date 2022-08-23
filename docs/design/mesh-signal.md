@@ -2,11 +2,11 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Basic Concepts](#2-basic-concepts)
-- [3. Protocols](#3-protocols)
-- [4. Design](#4-design)
-  - [4.1. Signaling](#41-signaling)
+*   [1. Introduction](#1-introduction)
+*   [2. Basic Concepts](#2-basic-concepts)
+*   [3. Protocols](#3-protocols)
+*   [4. Design](#4-design)
+    *   [4.1. Signaling](#41-signaling)
 
 ## 1. Introduction
 

@@ -15,7 +15,10 @@
     },
     {
       "path": "../../common/util"
-    }
+    },
+    {
+      "path": "../../halo/credentials"
+    },
   ],
   "types": [
     "mocha",
