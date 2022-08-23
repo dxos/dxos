@@ -13,7 +13,6 @@
     "src"
   ],
   "scripts": {
-    "build": "pnpm run gen && tsc",
     "check": "true",
     "gen": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
