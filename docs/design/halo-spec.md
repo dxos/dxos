@@ -225,7 +225,7 @@ The Space's public key is used later to identity the HALO for purposes of replic
 The Space key is then used to sign a credential that designates the Agent's Identity as the owner of the HALO.
 
 **(3)**
-The Identity key is then used to Admit the first Device to the Space.
+The Identity key is then used to Admit the first Device to the Agent's Identity.
 This grants authority to the Device to sign additional credentials.
 
 **(4)**
