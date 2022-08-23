@@ -15,9 +15,10 @@ import {
   PartyEventType,
   SignedMessage
 } from '@dxos/credentials';
-import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot, CredentialsMessage } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
+import { MemberInfo, PartyStateMachine } from '@dxos/halo-protocol'
 
 const log = debug('dxos:echo-db:party-processor');
 
@@ -44,7 +45,7 @@ export interface PartyStateProvider {
  * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
 export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
-  private readonly _state: PartyState;
+  private readonly _state = new PartyStateMachine(this._partyKey);
 
   readonly feedAdded = new Event<FeedKey>();
 
@@ -53,20 +54,12 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   /**
    * Used to generate halo snapshot.
    */
-  private _haloMessages: HaloMessage[] = [];
+  private _snapshot: HaloStateSnapshot = { messages: [] };
 
   constructor (
     private readonly _partyKey: PartyKey
   ) {
-    this._state = new PartyState(this._partyKey);
 
-    // TODO(marik-d): Use `Event.wrap` here.
-    this._state.on(PartyEventType.ADMIT_FEED, (keyRecord: any) => {
-      log(`Feed key admitted ${keyRecord.publicKey.toHex()}`);
-      this.feedAdded.emit(keyRecord.publicKey);
-    });
-    this._state.on(PartyEventType.ADMIT_KEY, (keyRecord: KeyRecord) => this.keyOrInfoAdded.emit(keyRecord.publicKey));
-    this._state.on(IdentityEventType.UPDATE_IDENTITY, (publicKey: PublicKey) => this.keyOrInfoAdded.emit(publicKey));
   }
 
   get partyKey () {
@@ -74,23 +67,24 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   }
 
   get feedKeys (): PublicKey[] {
-    return this._state.memberFeeds;
+    return Array.from(this._state.feeds.keys());
   }
 
   get memberKeys (): PublicKey[] {
-    return this._state.memberKeys;
+    return Array.from(this._state.members.keys());
   }
 
   get credentialMessages () {
-    return this._state.credentialMessages;
+    return this._state.credentials;
   }
 
   get infoMessages () {
-    return this._state.infoMessages;
+    // TODO(dmaretskyi): Not implemented.
+    return [];
   }
 
   get genesisRequired () {
-    return this._state.credentialMessages.size === 0;
+    return !this._state.genesisCredential;
   }
 
   get state () {
@@ -98,60 +92,63 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   }
 
   isFeedAdmitted (feedKey: FeedKey) {
-    // TODO(telackey): Make sure it is a feed.
-    return this._state.credentialMessages.has(feedKey.toHex());
+    return this._state.feeds.has(feedKey);
   }
 
   isMemberKey (publicKey: PublicKey) {
-    // TODO(telackey): Make sure it is not a feed.
-    return this._state.credentialMessages.has(publicKey.toHex());
+    return this._state.members.has(publicKey);
   }
 
-  getMemberInfo (publicKey: PublicKey) {
-    // TODO(telackey): Normalize PublicKey types in @dxos/credentials.
-    return this._state.getInfo(publicKey);
+  getMemberInfo (publicKey: PublicKey): MemberInfo | undefined {
+    return this._state.members.get(publicKey);
   }
 
   /**
    * Returns public key of the member that admitted the specified feed.
    */
   getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined {
-    // TODO(marik-d): Commented out beacuse it breaks tests currently.
-    // code assert(this._stateMachine.isMemberFeed(feedKey), 'Not a member feed');
-    return this._state.getAdmittedBy(feedKey);
+    return this._state.feeds.get(feedKey)?.assertion.identityKey;
   }
 
+  // TODO(dmaretskyi): Remove.
+  /**
+   * @deprecated 
+   */
   getOfflineInvitation (invitationID: Buffer) {
-    return this._state.getInvitation(invitationID);
+    return undefined;
   }
 
-  async takeHints (hints: KeyHint[]) {
+  // TODO(dmaretskyi): Remove.
+  /**
+   * @deprecated 
+   */
+   async takeHints (hints: KeyHint[]) {
     log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
     /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
      * what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
      * credential messages for ourselves.
      */
-    await this._state.takeHints(hints);
+    // await this._state.takeHints(hints);
   }
 
   async processMessage (message: IHaloStream) {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     const { data } = message;
-    this._haloMessages.push(data);
-    await this._state.processMessages([data]);
+    this._snapshot.messages!.push({ message: message.data, feedKey: message.meta.feedKey });
+    await this._state.process(message.data.credential, message.meta.feedKey);
   }
 
   makeSnapshot (): HaloStateSnapshot {
-    return {
-      messages: this._haloMessages
-    };
+    return this._snapshot;
   }
 
   async restoreFromSnapshot (snapshot: HaloStateSnapshot) {
-    assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized');
+    assert(this._snapshot.messages!.length === 0, 'PartyProcessor is already initialized');
     assert(snapshot.messages);
-    this._haloMessages = snapshot.messages;
-    await this._state.processMessages(snapshot.messages);
+    this._snapshot = snapshot;
+    for(const message of snapshot.messages) {
+      await this._state.process(message.message.credential, message.feedKey);
+    }
   }
 }

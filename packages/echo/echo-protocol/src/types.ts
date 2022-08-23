@@ -5,7 +5,7 @@
 import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { EchoEnvelope, FeedMessage } from './proto';
+import { CredentialsMessage, EchoEnvelope, FeedMessage } from './proto';
 
 //
 // Keys.
@@ -64,8 +64,7 @@ export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
 export interface IHaloStream {
   meta: FeedMeta
-  // TODO(telackey): Rename `dxos.halo.IHaloEnvelope`.
-  data: HaloMessage
+  data: CredentialsMessage
 }
 
 export interface IEchoStream {
