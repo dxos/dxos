@@ -22,13 +22,13 @@ import {
   SwarmInfo,
   ConnectionLog,
   CommandTrace,
-  Status
+  SignalStatus
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
-import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
+import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 
 export default {
   title: 'Devtools/Topology'
@@ -111,7 +111,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     controlPeer && setPeerMap(controlPeer.map.peers);
   }, [controlPeer]);
 
-  const [signalStatus, setSignalStatus] = useState<Status[]>([]);
+  const [signalStatus, setSignalStatus] = useState<SignalStatus[]>([]);
   useEffect(() => controlPeer?.signal.statusChanged.on(status => {
     setSignalStatus(status);
   }), [controlPeer]);
@@ -169,7 +169,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
             </div>
             <Routes>
               <Route path='/'>
-                <SignalStatus status={signalStatus} />
+                <SignalStatusComp status={signalStatus} />
                 <SignalTrace trace={signalTrace} />
               </Route>
               <Route path='/swarms'>

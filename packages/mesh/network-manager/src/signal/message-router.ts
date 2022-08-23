@@ -28,7 +28,6 @@ const log = debug('dxos:network-manager:message-router');
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
-// TODO(mykola): https://github.com/dxos/protocols/issues/1316
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
   private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>;

@@ -6,24 +6,24 @@ import React from 'react';
 
 import { Box } from '@mui/material';
 
-import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
-import { State, Status } from '@dxos/network-manager';
+import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
+import { SignalState, SignalStatus } from '@dxos/network-manager';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { SubscribeToSignalStatusResponse } from '../../proto';
 
-const stringToState = (state: string): State => {
-  const dict: Record<string, State> = {
-    CONNECTING: State.CONNECTING,
-    RE_CONNECTING: State.RE_CONNECTING,
-    CONNECTED: State.CONNECTED,
-    DISCONNECTED: State.DISCONNECTED,
-    CLOSED: State.CLOSED
+const stringToState = (state: string): SignalState => {
+  const dict: Record<string, SignalState> = {
+    CONNECTING: SignalState.CONNECTING,
+    RE_CONNECTING: SignalState.RE_CONNECTING,
+    CONNECTED: SignalState.CONNECTED,
+    DISCONNECTED: SignalState.DISCONNECTED,
+    CLOSED: SignalState.CLOSED
   };
   return dict[state];
 };
 
-const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Status => {
+const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,
@@ -52,7 +52,7 @@ export const SignalPanel = () => {
       overflowX: 'auto'
     }}>
       {servers.length >= 1 && (
-        <SignalStatus status={servers.map(signalStatus)} />
+        <SignalStatusComp status={servers.map(signalStatus)} />
       )}
       {events.length < 1 && (
         <SignalTrace trace={events?.map(event => JSON.parse(event))} />
