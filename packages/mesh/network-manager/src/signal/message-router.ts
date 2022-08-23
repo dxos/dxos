@@ -87,20 +87,21 @@ export class MessageRouter implements SignalMessaging {
   }
 
   async offer (message: OfferMessage): Promise<Answer> {
-    message.messageId = PublicKey.random();
+    const networkMessage: NetworkMessage = {
+      ...message,
+      messageId: PublicKey.random()
+    };
     return new Promise<Answer>((resolve, reject) => {
-      this._offerRecords.set(message.messageId!, { resolve, reject });
-      return this._sendReliableMessage(message.author, message.recipient, message);
+      this._offerRecords.set(networkMessage.messageId!, { resolve, reject });
+      return this._sendReliableMessage(message.author, message.recipient, networkMessage);
     });
   }
 
   private async _sendReliableMessage (author: PublicKey, recipient: PublicKey, message: MakeOptional<NetworkMessage, 'messageId'>): Promise<void> {
     const networkMessage: NetworkMessage = {
-      topic: message.topic,
-      sessionId: message.sessionId,
+      ...message,
       // Setting unique messageId if it not specified yet.
-      messageId: message.messageId ?? PublicKey.random(),
-      data: message.data
+      messageId: message.messageId ?? PublicKey.random()
     };
     log(`sent message: ${JSON.stringify(networkMessage)} from ${author} to ${recipient}`);
 
