@@ -5,10 +5,10 @@
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "{options.basePath}{options.outputPath}"
+        "{options.basePath}/gen"
       ],
       "options": {
-        "basePath": "packages/echo/text-model/src/proto/"
+        "basePath": "packages/echo/text-model/src/proto"
       }
     },
     "build": {

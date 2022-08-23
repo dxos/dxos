@@ -4,14 +4,18 @@
   "targets": {
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": ["{options.basePath}{options.outputPath}"],
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
       "options": {
-        "basePath": "packages/common/rpc/src/proto/"
+        "basePath": "packages/common/rpc/src/proto"
       }
     },
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "packages/common/rpc/dist",
         "tsConfig": "packages/common/rpc/tsconfig.json",
