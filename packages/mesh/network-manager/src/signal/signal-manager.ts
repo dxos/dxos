@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
-import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { CommandTrace, SignalStatus } from './signal-client';
 
 /**

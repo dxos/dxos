@@ -11,9 +11,8 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SignalMessage } from '../signal';
-import { Transport, TransportFactory } from './transport';
 import { Signal } from '../proto/gen/dxos/mesh/swarm';
+import { Transport, TransportFactory } from './transport';
 
 const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 

@@ -11,9 +11,9 @@ import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
+import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
 

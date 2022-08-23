@@ -10,9 +10,9 @@ import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
+import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 
 const log = debug('dxos:network-manager:swarm:connection');
 
