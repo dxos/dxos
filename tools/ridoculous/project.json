@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "toolchains/ridoculous/src",
+  "sourceRoot": "tools/ridoculous/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "toolchains/ridoculous/**/*.{ts,js}"
+          "tools/ridoculous/**/*.{ts,js}"
         ]
       }
     }

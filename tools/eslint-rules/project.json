@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "toolchains/eslint-plugin-rules",
+  "sourceRoot": "tools/eslint-rules",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "toolchains/eslint-plugin-rules/**/*.{ts,js}"
+          "tools/eslint-rules/**/*.{ts,js}"
         ]
       }
     }

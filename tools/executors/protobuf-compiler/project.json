@@ -1,6 +1,6 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "toolchains/protobuf-compiler/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/executors/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -8,7 +8,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "toolchains/protobuf-compiler/**/*.{ts,js}"
+          "tools/executors/protobuf-compiler/**/*.{ts,js}"
         ]
       }
     }

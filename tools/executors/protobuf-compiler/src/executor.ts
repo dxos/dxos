@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import type { ExecutorContext } from '@nrwl/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
@@ -12,11 +16,8 @@ export interface GenerateExecutorOptions {
   substitutionsPath: string
 }
 
-export default async function generateExecutor(
-  options: GenerateExecutorOptions,
-  context: ExecutorContext
-): Promise<{ success: boolean }> {
-  console.info(`Executing "generate"...`);
+export default async (options: GenerateExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
+  console.info('Executing "generate"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
   const outdir = join(options.basePath, options.outputPath);
@@ -29,7 +30,7 @@ export default async function generateExecutor(
     err(err.message);
   }
 
-  const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined
+  const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined;
   const proto = glob(src, { cwd: context.cwd });
 
   await build({
@@ -39,4 +40,4 @@ export default async function generateExecutor(
   });
 
   return { success: true };
-}
+};

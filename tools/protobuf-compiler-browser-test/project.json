@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "toolchains/protobuf-compiler-browser-test/src",
+  "sourceRoot": "tools/protobuf-compiler-browser-test/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -9,7 +9,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "toolchains/protobuf-compiler-browser-test/**/*.{ts,js}"
+          "tools/protobuf-compiler-browser-test/**/*.{ts,js}"
         ]
       }
     }
