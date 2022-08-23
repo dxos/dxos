@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { Keyring, KeyType } from '@dxos/credentials';
 
-import { buildDeviceChain, createCredential } from '../credentials';
+import { buildDeviceChain, createCredential, verifyCredential } from '../credentials';
 import { AdmittedFeed, PartyMember } from '../proto';
 import { PartyStateMachine } from './party-state-machine';
 
@@ -178,4 +178,91 @@ describe('PartyStateMachine', () => {
     expect(Array.from(partyState.feeds.values())).toMatchObject([]);
     expect(partyState.credentials).toHaveLength(3);
   });
+
+  it('storing device credentials and building a chain', async () => {
+    const keyring = new Keyring();
+    const { publicKey: haloParty } = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const { publicKey: feed } = await keyring.createKeyRecord({ type: KeyType.FEED });
+
+    const haloState = new PartyStateMachine(haloParty);
+
+    expect(await haloState.process(await createCredential({
+      issuer: haloParty,
+      subject: haloParty,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyGenesis',
+        partyKey: haloParty
+      },
+      keyring
+    }), feed)).toEqual(true);
+
+    expect(await haloState.process(await createCredential({
+      issuer: haloParty,
+      subject: identity,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyMember',
+        partyKey: haloParty,
+        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+      },
+      keyring
+    }), feed)).toEqual(true);
+
+    expect(await haloState.process(await createCredential({
+      issuer: haloParty,
+      subject: identity,
+      assertion: {
+        '@type': 'dxos.halo.credentials.HaloSpace',
+        identityKey: identity,
+        privateHalo: haloParty,
+      },
+      keyring
+    }), feed)).toEqual(true);
+
+    expect(await haloState.process(await createCredential({
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        deviceKey: device2,
+        identityKey: identity
+      },
+      subject: device2,
+      issuer: device1,
+      keyring
+    }), feed)).toEqual(true);
+    expect(await haloState.process(await createCredential({
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        deviceKey: device1,
+        identityKey: identity
+      },
+      subject: device1,
+      issuer: identity,
+      keyring
+    }), feed)).toEqual(true);
+
+    const chain = buildDeviceChain({
+      credentials: haloState.credentials,
+      device: device2,
+      identity,
+    })
+
+    const credential = await createCredential({
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: haloParty,
+        deviceKey: device2,
+        designation: AdmittedFeed.Designation.CONTROL,
+        identityKey: identity,
+      },
+      issuer: identity,
+      keyring,
+      subject: feed,
+      signingKey: device2,
+      chain
+    });
+
+    expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
+  })
 });
