@@ -7,10 +7,10 @@ import { PublicKey } from '@dxos/protocols';
 import { Credential } from '../proto/gen/dxos/halo/credentials';
 import { getCredentialAssertion } from './types';
 
-export const isValidAuthorizedDeviceCredential = (credential: Credential, device: PublicKey, identity: PublicKey): boolean => {
+export const isValidAuthorizedDeviceCredential = (credential: Credential, identityKey: PublicKey, deviceKey: PublicKey): boolean => {
   const assertion = getCredentialAssertion(credential);
-  return credential.subject.id.equals(device) &&
+  return credential.subject.id.equals(deviceKey) &&
     assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
-    assertion.identityKey.equals(identity) &&
-    assertion.deviceKey.equals(device);
+    assertion.identityKey.equals(identityKey) &&
+    assertion.deviceKey.equals(deviceKey);
 };

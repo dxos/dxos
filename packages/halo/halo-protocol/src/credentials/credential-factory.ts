@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { Credential } from '../proto';
+import { Chain, Credential } from '../proto';
 import { isValidAuthorizedDeviceCredential } from './assertions';
 import { getSignaturePayload, sign } from './signing';
 import { MessageType } from './types';
@@ -27,7 +27,7 @@ export type CreateCredentialParams = {
   /**
    * Provided if signing key is different from issuer.
    */
-  chain?: ComplexMap<PublicKey, Credential>,
+  chain?: Chain,
 
   nonce?: Uint8Array
 }
@@ -63,28 +63,28 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
 
   credential.proof.value = signature;
   if (opts.chain) {
-    credential.proof.chain = {
-      credentials: Object.fromEntries(Array.from(opts.chain.entries()).map(([key, cred]) => [key.toHex(), cred]))
-    };
+    credential.proof.chain = opts.chain;
   }
 
   return credential;
 };
 
-export type BuildDeviceChainParams = {
-  credentials: Credential[],
-  device: PublicKey,
-  identity: PublicKey,
-}
-
 /**
  * Recursively build a credential chain to prove delegated authority of a given device.
  */
-export const buildDeviceChain = ({ credentials, device, identity }: BuildDeviceChainParams): ComplexMap<PublicKey, Credential> => {
-  const result = new ComplexMap<PublicKey, Credential>(x => x.toHex());
+export const buildDeviceChain: (opts: {
+  credentials: Credential[],
+  identity: PublicKey,
+  device: PublicKey,
+}) => Chain = ({
+  credentials,
+  identity,
+  device
+}) => {
+  const result = new ComplexMap<PublicKey, Credential>(key => key.toHex());
 
   const insertCredentials = (key: PublicKey) => {
-    const credential = credentials.find(c => isValidAuthorizedDeviceCredential(c, key, identity)) ??
+    const credential = credentials.find(c => isValidAuthorizedDeviceCredential(c, identity, key)) ??
       raise(new Error(`Unable to build device credential chain: Missing credential for device: ${key}`));
 
     result.set(key, credential);
@@ -99,5 +99,7 @@ export const buildDeviceChain = ({ credentials, device, identity }: BuildDeviceC
   };
 
   insertCredentials(device);
-  return result;
+  return {
+    credentials: Object.fromEntries(Array.from(result.entries()).map(([key, cred]) => [key.toHex(), cred]))
+  };
 };

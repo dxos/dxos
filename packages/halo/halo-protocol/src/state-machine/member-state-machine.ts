@@ -25,7 +25,7 @@ export class MemberStateMachine {
   /**
    * Member IDENTITY key => info
    */
-  private _members = new ComplexMap<PublicKey, MemberInfo>(x => x.toHex());
+  private _members = new ComplexMap<PublicKey, MemberInfo>(key => key.toHex());
 
   readonly memberAdmitted = new Event<MemberInfo>();
 

@@ -29,7 +29,7 @@ export interface FeedInfo {
  * Provides a list of admitted feeds.
  */
 export class FeedStateMachine {
-  private _feeds = new ComplexMap<PublicKey, FeedInfo>(x => x.toHex());
+  private _feeds = new ComplexMap<PublicKey, FeedInfo>(key => key.toHex());
 
   readonly feedAdmitted = new Event<FeedInfo>();
 

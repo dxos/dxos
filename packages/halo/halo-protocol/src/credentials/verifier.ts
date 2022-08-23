@@ -80,7 +80,7 @@ const verifyChain = async (chain: Chain, issuer: PublicKey, signer: PublicKey): 
       }
     }
 
-    if (!isValidAuthorizedDeviceCredential(credential, key, issuer)) {
+    if (!isValidAuthorizedDeviceCredential(credential, issuer, key)) {
       return { kind: 'fail', errors: [`Invalid credential chain: invalid assertion for key: ${key}`] };
     }
 
