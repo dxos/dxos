@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/devtools/devtools/dist",
         "tsConfig": "packages/devtools/devtools/tsconfig.json",
-        "main": "packages/devtools/devtools/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/devtools/devtools/*.md"]
+        "main": "packages/devtools/devtools/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools/**/*.{ts,tsx,js,jsx}"

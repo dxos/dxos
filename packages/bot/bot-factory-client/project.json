@@ -19,9 +19,7 @@
       "options": {
         "outputPath": "packages/bot/bot-factory-client/dist",
         "tsConfig": "packages/bot/bot-factory-client/tsconfig.json",
-        "main": "packages/bot/bot-factory-client/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/bot/bot-factory-client/*.md"]
+        "main": "packages/bot/bot-factory-client/src/index.ts"
       }
     },
     "bundle": {

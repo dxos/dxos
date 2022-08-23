@@ -8,9 +8,7 @@
       "options": {
         "outputPath": "packages/common/async/dist",
         "tsConfig": "packages/common/async/tsconfig.json",
-        "main": "packages/common/async/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/common/async/*.md"]
+        "main": "packages/common/async/src/index.ts"
       }
     },
     "lint": {

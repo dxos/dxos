@@ -15,14 +15,14 @@
       "options": {
         "outputPath": "packages/common/rpc/dist",
         "tsConfig": "packages/common/rpc/tsconfig.json",
-        "main": "packages/common/rpc/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/common/rpc/*.md"]
+        "main": "packages/common/rpc/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/rpc/**/*.{ts,js}"

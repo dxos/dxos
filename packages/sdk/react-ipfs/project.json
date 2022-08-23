@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/sdk/react-ipfs/dist",
         "tsConfig": "packages/sdk/react-ipfs/tsconfig.json",
-        "main": "packages/sdk/react-ipfs/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/sdk/react-ipfs/*.md"]
+        "main": "packages/sdk/react-ipfs/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-ipfs/**/*.{ts,tsx,js,jsx}"

@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/sdk/react-registry-client/dist",
         "tsConfig": "packages/sdk/react-registry-client/tsconfig.json",
-        "main": "packages/sdk/react-registry-client/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/sdk/react-registry-client/*.md"]
+        "main": "packages/sdk/react-registry-client/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-registry-client/**/*.{ts,tsx,js,jsx}"

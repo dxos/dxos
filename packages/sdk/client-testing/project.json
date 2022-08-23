@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/sdk/client-testing/dist",
         "tsConfig": "packages/sdk/client-testing/tsconfig.json",
-        "main": "packages/sdk/client-testing/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/sdk/client-testing/*.md"]
+        "main": "packages/sdk/client-testing/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/client-testing/**/*.{ts,js}"

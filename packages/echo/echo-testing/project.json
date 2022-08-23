@@ -10,9 +10,7 @@
       "options": {
         "outputPath": "packages/echo/echo-testing/dist",
         "tsConfig": "packages/echo/echo-testing/tsconfig.json",
-        "main": "packages/echo/echo-testing/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/echo/echo-testing/*.md"]
+        "main": "packages/echo/echo-testing/src/index.ts"
       }
     },
     "lint": {

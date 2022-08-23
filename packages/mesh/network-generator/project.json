@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/mesh/network-generator/dist",
         "tsConfig": "packages/mesh/network-generator/tsconfig.json",
-        "main": "packages/mesh/network-generator/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/network-generator/*.md"]
+        "main": "packages/mesh/network-generator/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/network-generator/**/*.{ts,js}"

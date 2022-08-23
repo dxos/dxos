@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/devtools/devtools-mesh/dist",
         "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json",
-        "main": "packages/devtools/devtools-mesh/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/devtools/devtools-mesh/*.md"]
+        "main": "packages/devtools/devtools-mesh/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/devtools/devtools-mesh/**/*.{ts,tsx,js,jsx}"

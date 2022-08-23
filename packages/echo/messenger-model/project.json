@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/echo/messenger-model/dist",
         "tsConfig": "packages/echo/messenger-model/tsconfig.json",
-        "main": "packages/echo/messenger-model/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/echo/messenger-model/*.md"]
+        "main": "packages/echo/messenger-model/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/echo/messenger-model/**/*.{ts,js}"

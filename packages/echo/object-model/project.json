@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/echo/object-model/dist",
         "tsConfig": "packages/echo/object-model/tsconfig.json",
-        "main": "packages/echo/object-model/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/echo/object-model/*.md"]
+        "main": "packages/echo/object-model/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/echo/object-model/**/*.{ts,js}"

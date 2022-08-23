@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/mesh/broadcast/dist",
         "tsConfig": "packages/mesh/broadcast/tsconfig.json",
-        "main": "packages/mesh/broadcast/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/broadcast/*.md"]
+        "main": "packages/mesh/broadcast/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/broadcast/**/*.{ts,js}"

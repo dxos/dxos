@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/sdk/react-toolkit/dist",
         "tsConfig": "packages/sdk/react-toolkit/tsconfig.json",
-        "main": "packages/sdk/react-toolkit/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/sdk/react-toolkit/*.md"]
+        "main": "packages/sdk/react-toolkit/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-toolkit/**/*.{ts,tsx,js,jsx}"
