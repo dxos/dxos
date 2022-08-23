@@ -46,4 +46,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm nx affected --target=check
+      - run: pnpm nx affected --target=lint
+      - run: pnpm nx affected --target=test
+      - run: pnpm nx affected --target=build
+      - run: pnpm nx affected --target=bundle
+

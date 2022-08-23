@@ -9,11 +9,12 @@
       "runner": "@nrwl/nx-cloud",
       "options": {
         "cacheableOperations": [
-          "proto",
           "build",
           "bundle",
           "check",
           "lint",
+          "prebuild",
+          "proto",
           "test"
         ],
         "parallel": 6,
