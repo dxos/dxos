@@ -32,14 +32,16 @@
       "dependsOn": [
         "^build",
         "^bundle",
-        "proto"
+        "proto",
+        "prebuild"
       ]
     },
     "bundle": {
       "dependsOn": [
         "^bundle",
         "build",
-        "proto"
+        "proto",
+        "prebuild"
       ]
     },
     "test": {
