@@ -25,7 +25,7 @@
       }
     },
     "test": {
-      "executor": "@dxos/mocha-executor:mocha",
+      "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
           "packages/common/random-access-multi-storage/src/**/*.test.{ts,js}"
@@ -34,6 +34,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha-executor"
+    "mocha"
   ]
 }

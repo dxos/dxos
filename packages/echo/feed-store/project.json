@@ -23,6 +23,16 @@
           "packages/echo/feed-store/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/echo/feed-store/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/echo/feed-store/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

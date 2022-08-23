@@ -15,11 +15,12 @@ import path from 'path';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
 describe('config', () => {
-  const config = yaml.load(String(fs.readFileSync(path.join(__dirname, '../../../config/config.yml')))) as any;
+  const configPath = path.join(__dirname, '../../../config/config.yml');
+  const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
   test
     .stdout()
-    .command(['config', '--json', '--config', './config/config.yml'])
+    .command(['config', '--json', '--config', configPath])
     .it('runs config', ctx => {
       expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
     });

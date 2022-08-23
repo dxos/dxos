@@ -2,6 +2,21 @@
   "sourceRoot": "packages/gravity/orchestrator/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/gravity/orchestrator/dist",
+        "tsConfig": "packages/gravity/orchestrator/tsconfig.json",
+        "main": "packages/gravity/orchestrator/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/gravity/orchestrator/*.md"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -10,10 +25,18 @@
           "packages/gravity/orchestrator/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/gravity/orchestrator/src/**/*.test.{ts,js}"
+        ],
+        "forceExit": true
+      }
     }
   },
   "implicitDependencies": [
-    "bot-factory-client",
-    "botkit"
+    "mocha"
   ]
 }

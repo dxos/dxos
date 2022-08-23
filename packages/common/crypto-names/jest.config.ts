@@ -7,5 +7,5 @@ export default {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
-  coverageDirectory: 'packages/common/crypto-names/coverage'
+  coverageDirectory: './coverage'
 };

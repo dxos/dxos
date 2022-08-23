@@ -23,6 +23,19 @@
           "packages/sdk/react-client-testing/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/react-client-testing/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "forceExit": true,
+        "jsdom": true
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

@@ -6,5 +6,5 @@ export default {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
-  coverageDirectory: 'packages/common/codec-protobuf/coverage'
+  coverageDirectory: './coverage'
 };

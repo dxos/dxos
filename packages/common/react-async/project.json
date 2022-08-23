@@ -25,7 +25,7 @@
       }
     },
     "test": {
-      "executor": "@dxos/mocha-executor:mocha",
+      "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
@@ -36,6 +36,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha-executor"
+    "mocha"
   ]
 }

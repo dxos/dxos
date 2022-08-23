@@ -6,5 +6,5 @@ export default {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
-  coverageDirectory: 'packages/common/protocols/coverage'
+  coverageDirectory: './coverage'
 };
