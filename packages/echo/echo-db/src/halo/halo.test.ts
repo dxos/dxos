@@ -90,7 +90,11 @@ describe.only('HALO', () => {
     await halo.close();
   });
 
-  test('invite another device', async () => {
+  test('admit another device')
+
+  test('admit 2 devices in a chain')
+
+  test.skip('invite another device', async () => {
     const deviceA = setup();
     await deviceA.open();
     afterTest(() => deviceA.close());
@@ -109,7 +113,7 @@ describe.only('HALO', () => {
     expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
   });
 
-  test('invite 2 devices in a chain', async () => {
+  test.skip('invite 2 devices in a chain', async () => {
     const deviceA = await setupOpen();
     const deviceB = await setupOpen();
     const deviceC = await setupOpen();
@@ -132,7 +136,7 @@ describe.only('HALO', () => {
     expect(profileC!.publicKey.equals(profileA.publicKey)).toBeTruthy();
   });
 
-  test('recover HALO', async () => {
+  test.skip('recover HALO', async () => {
     const deviceA = await setupOpen();
     const deviceB = await setupOpen();
 
