@@ -17,7 +17,7 @@ If you are unfamiliar with DXOS, see our [website](https://dxos.org) for more in
 
 ## Demo
 
-Here's a demo of the ECHO database and data replication between twoo peers.
+Here's a demo of the ECHO database and data   replication between twoo peers.
 
 <br/>
 

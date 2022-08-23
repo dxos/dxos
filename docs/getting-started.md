@@ -23,7 +23,8 @@ Install pnpm and its dependencies:
 ```bash
 npm install -g pnpm@7.9.0
 nodenv rehash
-alias pnx = 'pnpm nx'
+
+alias pnx='pnpm nx'
 ```
 
 ### Building
@@ -126,12 +127,18 @@ pnpm ls -r --depth -1
 
 ## Troubleshooting
 
-1). Issue with `data.copy is not a function`.
+To remove all files not stored in git:
+
+```bash
+git clean -xdf
+```
+
+2). Issue with `data.copy is not a function`.
 
 This is caused by incomplete browser polyfills for Node (specifically for Buffer).
 Fixed by adding different polyfill for Buffer such as [here](https://github.com/dxos/protocols/blob/551f5592384f5af69f6d46960d5c895050f1f211/packages/sdk/demos/.storybook/main.js#L33).
 
-2). `Cannot GET /` when running `pnpm run storybook`
+1). `Cannot GET /` when running `pnpm run storybook`
 
 Solution:
 
