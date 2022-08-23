@@ -49,6 +49,7 @@ export class HaloParty {
   private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
+    partyKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
@@ -58,7 +59,7 @@ export class HaloParty {
     _options: PipelineOptions
   ) {
     this._partyCore = new PartyPipeline(
-      _credentialsSigner.getIdentityKey().publicKey,
+      partyKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
@@ -105,11 +106,15 @@ export class HaloParty {
   //
 
   get identityInfo () {
-    return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
+    // TODO(dmaretskyi): Not implemented.
+    return undefined
+    // return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
   get identityGenesis () {
-    return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
+    // TODO(dmaretskyi): Not implemented.
+    return undefined
+    // return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
   get credentialMessages () {

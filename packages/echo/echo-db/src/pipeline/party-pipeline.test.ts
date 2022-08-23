@@ -26,7 +26,7 @@ import { PartyPipeline } from './party-pipeline';
 import { createCredential } from '@dxos/halo-protocol';
 import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
-describe.only('PartyPipeline', () => {
+describe('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });

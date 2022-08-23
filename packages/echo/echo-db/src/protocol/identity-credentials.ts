@@ -6,6 +6,7 @@ import {
   createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
   KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
 } from '@dxos/credentials';
+import { Chain } from '@dxos/halo-protocol';
 import { humanize } from '@dxos/util';
 
 import { ContactManager, Preferences } from '../halo';
@@ -18,7 +19,7 @@ export interface IdentityCredentials {
   keyring: Keyring
   identityKey: KeyRecord
   deviceKey: KeyRecord
-  deviceKeyChain: KeyChain
+  deviceKeyChain: Chain
   identityGenesis: SignedMessage
   identityInfo: SignedMessage | undefined
   displayName: string | undefined
@@ -28,6 +29,7 @@ export interface IdentityCredentials {
 }
 
 export const createTestIdentityCredentials = async (keyring: Keyring): Promise<IdentityCredentials> => {
+  throw new Error('Not implemented');
   const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
   const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
@@ -58,6 +60,7 @@ export const createTestIdentityCredentials = async (keyring: Keyring): Promise<I
 };
 
 export const deriveTestDeviceCredentials = async (identity: IdentityCredentials): Promise<IdentityCredentials> => {
+  throw new Error('Not implemented');
   const deviceKey = await identity.keyring.createKeyRecord({ type: KeyType.DEVICE });
   const keyAdmit = createKeyAdmitMessage(identity.keyring, identity.identityKey.publicKey, deviceKey, [identity.identityKey]);
 

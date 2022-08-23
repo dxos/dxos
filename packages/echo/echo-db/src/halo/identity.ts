@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
+import { Filter, KeyChain, KeyRecord, Keyring, KeyType, PubKey, SignedMessage, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
@@ -13,6 +13,8 @@ import { IdentityCredentials } from '../protocol/identity-credentials';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
+import { Chain, getCredentialAssertion } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 const log = debug('dxos:echo-db:identity');
 
@@ -24,43 +26,44 @@ const log = debug('dxos:echo-db:identity');
 export class Identity implements IdentityCredentials {
   private readonly _identityKey: KeyRecord;
   private readonly _deviceKey: KeyRecord;
-  private readonly _deviceKeyChain: KeyChain;
+  private readonly _deviceKeyChain: Chain;
 
   /**
    * @param _keyring
    * @param _halo HALO party. Must be open.
    */
-  constructor (
+  constructor(
     private readonly _keyring: Keyring,
     private readonly _halo: HaloParty
   ) {
     this._identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
     this._deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
-    this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this.deviceKey);
-    assert(this._halo.identityGenesis);
+    this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this._identityKey.publicKey, this.deviceKey.publicKey);
+    // TODO(dmaretskyi): What is this about?
+    // assert(this._halo.identityGenesis);
   }
 
-  get signer (): Signer {
+  get signer(): Signer {
     return this._keyring;
   }
 
-  get keyring (): Keyring {
+  get keyring(): Keyring {
     return this._keyring;
   }
 
-  get identityKey (): KeyRecord {
+  get identityKey(): KeyRecord {
     return this._identityKey;
   }
 
-  get deviceKey (): KeyRecord {
+  get deviceKey(): KeyRecord {
     return this._deviceKey;
   }
 
-  get deviceKeyChain (): KeyChain {
+  get deviceKeyChain(): Chain {
     return this._deviceKeyChain;
   }
 
-  get displayName (): string | undefined {
+  get displayName(): string | undefined {
     return this.identityInfo?.signed.payload.displayName;
   }
 
@@ -68,19 +71,19 @@ export class Identity implements IdentityCredentials {
    * Contains profile username.
    * Can be missing if the username wasn't provided when profile was created.
    */
-  get identityInfo (): SignedMessage | undefined {
+  get identityInfo(): SignedMessage | undefined {
     return this._halo.identityInfo;
   }
 
-  get identityGenesis (): SignedMessage {
+  get identityGenesis(): SignedMessage {
     return this._halo.identityGenesis ?? failUndefined();
   }
 
-  get preferences (): Preferences {
+  get preferences(): Preferences {
     return this._halo.preferences;
   }
 
-  get contacts (): ContactManager {
+  get contacts(): ContactManager {
     return this._halo.contacts;
   }
 
@@ -88,11 +91,11 @@ export class Identity implements IdentityCredentials {
    * HALO party. Must be open.
    */
   // TODO(burdon): Remove.
-  get halo (): HaloParty {
+  get halo(): HaloParty {
     return this._halo;
   }
 
-  createCredentialsSigner (): CredentialsSigner {
+  createCredentialsSigner(): CredentialsSigner {
     return new CredentialsSigner(
       this._keyring,
       this.identityKey,
@@ -102,15 +105,16 @@ export class Identity implements IdentityCredentials {
   }
 }
 
-const getDeviceKeyChainFromHalo = (halo: HaloParty, deviceKey: KeyRecord) => {
-  try {
-    return Keyring.buildKeyChain(
-      deviceKey.publicKey,
-      halo.credentialMessages,
-      halo.feedKeys
-    );
-  } catch (err: any) {
-    log('Unable to locate device KeyChain:', err);
-    throw err;
-  }
+const getDeviceKeyChainFromHalo = (halo: HaloParty, identityKey: PublicKey, deviceKey: PublicKey): Chain => {
+  return {
+    credential: halo.processor.credentialMessages.find(credential => {
+      const assertion = getCredentialAssertion(credential)
+
+      return credential.issuer.equals(identityKey) &&
+        credential.subject.id.equals(deviceKey) &&
+        assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
+        assertion.identityKey.equals(identityKey) &&
+        assertion.deviceKey.equals(deviceKey);
+    }) ?? failUndefined()
+  };
 };

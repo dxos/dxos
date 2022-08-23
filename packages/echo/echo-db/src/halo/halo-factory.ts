@@ -30,6 +30,7 @@ import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
+import { AdmittedFeed, createCredential, PartyMember } from '@dxos/halo-protocol';
 
 /**
  * Options allowed when creating the HALO.
@@ -54,10 +55,11 @@ export class HaloFactory {
     private readonly _options: PipelineOptions = {}
   ) {}
 
-  async constructParty (): Promise<HaloParty> {
+  async constructParty (partyKey: PublicKey): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
     const halo = new HaloParty(
+      partyKey,
       this._modelFactory,
       this._snapshotStore,
       feedProvider,
@@ -71,6 +73,9 @@ export class HaloFactory {
   }
 
   async createHalo (options: HaloCreationOptions = {}): Promise<HaloParty> {
+
+    const partyKey = await this._keyring.createKeyRecord({ type: KeyType.PARTY });
+
     // Don't use `identityManager.identityKey`, because that doesn't check for the secretKey.
     const identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
     assert(identityKey, 'Identity key required.');
@@ -79,7 +84,7 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
-    const halo = await this.constructParty();
+    const halo = await this.constructParty(partyKey.publicKey);
     const feedKey = await halo.getWriteFeedKey();
     const feedKeyPair = this._keyring.getKey(feedKey);
     assert(feedKeyPair);
@@ -88,27 +93,69 @@ export class HaloFactory {
     // Connect the pipeline.
     await halo.open();
 
-    /* 2. Write a PartyGenesis message for the HALO. This message must be signed by the:
-     *    A. Identity key (in the case of the HALO, this serves as the Party key).
-     *    B. Device key (the first "member" of the Identity's HALO).
-     *    C. Feed key (the feed owned by the Device).
-     */
-    await halo.credentialsWriter.write(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
+    // TODO(dmaretskyi): Extract party (space) creation.
+    // Self-signed party genesis. Establishes root of authority.
+    await halo.credentialsWriter.write(await createCredential({
+      issuer: partyKey.publicKey,
+      subject: partyKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyGenesis',
+        partyKey: partyKey.publicKey
+      },
+      keyring: this._keyring,
+    }))
 
-    /* 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
-     *    message will be copied into other Parties which we create or join.
-     */
-    await halo.credentialsWriter.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
+    // Admit the identity to the party.
+    await halo.credentialsWriter.write(await createCredential({
+      issuer: partyKey.publicKey,
+      subject: identityKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyMember',
+        partyKey: partyKey.publicKey,
+        role: PartyMember.Role.ADMIN
+      },
+      keyring: this._keyring,
+    }));
 
-    if (options.identityDisplayName) {
-      // 4. Write the IdentityInfo message with descriptive details (eg, display name).
-      await halo.credentialsWriter.write(createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey));
-    }
+    // Assign the HALO party to the identity.
+    await halo.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: identityKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.HaloSpace',
+        identityKey: identityKey.publicKey,
+        haloKey: partyKey.publicKey
+      },
+      keyring: this._keyring,
+    }));
 
-    if (options.deviceDisplayName) {
-      // 5. Write the DeviceInfo message with descriptive details (eg, display name).
-      await halo.credentialsWriter.write(createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey));
-    }
+    // Admit device to the identity.
+    await halo.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: deviceKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        identityKey: identityKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+      },
+      keyring: this._keyring,
+    }));
+
+    // Admit feed to the party.
+    await halo.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: feedKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: partyKey.publicKey,
+        identityKey: identityKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
+      keyring: this._keyring,
+    }));
+
+    // TODO(dmaretskyi): Identity/device profile & metadata.
 
     // Create special properties item.
     await halo.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
@@ -119,6 +166,9 @@ export class HaloFactory {
       type: HALO_PARTY_DEVICE_PREFERENCES_TYPE,
       props: { publicKey: deviceKey.publicKey.asBuffer() }
     });
+
+    // Remove party genesis key.
+    await this._keyring.deleteSecretKey(partyKey);
 
     // Do no retain the Identity secret key after creation of the HALO.
     await this._keyring.deleteSecretKey(identityKey);
