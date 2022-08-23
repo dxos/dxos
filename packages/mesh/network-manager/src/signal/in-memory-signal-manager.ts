@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
@@ -17,7 +17,7 @@ export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
 
   constructor () {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
@@ -71,7 +71,7 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  async message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage) {
+  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
     assert(recipient);
     assert(state.connections.get(recipient), 'Peer not connected');
     state.connections.get(recipient)!.onMessage.emit([author, recipient, msg]);

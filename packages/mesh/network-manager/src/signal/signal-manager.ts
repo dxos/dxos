@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { CommandTrace, SignalStatus } from './signal-client';
 
@@ -28,12 +28,12 @@ export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalStatus[]>
   commandTrace: Event<CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
-  onMessage: Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>;
+  onMessage: Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>;
 
   getStatus (): SignalStatus[]
   destroy(): Promise<void>
   /**
    * Send message to peer.
    */
-  message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage): Promise<void>
+  message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage): Promise<void>
 }

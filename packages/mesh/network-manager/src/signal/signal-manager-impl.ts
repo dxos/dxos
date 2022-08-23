@@ -9,7 +9,7 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
@@ -31,7 +31,7 @@ export class SignalManagerImpl implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: NetworkMessage]>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
 
   constructor (
     private readonly _hosts: string[]
@@ -146,7 +146,7 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (author: PublicKey, recipient: PublicKey, msg: NetworkMessage) {
+  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
     log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
       server.message(author, recipient, msg).catch(err => {

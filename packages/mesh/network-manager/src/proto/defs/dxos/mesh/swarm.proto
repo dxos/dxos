@@ -6,9 +6,9 @@ syntax = "proto3";
 
 import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 
-package dxos.mesh.networkMessage;
+package dxos.mesh.swarm;
 
-message NetworkMessage {
+message SwarmMessage {
   /// Swarm identefier.
   PubKey topic = 3;
   /// Unique connection identifier.

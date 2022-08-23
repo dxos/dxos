@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
@@ -33,7 +33,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock1 = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock1 = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
@@ -42,7 +42,7 @@ describe('SignalClient', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const msg: NetworkMessage = {
+    const msg: SwarmMessage = {
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
@@ -77,13 +77,13 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
     await api1.join(topic, peer1);
 
-    const msg: NetworkMessage = {
+    const msg: SwarmMessage = {
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
@@ -125,7 +125,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: NetworkMessage) => Promise<void>>().resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
 
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
@@ -138,7 +138,7 @@ describe('SignalClient', () => {
 
     const sessionId = PublicKey.random();
 
-    const msg: NetworkMessage = {
+    const msg: SwarmMessage = {
       sessionId,
       topic,
       data: { offer: { json: 'bar' } },

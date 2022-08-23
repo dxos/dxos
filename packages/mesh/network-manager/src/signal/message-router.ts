@@ -8,7 +8,7 @@ import debug from 'debug';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet, exponentialBackoffInterval, MakeOptional, SubscriptionGroup } from '@dxos/util';
 
-import { Answer, NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
 
 interface OfferRecord {
@@ -17,7 +17,7 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>;
+  sendMessage?: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>;
   onOffer?: (message: OfferMessage) => Promise<Answer>;
   onSignal?: (message: SignalMessage) => Promise<void>;
   retryDelay?: number;
@@ -30,7 +30,7 @@ const log = debug('dxos:network-manager:message-router');
  */
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>;
+  private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>;
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
@@ -58,7 +58,7 @@ export class MessageRouter implements SignalMessaging {
     this._timeout = timeout;
   }
 
-  async receiveMessage (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  async receiveMessage (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     log(`receive message: ${JSON.stringify(message)} from ${author} to ${recipient}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
@@ -86,7 +86,7 @@ export class MessageRouter implements SignalMessaging {
   }
 
   async offer (message: OfferMessage): Promise<Answer> {
-    const networkMessage: NetworkMessage = {
+    const networkMessage: SwarmMessage = {
       ...message,
       messageId: PublicKey.random()
     };
@@ -96,8 +96,8 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _sendReliableMessage (author: PublicKey, recipient: PublicKey, message: MakeOptional<NetworkMessage, 'messageId'>): Promise<void> {
-    const networkMessage: NetworkMessage = {
+  private async _sendReliableMessage (author: PublicKey, recipient: PublicKey, message: MakeOptional<SwarmMessage, 'messageId'>): Promise<void> {
+    const networkMessage: SwarmMessage = {
       ...message,
       // Setting unique messageId if it not specified yet.
       messageId: message.messageId ?? PublicKey.random()
@@ -132,7 +132,7 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(author, recipient, networkMessage);
   }
 
-  private async _resolveAnswers (message: NetworkMessage): Promise<void> {
+  private async _resolveAnswers (message: SwarmMessage): Promise<void> {
     assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
     if (offerRecord) {
@@ -143,7 +143,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  private async _handleOffer (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  private async _handleOffer (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.data?.offer, 'No offer');
     // TODO(mykola): ugly cast.
     const offerMessage = this._castNetworkMessage(author, recipient, message) as OfferMessage;
@@ -160,20 +160,20 @@ export class MessageRouter implements SignalMessaging {
     );
   }
 
-  private async _handleSignal (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  private async _handleSignal (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.messageId);
     const signalMessage = this._castNetworkMessage(author, recipient, message) as SignalMessage;
     await this._onSignal(signalMessage);
   }
 
-  private async _handleAcknowledgement (message: NetworkMessage): Promise<void> {
+  private async _handleAcknowledgement (message: SwarmMessage): Promise<void> {
     assert(message.data?.ack?.messageId);
     this._onAckCallbacks.get(message.data.ack.messageId)?.();
   }
 
-  private async _sendAcknowledgement (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  private async _sendAcknowledgement (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.messageId);
-    const ackMessage: NetworkMessage = {
+    const ackMessage: SwarmMessage = {
       topic: message.topic,
       sessionId: message.sessionId,
       data: { ack: { messageId: message.messageId } },
@@ -183,7 +183,7 @@ export class MessageRouter implements SignalMessaging {
     await this._sendMessage(author, recipient, ackMessage);
   }
 
-  private _castNetworkMessage (author: PublicKey, recipient: PublicKey, message: NetworkMessage) {
+  private _castNetworkMessage (author: PublicKey, recipient: PublicKey, message: SwarmMessage) {
     return {
       author,
       recipient,

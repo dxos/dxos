@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { Answer } from '../proto/gen/dxos/mesh/networkMessage';
+import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalMessaging } from '../signal';
 import { OfferMessage, SignalMessage } from '../signal/signal-messaging';

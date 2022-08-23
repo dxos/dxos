@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { schema } from '../proto/gen';
-import { NetworkMessage } from '../proto/gen/dxos/mesh/networkMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -95,7 +95,7 @@ export class SignalClient {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onMessage: (author: PublicKey, recipient: PublicKey, message: NetworkMessage) => Promise<void>
+    private readonly _onMessage: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>
   ) {
     this._setState(SignalState.CONNECTING);
     this._createClient();
@@ -222,10 +222,10 @@ export class SignalClient {
     this._messageStreams.delete(topic);
   }
 
-  async message (author: PublicKey, recipient: PublicKey, message: NetworkMessage): Promise<void> {
+  async message (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     const payload: Any = {
-      type_url: 'dxos.mesh.networkMessage.NetworkMessage',
-      value: schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').encode(message)
+      type_url: 'dxos.mesh.swarm.SwarmMessage',
+      value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message)
     };
     return this._client.sendMessage(author, recipient, payload);
   }
@@ -253,8 +253,8 @@ export class SignalClient {
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
     messageStream.subscribe(async (message: Message) => {
-      if (message.payload.type_url === 'dxos.mesh.networkMessage.NetworkMessage') {
-        const networkMessage = schema.getCodecForType('dxos.mesh.networkMessage.NetworkMessage').decode(message.payload.value);
+      if (message.payload.type_url === 'dxos.mesh.swarm.SwarmMessage') {
+        const networkMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').decode(message.payload.value);
         log('Message received: ' + JSON.stringify(networkMessage));
         assert(peerId.equals(message.recipient), 'Message author does not match peer id.');
         await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), networkMessage);
