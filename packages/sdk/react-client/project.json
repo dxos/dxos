@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/sdk/react-client/dist",
         "tsConfig": "packages/sdk/react-client/tsconfig.json",
-        "main": "packages/sdk/react-client/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/sdk/react-client/*.md"]
+        "main": "packages/sdk/react-client/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/sdk/react-client/**/*.{ts,tsx,js,jsx}"

@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/mesh/protocol-plugin-replicator/dist",
         "tsConfig": "packages/mesh/protocol-plugin-replicator/tsconfig.json",
-        "main": "packages/mesh/protocol-plugin-replicator/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/protocol-plugin-replicator/*.md"]
+        "main": "packages/mesh/protocol-plugin-replicator/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/protocol-plugin-replicator/**/*.{ts,js}"

@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/mesh/protocol-plugin-rpc/dist",
         "tsConfig": "packages/mesh/protocol-plugin-rpc/tsconfig.json",
-        "main": "packages/mesh/protocol-plugin-rpc/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/protocol-plugin-rpc/*.md"]
+        "main": "packages/mesh/protocol-plugin-rpc/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/protocol-plugin-rpc/**/*.{ts,js}"

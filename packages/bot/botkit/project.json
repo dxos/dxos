@@ -19,9 +19,7 @@
       "options": {
         "outputPath": "packages/bot/botkit/dist",
         "tsConfig": "packages/bot/botkit/tsconfig.json",
-        "main": "packages/bot/botkit/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/bot/botkit/*.md"]
+        "main": "packages/bot/botkit/src/index.ts"
       }
     },
     "lint": {

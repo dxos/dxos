@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/echo/model-factory/dist",
         "tsConfig": "packages/echo/model-factory/tsconfig.json",
-        "main": "packages/echo/model-factory/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/echo/model-factory/*.md"]
+        "main": "packages/echo/model-factory/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/echo/model-factory/**/*.{ts,js}"

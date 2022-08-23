@@ -19,9 +19,7 @@
       "options": {
         "outputPath": "packages/halo/halo-protocol/dist",
         "tsConfig": "packages/halo/halo-protocol/tsconfig.json",
-        "main": "packages/halo/halo-protocol/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/halo/halo-protocol/*.md"]
+        "main": "packages/halo/halo-protocol/src/index.ts"
       }
     },
     "lint": {

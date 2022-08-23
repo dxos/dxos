@@ -10,14 +10,14 @@
       "options": {
         "outputPath": "packages/echo/echo-db/dist",
         "tsConfig": "packages/echo/echo-db/tsconfig.json",
-        "main": "packages/echo/echo-db/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/echo/echo-db/*.md"]
+        "main": "packages/echo/echo-db/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "eslintConfig": "packages/echo/echo-db/eslintConfig.json",
         "lintFilePatterns": [

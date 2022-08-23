@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/mesh/network-manager/dist",
         "tsConfig": "packages/mesh/network-manager/tsconfig.json",
-        "main": "packages/mesh/network-manager/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/network-manager/*.md"]
+        "main": "packages/mesh/network-manager/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/network-manager/**/*.{ts,js}"

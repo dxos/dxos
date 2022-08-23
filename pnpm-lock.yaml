@@ -1,5 +1,10 @@
 lockfileVersion: 5.4
 
+patchedDependencies:
+  '@nrwl/js@14.5.7':
+    hash: osi77fjxs57mwennraun4e6pmi
+    path: patches/@nrwl__js@14.5.7.patch
+
 importers:
 
   .:
@@ -34,7 +39,7 @@ importers:
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
       '@nrwl/eslint-plugin-nx': 14.5.7_5ajuhbouekabgvce7zxu72hya4
-      '@nrwl/js': 14.5.7_ekplozetgxqhy2mupbsub3i3wi
+      '@nrwl/js': 14.5.7_osi77fjxs57mwennraun4e6pmi_ekplozetgxqhy2mupbsub3i3wi
       '@nrwl/linter': 14.5.7_yqf6mqtodhk4dygdp5fgmhxhii
       '@nrwl/nx-cloud': 14.4.1
       '@swc-node/register': 1.5.1_typescript@4.7.4
@@ -8124,7 +8129,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@nrwl/js/14.5.7_ekplozetgxqhy2mupbsub3i3wi:
+  /@nrwl/js/14.5.7_osi77fjxs57mwennraun4e6pmi_ekplozetgxqhy2mupbsub3i3wi:
     resolution: {integrity: sha512-z3uAsAEonMGFZnXcl76zPPd0q1LQtkbeF40aFP0iJXZwQumPYolPAU1peaDYq7wzLbk2QVsmt44pBsOy+/wJlA==}
     dependencies:
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
@@ -8154,6 +8159,7 @@ packages:
       - typescript
       - utf-8-validate
     dev: true
+    patched: true
 
   /@nrwl/linter/14.5.7_yqf6mqtodhk4dygdp5fgmhxhii:
     resolution: {integrity: sha512-/nVlZo+TC7/kVEKdxqN+enR0CfnfDlU+BMvuBFm6Civn/a8pZrrYdmouZiT5BvGD2Pup5V+0Pa+f2YcBIDdQnw==}

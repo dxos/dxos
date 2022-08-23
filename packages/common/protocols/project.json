@@ -4,25 +4,29 @@
   "targets": {
     "proto": {
       "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": ["{options.basePath}{options.outputPath}"],
+      "outputs": [
+        "{options.basePath}{options.outputPath}"
+      ],
       "options": {
         "basePath": "packages/common/protocols/src/proto/"
       }
     },
     "build": {
       "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "packages/common/protocols/dist",
         "tsConfig": "packages/common/protocols/tsconfig.json",
-        "main": "packages/common/protocols/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/common/protocols/*.md"]
+        "main": "packages/common/protocols/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/protocols/**/*.{ts,js}"

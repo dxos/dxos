@@ -19,14 +19,14 @@
       "options": {
         "outputPath": "packages/mesh/mesh-protocol/dist",
         "tsConfig": "packages/mesh/mesh-protocol/tsconfig.json",
-        "main": "packages/mesh/mesh-protocol/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/mesh/mesh-protocol/*.md"]
+        "main": "packages/mesh/mesh-protocol/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/mesh-protocol/**/*.{ts,js}"

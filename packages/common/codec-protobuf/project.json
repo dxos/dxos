@@ -10,9 +10,7 @@
       "options": {
         "outputPath": "packages/common/codec-protobuf/dist",
         "tsConfig": "packages/common/codec-protobuf/tsconfig.json",
-        "main": "packages/common/codec-protobuf/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["packages/common/codec-protobuf/*.md"]
+        "main": "packages/common/codec-protobuf/src/index.ts"
       }
     },
     "bundle": {
@@ -32,7 +30,9 @@
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/common/codec-protobuf/**/*.{ts,js}"
