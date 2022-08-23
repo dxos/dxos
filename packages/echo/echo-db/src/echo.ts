@@ -162,7 +162,7 @@ export class ECHO {
       keyring: this._keyring,
       networkManager: this._networkManager,
       metadataStore: this._metadataStore,
-      feedProviderFactory: feedProviderFactory,
+      feedProviderFactory,
       modelFactory: this._modelFactory,
       snapshotStore: this._snapshotStore,
       options

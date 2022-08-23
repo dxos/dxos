@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/demos/tutorials-tasks-app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/demos/tutorials-tasks-app/dist"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

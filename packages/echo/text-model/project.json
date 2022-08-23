@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/echo/text-model/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/echo/text-model/dist",
+        "packages/echo/text-model/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

@@ -39,7 +39,7 @@ export const createPartyGenesisMessage = (
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
       partyKey: partyKeyPair.publicKey,
-      feedKey: feedKey,
+      feedKey,
       admitKey: admitKeyPair.publicKey,
       admitKeyType: admitKeyPair.type
     }
@@ -92,7 +92,7 @@ export const createFeedAdmitMessage = (
     type: PartyCredential.Type.FEED_ADMIT,
     feedAdmit: {
       partyKey,
-      feedKey: feedKey
+      feedKey
     }
   };
 

@@ -155,7 +155,7 @@ const VirtualTableCell = ({ column, row, height, renderCell, rowSelected, getVal
         minWidth: width,
         flex: width === undefined ? 1 : 0,
         flexShrink: 0,
-        height: height,
+        height,
         padding: 0,
         paddingLeft: 2,
         paddingRight: 2,
@@ -458,7 +458,7 @@ export const VirtualTable = <T extends RowData> (
           <TableBody
             sx={{
               position: 'relative', // Anchor for layout.
-              height: height
+              height
             }}
           >
             {range.rows.map(row => {

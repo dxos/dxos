@@ -44,7 +44,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(newField);
@@ -59,7 +59,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(newField);
@@ -73,7 +73,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const firstField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(firstField);

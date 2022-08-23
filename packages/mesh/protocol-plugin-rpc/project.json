@@ -1,0 +1,16 @@
+{
+  "sourceRoot": "packages/mesh/protocol-plugin-rpc/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/mesh/protocol-plugin-rpc/dist",
+        "packages/mesh/protocol-plugin-rpc/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    }
+  }
+}

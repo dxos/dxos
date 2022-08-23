@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { css } from '@emotion/css';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
+import { App } from './components';
 
 if ('serviceWorker' in navigator) {
   // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
@@ -19,39 +20,10 @@ if ('serviceWorker' in navigator) {
   console.error('Service workers are not supported.');
 }
 
-const styles = css`
-  display: flex;
-  flex-direction: row;
-  flex: 1;
-  align-items: center;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  > div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    align-items: center;
-  }
-`;
+const root = createRoot(document.getElementById('root') as HTMLElement);
 
-const App = () => {
-  return (
-    <div className={styles}>
-      <div>
-        <div>
-           <img src='./icons/icon-256.png' alt='logo' />
-        </div>
-      </div>
-    </div>
+(() => {
+  root.render(
+    <App />
   );
-};
-
-const main = () => {
-  const root = createRoot(document.getElementById('root')!);
-  root.render(<App />);
-};
-
-main();
+})();

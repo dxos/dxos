@@ -65,10 +65,10 @@ export interface ProtocolOptions {
 export class Protocol {
   private _isOpen = false;
 
-  readonly error = new Event<Error>()
-  readonly extensionsInitialized = new Event()
-  readonly extensionsHandshake = new Event()
-  readonly handshake = new Event<this>()
+  readonly error = new Event<Error>();
+  readonly extensionsInitialized = new Event();
+  readonly extensionsHandshake = new Event();
+  readonly handshake = new Event<this>();
 
   private _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
   private _streamOptions: ProtocolStreamCtorOpts | undefined;
@@ -99,7 +99,7 @@ export class Protocol {
   /**
    * Local object to store data for extensions.
    */
-  private _context: Record<string, any> = {}
+  private _context: Record<string, any> = {};
 
   constructor (options: ProtocolOptions = { initiator: false }) {
     const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
@@ -383,20 +383,20 @@ export class Protocol {
   /**
    * Handles extension messages.
    */
-   private _extensionHandler = (name: string, message: any) => {
-     if (name === this._extensionInit.name) {
-       this._extensionInit.emit('extension-message', message);
-       return;
-     }
+  private _extensionHandler = (name: string, message: any) => {
+    if (name === this._extensionInit.name) {
+      this._extensionInit.emit('extension-message', message);
+      return;
+    }
 
-     const extension = this._extensionMap.get(name);
-     if (!extension) {
-       process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
-       return;
-     }
+    const extension = this._extensionMap.get(name);
+    if (!extension) {
+      process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
+      return;
+    }
 
-     extension.emit('extension-message', message);
-   }
+    extension.emit('extension-message', message);
+  };
 }
 
 export const getProtocolFromStream = (stream: any): Protocol => {
