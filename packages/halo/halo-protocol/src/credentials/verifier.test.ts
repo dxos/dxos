@@ -8,8 +8,8 @@ import { it as test } from 'mocha';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 
-import { PartyMember } from '../proto';
-import { buildDeviceChain, createCredential } from './credential-factory';
+import { Chain, PartyMember } from '../proto';
+import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
 
 describe('verifier', () => {
@@ -136,22 +136,18 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device,
-              identityKey: identity
-            },
-            subject: device,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device,
-        identity
-      });
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          keyring
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -176,22 +172,18 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device,
-              identityKey: identity
-            },
-            subject: device,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device,
-        identity
-      });
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          keyring
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -218,22 +210,18 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device,
-              identityKey: identity
-            },
-            subject: device,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device,
-        identity
-      });
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          keyring
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -248,7 +236,7 @@ describe('verifier', () => {
         chain
       });
 
-      credential.proof.chain!.credentials![device.toHex()]!.proof.value![0] = 123;
+      credential.proof.chain!.credential.proof.value![0] = 123;
 
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
@@ -260,23 +248,18 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device,
-              identityKey: identity
-            },
-            subject: device,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device,
-        identity
-      });
-
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          keyring
+        })
+      };
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
@@ -290,7 +273,7 @@ describe('verifier', () => {
         chain
       });
 
-      credential.proof.chain!.credentials![device.toHex()] = await createCredential({
+      credential.proof.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
@@ -311,23 +294,19 @@ describe('verifier', () => {
       const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
+      const chain: Chain = {
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device,
-              identityKey: identity
-            },
-            subject: device,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device,
-        identity
-      });
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device,
+            identityKey: identity
+          },
+          subject: device,
+          issuer: identity,
+          keyring
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -342,7 +321,7 @@ describe('verifier', () => {
         chain
       });
 
-      credential.proof.chain!.credentials![device.toHex()] = await createCredential({
+      credential.proof.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device,
@@ -364,32 +343,31 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device2,
-              identityKey: identity
-            },
-            subject: device2,
-            issuer: device1,
-            keyring
-          }),
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device1,
-              identityKey: identity
-            },
-            subject: device1,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device: device2,
-        identity
-      });
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device2,
+            identityKey: identity
+          },
+          subject: device2,
+          issuer: identity,
+          keyring,
+          signingKey: device1,
+          chain: {
+            credential: await createCredential({
+              assertion: {
+                '@type': 'dxos.halo.credentials.AuthorizedDevice',
+                deviceKey: device1,
+                identityKey: identity
+              },
+              subject: device1,
+              issuer: identity,
+              keyring
+            })
+          }
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -415,32 +393,31 @@ describe('verifier', () => {
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain = buildDeviceChain({
-        credentials: [
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device2,
-              identityKey: identity
-            },
-            subject: device2,
-            issuer: device1,
-            keyring
-          }),
-          await createCredential({
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device1,
-              identityKey: identity
-            },
-            subject: device1,
-            issuer: identity,
-            keyring
-          })
-        ],
-        device: device2,
-        identity
-      });
+      const chain: Chain = {
+        credential: await createCredential({
+          assertion: {
+            '@type': 'dxos.halo.credentials.AuthorizedDevice',
+            deviceKey: device2,
+            identityKey: identity
+          },
+          subject: device2,
+          issuer: identity,
+          keyring,
+          signingKey: device1,
+          chain: {
+            credential: await createCredential({
+              assertion: {
+                '@type': 'dxos.halo.credentials.AuthorizedDevice',
+                deviceKey: device1,
+                identityKey: identity
+              },
+              subject: device1,
+              issuer: identity,
+              keyring
+            })
+          }
+        })
+      };
 
       const credential = await createCredential({
         assertion: {
@@ -455,7 +432,7 @@ describe('verifier', () => {
         chain
       });
 
-      credential.proof.chain!.credentials![device1.toHex()] = await createCredential({
+      credential.proof.chain!.credential.proof.chain!.credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.AuthorizedDevice',
           deviceKey: device1,
