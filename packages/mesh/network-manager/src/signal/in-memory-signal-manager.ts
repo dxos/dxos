@@ -9,23 +9,21 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
-import { SignalApi } from './signal-api';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
+import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
 export class InMemorySignalManager implements SignalManager {
-  readonly statusChanged = new Event<SignalApi.Status[]>();
-  readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly statusChanged = new Event<SignalStatus[]>();
+  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<SignalMessage>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
 
-  constructor (
-    private readonly _onOffer: (message: SignalMessage) => Promise<Answer>
-  ) {
+  constructor () {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
   }
 
-  getStatus (): SignalApi.Status[] {
+  getStatus (): SignalStatus[] {
     return [];
   }
 
@@ -73,16 +71,10 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  offer (msg: SignalMessage) {
-    assert(msg.remoteId);
-    assert(state.connections.has(msg.remoteId), 'Peer not connected');
-    return state.connections.get(msg.remoteId)!._onOffer(msg);
-  }
-
-  async message (msg: SignalMessage) {
-    assert(msg.remoteId);
-    assert(state.connections.get(msg.remoteId), 'Peer not connected');
-    state.connections.get(msg.remoteId)!.onMessage.emit(msg);
+  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
+    assert(recipient);
+    assert(state.connections.get(recipient), 'Peer not connected');
+    state.connections.get(recipient)!.onMessage.emit([author, recipient, msg]);
   }
 
   async destroy () {}

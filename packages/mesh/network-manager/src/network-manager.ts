@@ -12,8 +12,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { SignalMessage } from './proto/gen/dxos/mesh/signalMessage';
-import { InMemorySignalManager, SignalManager, SignalManagerImpl } from './signal';
+import { InMemorySignalManager, OfferMessage, SignalManager, SignalManagerImpl } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
@@ -48,20 +47,20 @@ export class NetworkManager {
   constructor (options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: SignalMessage) =>
+    const onOffer = async (message: OfferMessage) =>
       await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
 
     this._signalManager = options.signal
       ? new SignalManagerImpl(options.signal)
-      : new InMemorySignalManager(onOffer);
+      : new InMemorySignalManager();
 
     this._signalManager.swarmEvent
       .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
 
-    this._signalManager.onMessage.on(msg => this._messageRouter.receiveMessage(msg));
+    this._signalManager.onMessage.on(data => this._messageRouter.receiveMessage(...data));
 
     this._messageRouter = new MessageRouter({
-      sendMessage: msg => this._signalManager.message(msg),
+      sendMessage: this._signalManager.message.bind(this._signalManager),
       onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
       onOffer: msg => onOffer(msg)
     });

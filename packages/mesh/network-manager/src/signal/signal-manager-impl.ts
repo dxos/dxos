@@ -10,9 +10,8 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
-import { SignalApi } from './signal-api';
-import { SignalClient } from './signal-client';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
+import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:network-manager:signal-manager-impl');
@@ -29,10 +28,10 @@ export class SignalManagerImpl implements SignalManager {
   private _reconcileTimeoutId?: NodeJS.Timeout;
   private _destroyed = false;
 
-  readonly statusChanged = new Event<SignalApi.Status[]>();
-  readonly commandTrace = new Event<SignalApi.CommandTrace>();
+  readonly statusChanged = new Event<SignalStatus[]>();
+  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<SignalMessage>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
 
   constructor (
     private readonly _hosts: string[]
@@ -42,7 +41,7 @@ export class SignalManagerImpl implements SignalManager {
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async msg => this.onMessage.emit(msg)
+        async (author, recipient, msg) => this.onMessage.emit([author, recipient, msg])
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on(data => this.swarmEvent.emit(data));
@@ -54,7 +53,7 @@ export class SignalManagerImpl implements SignalManager {
     }
   }
 
-  getStatus (): SignalApi.Status[] {
+  getStatus (): SignalStatus[] {
     return Array.from(this._servers.values()).map(server => server.getStatus());
   }
 
@@ -147,10 +146,10 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (msg: SignalMessage) {
-    log(`Signal ${msg.remoteId}`);
+  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
+    log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
-      server.signal(msg).catch(err => {
+      server.message(author, recipient, msg).catch(err => {
         log(`Error signaling: ${err}`);
       });
     }

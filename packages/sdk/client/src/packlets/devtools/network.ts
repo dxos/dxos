@@ -3,7 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { SignalApi } from '@dxos/network-manager';
+import { CommandTrace } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 
 import {
@@ -32,7 +32,7 @@ export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => n
 
 export const subscribeToSignalTrace = (hook: DevtoolsServiceDependencies) => new Stream<SubscribeToSignalTraceResponse>(({ next }) => {
   next({ events: [] });
-  const trace: SignalApi.CommandTrace[] = [];
+  const trace: CommandTrace[] = [];
   hook.networkManager.signal.commandTrace.on(msg => {
     trace.push(msg);
     next({ events: trace.map((msg) => JSON.stringify(msg)) });
