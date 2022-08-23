@@ -144,9 +144,13 @@ export class MessageRouter implements SignalMessaging {
   }
 
   private async _handleOffer (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
-    assert(message.data?.offer, 'No offer');
-    // TODO(mykola): ugly cast.
-    const offerMessage = this._castNetworkMessage(author, recipient, message) as OfferMessage;
+    assert(message.data.offer, 'No offer');
+    const offerMessage: OfferMessage = { 
+      author, 
+      recipient, 
+      ...message,
+      data: {offer: message.data.offer},
+    };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
     await this._sendReliableMessage(
@@ -162,7 +166,13 @@ export class MessageRouter implements SignalMessaging {
 
   private async _handleSignal (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.messageId);
-    const signalMessage = this._castNetworkMessage(author, recipient, message) as SignalMessage;
+    assert(message.data.signal, 'No Signal');
+    const signalMessage: SignalMessage = { 
+      author, 
+      recipient, 
+      ...message,
+      data: {signal: message.data.signal},
+    };
     await this._onSignal(signalMessage);
   }
 
@@ -181,17 +191,6 @@ export class MessageRouter implements SignalMessaging {
     };
     log(`sent ack: ${JSON.stringify(ackMessage)}`);
     await this._sendMessage(author, recipient, ackMessage);
-  }
-
-  private _castNetworkMessage (author: PublicKey, recipient: PublicKey, message: SwarmMessage) {
-    return {
-      author,
-      recipient,
-      messageId: message.messageId,
-      data: message.data,
-      topic: message.topic,
-      sessionId: message.sessionId
-    };
   }
 
   destroy (): void {
