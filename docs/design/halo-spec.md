@@ -2,37 +2,43 @@
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Terminology](#2-terminology)
-*   [3. Specification](#3-specification)
-*   [4. Design](#4-design)
-    *   [4.1. HALO](#41-halo)
-        *   [4.1.1. Protocol Definitions](#411-protocol-definitions)
-        *   [4.1.2. Credentials](#412-credentials)
-        *   [4.1.3. HALO Genesis](#413-halo-genesis)
-        *   [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
-        *   [4.1.5. HALO Recovery](#415-halo-recovery)
-        *   [4.1.6. Profiles](#416-profiles)
-        *   [4.1.7. Circles](#417-circles)
-        *   [4.1.8. DID Documents](#418-did-documents)
-    *   [4.2. ECHO Spaces](#42-echo-spaces)
-        *   [4.2.1. Protocol Definitions](#421-protocol-definitions)
-        *   [4.2.2. Genesis](#422-genesis)
-        *   [4.2.3. Agent Authorization](#423-agent-authorization)
-        *   [4.2.4. Device Authentication](#424-device-authentication)
-    *   [4.3. Design Issues](#43-design-issues)
-*   [5. Implementation Details](#5-implementation-details)
-    *   [5.1. Credential message](#51-credential-message)
-    *   [5.2. Keychain](#52-keychain)
-    *   [5.3. HALO creation](#53-halo-creation)
-    *   [5.4. ECHO Space creation](#54-echo-space-creation)
-*   [6. Security Concerns](#6-security-concerns)
-    *   [6.1. Aspects of Trust](#61-aspects-of-trust)
-    *   [6.2. Trust Models](#62-trust-models)
-*   [7. References](#7-references)
-*   [8. Appendix](#8-appendix)
-    *   [8.1. Protocol Schema](#81-protocol-schema)
-    *   [8.2. Example](#82-example)
+- [1. Introduction](#1-introduction)
+- [2. Terminology](#2-terminology)
+- [3. Specification](#3-specification)
+- [4. Design](#4-design)
+  - [Keys and Credentials](#keys-and-credentials)
+    - [HALO Genesis](#halo-genesis)
+    - [Device Management](#device-management)
+    - [Recovery](#recovery)
+  - [4.1.1. Protocol Definitions](#411-protocol-definitions)
+    - [4.1.2. Credentials](#412-credentials)
+    - [4.1.3. HALO Genesis](#413-halo-genesis)
+    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
+    - [4.1.5. HALO Recovery](#415-halo-recovery)
+    - [4.1.6. Profiles](#416-profiles)
+    - [4.1.7. Circles](#417-circles)
+    - [4.1.8. DID Documents](#418-did-documents)
+  - [4.2. ECHO Spaces](#42-echo-spaces)
+    - [4.2.1. Protocol Definitions](#421-protocol-definitions)
+    - [4.2.2. Genesis](#422-genesis)
+    - [4.2.3. Agent Authorization](#423-agent-authorization)
+    - [4.2.4. Device Authentication](#424-device-authentication)
+  - [4.3. Design Issues](#43-design-issues)
+- [5. Implementation Details](#5-implementation-details)
+  - [5.1. Credential message](#51-credential-message)
+  - [5.2. Keychain](#52-keychain)
+  - [5.4. Space (party) state machines](#54-space-party-state-machines)
+  - [5.3. HALO Creation](#53-halo-creation)
+  - [5.4. ECHO Space creation](#54-echo-space-creation)
+- [6. Security Concerns](#6-security-concerns)
+  - [6.1. Aspects of Trust](#61-aspects-of-trust)
+  - [6.2. Trust Models](#62-trust-models)
+  - [Credential compression](#credential-compression)
+  - [Invitations](#invitations)
+- [7. References](#7-references)
+- [8. Appendix](#8-appendix)
+  - [8.1. Protocol Schema](#81-protocol-schema)
+  - [8.2. Example](#82-example)
 
 ## 1. Introduction
 
@@ -177,57 +183,90 @@ The HALO contains:
 *   A set of credentials that represent various decentralized claims (e.g., ECHO Spaces, KUBE access control, Blockchain accounts, external Web2 tokens).
 *   A set of public keys and metadata (e.g., cached DID Profile documents) representing the Agent's Circle.
 
-### Public and Private Key Types
+### Keys and Credentials
 
-The HALO manages the following keys.
+HALO manages the following public and private keys.
 
 | Key      | Type    | Description                              |
 |----------|---------|------------------------------------------|
+| Space    | Public  | Public key representing a HALO Space.   |
 | Identity | Public  | Represents the Agent's public identity.  |
-| Recovery | Private | Used to recover a HALO.                  |
 | Device   | Private | Signing key used to create credentials.  |
-| Space    | Public  | Public key representing an ECHO Space.   |
 | Feed     | Private | Signing key used to write feed messages. |
+| Recovery | Private | Used to recover a HALO.                  |
 
-NOTE: All private keys are stored in a device-local encrypted key store and should never exported outside of the device.
+All private keys are stored in a device-local password-protected encrypted key store and should never exported outside of the device.
 
-#### Identity
+Private keys are used to sign messages, which may include credentials.
+Credentials form a chain of trust that implement delegated authority such that multiple devices are able to create credentials on behalf of the Agent.
 
-  - Agent's root of authority.
-  - The private key is only used during Identity creation and destroyed immediately afterwards. 
-  - Used to issue credentials: `IdentityGenesis`, `IdentityRecovery`, `HaloSpace`, `AuthorizedDevice`, `PartyMember`.
-  - Initially ondisk before recovery.
+The diagram below illustrates the chain of trust that is created during HALO Genesis and at subsequent points during the life-cycle of the HALO.
 
+<br>
 
+![Credentials](./diagrames/../diagrams/halo-genesis.drawio.svg)
+
+This sections summarizes the principal HALO mechanisms with further details in the sections below.
+
+#### HALO Genesis
+
+During genesis public/private key-pairs are created for: 
+- a) the HALO Space; 
+- b) the Agent's Identity; 
+- c) the Device that is being used to create the HALO; 
+- d) an initial Feed that is used to store credentials. 
+
+**(1)**
+The Space key is used to create a self-signed message that anchors the chain of trust. The Space is both the Issuer and Subject of the credential. 
+The Space's public key is used later to identity the HALO for purposes of replication on the network.
+
+**(2)**
+The Space key is then used to sign a credential that designates the Agent's Identity as the owner of the HALO.
+
+**(3)** 
+The Identity key is then used to Admit the first Device to the Space. 
+This grants authority to the Device to sign additional credentials.
+
+**(4)** 
+The Device key is then used to Admit Feeds to the Space. 
+All messages written to the Feed are signed using the Feed's private key to guarantee the integrity of all messages on the Feed.
+
+Once the Genesis credentials have been created, the Space and Identity private keys are destroyed.
+
+#### Device Management
+
+Once a Device has been admitted to the Space, it has authority to add and remove subsequent Devices. 
+
+**(5)**
+The Device creates and signs a Credential that admits the new Device.
+As above, the newly admitted Device creates a credential to admit its feed(s) to the HALO Space.
 
 #### Recovery
-  - Used to create a new HALO Space and admit a new device to an identity.
 
+As an additional security measure, a Recovery key can be created and recorded by the User outside of the HALO.
+The Recovery key is usually represented as a 24-word keyphrase and is sometimed referred to as a Paper key.
 
-#### Space
-  - Space's root of authority. The private key is only used during genesis and destroyed immediately afterwards.
+**(6)**
+Recovery keys can be created by any Device.
 
+**(7)**
+Recovery keys themselves act as a pseudo-device that can be used to Admit new Devices as above.
 
-
-#### Device
-  - Individual device keys used to sign credential. 
-    Obtain delegated credentials to issue credentials on behalf of **Indentity** via AuthorizedDevice credentials.
-  - Can issue credentials: `AdmittedFeed`.
-  - Can sign credentials on behalf of **Indentity** PartyMember.
-
-
-#### Feed
-
-  - Used to identity feeds, and sign feed messages. Associated with a single device and identity.
+> NOTE: Devices additionally have a passphrase that is used to encrypt local storage and may be used as a challenge during the creation of subsequent credentials.
 
 
 
+<br>
+<br>
+<br>
 
-#### 4.1.1. Protocol Definitions
+> TODO(burdon): Organize sections below.
+
+### 4.1.1. Protocol Definitions
 
 The HALO protocol definitions are defined in the [References](#8-appendix) section.
 
-> *   TODO(burdon): Reorganize below with respect to examples (extract process descriptions from features.)
+> TODO(burdon): Reorganize below with respect to examples (extract process descriptions from features.)
 
 #### 4.1.2. Credentials
 
@@ -248,7 +287,6 @@ message Credential {
   optional Proof proof = 11;
 }
 ```
-
 
 #### 4.1.3. HALO Genesis
 
