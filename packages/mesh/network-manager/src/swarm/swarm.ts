@@ -13,8 +13,9 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
 import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessaging } from '../signal';
+import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
@@ -100,13 +101,13 @@ export class Swarm {
     this._topology.update();
   }
 
-  async onOffer (message: SignalMessage): Promise<Answer> {
+  async onOffer (message: OfferMessage): Promise<Answer> {
     log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
-    assert(message.id);
-    const remoteId = message.id;
-    if (!message.remoteId?.equals(this._ownPeerId)) {
-      log(`Rejecting offer with incorrect peerId: ${message.remoteId}`);
+    assert(message.author);
+    const remoteId = message.author;
+    if (!message.recipient?.equals(this._ownPeerId)) {
+      log(`Rejecting offer with incorrect peerId: ${message.author}`);
       return { accept: false };
     }
     if (!message.topic?.equals(this._topic)) {
@@ -133,7 +134,7 @@ export class Swarm {
     if (await this._topology.onOffer(remoteId)) {
       if (!this._connections.has(remoteId)) { // Connection might have been already established.
         assert(message.sessionId);
-        const connection = this._createConnection(false, message.id, message.sessionId);
+        const connection = this._createConnection(false, message.author, message.sessionId);
         try {
           connection.connect();
         } catch (err: any) {
@@ -148,12 +149,12 @@ export class Swarm {
 
   async onSignal (message: SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
-    assert(message.remoteId?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.remoteId}`);
+    assert(message.recipient?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`);
     assert(message.topic?.equals(this._topic));
-    assert(message.id);
-    const connection = this._connections.get(message.id);
+    assert(message.author);
+    const connection = this._connections.get(message.author);
     if (!connection) {
-      log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.id}`);
+      log(`Dropping signal message for non-existent connection: topic=${this._topic}, peerId=${message.author}`);
       return;
     }
 
@@ -206,35 +207,7 @@ export class Swarm {
 
     log(`Initiate connection: topic=${this._topic} peerId=${remoteId} sessionId=${sessionId}`);
     const connection = this._createConnection(true, remoteId, sessionId);
-    this._signalMessaging.offer({
-      id: this._ownPeerId,
-      remoteId,
-      sessionId,
-      topic: this._topic,
-      data: { offer: {} }
-    })
-      .then(answer => {
-        log(`Received answer: ${JSON.stringify(answer)} topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId}`);
-        if (connection.state !== ConnectionState.INITIAL) {
-          log('Ignoring answer.');
-          return;
-        }
-
-        if (answer.accept) {
-          try {
-            connection.connect();
-          } catch (err: any) {
-            this.errors.raise(err);
-          }
-        } else {
-          // If the peer rejected our connection remove it from the set of candidates.
-          this._discoveredPeers.delete(remoteId);
-        }
-        this._topology.update();
-      })
-      .catch(err => {
-        this.errors.raise(err);
-      });
+    connection.initiate();
 
     this._topology.update();
   }
@@ -249,7 +222,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      (msg: SignalMessage) => this._signalMessaging.signal(msg),
+      this._signalMessaging,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
@@ -262,15 +235,30 @@ export class Swarm {
       this._closeConnection(remoteId).catch(err => this.errors.raise(err));
     });
 
-    void connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
+    connection.stateChanged.on(state => {
+      switch (state) {
+        case ConnectionState.CONNECTED:
+          this.connected.emit(remoteId);
+          break;
 
-    void connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
-      log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
-      // Connection might have been already closed or replace by a different one.
-      // Only remove the connection if it has the same session id.
-      if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
-        this._connections.delete(remoteId);
-        this.connectionRemoved.emit(connection);
+        case ConnectionState.REJECTED:
+          // If the peer rejected our connection remove it from the set of candidates.
+          this._discoveredPeers.delete(remoteId);
+          break;
+
+        case ConnectionState.ACCEPTED:
+          this._topology.update();
+          break;
+
+        case ConnectionState.CLOSED:
+          log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
+          // Connection might have been already closed or replace by a different one.
+          // Only remove the connection if it has the same session id.
+          if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
+            this._connections.delete(remoteId);
+            this.connectionRemoved.emit(connection);
+          }
+          break;
       }
     });
 
