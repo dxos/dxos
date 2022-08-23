@@ -28,11 +28,12 @@ describe('Client', () => {
   //
   const testSuite = (createClient: () => Promise<ClientProxy>) => {
     describe('initialization', () => {
+      // TODO(wittjosiah): Review timeout.
       test('initialize and destroy', async () => {
         const client = await createClient();
         await client.initialize();
         await client.destroy();
-      }).timeout(200);
+      }).timeout(500);
 
       test('initialize and destroy are idempotent', async () => {
         const client = await createClient();

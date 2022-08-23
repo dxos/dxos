@@ -2,15 +2,15 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Terminology](#2-terminology)
-- [3. Basic Concepts](#3-basic-concepts)
-  - [3.1. Signaling](#31-signaling)
-  - [3.2. Signaling Server](#32-signaling-server)
-  - [3.3. Signaling Protocol](#33-signaling-protocol)
-  - [3.4. Client Swarms](#34-client-swarms)
-  - [3.5. libp2p architecture](#35-libp2p-architecture)
-  - [3.6. Protocol](#36-protocol)
+*   [1. Introduction](#1-introduction)
+*   [2. Terminology](#2-terminology)
+*   [3. Basic Concepts](#3-basic-concepts)
+    *   [3.1. Signaling](#31-signaling)
+    *   [3.2. Signaling Server](#32-signaling-server)
+    *   [3.3. Signaling Protocol](#33-signaling-protocol)
+    *   [3.4. Client Swarms](#34-client-swarms)
+    *   [3.5. libp2p architecture](#35-libp2p-architecture)
+    *   [3.6. Protocol](#36-protocol)
 
 ## 1. Introduction
 
