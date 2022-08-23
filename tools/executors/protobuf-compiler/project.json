@@ -3,6 +3,22 @@
   "sourceRoot": "tools/executors/protobuf-compiler/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "tools/executors/protobuf-compiler/dist",
+        "tsConfig": "tools/executors/protobuf-compiler/tsconfig.json",
+        "main": "tools/executors/protobuf-compiler/src/index.ts"
+      },
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "gen"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
