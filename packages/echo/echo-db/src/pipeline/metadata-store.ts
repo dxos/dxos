@@ -124,40 +124,26 @@ export class MetadataStore {
     if (this.getParty(partyKey)) {
       return;
     }
-    if (!this._metadata.parties) {
-      this._metadata.parties = [{ key: partyKey }];
-    } else {
-      this._metadata.parties.push({ key: partyKey });
+    const party: PartyMetadata = { 
+      record: {
+        spaceKey: partyKey,
+        // TODO(dmaretskyi): Refactor it so that genesis feed key is generated in advance.
+        genesisFeedKey: PublicKey.from('')
+      } 
     }
-    await this._save();
-  }
 
-  /**
-   * Adds feed key to the party specified by public key and saves updated data in persistent storage.
-   * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
-   */
-  async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
-    if (this.hasFeed(partyKey, feedKey)) {
-      return;
-    }
-    if (!this.getParty(partyKey)) {
-      await this.addParty(partyKey);
-    }
-    const party = this.getParty(partyKey);
-    assert(party);
-    if (party.feedKeys) {
-      party.feedKeys.push(feedKey);
+    if (!this._metadata.parties) {
+      this._metadata.parties = [party];
     } else {
-      party.feedKeys = [feedKey];
+      this._metadata.parties.push(party);
     }
     await this._save();
   }
 
   async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
     assert(PublicKey.isPublicKey(feedKey));
-    await this.addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
-    party.genesisFeedKey = feedKey;
+    party.record.genesisFeedKey = feedKey;
     await this._save();
   }
 
@@ -167,7 +153,6 @@ export class MetadataStore {
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
   async setDataFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
-    await this.addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
     party.dataFeedKey = feedKey;
     await this._save();
@@ -177,18 +162,7 @@ export class MetadataStore {
    * Returns party with given public key.
    */
   getParty (partyKey: PublicKey): PartyMetadata | undefined {
-    return this._metadata.parties?.find(party => party.key && partyKey.equals(party.key));
-  }
-
-  /**
-   * Checks if a party with given key has a feed with given key.
-   */
-  hasFeed (partyKey: PublicKey, feedKey: PublicKey): boolean {
-    const party = this.getParty(partyKey);
-    if (!party) {
-      return false;
-    }
-    return !!party.feedKeys?.find(fk => feedKey.equals(fk));
+    return this._metadata.parties?.find(party => party.record.spaceKey.equals(partyKey));
   }
 
   async setTimeframe (partyKey: PublicKey, timeframe: Timeframe) {

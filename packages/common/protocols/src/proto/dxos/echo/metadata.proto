@@ -9,6 +9,7 @@ package dxos.echo.metadata;
 import "google/protobuf/timestamp.proto";
 
 import "../halo/keys.proto";
+import "../halo/credentials.proto";
 
 message EchoMetadata {
   /**
@@ -19,18 +20,18 @@ message EchoMetadata {
    */
   int32 version = 1;
 
-  repeated PartyMetadata parties = 2;
+  google.protobuf.Timestamp created = 2;
+  google.protobuf.Timestamp updated = 3;
 
-  google.protobuf.Timestamp created = 3;
-  google.protobuf.Timestamp updated = 4;
+  optional IdentityRecord identity = 10;
+
+  /// List of the data parties.
+  repeated PartyMetadata parties = 11;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.
 message PartyMetadata {
-  /// Party key.
-  PubKey key = 1;
-
-  optional PubKey genesis_feed_key = 6;
+  SpaceRecord record = 1;
 
   /// Key of the wriatable control feed.
   optional PubKey control_feed_key = 4;
@@ -40,7 +41,4 @@ message PartyMetadata {
 
   // Latest timeframe reached while processing party messages.
   optional TimeframeVector latest_timeframe = 5;
-
-  /// List of all feed associated with the party.
-  repeated PubKey feed_keys = 2;
 }
