@@ -22,6 +22,8 @@ jobs:
         auth:
           username: dxos-bot
           password: $GH_TOKEN
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
     steps:
       - checkout
       - *cache_restore
@@ -29,10 +31,33 @@ jobs:
       - run: pnpx playwright install
       - *cache_save
       - nx/set-shas
+      - run: npx nx-cloud start-ci-run
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+      - run:
+          command: npx nx-cloud stop-all-agents
+          when: always
+  
+  agent:
+    docker:
+      - image: ghcr.io/dxos/circleci-node:latest
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpx playwright install
+      - *cache_save
+      - run:
+          command: npx nx-cloud start-agent
+          no_output_timeout: 60m
 
 workflows:
   build:
@@ -40,3 +65,9 @@ workflows:
       - main:
           context:
             - Github
+      - agent:
+          context:
+            - Github
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3, 4]
