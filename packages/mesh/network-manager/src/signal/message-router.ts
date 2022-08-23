@@ -145,11 +145,11 @@ export class MessageRouter implements SignalMessaging {
 
   private async _handleOffer (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.data.offer, 'No offer');
-    const offerMessage: OfferMessage = { 
-      author, 
-      recipient, 
+    const offerMessage: OfferMessage = {
+      author,
+      recipient,
       ...message,
-      data: {offer: message.data.offer},
+      data: { offer: message.data.offer }
     };
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
@@ -167,11 +167,11 @@ export class MessageRouter implements SignalMessaging {
   private async _handleSignal (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
     assert(message.messageId);
     assert(message.data.signal, 'No Signal');
-    const signalMessage: SignalMessage = { 
-      author, 
-      recipient, 
+    const signalMessage: SignalMessage = {
+      author,
+      recipient,
       ...message,
-      data: {signal: message.data.signal},
+      data: { signal: message.data.signal }
     };
     await this._onSignal(signalMessage);
   }
