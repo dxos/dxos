@@ -6,35 +6,35 @@
 - [2. Terminology](#2-terminology)
 - [3. Specification](#3-specification)
 - [4. Design](#4-design)
-  - [Keys and Credentials](#keys-and-credentials)
-    - [HALO Genesis](#halo-genesis)
-    - [Device Management](#device-management)
-    - [Recovery](#recovery)
-  - [4.1.1. Protocol Definitions](#411-protocol-definitions)
-    - [4.1.2. Credentials](#412-credentials)
-    - [4.1.3. HALO Genesis](#413-halo-genesis)
-    - [4.1.4. Device Authorization and Authentication](#414-device-authorization-and-authentication)
-    - [4.1.5. HALO Recovery](#415-halo-recovery)
-    - [4.1.6. Profiles](#416-profiles)
-    - [4.1.7. Circles](#417-circles)
-    - [4.1.8. DID Documents](#418-did-documents)
-  - [4.2. ECHO Spaces](#42-echo-spaces)
-    - [4.2.1. Protocol Definitions](#421-protocol-definitions)
-    - [4.2.2. Genesis](#422-genesis)
-    - [4.2.3. Agent Authorization](#423-agent-authorization)
-    - [4.2.4. Device Authentication](#424-device-authentication)
-  - [4.3. Design Issues](#43-design-issues)
+  - [4.1. Keys and Credentials](#41-keys-and-credentials)
+    - [4.1.1. HALO Genesis](#411-halo-genesis)
+    - [4.1.2. Device Management](#412-device-management)
+    - [4.1.3. Recovery](#413-recovery)
+  - [4.2. Protocol Definitions](#42-protocol-definitions)
+    - [4.2.1. Credentials](#421-credentials)
+    - [4.2.2. HALO Genesis](#422-halo-genesis)
+    - [4.2.3. Device Authorization and Authentication](#423-device-authorization-and-authentication)
+    - [4.2.4. HALO Recovery](#424-halo-recovery)
+    - [4.2.5. Profiles](#425-profiles)
+    - [4.2.6. Circles](#426-circles)
+    - [4.2.7. DID Documents](#427-did-documents)
+  - [4.3. ECHO Spaces](#43-echo-spaces)
+    - [4.3.1. Protocol Definitions](#431-protocol-definitions)
+    - [4.3.2. Genesis](#432-genesis)
+    - [4.3.3. Agent Authorization](#433-agent-authorization)
+    - [4.3.4. Device Authentication](#434-device-authentication)
+  - [4.4. Design Issues](#44-design-issues)
 - [5. Implementation Details](#5-implementation-details)
   - [5.1. Credential message](#51-credential-message)
   - [5.2. Keychain](#52-keychain)
-  - [5.4. Space (party) state machines](#54-space-party-state-machines)
-  - [5.3. HALO Creation](#53-halo-creation)
-  - [5.4. ECHO Space creation](#54-echo-space-creation)
+  - [5.3. Space (party) state machines](#53-space-party-state-machines)
+  - [5.4. HALO Creation](#54-halo-creation)
+  - [5.5. ECHO Space creation](#55-echo-space-creation)
 - [6. Security Concerns](#6-security-concerns)
   - [6.1. Aspects of Trust](#61-aspects-of-trust)
   - [6.2. Trust Models](#62-trust-models)
-  - [Credential compression](#credential-compression)
-  - [Invitations](#invitations)
+  - [6.3. compression](#63-compression)
+  - [6.4. Invitations](#64-invitations)
 - [7. References](#7-references)
 - [8. Appendix](#8-appendix)
   - [8.1. Protocol Schema](#81-protocol-schema)
@@ -147,29 +147,29 @@ A HALO is a secure, replicated, peer-to-peer dataset containing an Agent's decen
 The HALO is used to manage identity, credentials, Devices, and the Agent's Circle.
 The HALO protocols are implemented by components that form part of smart clients that can run securely cross-platform (e.g., Web browser, Mobile app, Terminal client, backend service.)
 
-- **Identity**
-    * Agents can create and manage multiple identities.
-    * Agents can recover an identity from a 24-word seed phrase.
-    * Identities can be used across Devices without sharing private keys.
-    * Agents can manage and use multiple isolated identities on a single Device.
-    * Agents have a public decentralized identifier that can be shared with others.
-    * Identities can be used to establish connections between Devices belongong to Agents on the MESH network.
+*   **Identity**
+    *   Agents can create and manage multiple identities.
+    *   Agents can recover an identity from a 24-word seed phrase.
+    *   Identities can be used across Devices without sharing private keys.
+    *   Agents can manage and use multiple isolated identities on a single Device.
+    *   Agents have a public decentralized identifier that can be shared with others.
+    *   Identities can be used to establish connections between Devices belongong to Agents on the MESH network.
 
-- **Profiles**
-    * Agents can manage a globally accessible public document that contains metadata they wish to share (e.g., display name).
-    * Profiles can be discovered across the network by the agent's public identifier.
+*   **Profiles**
+    *   Agents can manage a globally accessible public document that contains metadata they wish to share (e.g., display name).
+    *   Profiles can be discovered across the network by the agent's public identifier.
 
-- **Credential Management**
-    * Entities can create and share credentials that can represent an extensible set of verifiable claims.
-    * Agents can manage a decentralized set of credentials.
+*   **Credential Management**
+    *   Entities can create and share credentials that can represent an extensible set of verifiable claims.
+    *   Agents can manage a decentralized set of credentials.
 
-- **Device Management**
-    * Agents can manage a set of verified Devices.
-    * Devices can be revoked.
-    * Devices can be used to recover identity.
+*   **Device Management**
+    *   Agents can manage a set of verified Devices.
+    *   Devices can be revoked.
+    *   Devices can be used to recover identity.
 
-- **Circles**
-    * Agents can maintain a decentralized set of contacts and profile documents for other agents across the network.
+*   **Circles**
+    *   Agents can maintain a decentralized set of contacts and profile documents for other agents across the network.
 
 ## 4. Design
 
@@ -183,13 +183,13 @@ The HALO contains:
 *   A set of credentials that represent various decentralized claims (e.g., ECHO Spaces, KUBE access control, Blockchain accounts, external Web2 tokens).
 *   A set of public keys and metadata (e.g., cached DID Profile documents) representing the Agent's Circle.
 
-### Keys and Credentials
+### 4.1. Keys and Credentials
 
 HALO manages the following public and private keys.
 
 | Key      | Type    | Description                              |
-|----------|---------|------------------------------------------|
-| Space    | Public  | Public key representing a HALO Space.   |
+| -------- | ------- | ---------------------------------------- |
+| Space    | Public  | Public key representing a HALO Space.    |
 | Identity | Public  | Represents the Agent's public identity.  |
 | Device   | Private | Signing key used to create credentials.  |
 | Feed     | Private | Signing key used to write feed messages. |
@@ -208,40 +208,41 @@ The diagram below illustrates the chain of trust that is created during HALO Gen
 
 This sections summarizes the principal HALO mechanisms with further details in the sections below.
 
-#### HALO Genesis
+#### 4.1.1. HALO Genesis
 
-During genesis public/private key-pairs are created for: 
-- a) the HALO Space; 
-- b) the Agent's Identity; 
-- c) the Device that is being used to create the HALO; 
-- d) an initial Feed that is used to store credentials. 
+During genesis public/private key-pairs are created for:
+
+*   a) the HALO Space;
+*   b) the Agent's Identity;
+*   c) the Device that is being used to create the HALO;
+*   d) an initial Feed that is used to store credentials.
 
 **(1)**
-The Space key is used to create a self-signed message that anchors the chain of trust. The Space is both the Issuer and Subject of the credential. 
+The Space key is used to create a self-signed message that anchors the chain of trust. The Space is both the Issuer and Subject of the credential.
 The Space's public key is used later to identity the HALO for purposes of replication on the network.
 
 **(2)**
 The Space key is then used to sign a credential that designates the Agent's Identity as the owner of the HALO.
 
-**(3)** 
-The Identity key is then used to Admit the first Device to the Space. 
+**(3)**
+The Identity key is then used to Admit the first Device to the Space.
 This grants authority to the Device to sign additional credentials.
 
-**(4)** 
-The Device key is then used to Admit Feeds to the Space. 
+**(4)**
+The Device key is then used to Admit Feeds to the Space.
 All messages written to the Feed are signed using the Feed's private key to guarantee the integrity of all messages on the Feed.
 
 Once the Genesis credentials have been created, the Space and Identity private keys are destroyed.
 
-#### Device Management
+#### 4.1.2. Device Management
 
-Once a Device has been admitted to the Space, it has authority to add and remove subsequent Devices. 
+Once a Device has been admitted to the Space, it has authority to add and remove subsequent Devices.
 
 **(5)**
 The Device creates and signs a Credential that admits the new Device.
 As above, the newly admitted Device creates a credential to admit its feed(s) to the HALO Space.
 
-#### Recovery
+#### 4.1.3. Recovery
 
 As an additional security measure, a Recovery key can be created and recorded by the User outside of the HALO.
 The Recovery key is usually represented as a 24-word keyphrase and is sometimed referred to as a Paper key.
@@ -254,21 +255,19 @@ Recovery keys themselves act as a pseudo-device that can be used to Admit new De
 
 > NOTE: Devices additionally have a passphrase that is used to encrypt local storage and may be used as a challenge during the creation of subsequent credentials.
 
-
-
 <br>
 <br>
 <br>
 
 > TODO(burdon): Organize sections below.
 
-### 4.1.1. Protocol Definitions
+### 4.2. Protocol Definitions
 
 The HALO protocol definitions are defined in the [References](#8-appendix) section.
 
 > TODO(burdon): Reorganize below with respect to examples (extract process descriptions from features.)
 
-#### 4.1.2. Credentials
+#### 4.2.1. Credentials
 
 *   Credentials are represented by a schema defined by the HALO protocol.
     The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
@@ -288,21 +287,21 @@ message Credential {
 }
 ```
 
-#### 4.1.3. HALO Genesis
+#### 4.2.2. HALO Genesis
 
 1.  Agents first create an Ed25519 key pair that represents an Identity key.
 2.  An IdentityGenesis credential is created an signed by the Identity key.
 3.  One or more IdentityRecovery credentials are signed by the Identity key, they setup the keys (with 24-word seed-phrases)
-that can be used to recover the identity in case no devices are available.
+    that can be used to recover the identity in case no devices are available.
 4.  A space keypair is generated for the ECHO Space. It acts as a communication medium between Agent's devices and a credentials store. All of the mentioned credentials are recorded in that space.
-  a. Normal space-creation credential sequence is written to the space: SpaceGenesis, PartyMember, AdmittedFeed.
-  b. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
-  c. HaloSpace credential is created and signed by the identity key. It links the space key with the identity.
-5. Device keypair is generated. AuthorizedDevice credential is created.
-7. Optional IdentityProfile message can be written to set the profile information, such as username.
-6.  **NOTE**: The identity private key is only used to generate the HALO.
+    a. Normal space-creation credential sequence is written to the space: SpaceGenesis, PartyMember, AdmittedFeed.
+    b. A hash of the Space public key is used as a discovery key (or topic) to locate other peers that belong to the Halo.
+    c. HaloSpace credential is created and signed by the identity key. It links the space key with the identity.
+5.  Device keypair is generated. AuthorizedDevice credential is created.
+6.  Optional IdentityProfile message can be written to set the profile information, such as username.
+7.  **NOTE**: The identity private key is only used to generate the HALO.
 
-#### 4.1.4. Device Authorization and Authentication
+#### 4.2.3. Device Authorization and Authentication
 
 1.  Each Device creates a Ed25519 key pair and maintains a secure key store.
 2.  The key store is encrypted and optionally protected by a password and/or second factor authenticator.
@@ -331,43 +330,43 @@ The diagram below illustrates the chain of trust formed when a HALO is construct
 > and Devices present authentication messages when joining the swarm.
 > However, Credentials ***are*** written to the HALO so that they can be presented to ECHO Spaces to demonstrate a chain of trust for authorized Devices (see below).
 
-#### 4.1.5. HALO Recovery
+#### 4.2.4. HALO Recovery
 
 *   New Decices can be admitted to the Halo using the authorization mechanism below.
 *   Alternatively, Agents with the recovery key can self-admit a Device to the Halo.
 *   The Recovery key can be used to create an `Device Auth` message allowing the Device to connect to the Halo swarm.
 *   Another Device can then issue a `Feed Admit` message to enable replication to begin.
 
-#### 4.1.6. Profiles
+#### 4.2.5. Profiles
 
 *   Agents can create and update a content addressable Profile Document that conforms to a HALO protocol buffer schema.
 *   Profile Documents contains standard meta data (e.g., display name) as well as custom properties that can be set by the user and decentralized applications.
 *   Profile Documents are stored by a KUBE-supported IPFS network and accessed via DXNS.
 *   **NOTE**: IPNS is impractical since it only support single private-key access.
 
-#### 4.1.7. Circles
+#### 4.2.6. Circles
 
 *   The HALO database contains a set of records representing third-party agents.
 *   These records contain Agent keys (e.g., DIDs) and other metadata (e.g., cached Profiles).
 *   The HALO may also contain claims relating to other Agents.
 
-#### 4.1.8. DID Documents
+#### 4.2.7. DID Documents
 
 *   Agents may publish a [DID Document](https://www.w3.org/TR/did-core/#abstract) that can be used by external systesm to authenticate the Agent.
 *   DID Documents may be resolved by the assosicated DID via a decentralized DID controller (e.g., blockchain) or a trusted peer-to-peer network (e.g., KUBE).
 
-### 4.2. ECHO Spaces
+### 4.3. ECHO Spaces
 
 An ECHO Space is a collaborative peer-to-peer graph database secured by the HALO protocols.
 Internally ECHO Spaces are used to create decentralized HALO databases.
 
-#### 4.2.1. Protocol Definitions
+#### 4.3.1. Protocol Definitions
 
 The ECHO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/echo).
 
 TODO: Add table describing messasges.
 
-#### 4.2.2. Genesis
+#### 4.3.2. Genesis
 
 *   Spaces are created on an Agent's Device.
 *   On creation, a temporary key pair is generated and used to sign a set of `Genesis` messages.
@@ -375,7 +374,7 @@ TODO: Add table describing messasges.
 *   After Genesis, the private key is destroyed.
 *   The public key (or hash) may be used as a discovery key to advertise or locate a Space on the peer-to-peer MESH network.
 
-#### 4.2.3. Agent Authorization
+#### 4.3.3. Agent Authorization
 
 *   Spaces contain a DAG of `Agent Auth` messages that determine the capabilities of any ***Device*** controlled by the specified Agent.
 *   These messages are written to control feeds by a previously authorized Device and contain the public identity key of the given Agent.
@@ -384,7 +383,7 @@ TODO: Add table describing messasges.
     *   This initiates a handshake where joining Agent's Identity public key is sent to the inviting Device.
     *   If the invited Agent's Identity key is already know to the inviter (e.g., via the Agent's Circle), then the `Agent Auth` message can be written "offline", allowing the joining Device to authenticate at a later time.
 
-#### 4.2.4. Device Authentication
+#### 4.3.4. Device Authentication
 
 *   On joining a Space, the Device presents a Credential containing a claim that it is authorized to act on behalf of a given Agent.
 *   This Credential must be signed using either the Agent's Identity private key, or an authorized Device's private key.
@@ -397,7 +396,7 @@ The diagram below illustrates the chain of trust formed when a Space is construc
 
 ![Credentials](./diagrams//halo-credentials-space.drawio.svg)
 
-### 4.3. Design Issues
+### 4.4. Design Issues
 
 *   TODO: DXNS
     *   hybrid/federated KUBE p2p/blockchain.
@@ -450,16 +449,16 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 
 > TODO: It seems only the signatures of credential messages are verified and the claims are ignored.
 
-### 5.4. Space (party) state machines
+### 5.3. Space (party) state machines
 
-- Each space comes with a set of control feeds that can store credential message.
-- Some types of credentials are processed by the space internally:
-  - PartyMember - updates the list of party members (IDENTITY keys) and sets permissions.
-  - AdmittedFeed - party will maintain a set of associated feeds.
-- All credentials that are processed by the space must either be issued by the Space genesis key or by one of the member identities with proper permissions.
-- Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO party to build the device KeyChain. 
+*   Each space comes with a set of control feeds that can store credential message.
+*   Some types of credentials are processed by the space internally:
+    *   PartyMember - updates the list of party members (IDENTITY keys) and sets permissions.
+    *   AdmittedFeed - party will maintain a set of associated feeds.
+*   All credentials that are processed by the space must either be issued by the Space genesis key or by one of the member identities with proper permissions.
+*   Other credentials are ignored by the space, but are preserved and can be queried for. For example devices would query HALO party to build the device KeyChain.
 
-### 5.3. HALO Creation
+### 5.4. HALO Creation
 
 > *   TODO(burdon): Reconcile with above.
 
@@ -490,7 +489,7 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 
 > Genesis feed
 
-### 5.4. ECHO Space creation
+### 5.5. ECHO Space creation
 
 > *   TODO(burdon): Reconcile with above.
 
@@ -549,14 +548,14 @@ Parties admit identity keys as members. When a Device signs a credential, it pro
 
 > *   TODO: Document trust model and threats.
 
-### Credential compression
+### 6.3. compression
 
 Since credentials will often be issued via delegated authority, e.g. with device KeyChains, they might include repeating credentials.
 To compress the data on the feeds, writers might replace full credentials with references by their CID, as long as they appear in the feeds messages included by the timeframe.
 
-> * TODO: Define semantics of what credentials are indexed. Credentials from chains are also indexed.
+> *   TODO: Define semantics of what credentials are indexed. Credentials from chains are also indexed.
 
-### Invitations
+### 6.4. Invitations
 
 This spec does not define protocols to invite new Agents/Devices to a space.
 The concrete invitation processes will be implemented on a higher level, possibly within the app.
@@ -566,9 +565,9 @@ Space membership is defined by the PartyMember credential. All protocols must ev
 
 Examples of possible invitation processes:
 
-- Direct admission by key.
-- Invitation process with redeeming: a temporary credential (possibly with expiration is written to the space). An invitation token is sent to the invitee via a side channel (e.g. email). Invitee can claim an invitation later on.
-- Interactive real-time invitation: Inviter and invitee will connect directly over the network to perform the invitation process.
+*   Direct admission by key.
+*   Invitation process with redeeming: a temporary credential (possibly with expiration is written to the space). An invitation token is sent to the invitee via a side channel (e.g. email). Invitee can claim an invitation later on.
+*   Interactive real-time invitation: Inviter and invitee will connect directly over the network to perform the invitation process.
 
 ## 7. References
 
@@ -614,25 +613,29 @@ import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 
 message PartyGenesis {
   PubKey partyKey = 1; // Feeds belong to Parties.
-  PubKey identityKey = 2; // Devices belong to Identities.
 }
 
 //
-// **Claim** - 
+// **Claim** -
 //  Statement about a subject.
 //  Claims can be written directly to a feed or used within Credentials.
 //
 
 // Agent is authorized to access Party.
 message PartyMember {
+  // TODO(burdon): Consider permissions (e.g., for Bots).
   enum Role {
-    MEMBER = 0;
-    WRITER = 1;
-    ADMIN = 2;
+    INVALID = 0;
+    /// Manage members.
+    ADMIN = 1;
+    /// Read and write.
+    MEMBER = 2;
+    /// Read-only.
+    READER = 3;
   }
 
   PubKey partyKey = 1;
-  repeated Role roles = 2;
+  Role role = 2;
 }
 
 // Device is authorized to sign messages for a given Agent (Identity).
@@ -645,13 +648,59 @@ message AuthorizedDevice {
 // Feed is admitted to the Party for replication.
 // NOTE: Feeds are Admitted to Parties.
 message AdmittedFeed {
-  PubKey identityKey = 1; // Could be derived.
-  PubKey partyKey = 2;
+  enum Designation {
+    /// Classic general purpose feeds for both HALO and ECHO messages together. To be deprecated.
+    GENERAL = 0;
+    /// Contain system-level messages messages, such as credentials and epochs.
+    CONTROL = 1;
+    /// Database mutations.
+    DATA = 2;
+  }
+
+  PubKey partyKey = 1;
+
+  /// Owning identity.
+  PubKey identityKey = 2; // Could be derived.
+  /// Owning device.
   PubKey deviceKey = 3;
+
+  /// Controls sets the feed designation. Feeds with different designations are consumed by separate pipelines.
+  Designation designation = 4;
+}
+
+/// Associtaes a space that will implement Agent's HALO with an Identity.
+message HaloSpace {
+  PubKey identityKey = 1;
+  /// Space key.
+  PubKey haloKey = 2;
+}
+
+/// Grants recovery permissions to a recovery key.
+message IdentityRecovery {
+  PubKey identityKey = 1;
+  /// Public key derrived from the recovery seedphrase.
+  PubKey recoveryKey = 2;
+}
+
+/// Sets profile information.
+message IdentityProfile {
+  message ProfileDocument {
+    optional string displayName = 1;
+    optional string avatarCID = 2;
+  }
+
+  // TODO(dmaretskyi): This could also be a DXNS link or stored in user's public HALO (we could also index the public HALO in the DMG).
+  ProfileDocument profile = 1;
+}
+
+/// Metadata associated with a key.
+/// Subject must be a key being referenced.
+message KeyInfo {
+  optional string name = 1;
 }
 
 //
-// **Claim** - 
+// **Claim** -
 //  Statement about a subject.
 //  Claims can be written directly to a feed or used within Credentials.
 //
@@ -669,16 +718,19 @@ message Claim {
 //
 
 message Proof {
-  string type = 1; // Type of proof (e.g., "Ed25519Signature2020").
+  string type = 1;              // Type of proof (e.g., "Ed25519Signature2020").
   Timestamp creationDate = 2;
-  PubKey signer = 3;        // Entity that created the proof (e.g., Agent, Device, Party).
-  optional bytes nonce = 4; // Used in Presentations to protect against replay attacks.
+  PubKey signer = 3;            // Entity that created the proof (e.g., Agent, Device, Party).
+  optional bytes nonce = 4;     // Used in Presentations to protect against replay attacks.
 
-  /// Signature. 
-  /// Excluded from signed data.
-  bytes value = 5; 
-  /// Must be present if signer is not credential issuer. Establishes the authority of the signer. Proves that the signer can issue such credentials.
-  /// Excluded from signed data.
+  /// Signature (excluded from signed data).
+  bytes value = 5;
+
+  /**
+   * Must be present if signer is not credential issuer.
+   * Establishes the authority of the signer. Proves that the signer can issue such credentials.
+   * Excluded from signed data.
+   */
   // TODO(dmaretskyi): Should we sign the chain?
   optional Chain chain = 6;
 }
@@ -687,15 +739,18 @@ message Proof {
  * A chain of credentials that establishes the delegated authority to issue new credentials.
  * Each key in the chain has an assotiated credential that establishes the authrity of that specific key.
  *
- * For example: 
- *    Alice/Device-2 => Alice/Device-1 => Alice
+ * Example:
+ *   Alice/Device-2 => Alice/Device-1 => Alice
  *
  * This chain would include 2 credentials:
  *   1. Giving Alice/Device-2 the authority to issue credentials on behalf of Alice, signed by Alice/Device-1.
  *   2. Giving Alice/Device-1 the authority to issue credentials on behalf of Alice, signed by Alice.
  */
 message Chain {
-  /// A mapping from the key to the credential that establishes it's authority. Keys must be encoded to string in lowercase hex with leading '0x'.
+  /**
+   * A mapping from the key to the credential that establishes it's authority.
+   * Keys must be encoded to string in lowercase hex with leading '0x'.
+   */
   map<string, Credential> credentials = 1;
 }
 
@@ -707,11 +762,11 @@ message Chain {
 //
 
 message Credential {
-  optional PubKey id = 1; // Credential identifier (e.g., for storage indexing).
-  PubKey issuer = 2; // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
+  optional PubKey id = 1;                 // Credential identifier (e.g., for storage indexing).
+  PubKey issuer = 2;                      // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
   Timestamp issuanceDate = 3;
   optional Timestamp expirationDate = 4;
-  optional bytes expirationRef = 5; // Could reference blockchain or epoch number.
+  optional bytes expirationRef = 5;       // Could reference blockchain or epoch number.
   Claim subject = 10;
   Proof proof = 11;
 }
@@ -726,6 +781,33 @@ message Credential {
 message Presentation {
   repeated Credential credentials = 1;
   repeated Proof proofs = 2;
+}
+
+//
+// **Metadata** -
+//   Persistant metadata stored outside of used to bootsrapt the stack.
+//
+
+/// Information needed to bootstrap a Space.
+message SpaceRecord {
+  PubKey spaceKey = 1;
+
+  /// All feeds in the space must form a DAG (or a tree?). This is the root feed of that structure.
+  PubKey genesisFeedKey = 2;
+}
+
+/// Information needed to bootstrap an Identity.
+message IdentityRecord {
+  PubKey identityKey = 1;
+
+  SpaceRecord haloSpace = 2;
+
+  /// Public profile information.
+  /// Not yet implemented. Must be null.
+  optional SpaceRecord profileSpace = 3;
+
+  /// Cached profile.
+  optional IdentityProfile.ProfileDocument profile = 4;
 }
 ```
 
