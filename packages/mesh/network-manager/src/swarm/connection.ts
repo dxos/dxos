@@ -35,6 +35,16 @@ export enum ConnectionState {
   WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
 
   /**
+   * Peer rejected offer.
+   */
+  ACCEPTED = 'ACCEPTED',
+
+  /**
+   * Peer rejected offer.
+   */
+  REJECTED = 'REJECTED',
+
+  /**
    * Connection is established.
    */
   CONNECTED = 'CONNECTED',
@@ -52,9 +62,6 @@ export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
   private _bufferedSignals: SignalMessage[] = [];
-
-  public readonly peerNotFound = new Event<void>();
-  public readonly receivedAnswer = new Event<void>();
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
@@ -105,9 +112,9 @@ export class Connection {
           }
         } else {
           // If the peer rejected our connection remove it from the set of candidates.
-          this.peerNotFound.emit();
+          this._changeState(ConnectionState.REJECTED);
         }
-        this.receivedAnswer.emit();
+        this._changeState(ConnectionState.ACCEPTED);
       })
       .catch(err => {
         this.errors.raise(err);
@@ -117,8 +124,7 @@ export class Connection {
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
 
-    this._state = this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION;
-    this.stateChanged.emit(this._state);
+    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);
     this._transport = this._transportFactory({
@@ -132,8 +138,7 @@ export class Connection {
     });
 
     this._transport.connected.once(() => {
-      this._state = ConnectionState.CONNECTED;
-      this.stateChanged.emit(this._state);
+      this._changeState(ConnectionState.CONNECTED);
     });
 
     this._transport.closed.once(() => {
@@ -172,6 +177,11 @@ export class Connection {
     await this._transport.signal(msg);
   }
 
+  private _changeState (state: ConnectionState): void {
+    this._state = state;
+    this.stateChanged.emit(state);
+  }
+
   @synchronized
   async close () {
     if (this._state === ConnectionState.CLOSED) {
@@ -189,7 +199,6 @@ export class Connection {
 
     log(`Closed ${this.ownId}`);
 
-    this._state = ConnectionState.CLOSED;
-    this.stateChanged.emit(this._state);
+    this._changeState(ConnectionState.CLOSED);
   }
 }

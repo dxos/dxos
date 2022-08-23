@@ -247,9 +247,18 @@ export class Swarm {
       }
     });
 
-    // If the peer rejected our connection remove it from the set of candidates.
-    connection.peerNotFound.on(() => this._discoveredPeers.delete(remoteId));
-    connection.receivedAnswer.on(() => this._topology.update());
+    connection.stateChanged.on(state => {
+      switch(state) {
+        case ConnectionState.REJECTED:
+          // If the peer rejected our connection remove it from the set of candidates.
+          this._discoveredPeers.delete(remoteId);
+          break;
+
+        case ConnectionState.ACCEPTED:
+          this._topology.update();
+          break;
+      }
+    });
 
     return connection;
   }
