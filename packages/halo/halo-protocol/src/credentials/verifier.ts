@@ -58,38 +58,15 @@ const verifySignature = async (credential: Credential): Promise<VerificationResu
 /**
  * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
  */
-const verifyChain = async (chain: Chain, issuer: PublicKey, signer: PublicKey): Promise<VerificationResult> => {
-  // Keep track of process keys to avoid infinite recursion.
-  const seenKeys = new ComplexSet<PublicKey>(x => x.toHex());
+const verifyChain = async (chain: Chain, authority: PublicKey, subject: PublicKey): Promise<VerificationResult> => {
+  const result = await verifyCredential(chain.credential);
+  if (result.kind === 'fail') {
+    return result;
+  }
 
-  const verify = async (key: PublicKey): Promise<VerificationResult> => {
-    if (seenKeys.has(key)) {
-      return { kind: 'fail', errors: ['Invalid credential chain: cyclic chain detected.'] };
-    }
-    seenKeys.add(key);
+  if (!isValidAuthorizedDeviceCredential(chain.credential, authority, subject)) {
+    return { kind: 'fail', errors: [`Invalid credential chain: invalid assertion for key: ${subject}`] };
+  }
 
-    const credential = chain.credentials?.[key.toHex()];
-    if (!credential) {
-      return { kind: 'fail', errors: [`Invalid credential chain: missing credential for key: ${key}`] };
-    }
-
-    {
-      const result = await verifyCredential(credential);
-      if (result.kind === 'fail') {
-        return result;
-      }
-    }
-
-    if (!isValidAuthorizedDeviceCredential(credential, issuer, key)) {
-      return { kind: 'fail', errors: [`Invalid credential chain: invalid assertion for key: ${key}`] };
-    }
-
-    if (!credential.issuer.equals(issuer)) {
-      return verify(credential.issuer);
-    }
-
-    return { kind: 'pass' };
-  };
-
-  return verify(signer);
+  return { kind: 'pass' };
 };

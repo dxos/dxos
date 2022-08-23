@@ -68,38 +68,3 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
 
   return credential;
 };
-
-/**
- * Recursively build a credential chain to prove delegated authority of a given device.
- */
-export const buildDeviceChain: (opts: {
-  credentials: Credential[],
-  identity: PublicKey,
-  device: PublicKey,
-}) => Chain = ({
-  credentials,
-  identity,
-  device
-}) => {
-  const result = new ComplexMap<PublicKey, Credential>(key => key.toHex());
-
-  const insertCredentials = (key: PublicKey) => {
-    const credential = credentials.find(c => isValidAuthorizedDeviceCredential(c, identity, key)) ??
-      raise(new Error(`Unable to build device credential chain: Missing credential for device: ${key}`));
-
-    result.set(key, credential);
-
-    if (result.has(credential.issuer)) {
-      throw new Error(`Cyclic credential chain detected for keys: ${Array.from(result.keys())}`);
-    }
-
-    if (!credential.issuer.equals(identity)) {
-      insertCredentials(credential.issuer);
-    }
-  };
-
-  insertCredentials(device);
-  return {
-    credentials: Object.fromEntries(Array.from(result.entries()).map(([key, cred]) => [key.toHex(), cred]))
-  };
-};
