@@ -235,20 +235,12 @@ export class Swarm {
       this._closeConnection(remoteId).catch(err => this.errors.raise(err));
     });
 
-    void connection.stateChanged.waitFor(s => s === ConnectionState.CONNECTED).then(() => this.connected.emit(remoteId));
-
-    void connection.stateChanged.waitFor(s => s === ConnectionState.CLOSED).then(() => {
-      log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
-      // Connection might have been already closed or replace by a different one.
-      // Only remove the connection if it has the same session id.
-      if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
-        this._connections.delete(remoteId);
-        this.connectionRemoved.emit(connection);
-      }
-    });
-
     connection.stateChanged.on(state => {
       switch(state) {
+        case ConnectionState.CONNECTED: 
+          this.connected.emit(remoteId);
+          break;
+
         case ConnectionState.REJECTED:
           // If the peer rejected our connection remove it from the set of candidates.
           this._discoveredPeers.delete(remoteId);
@@ -256,6 +248,16 @@ export class Swarm {
 
         case ConnectionState.ACCEPTED:
           this._topology.update();
+          break;
+
+        case ConnectionState.CLOSED:
+          log(`Connection closed topic=${this._topic} remoteId=${remoteId} initiator=${initiator}`);
+          // Connection might have been already closed or replace by a different one.
+          // Only remove the connection if it has the same session id.
+          if (this._connections.get(remoteId)?.sessionId.equals(sessionId)) {
+            this._connections.delete(remoteId);
+            this.connectionRemoved.emit(connection);
+          }
           break;
       }
     });
