@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "toolchains/toolchain-node-library/src",
+  "sourceRoot": "tools/deprecated/toolchain-node-library/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "toolchains/toolchain-node-library/**/*.{ts,js}"
+          "tools/deprecated/toolchain-node-library/**/*.{ts,js}"
         ]
       }
     }

@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "toolchains/protocols-toolchain/src",
+  "sourceRoot": "tools/deprecated/protocols-toolchain/src",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "toolchains/protocols-toolchain/**/*.{ts,js}"
+          "tools/deprecated/protocols-toolchain/**/*.{ts,js}"
         ]
       }
     }
