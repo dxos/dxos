@@ -34,7 +34,7 @@ export const anySubstitutions = {
       if(!schema.hasType(value.type_url)) {
         return {
           '@type': 'google.protobuf.Any',
-          ...value.value
+          ...value
         }
       }
       const codec = schema.tryGetCodecForType(value.type_url);
