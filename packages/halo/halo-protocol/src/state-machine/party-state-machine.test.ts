@@ -123,7 +123,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        role: PartyMember.Role.ADMIN,
+        role: PartyMember.Role.ADMIN
       },
       keyring
     }), feed)).toEqual(true);
@@ -151,7 +151,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        role: PartyMember.Role.MEMBER,
+        role: PartyMember.Role.MEMBER
       },
       keyring,
       signingKey: device,
@@ -205,7 +205,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: haloParty,
-        role: PartyMember.Role.ADMIN,
+        role: PartyMember.Role.ADMIN
       },
       keyring
     }), feed)).toEqual(true);
@@ -216,7 +216,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.HaloSpace',
         identityKey: identity,
-        haloKey: haloParty,
+        haloKey: haloParty
       },
       keyring
     }), feed)).toEqual(true);
@@ -245,8 +245,8 @@ describe('PartyStateMachine', () => {
     const chain = buildDeviceChain({
       credentials: haloState.credentials,
       device: device2,
-      identity,
-    })
+      identity
+    });
 
     const credential = await createCredential({
       assertion: {
@@ -254,7 +254,7 @@ describe('PartyStateMachine', () => {
         partyKey: haloParty,
         deviceKey: device2,
         designation: AdmittedFeed.Designation.CONTROL,
-        identityKey: identity,
+        identityKey: identity
       },
       issuer: identity,
       keyring,
@@ -264,5 +264,5 @@ describe('PartyStateMachine', () => {
     });
 
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
-  })
+  });
 });

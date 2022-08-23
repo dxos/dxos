@@ -104,7 +104,7 @@ export class PartyStateMachine {
   }
 
   private _canAdmitFeeds (key: PublicKey): boolean {
-    const role = this._members.getRole(key)
+    const role = this._members.getRole(key);
     return role === PartyMember.Role.MEMBER || role === PartyMember.Role.ADMIN;
   }
 }

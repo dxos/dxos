@@ -8,9 +8,9 @@ import { it as test } from 'mocha';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 
+import { PartyMember } from '../proto';
 import { buildDeviceChain, createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
-import { PartyMember } from '../proto';
 
 describe('verifier', () => {
   describe('no chain', () => {
@@ -24,7 +24,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer,
         keyring,
@@ -44,7 +44,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer,
         keyring,
@@ -67,7 +67,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer,
         keyring,
@@ -90,7 +90,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer,
         keyring,
@@ -114,7 +114,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer,
         keyring,
@@ -157,7 +157,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -197,7 +197,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -239,7 +239,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -281,7 +281,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -294,7 +294,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -333,7 +333,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -395,7 +395,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
@@ -446,7 +446,7 @@ describe('verifier', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
           partyKey,
-          role: PartyMember.Role.ADMIN,
+          role: PartyMember.Role.ADMIN
         },
         issuer: identity,
         keyring,
