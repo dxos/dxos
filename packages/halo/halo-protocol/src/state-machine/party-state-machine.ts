@@ -100,10 +100,11 @@ export class PartyStateMachine {
   }
 
   private _canInviteNewMembers (key: PublicKey): boolean {
-    return key.equals(this._partyKey) || this._members.getRoles(key).includes(PartyMember.Role.ADMIN);
+    return key.equals(this._partyKey) || this._members.getRole(key) === PartyMember.Role.ADMIN;
   }
 
   private _canAdmitFeeds (key: PublicKey): boolean {
-    return this._members.getRoles(key).includes(PartyMember.Role.WRITER);
+    const role = this._members.getRole(key)
+    return role === PartyMember.Role.MEMBER || role === PartyMember.Role.ADMIN;
   }
 }

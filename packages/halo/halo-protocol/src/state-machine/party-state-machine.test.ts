@@ -36,7 +36,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+        role: PartyMember.Role.ADMIN
       },
       keyring
     }), feed)).toEqual(true);
@@ -79,7 +79,7 @@ describe('PartyStateMachine', () => {
         key: identity,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+          role: PartyMember.Role.ADMIN
         }
       }
     ]);
@@ -123,7 +123,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+        role: PartyMember.Role.ADMIN,
       },
       keyring
     }), feed)).toEqual(true);
@@ -151,7 +151,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: party,
-        roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+        role: PartyMember.Role.MEMBER,
       },
       keyring,
       signingKey: device,
@@ -164,14 +164,14 @@ describe('PartyStateMachine', () => {
         key: identity,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+          role: PartyMember.Role.ADMIN
         }
       },
       {
         key: identity2,
         assertion: {
           partyKey: party,
-          roles: [PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+          role: PartyMember.Role.MEMBER
         }
       }
     ]);
@@ -205,7 +205,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.PartyMember',
         partyKey: haloParty,
-        roles: [PartyMember.Role.ADMIN, PartyMember.Role.WRITER, PartyMember.Role.MEMBER]
+        role: PartyMember.Role.ADMIN,
       },
       keyring
     }), feed)).toEqual(true);
@@ -216,7 +216,7 @@ describe('PartyStateMachine', () => {
       assertion: {
         '@type': 'dxos.halo.credentials.HaloSpace',
         identityKey: identity,
-        privateHalo: haloParty,
+        haloKey: haloParty,
       },
       keyring
     }), feed)).toEqual(true);

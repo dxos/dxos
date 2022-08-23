@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { buildDeviceChain, createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
+import { PartyMember } from '../proto';
 
 describe('verifier', () => {
   describe('no chain', () => {
@@ -22,7 +23,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer,
         keyring,
@@ -41,7 +43,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer,
         keyring,
@@ -63,7 +66,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer,
         keyring,
@@ -85,7 +89,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer,
         keyring,
@@ -108,7 +113,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer,
         keyring,
@@ -150,7 +156,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -189,7 +196,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -230,7 +238,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -271,7 +280,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -283,7 +293,8 @@ describe('verifier', () => {
       credential.proof.chain!.credentials![device.toHex()] = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -321,7 +332,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -382,7 +394,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,
@@ -432,7 +445,8 @@ describe('verifier', () => {
       const credential = await createCredential({
         assertion: {
           '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey
+          partyKey,
+          role: PartyMember.Role.ADMIN,
         },
         issuer: identity,
         keyring,

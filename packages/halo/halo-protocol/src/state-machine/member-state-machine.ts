@@ -37,8 +37,8 @@ export class MemberStateMachine {
     return this._members;
   }
 
-  getRoles (member: PublicKey): PartyMember.Role[] {
-    return this._members.get(member)?.assertion.roles ?? [];
+  getRole (member: PublicKey): PartyMember.Role | undefined {
+    return this._members.get(member)?.assertion.role;
   }
 
   /**
