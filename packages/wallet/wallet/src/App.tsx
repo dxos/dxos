@@ -52,7 +52,10 @@ export const App = () => {
         await clientRef.current!.reset();
       }}
     >
-      <ClientProvider config={configProvider}>
+      <ClientProvider
+        clientRef={clientRef}
+        config={configProvider}
+      >
         <ActionProvider>
           <HashRouter>
             <Routes />
