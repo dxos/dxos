@@ -1,10 +1,10 @@
-# KAI
+# Kai (貝)
 
-A simple PWA DXOS client demo.
+A simple DXOS progressive web app (PWA).
 
-## PWA
+The word kai (貝) is the Japanese word for shell.
 
-### Refs
+### PWA Refs
 
 - https://w3c.github.io/manifest
 - https://github.com/mdn/pwa-examples/tree/master/a2hs

@@ -278,7 +278,7 @@ export function inMemoryTests () {
         const peerId = PublicKey.random();
         const { plugin } = await createPeer({ topic, peerId });
 
-        const [done, pongReceived] = latch(peersPerTopic - 1);
+        const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
 
         plugin.on('connect', async (protocol: Protocol) => {
           const { peerId } = protocol.getSession() ?? {};

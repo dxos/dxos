@@ -20,7 +20,7 @@ describe('config', () => {
   test
     .stdout()
     .command(['config', '--json', '--config', './config/config.yml'])
-    .it('runs kube status', ctx => {
+    .it('runs config', ctx => {
       expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
     });
 });
