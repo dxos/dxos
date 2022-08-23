@@ -2,29 +2,29 @@
 
 This document presents the design of the Decentralized Meta Graph (DMG).
 
-> - TODO: Merge with dmg-spec, dmg-usage.
+> *   TODO: Merge with dmg-spec, dmg-usage.
 
 <!-- @toc -->
 
-- [1. Terminology](#1-terminology)
-- [2. Basic Concepts](#2-basic-concepts)
-  - [2.1. Subnets](#21-subnets)
-    - [2.1.1. Realms](#211-realms)
-    - [2.1.2. Records](#212-records)
-    - [2.1.3. Computation](#213-computation)
-    - [2.1.4. Issues](#214-issues)
-- [3. Architecture](#3-architecture)
-  - [3.1. KUBE Services](#31-kube-services)
-  - [3.2. KUBE Architecture](#32-kube-architecture)
-  - [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
-- [4. Notes](#4-notes)
-- [User Model](#user-model)
-  - [Source](#source)
-  - [Publishing](#publishing)
+*   [1. Terminology](#1-terminology)
+*   [2. Basic Concepts](#2-basic-concepts)
+    *   [2.1. Subnets](#21-subnets)
+        *   [2.1.1. Realms](#211-realms)
+        *   [2.1.2. Records](#212-records)
+        *   [2.1.3. Computation](#213-computation)
+        *   [2.1.4. Issues](#214-issues)
+*   [3. Architecture](#3-architecture)
+    *   [3.1. KUBE Services](#31-kube-services)
+    *   [3.2. KUBE Architecture](#32-kube-architecture)
+    *   [3.3. Service Monitoring and Scale](#33-service-monitoring-and-scale)
+*   [4. Notes](#4-notes)
+*   [5. Model](#5-model)
+    *   [5.1. Source](#51-source)
+    *   [5.2. Publishing](#52-publishing)
 
 ## 1. Terminology
 
-**Credential** - 
+**Credential** -
 Verifiable credential that enables decentralized access control within the Subnet (e.g., administrative, read/write, replication, control).
 Each KUBE maintains a secure Credential store.
 
@@ -32,20 +32,20 @@ Each KUBE maintains a secure Credential store.
 > *   TODO: Disambiguation TLS certificates from credentials (vs. CA/DNS).
 > *   TODO: Connect Pierre with Ben Laurie!
 
-**DNS** - 
+**DNS** -
 Global authority for domain records.
 
-**KUBE** - 
+**KUBE** -
 Individual Host (Subnet Node) running the KUBE daemon.
 
-**Realm** - 
+**Realm** -
 Logical partition of the federated DMG consistent across the Subnet.
 
-**Root CA** - 
-Root Certification Authority (for the Subnet). 
+**Root CA** -
+Root Certification Authority (for the Subnet).
 Used to enroll KUBEs into the Subnet and is the root for other Credentials used within the Subnet.
 
-**Subnet** - 
+**Subnet** -
 A cluster of KUBE nodes under local authority.
 
 ## 2. Basic Concepts
@@ -58,7 +58,7 @@ A cluster of KUBE nodes under local authority.
 A KUBE Subnet is a collection of devices running the KUBE daemon.
 Subnets implement a coordinated set of services and may span network boundaries.
 
-> - TODO: Centralized vs. decentralized autority.
+> *   TODO: Centralized vs. decentralized autority.
 
 Typically, domain records point to the IP addressese of one or more Subnet devices.
 Multiple domain names may reference the same Subnet;
@@ -66,13 +66,10 @@ conversely, Subnets are not reqrued to be associated with a domain name.
 
 ![Meta Graph](./diagrams/dmg-subnet.drawio.svg)
 
-
 #### 2.1.1. Realms
 
 The DMG is a global federated graph physically partitioned by Subnets.
 Subnets also manage logical partitions called Realms.
-
-
 
 Each Subnet operates a DMG Service, which manages a Realm.
 A Realm can be thought of as decentralized file system that is consistent across the Subnet.
@@ -81,7 +78,6 @@ Each KUBE within the Subnet replicates changes to all other KUBEs, which form a 
 Directories within the Realm may be mapped onto domain and subdomain names managed by the Subnet.
 
 **Example**
-
 
 #### 2.1.2. Records
 
@@ -96,8 +92,8 @@ DMG Records may be mapped onto URLs as follows:
 
 ![URL](./diagrams/dmg-url.drawio.svg)
 
-> - Note: Realm is just a FQ hostname.
-> - TODO: Resources are "leaf" nodes of the graph and are processed by a `handler` specified by its ancestors Records, which may be inherited.
+> *   Note: Realm is just a FQ hostname.
+> *   TODO: Resources are "leaf" nodes of the graph and are processed by a `handler` specified by its ancestors Records, which may be inherited.
 
 Realms represent a logical partition of the KUBE subnet's DMG.
 They map directly onto a root folder within the graph.
@@ -108,7 +104,7 @@ The remainder of the `path` is then considered to be a `resource` path within th
 
 ![URL](./diagrams/dmg-tree.drawio.svg)
 
-> - TODO: Illustrate inheritance and overriding props (e.g., /app/notepad/dev)
+> *   TODO: Illustrate inheritance and overriding props (e.g., /app/notepad/dev)
 
 Records are retrieved via the DMG Record Service, which defines the following API.
 
@@ -188,7 +184,7 @@ Returns
 }
 ```
 
-> - TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
+> *   TODO: When Records are requested they are decoded by the client using a codec retrieved from DMG via the Record's `type` property.
 
 The DMG record can be retrieved as JSON objects by passing appropriate [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Authroization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) headers.
 
@@ -212,7 +208,7 @@ The following example illustrates a DMG Record that represents a Web application
 }
 ```
 
-> - TODO: DMG Record protocol buffer schema.
+> *   TODO: DMG Record protocol buffer schema.
 
 The DMG Record can be retrieved as a JSON document via a TCP or HTTP request:
 
@@ -259,8 +255,8 @@ The script can be invoked by making an HTTP POST request.
 curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/data
 ```
 
-> - TODO: Note the script would typically be a think adapter to some other compute system.
-> - TODO: How does this relate to bots?
+> *   TODO: Note the script would typically be a think adapter to some other compute system.
+> *   TODO: How does this relate to bots?
 
 #### 2.1.4. Issues
 
@@ -410,16 +406,13 @@ curl -X POST -H "Accept:application/json" https://beta.example.com/app/notepad/d
             [DNS domain subnet]/[authority]]/[resource]
 -->
 
-
-
-## User Model
+## 5. Model
 
 This section illustrates the User Model for developers.
 
-> - ISSUE: We need to map Source => Build Artifacts => Publishing Address (and published metadata; hierarchical records)
+> *   ISSUE: We need to map Source => Build Artifacts => Publishing Address (and published metadata; hierarchical records)
 
-
-### Source
+### 5.1. Source
 
 Developers use conventional source code managements systems and tools, such as `git`, during the development phase.
 
@@ -443,8 +436,7 @@ origin	git@github.com:alice/notepad.git (push)
   prod
 ```
 
-
-### Publishing
+### 5.2. Publishing
 
 Developers use the `dx` CLI tool to manage publishing build artifacts to the DMG.
 She creates a `dx.yml` configuration file within each project she wants to publish.
@@ -486,10 +478,9 @@ dx://beta.alice.com/app/notepad
 Published: 2022-07-31 15:05:02
 ```
 
-> - ISSUE: URL mapping conflicts across DMG records.
+> *   ISSUE: URL mapping conflicts across DMG records.
 
-> - TODO: Compare (serverless, lambda, digital ocean, etc.)
-
+> *   TODO: Compare (serverless, lambda, digital ocean, etc.)
 
 ```
 Case 1: Single new KUBE (DX instance) (local laptop, doing development)
@@ -570,11 +561,9 @@ textapp.foo.com                       dmg:[pierre.com]/app/textapp
 
 ```
 
-> - ISSUE: Load balancing (FE/BE)
+> *   ISSUE: Load balancing (FE/BE)
 
-- Each KUBE machine has a Repo (snowflake)
-- Repo can mount and share hierarchies (within subnet and across subnets)
-  - ISSUE: How to reference other subnets? DNS primary mechanism for global names. In theory could have non-DNS.
-
-
+*   Each KUBE machine has a Repo (snowflake)
+*   Repo can mount and share hierarchies (within subnet and across subnets)
+    *   ISSUE: How to reference other subnets? DNS primary mechanism for global names. In theory could have non-DNS.
 
