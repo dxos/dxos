@@ -20,13 +20,7 @@
         "outputPath": "packages/sdk/client/dist",
         "tsConfig": "packages/sdk/client/tsconfig.json",
         "main": "packages/sdk/client/src/index.ts"
-      },
-      "dependsOn": [
-        "^build",
-        "^bundle",
-        "proto",
-        "prebuild"
-      ]
+      }
     },
     "bundle": {
       "executor": "@dxos/esbuild:bundle",
@@ -47,13 +41,7 @@
           "@dxos/network-manager",
           "@dxos/object-model"
         ]
-      },
-      "dependsOn": [
-        "^bundle",
-        "build",
-        "proto",
-        "prebuild"
-      ]
+      }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
