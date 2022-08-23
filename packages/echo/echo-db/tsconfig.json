@@ -38,6 +38,9 @@
       "path": "../../halo/credentials"
     },
     {
+      "path": "../../halo/halo-protocol"
+    },
+    {
       "path": "../../mesh/network-manager"
     },
     {

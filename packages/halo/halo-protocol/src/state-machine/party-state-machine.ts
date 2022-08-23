@@ -10,6 +10,7 @@ import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { Credential, PartyMember } from '../proto';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { ReadOnlyEvent } from '@dxos/async';
 
 const log = debug('dxos:halo:party-state-machine');
 
@@ -23,6 +24,14 @@ export class PartyStateMachine {
   private readonly _feeds = new FeedStateMachine(this._partyKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
+
+  get memberAdmitted(): ReadOnlyEvent<MemberInfo> {
+    return this._members.memberAdmitted;
+  }
+
+  get feedAdmitted (): ReadOnlyEvent<FeedInfo> {
+    return this._feeds.feedAdmitted;
+  }
 
   constructor (
     private readonly _partyKey: PublicKey

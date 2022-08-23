@@ -58,6 +58,9 @@ describe.only('party-processor', () => {
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
 
+    const feedAddedPromise = partyProcessor.feedAdded.waitForCount(1)
+    const keyAddedPromise = partyProcessor.keyOrInfoAdded.waitForCount(1)
+
     await partyProcessor.processMessage({
       meta: {
         feedKey: feedKey.publicKey,
@@ -114,6 +117,9 @@ describe.only('party-processor', () => {
     expect(partyProcessor.memberKeys).toHaveLength(1);
     expect(partyProcessor.feedKeys).toContainEqual(feedKey.publicKey);
     expect(partyProcessor.memberKeys).toContainEqual(identityKey.publicKey);
+
+    await feedAddedPromise;
+    await keyAddedPromise;
   });
 
   test('feed admit with separate keyring', async () => {

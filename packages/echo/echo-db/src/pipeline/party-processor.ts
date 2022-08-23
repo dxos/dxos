@@ -59,7 +59,8 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   constructor (
     private readonly _partyKey: PartyKey
   ) {
-
+    this._state.memberAdmitted.on(info => this.keyOrInfoAdded.emit(info.key));
+    this._state.feedAdmitted.on(info => this.feedAdded.emit(info.key));
   }
 
   get partyKey () {
@@ -123,6 +124,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
    * @deprecated 
    */
    async takeHints (hints: KeyHint[]) {
+    console.log('deprecated takeHints');
     log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
     /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
