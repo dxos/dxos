@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
+import { Signal } from '../proto/gen/dxos/mesh/swarm';
 
 const log = debug('dxos:network-manager:swarm:connection');
 
@@ -61,7 +62,7 @@ export enum ConnectionState {
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
   private _transport: Transport | undefined;
-  private _bufferedSignals: SignalMessage[] = [];
+  private _bufferedSignals: Signal[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
   readonly errors = new ErrorStream();
@@ -168,13 +169,13 @@ export class Connection {
 
     if (this._state === ConnectionState.INITIAL) {
       log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data}`);
-      this._bufferedSignals.push(msg);
+      this._bufferedSignals.push(msg.data.signal);
       return;
     }
 
     assert(this._transport, 'Connection not ready to accept signals.');
     log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data}`);
-    await this._transport.signal(msg);
+    await this._transport.signal(msg.data.signal);
   }
 
   private _changeState (state: ConnectionState): void {

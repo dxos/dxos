@@ -13,6 +13,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
+import { Signal } from '../proto/gen/dxos/mesh/swarm';
 
 const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
@@ -89,10 +90,10 @@ export class WebRTCTransport implements Transport {
     return this._peer;
   }
 
-  async signal (msg: SignalMessage) {
+  async signal (signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
-    assert(msg.data?.signal?.json, 'Signal message must contain signal data.');
-    this._peer.signal(JSON.parse(msg.data.signal.json));
+    assert(signal.json, 'Signal message must contain signal data.');
+    this._peer.signal(JSON.parse(signal.json));
   }
 
   async close () {
