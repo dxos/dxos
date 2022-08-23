@@ -32,8 +32,10 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: npx nx-cloud start-ci-run
-      - run: pnpm nx run-many --target=lint --skip-nx-cache
-      - run: pnpm nx run-many --target=test --skip-nx-cache
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
       - run:
           command: npx nx-cloud stop-all-agents
           when: always
