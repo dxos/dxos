@@ -44,13 +44,16 @@
     },
     "test": {
       "dependsOn": [
-        "build"
+        "^build",
+        "proto"
       ]
     },
     "check": {
       "dependsOn": [
         "lint",
-        "test"
+        "test",
+        "proto",
+        "build"
       ]
     }
   },
