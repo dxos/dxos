@@ -16,6 +16,7 @@ import { jsonReplacer } from '@dxos/util';
 
 import { EchoProcessor, TimeframeClock } from '../packlets/database';
 import { CredentialProcessor, PartyStateProvider } from './party-processor';
+import { Credential } from '@dxos/halo-protocol/src/proto';
 
 interface Options {
   readLogger?: (msg: any) => void
@@ -41,7 +42,7 @@ export class FeedMuxer {
   /**
    * Halo message stream to write into pipeline.
    */
-  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
+  private _outboundHaloStream: FeedWriter<Credential> | undefined;
 
   private _echoProcessor: EchoProcessor | undefined;
 
@@ -69,9 +70,9 @@ export class FeedMuxer {
         timeframe: this._timeframeClock.timeframe,
         echo: message
       }), loggingWriter);
-      this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({
+      this._outboundHaloStream = mapFeedWriter<Credential, FeedMessage>(async credential => ({
         timeframe: this._timeframeClock.timeframe,
-        halo: message
+        halo: { credential }
       }), loggingWriter);
     }
   }

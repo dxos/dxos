@@ -8,7 +8,7 @@ import { synchronized } from '@dxos/async';
 import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot
+  createFeedWriter, CredentialsMessage, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot
 } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
@@ -20,6 +20,7 @@ import { FeedMuxer } from './feed-muxer';
 import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
+import { Credential } from '@dxos/halo-protocol/src/proto';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 
@@ -118,7 +119,7 @@ export class PartyPipeline {
     return feed;
   }
 
-  get credentialsWriter (): FeedWriter<HaloMessage> {
+  get credentialsWriter (): FeedWriter<Credential> {
     assert(this._pipeline?.outboundHaloStream, 'Party not open');
     return this._pipeline?.outboundHaloStream;
   }
@@ -152,8 +153,8 @@ export class PartyPipeline {
       void this._feedProvider.createOrOpenReadOnlyFeed(feed);
     }));
 
-    // TODO(dmaretskyi): We still need to hint at the genesis feed for some reason, not doing this breaks invitation tests.
-    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: genesisFeedKey }]);
+    // Make sure we have the genesis feed open for replication.
+    await this._feedProvider.createOrOpenReadOnlyFeed(genesisFeedKey);
 
     //
     // Pipeline

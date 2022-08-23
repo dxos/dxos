@@ -15,11 +15,11 @@ import { IHaloStream } from '@dxos/echo-protocol';
 
 import { PartyProcessor } from '../pipeline';
 import { createCredential } from '@dxos/halo-protocol';
-import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol/dist/src/proto';
+import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo:parties:party-processor:test');
 
-describe.only('party-processor', () => {
+describe('party-processor', () => {
   test('genesis', async () => {
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
@@ -33,15 +33,17 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: partyKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey: partyKey.publicKey
-        },
-        keyring
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: partyKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyGenesis',
+            partyKey: partyKey.publicKey
+          },
+          keyring
+        })
+      }
     });
 
     expect(partyProcessor.feedKeys).toHaveLength(0);
@@ -66,15 +68,17 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: partyKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey: partyKey.publicKey
-        },
-        keyring
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: partyKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyGenesis',
+            partyKey: partyKey.publicKey
+          },
+          keyring
+        })
+      }
     });
 
     await partyProcessor.processMessage({
@@ -82,16 +86,18 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: identityKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey: partyKey.publicKey,
-          role: PartyMember.Role.ADMIN
-        },
-        keyring,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: identityKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyMember',
+            partyKey: partyKey.publicKey,
+            role: PartyMember.Role.ADMIN
+          },
+          keyring,
+        })
+      }
     });
 
     await partyProcessor.processMessage({
@@ -99,18 +105,20 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: identityKey.publicKey,
-        subject: feedKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: partyKey.publicKey,
-          deviceKey: deviceKey.publicKey,
-          identityKey: identityKey.publicKey,
-          designation: AdmittedFeed.Designation.CONTROL,
-        },
-        keyring,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: identityKey.publicKey,
+          subject: feedKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: partyKey.publicKey,
+            deviceKey: deviceKey.publicKey,
+            identityKey: identityKey.publicKey,
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+          keyring,
+        })
+      }
     });
 
     expect(partyProcessor.feedKeys).toHaveLength(1);
@@ -137,15 +145,17 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: partyKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey: partyKey.publicKey
-        },
-        keyring
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: partyKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyGenesis',
+            partyKey: partyKey.publicKey
+          },
+          keyring
+        })
+      }
     });
 
     await partyProcessor.processMessage({
@@ -153,16 +163,18 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: identityKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey: partyKey.publicKey,
-          role: PartyMember.Role.ADMIN
-        },
-        keyring,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: identityKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyMember',
+            partyKey: partyKey.publicKey,
+            role: PartyMember.Role.ADMIN
+          },
+          keyring,
+        })
+      }
     });
 
     await partyProcessor.processMessage({
@@ -170,18 +182,20 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: identityKey.publicKey,
-        subject: feedKey.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: partyKey.publicKey,
-          deviceKey: deviceKey.publicKey,
-          identityKey: identityKey.publicKey,
-          designation: AdmittedFeed.Designation.CONTROL,
-        },
-        keyring,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: identityKey.publicKey,
+          subject: feedKey.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: partyKey.publicKey,
+            deviceKey: deviceKey.publicKey,
+            identityKey: identityKey.publicKey,
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+          keyring,
+        })
+      }
     });
 
     const keyring2 = new Keyring();
@@ -194,16 +208,18 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: partyKey.publicKey,
-        subject: identityKey2.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey: partyKey.publicKey,
-          role: PartyMember.Role.ADMIN
-        },
-        keyring,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: partyKey.publicKey,
+          subject: identityKey2.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.PartyMember',
+            partyKey: partyKey.publicKey,
+            role: PartyMember.Role.ADMIN
+          },
+          keyring,
+        })
+      }
     });
 
     await partyProcessor.processMessage({
@@ -211,18 +227,20 @@ describe.only('party-processor', () => {
         feedKey: feedKey.publicKey,
         seq: 0
       },
-      data: { credential: await createCredential({
-        issuer: identityKey2.publicKey,
-        subject: feedKey2.publicKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: partyKey.publicKey,
-          deviceKey: deviceKey2.publicKey,
-          identityKey: identityKey2.publicKey,
-          designation: AdmittedFeed.Designation.CONTROL,
-        },
-        keyring: keyring2,
-      }) }
+      data: {
+        credential: await createCredential({
+          issuer: identityKey2.publicKey,
+          subject: feedKey2.publicKey,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: partyKey.publicKey,
+            deviceKey: deviceKey2.publicKey,
+            identityKey: identityKey2.publicKey,
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+          keyring: keyring2,
+        })
+      }
     });
 
     expect(partyProcessor.feedKeys).toHaveLength(2);

@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout, sleep } from '@dxos/async';
-import { createFeedAdmitMessage, createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
+import { Keyring, KeyType } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, FeedMessage } from '@dxos/echo-protocol';
@@ -23,8 +23,10 @@ import { SnapshotStore } from '../snapshots';
 import { MetadataStore } from './metadata-store';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyPipeline } from './party-pipeline';
+import { createCredential } from '@dxos/halo-protocol';
+import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
-describe('PartyPipeline', () => {
+describe.only('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
@@ -38,6 +40,8 @@ describe('PartyPipeline', () => {
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
+    const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey.publicKey);
 
@@ -54,28 +58,48 @@ describe('PartyPipeline', () => {
     afterTest(async () => party.close());
 
     // PartyGenesis (self-signed by Party).
-    await party.credentialsWriter.write(createPartyGenesisMessage(
-      keyring,
-      partyKey,
-      feed.key,
-      partyKey)
-    );
+    await party.credentialsWriter.write(await createCredential({
+      issuer: partyKey.publicKey,
+      subject: partyKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyGenesis',
+        partyKey: partyKey.publicKey
+      },
+      keyring
+    }));
 
-    // FeedAdmit (signed by the Device KeyChain).
-    await party.credentialsWriter.write(createFeedAdmitMessage(
+    await party.credentialsWriter.write(await createCredential({
+      issuer: partyKey.publicKey,
+      subject: identityKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.PartyMember',
+        partyKey: partyKey.publicKey,
+        role: PartyMember.Role.ADMIN
+      },
       keyring,
-      partyKey.publicKey,
-      feed.key,
-      [partyKey]
-    ));
+    }));
 
-    return { party, feedKey: feed.key, feed, feedStore, partyKey, keyring, partyFeedProvider };
+    await party.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: feed.key,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: partyKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+        identityKey: identityKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
+      keyring,
+    }));
+
+    return { party, feedKey: feed.key, feed, feedStore, partyKey, keyring, partyFeedProvider, identityKey, deviceKey };
   };
 
   test('create & have the feed key admitted', async () => {
     const { party, feedKey } = await setup();
 
-    await party.processor.keyOrInfoAdded.waitForCount(1);
+    await party.processor.keyOrInfoAdded.waitForCondition(() => party.processor.memberKeys.length === 1)
+    await party.processor.feedAdded.waitForCondition(() => party.processor.feedKeys.length === 1)
 
     expect(party.processor.isFeedAdmitted(feedKey)).toBeTruthy();
   });
@@ -118,17 +142,23 @@ describe('PartyPipeline', () => {
   });
 
   test('feed admit message triggers new feed to be opened', async () => {
-    const { party, partyKey, keyring, partyFeedProvider, feedStore } = await setup();
+    const { party, partyKey, keyring, partyFeedProvider, feedStore, identityKey, deviceKey } = await setup();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
 
     const eventFired = feedStore.feedOpenedEvent.waitForCount(1);
-    await party.credentialsWriter.write(createFeedAdmitMessage(
+    await party.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: feedKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: partyKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+        identityKey: identityKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
       keyring,
-      party.key,
-      feedKey.publicKey,
-      [partyKey]
-    ));
+    }));
     await promiseTimeout(eventFired, 1000, new Error('timeout'));
     expect(partyFeedProvider.getFeeds().find(k => k.key.equals(feedKey.publicKey))).toBeTruthy();
   });
@@ -191,18 +221,24 @@ describe('PartyPipeline', () => {
   });
 
   test('admit a second feed to the party', async () => {
-    const { party, keyring, partyKey, feedStore } = await setup();
+    const { party, keyring, partyKey, feedStore, identityKey, deviceKey } = await setup();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
     const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
 
-    await party.credentialsWriter.write(createFeedAdmitMessage(
+    await party.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: feedKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: partyKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+        identityKey: identityKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
       keyring,
-      party.key,
-      feed2.key,
-      [partyKey]
-    ));
+    }));
 
     const itemId = createId();
     await feed2.append(checkType<FeedMessage>({
@@ -220,17 +256,23 @@ describe('PartyPipeline', () => {
   });
 
   test('admit feed and then open it', async () => {
-    const { party, keyring, partyKey, feedStore } = await setup();
+    const { party, keyring, partyKey, feedStore, identityKey, deviceKey } = await setup();
 
     const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
     const fullKey = keyring.getFullKey(feedKey.publicKey);
 
-    await party.credentialsWriter.write(createFeedAdmitMessage(
+    await party.credentialsWriter.write(await createCredential({
+      issuer: identityKey.publicKey,
+      subject: feedKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: partyKey.publicKey,
+        deviceKey: deviceKey.publicKey,
+        identityKey: identityKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
       keyring,
-      party.key,
-      feedKey.publicKey,
-      [partyKey]
-    ));
+    }));
 
     const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
     const itemId = createId();
@@ -293,15 +335,21 @@ describe('PartyPipeline', () => {
     );
 
     const feed2 = await partyFeedProvider.createOrOpenWritableFeed();
-
-    await peer1.party.credentialsWriter.write(createFeedAdmitMessage(
-      peer1.keyring,
-      peer1.party.key,
-      feed2.key,
-      [peer1.partyKey]
-    ));
+    await peer1.party.credentialsWriter.write(await createCredential({
+      issuer: peer1.identityKey.publicKey,
+      subject: feed2.key,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AdmittedFeed',
+        partyKey: peer1.partyKey.publicKey,
+        deviceKey: peer1.deviceKey.publicKey,
+        identityKey: peer1.identityKey.publicKey,
+        designation: AdmittedFeed.Designation.CONTROL,
+      },
+      keyring: peer1.keyring,
+    }));
 
     await party2.open({ genesisFeedKey: peer1.feedKey });
+
     afterTest(async () => party2.close());
 
     createTestProtocolPair(

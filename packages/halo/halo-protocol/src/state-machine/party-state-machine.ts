@@ -99,6 +99,7 @@ export class PartyStateMachine {
           log(`Party member ${credential.issuer} is not authorized to admit feeds.`);
           return false;
         }
+        // TODO(dmaretskyi): Check that the feed owner is a member of the party.
         this._feeds.process(credential, fromFeed);
         break;
     }
