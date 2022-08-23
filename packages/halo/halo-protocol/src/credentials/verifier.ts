@@ -4,7 +4,6 @@
 
 import { Keyring } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexSet } from '@dxos/util';
 
 import { Chain, Credential } from '../proto';
 import { isValidAuthorizedDeviceCredential } from './assertions';

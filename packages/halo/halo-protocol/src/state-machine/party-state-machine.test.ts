@@ -41,16 +41,18 @@ describe('PartyStateMachine', () => {
       keyring
     }), feed)).toEqual(true);
 
-    const chain: Chain = { credential: await createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        deviceKey: device,
-        identityKey: identity
-      },
-      subject: device,
-      issuer: identity,
-      keyring
-    }) };
+    const chain: Chain = {
+      credential: await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          deviceKey: device,
+          identityKey: identity
+        },
+        subject: device,
+        issuer: identity,
+        keyring
+      })
+    };
 
     expect(await partyState.process(await createCredential({
       issuer: identity,
@@ -124,16 +126,18 @@ describe('PartyStateMachine', () => {
       keyring
     }), feed)).toEqual(true);
 
-    const chain: Chain = { credential: await createCredential({
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        deviceKey: device,
-        identityKey: identity
-      },
-      subject: device,
-      issuer: identity,
-      keyring
-    }) };
+    const chain: Chain = {
+      credential: await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          deviceKey: device,
+          identityKey: identity
+        },
+        subject: device,
+        issuer: identity,
+        keyring
+      })
+    };
 
     expect(await partyState.process(await createCredential({
       issuer: identity,

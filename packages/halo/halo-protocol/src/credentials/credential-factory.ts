@@ -5,12 +5,9 @@
 import assert from 'assert';
 
 import { Keyring } from '@dxos/credentials';
-import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap } from '@dxos/util';
 
 import { Chain, Credential } from '../proto';
-import { isValidAuthorizedDeviceCredential } from './assertions';
 import { getSignaturePayload, sign } from './signing';
 import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519 } from './verifier';

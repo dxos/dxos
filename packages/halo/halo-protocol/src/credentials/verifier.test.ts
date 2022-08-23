@@ -342,7 +342,7 @@ describe('verifier', () => {
       const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
-      
+
       const chain: Chain = {
         credential: await createCredential({
           assertion: {
@@ -354,16 +354,18 @@ describe('verifier', () => {
           issuer: identity,
           keyring,
           signingKey: device1,
-          chain: { credential: await createCredential({ 
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device1,
-              identityKey: identity
-            },
-            subject: device1,
-            issuer: identity,
-            keyring 
-          }) }
+          chain: {
+            credential: await createCredential({
+              assertion: {
+                '@type': 'dxos.halo.credentials.AuthorizedDevice',
+                deviceKey: device1,
+                identityKey: identity
+              },
+              subject: device1,
+              issuer: identity,
+              keyring
+            })
+          }
         })
       };
 
@@ -402,16 +404,18 @@ describe('verifier', () => {
           issuer: identity,
           keyring,
           signingKey: device1,
-          chain: { credential: await createCredential({ 
-            assertion: {
-              '@type': 'dxos.halo.credentials.AuthorizedDevice',
-              deviceKey: device1,
-              identityKey: identity
-            },
-            subject: device1,
-            issuer: identity,
-            keyring 
-          }) }
+          chain: {
+            credential: await createCredential({
+              assertion: {
+                '@type': 'dxos.halo.credentials.AuthorizedDevice',
+                deviceKey: device1,
+                identityKey: identity
+              },
+              subject: device1,
+              issuer: identity,
+              keyring
+            })
+          }
         })
       };
 
