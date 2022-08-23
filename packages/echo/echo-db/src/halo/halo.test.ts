@@ -74,7 +74,7 @@ describe.only('HALO', () => {
     expect(profile.publicKey).toBeInstanceOf(PublicKey);
   });
 
-  test.only('reload with profile', async () => {
+  test('reload with profile', async () => {
     const halo = setup();
     await halo.open();
 
