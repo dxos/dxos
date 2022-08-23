@@ -11,6 +11,8 @@ import { SingletonMessage } from '../proto';
 
 const log = debug('dxos:client:singleton-port');
 
+const IFRAME_ID = 'dxos-client-singleton';
+
 const waitForClient = () => {
   return new Promise<void>(resolve => {
     const messageHandler = (event: MessageEvent<SingletonMessage>) => {
@@ -24,16 +26,23 @@ const waitForClient = () => {
   });
 };
 
+const createIframe = (source: string) => {
+  const iframe = document.createElement('iframe') as HTMLIFrameElement;
+  iframe.id = IFRAME_ID;
+  iframe.src = source;
+  iframe.setAttribute('style', 'display: none;');
+  document.body.appendChild(iframe);
+
+  return iframe;
+};
+
 export const createSingletonPort = async (singletonSource: string): Promise<RpcPort> => {
   if (isNode()) {
     throw new Error('Connecting to singleton client is not available in Node environment.');
   }
 
-  const singleton = document.createElement('iframe') as HTMLIFrameElement;
-  singleton.id = 'dxos-client-singleton';
-  singleton.src = singletonSource;
-  singleton.setAttribute('style', 'display: none;');
-  document.body.appendChild(singleton);
+  const singleton = document.getElementById(IFRAME_ID) as HTMLIFrameElement ??
+    createIframe(singletonSource);
 
   await waitForClient();
 

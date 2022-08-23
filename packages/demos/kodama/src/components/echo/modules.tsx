@@ -9,7 +9,7 @@ import { Party } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
 import { useAppState } from '../../hooks';
-import { Join, Share } from '../invitations';
+import { Join, Invite } from '../invitations';
 import { MenuItem, Module, Panel } from '../util';
 import { CreateParty } from './CreateParty';
 import { PartyFeeds } from './PartyFeeds';
@@ -72,7 +72,7 @@ export const createEchoMenu = (): MenuItem | undefined => {
           label: 'Share Space',
           component: () => (
             <PartyPanel party={party}>
-              <Share
+              <Invite
                 onCreate={() => {
                   return party.createInvitation();
                 }}

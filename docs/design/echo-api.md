@@ -1,16 +1,15 @@
 # ECHO API
 
-- Graph object module
-  - Items
-    - Parent-child
-  - Links
-- Query
-- Item
-  - Model
-    - ObjectModel: Document (JSON)
-      - Key-value mutations
-- Transactions
-
+*   Graph object module
+    *   Items
+        *   Parent-child
+    *   Links
+*   Query
+*   Item
+    *   Model
+        *   ObjectModel: Document (JSON)
+            *   Key-value mutations
+*   Transactions
 
 ```protobuf
 message Contact {
@@ -86,6 +85,4 @@ obj.emails.push('alice@example.com');
 db.query()
 
 ```
-
-
 

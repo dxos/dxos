@@ -12,7 +12,7 @@ import { useAsyncEffect, useMounted } from '@dxos/react-async';
 import { clear, copyToClipboard } from '../../util';
 import { ActionStatus, StatusState } from '../util';
 
-export const Share: FC<{
+export const Invite: FC<{
   onCreate: () => Promise<InvitationRequest>
 }> = ({
   onCreate

@@ -7,7 +7,7 @@ import React from 'react';
 import { Client } from '@dxos/client/client';
 
 import { useModule } from '../../hooks';
-import { Join, Share } from '../invitations';
+import { Join, Invite } from '../invitations';
 import { MenuItem, Module, Panel } from '../util';
 import { Contacts } from './Contacts';
 import { CreateProfile } from './CreateProfile';
@@ -89,7 +89,7 @@ export const createHaloMenu = (client: Client): MenuItem => {
               label: 'Add Device',
               component: () => (
                 <Panel>
-                  <Share
+                  <Invite
                     onCreate={() => {
                       return client.halo.createInvitation();
                     }}
