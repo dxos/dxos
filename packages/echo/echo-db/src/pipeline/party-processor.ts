@@ -119,21 +119,6 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
     return undefined;
   }
 
-  // TODO(dmaretskyi): Remove.
-  /**
-   * @deprecated 
-   */
-   async takeHints (hints: KeyHint[]) {
-    console.log('deprecated takeHints');
-    log(`addHints ${hints.length}`);
-    // Gives state machine hints on initial feed set from where to read party genesis message.
-    /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
-     * what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
-     * credential messages for ourselves.
-     */
-    // await this._state.takeHints(hints);
-  }
-
   async processMessage (message: IHaloStream) {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     const { data } = message;
