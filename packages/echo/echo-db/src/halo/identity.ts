@@ -6,7 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, PubKey, SignedMessage, Signer } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { IdentityCredentials } from '../protocol/identity-credentials';
@@ -115,6 +115,6 @@ const getDeviceKeyChainFromHalo = (halo: HaloParty, identityKey: PublicKey, devi
         assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' &&
         assertion.identityKey.equals(identityKey) &&
         assertion.deviceKey.equals(deviceKey);
-    }) ?? failUndefined()
+    }) ?? raise(new Error('Could not build device keychain: AuthorizedDevice credential is missing or invalid.'))
   };
 };

@@ -18,7 +18,7 @@ import {
 import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot, CredentialsMessage } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
-import { MemberInfo, PartyStateMachine } from '@dxos/halo-protocol'
+import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol'
 
 const log = debug('dxos:echo-db:party-processor');
 
@@ -46,6 +46,8 @@ export interface PartyStateProvider {
  */
 export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private readonly _state = new PartyStateMachine(this._partyKey);
+
+  readonly credentialProcessed = new Event<Credential>();
 
   readonly feedAdded = new Event<FeedKey>();
 
@@ -124,6 +126,8 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
     const { data } = message;
     this._snapshot.messages!.push({ message: message.data, feedKey: message.meta.feedKey });
     await this._state.process(message.data.credential, message.meta.feedKey);
+
+    this.credentialProcessed.emit(message.data.credential);
   }
 
   makeSnapshot (): HaloStateSnapshot {

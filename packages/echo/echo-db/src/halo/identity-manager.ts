@@ -14,6 +14,7 @@ import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
+import { getCredentialAssertion } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo-db:identity-manager');
 
@@ -45,6 +46,18 @@ export class IdentityManager {
     // const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
     // await waitForCondition(() => halo.identityGenesis);
 
+    // TODO(dmaretskyi): Extract to HaloParty.
+    const identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
+    const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
+
+    // Wait for the AuthorizedDevice credential for the current device to be processed. 
+    await halo.processor.credentialProcessed.waitForCondition(() => halo.isOpen && halo.processor.credentialMessages.some(credential => {
+      const assertion = getCredentialAssertion(credential);
+      return credential.issuer.equals(identityKey.publicKey) &&
+        credential.subject.id.equals(deviceKey.publicKey) &&
+        assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice'
+    }));
+
     this._identity = new Identity(this._keyring, halo);
     this.ready.emit();
     log('HALO initialized.');
@@ -68,10 +81,10 @@ export class IdentityManager {
       const metadata = this._metadataStore.getParty(identityKey.publicKey);
       if (metadata) {
         // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty();
+        const halo = await this._haloFactory.constructParty(metadata.record.spaceKey);
 
-        assert(metadata.genesisFeedKey);
-        halo._setGenesisFeedKey(metadata.genesisFeedKey);
+        assert(metadata.record.genesisFeedKey);
+        halo._setGenesisFeedKey(metadata.record.genesisFeedKey);
 
         // Always open the HALO.
         await halo.open();

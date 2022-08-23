@@ -153,6 +153,10 @@ export class MetadataStore {
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
   async setDataFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    // TODO(dmaretskyi): Don't create party automatically.
+    if(!this.getParty(partyKey)) {
+      await this.addParty(partyKey);
+    }
     const party = this.getParty(partyKey) ?? failUndefined();
     party.dataFeedKey = feedKey;
     await this._save();
