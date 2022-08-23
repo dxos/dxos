@@ -2235,16 +2235,13 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
-      '@swc-node/register': ~1.4.2
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.27
       '@types/node-fetch': ^2.5.10
       debug: ^4.3.3
       node-fetch: ^2.6.0
       pkg-up: ^3.1.0
-      typescript: ^4.7.2
     dependencies:
       '@dxos/async': link:../../common/async
       debug: 4.3.4
@@ -2252,13 +2249,10 @@ importers:
       pkg-up: 3.1.0
     devDependencies:
       '@dxos/protocols': link:../../common/protocols
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/util': link:../../common/util
-      '@swc-node/register': 1.4.2
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
-      typescript: 4.7.4
 
   packages/sdk/client:
     specifiers:
