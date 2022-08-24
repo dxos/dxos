@@ -177,6 +177,8 @@ describe.only('Stack', () => {
   test('Genesis', async () => {
     const halo = new HALO();
     await halo.genesis();
+
+    // TODO(burdon): Wait for first device to show up.
     expect(halo.initialized).toBeTruthy();
 
     // TODO(burdon): Write credential to invite new device.
