@@ -4,6 +4,8 @@
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { Chain } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Contains a signer (keyring), provides signing keys to create signed credential messages.
@@ -21,7 +23,7 @@ export class CredentialsSigner {
       keyring,
       identityKey,
       deviceKey,
-      deviceKey
+      deviceKey.publicKey
     );
   }
 
@@ -29,7 +31,7 @@ export class CredentialsSigner {
     private readonly _signer: Signer,
     private readonly _identityKey: KeyRecord,
     private readonly _deviceKey: KeyRecord,
-    private readonly _signingKeys: KeyRecord | KeyChain
+    private readonly _signingKeys: PublicKey | Chain
   ) {}
 
   get signer (): Signer {
@@ -54,7 +56,7 @@ export class CredentialsSigner {
    * Data-parties don't store credentials that admit devices to profiles.
    * Devices need to sign with their keyChain including the device key admission credential in the signature.
    */
-  getDeviceSigningKeys (): KeyRecord | KeyChain {
+  getDeviceSigningKeys (): PublicKey | Chain {
     return this._signingKeys;
   }
 }

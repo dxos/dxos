@@ -43,9 +43,11 @@ export class PartyProtocolFactory {
       sampleSize: 20
     };
 
+    const credentials = await this._credentials.get();
+    
     log(`Joining swarm: ${this._partyKey.toHex()}`);
     return this._networkManager.joinProtocolSwarm({
-      protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }, plugins),
+      protocol: ({ channel, initiator }) => this._createProtocol(credentials, channel, { initiator }, plugins),
       peerId: this._peerId,
       topic: this._partyKey,
       presence: this._presencePlugin,
@@ -64,7 +66,7 @@ export class PartyProtocolFactory {
     await this._networkManager.leaveProtocolSwarm(this._partyKey);
   }
 
-  private _createProtocol (channel: any, opts: { initiator: boolean }, extraPlugins: Plugin[]) {
+  private _createProtocol (credentials: Buffer, channel: any, opts: { initiator: boolean }, extraPlugins: Plugin[]) {
     const plugins: Plugin[] = [
       ...extraPlugins,
       this._presencePlugin
@@ -95,7 +97,7 @@ export class PartyProtocolFactory {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
         peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: this._credentials.get().toString('base64')
+        credentials: credentials.toString('base64')
       },
 
       initiator: opts.initiator

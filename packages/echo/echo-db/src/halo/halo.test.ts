@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring } from '@dxos/credentials';
+import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring, KeyType } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -20,6 +20,7 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
 import waitForExpect from 'wait-for-expect';
+import { createCredential } from '@dxos/halo-protocol';
 
 describe.only('HALO', () => {
   const setup = () => {
@@ -115,7 +116,42 @@ describe.only('HALO', () => {
     await halo.close();
   });
 
-  test('admit another device')
+  test.only('admit another device', async () => {
+    const deviceA = setup();
+    await deviceA.open();
+    afterTest(() => deviceA.close());
+    const profileA = await deviceA.createProfile({ username: 'Test user' });
+
+    const deviceB = setup();
+    await deviceB.open();
+    afterTest(() => deviceB.close());
+
+    const identityKey = deviceA.identity!.identityKey.publicKey;
+
+    // Initialize deviceB with deviceA's profile and admit deviceB to the HALO.
+    const deviceBKey = await deviceB.keyring.createKeyRecord({ type: KeyType.DEVICE })
+    await deviceA.identity!.halo.credentialsWriter.write(await createCredential({
+      issuer: identityKey,
+      subject: deviceBKey.publicKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        identityKey: identityKey,
+        deviceKey: deviceBKey.publicKey,
+      },
+      keyring: deviceA.identity!.keyring,
+      chain: deviceA.identity!.deviceKeyChain,
+      signingKey: deviceA.identity!.deviceKey.publicKey,
+    }))
+    console.log('before join')
+    await deviceB.manuallyJoin(deviceA.identity!.record);
+    console.log('after join')
+
+
+    const profileB = deviceB.getProfile()
+    expect(profileB).toBeDefined();
+    // expect(profileB!.username).toEqual('Test user');
+    expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
+  })
 
   test('admit 2 devices in a chain')
 

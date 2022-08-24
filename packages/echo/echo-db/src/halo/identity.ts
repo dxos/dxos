@@ -13,7 +13,7 @@ import { IdentityCredentials } from '../protocol/identity-credentials';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';
-import { Chain, getCredentialAssertion } from '@dxos/halo-protocol';
+import { Chain, getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 const log = debug('dxos:echo-db:identity');
@@ -33,6 +33,7 @@ export class Identity implements IdentityCredentials {
    * @param _halo HALO party. Must be open.
    */
   constructor(
+    private readonly _record: IdentityRecord,
     private readonly _keyring: Keyring,
     private readonly _halo: HaloParty
   ) {
@@ -41,6 +42,10 @@ export class Identity implements IdentityCredentials {
     this._deviceKeyChain = getDeviceKeyChainFromHalo(this._halo, this._identityKey.publicKey, this.deviceKey.publicKey);
     // TODO(dmaretskyi): What is this about?
     // assert(this._halo.identityGenesis);
+  }
+
+  get record(): IdentityRecord {
+    return this._record;
   }
 
   get signer(): Signer {

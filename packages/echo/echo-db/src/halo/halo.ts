@@ -23,6 +23,7 @@ import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
+import { IdentityRecord } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo');
 
@@ -209,6 +210,16 @@ export class HALO {
     assert(!this.identity?.identityKey, 'Identity key already exists.');
 
     return this._identityManager.recoverHalo(seedPhrase);
+  }
+
+  /**
+   * Initializes the current agent as a new device with the provided identity.
+   * 
+   * Expects the device key to exist in the keyring.
+   * Expects the new device to be admitted to the HALO.
+   */
+  async manuallyJoin(identity: IdentityRecord) {
+    await this._identityManager.manuallyJoin(identity);
   }
 
   /**

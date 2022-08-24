@@ -190,7 +190,8 @@ export class HaloParty {
         this._credentialsSigner,
         this._partyCore.credentialsWriter
       ), peerId),
-      createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
+      // TODO(dmaretskyi): Fix recovery.
+      // createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);
 
     // Issue an 'update' whenever the properties change.

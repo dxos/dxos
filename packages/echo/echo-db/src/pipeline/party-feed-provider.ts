@@ -60,7 +60,6 @@ export class PartyFeedProvider {
       return this._feeds.get(feedKey)!;
     }
 
-    await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
@@ -97,9 +96,7 @@ export class PartyFeedProvider {
     }
 
     this.feedOpened.on((descriptor) => {
-      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
-        iterator.addFeedDescriptor(descriptor);
-      }
+      iterator.addFeedDescriptor(descriptor);
     });
 
     iterator.stalled.on(candidates => {

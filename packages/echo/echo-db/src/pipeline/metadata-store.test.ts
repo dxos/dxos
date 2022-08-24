@@ -9,7 +9,7 @@ import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { MetadataStore } from './metadata-store';
 
-describe.only('MetadataStore in-memory', () => {
+describe('MetadataStore in-memory', () => {
   it('creates party', async () => {
     const storage = createStorage('', StorageType.RAM);
     const store = new MetadataStore(storage.directory('metadata'));

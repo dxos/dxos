@@ -23,6 +23,7 @@ message EchoMetadata {
   google.protobuf.Timestamp created = 2;
   google.protobuf.Timestamp updated = 3;
 
+  // TODO(dmaretskyi): Store the device key associated with the identity.
   optional IdentityRecord identity = 10;
 
   /// List of the data parties.

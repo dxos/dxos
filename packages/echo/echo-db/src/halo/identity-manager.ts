@@ -7,14 +7,14 @@ import assert from 'node:assert';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, todo } from '@dxos/debug';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
-import { getCredentialAssertion } from '@dxos/halo-protocol';
+import { getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo-db:identity-manager');
 
@@ -36,7 +36,7 @@ export class IdentityManager {
     return this._identity;
   }
 
-  private async _initialize (halo: HaloParty) {
+  private async _initialize (identityRecord: IdentityRecord, halo: HaloParty) {
     assert(halo.isOpen, 'HALO must be open.');
 
     // TODO(dmaretskyi): Wait for the device credentials to be processed.
@@ -51,14 +51,16 @@ export class IdentityManager {
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
 
     // Wait for the AuthorizedDevice credential for the current device to be processed. 
+    console.log('WAITING')
     await halo.processor.credentialProcessed.waitForCondition(() => halo.isOpen && halo.processor.credentialMessages.some(credential => {
       const assertion = getCredentialAssertion(credential);
       return credential.issuer.equals(identityKey.publicKey) &&
         credential.subject.id.equals(deviceKey.publicKey) &&
         assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice'
     }));
+    console.log('DONE WAITING')
 
-    this._identity = new Identity(this._keyring, halo);
+    this._identity = new Identity(identityRecord, this._keyring, halo);
     this.ready.emit();
     log('HALO initialized.');
   }
@@ -87,7 +89,7 @@ export class IdentityManager {
 
       // Always open the HALO.
       await halo.open();
-      await this._initialize(halo);
+      await this._initialize(identityRecord, halo);
     }
   }
 
@@ -101,17 +103,38 @@ export class IdentityManager {
     const halo = await this._haloFactory.createHalo(options);
 
     const identityKey = this.getIdentityKey() ?? failUndefined();
-    await this._metadataStore.setIdentityRecord({
-      identityKey: identityKey.publicKey,
-      haloSpace: {
-        spaceKey: halo.key,
-        genesisFeedKey: await halo.getWriteFeedKey(),
-      }
-    })
+    const identityRecord: IdentityRecord = {
+       identityKey: identityKey.publicKey,
+       haloSpace: {
+         spaceKey: halo.key,
+         genesisFeedKey: await halo.getWriteFeedKey(),
+       }
+     };
+    await this._metadataStore.setIdentityRecord(identityRecord)
 
-    await this._initialize(halo);
+    await this._initialize(identityRecord, halo);
     return halo;
   }
+
+    /**
+     * Initializes the current agent as a new device with the provided identity.
+     * 
+     * Expects the device key to exist in the keyring.
+     * Expects the new device to be admitted to the HALO.
+     */
+    async manuallyJoin(identity: IdentityRecord) {
+      // Import identity key.
+      await this._keyring.addPublicKey({ type: KeyType.IDENTITY, publicKey: identity.identityKey, own: true, trusted: true });
+      
+      const halo = await this._haloFactory.constructParty(identity.haloSpace.spaceKey);
+      halo._setGenesisFeedKey(identity.haloSpace.genesisFeedKey);
+      await this._metadataStore.setIdentityRecord(identity)
+
+      await halo.open();
+      console.log('after open')
+
+      await this._initialize(identity, halo);
+    }
 
    /**
     * Joins an existing Identity HALO from a recovery seed phrase.
@@ -125,7 +148,7 @@ export class IdentityManager {
      assert(!this._identity, 'Identity already initialized.');
 
      const halo = await this._haloFactory.recoverHalo(seedPhrase);
-     await this._initialize(halo);
+     await this._initialize(todo(), halo);
      return halo;
    }
 
@@ -137,7 +160,7 @@ export class IdentityManager {
      assert(!this._identity, 'Identity already initialized.');
 
      const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);
-     await this._initialize(halo);
+     await this._initialize(todo(), halo);
      return halo;
    }
 }
