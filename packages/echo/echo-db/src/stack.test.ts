@@ -7,6 +7,7 @@ import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
+import { PublicKey } from '@dxos/protocols';
 
 class Timeframe {}
 
@@ -86,7 +87,47 @@ class FeedIterator {
 }
 
 class Pipeline {
+  readonly writable = new Feed();
+}
 
+class Space {
+  readonly pipeline = new Pipeline();
+}
+
+class HALO {
+  private _space?: Space;
+
+  // TODO(burdon): Device manager.
+  private _devices: Buffer[] = [];
+
+  async genesis () {
+    // TODO(burdon): Create identity key, space key, device key, feed key.
+    const space = new Space();
+
+    // TODO(burdon): Write credentials from new package.
+    space.pipeline.writable.append(Buffer.from('space-genesis'));
+    space.pipeline.writable.append(Buffer.from('identity')); // TODO(burdon): Identity abstraction?
+
+    // TODO(burdon): How do these get processed in the SAME way as other devices joining the party?
+    space.pipeline.writable.append(Buffer.from('device'));
+    space.pipeline.writable.append(Buffer.from('feed'));
+
+    this._space = space;
+    return space;
+  }
+
+  getDevices () {
+    return this._devices;
+  }
+
+  // TODO(burdon): Challenge!
+  async addDevice (deviceKey: PublicKey) {
+    throw new Error('Not implemented');
+  }
+
+  get initialized () {
+    return !!this._space;
+  }
 }
 
 describe.only('Stack', () => {
@@ -132,6 +173,18 @@ describe.only('Stack', () => {
   // TODO(burdon): Pipeline abstraction with multiple "peers" (and single writable feed).
   // TODO(burdon): Replication.
   // TODO(burdon): Auth state machine.
+
+  test('Genesis', async () => {
+    const halo = new HALO();
+    await halo.genesis();
+    expect(halo.initialized).toBeTruthy();
+
+    // TODO(burdon): Write credential to invite new device.
+    const device = {
+      key: PublicKey.random()
+    };
+    await halo.addDevice(device.key);
+  });
 
   // Phase 2
   // TODO(burdon): Genesis (incl. device joining).
