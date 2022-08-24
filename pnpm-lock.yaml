@@ -4,6 +4,9 @@ patchedDependencies:
   '@nrwl/js@14.5.7':
     hash: osi77fjxs57mwennraun4e6pmi
     path: patches/@nrwl__js@14.5.7.patch
+  vite@3.0.9:
+    hash: sn4pdpxxcdbczqmgzem6dbvc7e
+    path: patches/vite@3.0.9.patch
 
 importers:
 
@@ -1012,35 +1015,6 @@ importers:
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
       wait-for-expect: 3.0.2
-
-  packages/demos/vite-project:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/esbuild-plugins': ~2.28.12
-      '@dxos/protocols': workspace:*
-      '@types/react': ^18.0.17
-      '@types/react-dom': ^18.0.6
-      '@vitejs/plugin-react': ^2.0.1
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      rollup: ^2.78.1
-      rollup-plugin-polyfill-node: ^0.10.2
-      typescript: ^4.6.4
-      vite: ^3.0.7
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/protocols': link:../../common/protocols
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.28.12
-      '@types/react': 18.0.17
-      '@types/react-dom': 18.0.6
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
-      rollup: 2.78.1
-      rollup-plugin-polyfill-node: 0.10.2_rollup@2.78.1
-      typescript: 4.7.4
-      vite: 3.0.9
 
   packages/devtools/devtools:
     specifiers:
@@ -3026,11 +3000,16 @@ importers:
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       '@types/url-join': ~4.0.1
+      '@vitejs/plugin-react': ^2.0.1
+      eslint: ^8.21.0
       react: ^18.1.0
       react-dom: ^18.1.0
       react-router-dom: ^6.3.0
+      rollup: ~2.77.3
+      rollup-plugin-polyfill-node: ^0.10.2
       typescript: ^4.7.2
       url-join: ^4.0.1
+      vite: 3.0.9
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
@@ -3056,7 +3035,12 @@ importers:
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
       '@types/url-join': 4.0.1
+      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      eslint: 8.22.0
+      rollup: 2.77.3
+      rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
       typescript: 4.7.4
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   packages/wallet/wallet-extension:
     specifiers:
@@ -5341,7 +5325,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.6
+      '@babel/helper-plugin-utils': 7.18.9
     dev: true
 
   /@babel/plugin-transform-react-jsx-source/7.16.0_@babel+core@7.12.3:
@@ -5361,7 +5345,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.6
+      '@babel/helper-plugin-utils': 7.18.9
     dev: true
 
   /@babel/plugin-transform-react-jsx/7.16.0_@babel+core@7.12.3:
@@ -6204,23 +6188,6 @@ packages:
       - utf-8-validate
       - webpack-cli
       - webpack-command
-    dev: true
-
-  /@dxos/esbuild-plugins/2.28.12:
-    resolution: {integrity: sha512-JOX3NzXDF18DPlsbVFHKiLFwHkVhGO+2Kcop1AyoQZ1j3AW9OjuN9i89pD8pjbAGO1FZ66k153D58X+ZJ9lqcQ==}
-    dependencies:
-      assert: 2.0.0
-      crypto-browserify: 3.12.0
-      debug: 4.3.4
-      domain-browser: 4.22.0
-      esbuild: 0.14.49
-      events: 3.3.0
-      path-browserify: 1.0.1
-      readable-stream: 3.6.0
-      tty-browserify: 0.0.1
-      util: 0.12.4
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /@dxos/esbuild-plugins/2.29.0:
@@ -9153,15 +9120,15 @@ packages:
   /@protobufjs/utf8/1.1.0:
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  /@rollup/plugin-inject/4.0.4_rollup@2.78.1:
+  /@rollup/plugin-inject/4.0.4_rollup@2.77.3:
     resolution: {integrity: sha512-4pbcU4J/nS+zuHk+c+OL3WtmEQhqxlZ9uqfjQMQDOHOPld7PsCd8k5LWs8h5wjwJN7MgnAn768F2sDxEP4eNFQ==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.78.1
+      '@rollup/pluginutils': 3.1.0_rollup@2.77.3
       estree-walker: 2.0.2
       magic-string: 0.25.7
-      rollup: 2.78.1
+      rollup: 2.77.3
     dev: true
 
   /@rollup/plugin-node-resolve/7.1.3_rollup@1.32.1:
@@ -9200,7 +9167,7 @@ packages:
       rollup: 1.32.1
     dev: false
 
-  /@rollup/pluginutils/3.1.0_rollup@2.78.1:
+  /@rollup/pluginutils/3.1.0_rollup@2.77.3:
     resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
@@ -9209,7 +9176,7 @@ packages:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.3.1
-      rollup: 2.78.1
+      rollup: 2.77.3
     dev: true
 
   /@rushstack/debug-certificate-manager/1.1.67:
@@ -11112,7 +11079,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.18.13
       magic-string: 0.26.2
       react-refresh: 0.14.0
-      vite: 3.0.9
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -27173,13 +27140,13 @@ packages:
       rollup-pluginutils: 2.8.2
     dev: false
 
-  /rollup-plugin-polyfill-node/0.10.2_rollup@2.78.1:
+  /rollup-plugin-polyfill-node/0.10.2_rollup@2.77.3:
     resolution: {integrity: sha512-5GMywXiLiuQP6ZzED/LO/Q0HyDi2W6b8VN+Zd3oB0opIjyRs494Me2ZMaqKWDNbGiW4jvvzl6L2n4zRgxS9cSQ==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/plugin-inject': 4.0.4_rollup@2.78.1
-      rollup: 2.78.1
+      '@rollup/plugin-inject': 4.0.4_rollup@2.77.3
+      rollup: 2.77.3
     dev: true
 
   /rollup-plugin-terser/5.3.1_rollup@1.32.1:
@@ -27212,14 +27179,6 @@ packages:
 
   /rollup/2.77.3:
     resolution: {integrity: sha512-/qxNTG7FbmefJWoeeYJFbHehJ2HNWnjkAFRKzWN/45eNBBF/r8lo992CwcJXEzyVxs5FmfId+vTSTQDb+bxA+g==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
-  /rollup/2.78.1:
-    resolution: {integrity: sha512-VeeCgtGi4P+o9hIg+xz4qQpRl6R401LWEXBmxYKOV4zlF82lyhgh2hTZnheFUbANE8l2A41F458iwj2vEYaXJg==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
@@ -29995,7 +29954,7 @@ packages:
       replace-ext: 1.0.1
     dev: false
 
-  /vite/3.0.9:
+  /vite/3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e:
     resolution: {integrity: sha512-waYABTM+G6DBTCpYAxvevpG50UOlZuynR0ckTK5PawNVt7ebX6X7wNXHaGIO6wYYFXSM7/WcuFuO2QzhBB6aMw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -30021,6 +29980,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+    patched: true
 
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}

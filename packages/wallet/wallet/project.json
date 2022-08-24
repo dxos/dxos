@@ -2,6 +2,15 @@
   "sourceRoot": "packages/wallet/wallet/src",
   "projectType": "library",
   "targets": {
+    "dev": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "dev"
+      },
+      "dependsOn": [
+        "^build"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [
