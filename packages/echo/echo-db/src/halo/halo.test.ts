@@ -19,6 +19,7 @@ import { defaultInvitationAuthenticator } from '../invitations';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
+import waitForExpect from 'wait-for-expect';
 
 describe.only('HALO', () => {
   const setup = () => {
@@ -86,6 +87,30 @@ describe.only('HALO', () => {
     expect(profile).toBeDefined();
     // expect(profile!.username).toEqual('Test user');
     expect(profile!.publicKey.equals(initialProfile.publicKey)).toBeTruthy();
+
+    await halo.close();
+  });
+
+  test('preferences are persisted after reload', async () => {
+    const halo = setup();
+    await halo.open();
+
+    const initialProfile = await halo.createProfile({ username: 'Test user' });
+    halo.identity!.preferences.getGlobalPreferences()!.model.set('test', 'value');
+    expect(halo.identity!.preferences.getGlobalPreferences()!.model.get('test')).toEqual('value');
+
+    await halo.close();
+
+    await halo.open();
+    const profile = halo.getProfile();
+    expect(profile).toBeDefined();
+    // expect(profile!.username).toEqual('Test user');
+    expect(profile!.publicKey.equals(initialProfile.publicKey)).toBeTruthy();
+
+    // TODO(dmaretskyi): Make sure that HALO waits for the data to be loaded on startup.
+    await waitForExpect(async () => {
+      expect(halo.identity!.preferences.getGlobalPreferences()!.model.get('test')).toEqual('value');
+    })
 
     await halo.close();
   });
