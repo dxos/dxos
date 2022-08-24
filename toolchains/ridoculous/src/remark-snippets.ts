@@ -99,7 +99,7 @@ export function remarkSnippets () {
               // Number of existing nodes.
               let existing = 0;
 
-              // Check if link already exists.
+              // Check if the link node already exists.
               const linkNode = parent.children[i! + 1];
               if (linkNode?.type === 'paragraph' &&
                 linkNode.children[0]?.type === 'html' &&
@@ -107,7 +107,7 @@ export function remarkSnippets () {
                 existing++;
               }
 
-              // Check if code block already exists.
+              // Check if the code node already exists.
               const codeNode = parent.children[i! + 1 + existing];
               if (codeNode?.type === 'code') {
                 existing++;
@@ -117,15 +117,26 @@ export function remarkSnippets () {
               const nodes = [];
 
               if (addLink) {
+                // Get package name.
+                let pkgName;
+                try {
+                  // E.g., ../../packages/halo/halo-protocol/src/proto/defs/credentials.proto
+                  const match = filePath.match(/(.+)\/src\/.+\/(.+)/);
+                  const [, pkgDir] = match ?? [];
+
+                  // Test Node package.
+                  const { name } = JSON.parse(fs.readFileSync(`${pkgDir}/package.json`, 'utf8'));
+                  pkgName = name;
+                } catch (err) {}
+
                 nodes.push(u('paragraph', {}, [
                   u('html', { value: '<sub>' }),
-                  u('inlineCode', { value: path.basename(filePath) }),
-                  u('text', { value: ' ' }),
+                  pkgName ? u('inlineCode', { value: pkgName }) : null,
                   u('link', { url: path.relative(rootDir, filePath) }, [
-                    u('text', { value: '[source]' })
+                    u('inlineCode', { value: `[${path.basename(filePath)}]` })
                   ]),
                   u('html', { value: '</sub>' })
-                ]));
+                ].filter(Boolean)));
               }
 
               nodes.push(u('code', { lang, value: content }));

@@ -200,17 +200,19 @@ All private keys are stored in a device-local password-protected encrypted key s
 Private keys are used to sign messages, which may include credentials.
 Credentials form a chain of trust that implement delegated authority such that multiple devices are able to create credentials on behalf of the Agent.
 
-The diagram below illustrates the chain of trust that is created during HALO Genesis and at subsequent points during the life-cycle of the HALO.
+The sequence diagram below illustrates the chain of trust that is created during HALO Genesis and at subsequent points during the life-cycle of the HALO.
+The following sections describe the numbered steps.
 
 <br>
 
 ![Credentials](./diagrames/../diagrams/halo-genesis.drawio.svg)
 
-This sections summarizes the principal HALO mechanisms with further details in the sections below.
+<br>
+<center><sup>HALO Genesis Sequence Diagram</sup></center>
 
 #### 4.1.1. HALO Genesis
 
-During genesis public/private key-pairs are created for:
+During HALO genesis public/private key-pairs are created for:
 
 *   a) the HALO Space;
 *   b) the Agent's Identity;
@@ -218,7 +220,7 @@ During genesis public/private key-pairs are created for:
 *   d) an initial Feed that is used to store credentials.
 
 **(1)**
-The Space key is used to create a self-signed message that anchors the chain of trust. The Space is both the Issuer and Subject of the credential.
+The Space key is used to create a self-signed message that is the root of the chain of trust. The Space is both the Issuer and Subject of the credential.
 The Space's public key is used later to identity the HALO for purposes of replication on the network.
 
 **(2)**
@@ -269,7 +271,7 @@ The HALO protocol definitions are defined in the [References](#8-appendix) secti
 
 <!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential, link) -->
 
-<sub>`credentials.proto` [\[source\]](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
+<sub>`@dxos/halo-protocol`[`[credentials.proto]`](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 message Credential {
@@ -576,13 +578,11 @@ Examples of possible invitation processes:
 
 ## 8. Appendix
 
-The protocol protocol buffer schema are defined [here](./refs/credentials.proto).
-
 ### 8.1. Protocol Schema
 
 <!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto, link) -->
 
-<sub>`credentials.proto` [\[source\]](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
+<sub>`@dxos/halo-protocol`[`[credentials.proto]`](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 //
@@ -809,7 +809,7 @@ message IdentityRecord {
 
 <!-- @code(./refs/example.yml, link) -->
 
-<sub>`example.yml` [\[source\]](refs/example.yml)</sub>
+<sub>[`[example.yml]`](refs/example.yml)</sub>
 
 ```yaml
 #
