@@ -2,43 +2,43 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Terminology](#2-terminology)
-- [3. Specification](#3-specification)
-- [4. Design](#4-design)
-  - [4.1. Keys and Credentials](#41-keys-and-credentials)
-    - [4.1.1. HALO Genesis](#411-halo-genesis)
-    - [4.1.2. Device Management](#412-device-management)
-    - [4.1.3. Recovery](#413-recovery)
-  - [4.2. Protocol Definitions](#42-protocol-definitions)
-    - [4.2.1. Credentials](#421-credentials)
-    - [4.2.2. HALO Genesis](#422-halo-genesis)
-    - [4.2.3. Device Authorization and Authentication](#423-device-authorization-and-authentication)
-    - [4.2.4. HALO Recovery](#424-halo-recovery)
-    - [4.2.5. Profiles](#425-profiles)
-    - [4.2.6. Circles](#426-circles)
-    - [4.2.7. DID Documents](#427-did-documents)
-  - [4.3. ECHO Spaces](#43-echo-spaces)
-    - [4.3.1. Protocol Definitions](#431-protocol-definitions)
-    - [4.3.2. Genesis](#432-genesis)
-    - [4.3.3. Agent Authorization](#433-agent-authorization)
-    - [4.3.4. Device Authentication](#434-device-authentication)
-  - [4.4. Design Issues](#44-design-issues)
-- [5. Implementation Details](#5-implementation-details)
-  - [5.1. Credential message](#51-credential-message)
-  - [5.2. Keychain](#52-keychain)
-  - [5.3. Space (party) state machines](#53-space-party-state-machines)
-  - [5.4. HALO Creation](#54-halo-creation)
-  - [5.5. ECHO Space creation](#55-echo-space-creation)
-- [6. Security Concerns](#6-security-concerns)
-  - [6.1. Aspects of Trust](#61-aspects-of-trust)
-  - [6.2. Trust Models](#62-trust-models)
-  - [6.3. compression](#63-compression)
-  - [6.4. Invitations](#64-invitations)
-- [7. References](#7-references)
-- [8. Appendix](#8-appendix)
-  - [8.1. Protocol Schema](#81-protocol-schema)
-  - [8.2. Example](#82-example)
+*   [1. Introduction](#1-introduction)
+*   [2. Terminology](#2-terminology)
+*   [3. Specification](#3-specification)
+*   [4. Design](#4-design)
+    *   [4.1. Keys and Credentials](#41-keys-and-credentials)
+        *   [4.1.1. HALO Genesis](#411-halo-genesis)
+        *   [4.1.2. Device Management](#412-device-management)
+        *   [4.1.3. Recovery](#413-recovery)
+    *   [4.2. Protocol Definitions](#42-protocol-definitions)
+        *   [4.2.1. Credentials](#421-credentials)
+        *   [4.2.2. HALO Genesis](#422-halo-genesis)
+        *   [4.2.3. Device Authorization and Authentication](#423-device-authorization-and-authentication)
+        *   [4.2.4. HALO Recovery](#424-halo-recovery)
+        *   [4.2.5. Profiles](#425-profiles)
+        *   [4.2.6. Circles](#426-circles)
+        *   [4.2.7. DID Documents](#427-did-documents)
+    *   [4.3. ECHO Spaces](#43-echo-spaces)
+        *   [4.3.1. Protocol Definitions](#431-protocol-definitions)
+        *   [4.3.2. Genesis](#432-genesis)
+        *   [4.3.3. Agent Authorization](#433-agent-authorization)
+        *   [4.3.4. Device Authentication](#434-device-authentication)
+    *   [4.4. Design Issues](#44-design-issues)
+*   [5. Implementation Details](#5-implementation-details)
+    *   [5.1. Credential message](#51-credential-message)
+    *   [5.2. Keychain](#52-keychain)
+    *   [5.3. Space (party) state machines](#53-space-party-state-machines)
+    *   [5.4. HALO Creation](#54-halo-creation)
+    *   [5.5. ECHO Space creation](#55-echo-space-creation)
+*   [6. Security Concerns](#6-security-concerns)
+    *   [6.1. Aspects of Trust](#61-aspects-of-trust)
+    *   [6.2. Trust Models](#62-trust-models)
+    *   [6.3. compression](#63-compression)
+    *   [6.4. Invitations](#64-invitations)
+*   [7. References](#7-references)
+*   [8. Appendix](#8-appendix)
+    *   [8.1. Protocol Schema](#81-protocol-schema)
+    *   [8.2. Example](#82-example)
 
 ## 1. Introduction
 
@@ -255,12 +255,6 @@ Recovery keys themselves act as a pseudo-device that can be used to Admit new De
 
 > NOTE: Devices additionally have a passphrase that is used to encrypt local storage and may be used as a challenge during the creation of subsequent credentials.
 
-<br>
-<br>
-<br>
-
-> TODO(burdon): Organize sections below.
-
 ### 4.2. Protocol Definitions
 
 The HALO protocol definitions are defined in the [References](#8-appendix) section.
@@ -273,7 +267,9 @@ The HALO protocol definitions are defined in the [References](#8-appendix) secti
     The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 *   Claims may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
 
-<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential, link) -->
+
+<sub>`credentials.proto` [\[source\]](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 message Credential {
@@ -584,7 +580,9 @@ The protocol protocol buffer schema are defined [here](./refs/credentials.proto)
 
 ### 8.1. Protocol Schema
 
-<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto, link) -->
+
+<sub>`credentials.proto` [\[source\]](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 //
@@ -731,7 +729,6 @@ message Proof {
    * Establishes the authority of the signer. Proves that the signer can issue such credentials.
    * Excluded from signed data.
    */
-  // TODO(dmaretskyi): Should we sign the chain?
   optional Chain chain = 6;
 }
 
@@ -747,11 +744,8 @@ message Proof {
  *   2. Giving Alice/Device-1 the authority to issue credentials on behalf of Alice, signed by Alice.
  */
 message Chain {
-  /**
-   * A mapping from the key to the credential that establishes it's authority.
-   * Keys must be encoded to string in lowercase hex with leading '0x'.
-   */
-  map<string, Credential> credentials = 1;
+  /// Credential that authorizes the subject to issue new credentials (can be recursive).
+  Credential credential = 1;
 }
 
 //
@@ -813,7 +807,9 @@ message IdentityRecord {
 
 ### 8.2. Example
 
-<!-- @code(./refs/example.yml, { validate: true }) -->
+<!-- @code(./refs/example.yml, link) -->
+
+<sub>`example.yml` [\[source\]](refs/example.yml)</sub>
 
 ```yaml
 #

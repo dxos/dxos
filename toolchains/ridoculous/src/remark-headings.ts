@@ -52,7 +52,7 @@ export function remarkHeadings ({ autoNumber }: Options = {}) {
           }
 
           // Update number.
-          const match = node.value.match(/(?:(\S+)\s)?\s*(.+)/);
+          const match = node.value.match(/(?:([0-9.]+)\s)?\s*(.+)/);
           const [,, title] = match;
           const number = formatNumber(numbers);
           node.value = autoNumber ? `${number} ${title}` : title;

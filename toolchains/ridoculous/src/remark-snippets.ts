@@ -96,38 +96,42 @@ export function remarkSnippets () {
             if (lang) {
               content = removeTrailing(parser?.(content, { hash }) ?? content);
 
-              // Check for code block.
-              const next = parent.children[i! + 1];
-              const link = parent.children[i! + 2];
-              if (next?.type === 'code') {
-                Object.assign(next, {
-                  lang,
-                  value: content
-                });
-              } else {
-                // https://github.com/syntax-tree/unist-builder
-                const code = u('code', { lang, value: content });
-                parent.children.splice(i! + 1, 0, code);
+              // Number of existing nodes.
+              let existing = 0;
+
+              // Check if link already exists.
+              const linkNode = parent.children[i! + 1];
+              if (linkNode?.type === 'paragraph' &&
+                linkNode.children[0]?.type === 'html' &&
+                linkNode.children[0]?.value === '<sub>') {
+                existing++;
               }
 
-              // eslint-disable-next-line no-constant-condition
-              if (addLink && false) {
-                // Check exists.
-                const exists = (link?.type === 'paragraph' &&
-                  link.children[0]?.type === 'html' &&
-                  link.children[0]?.value === '<sup>');
+              // Check if code block already exists.
+              const codeNode = parent.children[i! + 1 + existing];
+              if (codeNode?.type === 'code') {
+                existing++;
+              }
 
-                // TODO(burdon): Create realtive link.
-                const newLink = u('paragraph', {}, [
-                  u('html', { value: '<sup>' }),
-                  u('link', { url: filePath }, [
-                    u('text', { value: 'source code' })
+              // Nodes to insert.
+              const nodes = [];
+
+              if (addLink) {
+                nodes.push(u('paragraph', {}, [
+                  u('html', { value: '<sub>' }),
+                  u('inlineCode', { value: path.basename(filePath) }),
+                  u('text', { value: ' ' }),
+                  u('link', { url: path.relative(rootDir, filePath) }, [
+                    u('text', { value: '[source]' })
                   ]),
-                  u('html', { value: '</sup>' })
-                ]);
-
-                parent.children.splice(i! + 2, exists ? 1 : 0, newLink);
+                  u('html', { value: '</sub>' })
+                ]));
               }
+
+              nodes.push(u('code', { lang, value: content }));
+
+              // Replace nodes.
+              parent.children.splice(i! + 1, existing, ...nodes);
             }
 
             break;

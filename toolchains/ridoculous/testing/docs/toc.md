@@ -12,7 +12,7 @@ This is what you should know first.
 
 ## 1. Spec
 
-### HALO
+### HALO Protocol
 
 This is all about HALO.
 
