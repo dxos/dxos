@@ -3,8 +3,7 @@
 //
 
 import {
-  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
-  KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
+  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyRecord, Keyring, KeyType, SignedMessage
 } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { Chain } from '@dxos/halo-protocol';

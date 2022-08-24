@@ -11,7 +11,7 @@ import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed, todo } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap, boolGuard, Provider } from '@dxos/util';
+import { ComplexMap, Provider } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
@@ -68,8 +68,7 @@ export class PartyManager {
     }
     this._open = true;
 
-    
-    let partyKeys = todo() as any //this._metadataStore.parties.map(party => party.key).filter(boolGuard);
+    let partyKeys = todo() as any; // this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
     // Identity may be undefined, for example, on the first start.
     const identity = this._identityProvider();

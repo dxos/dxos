@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { CredentialsMessage, EchoEnvelope, FeedMessage } from './proto';

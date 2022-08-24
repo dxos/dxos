@@ -5,11 +5,11 @@
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import {
-  createFeedWriter, CredentialsMessage, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot
+  createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot
 } from '@dxos/echo-protocol';
+import { Credential } from '@dxos/halo-protocol/src/proto';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
@@ -20,7 +20,6 @@ import { FeedMuxer } from './feed-muxer';
 import { createMessageSelector } from './message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
-import { Credential } from '@dxos/halo-protocol/src/proto';
 
 const DEFAULT_SNAPSHOT_INTERVAL = 100; // Every 100 messages.
 

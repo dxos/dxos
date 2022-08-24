@@ -318,7 +318,7 @@ export class DataParty {
         return this.processor.memberKeys
           .filter(publicKey => !this.processor.partyKey.equals(publicKey))
           .map((publicKey: PublicKey): PartyMember => {
-            const displayName = todo() //this.processor.getMemberInfo(publicKey)?.displayName;
+            const displayName = todo(); // this.processor.getMemberInfo(publicKey)?.displayName;
             return {
               publicKey,
               displayName

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
+import { Filter, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { Chain } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/protocols';

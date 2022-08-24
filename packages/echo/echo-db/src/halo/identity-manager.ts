@@ -5,16 +5,16 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { Event, synchronized, waitForCondition } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { failUndefined, todo } from '@dxos/debug';
+import { getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
 import { Identity } from './identity';
-import { getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo-db:identity-manager');
 
@@ -50,12 +50,12 @@ export class IdentityManager {
     const identityKey = this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true })) ?? failUndefined();
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
 
-    // Wait for the AuthorizedDevice credential for the current device to be processed. 
+    // Wait for the AuthorizedDevice credential for the current device to be processed.
     await halo.processor.credentialProcessed.waitForCondition(() => halo.isOpen && halo.processor.credentialMessages.some(credential => {
       const assertion = getCredentialAssertion(credential);
       return credential.issuer.equals(identityKey.publicKey) &&
         credential.subject.id.equals(deviceKey.publicKey) &&
-        assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice'
+        assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice';
     }));
 
     this._identity = new Identity(identityRecord, this._keyring, halo);
@@ -77,10 +77,10 @@ export class IdentityManager {
 
   @synchronized
   async loadFromStorage () {
-    const identityRecord = this._metadataStore.getIdentityRecord()
+    const identityRecord = this._metadataStore.getIdentityRecord();
     if (identityRecord) {
       const identityKey = this.getIdentityKey() ?? failUndefined();
-      assert(identityKey.publicKey.equals(identityRecord.identityKey))
+      assert(identityKey.publicKey.equals(identityRecord.identityKey));
       // TODO(marik-d): Snapshots for halo party?
       const halo = await this._haloFactory.constructParty(identityRecord.haloSpace.spaceKey);
       halo._setGenesisFeedKey(identityRecord.haloSpace.genesisFeedKey);
@@ -102,36 +102,36 @@ export class IdentityManager {
 
     const identityKey = this.getIdentityKey() ?? failUndefined();
     const identityRecord: IdentityRecord = {
-       identityKey: identityKey.publicKey,
-       haloSpace: {
-         spaceKey: halo.key,
-         genesisFeedKey: await halo.getWriteFeedKey(),
-       }
-     };
-    await this._metadataStore.setIdentityRecord(identityRecord)
+      identityKey: identityKey.publicKey,
+      haloSpace: {
+        spaceKey: halo.key,
+        genesisFeedKey: await halo.getWriteFeedKey()
+      }
+    };
+    await this._metadataStore.setIdentityRecord(identityRecord);
 
     await this._initialize(identityRecord, halo);
     return halo;
   }
 
-    /**
+   /**
      * Initializes the current agent as a new device with the provided identity.
-     * 
+     *
      * Expects the device key to exist in the keyring.
      * Expects the new device to be admitted to the HALO.
      */
-    async manuallyJoin(identity: IdentityRecord) {
-      // Import identity key.
-      await this._keyring.addPublicKey({ type: KeyType.IDENTITY, publicKey: identity.identityKey, own: true, trusted: true });
-      
-      const halo = await this._haloFactory.constructParty(identity.haloSpace.spaceKey);
-      halo._setGenesisFeedKey(identity.haloSpace.genesisFeedKey);
-      await this._metadataStore.setIdentityRecord(identity)
+   async manuallyJoin (identity: IdentityRecord) {
+     // Import identity key.
+     await this._keyring.addPublicKey({ type: KeyType.IDENTITY, publicKey: identity.identityKey, own: true, trusted: true });
 
-      await halo.open();
+     const halo = await this._haloFactory.constructParty(identity.haloSpace.spaceKey);
+     halo._setGenesisFeedKey(identity.haloSpace.genesisFeedKey);
+     await this._metadataStore.setIdentityRecord(identity);
 
-      await this._initialize(identity, halo);
-    }
+     await halo.open();
+
+     await this._initialize(identity, halo);
+   }
 
    /**
     * Joins an existing Identity HALO from a recovery seed phrase.

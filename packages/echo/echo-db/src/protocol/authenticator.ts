@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
 
+import { Keyring } from '@dxos/credentials';
 import { FeedKey, FeedWriter, PartyKey, schema } from '@dxos/echo-protocol';
+import { AdmittedFeed, Auth, createCredential, Credential, isValidAuthorizedDeviceCredential, verifyCredential } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { PartyProcessor, PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from './credentials-signer';
-import { AdmittedFeed, Auth, createCredential, Credential, isValidAuthorizedDeviceCredential, verifyCredential } from '@dxos/halo-protocol';
-import { Keyring } from '@dxos/credentials';
-import assert from 'assert';
-import { PublicKey } from '@dxos/protocols';
 
 const log = debug('dxos:echo-db:authenticator');
 
@@ -20,16 +20,16 @@ export const createAuthenticator = (
   credentialsSigner: CredentialsSigner,
   credentialsWriter: FeedWriter<Credential>
 ): Authenticator => new PartyAuthenticator(partyProcessor, async auth => {
-  if(auth.feedAdmit?.subject?.assertion['@type'] !== 'dxos.halo.credentials.AdmittedFeed') {
+  if (auth.feedAdmit?.subject?.assertion['@type'] !== 'dxos.halo.credentials.AdmittedFeed') {
     log('Invalid credential type: %s', auth.feedAdmit?.subject?.assertion['@type']);
-    return
+    return;
   }
 
-  if(partyProcessor.isFeedAdmitted(auth.feedAdmit.subject.id)) {
+  if (partyProcessor.isFeedAdmitted(auth.feedAdmit.subject.id)) {
     log('Feed already admitted: %s', auth.feedAdmit.subject.id);
-    return
+    return;
   }
-  
+
   // TODO(dmaretskyi): Verify credential identity and device keys.
 
   log(`Admitting feed of authenticated member: ${auth.feedAdmit.issuer}`);
@@ -53,26 +53,25 @@ export const createCredentialsProvider = (credentialsSigner: CredentialsSigner, 
       subject: feedKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey: partyKey,
+        partyKey,
         identityKey: credentialsSigner.getIdentityKey().publicKey,
         deviceKey: credentialsSigner.getDeviceKey().publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
       keyring: credentialsSigner.signer as Keyring, // TODO(dmaretskyi): Fix signer interface.
       chain,
-      signingKey: credentialsSigner.getDeviceKey().publicKey,
-    })
+      signingKey: credentialsSigner.getDeviceKey().publicKey
+    });
 
     const authMessage: Auth = {
       crednetials: {
-        credentials: [chain.credential],
+        credentials: [chain.credential]
       },
-      feedAdmit: feedAdmit,
+      feedAdmit
     };
     return Buffer.from(schema.getCodecForType('dxos.halo.credentials.Auth').encode(authMessage));
   }
 });
-
 
 /**
  * Interface for Authenticators.
@@ -109,15 +108,15 @@ export class PartyAuthenticator implements Authenticator {
   //  signing a message of type `dxos.credentials.auth.Auth`.
   async authenticate (auth: Auth): Promise<boolean> {
     // Verify that presentation is ok.
-    if(!auth.crednetials.credentials || auth.crednetials.credentials.length !== 1) {
+    if (!auth.crednetials.credentials || auth.crednetials.credentials.length !== 1) {
       log('Bad presentation');
       return false;
     }
 
     // Verify that credential is valid.
     const credential = auth.crednetials.credentials[0];
-    const result = await verifyCredential(credential)
-    if(result.kind !== 'pass') {
+    const result = await verifyCredential(credential);
+    if (result.kind !== 'pass') {
       log(`Invalid credential: ${result.errors}`);
       return false;
     }
@@ -126,7 +125,7 @@ export class PartyAuthenticator implements Authenticator {
     const deviceKey = credential.subject.id;
 
     // Verify credential type.
-    if(!isValidAuthorizedDeviceCredential(credential, identityKey, deviceKey)) {
+    if (!isValidAuthorizedDeviceCredential(credential, identityKey, deviceKey)) {
       log('Invalid credential type');
       return false;
     }
@@ -134,9 +133,6 @@ export class PartyAuthenticator implements Authenticator {
     // TODO(dmaretskyi): Validate presentation nonce.
 
     // TODO(dmaretskyi): Do we need to include and verify the party key during auth?
-    
-
-
 
     /*
      * TODO(telackey): This is not how it should be done. We would rather use the remote

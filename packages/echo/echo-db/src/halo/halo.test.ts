@@ -4,10 +4,12 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
+import waitForExpect from 'wait-for-expect';
 
 import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring, KeyType } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { createCredential } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -19,8 +21,6 @@ import { defaultInvitationAuthenticator } from '../invitations';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
-import waitForExpect from 'wait-for-expect';
-import { createCredential } from '@dxos/halo-protocol';
 
 describe('HALO', () => {
   const setup = () => {
@@ -111,7 +111,7 @@ describe('HALO', () => {
     // TODO(dmaretskyi): Make sure that HALO waits for the data to be loaded on startup.
     await waitForExpect(async () => {
       expect(halo.identity!.preferences.getGlobalPreferences()!.model.get('test')).toEqual('value');
-    })
+    });
 
     await halo.close();
   });
@@ -129,28 +129,28 @@ describe('HALO', () => {
     const identityKey = deviceA.identity!.identityKey.publicKey;
 
     // Initialize deviceB with deviceA's profile and admit deviceB to the HALO.
-    const deviceBKey = await deviceB.keyring.createKeyRecord({ type: KeyType.DEVICE })
+    const deviceBKey = await deviceB.keyring.createKeyRecord({ type: KeyType.DEVICE });
     await deviceA.identity!.halo.credentialsWriter.write(await createCredential({
       issuer: identityKey,
       subject: deviceBKey.publicKey,
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey: identityKey,
-        deviceKey: deviceBKey.publicKey,
+        identityKey,
+        deviceKey: deviceBKey.publicKey
       },
       keyring: deviceA.identity!.keyring,
       chain: deviceA.identity!.deviceKeyChain,
-      signingKey: deviceA.identity!.deviceKey.publicKey,
-    }))
+      signingKey: deviceA.identity!.deviceKey.publicKey
+    }));
     await deviceB.manuallyJoin(deviceA.identity!.record);
 
-    const profileB = deviceB.getProfile()
+    const profileB = deviceB.getProfile();
     expect(profileB).toBeDefined();
     // expect(profileB!.username).toEqual('Test user');
     expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
-  })
+  });
 
-  test('admit 2 devices in a chain')
+  test('admit 2 devices in a chain');
 
   test.skip('invite another device', async () => {
     const deviceA = setup();

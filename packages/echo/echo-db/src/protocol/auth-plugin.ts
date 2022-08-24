@@ -2,15 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Replicator } from '@dxos/protocol-plugin-replicator';
-import { PublicKey } from '@dxos/protocols';
-import { Authenticator } from './authenticator';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
-import { ERR_EXTENSION_RESPONSE_FAILED, Extension, Protocol } from '@dxos/mesh-protocol';
 import { schema } from '@dxos/echo-protocol';
+import { ERR_EXTENSION_RESPONSE_FAILED, Extension, Protocol } from '@dxos/mesh-protocol';
+import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { PublicKey } from '@dxos/protocols';
+
+import { Authenticator } from './authenticator';
 
 const log = debug('dxos:halo:auth');
 

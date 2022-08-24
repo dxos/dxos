@@ -44,7 +44,7 @@ export class PartyProtocolFactory {
     };
 
     const credentials = await this._credentials.get();
-    
+
     log(`Joining swarm: ${this._partyKey.toHex()}`);
     return this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, channel, { initiator }, plugins),

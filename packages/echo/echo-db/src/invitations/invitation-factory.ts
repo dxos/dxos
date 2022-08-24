@@ -4,8 +4,10 @@
 
 import assert from 'node:assert';
 
-import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
+import { createPartyInvitationMessage } from '@dxos/credentials';
+import { todo } from '@dxos/debug';
 import { FeedWriter } from '@dxos/echo-protocol';
+import { Credential } from '@dxos/halo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 
@@ -14,8 +16,6 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { Credential } from '@dxos/halo-protocol';
-import { todo } from '@dxos/debug';
 
 /**
  * Groups together all invitation-related functionality for a single party.
@@ -42,7 +42,7 @@ export class InvitationFactory {
       this._partyProcessor.partyKey,
       publicKey,
       this._credentialsSigner.getIdentityKey(),
-      todo(), //this._credentialsSigner.getDeviceSigningKeys()
+      todo() // this._credentialsSigner.getDeviceSigningKeys()
     );
 
     // await this._credentialsWriter.write(invitationMessage);
@@ -65,7 +65,7 @@ export class InvitationFactory {
       this._partyProcessor,
       this._genesisFeedKey,
       this._credentialsSigner,
-      todo(), //this._credentialsWriter
+      todo() // this._credentialsWriter
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

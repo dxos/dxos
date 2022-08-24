@@ -5,9 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import {
-  createKeyAdmitMessage, createPartyGenesisMessage, defaultSecretProvider, Keyring, KeyType, codec as haloCodec
-} from '@dxos/credentials';
+import { defaultSecretProvider, Keyring, KeyType, codec as haloCodec } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';

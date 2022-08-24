@@ -9,13 +9,11 @@ import { it as test } from 'mocha';
 import { promiseTimeout } from '@dxos/async';
 import {
   Keyring,
-  KeyType,
+  KeyType
 } from '@dxos/credentials';
-import { IHaloStream } from '@dxos/echo-protocol';
+import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
 import { PartyProcessor } from '../pipeline';
-import { createCredential } from '@dxos/halo-protocol';
-import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo:parties:party-processor:test');
 
@@ -48,7 +46,7 @@ describe('party-processor', () => {
 
     expect(partyProcessor.feedKeys).toHaveLength(0);
     expect(partyProcessor.memberKeys).toHaveLength(0);
-    expect(partyProcessor.genesisRequired).toEqual(false)
+    expect(partyProcessor.genesisRequired).toEqual(false);
   });
 
   test('member & feed admit', async () => {
@@ -60,8 +58,8 @@ describe('party-processor', () => {
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
 
-    const feedAddedPromise = partyProcessor.feedAdded.waitForCount(1)
-    const keyAddedPromise = partyProcessor.keyOrInfoAdded.waitForCount(1)
+    const feedAddedPromise = partyProcessor.feedAdded.waitForCount(1);
+    const keyAddedPromise = partyProcessor.keyOrInfoAdded.waitForCount(1);
 
     await partyProcessor.processMessage({
       meta: {
@@ -95,7 +93,7 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             role: PartyMember.Role.ADMIN
           },
-          keyring,
+          keyring
         })
       }
     });
@@ -114,9 +112,9 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             deviceKey: deviceKey.publicKey,
             identityKey: identityKey.publicKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed.Designation.CONTROL
           },
-          keyring,
+          keyring
         })
       }
     });
@@ -172,7 +170,7 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             role: PartyMember.Role.ADMIN
           },
-          keyring,
+          keyring
         })
       }
     });
@@ -191,9 +189,9 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             deviceKey: deviceKey.publicKey,
             identityKey: identityKey.publicKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed.Designation.CONTROL
           },
-          keyring,
+          keyring
         })
       }
     });
@@ -217,7 +215,7 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             role: PartyMember.Role.ADMIN
           },
-          keyring,
+          keyring
         })
       }
     });
@@ -236,9 +234,9 @@ describe('party-processor', () => {
             partyKey: partyKey.publicKey,
             deviceKey: deviceKey2.publicKey,
             identityKey: identityKey2.publicKey,
-            designation: AdmittedFeed.Designation.CONTROL,
+            designation: AdmittedFeed.Designation.CONTROL
           },
-          keyring: keyring2,
+          keyring: keyring2
         })
       }
     });

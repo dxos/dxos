@@ -6,12 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import {
-  createEnvelopeMessage,
-  createFeedAdmitMessage,
-  createPartyGenesisMessage,
   KeyType,
-  SecretProvider,
-  wrapMessage
+  SecretProvider
 } from '@dxos/credentials';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot } from '@dxos/echo-protocol';

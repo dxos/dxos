@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring, KeyType, wrapMessage } from '@dxos/credentials';
+import { createAuthMessage, Keyring, KeyType } from '@dxos/credentials';
 
 import { PartyProcessor } from '../pipeline';
 import { createAuthenticator } from './authenticator';

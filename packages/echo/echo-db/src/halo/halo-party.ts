@@ -13,7 +13,6 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
-import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
@@ -107,13 +106,13 @@ export class HaloParty {
 
   get identityInfo () {
     // TODO(dmaretskyi): Not implemented.
-    return undefined
+    return undefined;
     // return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
   get identityGenesis () {
     // TODO(dmaretskyi): Not implemented.
-    return undefined
+    return undefined;
     // return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
@@ -181,12 +180,12 @@ export class HaloParty {
       peerId,
 
       // TODO(dmaretskyi): Fix authenticator.
-      { get: async () => Buffer.from('') }, // createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
+      { get: async () => Buffer.from('') } // createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     // Replication.
     await this._protocol.start([
-      createReplicatorPlugin(this._feedProvider),
+      createReplicatorPlugin(this._feedProvider)
       // TODO(dmaretskyi): Fix authenticator.
       // createAuthPlugin(createAuthenticator(
       //   this._partyCore.processor,

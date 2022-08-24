@@ -7,18 +7,12 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import {
-  KeyHint,
-  KeyRecord,
-  PartyState,
-  Message as HaloMessage,
-  IdentityEventType,
-  PartyEventType,
   SignedMessage
 } from '@dxos/credentials';
-import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot, CredentialsMessage } from '@dxos/echo-protocol';
+import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
-import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol'
 
 const log = debug('dxos:echo-db:party-processor');
 
@@ -115,7 +109,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
 
   // TODO(dmaretskyi): Remove.
   /**
-   * @deprecated 
+   * @deprecated
    */
   getOfflineInvitation (invitationID: Buffer) {
     return undefined;
@@ -125,8 +119,8 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
     this._snapshot.messages!.push({ message: message.data, feedKey: message.meta.feedKey });
     const ok = await this._state.process(message.data.credential, message.meta.feedKey);
-    if(!ok) {
-      log(`Rejected credential message`)
+    if (!ok) {
+      log('Rejected credential message');
     }
 
     this.credentialProcessed.emit(message.data.credential);
@@ -140,7 +134,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
     assert(this._snapshot.messages!.length === 0, 'PartyProcessor is already initialized');
     assert(snapshot.messages);
     this._snapshot = snapshot;
-    for(const message of snapshot.messages) {
+    for (const message of snapshot.messages) {
       await this._state.process(message.message.credential, message.feedKey);
     }
   }

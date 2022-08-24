@@ -23,6 +23,7 @@ import {
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
+import { todo } from '@dxos/debug';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 
@@ -30,7 +31,6 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
-import { todo } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:greeting-initiator');
 
@@ -223,6 +223,6 @@ export const createDataPartyAdmissionMessages = (
   credentialsSigner.signer,
   partyKey,
   wrapMessage(identityGenesis),
-  [todo() /*credentialsSigner.getDeviceSigningKeys()*/],
+  [todo()],
   Buffer.from(nonce)
 );

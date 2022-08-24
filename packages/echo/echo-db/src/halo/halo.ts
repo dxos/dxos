@@ -9,6 +9,7 @@ import { synchronized } from '@dxos/async';
 import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
+import { IdentityRecord } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
@@ -23,7 +24,6 @@ import { Contact } from './contact-manager';
 import { HaloFactory } from './halo-factory';
 import { IdentityManager } from './identity-manager';
 import type { CreateProfileOptions } from './types';
-import { IdentityRecord } from '@dxos/halo-protocol';
 
 const log = debug('dxos:echo');
 
@@ -214,11 +214,11 @@ export class HALO {
 
   /**
    * Initializes the current agent as a new device with the provided identity.
-   * 
+   *
    * Expects the device key to exist in the keyring.
    * Expects the new device to be admitted to the HALO.
    */
-  async manuallyJoin(identity: IdentityRecord) {
+  async manuallyJoin (identity: IdentityRecord) {
     await this._identityManager.manuallyJoin(identity);
   }
 

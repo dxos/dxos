@@ -70,10 +70,10 @@ export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicK
   return createCredential({
     subject: partyKey,
     issuer: partyKey,
-    assertion:  {
-      "@type": "dxos.halo.credentials.PartyGenesis",
-      partyKey,
+    assertion: {
+      '@type': 'dxos.halo.credentials.PartyGenesis',
+      partyKey
     },
     keyring
   });
-}
+};

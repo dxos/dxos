@@ -8,9 +8,9 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
+import { IdentityRecord } from '@dxos/halo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
-import { IdentityRecord } from '@dxos/halo-protocol';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -118,11 +118,11 @@ export class MetadataStore {
     await this._directory.delete();
   }
 
-  getIdentityRecord(): IdentityRecord | undefined {
+  getIdentityRecord (): IdentityRecord | undefined {
     return this._metadata.identity;
   }
 
-  async setIdentityRecord(record: IdentityRecord) {
+  async setIdentityRecord (record: IdentityRecord) {
     assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
 
     this._metadata.identity = record;
@@ -136,13 +136,13 @@ export class MetadataStore {
     if (this.getParty(partyKey)) {
       return;
     }
-    const party: PartyMetadata = { 
+    const party: PartyMetadata = {
       record: {
         spaceKey: partyKey,
         // TODO(dmaretskyi): Refactor it so that genesis feed key is generated in advance.
         genesisFeedKey: PublicKey.from('')
-      } 
-    }
+      }
+    };
 
     if (!this._metadata.parties) {
       this._metadata.parties = [party];
@@ -166,7 +166,7 @@ export class MetadataStore {
    */
   async setDataFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
     // TODO(dmaretskyi): Don't create party automatically.
-    if(!this.getParty(partyKey)) {
+    if (!this.getParty(partyKey)) {
       await this.addParty(partyKey);
     }
     const party = this.getParty(partyKey) ?? failUndefined();

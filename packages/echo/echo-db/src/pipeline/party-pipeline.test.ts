@@ -11,6 +11,7 @@ import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -23,8 +24,6 @@ import { SnapshotStore } from '../snapshots';
 import { MetadataStore } from './metadata-store';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyPipeline } from './party-pipeline';
-import { createCredential } from '@dxos/halo-protocol';
-import { AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
 describe('PartyPipeline', () => {
   const setup = async () => {
@@ -76,7 +75,7 @@ describe('PartyPipeline', () => {
         partyKey: partyKey.publicKey,
         role: PartyMember.Role.ADMIN
       },
-      keyring,
+      keyring
     }));
 
     await party.credentialsWriter.write(await createCredential({
@@ -87,9 +86,9 @@ describe('PartyPipeline', () => {
         partyKey: partyKey.publicKey,
         deviceKey: deviceKey.publicKey,
         identityKey: identityKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring,
+      keyring
     }));
 
     return { party, feedKey: feed.key, feed, feedStore, partyKey, keyring, partyFeedProvider, identityKey, deviceKey };
@@ -98,8 +97,8 @@ describe('PartyPipeline', () => {
   test('create & have the feed key admitted', async () => {
     const { party, feedKey } = await setup();
 
-    await party.processor.keyOrInfoAdded.waitForCondition(() => party.processor.memberKeys.length === 1)
-    await party.processor.feedAdded.waitForCondition(() => party.processor.feedKeys.length === 1)
+    await party.processor.keyOrInfoAdded.waitForCondition(() => party.processor.memberKeys.length === 1);
+    await party.processor.feedAdded.waitForCondition(() => party.processor.feedKeys.length === 1);
 
     expect(party.processor.isFeedAdmitted(feedKey)).toBeTruthy();
   });
@@ -155,9 +154,9 @@ describe('PartyPipeline', () => {
         partyKey: partyKey.publicKey,
         deviceKey: deviceKey.publicKey,
         identityKey: identityKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring,
+      keyring
     }));
     await promiseTimeout(eventFired, 1000, new Error('timeout'));
     expect(partyFeedProvider.getFeeds().find(k => k.key.equals(feedKey.publicKey))).toBeTruthy();
@@ -235,9 +234,9 @@ describe('PartyPipeline', () => {
         partyKey: partyKey.publicKey,
         deviceKey: deviceKey.publicKey,
         identityKey: identityKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring,
+      keyring
     }));
 
     const itemId = createId();
@@ -269,9 +268,9 @@ describe('PartyPipeline', () => {
         partyKey: partyKey.publicKey,
         deviceKey: deviceKey.publicKey,
         identityKey: identityKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring,
+      keyring
     }));
 
     const feed2 = await feedStore.openReadWriteFeed(fullKey!.publicKey, fullKey!.secretKey!);
@@ -343,9 +342,9 @@ describe('PartyPipeline', () => {
         partyKey: peer1.partyKey.publicKey,
         deviceKey: peer1.deviceKey.publicKey,
         identityKey: peer1.identityKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring: peer1.keyring,
+      keyring: peer1.keyring
     }));
 
     await party2.open({ genesisFeedKey: peer1.feedKey });

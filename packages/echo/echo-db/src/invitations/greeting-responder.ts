@@ -16,6 +16,7 @@ import {
   Message as HaloMessage
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
+import { todo } from '@dxos/debug';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
@@ -24,7 +25,6 @@ import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
-import { todo } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:greeting-responder');
 
@@ -224,7 +224,7 @@ export class GreetingResponder {
         this._credentialsSigner.signer,
         this._partyProcessor.partyKey,
         message,
-        todo(), //[this._credentialsSigner.getDeviceSigningKeys()]
+        todo() // [this._credentialsSigner.getDeviceSigningKeys()]
       );
 
       await this._credentialsWriter.write(envelope);

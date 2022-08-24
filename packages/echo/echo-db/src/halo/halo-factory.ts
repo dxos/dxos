@@ -6,16 +6,14 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import {
-  createDeviceInfoMessage,
-  createIdentityInfoMessage,
-  createKeyAdmitMessage,
-  createPartyGenesisMessage,
   keyPairFromSeedPhrase,
   Keyring,
   KeyType,
   Filter,
   SecretProvider
 } from '@dxos/credentials';
+import { todo } from '@dxos/debug';
+import { AdmittedFeed, createCredential, createPartyGenesisCredential, PartyMember } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -30,8 +28,6 @@ import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { AdmittedFeed, createCredential, createPartyGenesisCredential, PartyMember } from '@dxos/halo-protocol';
-import { raise, todo } from '@dxos/debug';
 
 /**
  * Options allowed when creating the HALO.
@@ -107,7 +103,7 @@ export class HaloFactory {
         partyKey: partyKey.publicKey,
         role: PartyMember.Role.ADMIN
       },
-      keyring: this._keyring,
+      keyring: this._keyring
     }));
 
     // Assign the HALO party to the identity.
@@ -119,7 +115,7 @@ export class HaloFactory {
         identityKey: identityKey.publicKey,
         haloKey: partyKey.publicKey
       },
-      keyring: this._keyring,
+      keyring: this._keyring
     }));
 
     // Admit device to the identity.
@@ -129,9 +125,9 @@ export class HaloFactory {
       assertion: {
         '@type': 'dxos.halo.credentials.AuthorizedDevice',
         identityKey: identityKey.publicKey,
-        deviceKey: deviceKey.publicKey,
+        deviceKey: deviceKey.publicKey
       },
-      keyring: this._keyring,
+      keyring: this._keyring
     }));
 
     // Admit feed to the party.
@@ -143,9 +139,9 @@ export class HaloFactory {
         partyKey: partyKey.publicKey,
         identityKey: identityKey.publicKey,
         deviceKey: deviceKey.publicKey,
-        designation: AdmittedFeed.Designation.CONTROL,
+        designation: AdmittedFeed.Designation.CONTROL
       },
-      keyring: this._keyring,
+      keyring: this._keyring
     }));
 
     // TODO(dmaretskyi): Identity/device profile & metadata.

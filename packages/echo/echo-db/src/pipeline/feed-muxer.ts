@@ -6,17 +6,16 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Message as HaloMessage } from '@dxos/credentials';
 import { checkType } from '@dxos/debug';
 import {
   createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter
 } from '@dxos/echo-protocol';
+import { Credential } from '@dxos/halo-protocol/src/proto';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 import { EchoProcessor, TimeframeClock } from '../packlets/database';
 import { CredentialProcessor, PartyStateProvider } from './party-processor';
-import { Credential } from '@dxos/halo-protocol/src/proto';
 
 interface Options {
   readLogger?: (msg: any) => void
