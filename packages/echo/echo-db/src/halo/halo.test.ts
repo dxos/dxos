@@ -150,7 +150,7 @@ describe.only('HALO', () => {
     expect(profileB!.publicKey.equals(profileA.publicKey)).toBeTruthy();
   });
 
-  test('HALO database is synced between 2 devices', async () => {
+  test.skip('HALO database is synced between 2 devices', async () => {
     const deviceA = await setupOpen();
     const deviceB = await setupOpen();
     await deviceA.createProfile({ username: 'Test user' });
@@ -170,7 +170,7 @@ describe.only('HALO', () => {
     }
   });
 
-  describe('Preferences', () => {
+  describe.skip('Preferences', () => {
     test('global and device work on single device', async () => {
       const halo = await setupOpen();
       await halo.createProfile();

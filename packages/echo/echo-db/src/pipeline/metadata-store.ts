@@ -10,6 +10,7 @@ import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-multi-storage';
+import { IdentityRecord } from '@dxos/halo-protocol';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
@@ -115,6 +116,17 @@ export class MetadataStore {
   async clear (): Promise<void> {
     log('Clearing all echo metadata...');
     await this._directory.delete();
+  }
+
+  getIdentityRecord(): IdentityRecord | undefined {
+    return this._metadata.identity;
+  }
+
+  async setIdentityRecord(record: IdentityRecord) {
+    assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
+
+    this._metadata.identity = record;
+    await this._save();
   }
 
   /**

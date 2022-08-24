@@ -31,6 +31,7 @@ import {
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
 import { AdmittedFeed, createCredential, PartyMember } from '@dxos/halo-protocol';
+import { raise, todo } from '@dxos/debug';
 
 /**
  * Options allowed when creating the HALO.
@@ -244,7 +245,7 @@ export class HaloFactory {
     await initiator.connect();
     const { genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
 
-    const halo = await this.constructParty();
+    const halo = await this.constructParty(todo());
     halo._setGenesisFeedKey(genesisFeedKey);
     await halo.open();
 

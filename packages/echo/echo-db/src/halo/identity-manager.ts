@@ -70,28 +70,24 @@ export class IdentityManager {
     await identity?.halo.close();
   }
 
+  // TODO(dmaretskyi): Query using the public key from metadata.
   getIdentityKey (): KeyRecord | undefined {
     return this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY, own: true, trusted: true }));
   }
 
   @synchronized
   async loadFromStorage () {
-    const identityKey = this.getIdentityKey();
-    if (identityKey) {
-      const metadata = this._metadataStore.getParty(identityKey.publicKey);
-      if (metadata) {
-        // TODO(marik-d): Snapshots for halo party?
-        const halo = await this._haloFactory.constructParty(metadata.record.spaceKey);
+    const identityRecord = this._metadataStore.getIdentityRecord()
+    if (identityRecord) {
+      const identityKey = this.getIdentityKey() ?? failUndefined();
+      assert(identityKey.publicKey.equals(identityRecord.identityKey))
+      // TODO(marik-d): Snapshots for halo party?
+      const halo = await this._haloFactory.constructParty(identityRecord.haloSpace.spaceKey);
+      halo._setGenesisFeedKey(identityRecord.haloSpace.genesisFeedKey);
 
-        assert(metadata.record.genesisFeedKey);
-        halo._setGenesisFeedKey(metadata.record.genesisFeedKey);
-
-        // Always open the HALO.
-        await halo.open();
-        await this._initialize(halo);
-      } else if (!this._keyring.hasSecretKey(identityKey)) {
-        throw new Error('HALO missing and identity key has no secret.');
-      }
+      // Always open the HALO.
+      await halo.open();
+      await this._initialize(halo);
     }
   }
 
@@ -105,7 +101,13 @@ export class IdentityManager {
     const halo = await this._haloFactory.createHalo(options);
 
     const identityKey = this.getIdentityKey() ?? failUndefined();
-    await this._metadataStore.setGenesisFeed(identityKey.publicKey, await halo.getWriteFeedKey());
+    await this._metadataStore.setIdentityRecord({
+      identityKey: identityKey.publicKey,
+      haloSpace: {
+        spaceKey: halo.key,
+        genesisFeedKey: await halo.getWriteFeedKey(),
+      }
+    })
 
     await this._initialize(halo);
     return halo;
