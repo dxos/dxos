@@ -60,7 +60,7 @@ describe('WebRTCTransport', () => {
       topic,
       async msg => {
         await sleep(10);
-        await connection2.signal(msg);
+        await connection2.signal(msg.data.signal);
       }
     );
     afterTest(() => connection1.close());
@@ -77,7 +77,7 @@ describe('WebRTCTransport', () => {
       topic,
       async msg => {
         await sleep(10);
-        await connection1.signal(msg);
+        await connection1.signal(msg.data.signal);
       }
     );
     afterTest(() => connection2.close());
