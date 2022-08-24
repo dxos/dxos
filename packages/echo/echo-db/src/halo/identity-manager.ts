@@ -51,14 +51,12 @@ export class IdentityManager {
     const deviceKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE })) ?? failUndefined();
 
     // Wait for the AuthorizedDevice credential for the current device to be processed. 
-    console.log('WAITING')
     await halo.processor.credentialProcessed.waitForCondition(() => halo.isOpen && halo.processor.credentialMessages.some(credential => {
       const assertion = getCredentialAssertion(credential);
       return credential.issuer.equals(identityKey.publicKey) &&
         credential.subject.id.equals(deviceKey.publicKey) &&
         assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice'
     }));
-    console.log('DONE WAITING')
 
     this._identity = new Identity(identityRecord, this._keyring, halo);
     this.ready.emit();
@@ -131,7 +129,6 @@ export class IdentityManager {
       await this._metadataStore.setIdentityRecord(identity)
 
       await halo.open();
-      console.log('after open')
 
       await this._initialize(identity, halo);
     }

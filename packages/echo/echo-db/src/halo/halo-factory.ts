@@ -30,7 +30,7 @@ import {
   HaloParty,
   HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
-import { AdmittedFeed, createCredential, PartyMember } from '@dxos/halo-protocol';
+import { AdmittedFeed, createCredential, createPartyGenesisCredential, PartyMember } from '@dxos/halo-protocol';
 import { raise, todo } from '@dxos/debug';
 
 /**
@@ -96,15 +96,7 @@ export class HaloFactory {
 
     // TODO(dmaretskyi): Extract party (space) creation.
     // Self-signed party genesis. Establishes root of authority.
-    await halo.credentialsWriter.write(await createCredential({
-      issuer: partyKey.publicKey,
-      subject: partyKey.publicKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.PartyGenesis',
-        partyKey: partyKey.publicKey
-      },
-      keyring: this._keyring,
-    }))
+    await halo.credentialsWriter.write(await createPartyGenesisCredential(this._keyring, partyKey.publicKey));
 
     // Admit the identity to the party.
     await halo.credentialsWriter.write(await createCredential({

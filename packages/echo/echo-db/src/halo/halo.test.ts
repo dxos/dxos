@@ -22,7 +22,7 @@ import { HALO } from './halo';
 import waitForExpect from 'wait-for-expect';
 import { createCredential } from '@dxos/halo-protocol';
 
-describe.only('HALO', () => {
+describe('HALO', () => {
   const setup = () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
@@ -116,7 +116,7 @@ describe.only('HALO', () => {
     await halo.close();
   });
 
-  test.only('admit another device', async () => {
+  test('admit another device', async () => {
     const deviceA = setup();
     await deviceA.open();
     afterTest(() => deviceA.close());
@@ -142,10 +142,7 @@ describe.only('HALO', () => {
       chain: deviceA.identity!.deviceKeyChain,
       signingKey: deviceA.identity!.deviceKey.publicKey,
     }))
-    console.log('before join')
     await deviceB.manuallyJoin(deviceA.identity!.record);
-    console.log('after join')
-
 
     const profileB = deviceB.getProfile()
     expect(profileB).toBeDefined();

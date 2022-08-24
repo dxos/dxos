@@ -14,6 +14,8 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { Credential } from '@dxos/halo-protocol';
+import { todo } from '@dxos/debug';
 
 /**
  * Groups together all invitation-related functionality for a single party.
@@ -23,7 +25,7 @@ export class InvitationFactory {
     private readonly _partyProcessor: PartyStateProvider,
     private readonly _genesisFeedKey: PublicKey,
     private readonly _credentialsSigner: CredentialsSigner,
-    private readonly _credentialsWriter: FeedWriter<HaloMessage>,
+    private readonly _credentialsWriter: FeedWriter<Credential>,
     private readonly _networkManager: NetworkManager
   ) {}
 
@@ -40,10 +42,10 @@ export class InvitationFactory {
       this._partyProcessor.partyKey,
       publicKey,
       this._credentialsSigner.getIdentityKey(),
-      this._credentialsSigner.getDeviceSigningKeys()
+      todo(), //this._credentialsSigner.getDeviceSigningKeys()
     );
 
-    await this._credentialsWriter.write(invitationMessage);
+    // await this._credentialsWriter.write(invitationMessage);
 
     return new InvitationDescriptor(
       InvitationDescriptorType.OFFLINE,
@@ -63,7 +65,7 @@ export class InvitationFactory {
       this._partyProcessor,
       this._genesisFeedKey,
       this._credentialsSigner,
-      this._credentialsWriter
+      todo(), //this._credentialsWriter
     );
 
     const { secretValidator, secretProvider } = authenticationDetails;

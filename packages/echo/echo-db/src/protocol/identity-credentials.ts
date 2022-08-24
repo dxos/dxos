@@ -6,6 +6,7 @@ import {
   createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage,
   KeyChain, KeyRecord, Keyring, KeyType, SignedMessage
 } from '@dxos/credentials';
+import { todo } from '@dxos/debug';
 import { Chain } from '@dxos/halo-protocol';
 import { humanize } from '@dxos/util';
 
@@ -49,11 +50,11 @@ export const createTestIdentityCredentials = async (keyring: Keyring): Promise<I
     keyring,
     identityKey,
     deviceKey,
-    deviceKeyChain,
+    deviceKeyChain: todo(),
     identityGenesis: keyAdmit.payload as SignedMessage,
     identityInfo: identityInfo.payload as SignedMessage,
     displayName,
-    createCredentialsSigner: () => new CredentialsSigner(keyring, identityKey, deviceKey, deviceKeyChain),
+    createCredentialsSigner: () => new CredentialsSigner(keyring, identityKey, deviceKey, todo()),
     preferences: undefined,
     contacts: undefined
   };
@@ -72,12 +73,12 @@ export const deriveTestDeviceCredentials = async (identity: IdentityCredentials)
   return {
     ...identity,
     deviceKey,
-    deviceKeyChain,
+    deviceKeyChain: todo(),
     createCredentialsSigner: () => new CredentialsSigner(
       identity.keyring,
       identity.identityKey,
       deviceKey,
-      deviceKeyChain
+      todo()
     )
   };
 };

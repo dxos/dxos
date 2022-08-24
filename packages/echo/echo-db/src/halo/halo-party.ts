@@ -165,7 +165,7 @@ export class HaloParty {
       this._partyCore.processor,
       this._genesisFeedKey,
       this._credentialsSigner,
-      this._partyCore.credentialsWriter,
+      this._partyCore.credentialsWriter as any, // TODO(dmaretskyi): Fix.
       this._networkManager
     );
 
@@ -179,17 +179,20 @@ export class HaloParty {
       this._partyCore.key,
       this._networkManager,
       peerId,
-      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
+
+      // TODO(dmaretskyi): Fix authenticator.
+      { get: async () => Buffer.from('') }, // createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     // Replication.
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(
-        this._partyCore.processor,
-        this._credentialsSigner,
-        this._partyCore.credentialsWriter
-      ), peerId),
+      // TODO(dmaretskyi): Fix authenticator.
+      // createAuthPlugin(createAuthenticator(
+      //   this._partyCore.processor,
+      //   this._credentialsSigner,
+      //   this._partyCore.credentialsWriter
+      // ), peerId),
       // TODO(dmaretskyi): Fix recovery.
       // createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);

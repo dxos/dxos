@@ -30,6 +30,7 @@ import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
+import { todo } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:greeting-initiator');
 
@@ -222,6 +223,6 @@ export const createDataPartyAdmissionMessages = (
   credentialsSigner.signer,
   partyKey,
   wrapMessage(identityGenesis),
-  [credentialsSigner.getDeviceSigningKeys()],
+  [todo() /*credentialsSigner.getDeviceSigningKeys()*/],
   Buffer.from(nonce)
 );

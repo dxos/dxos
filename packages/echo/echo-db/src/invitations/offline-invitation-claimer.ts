@@ -30,6 +30,7 @@ import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
 import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 import { InvitationFactory } from './invitation-factory';
+import { todo } from '@dxos/debug';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
 
@@ -179,7 +180,7 @@ export class OfflineInvitationClaimer {
         credentials.signer,
           info!.id.value,
           credentials.getIdentityKey(),
-          credentials.getDeviceSigningKeys(),
+          todo(), //credentials.getDeviceSigningKeys(),
           undefined,
           info!.authNonce.value)
     ));

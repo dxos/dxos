@@ -8,7 +8,7 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
-import { failUndefined, timed } from '@dxos/debug';
+import { failUndefined, timed, todo } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, boolGuard, Provider } from '@dxos/util';
@@ -68,14 +68,15 @@ export class PartyManager {
     }
     this._open = true;
 
-    let partyKeys = this._metadataStore.parties.map(party => party.key).filter(boolGuard);
+    
+    let partyKeys = todo() as any //this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
     // Identity may be undefined, for example, on the first start.
     const identity = this._identityProvider();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
     if (identity) {
-      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
+      partyKeys = partyKeys.filter((partyKey: any) => !partyKey.equals(identity.identityKey!.publicKey));
     }
 
     // TODO(burdon): Does this make sense?
@@ -92,7 +93,7 @@ export class PartyManager {
         const snapshot = await this._snapshotStore.load(partyKey);
 
         const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
-        if (!metadata.genesisFeedKey) {
+        if (!metadata.record.genesisFeedKey) {
           log(`Skipping loading party with missing genesis feed key: ${partyKey}`);
           continue;
         }
@@ -100,7 +101,7 @@ export class PartyManager {
         const party = snapshot
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
-        party._setGenesisFeedKey(metadata.genesisFeedKey);
+        party._setGenesisFeedKey(metadata.record.genesisFeedKey);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -305,15 +306,15 @@ export class PartyManager {
       const memberInfo = party.processor.getMemberInfo(publicKey);
 
       if (contact) {
-        if (memberInfo && contact.displayName !== memberInfo.displayName) {
-          log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
-          contact.displayName = memberInfo.displayName;
-          await contactListItem.model.set(hexKey, memberInfo);
-        }
+        // if (memberInfo && contact.displayName !== memberInfo.displayName) {
+        //   log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
+        //   contact.displayName = memberInfo.displayName;
+        //   await contactListItem.model.set(hexKey, memberInfo);
+        // }
       } else {
-        const displayName = memberInfo?.displayName ?? hexKey;
-        log(`Creating contact ${hexKey} to ${displayName}`);
-        await contactListItem.model.set(hexKey, { publicKey, displayName });
+        // const displayName = memberInfo?.displayName ?? hexKey;
+        // log(`Creating contact ${hexKey} to ${displayName}`);
+        // await contactListItem.model.set(hexKey, { publicKey, displayName });
       }
     }
   }

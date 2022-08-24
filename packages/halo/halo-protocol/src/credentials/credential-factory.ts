@@ -65,3 +65,15 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
 
   return credential;
 };
+
+export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicKey): Promise<Credential> => {
+  return createCredential({
+    subject: partyKey,
+    issuer: partyKey,
+    assertion:  {
+      "@type": "dxos.halo.credentials.PartyGenesis",
+      partyKey,
+    },
+    keyring
+  });
+}

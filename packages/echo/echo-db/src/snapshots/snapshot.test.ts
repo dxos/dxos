@@ -18,7 +18,7 @@ import { createTestInstance } from '../testing';
 const log = debug('dxos:snapshot:test');
 // debug.enable('dxos:echo-db:*');
 
-describe('snapshot', () => {
+describe.skip('snapshot', () => {
   test.skip('loading large party', async () => {
     const echo = await createTestInstance({ initialize: true });
 

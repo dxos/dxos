@@ -123,7 +123,6 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
 
   async processMessage (message: IHaloStream) {
     log(`Processing: ${JSON.stringify(message, jsonReplacer)}`);
-    console.log(message.data.credential)
     this._snapshot.messages!.push({ message: message.data, feedKey: message.meta.feedKey });
     const ok = await this._state.process(message.data.credential, message.meta.feedKey);
     if(!ok) {

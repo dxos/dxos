@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { timed } from '@dxos/debug';
+import { timed, todo } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
@@ -318,7 +318,7 @@ export class DataParty {
         return this.processor.memberKeys
           .filter(publicKey => !this.processor.partyKey.equals(publicKey))
           .map((publicKey: PublicKey): PartyMember => {
-            const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
+            const displayName = todo() //this.processor.getMemberInfo(publicKey)?.displayName;
             return {
               publicKey,
               displayName

@@ -24,6 +24,7 @@ import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { InvitationOptions } from './common';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
+import { todo } from '@dxos/debug';
 
 const log = debug('dxos:echo-db:greeting-responder');
 
@@ -223,7 +224,7 @@ export class GreetingResponder {
         this._credentialsSigner.signer,
         this._partyProcessor.partyKey,
         message,
-        [this._credentialsSigner.getDeviceSigningKeys()]
+        todo(), //[this._credentialsSigner.getDeviceSigningKeys()]
       );
 
       await this._credentialsWriter.write(envelope);

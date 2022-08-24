@@ -23,7 +23,7 @@ import { inviteTestPeer } from './testing';
 
 const log = debug('dxos:echo:test');
 
-describe('ECHO', () => {
+describe.skip('ECHO', () => {
   interface SetupOptions {
     createProfile?: boolean
     displayName?: string
