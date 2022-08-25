@@ -2,6 +2,17 @@
   "sourceRoot": "packages/common/util/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/util/dist",
+        "tsConfig": "packages/common/util/tsconfig.json",
+        "main": "packages/common/util/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

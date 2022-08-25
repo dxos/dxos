@@ -2,24 +2,39 @@
   "sourceRoot": "packages/mesh/broadcast/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/mesh/broadcast/dist",
-        "packages/mesh/broadcast/src/proto/gen"
+        "{options.basePath}/gen"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/mesh/broadcast/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/broadcast/dist",
+        "tsConfig": "packages/mesh/broadcast/tsconfig.json",
+        "main": "packages/mesh/broadcast/src/index.ts"
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/mesh/broadcast/**/*.{ts,js}"
         ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
 }

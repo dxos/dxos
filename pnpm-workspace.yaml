@@ -9,4 +9,6 @@ packages:
   - packages/mesh/*
   - packages/sdk/*
   - packages/wallet/*
-  - toolchains/*
+  - tools/deprecated/*
+  - tools/executors/*
+  - tools/*

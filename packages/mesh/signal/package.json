@@ -17,10 +17,8 @@
     "node:assert": "assert"
   },
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
-    "start": "./bin/signal.js",
-    "test": "toolchain test"
+    "start": "./bin/signal.js"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -31,13 +29,10 @@
   "devDependencies": {
     "@types/node": "^16.11.27",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node-fetch": "^2.5.10",
-    "debug": "^4.3.3",
-    "typescript": "^4.7.2",
-    "@swc-node/register": "~1.4.2"
+    "debug": "^4.3.3"
   },
   "publishConfig": {
     "access": "public"

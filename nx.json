@@ -10,8 +10,11 @@
       "options": {
         "cacheableOperations": [
           "build",
+          "bundle",
           "check",
           "lint",
+          "prebuild",
+          "proto",
           "test"
         ],
         "parallel": 6,
@@ -20,21 +23,46 @@
     }
   },
   "targetDefaults": {
-    "build": {
+    "proto": {
       "dependsOn": [
         "^build"
       ]
     },
+    "build": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto",
+        "prebuild"
+      ]
+    },
+    "bundle": {
+      "dependsOn": [
+        "^bundle",
+        "build",
+        "proto",
+        "prebuild"
+      ]
+    },
     "test": {
       "dependsOn": [
-        "build"
+        "^build",
+        "proto"
       ]
     },
     "check": {
       "dependsOn": [
         "lint",
-        "test"
+        "test",
+        "proto",
+        "build"
       ]
+    }
+  },
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
     }
   }
 }

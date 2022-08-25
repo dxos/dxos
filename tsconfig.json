@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "baseUrl": ".",
     "composite": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "incremental": true,
+    // "incremental": true,
     "jsx": "react",
     "lib": [
       "ESNext"
@@ -13,7 +14,6 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitOverride": true,
-    "outDir": "./dist",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
