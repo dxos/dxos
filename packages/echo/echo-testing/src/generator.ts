@@ -52,14 +52,14 @@ const createProps = (type: keyof typeof generators) => {
 };
 
 interface GeneratorOptions {
-  seed?: number;
+  seed?: number
 }
 
 interface GenerateConfig {
-  numOrgs?: number;
-  numPeople?: number;
-  numProjects?: number;
-  numTasks?: number;
+  numOrgs?: number
+  numPeople?: number
+  numProjects?: number
+  numTasks?: number
 }
 
 /**

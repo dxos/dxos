@@ -84,10 +84,10 @@ const TreeItem = ({
   value,
   children
 }: {
-  nodeId: string,
-  size?: Size,
-  label: string,
-  value?: ReactElement,
+  nodeId: string
+  size?: Size
+  label: string
+  value?: ReactElement
   children?: ReactNode
 }) => {
   const theme = useTheme();

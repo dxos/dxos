@@ -14,8 +14,8 @@ import { CopyText } from '@dxos/react-components';
 
 export interface SwarmInfoViewProps {
   swarmInfo: SwarmInfo
-  onConnectionClick?: (sessionId: PublicKey) => void,
-  onReturn?: () => void,
+  onConnectionClick?: (sessionId: PublicKey) => void
+  onReturn?: () => void
 }
 
 // TODO(burdon): Convert to table.

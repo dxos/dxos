@@ -14,12 +14,12 @@ import type { Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 export interface CreateDescriptorOptions {
-  key: PublicKey,
+  key: PublicKey
   secretKey?: Buffer
 }
 
 export interface CreateReadWriteFeedOptions {
-  key: PublicKey,
+  key: PublicKey
   secretKey: Buffer
 }
 

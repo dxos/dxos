@@ -27,8 +27,8 @@ export interface RunOptions {
   headless: boolean
   stayOpen: boolean
   setup?: string
-  debug?: boolean,
-  browserArgs?: string[],
+  debug?: boolean
+  browserArgs?: string[]
   checkLeaks: boolean
 }
 
