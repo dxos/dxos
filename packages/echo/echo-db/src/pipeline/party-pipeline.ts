@@ -17,7 +17,7 @@ import { SubscriptionGroup } from '@dxos/util';
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { FeedMuxer } from './feed-muxer';
-import { createMessageSelector } from './message-selector';
+import { createMessageSelector } from '../packlets/pipeline/message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 

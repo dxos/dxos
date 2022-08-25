@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { MessageSelector } from '@dxos/echo-protocol';
 
-import { TimeframeClock } from '../packlets/database';
+import { TimeframeClock } from './timeframe-clock';
 
 const log = debug('dxos:echo-db:message-selector');
 
