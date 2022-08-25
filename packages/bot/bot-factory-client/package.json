@@ -12,8 +12,7 @@
   },
   "scripts": {
     "build": "toolchain bundle:library",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -27,14 +26,12 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "jsonify": "^0.0.0",
     "typescript": "^4.7.2"

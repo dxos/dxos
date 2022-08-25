@@ -5,7 +5,7 @@
 import { Stream } from './stream';
 
 describe('Stream', () => {
-  test.only('can consume a stream that immediately closes', async () => {
+  test('can consume a stream that immediately closes', async () => {
     const stream = new Stream(({ next, close }) => {
       next('foo');
       next('bar');

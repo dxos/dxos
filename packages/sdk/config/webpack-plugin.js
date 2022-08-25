@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.
+// Copyright 2020 DXOS.org
 //
 
 // Not included in the main `index.ts` so that the apps are not bundled with it.

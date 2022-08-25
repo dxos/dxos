@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "build": "true",
-    "check": "true"
+    "check": "true",
+    "test": "true"
   },
   "dependencies": {
   },

@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { readFileSync, readdirSync, lstatSync } from 'fs';
-import { join } from 'path';
-import { it as test } from 'mocha'
-import expect from 'expect'
+import expect from 'expect';
+import { it as test } from 'mocha';
 
 import { MyKey } from './my-key';
 import { schema } from './proto/gen';
@@ -216,7 +214,7 @@ describe('Schema', () => {
       };
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
-    })
+    });
 
     test('optional', () => {
       const codec = schema.getCodecForType('dxos.test.OptionalScalars');
@@ -263,21 +261,20 @@ describe('Schema', () => {
       };
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
-    })
-  })
+    });
+  });
 
   test('default values for missing message-typed fields', () => {
     const codec = schema.getCodecForType('dxos.test.Outer');
 
     const expected: Outer = {
       inner: {
-        num: 0,
+        num: 0
       }
     };
     const decoded = codec.decode(Buffer.from(''));
     expect(decoded).toEqual(expected);
-  })
-
+  });
 
   test('timestamp', () => {
     const codec = schema.getCodecForType('dxos.test.WithTimestamp');

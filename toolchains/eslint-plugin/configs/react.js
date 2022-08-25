@@ -1,23 +1,12 @@
-const recomended = require('./recomended');
+//
+// Copyright 2022 DXOS.org
+//
 
 module.exports = {
-  ...recomended,
   extends: [
-    ...recomended.extends,
     'plugin:react/recommended'
   ],
-  ignorePatterns: [
-    ...recomended.ignorePatterns,
-
-    // Build Artifacts
-    'out',
-
-    // Config
-    'esbuild-server.config.js',
-    'webpack.config.js'
-  ],
   rules: {
-    ...recomended.rules,
     'jsx-quotes': [
       'error',
       'prefer-single'
@@ -56,4 +45,4 @@ module.exports = {
   env: {
     browser: true
   }
-}
+};

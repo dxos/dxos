@@ -25,9 +25,15 @@
         "^build"
       ]
     },
-    "check": {
+    "test": {
       "dependsOn": [
         "build"
+      ]
+    },
+    "check": {
+      "dependsOn": [
+        "lint",
+        "test"
       ]
     }
   }
