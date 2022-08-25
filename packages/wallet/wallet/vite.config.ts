@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react';
-import nodePolyfills from 'rollup-plugin-polyfill-node';
-import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react'
+import RollupNodeGlobalsPlugin from 'rollup-plugin-polyfill-node';
+import { defineConfig } from 'vite'
 
-import { ConfigPlugin } from '@dxos/config/esbuild-plugin';
-import { NodeGlobalsPolyfillPlugin } from '@dxos/esbuild-plugins';
+import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin';
+import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
+import { NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin } from '@dxos/esbuild-plugins';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -31,8 +32,8 @@ export default defineConfig({
     ],
     esbuildOptions: {
       plugins: [
-        NodeGlobalsPolyfillPlugin(),
-        ConfigPlugin(),
+        EsbuildNodeGlobalsPlugin(),
+        EsbuildConfigPlugin(),
         {
           name: 'sodium-universal-patch',
           setup: build => {
@@ -65,7 +66,8 @@ export default defineConfig({
         // `null` targets all source code files.
         // https://github.com/FredKSchott/rollup-plugin-polyfill-node#options
         // TODO(wittjosiah): Specifically target our deps?
-        nodePolyfills({ include: null })
+        RollupNodeGlobalsPlugin({ include: null }),
+        RollupConfigPlugin()
       ]
     }
   },

@@ -2441,6 +2441,7 @@ importers:
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       node-fetch: ^2.6.0
+      rollup: ~2.77.3
       typescript: ^4.7.2
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -2466,6 +2467,7 @@ importers:
       '@types/node': 16.11.27
       esbuild: 0.14.49
       expect: 27.0.6
+      rollup: 2.77.3
       typescript: 4.7.4
 
   packages/sdk/react-client:
@@ -2996,17 +2998,20 @@ importers:
       '@dxos/util': workspace:*
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
+      '@types/debug': ^4.1.7
       '@types/node': ^16.11.27
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       '@types/url-join': ~4.0.1
       '@vitejs/plugin-react': ^2.0.1
+      debug: ^4.3.3
       eslint: ^8.21.0
       react: ^18.1.0
       react-dom: ^18.1.0
       react-router-dom: ^6.3.0
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
+      setimmediate: 1.0.5
       typescript: ^4.7.2
       url-join: ^4.0.1
       vite: 3.0.9
@@ -3021,6 +3026,7 @@ importers:
       '@dxos/util': link:../../common/util
       '@mui/icons-material': 5.8.4_3qrniyd4fth4fdw4jngl7l7ure
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
+      debug: 4.3.4
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router-dom: 6.3.0_biqbaboplfbrettd7655fr4n2y
@@ -3031,6 +3037,7 @@ importers:
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/react-client-testing': link:../../sdk/react-client-testing
+      '@types/debug': 4.1.7
       '@types/node': 16.11.27
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
@@ -3039,6 +3046,7 @@ importers:
       eslint: 8.22.0
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
+      setimmediate: 1.0.5
       typescript: 4.7.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 

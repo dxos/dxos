@@ -2,10 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
+import debug from 'debug';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+// TODO(wittjosiah): Move to rollup plugin or remove need altogether.
+import 'setimmediate';
 
 import { App } from './App';
+
+debug.enable('*');
 
 const root = createRoot(document.getElementById('root') as HTMLElement);
 

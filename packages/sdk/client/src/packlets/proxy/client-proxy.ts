@@ -161,11 +161,11 @@ export class Client {
       return;
     }
 
-    const t = 10;
+    const t = this._options.timeout ?? 10000;
     const timeout = setTimeout(() => {
       // TODO(burdon): Tie to global error handling (or event).
-      throw new TimeoutError(`Initialize timed out after ${t}s.`);
-    }, t * 1000);
+      throw new TimeoutError(`Initialize timed out after ${t / 1000}s.`);
+    }, t);
 
     if (this._options.serviceProvider) {
       this._serviceProvider = this._options.serviceProvider;
