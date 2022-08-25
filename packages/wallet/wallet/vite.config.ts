@@ -64,6 +64,7 @@ const dxosPlugin = (): Plugin => ({
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '', // Ensures relative path to assets.
   optimizeDeps: {
     include: [
       '@dxos/client',
