@@ -2,13 +2,13 @@
   "sourceRoot": "packages/sdk/react-client/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/sdk/react-client/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/sdk/react-client/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

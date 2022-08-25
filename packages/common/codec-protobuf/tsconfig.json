@@ -4,6 +4,7 @@
     "outDir": "dist"
   },
   "include": [
+    "build.ts",
     "src",
     "test"
   ],

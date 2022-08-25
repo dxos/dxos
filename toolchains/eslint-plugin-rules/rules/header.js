@@ -1,10 +1,14 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 const REGEX = /Copyright [0-9]+ DXOS.org/;
 const TEMPLATE = [
   '//',
   `// Copyright ${new Date().getFullYear()} DXOS.org`,
   '//',
-  '',
-].join('\n') + '\n'
+  ''
+].join('\n') + '\n';
 
 module.exports = {
   pattern: REGEX,
@@ -12,22 +16,22 @@ module.exports = {
     type: 'layout',
 
     docs: {
-      description: 'enforce copyright header',
+      description: 'enforce copyright header'
     },
     fixable: 'code',
-    schema: [],
+    schema: []
   },
   create: context => {
     return {
       Program: (node) => {
-        if(!context.getSource().match(REGEX)) {
+        if (!context.getSource().match(REGEX)) {
           context.report({
             node,
             message: 'Missing copyright header',
-            fix: fixer => fixer.insertTextBefore(node, TEMPLATE),
+            fix: fixer => fixer.insertTextBefore(node, TEMPLATE)
           });
         }
       }
     };
   }
-}
+};

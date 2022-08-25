@@ -34,7 +34,7 @@
       "path": "../../halo/credentials"
     },
     {
-      "path": "../protocol"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-plugin-presence"

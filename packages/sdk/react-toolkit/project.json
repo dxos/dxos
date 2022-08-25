@@ -2,13 +2,13 @@
   "sourceRoot": "packages/sdk/react-toolkit/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/sdk/react-toolkit/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/sdk/react-toolkit/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

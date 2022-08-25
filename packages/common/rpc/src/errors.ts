@@ -1,10 +1,10 @@
-/**
- * Error that is reconstructed after being sent over the RPC boundary.
- */
 //
 // Copyright 2021 DXOS.org
 //
 
+/**
+ * Error that is reconstructed after being sent over the RPC boundary.
+ */
 export class SerializedRpcError extends Error {
   constructor (name: string, message: string, public readonly remoteStack: string, public readonly rpcMethod: string) {
     super(message);

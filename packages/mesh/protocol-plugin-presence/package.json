@@ -23,8 +23,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -41,13 +40,11 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
-    "eslint": "^8.21.0",
     "ngraph.path": "~1.3.1",
     "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"

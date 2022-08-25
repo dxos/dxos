@@ -15,11 +15,19 @@
   "scripts": {
     "nx": "nx"
   },
-  "workspaces": [
-    "packages/*/*"
-  ],
   "devDependencies": {
-    "nx": "14.5.4",
-    "@nrwl/nx-cloud": "^14.3.0"
+    "@dxos/eslint-plugin": "workspace:*",
+    "@dxos/eslint-plugin-rules": "workspace:*",
+    "@nrwl/eslint-plugin-nx": "14.5.7",
+    "@nrwl/js": "14.5.7",
+    "@nrwl/linter": "14.5.7",
+    "@nrwl/nx-cloud": "^14.3.0",
+    "@swc-node/register": "1.5.1",
+    "@types/node": "^16.11.27",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "eslint": "^8.21.0",
+    "nx": "14.5.7",
+    "typescript": "^4.7.2"
   }
 }

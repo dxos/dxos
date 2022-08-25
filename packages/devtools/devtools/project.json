@@ -2,14 +2,13 @@
   "sourceRoot": "packages/devtools/devtools/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/devtools/devtools/dist",
-        "packages/devtools/devtools/src/proto/gen"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/devtools/devtools/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }
