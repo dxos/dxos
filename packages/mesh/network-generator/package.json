@@ -23,7 +23,6 @@
     "README.md"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "test": "toolchain test"
   },

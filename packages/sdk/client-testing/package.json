@@ -13,7 +13,6 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "console": "ts-node ./src/console.ts",
     "test": "toolchain test"

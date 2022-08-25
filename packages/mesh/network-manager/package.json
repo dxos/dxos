@@ -15,7 +15,6 @@
     "README.md"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "test": "toolchain test",
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"

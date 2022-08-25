@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out"
+  ],
+  "include": [
+    "src/**/*",
+    "testing/**/*"
+  ]
+}
