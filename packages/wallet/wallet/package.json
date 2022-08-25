@@ -9,10 +9,9 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build": "tsc && vite build",
-    "check": "toolchain check",
+    "bundle": "vite build",
+    "check": "true",
     "dev": "vite",
-    "lint": "toolchain lint",
     "preview": "vite preview"
   },
   "dependencies": {

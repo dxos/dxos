@@ -11,6 +11,17 @@
         "^build"
       ]
     },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/wallet/wallet/dist",
+        "tsConfig": "packages/wallet/wallet/tsconfig.json",
+        "main": "packages/wallet/wallet/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

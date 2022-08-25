@@ -50,4 +50,6 @@ jobs:
       - run: pnpm nx affected --target=test
       - run: pnpm nx affected --target=build
       - run: pnpm nx affected --target=bundle
-
+        env:
+          # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+          NODE_OPTIONS: --max_old_space_size=8198
