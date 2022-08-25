@@ -61,12 +61,12 @@ describe.only('Stack', () => {
   // NOTE: No dependencies on Space.
   test.only('Pipeline', async () => {
     // Create peers.
-    const numPipelines = 2;
+    const numPipelines = 3;
     const pipelines: PipelineDef[] = Array.from({ length: numPipelines }).map((_, i) => {
       return [`P-${i + 1}`, new Pipeline({ writable: true })];
     });
 
-    // TODO(burdon): Simulate replication.
+    // TODO(burdon): Simulate actual replication.
     pipelines.forEach(([pipelineId, pipeline]) => {
       pipelines.forEach(([peerId, peer]) => {
         if (pipelineId !== peerId) {
@@ -97,6 +97,7 @@ describe.only('Stack', () => {
     pipelines.forEach(([pipelineId, pipeline]) => {
       log(`[${pipelineId}:${String(pipeline)}] Reading...`);
 
+      // TODO(burdon): Create pipeline consumer.
       setImmediate(async () => {
         let count = 0;
         const iterator = pipeline.messageIterator;
@@ -113,6 +114,9 @@ describe.only('Stack', () => {
     });
 
     await reading;
+
+    // TODO(burdon): Check same state.
+    //  Create simple arithmetical operations (add, multiple) that must be processed in order.
   });
 
   // TODO(burdon): Move to halo.test.ts

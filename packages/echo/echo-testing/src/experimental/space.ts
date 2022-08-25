@@ -22,12 +22,12 @@ export class HALO {
     const space = new Space();
 
     // TODO(burdon): Write credentials from new package.
-    space.pipeline.writableFeed.append(Buffer.from('space-genesis'));
-    space.pipeline.writableFeed.append(Buffer.from('identity')); // TODO(burdon): Identity abstraction?
+    space.pipeline.writableFeed!.append(Buffer.from('space-genesis'));
+    space.pipeline.writableFeed!.append(Buffer.from('identity')); // TODO(burdon): Identity abstraction?
 
     // TODO(burdon): How do these get processed in the SAME way as other devices joining the party?
-    space.pipeline.writableFeed.append(Buffer.from('device'));
-    space.pipeline.writableFeed.append(Buffer.from('feed'));
+    space.pipeline.writableFeed!.append(Buffer.from('device'));
+    space.pipeline.writableFeed!.append(Buffer.from('feed'));
 
     this._space = space;
     return space;

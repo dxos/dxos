@@ -86,6 +86,7 @@ export class MessageIterator {
         return feed.length > i;
       });
 
+      // TODO(burdon): Trigger on feed/feedstore event.
       if (candidates.length) {
         const feed = faker.random.arrayElement(candidates);
         const i = this._feedIndexMap.get(feed.key) ?? 0;
@@ -112,7 +113,7 @@ export class Pipeline {
   readonly feedStore = new FeedStore();
   readonly messageIterator = new MessageIterator(this.feedStore);
 
-  constructor ({ writable = false }: PipelineOptions) {
+  constructor ({ writable = false }: PipelineOptions = {}) {
     this.writableFeed = writable ? new Feed() : undefined;
     if (this.writableFeed) {
       this.feedStore.addFeed(this.writableFeed);
