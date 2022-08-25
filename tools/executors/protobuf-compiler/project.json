@@ -31,6 +31,15 @@
           "tools/executors/protobuf-compiler/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "test"
+      },
+      "dependsOn": [
+        "prebuild"
+      ]
     }
   }
 }
