@@ -32,7 +32,11 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          environment:
+            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+            NODE_OPTIONS: --max_old_space_size=8198
 
 workflows:
   build:

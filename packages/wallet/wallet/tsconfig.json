@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "noEmit": true,
     "lib": [
       "DOM",
       "ESNext"
@@ -31,6 +32,9 @@
     },
     {
       "path": "../../sdk/react-toolkit"
+    },
+    {
+      "path": "./tsconfig.node.json"
     }
   ]
 }

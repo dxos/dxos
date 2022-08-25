@@ -38,6 +38,7 @@
     "chalk": "^4.1.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.12.9",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protobuf-compiler": "workspace:*",
