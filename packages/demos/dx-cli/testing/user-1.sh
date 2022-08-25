@@ -1,4 +1,5 @@
-#!/bin/bash -x
+#!/usr/bin/env bash
+set -euxo pipefail
 
 export DX_CONFIG=./testing/config/user-1.yml
 
