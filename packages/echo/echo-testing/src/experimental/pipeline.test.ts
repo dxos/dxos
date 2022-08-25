@@ -8,62 +8,54 @@ import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { latch, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/protocols';
 
 import { Feed, FeedStore, MessageIterator, Pipeline } from './pipeline';
-import { HALO } from './space';
+import { createTestMessage, decode, encode, TestStateMachine } from './testing';
 
 const log = debug('dxos:test:pipeline');
 
-const padNum = (n: number, len = 4) => String(n).padStart(len, '0');
+faker.seed(100);
 
-describe.only('Stack', () => {
-  test.skip('Pipeline message ordering', async () => {
-    const fs = new FeedStore();
+const padNum = (n: number, len = 3) => String(n).padStart(len, '0');
 
-    // TODO(burdon): Order by timeframe.
-    const it = new MessageIterator(fs);
+describe('Pipeline', () => {
+  test('Message iterator', async () => {
+    const feedStore = new FeedStore();
+    const messageIterator = new MessageIterator(feedStore);
 
     // Create feeds.
-    Array.from({ length: 10 }).forEach(() => fs.addFeed(new Feed()));
+    Array.from({ length: 10 }).forEach(() => feedStore.addFeed(new Feed()));
 
     // Write a message.
-    const numMessages = 100;
+    const numMessages = 10;
     setImmediate(async () => {
       for (let i = 0; i < numMessages; i++) {
-        // TODO(burdon): Should select the writable feed from one of the pipelines.
-        const feed = faker.random.arrayElement(fs.getFeeds());
-        feed.append(Buffer.from(JSON.stringify({
-          timeframe: it.getTimeframe(),
-          data: faker.datatype.string(16)
-        })));
-
-        await sleep(79);
+        const feed = faker.random.arrayElement(feedStore.getFeeds());
+        feed.append(encode(createTestMessage()));
+        await sleep(faker.datatype.number({ min: 10, max: 100 }));
       }
     });
 
     // Consume messages.
-    // TODO(burdon): ISSUE: What if discover out of order? Replay?
     let count = 0;
-    for await (const [message] of it.reader()) {
-      log(`Message[${padNum(count)}] = ${message.length}`);
+    for await (const [message] of messageIterator.reader()) {
+      log(`[${padNum(count)}] = ${JSON.stringify(JSON.parse(message.toString()))}`);
       if (++count === numMessages) {
-        it.stop();
+        messageIterator.stop();
       }
     }
 
-    // TODO(burdon): Check in order.
     expect(true).toBeTruthy();
   });
 
-  type PipelineDef = [id: string, pipeline: Pipeline]
+  type PipelineDef = [id: string, pipeline: Pipeline, stateMachine: TestStateMachine]
 
   // NOTE: No dependencies on Space.
-  test.only('Pipeline', async () => {
+  test('Pipeline with ordered messages', async () => {
     // Create peers.
     const numPipelines = 3;
     const pipelines: PipelineDef[] = Array.from({ length: numPipelines }).map((_, i) => {
-      return [`P-${i + 1}`, new Pipeline({ writable: true })];
+      return [`P-${i + 1}`, new Pipeline({ writable: true }), new TestStateMachine()];
     });
 
     // TODO(burdon): Simulate actual replication.
@@ -75,39 +67,38 @@ describe.only('Stack', () => {
       });
     });
 
-    // Write a message.
+    // Write messages.
     const numMessages = 10;
     setImmediate(async () => {
       for (let i = 0; i < numMessages; i++) {
         const [pipelineId, pipeline] = faker.random.arrayElement(pipelines);
-        const message = {
-          timeframe: pipeline.messageIterator.getTimeframe(),
-          data: faker.datatype.hexaDecimal()
-        };
-
+        const message = createTestMessage();
         log(`[${pipelineId}:${padNum(pipeline.writableFeed?.length ?? 0)}] ==> ${JSON.stringify(message)}`);
-        pipeline.writableFeed!.append(Buffer.from(JSON.stringify(message)));
+        pipeline.writableFeed!.append(encode(message));
         await sleep(faker.datatype.number({ min: 10, max: 100 }));
       }
     });
 
     // Consume messages.
-    // TODO(burdon): ISSUE: What if discover out of order? Replay?
-    const [reading, done] = latch({ count: pipelines.length });
-    pipelines.forEach(([pipelineId, pipeline]) => {
+    const [reading, complete] = latch({ count: pipelines.length });
+    pipelines.forEach(([pipelineId, pipeline, stateMachine]) => {
       log(`[${pipelineId}:${String(pipeline)}] Reading...`);
 
-      // TODO(burdon): Create pipeline consumer.
       setImmediate(async () => {
         let count = 0;
+
+        // TODO(burdon): ISSUE: Replay if discover timeframes out of order.
         const iterator = pipeline.messageIterator;
         for await (const [message, feedKey, i] of iterator.reader()) {
           const [writerId] = pipelines.find(([, pipeline]) => feedKey.equals(pipeline.writableFeed!.key))!;
+
+          // Update state machine.
+          stateMachine.execute(decode(message));
           log(`[${pipelineId}:${padNum(count)}] <-- [${writerId}:${padNum(i)}]: ${message.toString()}`);
           if (++count === numMessages) {
-            log(`[${pipelineId}] Done`);
+            log(`[${pipelineId}] Done (${count})`);
             iterator.stop();
-            done();
+            complete();
           }
         }
       });
@@ -115,38 +106,20 @@ describe.only('Stack', () => {
 
     await reading;
 
-    // TODO(burdon): Check same state.
-    //  Create simple arithmetical operations (add, multiple) that must be processed in order.
+    // Check same state.
+    {
+      const results = pipelines.reduce((map, [pipelineId,, stateMachine]) => {
+        const value = stateMachine.value;
+        log(`[${pipelineId}]: Result = ${value}`);
+        const peers = map.get(value) ?? [];
+        peers.push(pipelineId);
+        map.set(value, peers);
+        return map;
+      }, new Map<number, string[]>());
+
+      // expect(results.size).toBe(1);
+      // const value = Array.from(results.keys())[0];
+      // expect(results.get(value)!.length).toBe(numPipelines);
+    }
   });
-
-  // TODO(burdon): Move to halo.test.ts
-
-  // Phase 1: Pipeline Abstraction
-  // TODO(burdon): Pipeline abstraction with multiple "peers" (and single writable feed).
-  // TODO(burdon): Replication.
-  // TODO(burdon): Auth state machine.
-  test.skip('Genesis', async () => {
-    const halo = new HALO();
-    await halo.genesis();
-
-    // TODO(burdon): Wait for first device to show up.
-    expect(halo.initialized).toBeTruthy();
-
-    // TODO(burdon): Write credential to invite new device.
-    const device = {
-      key: PublicKey.random()
-    };
-    await halo.addDevice(device.key);
-  });
-
-  // Phase 2
-  // TODO(burdon): Genesis (incl. device joining).
-  // TODO(burdon): Cold start.
-  // TODO(burdon): Invitations and device joining (credential state machine).
-  // TODO(burdon): Invitations and member joining.
-
-  // Phase 3
-  // TODO(burdon): Space items.
-  // TODO(burdon): Strongly typed items.
-  // TODO(burdon): Epochs.
 });
