@@ -16,11 +16,11 @@ export function ConfigPlugin ({ dynamic = false, publicUrl = '' } = {}) {
 
   return {
     name: 'dxos-config',
-    transform(code, module) {
+    transform (code, module) {
       // Based on https://github.com/mmirca/rollup-plugin-entry-code-injector/blob/6ce979fcea31a75537c00748fbe25ed14f340624/commonjs/index.js.
       if (this.getModuleInfo(module).isEntry) {
         return contents + code;
       }
     }
   };
-};
+}

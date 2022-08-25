@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react';
 import RollupNodeGlobalsPlugin from 'rollup-plugin-polyfill-node';
-import { defineConfig, Plugin } from 'vite'
+import { defineConfig, Plugin } from 'vite';
 
 import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin';
 import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
@@ -19,7 +19,7 @@ const dxosPlugin = (): Plugin => ({
       alias: {
         'node:assert': 'assert/',
         'node:util': 'util/'
-      },
+      }
     },
     optimizeDeps: {
       esbuildOptions: {
@@ -32,11 +32,11 @@ const dxosPlugin = (): Plugin => ({
             setup: build => {
               build.onResolve({ filter: /sodium-native/ }, args => {
                 return { path: require.resolve('sodium-javascript') };
-              })
+              });
             }
           }
         ]
-      },
+      }
     },
     build: {
       rollupOptions: {
@@ -49,7 +49,7 @@ const dxosPlugin = (): Plugin => ({
           // TODO(wittjosiah): Is there a better way to do this? Can we eliminate setImmediate usage?
           {
             name: 'setimmediate-polyfill',
-            transform(code, module) {
+            transform (code, module) {
               const contents = 'import "setimmediate";';
               if (this.getModuleInfo(module).isEntry) {
                 return contents + code;
@@ -75,7 +75,7 @@ export default defineConfig({
       '@dxos/react-components',
       '@dxos/react-toolkit',
       '@dxos/util'
-    ],
+    ]
   },
   build: {
     commonjsOptions: {
@@ -92,7 +92,7 @@ export default defineConfig({
         /util/,
         /node_modules/
       ]
-    },
+    }
   },
   plugins: [react(), dxosPlugin()]
 });
