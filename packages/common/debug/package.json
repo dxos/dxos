@@ -15,8 +15,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -24,12 +23,10 @@
     "events": "^3.3.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/jest": "^28.1.6",
     "@types/node": "^16.11.27",
-    "eslint": "^8.21.0",
     "typescript": "^4.7.2"
   },
   "publishConfig": {

@@ -6,7 +6,7 @@ import { screen, render } from '@testing-library/react';
 import expect from 'expect';
 import React from 'react';
 
-import { Client } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 
 import { useClient } from '../hooks';
 import { ClientProvider } from './ClientProvider';

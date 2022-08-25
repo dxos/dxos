@@ -2,13 +2,13 @@
   "sourceRoot": "packages/demos/kodama/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/demos/kodama/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/demos/kodama/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

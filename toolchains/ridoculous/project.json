@@ -2,13 +2,13 @@
   "sourceRoot": "toolchains/ridoculous/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "toolchains/ridoculous/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "toolchains/ridoculous/**/*.{ts,js}"
+        ]
       }
     }
   }

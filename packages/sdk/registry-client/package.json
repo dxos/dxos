@@ -13,11 +13,10 @@
   },
   "scripts": {
     "build": "toolchain bundle:library",
-    "check": "toolchain check",
+    "check": "true",
     "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/polkadot/interfaces",
     "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/polkadot/interfaces",
     "generate:types": "toolchain generate:defs && yarn generate:meta",
-    "lint": "toolchain lint",
     "test": "toolchain test",
     "test:integration": "NODE_ENV=test mocha 'test/integration/**/*.test.ts'",
     "test:integration:auctions": "NODE_ENV=test mocha 'test/integration/**/auctions-api.test.ts'",
@@ -39,7 +38,6 @@
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@polkadot/api": "4.17.1",
     "@polkadot/keyring": "6.11.1",
@@ -58,7 +56,6 @@
     "@types/randombytes": "^2.0.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^8.21.0",
     "mocha": "^8.4.0",
     "protobufjs": "^6.9.0",
     "ts-node": "^10.8.2",

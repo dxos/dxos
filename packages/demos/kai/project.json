@@ -2,13 +2,13 @@
   "sourceRoot": "packages/demos/kai/src",
   "projectType": "application",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
-      "outputs": [
-        "packages/demos/kai/dist"
-      ],
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/demos/kai/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

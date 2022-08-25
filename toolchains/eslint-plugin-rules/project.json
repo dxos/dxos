@@ -1,4 +1,15 @@
 {
   "sourceRoot": "toolchains/eslint-plugin-rules",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "toolchains/eslint-plugin-rules/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
 }

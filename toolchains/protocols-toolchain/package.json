@@ -7,8 +7,8 @@
   },
   "scripts": {
     "build": "ts-node src/main.ts build",
-    "check": "pnpm lint",
-    "lint": "ts-node src/main.ts lint"
+    "check": "true",
+    "test": "true"
   },
   "dependencies": {
     "@dxos/toolchain-node-library": "workspace:*",
@@ -16,10 +16,8 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
     "@types/node": "^16.11.27",
     "@types/yargs": "~16.0.1",
-    "eslint": "^8.21.0",
     "ts-node": "^10.8.2"
   }
 }

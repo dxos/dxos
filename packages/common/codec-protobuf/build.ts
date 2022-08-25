@@ -5,7 +5,7 @@
 import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
-build({
+void build({
   entryPoints: ['src/index.ts'],
   outfile: 'dist/browser.js',
   format: 'cjs',

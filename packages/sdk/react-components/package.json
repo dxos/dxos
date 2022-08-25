@@ -14,8 +14,7 @@
     "book": "toolchain book",
     "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -37,7 +36,6 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@emotion/react": "^11.9.0",
@@ -56,7 +54,6 @@
     "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "clsx": "^1.1.0",
-    "eslint": "^8.21.0",
     "faker": "^5.1.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",

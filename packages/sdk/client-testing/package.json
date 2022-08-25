@@ -14,9 +14,8 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
+    "check": "true",
     "console": "ts-node ./src/console.ts",
-    "lint": "toolchain lint",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -33,7 +32,6 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
@@ -46,7 +44,6 @@
     "@types/node": "^16.11.27",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "mocha": "^8.4.0",
     "ts-node": "^10.8.2",
