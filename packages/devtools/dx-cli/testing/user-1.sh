@@ -6,7 +6,7 @@ export DX_CONFIG=./testing/config/user-1.yml
 dx=./bin/run
 
 # Reset
-if [ "$1" = '--reset' ];
+if [ "${1:-}" = '--reset' ];
 then
   $dx reset
 fi
@@ -23,7 +23,8 @@ fi
 
 # Create Space
 KEY=$($dx space create --json | jq --raw-output '.key')
-echo $KEY > /tmp/dx-cli/testing/party_key.txt
+# mkdir -p /tmp/dx-cli/testing
+# echo $KEY > /tmp/dx-cli/testing_party_key.txt
 
 # Create Invitation
 $dx space invite $KEY
