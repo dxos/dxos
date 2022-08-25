@@ -1,6 +1,5 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
-/* eslint-disable */
-
+-
 import type { Text } from '@polkadot/types';
 import type { BalanceStatus } from '@polkadot/types/interfaces/balances';
 import type { AuthorityList } from '@polkadot/types/interfaces/grandpa';
