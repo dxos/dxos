@@ -41,7 +41,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@nrwl/js@14.5.7": "patches/@nrwl__js@14.5.7.patch"
+      "@nrwl/js@14.5.7": "patches/@nrwl__js@14.5.7.patch",
+      "vite@3.0.9": "patches/vite@3.0.9.patch"
     }
   }
 }
