@@ -55,8 +55,6 @@ export const App = () => {
       <ClientProvider
         clientRef={clientRef}
         config={configProvider}
-        // TODO(wittjosiah): Why does it take so long for the client to initialize in prod build?
-        options={{ timeout: 30000 }}
       >
         <ActionProvider>
           <HashRouter>
