@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "entryPoints": {
+      "type": "array",
+      "description": ""
+    },
+    "outfile": {
+      "type": "string",
+      "description": ""
+    },
+    "bundlePackages": {
+      "type": "array",
+      "description": ""
+    }
+  },
+  "required": ["entryPoints", "outfile"]
+}

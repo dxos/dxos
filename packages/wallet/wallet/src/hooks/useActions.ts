@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
+import { Context, createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
 
 import { PublicKey } from '@dxos/protocols';
 
@@ -50,7 +50,8 @@ const reducer = (state: AppAction | undefined, action: AppAction) => {
 
 export const createActionContext = () => useReducer(reducer, initialState);
 
-export const ActionContext = createContext<[AppAction | undefined, Dispatch<AppAction>]>([undefined, () => {}]);
+export const ActionContext: Context<[AppAction | undefined, Dispatch<AppAction>]> =
+  createContext<[AppAction | undefined, Dispatch<AppAction>]>([undefined, () => {}]);
 
 /**
  * Provides current app action and dispatcher.

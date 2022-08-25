@@ -16,7 +16,7 @@
   "scripts": {
     "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "book": "toolchain book",
-    "build": "npm run prebuild && toolchain bundle:library && toolchain bundle:app",
+    "build-singleton": "toolchain bundle:app",
     "check": "true",
     "start": "toolchain start",
     "test": "toolchain test"
@@ -64,7 +64,6 @@
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/readable-stream": "^2.3.9",
-    "@types/sharedworker": "~0.0.79",
     "@types/uuid": "~8.3.3",
     "expect": "~27.0.2",
     "jsonify": "^0.0.0",
@@ -77,16 +76,6 @@
     "access": "public"
   },
   "toolchain": {
-    "bundlePackages": [
-      "@dxos/credentials",
-      "@dxos/crypto",
-      "@dxos/echo-db",
-      "@dxos/echo-protocol",
-      "@dxos/feed-store",
-      "@dxos/network-manager",
-      "@dxos/object-model"
-    ],
-    "protoBase": "./src/packlets/proto",
     "testingFramework": "mocha"
   }
 }

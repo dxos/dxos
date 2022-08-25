@@ -1,0 +1,25 @@
+{
+  "sourceRoot": "tools/executors/esbuild/src",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/executors/esbuild/dist",
+        "tsConfig": "tools/executors/esbuild/tsconfig.json",
+        "main": "tools/executors/esbuild/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": ["tools/executors/esbuild/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/executors/esbuild/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

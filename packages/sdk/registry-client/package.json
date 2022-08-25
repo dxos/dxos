@@ -12,7 +12,6 @@
     "node:util": "util"
   },
   "scripts": {
-    "build": "toolchain bundle:library",
     "check": "true",
     "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/polkadot/interfaces",
     "generate:meta": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-chain --package sample-polkadotjs-typegen/interfaces --endpoint ws://127.0.0.1:9944 --output ./src/polkadot/interfaces",
@@ -68,15 +67,6 @@
     "access": "public"
   },
   "toolchain": {
-    "bundlePackages": [
-      "@polkadot/api",
-      "@polkadot/keyring",
-      "@polkadot/metadata",
-      "@polkadot/rpc-core",
-      "@polkadot/types",
-      "@polkadot/util",
-      "@polkadot/util-crypto"
-    ],
     "testingFramework": "mocha",
     "allowExtendedEslintConfig": true
   }
