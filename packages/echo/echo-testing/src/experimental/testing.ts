@@ -4,14 +4,13 @@
 
 import faker from 'faker';
 
-export const encode = (obj: any) => Buffer.from(JSON.stringify(obj));
-export const decode = (data: Buffer) => JSON.parse(data.toString());
+import { StateMachine } from './pipeline';
 
 // TODO(burdon): Local proto def.
 export enum TestOperation { ADD, MULTIPLY }
 export type TestAction = { operation: TestOperation, value: number }
 
-export class TestStateMachine {
+export class TestStateMachine implements StateMachine<TestAction> {
   _value = 0;
 
   get value () {

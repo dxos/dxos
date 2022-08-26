@@ -9,8 +9,8 @@ import { it as test } from 'mocha';
 
 import { latch, sleep } from '@dxos/async';
 
-import { Feed, FeedStore, MessageIterator, Pipeline } from './pipeline';
-import { createTestMessage, decode, encode, TestStateMachine } from './testing';
+import { decode, encode, Feed, FeedStore, MessageIterator, Pipeline } from './pipeline';
+import { createTestMessage, TestStateMachine } from './testing';
 
 const log = debug('dxos:test:pipeline');
 
@@ -117,9 +117,9 @@ describe('Pipeline', () => {
         return map;
       }, new Map<number, string[]>());
 
-      // expect(results.size).toBe(1);
-      // const value = Array.from(results.keys())[0];
-      // expect(results.get(value)!.length).toBe(numPipelines);
+      expect(results.size).toBe(1);
+      const value = Array.from(results.keys())[0];
+      expect(results.get(value)!.length).toBe(numPipelines);
     }
   });
 });

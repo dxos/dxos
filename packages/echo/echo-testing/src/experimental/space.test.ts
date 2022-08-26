@@ -7,9 +7,7 @@ import expect from 'expect';
 import faker from 'faker';
 import { it as test } from 'mocha';
 
-import { PublicKey } from '@dxos/protocols';
-
-import { HALO } from './space';
+import { HALO } from './halo';
 
 const log = debug('dxos:test:halo');
 
@@ -29,13 +27,6 @@ describe('HALO', () => {
     // TODO(burdon): Wait for first device to show up.
     log(halo);
     expect(halo.initialized).toBeTruthy();
-
-    // TODO(burdon): Write credential to invite new device.
-    const device = {
-      key: PublicKey.random()
-    };
-
-    await halo.addDevice(device.key);
     expect(halo.getDevices()).toHaveLength(1);
   });
 

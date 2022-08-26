@@ -9,18 +9,22 @@ import { PublicKey } from '@dxos/protocols';
 
 export class Timeframe {}
 
-type Message = Buffer;
+export type Message = Buffer;
+
+export const encode = (obj: any) => Buffer.from(JSON.stringify(obj));
+export const decode = (data: Buffer) => JSON.parse(data.toString());
+
+export interface StateMachine<T> {
+  execute (message: T): void
+}
 
 /**
  * Hypercore abstraction.
  */
 export class Feed {
-  private readonly _key = PublicKey.random();
   private readonly _messages: Message[] = [];
 
-  get key () {
-    return this._key;
-  }
+  readonly key = PublicKey.random();
 
   get length () {
     return this._messages.length;
