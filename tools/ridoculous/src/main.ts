@@ -52,12 +52,12 @@ const main = () => {
         outDir,
         verbose
       }: {
-        autoNumber: boolean,
-        baseDir: string,
-        dryRun: boolean,
-        files: string,
-        html: boolean,
-        outDir: string,
+        autoNumber: boolean
+        baseDir: string
+        dryRun: boolean
+        files: string
+        html: boolean
+        outDir: string
         verbose: boolean
       }) => {
         void processFiles({

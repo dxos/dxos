@@ -15,10 +15,10 @@ import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
-  directory: Directory,
-  key: PublicKey,
-  hypercore: Hypercore,
-  secretKey?: Buffer,
+  directory: Directory
+  key: PublicKey
+  hypercore: Hypercore
+  secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
 }
@@ -171,10 +171,10 @@ const MOCK_CRYPTO = {
  * File API that hypercore uses to read/write from storage.
  */
 interface HypercoreFile {
-  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
-  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
-  del (offset: number, size: number, cb?: (err: Error | null) => void): void;
-  stat (cb: (err: Error | null, data?: {size: number}) => void): void;
-  close (cb?: (err: Error | null) => void): void;
-  destroy (cb?: (err: Error | null) => void): void;
+  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void
+  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void
+  del (offset: number, size: number, cb?: (err: Error | null) => void): void
+  stat (cb: (err: Error | null, data?: {size: number}) => void): void
+  close (cb?: (err: Error | null) => void): void
+  destroy (cb?: (err: Error | null) => void): void
 }

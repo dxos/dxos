@@ -12,16 +12,16 @@ import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
 
 interface OfferRecord {
-  resolve: (answer: Answer) => void;
-  reject: (error?: Error) => void;
+  resolve: (answer: Answer) => void
+  reject: (error?: Error) => void
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>;
-  onOffer?: (message: OfferMessage) => Promise<Answer>;
-  onSignal?: (message: SignalMessage) => Promise<void>;
-  retryDelay?: number;
-  timeout?: number;
+  sendMessage?: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>
+  onOffer?: (message: OfferMessage) => Promise<Answer>
+  onSignal?: (message: SignalMessage) => Promise<void>
+  retryDelay?: number
+  timeout?: number
 }
 
 const log = debug('dxos:network-manager:message-router');

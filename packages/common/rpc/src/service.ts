@@ -44,8 +44,8 @@ export const createRpcClient = <S>(serviceDef: ServiceDescriptor<S>, options: Om
 };
 
 export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
-  service: ServiceDescriptor<S>,
-  handlers: S,
+  service: ServiceDescriptor<S>
+  handlers: S
 }
 
 /**
@@ -99,8 +99,8 @@ export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options
 };
 
 export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'messageHandler'> {
-  services: ServiceBundle<S>,
-  handlers: S,
+  services: ServiceBundle<S>
+  handlers: S
 }
 
 /**

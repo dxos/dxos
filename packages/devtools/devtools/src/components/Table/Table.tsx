@@ -44,7 +44,7 @@ export const Table = ({ children, ...props }: TableProps) => (
 );
 
 interface TableCellProps extends MuiTableCellProps {
-  monospace?: boolean;
+  monospace?: boolean
 }
 
 const StyledTableCell = styled(MuiTableCell, {

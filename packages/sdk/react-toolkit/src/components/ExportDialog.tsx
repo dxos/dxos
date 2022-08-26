@@ -17,10 +17,10 @@ export const ExportDialog = ({
   filename,
   encrypter
 }: {
-  open: boolean,
-  onClose: () => void,
-  filename: string,
-  encrypter: (passphrase: string) => Promise<string>,
+  open: boolean
+  onClose: () => void
+  filename: string
+  encrypter: (passphrase: string) => Promise<string>
 }) => {
   const [error, setError] = useState<string>();
   const minLength = 8;

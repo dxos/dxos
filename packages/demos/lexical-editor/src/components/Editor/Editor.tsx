@@ -67,8 +67,8 @@ const FocusPlugin: FC<{
  *
  */
 export const Editor: FC<{
-  id: string,
-  item: Item<TextModel>,
+  id: string
+  item: Item<TextModel>
   children?: JSX.Element | string
 }> = ({
   id,

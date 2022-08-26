@@ -16,8 +16,8 @@ interface SerializedObject {
 }
 
 interface Connection {
-  peer: Protocol,
-  cleanup?: () => Promise<void> | void,
+  peer: Protocol
+  cleanup?: () => Promise<void> | void
   receive: Event<SerializedObject>
 }
 

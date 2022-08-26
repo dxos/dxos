@@ -8,8 +8,8 @@ import * as ts from 'typescript';
 import { ModuleSpecifier } from '../module-specifier';
 
 export interface ImportDescriptor {
-  clause: ts.ImportClause,
-  module: ModuleSpecifier,
+  clause: ts.ImportClause
+  module: ModuleSpecifier
 }
 
 /**

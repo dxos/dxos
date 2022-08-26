@@ -90,8 +90,8 @@ const HaloInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any,
-  identity?: string,
+  error?: any
+  identity?: string
   invitation?: Invitation
 }
 

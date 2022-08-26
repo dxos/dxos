@@ -22,7 +22,7 @@ export type PeerState = ConnectionState | 'INDIRECTLY_CONNECTED' | 'ME'
  */
 export interface PeerInfo {
   id: PublicKey
-  state: PeerState,
+  state: PeerState
   connections: PublicKey[]
 }
 

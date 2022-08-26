@@ -12,8 +12,8 @@ import {
  * Displays contact selector.
  */
 export const ContactsSelector = ({ contacts, selected = '', onSelect }: {
-  contacts: any[],
-  selected?: string,
+  contacts: any[]
+  selected?: string
   onSelect: (selected: string) => void
 }) => (
   <FormControl fullWidth>

@@ -14,7 +14,7 @@ export const PartyJoinPanel = (
     onSubmit,
     onAuthenticate
   }: {
-    status: any, // TODO(burdon): Define.
+    status: any // TODO(burdon): Define.
     onSubmit: (invitationCode: string) => void
     onAuthenticate: (pin: string) => void
   }

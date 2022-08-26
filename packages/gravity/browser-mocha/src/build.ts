@@ -11,8 +11,8 @@ import {
 } from '@dxos/esbuild-plugins';
 
 export interface BuildTestsOpts {
-  outDir: string,
-  debug: boolean,
+  outDir: string
+  debug: boolean
   checkLeaks: boolean
 }
 
