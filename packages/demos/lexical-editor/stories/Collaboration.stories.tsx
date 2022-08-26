@@ -46,8 +46,8 @@ type InvitationInfo = {
 const DOCMENT_TYPE = 'example:type/document';
 
 const EditorContainer: FC<{
-  id: string,
-  invitation?: InvitationInfo,
+  id: string
+  invitation?: InvitationInfo
   onInvite?: (invitation: InvitationInfo) => void
 }> = ({
   id,

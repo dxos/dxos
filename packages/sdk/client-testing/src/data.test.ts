@@ -23,7 +23,7 @@ type DataType = {
     id: string
     type?: string
     name?: string
-  }[],
+  }[]
 
   [TestType.Person]: {
     id: string

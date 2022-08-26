@@ -18,7 +18,7 @@ import { ViewType } from './ViewSelector';
 
 interface ViewContainerProps {
   value: string
-  model?: EchoGraphModel,
+  model?: EchoGraphModel
   items?: Item<ObjectModel>[]
   itemAdapter: ItemAdapter
   selected?: Set<ItemID>

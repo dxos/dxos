@@ -35,7 +35,7 @@ import {
  * Options allowed when creating the HALO.
  */
 export interface HaloCreationOptions {
-  identityDisplayName?: string,
+  identityDisplayName?: string
   deviceDisplayName?: string
 }
 

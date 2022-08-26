@@ -51,8 +51,8 @@ export interface RegistrationDialogProps {
   modal?: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void,
-  onJoinHalo?: () => void,
+  onComplete: (seedPhrase: string, username: string) => void
+  onJoinHalo?: () => void
 }
 
 /**

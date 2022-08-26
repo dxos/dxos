@@ -45,7 +45,7 @@ export interface GenerateSchemaOptions {
   schema: pb.Root
   outDir: string
   substitutions?: {
-    map: SubstitutionsMap,
+    map: SubstitutionsMap
     module: ModuleSpecifier
   }
 }

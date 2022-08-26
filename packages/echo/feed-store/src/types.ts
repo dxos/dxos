@@ -3,6 +3,6 @@
 //
 
 export type ValueEncoding = string | {
-  encode: (x: any) => Uint8Array;
-  decode: (data: Uint8Array) => any;
+  encode: (x: any) => Uint8Array
+  decode: (data: Uint8Array) => any
 };

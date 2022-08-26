@@ -27,15 +27,15 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
   /**
    * You can use this to detect if you connect to yourself.
    */
-  id?: Buffer;
+  id?: Buffer
   /**
    * Signal to the other peer that you want to keep this stream open forever.
    */
-  live?: boolean;
+  live?: boolean
   /**
    * Match the discoveryKey with a publicKey to do the handshake.
    */
-  expectedFeeds?: number;
+  expectedFeeds?: number
 }
 
 export interface ProtocolOptions {
@@ -43,9 +43,9 @@ export interface ProtocolOptions {
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
-  streamOptions?: ProtocolStreamOptions,
+  streamOptions?: ProtocolStreamOptions
 
-  discoveryKey?: Buffer,
+  discoveryKey?: Buffer
 
   initTimeout?: number
 
@@ -54,8 +54,8 @@ export interface ProtocolOptions {
    */
   codec?: Codec<any>
 
-  initiator: boolean,
-  userSession?: Record<string, any>,
+  initiator: boolean
+  userSession?: Record<string, any>
 }
 
 /**

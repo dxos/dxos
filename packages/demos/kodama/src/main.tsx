@@ -55,9 +55,9 @@ const main = async () => {
         debug,
         skipVersionCheck
       }: {
-        config: string,
+        config: string
         username: string
-        debug: boolean,
+        debug: boolean
         skipVersionCheck: boolean
       }) => {
         if (!skipVersionCheck) {
