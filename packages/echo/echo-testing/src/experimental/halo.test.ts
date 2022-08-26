@@ -21,6 +21,16 @@ describe('HALO', () => {
   // TODO(burdon): Cold start (same outcomde).
 
   test('Genesis', async () => {
+    // TODO(dmaretskyi): What do you think about API similar to:
+    /*
+    const dxos = new DXOS();
+    const [profile] = await dxos.loadProfiles();
+
+    const space = await profile.createSpace(TaskListSchema);
+
+    space.data.taskList.push(new Task({ title: 'Buy eggs' }))
+   */
+
     const halo = new HALO();
     await halo.init();
     await halo.genesis();
