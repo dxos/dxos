@@ -94,4 +94,12 @@ export class Pipeline {
   stop () {
     this._iterator.close();
   }
+
+  get timeframe () {
+    return this._timeframeClock.timeframe;
+  }
+
+  get timeframeUpdate () {
+    return this._timeframeClock.update;
+  }
 }

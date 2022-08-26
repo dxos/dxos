@@ -13,6 +13,7 @@ import { Credential } from '@dxos/halo-protocol/src/proto';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
+import { Pipeline } from '../packlets/pipeline';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
 import { createMessageSelector } from '../packlets/pipeline/message-selector';
@@ -66,9 +67,8 @@ export class PartyPipeline {
   private readonly _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
-  private _pipeline?: FeedMuxer;
   private _partyProcessor?: PartyProcessor;
-  private _timeframeClock?: TimeframeClock;
+  private _pipeline?: Pipeline;
 
   constructor (
     private readonly _partyKey: PartyKey,
@@ -103,13 +103,13 @@ export class PartyPipeline {
   }
 
   get timeframe () {
-    assert(this._timeframeClock, 'Party not open');
-    return this._timeframeClock.timeframe;
+    assert(this._pipeline, 'Party not open.');
+    return this._pipeline.timeframe;
   }
 
   get timeframeUpdate () {
-    assert(this._timeframeClock, 'Party not open');
-    return this._timeframeClock.update;
+    assert(this._pipeline, 'Party not open.');
+    return this._pipeline.timeframeUpdate;
   }
 
   async getWriteFeed () {
