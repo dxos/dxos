@@ -118,6 +118,7 @@ export class Pipeline {
   readonly messageIterator = new MessageIterator(this.feedStore);
 
   constructor ({ writable = false }: PipelineOptions = {}) {
+    // TODO(burdon): Defer adding.
     this.writableFeed = writable ? new Feed() : undefined;
     if (this.writableFeed) {
       this.feedStore.addFeed(this.writableFeed);

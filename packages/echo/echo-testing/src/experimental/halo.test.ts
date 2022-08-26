@@ -22,6 +22,7 @@ describe('HALO', () => {
 
   test('Genesis', async () => {
     const halo = new HALO();
+    await halo.init();
     await halo.genesis();
 
     // TODO(burdon): Wait for first device to show up.
