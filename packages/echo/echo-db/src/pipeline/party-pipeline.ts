@@ -15,9 +15,9 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
+import { createMessageSelector } from '../packlets/pipeline/message-selector';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { FeedMuxer } from './feed-muxer';
-import { createMessageSelector } from '../packlets/pipeline/message-selector';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 
