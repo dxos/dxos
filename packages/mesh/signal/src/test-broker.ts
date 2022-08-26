@@ -14,13 +14,20 @@ import { randomInt } from '@dxos/util';
 
 const log = debug('dxos:signal:test-broker');
 
+interface TestBrokerOptions {
+  port?: number;
+  timeout?: number;
+}
+
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
   private readonly _port: number;
+  private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor (port = 8080) {
+  constructor ({ port = 8080, timeout = 2_000 }: TestBrokerOptions = {}) {
     this._port = port;
+    this._timeout = timeout;
     this._serverProcess = this.startProcess();
   }
 
@@ -62,14 +69,19 @@ export class TestBroker {
   }
 
   public async waitUntilStarted (): Promise<void> {
-    let online = false;
-    while (!online) {
+    let waited = 0;
+    while (waited < this._timeout) {
       try {
-        await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
-        online = true;
+        const response = await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
+        log(`Fetching broker. Response=${JSON.stringify(response)}`);
+        return;
       } catch (err) {
         await sleep(20);
+        waited = waited + 20;
       }
+    }
+    if (waited >= this._timeout) {
+      throw new Error('Broker was not started');
     }
   }
 
