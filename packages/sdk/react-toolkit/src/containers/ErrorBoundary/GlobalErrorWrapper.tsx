@@ -21,7 +21,7 @@ export const GlobalErrorWrapper = ({
   children,
   indicator: ErrorIndicator
 }: {
-  children: ReactNode,
+  children: ReactNode
   indicator?: FunctionComponent<ErrorIndicatorProps> | null
 }) => {
   const { errors, addError, resetErrors } = useContext(ErrorContext)!;

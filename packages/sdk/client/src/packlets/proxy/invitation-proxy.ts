@@ -18,13 +18,13 @@ export interface CreateInvitationRequestOpts {
 }
 
 export interface HandleInvitationRedemptionOpts {
-  stream: Stream<RedeemedInvitationProto>,
-  invitationDescriptor: InvitationDescriptor,
+  stream: Stream<RedeemedInvitationProto>
+  invitationDescriptor: InvitationDescriptor
   onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>
 }
 
 export interface HandleInvitationRedemptionResult {
-  waitForFinish: () => Promise<RedeemedInvitationProto>,
+  waitForFinish: () => Promise<RedeemedInvitationProto>
   authenticate: (secret: Uint8Array) => void
 }
 

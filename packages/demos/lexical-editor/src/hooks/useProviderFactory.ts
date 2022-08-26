@@ -19,33 +19,33 @@ const log = debug('dxos:lexical:useProviderFactory');
 // TODO(burdon): https://github.com/facebook/lexical/issues/2844
 //
 export type UserState = {
-  anchorPos: null | RelativePosition,
-  focusPos: null | RelativePosition,
-  name: string,
-  color: string,
-  focusing: boolean,
+  anchorPos: null | RelativePosition
+  focusPos: null | RelativePosition
+  name: string
+  color: string
+  focusing: boolean
 };
 
 export type ProviderAwareness = {
-  getLocalState: () => UserState | null,
-  setLocalState: (state: UserState) => void,
-  getStates: () => Map<number, UserState>,
-  on: (type: 'update', cb: () => void) => void,
-  off: (type: 'update', cb: () => void) => void,
+  getLocalState: () => UserState | null
+  setLocalState: (state: UserState) => void
+  getStates: () => Map<number, UserState>
+  on: (type: 'update', cb: () => void) => void
+  off: (type: 'update', cb: () => void) => void
 };
 
 export interface Provider {
-  connect(): void | Promise<void>;
-  disconnect(): void;
-  awareness: ProviderAwareness;
-  on(type: 'sync', cb: (isSynced: boolean) => void): void;
-  on(type: 'status', cb: ({ status }: { status: string }) => void): void;
-  on(type: 'update', cb: (value: any) => void): void;
-  on(type: 'reload', cb: (doc: Doc) => void): void;
-  off(type: 'sync', cb: (isSynced: boolean) => void): void;
-  off(type: 'update', cb: (value: any) => void): void;
-  off(type: 'status', cb: ({ status }: { status: string }) => void): void;
-  off(type: 'reload', cb: (doc: Doc) => void): void;
+  connect(): void | Promise<void>
+  disconnect(): void
+  awareness: ProviderAwareness
+  on(type: 'sync', cb: (isSynced: boolean) => void): void
+  on(type: 'status', cb: ({ status }: { status: string }) => void): void
+  on(type: 'update', cb: (value: any) => void): void
+  on(type: 'reload', cb: (doc: Doc) => void): void
+  off(type: 'sync', cb: (isSynced: boolean) => void): void
+  off(type: 'update', cb: (value: any) => void): void
+  off(type: 'status', cb: ({ status }: { status: string }) => void): void
+  off(type: 'reload', cb: (doc: Doc) => void): void
 }
 
 export type ProviderFactory = (

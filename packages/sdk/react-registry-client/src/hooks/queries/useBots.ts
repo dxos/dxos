@@ -12,14 +12,14 @@ import { useAsync } from './useAsync';
 const BOT_TYPE_DXN = DXN.parse('dxos:type/bot');
 
 export interface BotData {
-  dxn: DXN,
-  tag?: string,
-  version?: string,
-  description?: string,
+  dxn: DXN
+  tag?: string
+  version?: string
+  description?: string
   created?: string
 }
 export interface Result {
-  bots: BotData[],
+  bots: BotData[]
   error?: unknown
 }
 

@@ -312,7 +312,7 @@ export interface ReadOnlyEvent<T = void> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): () => void;
+  on(callback: (data: T) => void): () => void
 
   /**
    * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
@@ -323,7 +323,7 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  off(callback: (data: T) => void): void;
+  off(callback: (data: T) => void): void
 
   /**
    * Register a callback to be called only once when the next event is emitted.
@@ -332,32 +332,32 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): () => void;
+  once(callback: (data: T) => void): () => void
 
   /**
    * An async iterator that iterates over events.
    *
    * This iterator runs indefinitely.
    */
-  [Symbol.asyncIterator](): AsyncIterator<T>;
+  [Symbol.asyncIterator](): AsyncIterator<T>
 
   /**
    * Returns a promise that resolves with the first event emitted that matches the provided predicate.
    *
    * @param predicate
    */
-  waitFor(predicate: (data: T) => boolean): Promise<T>;
+  waitFor(predicate: (data: T) => boolean): Promise<T>
 
   /**
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
    * @param expectedCount
    */
-  waitForCount(expectedCount: number): Promise<T>;
+  waitForCount(expectedCount: number): Promise<T>
 
   /**
    * Turn any variant of `Event<T>` into an `Event<void>` discarding the callback parameter.
    */
-  discardParameter(): Event<void>;
+  discardParameter(): Event<void>
 }
 
 /**
