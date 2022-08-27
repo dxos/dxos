@@ -37,6 +37,7 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",

@@ -24,7 +24,7 @@ import { DXOS_VERSION } from './version';
 const log = debug('dxos:client-proxy');
 
 // TODO(wittjosiah): Should be kube.local or equivalent.
-const DEFAULT_SINGLETON_HOST = 'http://localhost:8080';
+const DEFAULT_SINGLETON_HOST = 'http://localhost:3967';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigObject = { version: 1 };
