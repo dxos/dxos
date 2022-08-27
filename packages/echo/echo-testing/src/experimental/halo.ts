@@ -46,11 +46,18 @@ export class HALO {
 
   // TODO(burdon): Kill above.
   async stop () {
+    assert(this._space);
+
+    const iterator = this._space.pipeline.messageIterator;
+    iterator.stop();
     this._running = false;
   }
 
   async genesis () {
     assert(this._space);
+
+    // TODO(burdon): Assert that this space is empty.
+    // TODO(burdon): Manually admit the feed.
 
     const spaceKey = PublicKey.random();
     this._space.pipeline.writableFeed!.append(encode(createCredential('genesis', { key: spaceKey.toHex() })));
@@ -70,6 +77,7 @@ export class HALO {
     return this._devices;
   }
 
+  // TODO(burdon): Only add feeds.77777777777777777777777y  Q                     a
   async authDevice (device: Device) {
     assert(this._space);
 
