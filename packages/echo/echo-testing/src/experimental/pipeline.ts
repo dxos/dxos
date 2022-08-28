@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import debug from 'debug';
 import faker from 'faker';
-import assert from 'node:assert';
 
 import { sleep } from '@dxos/async';
+import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
 
 export class Timeframe {}
@@ -15,6 +16,8 @@ export type Message = Buffer;
 export const encode = (obj: any) => Buffer.from(JSON.stringify(obj));
 export const decode = (data: Buffer) => JSON.parse(data.toString());
 
+const log = debug('dxos:test:pipeline');
+
 export interface StateMachine<T> {
   execute (message: T): void
 }
@@ -23,13 +26,8 @@ export interface StateMachine<T> {
  * Hypercore abstraction.
  */
 export class Feed {
-  private readonly _messages: Message[] = [];
-
   readonly key = PublicKey.random();
-
-  constructor (
-    readonly writable = false
-  ) {}
+  readonly _messages: Message[] = [];
 
   get length () {
     return this._messages.length;
@@ -40,21 +38,21 @@ export class Feed {
   }
 
   append (message: Message) {
-    assert(this.writable);
     this._messages.push(message);
   }
 }
 
 export enum FeedType {
-  GENESIS,
-  WRITABLE,
-  READABLE
+  INVALID = 0,
+  GENESIS = 1,
+  WRITABLE = 2,
+  READABLE = 3
 }
 
 export class FeedDescriptor {
   constructor (
     readonly type: FeedType = FeedType.READABLE,
-    readonly feed: Feed = new Feed(type !== FeedType.READABLE)
+    readonly feed: Feed = new Feed()
   ) {}
 }
 
@@ -69,6 +67,12 @@ export class FeedStore {
     feeds: FeedDescriptor[] = []
   ) {
     feeds.forEach(feed => this.addFeed(feed));
+  }
+
+  toString () {
+    const feeds = Array.from(this._descriptors.entries())
+      .map(([key, { feed, type }]) => `${truncateKey(key)}[${type}]=${feed.length}`);
+    return `FeedStore(${feeds.join(', ')})`;
   }
 
   addFeed (descriptor: FeedDescriptor) {
@@ -91,12 +95,17 @@ export type MessageMeta = [
  * Consumes feeds and generates total order across messages.
  */
 export class MessageIterator {
-  _running = true;
+  _running = false;
   _feedIndexMap = new Map<PublicKey, number>();
 
   constructor (
     private readonly _store: FeedStore
   ) {}
+
+  toString () {
+    const array = Array.from(this._feedIndexMap.entries()).map(([key, value]) => [truncateKey(key), value]);
+    return `MessageIterator(${array.map(([key, value]) => `${key}:${value}`).join(', ')})`;
+  }
 
   stop () {
     this._running = false;
@@ -110,16 +119,14 @@ export class MessageIterator {
    * Generator that returns the next ordered message.
    */
   async * reader (): AsyncIterableIterator<MessageMeta> {
-    // TODO(burdon): Select next message.
+    this._running = true;
+
+    // Select next message.
     while (this._running) {
       const candidates: Feed[] = this._store.getFeedDescriptors()
-        .filter(({ feed }) => {
-          const i = this._feedIndexMap.get(feed.key) ?? 0;
-          return feed.length > i;
-        })
+        .filter(({ feed }) => (this._feedIndexMap.get(feed.key) ?? 0) < feed.length)
         .map(({ feed }) => feed);
 
-      // TODO(burdon): Trigger on feed/feedstore event.
       if (candidates.length) {
         const feed = faker.random.arrayElement(candidates);
         const i = this._feedIndexMap.get(feed.key) ?? 0;
@@ -127,6 +134,7 @@ export class MessageIterator {
         this._feedIndexMap.set(feed.key, i + 1);
         yield [message, feed.key, i];
       } else {
+        // TODO(burdon): Wait for feed event.
         await sleep(100);
       }
     }

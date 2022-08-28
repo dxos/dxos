@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 
 import { HALO } from './halo';
 
-const log = debug('dxos:test:halo');
+const log = debug('dxos:test');
 
 faker.seed(100);
 
@@ -39,7 +39,10 @@ describe('HALO', () => {
     await halo.start();
 
     // TODO(burdon): Wait for first device to show up.
-    log(halo);
+    log(String(halo));
+    setTimeout(() => {
+      void halo.stop();
+    }, 1000);
   });
 
   // Phase 3

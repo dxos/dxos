@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import debug from 'debug';
 import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/protocols';
 
 import { decode, encode, Feed, FeedDescriptor, FeedType } from './pipeline';
 import { Space } from './space';
+
+const log = debug('dxos:halo');
 
 const createCredential = (type: string, data: any = undefined) => {
   return {
@@ -31,6 +34,10 @@ export class HALO {
     return !!this._space;
   }
 
+  toString () {
+    return `HALO(${this._space})`;
+  }
+
   async start () {
     // Process credentials.
     setImmediate(async () => {
@@ -42,7 +49,7 @@ export class HALO {
         console.log('::::', type, key);
       }
 
-      console.log('DONE');
+      log('DONE');
     });
   }
 
