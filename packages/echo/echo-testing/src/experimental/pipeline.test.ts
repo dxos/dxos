@@ -53,7 +53,7 @@ describe('Pipeline', () => {
 
   type PipelineDef = [id: string, pipeline: Pipeline, stateMachine: TestStateMachine]
 
-  test.only('Pipeline with ordered messages', async () => {
+  test('Pipeline with ordered messages', async () => {
     // Create peers.
     const numPipelines = 3;
     const pipelines: PipelineDef[] = Array.from({ length: numPipelines }).map((_, i) => {

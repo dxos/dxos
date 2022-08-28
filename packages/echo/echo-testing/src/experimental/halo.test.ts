@@ -20,7 +20,7 @@ describe('HALO', () => {
   // TODO(burdon): Invitations and device joining (credential state machine).
   // TODO(burdon): Cold start (same outcomde).
 
-  test('Genesis', async () => {
+  test.only('Genesis', async () => {
     // TODO(dmaretskyi): What do you think about API similar to:
     /*
     const dxos = new DXOS();
@@ -31,14 +31,15 @@ describe('HALO', () => {
     space.data.taskList.push(new Task({ title: 'Buy eggs' }))
    */
 
-    // TODO(burdon): Initially populate with FeedStore.
     const halo = new HALO();
 
+    // TODO(burdon): Test non-genesis (cold startup) below.
     await halo.genesis();
     expect(halo.initialized).toBeTruthy();
     await halo.start();
 
-    // TODO(burdon): Wait for first device to show up.
+    // TODO(burdon): Add second device and start replicating.
+
     log(String(halo));
     setTimeout(() => {
       void halo.stop();
