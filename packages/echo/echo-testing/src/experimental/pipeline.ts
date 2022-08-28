@@ -3,6 +3,7 @@
 //
 
 import faker from 'faker';
+import assert from 'node:assert';
 
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
@@ -26,6 +27,10 @@ export class Feed {
 
   readonly key = PublicKey.random();
 
+  constructor (
+    readonly writable = false
+  ) {}
+
   get length () {
     return this._messages.length;
   }
@@ -35,22 +40,44 @@ export class Feed {
   }
 
   append (message: Message) {
+    assert(this.writable);
     this._messages.push(message);
   }
 }
 
+export enum FeedType {
+  GENESIS,
+  WRITABLE,
+  READABLE
+}
+
+export class FeedDescriptor {
+  constructor (
+    readonly type: FeedType = FeedType.READABLE,
+    readonly feed: Feed = new Feed(type !== FeedType.READABLE)
+  ) {}
+}
+
 /**
- * Memory/Persistent feed store abstraction.
+ * Manages a set of Feeds.
+ * NOTE: This is specific to an invidiual space.
  */
 export class FeedStore {
-  private readonly _feeds: Feed[] = [];
+  private readonly _descriptors = new Map<PublicKey, FeedDescriptor>();
 
-  addFeed (feed: Feed) {
-    this._feeds.push(feed);
+  constructor (
+    feeds: FeedDescriptor[] = []
+  ) {
+    feeds.forEach(feed => this.addFeed(feed));
   }
 
-  getFeeds (): Feed[] {
-    return this._feeds;
+  addFeed (descriptor: FeedDescriptor) {
+    this._descriptors.set(descriptor.feed.key, descriptor);
+    return this;
+  }
+
+  getFeedDescriptors (): FeedDescriptor[] {
+    return Array.from(this._descriptors.values());
   }
 }
 
@@ -85,10 +112,12 @@ export class MessageIterator {
   async * reader (): AsyncIterableIterator<MessageMeta> {
     // TODO(burdon): Select next message.
     while (this._running) {
-      const candidates = this._store.getFeeds().filter(feed => {
-        const i = this._feedIndexMap.get(feed.key) ?? 0;
-        return feed.length > i;
-      });
+      const candidates: Feed[] = this._store.getFeedDescriptors()
+        .filter(({ feed }) => {
+          const i = this._feedIndexMap.get(feed.key) ?? 0;
+          return feed.length > i;
+        })
+        .map(({ feed }) => feed);
 
       // TODO(burdon): Trigger on feed/feedstore event.
       if (candidates.length) {
@@ -104,28 +133,21 @@ export class MessageIterator {
   }
 }
 
-export type PipelineOptions = {
-  writable?: boolean
-}
-
 /**
  * Main pipeline.
  * NOTE: NO dependencies on HALO, Credentials, Space, etc.
  */
 export class Pipeline {
-  readonly writableFeed?: Feed;
-  readonly feedStore = new FeedStore();
-  readonly messageIterator = new MessageIterator(this.feedStore);
+  readonly messageIterator;
 
-  constructor ({ writable = false }: PipelineOptions = {}) {
-    // TODO(burdon): Defer adding.
-    this.writableFeed = writable ? new Feed() : undefined;
-    if (this.writableFeed) {
-      this.feedStore.addFeed(this.writableFeed);
-    }
+  constructor (
+    readonly feedStore: FeedStore,
+    readonly writable?: Feed
+  ) {
+    this.messageIterator = new MessageIterator(this.feedStore);
   }
 
   toString () {
-    return `Pipeline(${JSON.stringify({ feeds: this.feedStore.getFeeds().length })})`;
+    return `Pipeline(${JSON.stringify({ feeds: this.feedStore.getFeedDescriptors().length })})`;
   }
 }

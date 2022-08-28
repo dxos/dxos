@@ -9,7 +9,7 @@ import { it as test } from 'mocha';
 
 import { latch, sleep } from '@dxos/async';
 
-import { decode, encode, Feed, FeedStore, MessageIterator, Pipeline } from './pipeline';
+import { decode, encode, Feed, FeedDescriptor, FeedStore, FeedType, MessageIterator, Pipeline } from './pipeline';
 import { createTestMessage, TestStateMachine } from './testing';
 
 const log = debug('dxos:test:pipeline');
@@ -24,13 +24,14 @@ describe('Pipeline', () => {
     const messageIterator = new MessageIterator(feedStore);
 
     // Create feeds.
-    Array.from({ length: 10 }).forEach(() => feedStore.addFeed(new Feed()));
+    Array.from({ length: 10 }).forEach(() =>
+      feedStore.addFeed(new FeedDescriptor(FeedType.WRITABLE)));
 
     // Write a message.
     const numMessages = 10;
     setImmediate(async () => {
       for (let i = 0; i < numMessages; i++) {
-        const feed = faker.random.arrayElement(feedStore.getFeeds());
+        const { feed } = faker.random.arrayElement(feedStore.getFeedDescriptors());
         feed.append(encode(createTestMessage()));
         await sleep(faker.datatype.number({ min: 10, max: 100 }));
       }
@@ -50,19 +51,20 @@ describe('Pipeline', () => {
 
   type PipelineDef = [id: string, pipeline: Pipeline, stateMachine: TestStateMachine]
 
-  // NOTE: No dependencies on Space.
   test('Pipeline with ordered messages', async () => {
     // Create peers.
     const numPipelines = 3;
     const pipelines: PipelineDef[] = Array.from({ length: numPipelines }).map((_, i) => {
-      return [`P-${i + 1}`, new Pipeline({ writable: true }), new TestStateMachine()];
+      const writable = new Feed(true);
+      const feedStore = new FeedStore([new FeedDescriptor(FeedType.WRITABLE)]);
+      return [`P-${i + 1}`, new Pipeline(feedStore, writable), new TestStateMachine()];
     });
 
     // TODO(burdon): Simulate actual replication.
     pipelines.forEach(([pipelineId, pipeline]) => {
       pipelines.forEach(([peerId, peer]) => {
         if (pipelineId !== peerId) {
-          pipeline.feedStore.addFeed(peer.writableFeed!);
+          pipeline.feedStore.addFeed(new FeedDescriptor(FeedType.READABLE, peer.writable!));
         }
       });
     });
@@ -73,8 +75,8 @@ describe('Pipeline', () => {
       for (let i = 0; i < numMessages; i++) {
         const [pipelineId, pipeline] = faker.random.arrayElement(pipelines);
         const message = createTestMessage();
-        log(`[${pipelineId}:${padNum(pipeline.writableFeed?.length ?? 0)}] ==> ${JSON.stringify(message)}`);
-        pipeline.writableFeed!.append(encode(message));
+        log(`[${pipelineId}:${padNum(pipeline.writable?.length ?? 0)}] ==> ${JSON.stringify(message)}`);
+        pipeline.writable!.append(encode(message));
         await sleep(faker.datatype.number({ min: 10, max: 100 }));
       }
     });
@@ -90,7 +92,7 @@ describe('Pipeline', () => {
         // TODO(burdon): ISSUE: Replay if discover timeframes out of order.
         const iterator = pipeline.messageIterator;
         for await (const [message, feedKey, i] of iterator.reader()) {
-          const [writerId] = pipelines.find(([, pipeline]) => feedKey.equals(pipeline.writableFeed!.key))!;
+          const [writerId] = pipelines.find(([, pipeline]) => feedKey.equals(pipeline.writable!.key))!;
 
           // Update state machine.
           stateMachine.execute(decode(message));

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/protocols';
 
-import { decode, encode } from './pipeline';
+import { decode, encode, Feed, FeedDescriptor, FeedType } from './pipeline';
 import { Space } from './space';
 
 const createCredential = (type: string, data: any = undefined) => {
@@ -18,72 +18,64 @@ const createCredential = (type: string, data: any = undefined) => {
 
 export class Device {
   readonly key = PublicKey.random();
+
   constructor (
     readonly writableFeedKey?: PublicKey
   ) {}
 }
 
 export class HALO {
-  private _space?: Space;
-  private _running = false;
-
-  // TODO(burdon): Device manager.
-  private _devices: Buffer[] = [];
-
-  async init () {
-    this._space = new Space();
-
-    // TODO(burdon): Stopping.
-    setImmediate(async () => {
-      assert(this._space);
-      const iterator = this._space.pipeline.messageIterator;
-      for await (const [message, feedKey, i] of iterator.reader()) {
-        // TODO(burdon): Add writable feed to feedstore.
-        console.log('::::', decode(message));
-      }
-    });
-  }
-
-  // TODO(burdon): Kill above.
-  async stop () {
-    assert(this._space);
-
-    const iterator = this._space.pipeline.messageIterator;
-    iterator.stop();
-    this._running = false;
-  }
-
-  async genesis () {
-    assert(this._space);
-
-    // TODO(burdon): Assert that this space is empty.
-    // TODO(burdon): Manually admit the feed.
-
-    const spaceKey = PublicKey.random();
-    this._space.pipeline.writableFeed!.append(encode(createCredential('genesis', { key: spaceKey.toHex() })));
-
-    const identityKey = PublicKey.random();
-    this._space.pipeline.writableFeed!.append(encode(createCredential('identity', { key: identityKey.toHex() })));
-
-    // TODO(burdon): How do these get processed in the SAME way as other devices joining the party?
-    await this.authDevice(new Device(this._space.pipeline.writableFeed?.key));
-  }
+  private _space = new Space();
 
   get initialized () {
     return !!this._space;
   }
 
-  getDevices () {
-    return this._devices;
+  async start () {
+    // Process credentials.
+    setImmediate(async () => {
+      assert(this._space);
+      const iterator = this._space.pipeline.messageIterator;
+      for await (const [message, feedKey, i] of iterator.reader()) {
+        const { type, data: { key } } = decode(message);
+        // TODO(burdon): Add writable feed to feedstore.
+        console.log('::::', type, key);
+      }
+
+      console.log('DONE');
+    });
   }
 
-  // TODO(burdon): Only add feeds.77777777777777777777777y  Q                     a
-  async authDevice (device: Device) {
+  async stop () {
     assert(this._space);
 
-    this._space.pipeline.writableFeed!.append(encode(createCredential('device', { key: device.key.toHex() })));
+    const iterator = this._space.pipeline.messageIterator;
+    iterator.stop();
+  }
+
+  async genesis () {
+    // Assert empty.
+    const feed = this._space.feedStore.getFeedDescriptors().find(({ type }) => type === FeedType.GENESIS);
+    if (feed) {
+      throw new Error('Genesis already created.');
+    }
+
+    const genesisDescriptor = new FeedDescriptor(FeedType.GENESIS);
+    this._space.feedStore.addFeed(genesisDescriptor);
+
+    const spaceKey = PublicKey.random();
+    genesisDescriptor.feed.append(encode(createCredential('genesis', { key: spaceKey.toHex() })));
+
+    const identityKey = PublicKey.random();
+    genesisDescriptor.feed.append(encode(createCredential('identity', { key: identityKey.toHex() })));
+
+    await this.authDevice(genesisDescriptor.feed, new Device(genesisDescriptor.feed.key));
+  }
+
+  async authDevice (feed: Feed, device: Device) {
+    feed.append(encode(createCredential('device', { key: device.key.toHex() })));
     if (device.writableFeedKey) {
-      this._space.pipeline.writableFeed!.append(encode(createCredential('feed', { key: device.writableFeedKey.toHex() })));
+      feed.append(encode(createCredential('feed', { key: device.writableFeedKey.toHex() })));
     }
   }
 }

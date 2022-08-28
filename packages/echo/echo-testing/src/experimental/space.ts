@@ -4,12 +4,18 @@
 
 import { PublicKey } from '@dxos/protocols';
 
-import { Pipeline } from './pipeline';
+import { FeedStore, Pipeline } from './pipeline';
 
 export class Space {
-  readonly key = PublicKey.random();
-  readonly pipeline = new Pipeline({ writable: true });
+  private _key?: PublicKey;
+  readonly feedStore = new FeedStore();
+  readonly pipeline = new Pipeline(this.feedStore);
 
-  // TODO(burdon): Space creating the genesis must auto admit first device and feed.
-  // TODO(burdon): Start method should start the pipeline's iterator; multiple pipelines?
+  get key () {
+    return this._key;
+  }
+
+  async initialize (key: PublicKey) {
+    this._key = key;
+  }
 }

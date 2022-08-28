@@ -31,14 +31,15 @@ describe('HALO', () => {
     space.data.taskList.push(new Task({ title: 'Buy eggs' }))
    */
 
+    // TODO(burdon): Initially populate with FeedStore.
     const halo = new HALO();
-    await halo.init();
+
     await halo.genesis();
+    expect(halo.initialized).toBeTruthy();
+    await halo.start();
 
     // TODO(burdon): Wait for first device to show up.
     log(halo);
-    expect(halo.initialized).toBeTruthy();
-    expect(halo.getDevices()).toHaveLength(1);
   });
 
   // Phase 3
