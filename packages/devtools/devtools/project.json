@@ -2,15 +2,39 @@
   "sourceRoot": "packages/devtools/devtools/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/devtools/devtools/dist",
-        "packages/devtools/devtools/src/proto/gen"
+        "{options.basePath}/gen"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/devtools/devtools/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/devtools/devtools/dist",
+        "tsConfig": "packages/devtools/devtools/tsconfig.json",
+        "main": "packages/devtools/devtools/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/devtools/devtools/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
 }

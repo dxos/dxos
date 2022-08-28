@@ -18,7 +18,7 @@ import { PartyMembers } from './PartyMembers';
 import { PartyView } from './PartyView';
 
 const PartyPanel: FC<{
-  children: ReactNode,
+  children: ReactNode
   party: Party
 }> = ({
   children,

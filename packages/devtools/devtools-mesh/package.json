@@ -6,10 +6,8 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "book": "toolchain book",
-    "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "check": "pnpm run build && pnpm run lint",
-    "lint": "toolchain lint"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
@@ -31,12 +29,10 @@
   "devDependencies": {
     "@babel/core": "~7.13.15",
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/react": "^18.0.9",
     "@types/react-copy-to-clipboard": "~5.0.1",
-    "eslint": "^8.21.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-router-dom": "^6.3.0",

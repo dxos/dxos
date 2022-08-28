@@ -24,17 +24,17 @@ import { Filtering, Filter } from './filtering';
 import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
-  name: DXN,
+  name: DXN
   tags: Record<string, CID>
 }
 
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   payload: RecordExtension<T>
 }
 
 export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   type: {
     /**
      * FQN of the root message in the protobuf definitions.

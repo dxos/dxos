@@ -8,10 +8,8 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "book": "toolchain book",
-    "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test && npm run test:playwright",
     "test:playwright": "playwright test --config ./tests/playwright/config.ts"
   },
@@ -31,7 +29,6 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
     "@playwright/test": "^1.23.4",
@@ -45,7 +42,6 @@
     "@types/react-dom": "^18.0.5",
     "@types/testing-library__jest-dom": "~5.9.5",
     "@types/use-subscription": "^1.0.0",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "level-js": "^5.0.2",
     "playwright": "^1.23.4",

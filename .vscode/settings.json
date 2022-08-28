@@ -9,6 +9,10 @@
     "burdon"
   ],
   "files.associations": {
+    "workspace.json": "jsonc",
+    "project.json": "jsonc",
+    "eslintConfig.json": "jsonc",
+    ".eslintrc.json": "jsonc",
     "rush.json": "jsonc",
     "command-line.json": "jsonc",
     "version-policies.json": "jsonc",

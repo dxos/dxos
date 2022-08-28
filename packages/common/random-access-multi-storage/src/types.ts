@@ -9,15 +9,15 @@ export interface FileStat {
 }
 
 export interface Callback<DataType> {
-  (err: Error | null, data?: DataType): void;
+  (err: Error | null, data?: DataType): void
 }
 
 export interface RandomAccessStorage {
-  (file: string, opts?: {}): FileInternal;
+  (file: string, opts?: {}): FileInternal
 
-  root: string;
+  root: string
 
-  type: string;
+  type: string
 
-  destroy(): Promise<void>;
+  destroy(): Promise<void>
 }

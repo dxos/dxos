@@ -14,8 +14,7 @@
   ],
   "scripts": {
     "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test"
@@ -36,7 +35,6 @@
   },
   "devDependencies": {
     "@babel/core": "~7.13.15",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/mocha": "^8.2.2",
@@ -44,7 +42,6 @@
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
     "esbuild": "^0.14.49",
-    "eslint": "^8.21.0",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "mocha": "^8.4.0",

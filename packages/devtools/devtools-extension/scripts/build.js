@@ -26,7 +26,7 @@ void (async () => {
     write: true,
     bundle: true,
     plugins: [
-      NodeModulesPlugin(),
+      NodeModulesPlugin()
     ],
     watch: process.argv.includes('--watch') ? {
       onRebuild: ((error) => {

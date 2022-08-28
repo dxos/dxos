@@ -3,13 +3,44 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/common/codec-protobuf/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/common/codec-protobuf/dist",
+        "tsConfig": "packages/common/codec-protobuf/tsconfig.json",
+        "main": "packages/common/codec-protobuf/src/index.ts"
+      }
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/common/codec-protobuf/src/index.ts"
+        ],
+        "outfile": "packages/common/codec-protobuf/dist/browser.js",
+        "bundlePackages": [
+          "protobufjs"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/codec-protobuf/**/*.{ts,js}"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
 }

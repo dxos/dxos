@@ -14,8 +14,8 @@ import { ProtocolProvider } from './network-manager';
 const log = debug('dxos:network-manager:protocol-factory');
 
 interface ProtocolFactoryOptions {
-  plugins: any[],
-  getTopics: () => Buffer[],
+  plugins: any[]
+  getTopics: () => Buffer[]
   session: Record<string, any>
 }
 
@@ -57,7 +57,7 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
 };
 
 export interface Plugin {
-  createExtension: () => Extension;
+  createExtension: () => Extension
 }
 
 export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) => protocolFactory({

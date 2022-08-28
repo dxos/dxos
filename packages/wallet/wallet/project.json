@@ -2,13 +2,35 @@
   "sourceRoot": "packages/wallet/wallet/src",
   "projectType": "library",
   "targets": {
-    "build": {
+    "dev": {
       "executor": "nx:run-script",
+      "options": {
+        "script": "dev"
+      },
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/wallet/wallet/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/wallet/wallet/dist",
+        "tsConfig": "packages/wallet/wallet/tsconfig.json",
+        "main": "packages/wallet/wallet/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/wallet/wallet/**/*.{ts,js}"
+        ]
       }
     }
   }

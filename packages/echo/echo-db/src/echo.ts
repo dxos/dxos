@@ -55,7 +55,7 @@ export interface EchoCreationOptions {
   /**
    * Networking provider. Defaults to in-memory networking.
    */
-  networkManagerOptions?: NetworkManagerOptions,
+  networkManagerOptions?: NetworkManagerOptions
 
   /**
    * Whether to save and load snapshots. Defaults to `true`.
@@ -69,8 +69,8 @@ export interface EchoCreationOptions {
   snapshotInterval?: number
 
   // TODO(burdon): Comments.
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
+  readLogger?: (msg: any) => void
+  writeLogger?: (msg: any) => void
 }
 
 /**

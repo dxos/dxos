@@ -21,7 +21,7 @@
       "path": "../broadcast"
     },
     {
-      "path": "../protocol"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-network-generator"

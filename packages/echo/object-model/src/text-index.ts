@@ -7,8 +7,8 @@ import MiniSearch from 'minisearch';
 import { Getter } from './matcher';
 
 interface IndexerOptions {
-  fields: string[];
-  getter: Getter;
+  fields: string[]
+  getter: Getter
 }
 
 /**

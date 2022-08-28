@@ -12,10 +12,8 @@
   ],
   "scripts": {
     "book": "toolchain book",
-    "build": "toolchain build",
     "build:book": "toolchain build:book",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -27,7 +25,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -43,7 +40,6 @@
     "@types/faker": "^5.5.1",
     "@types/react": "^18.0.9",
     "clsx": "^1.1.0",
-    "eslint": "^8.21.0",
     "faker": "^5.1.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",

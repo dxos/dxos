@@ -8,7 +8,7 @@ import { useRegistry } from '../registry';
 import { useAsync } from './useAsync';
 
 interface Result {
-  records: RegistryRecord[],
+  records: RegistryRecord[]
   error?: unknown
 }
 

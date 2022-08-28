@@ -2,13 +2,15 @@
   "sourceRoot": "packages/wallet/wallet-playground/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
       "outputs": [
-        "packages/wallet/wallet-playground/dist"
+        "{options.outputFile}"
       ],
       "options": {
-        "script": "build"
+        "lintFilePatterns": [
+          "packages/wallet/wallet-playground/**/*.{ts,js}"
+        ]
       }
     }
   }

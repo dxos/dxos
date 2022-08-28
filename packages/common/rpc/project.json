@@ -2,14 +2,35 @@
   "sourceRoot": "packages/common/rpc/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/common/rpc/dist",
-        "packages/common/rpc/src/proto/gen"
+        "{options.basePath}/gen"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/common/rpc/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/rpc/dist",
+        "tsConfig": "packages/common/rpc/tsconfig.json",
+        "main": "packages/common/rpc/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/rpc/**/*.{ts,js}"
+        ]
       }
     }
   }

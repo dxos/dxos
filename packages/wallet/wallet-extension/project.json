@@ -11,6 +11,17 @@
       "options": {
         "script": "build"
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/wallet/wallet-extension/**/*.{ts,js}"
+        ]
+      }
     }
   }
 }

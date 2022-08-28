@@ -7,9 +7,9 @@ import { useSnackbar } from './useSnackbar';
 // TODO(burdon): Rewrite and replace useSnackbar.
 
 interface Messages {
-  onSuccessMessage?: string, // To display when the requests passes successfully.
-  onTimeoutMessage?: string, // To display when the request times out.
-  onErrorMessage?: string, // To display when some other error happens. Prints actual error by default.
+  onSuccessMessage?: string // To display when the requests passes successfully.
+  onTimeoutMessage?: string // To display when the request times out.
+  onErrorMessage?: string // To display when some other error happens. Prints actual error by default.
 }
 
 export const useUIError = () => {

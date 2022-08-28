@@ -3,12 +3,25 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/sdk/react-ipfs/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/sdk/react-ipfs/dist",
+        "tsConfig": "packages/sdk/react-ipfs/tsconfig.json",
+        "main": "packages/sdk/react-ipfs/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/react-ipfs/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

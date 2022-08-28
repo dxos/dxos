@@ -17,7 +17,7 @@ export interface ContentLoader {
    * Downloads a file from the CDN and saves it to the specified filesystem directory.
    * @returns The path to the downloaded file.
    */
-  download: (id: string, dir: string) => Promise<string>;
+  download: (id: string, dir: string) => Promise<string>
 }
 
 export class IPFSContentLoader implements ContentLoader {

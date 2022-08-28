@@ -3,12 +3,23 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/echo/echo-testing/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/echo/echo-testing/dist",
+        "tsConfig": "packages/echo/echo-testing/tsconfig.json",
+        "main": "packages/echo/echo-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/echo/echo-testing/**/*.{ts,js}"
+        ]
       }
     }
   }
