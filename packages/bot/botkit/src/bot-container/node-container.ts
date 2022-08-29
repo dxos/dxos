@@ -87,10 +87,10 @@ export class NodeContainer implements BotContainer {
 }
 
 export interface IpcProcessLike {
-  on(event: 'message', listener: (message: Serializable) => void): void;
-  off(event: 'message', listener: (message: Serializable) => void): void;
+  on(event: 'message', listener: (message: Serializable) => void): void
+  off(event: 'message', listener: (message: Serializable) => void): void
 
-  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean;
+  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean
 }
 
 export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({

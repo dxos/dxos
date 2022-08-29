@@ -16,7 +16,7 @@ import { Autocomplete } from '../../components';
 import { SubscribeToNetworkTopicsResponse } from '../../proto';
 
 interface Topic {
-  topic: string,
+  topic: string
   label: string
 }
 

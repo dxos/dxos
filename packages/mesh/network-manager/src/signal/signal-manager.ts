@@ -28,7 +28,7 @@ export interface SignalManager extends SignalConnection {
   statusChanged: Event<SignalStatus[]>
   commandTrace: Event<CommandTrace>
   swarmEvent: Event<[topic: PublicKey, swarmEvent: SwarmEvent]>
-  onMessage: Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>;
+  onMessage: Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>
 
   getStatus (): SignalStatus[]
   destroy(): Promise<void>

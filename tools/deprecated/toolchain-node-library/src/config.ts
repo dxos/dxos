@@ -7,21 +7,21 @@
  */
 export interface Config {
   esbuild: {
-    config: string,
-    outdir: string,
+    config: string
+    outdir: string
     book: {
       outdir: string
     }
-  },
+  }
   protobuf: {
     base: string
     src: string
     output: string
     substitutions: string
-  },
+  }
   tsc: {
     output: string
-  },
+  }
   tests: {
     src: string
     spec: string

@@ -3,6 +3,6 @@
 //
 
 export interface DecodedAny {
-  typeUrl: string,
-  [key: string]: any,
+  typeUrl: string
+  [key: string]: any
 }

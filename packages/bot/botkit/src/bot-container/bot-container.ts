@@ -12,15 +12,15 @@ export interface SpawnOptions {
 }
 
 export interface BotExitStatus {
-  code: number | null;
-  signal: NodeJS.Signals | null;
+  code: number | null
+  signal: NodeJS.Signals | null
 }
 
 export interface BotContainer {
-  error: ReadOnlyEvent<[id: string, error: Error]>;
-  exited: ReadOnlyEvent<[id: string, status: BotExitStatus]>;
+  error: ReadOnlyEvent<[id: string, error: Error]>
+  exited: ReadOnlyEvent<[id: string, status: BotExitStatus]>
 
-  spawn(opts: SpawnOptions): Promise<RpcPort>;
-  kill(id: string): Promise<void>;
-  killAll(): void;
+  spawn(opts: SpawnOptions): Promise<RpcPort>
+  kill(id: string): Promise<void>
+  killAll(): void
 }

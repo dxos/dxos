@@ -14,8 +14,8 @@ import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol';
 type Command = 'continue' | 'break' | 'session'
 
 export interface ExtensionInitOptions {
-  timeout?: number,
-  userSession?: Record<string, any>,
+  timeout?: number
+  userSession?: Record<string, any>
 }
 
 export class ExtensionInit extends Extension {

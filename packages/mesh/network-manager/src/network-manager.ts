@@ -21,8 +21,8 @@ import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transp
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
 export interface NetworkManagerOptions {
-  signal?: string[],
-  ice?: any[],
+  signal?: string[]
+  ice?: any[]
   /**
    * Enable connection logging for devtools.
    */
@@ -184,22 +184,22 @@ export interface SwarmOptions {
   /**
    * Swarm topic.
    */
-  topic: PublicKey,
+  topic: PublicKey
 
   /**
    * This node's peer id.
    */
-  peerId: PublicKey,
+  peerId: PublicKey
 
   /**
    * Requested topology. Must be a new instance for every swarm.
    */
-  topology: Topology,
+  topology: Topology
 
   /**
    * Protocol to use for every connection.
    */
-  protocol: ProtocolProvider,
+  protocol: ProtocolProvider
 
   /**
    * Presence plugin for network mapping, if exists.

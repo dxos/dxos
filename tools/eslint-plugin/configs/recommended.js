@@ -26,6 +26,7 @@ module.exports = {
     'curly': ['error', 'all'],
     'brace-style': ['error', '1tbs'],
     'func-call-spacing': 'off',
+    'import/export': 'off',
     'import/order': ['error', {
       pathGroups: [
         {
@@ -34,12 +35,15 @@ module.exports = {
           position: 'after'
         },
         {
-          pattern: '@{dxos,wirelineio}/**',
+          pattern: '@{dxos,braneframe}/**',
           group: 'internal',
           position: 'before'
         }
       ],
-      pathGroupsExcludedImportTypes: ['@{dxos,wirelineio}/**', '@{mui,material-ui}/**'],
+      pathGroupsExcludedImportTypes: [
+        '@{dxos,braneframe}/**',
+        '@{mui,material-ui}/**'
+      ],
       'newlines-between': 'always',
       groups: [
         ['builtin', 'external'],
@@ -50,18 +54,8 @@ module.exports = {
       }
     }],
     'multiline-ternary': 'off',
-    'no-unused-vars': 'off',
-    'no-unused-expressions': 'off',
-    'no-useless-constructor': 'off',
-    'no-void': [
-      'error',
-      {
-        allowAsStatement: true
-      }
-    ],
-    'padded-blocks': 'off',
-    'quote-props': 'off',
-    'import/export': 'off',
+    'n/no-callback-literal': 'off',
+    'node/no-callback-literal': 'off',
     'no-extra-parens': 'off',
     'no-lone-blocks': 'off',
     'no-restricted-imports': [
@@ -75,9 +69,18 @@ module.exports = {
         ]
       }
     ],
+    'no-unused-expressions': 'off',
+    'no-unused-vars': 'off',
     'no-use-before-define': 'off',
-    'node/no-callback-literal': 'off',
-    'n/no-callback-literal': 'off',
+    'no-useless-constructor': 'off',
+    'no-void': [
+      'error',
+      {
+        allowAsStatement: true
+      }
+    ],
+    'padded-blocks': 'off',
+    'quote-props': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [

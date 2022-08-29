@@ -16,11 +16,11 @@ export interface Signer {
    *   signatures: []   // An array with signature and publicKey of each signing key.
    * }
    */
-  sign (message: any, keys: SigningKey[], nonce?: Buffer, created?: string): WithTypeUrl<SignedMessage>;
+  sign (message: any, keys: SigningKey[], nonce?: Buffer, created?: string): WithTypeUrl<SignedMessage>
 
   /**
    * Sign the data with the indicated key and return the signature.
    * KeyChains are not supported.
    */
-  rawSign (data: Buffer, keyRecord: KeyRecord): Buffer;
+  rawSign (data: Buffer, keyRecord: KeyRecord): Buffer
 }

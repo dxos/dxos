@@ -10,7 +10,7 @@ interface ColumnContainerProps {
   topComponent: ReactNode
   bottomComponent: ReactNode
   config: {
-    fixedComponent: 'top' | 'bottom',
+    fixedComponent: 'top' | 'bottom'
     height: string
   }
 }

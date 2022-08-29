@@ -36,22 +36,22 @@ interface Peer {
 }
 
 interface ConnectionEventDetails {
-  fromId: Buffer,
+  fromId: Buffer
   toId: Buffer
 }
 
 interface ProtocolMessageEventDetails {
-  protocol: Protocol,
+  protocol: Protocol
   message: any
 }
 
 interface NeighborJoinedEventDetails {
-  peerId: string,
+  peerId: string
   protocol: Protocol
 }
 
 interface GraphUpdatedEventDetails {
-  graph: any,
+  graph: any
   changes: any
 }
 
