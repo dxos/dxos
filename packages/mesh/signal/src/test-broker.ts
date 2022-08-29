@@ -87,10 +87,10 @@ export class TestBroker {
       this.stop();
       this._serverProcess = this.startProcess();
       this._startRetries++;
+      if (this._startRetries > this._retriesLimit) {
+        throw new Error('Test Signal server was not started');
+      }
       return await this.waitUntilStarted();
-    }
-    if (this._startRetries > this._retriesLimit) {
-      throw new Error('Test Signal server was not started');
     }
   }
 
