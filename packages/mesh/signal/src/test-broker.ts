@@ -14,13 +14,22 @@ import { randomInt } from '@dxos/util';
 
 const log = debug('dxos:signal:test-broker');
 
+interface TestBrokerOptions {
+  port?: number
+  timeout?: number
+}
+
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
+  private _startRetries = 0;
+  private readonly _retriesLimit = 3;
   private readonly _port: number;
+  private readonly _timeout: number;
   private _serverProcess: ChildProcessWithoutNullStreams;
 
-  constructor (port = 8080) {
+  constructor ({ port = 8080, timeout = 5_000 }: TestBrokerOptions = {}) {
     this._port = port;
+    this._timeout = timeout;
     this._serverProcess = this.startProcess();
   }
 
@@ -62,14 +71,26 @@ export class TestBroker {
   }
 
   public async waitUntilStarted (): Promise<void> {
-    let online = false;
-    while (!online) {
+    let waited = 0;
+    const waitInc = 20;
+    while (waited < this._timeout) {
       try {
-        await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
-        online = true;
+        const response = await fetch(`http://localhost:${this._port}/.well-known/dx/signal`);
+        log(`Fetching broker. Response=${JSON.stringify(response)}`);
+        return;
       } catch (err) {
-        await sleep(20);
+        await sleep(waitInc);
+        waited = waited + waitInc;
       }
+    }
+    if (waited >= this._timeout) {
+      this.stop();
+      this._serverProcess = this.startProcess();
+      this._startRetries++;
+      return await this.waitUntilStarted();
+    }
+    if (this._startRetries > this._retriesLimit) {
+      throw new Error('Test Signal server was not started');
     }
   }
 
@@ -88,7 +109,7 @@ export class TestBroker {
  * @param port Port to start the signal server on, random by default.
  */
 export const createTestBroker = async (port?: number): Promise<TestBroker> => {
-  const server = new TestBroker(port ?? randomInt(10000, 50000));
+  const server = new TestBroker({ port: port ?? randomInt(10000, 50000) });
   await server.waitUntilStarted();
   return server;
 };
