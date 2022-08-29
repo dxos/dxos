@@ -19,6 +19,7 @@ export default defineConfig({
       '@dxos/client',
       '@dxos/client/client',
       '@dxos/config',
+      '@dxos/protocols',
       '@dxos/react-async',
       '@dxos/rpc',
       '@dxos/rpc-worker-proxy'
@@ -26,10 +27,10 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      // TODO(wittjosiah): Prod build not working, use package.json exports?
       include: [
         /client/,
         /config/,
+        /protocols/,
         /react-async/,
         /rpc/,
         /rpc-worker-proxy/,
@@ -37,5 +38,8 @@ export default defineConfig({
       ]
     }
   },
-  plugins: [dxosPlugin()]
+  plugins: [dxosPlugin()],
+  worker: {
+    plugins: [dxosPlugin()]
+  }
 });

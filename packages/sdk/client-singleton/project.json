@@ -24,7 +24,6 @@
       "executor": "@nrwl/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
-        "port": 4400,
         "config": {
           "configFolder": "packages/sdk/client-singleton/.storybook"
         }

@@ -7,6 +7,12 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
+  uuid@8.3.2:
+    hash: rxfbstxgb7ip2ka7npjixuqpye
+    path: patches/uuid@8.3.2.patch
+  memdown@5.1.0:
+    hash: tjbpekhnedejisbcwvc5eec3ii
+    path: patches/memdown@5.1.0.patch
 
 importers:
 
@@ -1401,7 +1407,7 @@ importers:
       columnify: 1.6.0
       expect: 27.0.6
       faker: 5.5.3
-      memdown: 5.1.0
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
       mocha: 8.4.0
       typescript: 4.7.4
 
@@ -1739,7 +1745,7 @@ importers:
       '@types/uuid': 8.3.3
       '@types/yargs': 16.0.4
       typescript: 4.7.4
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
 
   packages/gravity/browser-tests:
     specifiers:
@@ -1900,7 +1906,7 @@ importers:
       leveldown: 5.6.0
       levelup: 4.4.0
       lodash.matches: 4.6.0
-      memdown: 5.1.0
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
       moment: 2.29.1
       performance-now: 2.1.0
       pump: 3.0.0
@@ -2375,9 +2381,9 @@ importers:
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       lodash.defaultsdeep: 4.6.1
-      memdown: 5.1.0
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
       readable-stream: 3.6.0
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
@@ -2411,6 +2417,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-worker-proxy': workspace:*
@@ -2421,6 +2428,7 @@ importers:
     dependencies:
       '@dxos/client': link:../client
       '@dxos/config': link:../config
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/rpc-worker-proxy': link:../../common/rpc-worker-proxy
     devDependencies:
@@ -2946,7 +2954,7 @@ importers:
       mobile-detect: 1.4.5
       react-copy-to-clipboard: 5.1.0_react@18.2.0
       url-join: 4.0.1
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
       '@babel/core': 7.13.16
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.13.16
@@ -3061,12 +3069,14 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
+      setimmediate: 1.0.5
       vite: 3.0.9
     dependencies:
       '@dxos/config': link:../config
       '@dxos/esbuild-plugins': 2.29.0
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
+      setimmediate: 1.0.5
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   packages/wallet/wallet:
@@ -3223,7 +3233,7 @@ importers:
       playwright: 1.24.0
       rmdir: 1.2.0
       typescript: 4.7.4
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
 
   packages/wallet/wallet-playground:
     specifiers:
@@ -26770,7 +26780,7 @@ packages:
       ltgt: 2.2.1
       safe-buffer: 5.1.2
 
-  /memdown/5.1.0:
+  /memdown/5.1.0_tjbpekhnedejisbcwvc5eec3ii:
     resolution: {integrity: sha512-B3J+UizMRAlEArDjWHTMmadet+UKwHd3UjMgGBkZcKAxAYVPS9o0Yeiha4qvz7iGiL2Sb3igUft6p7nbFWctpw==}
     engines: {node: '>=6'}
     dependencies:
@@ -26780,6 +26790,7 @@ packages:
       inherits: 2.0.4
       ltgt: 2.2.1
       safe-buffer: 5.2.1
+    patched: true
 
   /memfs/3.4.7:
     resolution: {integrity: sha512-ygaiUSNalBX85388uskeCyhSAoOSgzBbtVCr9jA2RROssFL9Q19/ZXFqS+2Th2sr1ewNIWgFdLzLC3Yl1Zv+lw==}
@@ -27958,7 +27969,7 @@ packages:
       is-wsl: 2.2.0
       semver: 7.3.7
       shellwords: 0.1.1
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       which: 2.0.2
     dev: false
     optional: true
@@ -27970,7 +27981,7 @@ packages:
       is-wsl: 2.2.0
       semver: 7.3.7
       shellwords: 0.1.1
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       which: 2.0.2
     dev: true
 
@@ -32305,7 +32316,7 @@ packages:
     resolution: {integrity: sha512-GJgLTZ7vYb/JtPSSZ10hsOYIvEYsjbNU+zPdIHcUaWVNUEPivzxku31865sSSud0Da0W4lEeOPlmw93zLQchuQ==}
     dependencies:
       faye-websocket: 0.11.4
-      uuid: 8.3.2
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
       websocket-driver: 0.7.4
     dev: false
 
@@ -34501,9 +34512,10 @@ packages:
     hasBin: true
     dev: false
 
-  /uuid/8.3.2:
+  /uuid/8.3.2_rxfbstxgb7ip2ka7npjixuqpye:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
+    patched: true
 
   /uvu/0.5.2:
     resolution: {integrity: sha512-m2hLe7I2eROhh+tm3WE5cTo/Cv3WQA7Oc9f7JB6uWv+/zVKvfAm53bMyOoGOSZeQ7Ov2Fu9pLhFr7p07bnT20w==}

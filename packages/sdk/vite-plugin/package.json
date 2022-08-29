@@ -18,6 +18,7 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "rollup-plugin-polyfill-node": "^0.10.2",
     "rollup": "~2.77.3",
+    "setimmediate": "1.0.5",
     "vite": "3.0.9"
   }
 }

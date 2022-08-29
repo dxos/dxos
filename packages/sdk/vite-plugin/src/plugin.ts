@@ -48,7 +48,7 @@ export const dxosPlugin = (): Plugin => ({
           {
             name: 'setimmediate-polyfill',
             transform (code, module) {
-              const contents = 'import "setimmediate";';
+              const contents = `import "${require.resolve('setimmediate')}";`;
               // eslint-disable-next-line
               // @ts-ignore
               if (this.getModuleInfo(module).isEntry) {

@@ -16,6 +16,7 @@
     "nx": "nx"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.13",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/eslint-plugin": "workspace:*",
@@ -26,12 +27,12 @@
     "@nrwl/eslint-plugin-nx": "14.5.7",
     "@nrwl/js": "14.5.7",
     "@nrwl/linter": "14.5.7",
-    "@nrwl/storybook": "14.5.7",
     "@nrwl/nx-cloud": "^14.3.0",
+    "@nrwl/storybook": "14.5.7",
     "@storybook/addon-actions": "^6.5.10",
-    "@storybook/addon-links": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
     "@storybook/addon-interactions": "^6.5.10",
+    "@storybook/addon-links": "^6.5.10",
     "@storybook/builder-vite": "^0.2.2",
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "^6.5.10",
@@ -44,7 +45,6 @@
     "@types/sharedworker": "0.0.80",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",
-    "@babel/core": "^7.18.13",
     "babel-loader": "^8.2.5",
     "esbuild": "~0.14.1",
     "esbuild-node-externals": "^1.4.1",
@@ -60,7 +60,9 @@
   "pnpm": {
     "patchedDependencies": {
       "@nrwl/js@14.5.7": "patches/@nrwl__js@14.5.7.patch",
-      "vite@3.0.9": "patches/vite@3.0.9.patch"
+      "vite@3.0.9": "patches/vite@3.0.9.patch",
+      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
+      "memdown@5.1.0": "patches/memdown@5.1.0.patch"
     }
   }
 }

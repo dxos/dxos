@@ -8,10 +8,14 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { createBundledRpcServer } from '@dxos/rpc';
 import { openPort } from '@dxos/rpc-worker-proxy';
 
+// eslint-disable-next-line
+// @ts-ignore
+import SharedWorker from './worker-proxy?sharedworker';
+
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     let client: Client;
-    const worker = new SharedWorker('/src/shared-worker.ts', { type: 'module' });
+    const worker = new SharedWorker();
 
     await openPort({
       worker,

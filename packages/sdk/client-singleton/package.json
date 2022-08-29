@@ -14,11 +14,12 @@
     "bundle": "vite build",
     "check": "true",
     "dev": "vite --port 3967",
-    "preview": "vite preview"
+    "preview": "vite preview --port 3967"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/rpc-worker-proxy": "workspace:*",
     "@dxos/rpc": "workspace:*"
   },
