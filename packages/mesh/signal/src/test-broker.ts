@@ -82,7 +82,7 @@ export class TestBroker {
         await sleep(waitInc);
         waited = waited + waitInc;
       }
-    } 
+    }
     if (waited >= this._timeout) {
       this.stop();
       this._serverProcess = this.startProcess();
