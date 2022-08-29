@@ -15,13 +15,13 @@ import { randomInt } from '@dxos/util';
 const log = debug('dxos:signal:test-broker');
 
 interface TestBrokerOptions {
-  port?: number;
-  timeout?: number;
+  port?: number
+  timeout?: number
 }
 
 export class TestBroker {
   private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
-  private  _startRetries = 0;
+  private _startRetries = 0;
   private readonly _retriesLimit = 3;
   private readonly _port: number;
   private readonly _timeout: number;
@@ -84,13 +84,13 @@ export class TestBroker {
       }
     }
     if (waited >= this._timeout) {
-      this.stop()
+      this.stop();
       this._serverProcess = this.startProcess();
       this._startRetries++;
       return await this.waitUntilStarted();
     }
     if (this._startRetries > this._retriesLimit) {
-      throw new Error('Test Signal server was not started')
+      throw new Error('Test Signal server was not started');
     }
   }
 
