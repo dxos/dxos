@@ -16,7 +16,8 @@
     "check-dependencies": "syncpack list-mismatches",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
-    "nx": "nx"
+    "nx": "nx",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -56,6 +57,7 @@
     "esbuild": "~0.14.1",
     "esbuild-node-externals": "^1.4.1",
     "eslint": "^8.21.0",
+    "husky": "^8.0.0",
     "nx": "14.5.7",
     "playwright": "^1.25.1", 
     "react": "^18.1.0",
