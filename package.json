@@ -13,6 +13,9 @@
   },
   "license": "MIT",
   "scripts": {
+    "check-dependencies": "syncpack list-mismatches",
+    "fix-dependencies": "syncpack fix-mismatches",
+    "format-package": "syncpack format",
     "nx": "nx"
   },
   "devDependencies": {
@@ -41,7 +44,7 @@
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "^6.5.10",
     "@storybook/testing-library": "^0.0.13",
-    "@swc-node/register": "1.5.1",
+    "@swc-node/register": "~1.5.1",
     "@types/jest": "^28.1.6",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
@@ -58,6 +61,7 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "require-from-string": "^2.0.2",
+    "syncpack": "^8.2.4",
     "typescript": "^4.7.2",
     "vite": "3.0.9",
     "webpack": "^5.74.0"

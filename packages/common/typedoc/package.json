@@ -13,7 +13,6 @@
     "generate:sdk": "typedoc --json src/api/sdk.json --entryPointStrategy packages '../../sdk/*' --name '@dxos/typedoc'",
     "prerelease": "npm run generate 2>&1 && tsc"
   },
-  "dependencies": {},
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "typedoc": "^0.22.18",

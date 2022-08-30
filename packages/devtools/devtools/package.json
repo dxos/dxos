@@ -46,7 +46,7 @@
     "react-dom": "^18.1.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.13.15",
+    "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",

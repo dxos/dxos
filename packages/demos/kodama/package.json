@@ -61,7 +61,7 @@
     "@types/node-fetch": "^2.5.10",
     "@types/react": "^18.0.9",
     "@types/yargs": "~16.0.1",
-    "esbuild": "^0.14.49",
+    "esbuild": "~0.14.1",
     "expect": "~27.0.2",
     "mocha": "^8.4.0",
     "supervisor": "~0.12.0",

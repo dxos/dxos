@@ -21,7 +21,7 @@
     "@dxos/gem-spore": "2.2.1-beta.11"
   },
   "devDependencies": {
-    "@babel/core": "~7.13.15",
+    "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",

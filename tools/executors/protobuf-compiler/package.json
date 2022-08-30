@@ -28,7 +28,7 @@
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
-    "@swc-node/register": "~1.4.2",
+    "@swc-node/register": "~1.5.1",
     "@types/argparse": "^2.0.0",
     "@types/glob": "~7.1.3",
     "@types/mocha": "^8.2.2",

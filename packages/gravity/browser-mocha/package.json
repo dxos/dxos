@@ -33,7 +33,7 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "assert": "^2.0.0",
     "chalk": "^4.1.0",
-    "esbuild": "^0.14.49",
+    "esbuild": "~0.14.1",
     "glob": "~7.1.6",
     "pkg-up": "^3.1.0",
     "playwright": "^1.25.1",

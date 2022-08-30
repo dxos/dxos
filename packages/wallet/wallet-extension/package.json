@@ -48,7 +48,7 @@
     "@types/webpack-env": "^1.16.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
-    "esbuild": "^0.14.49",
+    "esbuild": "~0.14.1",
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "playwright": "^1.25.1",

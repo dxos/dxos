@@ -1,0 +1,20 @@
+peer: false
+workspace: false
+semverGroups:
+  - range: ^
+    packages:
+      - '**'
+    dependencies:
+      - '**'
+  - range: ~
+    packages:
+      - esbuild
+      - '@swc-node/register'
+    dependencies:
+      - '**'
+  - range: ''
+    packages:
+      - '**'
+    dependencies:
+      - nx
+      - '@nwrl/*'
