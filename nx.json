@@ -23,11 +23,6 @@
     }
   },
   "targetDefaults": {
-    "proto": {
-      "dependsOn": [
-        "^build"
-      ]
-    },
     "build": {
       "dependsOn": [
         "^build",
@@ -44,18 +39,28 @@
         "prebuild"
       ]
     },
-    "test": {
-      "dependsOn": [
-        "^build",
-        "proto"
-      ]
-    },
     "check": {
       "dependsOn": [
         "lint",
         "test",
         "proto",
         "build"
+      ]
+    },
+    "prebuild": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "proto": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "^build",
+        "proto"
       ]
     }
   },
