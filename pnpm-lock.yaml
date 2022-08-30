@@ -4,15 +4,18 @@ patchedDependencies:
   '@nrwl/js@14.5.7':
     hash: osi77fjxs57mwennraun4e6pmi
     path: patches/@nrwl__js@14.5.7.patch
-  vite@3.0.9:
-    hash: sn4pdpxxcdbczqmgzem6dbvc7e
-    path: patches/vite@3.0.9.patch
-  uuid@8.3.2:
-    hash: rxfbstxgb7ip2ka7npjixuqpye
-    path: patches/uuid@8.3.2.patch
+  '@nxext/vite@14.0.3':
+    hash: 4yw7ucziv572yqpbjanig3ynou
+    path: patches/@nxext__vite@14.0.3.patch
   memdown@5.1.0:
     hash: tjbpekhnedejisbcwvc5eec3ii
     path: patches/memdown@5.1.0.patch
+  uuid@8.3.2:
+    hash: rxfbstxgb7ip2ka7npjixuqpye
+    path: patches/uuid@8.3.2.patch
+  vite@3.0.9:
+    hash: sn4pdpxxcdbczqmgzem6dbvc7e
+    path: patches/vite@3.0.9.patch
 
 importers:
 
@@ -32,7 +35,7 @@ importers:
       '@nrwl/nx-cloud': ^14.3.0
       '@nrwl/storybook': 14.5.7
       '@nrwl/workspace': 14.5.7
-      '@nxext/vite': ^14.0.3
+      '@nxext/vite': 14.0.3
       '@playwright/test': ^1.25.1
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
@@ -77,7 +80,7 @@ importers:
       '@nrwl/nx-cloud': 14.4.1
       '@nrwl/storybook': 14.5.7_swgsivd2zb7is2rsdcepjxvfa4
       '@nrwl/workspace': 14.5.7_yqf6mqtodhk4dygdp5fgmhxhii
-      '@nxext/vite': 14.0.3_twh37saat3kv5aa5buvztedblu
+      '@nxext/vite': 14.0.3_4yw7ucziv572yqpbjanig3ynou_twh37saat3kv5aa5buvztedblu
       '@playwright/test': 1.25.1
       '@storybook/addon-actions': 6.5.10_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.10_nwfnkkhjqg55kiljqio4o4kdgi
@@ -10356,7 +10359,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@nxext/vite/14.0.3_twh37saat3kv5aa5buvztedblu:
+  /@nxext/vite/14.0.3_4yw7ucziv572yqpbjanig3ynou_twh37saat3kv5aa5buvztedblu:
     resolution: {integrity: sha512-gTexrtDTHmD1FjN4wwDMmkSFZvUBjTSaeQ0PuI71ugSc2pCHMc269EVbv/pkUeWqfkvevLIicYi521+H2XOm0A==}
     peerDependencies:
       '@nrwl/workspace': ^14.5.0
@@ -10372,6 +10375,7 @@ packages:
     transitivePeerDependencies:
       - nx
     dev: true
+    patched: true
 
   /@oclif/color/1.0.1:
     resolution: {integrity: sha512-qjYr+izgWdIVOroiBKqTzQgc1r5Wd9QB1J7yGM2EeelqhBARiiVLRZL45vhV4zdyTRdDkZS0EBzFwQap+nliLA==}

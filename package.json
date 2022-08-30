@@ -30,7 +30,7 @@
     "@nrwl/nx-cloud": "^14.3.0",
     "@nrwl/storybook": "14.5.7",
     "@nrwl/workspace": "14.5.7",
-    "@nxext/vite": "^14.0.3",
+    "@nxext/vite": "14.0.3",
     "@playwright/test": "^1.25.1",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
@@ -64,9 +64,10 @@
   "pnpm": {
     "patchedDependencies": {
       "@nrwl/js@14.5.7": "patches/@nrwl__js@14.5.7.patch",
-      "vite@3.0.9": "patches/vite@3.0.9.patch",
+      "@nxext/vite@14.0.3": "patches/@nxext__vite@14.0.3.patch",
+      "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "memdown@5.1.0": "patches/memdown@5.1.0.patch"
+      "vite@3.0.9": "patches/vite@3.0.9.patch"
     }
   }
 }
