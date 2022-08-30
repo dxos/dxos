@@ -11,7 +11,7 @@
   "scripts": {
     "build": "true",
     "check": "true",
-    "test": "true",    
+    "test": "true",
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium"
   },
   "devDependencies": {
