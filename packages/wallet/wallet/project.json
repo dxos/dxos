@@ -13,6 +13,22 @@
         "main": "packages/wallet/wallet/src/index.ts"
       }
     },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "packages/wallet/wallet/out/storybook",
+        "config": {
+          "configFolder": "packages/wallet/wallet/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
     "bundle": {
       "executor": "@nxext/vite:build",
       "outputs": [
@@ -38,6 +54,20 @@
       "executor": "@nxext/vite:dev",
       "options": {
         "configFile": "packages/wallet/wallet/vite.config.ts"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/wallet/wallet/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
       }
     }
   }
