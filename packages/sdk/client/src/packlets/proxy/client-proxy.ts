@@ -11,6 +11,7 @@ import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
+import { createSingletonPort } from '@dxos/rpc-worker-proxy';
 
 import { InvalidConfigurationError, ClientServiceProvider, ClientServices, Echo, Halo, HaloSigner } from '../api';
 import { Runtime } from '../proto';
@@ -18,7 +19,6 @@ import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
 import { ClientServiceProxy } from './service-proxy';
-import { createSingletonPort } from './singleton-port';
 import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
