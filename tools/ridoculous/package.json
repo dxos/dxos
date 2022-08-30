@@ -1,7 +1,7 @@
 {
   "name": "@dxos/ridoculous",
-  "description": "Markdown processing CLI and library.",
   "version": "2.33.8",
+  "description": "Markdown processing CLI and library.",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -13,13 +13,14 @@
     "build": "rm -rf ./dist && tsc",
     "check": "true",
     "info": "tsc --showConfig | jq",
+    "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
-    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose",
-    "test": "mocha"
+    "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
     "array-iterate": "~2.0.1",
+    "chalk": "^4.1.0",
     "debug": "^4.3.3",
     "glob": "~7.1.6",
     "js-yaml": "^4.1.0",
@@ -34,8 +35,7 @@
     "to-vfile": "~7.2.3",
     "unist-builder": "~3.0.0",
     "unist-util-visit": "^4.1.0",
-    "yargs": "~16.2.0",
-    "chalk": "^4.1.0"
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",

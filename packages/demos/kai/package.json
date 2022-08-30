@@ -28,8 +28,8 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@emotion/css": "^11.7.1",
-    "@mui/material": "^5.8.1",
     "@mui/icons-material": "^5.8.0",
+    "@mui/material": "^5.8.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
   },

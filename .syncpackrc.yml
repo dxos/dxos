@@ -18,3 +18,25 @@ semverGroups:
     dependencies:
       - nx
       - '@nwrl/*'
+sortFirst:
+  - name
+  - version
+  - private
+  - description
+  - license
+  - author
+  - keywords
+  - homepage
+  - bugs
+  - repository
+  - type
+  - bin
+  - main
+  - types
+  - browser
+  - files
+  - exports
+  - scripts
+  - dependencies
+  - devDependencies
+  - peerDependencies
