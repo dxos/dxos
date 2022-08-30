@@ -18,7 +18,7 @@
   "scripts": {
     "check": "true",
     "test": "toolchain test",
-    "test:browser": "true"
+    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium --browser=firefox --browser=webkit"
   },
   "dependencies": {
     "assert": "^2.0.0",
