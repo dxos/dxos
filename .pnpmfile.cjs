@@ -21,6 +21,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // https://github.com/nxext/nx-extensions/issues/755
+    case '@nxext/vite': {
+      packageJson.peerDependencies['vite'] = '3.0.9'
+      break;
+    }
+
     case '@typescript-eslint/eslint-plugin': 
     case '@typescript-eslint/parser': {
       packageJson.dependencies['eslint'] = '^8.0.0'

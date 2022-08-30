@@ -29,6 +29,8 @@
     "@nrwl/linter": "14.5.7",
     "@nrwl/nx-cloud": "^14.3.0",
     "@nrwl/storybook": "14.5.7",
+    "@nrwl/workspace": "14.5.7",
+    "@nxext/vite": "^14.0.3",
     "@playwright/test": "^1.25.1",
     "@storybook/addon-actions": "^6.5.10",
     "@storybook/addon-essentials": "^6.5.10",
