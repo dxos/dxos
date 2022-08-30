@@ -278,7 +278,7 @@ export const setupCoreCommands = (yargs: Argv) => (
       yargs => yargs
         .options('additional', {
           type: 'boolean',
-          default: false
+          default: true
         })
         .strict(),
       handler<{ additional: boolean }>('Tests', async (argv) => {
