@@ -13,7 +13,9 @@
   },
   "license": "MIT",
   "scripts": {
-    "nx": "nx"
+    "nx": "nx",
+    "build": "nx run-many --target=build",
+    "check": "nx run-many --target=check"
   },
   "devDependencies": {
     "@dxos/esbuild": "workspace:*",

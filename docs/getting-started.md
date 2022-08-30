@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: DXOS SDK
+description: Getting started with DXOS SDK
 ---
 
 ## Nx Monorepos
@@ -37,19 +37,24 @@ pnpm install
 To build all packages:
 
 ```bash
-pnpm nx run-many --target=build
+pnpm build
+```
+
+To build multiple specific packages:
+```bash
+pnpm build --project <package>,...
+```
+
+To build a single package and dependencies:
+```bash
+# (optionally with the `watch` flag):
+pnpm nx build <target> --watch
 ```
 
 To check all tests pass (this is run by CI):
 
 ```bash
-pnpm nx run-many --target=check
-```
-
-To build an individual package (optionally with the `watch` flag):
-
-```bash
-pnpm nx build <target> --watch
+pnpm check
 ```
 
 ### Adding new dependencies
