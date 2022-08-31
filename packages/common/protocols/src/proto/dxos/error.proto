@@ -1,0 +1,17 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.error;
+
+message Error {
+  Code code = 1;
+  string message = 2;
+  optional string stack = 3;
+
+  enum Code {
+    UNKNOWN = 0;
+  }
+}
