@@ -37,6 +37,7 @@ importers:
       '@nrwl/workspace': 14.5.7
       '@nxext/vite': 14.0.3
       '@playwright/test': ^1.25.1
+      '@rushstack/eslint-patch': ^1.1.4
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -82,6 +83,7 @@ importers:
       '@nrwl/workspace': 14.5.7_yqf6mqtodhk4dygdp5fgmhxhii
       '@nxext/vite': 14.0.3_4yw7ucziv572yqpbjanig3ynou_twh37saat3kv5aa5buvztedblu
       '@playwright/test': 1.25.1
+      '@rushstack/eslint-patch': 1.1.4
       '@storybook/addon-actions': 6.5.10_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.10_nwfnkkhjqg55kiljqio4o4kdgi
       '@storybook/addon-interactions': 6.5.10_gnl5i5cb3h2lnkptqhyi4kye4e
@@ -11148,6 +11150,10 @@ packages:
       '@rushstack/node-core-library': 3.50.2
       node-forge: 1.3.1
       sudo: 1.0.3
+
+  /@rushstack/eslint-patch/1.1.4:
+    resolution: {integrity: sha512-LwzQKA4vzIct1zNZzBmRKI9QuNpLgTQMEjsQLf3BXuGYb3QPTP4Yjf6mkdX+X1mYttZ808QpOwAzZjv28kq7DA==}
+    dev: true
 
   /@rushstack/eslint-plugin-packlets/0.4.1_4rv7y5c6xz3vfxwhbrcxxi73bq:
     resolution: {integrity: sha512-A+mb+45fAUV6SRRlRy5EXrZAHNTnvOO3ONxw0hmRDcvyPAJwoX0ClkKQriz56QQE5SL4sPxhYoqbkoKbBmsxcA==}
