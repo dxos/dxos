@@ -1,0 +1,58 @@
+@startuml
+!theme superhero
+skinparam backgroundColor black
+
+entity      "App A"         as appA
+entity      "Iframe A"      as frameA
+entity      "Shared Worker" as worker
+entity      "Iframe B"      as frameB
+entity      "App B"         as appB
+autonumber 1.1
+
+== App A starts ==
+appA -> frameA:       <i>open</i>
+frameA -> worker:     <i>connect</i>
+worker -> frameA:     Setup Provider
+frameA -> worker:     Provider Ready
+frameA -> appA:       Provider Ready
+
+...afterward...
+autonumber inc A
+== App A runs with provider in frame ==
+appA -> frameA:       Window Message
+frameA -> appA:       Window Message
+
+...later on...
+autonumber inc A
+== App B starts ==
+appB -> frameB:       <i>open</i>
+frameB -> worker:     <i>connect</i>
+worker -> frameA:     Setup Port
+frameA -> worker:     Port Ready
+worker -> frameB:     Port Ready
+frameB -> appB:       Provider Ready
+
+...afterward...
+autonumber inc A
+== App B runs with proxy in frame ==
+appB -> frameB:       Window Message
+frameB -> worker:     Proxy Message
+worker -> frameA:     Proxy Message
+frameA -> worker:     Provider Message
+worker -> frameB:     Provider Message
+frameB -> appB:       Window Message
+
+...eventually...
+== App A closes ==
+appA -> frameA:       <i>unload</i>
+frameA -> worker:     Port Closing
+worker -> frameB:     Setup Provider
+frameB -> worker:     Provider Ready
+frameB -> appB:       Provider Ready
+
+...afterward...
+autonumber inc A
+== App B runs with provider in frame ==
+appB -> frameB:       Window Message
+frameB -> appB:       Window Message
+@enduml
