@@ -11,19 +11,12 @@
         "main": "packages/sdk/client-singleton/src/index.ts"
       }
     },
-    "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": [
-          "packages/sdk/client-singleton/**/*.{ts,tsx,js,jsx}"
-        ]
-      }
-    },
-    "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
+        "outputPath": "packages/sdk/client-singleton/out/storybook",
         "config": {
           "configFolder": "packages/sdk/client-singleton/.storybook"
         }
@@ -34,12 +27,36 @@
         }
       }
     },
-    "build-storybook": {
-      "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+    "bundle": {
+      "executor": "@nxext/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/client-singleton/out/client-singleton",
+        "configFile": "packages/sdk/client-singleton/vite.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client-singleton/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/sdk/client-singleton/out/client-singleton",
+        "configFile": "packages/sdk/client-singleton/vite.config.ts"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "packages/sdk/client-singleton/out/storybook",
         "config": {
           "configFolder": "packages/sdk/client-singleton/.storybook"
         }

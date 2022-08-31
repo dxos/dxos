@@ -3,6 +3,7 @@
 //
 
 import React, { useState } from 'react';
+import { HashRouter } from 'react-router-dom';
 
 import { Box, Button } from '@mui/material';
 
@@ -76,12 +77,14 @@ const Story = () => {
 
 export const Primary = () => {
   return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <ActionProvider>
-          <Story />
-        </ActionProvider>
-      </ProfileInitializer>
-    </ClientProvider>
+    <HashRouter>
+      <ClientProvider>
+        <ProfileInitializer>
+          <ActionProvider>
+            <Story />
+          </ActionProvider>
+        </ProfileInitializer>
+      </ClientProvider>
+    </HashRouter>
   );
 };
