@@ -30,7 +30,6 @@
         "testPatterns": [
           "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "forceExit": true,
         "jsdom": true
       }
     }

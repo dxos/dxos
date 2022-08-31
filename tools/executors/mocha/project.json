@@ -8,8 +8,7 @@
       "options": {
         "outputPath": "tools/executors/mocha/dist",
         "tsConfig": "tools/executors/mocha/tsconfig.json",
-        "main": "tools/executors/mocha/src/main.ts",
-        "updateBuildableProjectDepsInPackageJson": false
+        "main": "tools/executors/mocha/src/main.ts"
       }
     },
     "lint": {

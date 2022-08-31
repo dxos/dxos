@@ -38,8 +38,7 @@
       "options": {
         "testPatterns": [
           "packages/mesh/network-manager/src/**/*.test.{ts,js}"
-        ],
-        "forceExit": true
+        ]
       }
     }
   },

@@ -16,8 +16,7 @@
       "options": {
         "testPatterns": [
           "packages/demos/kai/src/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "forceExit": true
+        ]
       }
     }
   },

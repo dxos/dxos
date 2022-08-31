@@ -3,36 +3,37 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import { exec } from 'child_process';
+import '@swc-node/register';
+import glob from 'glob';
+import Mocha from 'mocha';
 import { resolve } from 'path';
-import { promisify } from 'util';
+
+import './util/react-setup';
+import './util/catch-unhandled-rejections';
 
 export interface MochaExecutorOptions {
   testPatterns: string[]
   jsdom: boolean
-  forceExit: boolean
+  timeout: number
 }
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing "mocha"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  const args = [
-    ...(options.jsdom ? ['-r jsdom-global/register'] : []),
-    '-r @swc-node/register',
-    `-r ${require.resolve('./util/react-setup.js')}`,
-    `-r ${require.resolve('./util/catch-unhandled-rejections.js')}`,
-    ...options.testPatterns.map(pattern => resolve(context.root, pattern)),
-    options.forceExit ? '--exit' : '--no-exit',
-    '-t 15000'
-  ];
+  const mocha = new Mocha({ timeout: options.timeout });
 
-  const { stdout, stderr } = await promisify(exec)(
-    `mocha ${args.join(' ')}`
-  );
-  console.log(stdout);
-  console.error(stderr);
+  if (options.jsdom) {
+    await import('jsdom-global/register');
+  }
 
-  const success = !stderr;
-  return { success };
+  options.testPatterns.forEach(pattern => {
+    glob.sync(pattern).forEach(path => {
+      mocha.addFile(resolve(context.root, path));
+    });
+  });
+
+  const failures = await new Promise(resolve => mocha.run(failures => resolve(failures)));
+
+  return { success: !failures };
 };

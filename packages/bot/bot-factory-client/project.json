@@ -53,8 +53,7 @@
       "options": {
         "testPatterns": [
           "packages/bot/bot-factory-client/src/**/*.test.{ts,js}"
-        ],
-        "forceExit": true
+        ]
       }
     }
   },

@@ -2,16 +2,6 @@
   "sourceRoot": "packages/demos/dx-cli/src",
   "projectType": "application",
   "targets": {
-    "test": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "test"
-      },
-      "dependsOn": [
-        "proto",
-        "build"
-      ]
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -26,9 +16,11 @@
       "options": {
         "testPatterns": [
           "packages/demos/dx-cli/src/**/*.test.{ts,tsx,js,jsx}"
-        ],
-        "forceExit": true
-      }
+        ]
+      },
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }

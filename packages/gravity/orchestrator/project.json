@@ -31,8 +31,7 @@
       "options": {
         "testPatterns": [
           "packages/gravity/orchestrator/src/**/*.test.{ts,js}"
-        ],
-        "forceExit": true
+        ]
       }
     }
   },

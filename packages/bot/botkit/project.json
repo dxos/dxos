@@ -38,8 +38,7 @@
       "options": {
         "testPatterns": [
           "packages/bot/botkit/src/**/*.test.{ts,js}"
-        ],
-        "forceExit": true
+        ]
       }
     }
   },

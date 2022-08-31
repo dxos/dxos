@@ -16,10 +16,10 @@
       "description": "Register jsdom environment",
       "default": false
     },
-    "forceExit": {
-      "type": "boolean",
-      "description": "Force process to exit once tests have run",
-      "default": false
+    "timeout": {
+      "type": "number",
+      "description": "Mocha timeout in ms",
+      "default": 15000
     },
     "watch": {
       "type": "boolean",

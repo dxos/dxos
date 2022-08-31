@@ -30,8 +30,7 @@
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true,
-        "forceExit": true
+        "jsdom": true
       }
     }
   },
