@@ -31,6 +31,7 @@ importers:
       '@nrwl/linter': 14.5.7
       '@nrwl/nx-cloud': ^14.3.0
       '@nrwl/storybook': 14.5.7
+      '@playwright/test': ^1.25.1
       '@storybook/addon-actions': ^6.5.10
       '@storybook/addon-essentials': ^6.5.10
       '@storybook/addon-interactions': ^6.5.10
@@ -52,6 +53,7 @@ importers:
       esbuild-node-externals: ^1.4.1
       eslint: ^8.21.0
       nx: 14.5.7
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       require-from-string: ^2.0.2
@@ -72,6 +74,7 @@ importers:
       '@nrwl/linter': 14.5.7_yqf6mqtodhk4dygdp5fgmhxhii
       '@nrwl/nx-cloud': 14.4.1
       '@nrwl/storybook': 14.5.7_swgsivd2zb7is2rsdcepjxvfa4
+      '@playwright/test': 1.25.1
       '@storybook/addon-actions': 6.5.10_biqbaboplfbrettd7655fr4n2y
       '@storybook/addon-essentials': 6.5.10_nwfnkkhjqg55kiljqio4o4kdgi
       '@storybook/addon-interactions': 6.5.10_gnl5i5cb3h2lnkptqhyi4kye4e
@@ -93,6 +96,7 @@ importers:
       esbuild-node-externals: 1.4.1_esbuild@0.14.49
       eslint: 8.22.0
       nx: 14.5.7_@swc-node+register@1.5.1
+      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       require-from-string: 2.0.2
@@ -500,12 +504,12 @@ importers:
       '@mui/icons-material': ^5.8.0
       '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
-      '@playwright/test': ^1.14.1
+      '@playwright/test': ^1.25.1
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       debug: ^4.3.3
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       vite: 3.0.9
@@ -529,11 +533,11 @@ importers:
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
-      '@playwright/test': 1.24.0
+      '@playwright/test': 1.25.1
       '@types/debug': 4.1.7
       '@types/react': 18.0.17
       '@types/react-dom': 18.0.6
-      playwright: 1.24.0
+      playwright: 1.25.1
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       wait-for-expect: 3.0.2
 
@@ -676,7 +680,7 @@ importers:
       '@types/react-dom': ^18.0.5
       expect: ~27.0.2
       mocha: ^8.4.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -703,7 +707,7 @@ importers:
       '@types/react-dom': 18.0.6
       expect: 27.0.6
       mocha: 8.4.0
-      playwright: 1.24.0
+      playwright: 1.25.1
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
 
@@ -796,7 +800,7 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/system': ^5.8.1
       '@mui/x-data-grid': ^5.12.3
-      '@playwright/test': ^1.14.1
+      '@playwright/test': ^1.25.1
       '@types/d3': ~7.0.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
@@ -818,7 +822,7 @@ importers:
       it-all: 1.0.6
       mobile-detect: ~1.4.5
       mocha: ^8.4.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       robotjs: ~0.6.0
@@ -865,7 +869,7 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@playwright/test': 1.24.0
+      '@playwright/test': 1.25.1
       '@types/d3': 7.0.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -882,7 +886,7 @@ importers:
       expect: 27.0.6
       faker: 5.5.3
       mocha: 8.4.0
-      playwright: 1.24.0
+      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       robotjs: 0.6.0
@@ -1010,7 +1014,7 @@ importers:
       expect: ~27.0.2
       lexical: ~0.3.11
       mocha: ^8.4.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: ^10.8.2
@@ -1056,7 +1060,7 @@ importers:
       debug: 4.3.4
       expect: 27.0.6
       mocha: 8.4.0
-      playwright: 1.24.0
+      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
@@ -1088,7 +1092,7 @@ importers:
       buffer: ^6.0.3
       expect: ~27.0.2
       mocha: ^8.4.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       react-scripts: 4.0.3
@@ -1125,7 +1129,7 @@ importers:
       '@types/react-dom': 18.0.6
       expect: 27.0.6
       mocha: 8.4.0
-      playwright: 1.24.0
+      playwright: 1.25.1
       ts-node: 10.8.2_sx5ynny5elbe7xjikueazwirqy
       typescript: 4.7.4
       wait-for-expect: 3.0.2
@@ -1776,7 +1780,7 @@ importers:
       esbuild: ^0.14.49
       glob: ~7.1.6
       pkg-up: ^3.1.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       typescript: ^4.7.2
       uuid: ^8.3.2
       yargs: ~16.2.0
@@ -1789,7 +1793,7 @@ importers:
       esbuild: 0.14.49
       glob: 7.1.7
       pkg-up: 3.1.0
-      playwright: 1.24.0
+      playwright: 1.25.1
       yargs: 16.2.0
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
@@ -2621,7 +2625,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
-      '@playwright/test': ^1.23.4
+      '@playwright/test': ^1.25.1
       '@testing-library/react': ^11.0.4
       '@testing-library/react-hooks': 5.1.2
       '@types/debug': ^4.1.7
@@ -2636,7 +2640,7 @@ importers:
       debug: ^4.3.3
       expect: ~27.0.2
       level-js: ^5.0.2
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       raf: ^3.4.1
       react: ^18.1.0
       react-dom: ^18.1.0
@@ -2661,7 +2665,7 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
-      '@playwright/test': 1.24.0
+      '@playwright/test': 1.25.1
       '@testing-library/react': 11.2.7_biqbaboplfbrettd7655fr4n2y
       '@testing-library/react-hooks': 5.1.2_e2ahcdagsdonc2lnwoylqhejci
       '@types/debug': 4.1.7
@@ -2674,7 +2678,7 @@ importers:
       '@types/use-subscription': 1.0.0
       expect: 27.0.6
       level-js: 5.0.2
-      playwright: 1.24.0
+      playwright: 1.25.1
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -3239,7 +3243,7 @@ importers:
       expect: ~27.0.2
       faker: ^5.1.0
       mocha: ^8.4.0
-      playwright: ^1.23.4
+      playwright: ^1.25.1
       react: ^18.1.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.1.0
@@ -3285,7 +3289,7 @@ importers:
       esbuild: 0.14.49
       expect: 27.0.6
       faker: 5.5.3
-      playwright: 1.24.0
+      playwright: 1.25.1
       rmdir: 1.2.0
       typescript: 4.7.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
@@ -10662,13 +10666,13 @@ packages:
       typescript: 4.7.4
     dev: true
 
-  /@playwright/test/1.24.0:
-    resolution: {integrity: sha512-sZLH2N6aWN9TtG+vMjNSomSfX0dSVHwWE+GhHQPV+ZeGcuZ/6CgMCGFuGjobgq/hNF9ZkuVOjeyoceZ0owKnHQ==}
+  /@playwright/test/1.25.1:
+    resolution: {integrity: sha512-IJ4X0yOakXtwkhbnNzKkaIgXe6df7u3H3FnuhI9Jqh+CdO0e/lYQlDLYiyI9cnXK8E7UAppAWP+VqAv6VX7HQg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 16.11.27
-      playwright-core: 1.24.0
+      playwright-core: 1.25.1
     dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin/0.4.3_iuu3iat45jetoshmqy6ruoxpeq:
@@ -29448,18 +29452,18 @@ packages:
     dependencies:
       find-up: 3.0.0
 
-  /playwright-core/1.24.0:
-    resolution: {integrity: sha512-BkDWdVsoEEC8m2glQlfNu1EN2qvjBsLIg5bD0wjrfwv9zVHktIsp80yYFObAcWreLNYhfRP4PlXE04lr5R4DFQ==}
+  /playwright-core/1.25.1:
+    resolution: {integrity: sha512-lSvPCmA2n7LawD2Hw7gSCLScZ+vYRkhU8xH0AapMyzwN+ojoDqhkH/KIEUxwNu2PjPoE/fcE0wLAksdOhJ2O5g==}
     engines: {node: '>=14'}
     hasBin: true
 
-  /playwright/1.24.0:
-    resolution: {integrity: sha512-oA9HzuYhskm9iEm9DeiWoLuJps+yzZ35zwR0EHhGFUd9ikUVMN5NqNAORvq+JesgoMlEu4IUdKK9jigFWm7olA==}
+  /playwright/1.25.1:
+    resolution: {integrity: sha512-kOlW7mllnQ70ALTwAor73q/FhdH9EEXLUqjdzqioYLcSVC4n4NBfDqeCikGuayFZrLECLkU6Hcbziy/szqTXSA==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.24.0
+      playwright-core: 1.25.1
 
   /pnp-webpack-plugin/1.6.4_typescript@4.7.4:
     resolution: {integrity: sha512-7Wjy+9E3WwLOEL30D+m8TSTF7qJJUJLONBnwQp0518siuMxUQUbgZwssaFX+QKlZkjHZcw/IpZCt/H0srrntSg==}
