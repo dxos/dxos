@@ -12,9 +12,6 @@
     "check": "true",
     "test": "toolchain test"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -28,8 +25,8 @@
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
-    "@dxos/react-toolkit": "workspace:*",
     "@dxos/react-registry-client": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@emotion/react": "^11.9.0",
@@ -46,7 +43,7 @@
     "react-dom": "^18.1.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.13.15",
+    "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
@@ -62,5 +59,8 @@
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^18.0.5",
     "typescript": "^4.7.2"
-  }
+  },
+  "browserslist": [
+    "> 5%"
+  ]
 }
