@@ -11,4 +11,5 @@ export * from './sink';
 export * from './stream-to-array';
 export * from './trigger';
 export * from './types';
+export * from './until';
 export * from './util';

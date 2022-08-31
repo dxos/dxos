@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, until } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
 
@@ -64,6 +64,17 @@ export class InvitationRequest {
    */
   get hasConnected (): boolean {
     return this._hasConnected;
+  }
+
+  /**
+   * Wait until connected.
+   */
+  async wait (timeout?: number) {
+    await until((resolve, reject) => {
+      this.canceled.on(resolve);
+      this.finished.on(resolve);
+      this.error.on(reject);
+    }, timeout ? timeout * 1_000 : 0);
   }
 
   /**
