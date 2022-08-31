@@ -27,6 +27,7 @@
     "@dxos/model-factory": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-worker-proxy": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",
