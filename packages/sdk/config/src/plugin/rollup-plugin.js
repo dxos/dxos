@@ -11,7 +11,7 @@ export function ConfigPlugin ({ dynamic = false, publicUrl = '' } = {}) {
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
   const contents = Object.entries(definitions({ dynamic, publicUrl }))
-    .map(([key, value]) => `window.${key} = ${JSON.stringify(value)};`)
+    .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
     .join('\n');
 
   return {

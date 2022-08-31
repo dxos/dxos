@@ -11,7 +11,8 @@ import { FixMemdownPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export interface EsbuildExecutorOptions {
   entryPoints: string[]
-  outfile: string
+  outdir?: string
+  outfile?: string
   bundlePackages?: string[]
 }
 
@@ -23,6 +24,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
 
   const result = await build({
     entryPoints: options.entryPoints,
+    outdir: options.outdir,
     outfile: options.outfile,
     format: 'cjs',
     write: true,

@@ -36,6 +36,16 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // @storybook/react transitive dep
+    case 'react-element-to-jsx-string': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react-dom'] = '^18.0.0'
+      break;
+    }
+
+    // @storybook/addon-essentials transitive deps
+    case 'react-inspector':
+    case '@mdx-js/react':
     // https://github.com/FezVrasta/react-resize-aware/issues/59
     case 'react-resize-aware': {
       packageJson.peerDependencies['react'] = '^18.0.0'
