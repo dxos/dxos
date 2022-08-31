@@ -44,6 +44,23 @@ export default class Invite extends BaseCommand {
       this.log(chalk`\n{blue Invitation}: ${descriptor}`);
       this.log(chalk`\n{red Secret}: ${secret}\n`);
 
+      {
+        type CB = () => void;
+
+        const until = (cb: CB) => {
+          // return new Promise((resolve, reject) => {
+          // cb(resolve);
+          // });
+        };
+
+        until(cb => {
+          // TODO(burdon): Async error handling (see kodama).
+          // invitation.canceled.on(resolve);
+          // invitation.finished.on(resolve);
+          // invitation.error.on(reject);
+        });
+      }
+
       const [promise, resolve, reject] = latch({ timeout: timeout * 1_000 });
 
       // TODO(burdon): Async error handling (see kodama).
