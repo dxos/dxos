@@ -54,7 +54,7 @@ test.describe('Multiple windows', () => {
     const b = await pageB.locator('p:right-of(:text("value"), 10)').textContent();
     const [intA, intB] = [a!, b!].map(str => parseInt(str.slice(1)));
 
-    expect(Math.abs(intA - intB)).toBeLessThan(10);
+    expect(Math.abs(intA - intB)).toBeLessThan(50);
   });
 
   // TODO(wittjosiah): Fix.
