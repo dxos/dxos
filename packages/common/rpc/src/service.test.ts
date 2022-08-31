@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
-import { TestStreamService } from './proto/gen/dxos/rpc/test';
+import { TestStreamService } from './proto/gen/dxos/test/rpc';
 import { RpcPeer } from './rpc';
 import { createRpcClient, createRpcServer, ProtoRpcClient, createBundledRpcClient, createBundledRpcServer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testutil';
@@ -19,7 +19,7 @@ describe('Protobuf service', () => {
   test('Works with protobuf service', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const service = schema.getService('dxos.rpc.test.TestService');
+    const service = schema.getService('dxos.test.rpc.TestService');
 
     const server: RpcPeer = createRpcServer({
       service,
@@ -50,7 +50,7 @@ describe('Protobuf service', () => {
   test('Errors are serialized', async () => {
     const [alicePort, bobPort] = createLinkedPorts();
 
-    const service = schema.getService('dxos.rpc.test.TestService');
+    const service = schema.getService('dxos.test.rpc.TestService');
 
     const server: RpcPeer = createRpcServer({
       service,
@@ -91,7 +91,7 @@ describe('Protobuf service', () => {
   });
 
   describe('streams', () => {
-    const service = schema.getService('dxos.rpc.test.TestStreamService');
+    const service = schema.getService('dxos.test.rpc.TestStreamService');
     let server: RpcPeer;
     let client: ProtoRpcClient<TestStreamService>;
 
@@ -131,7 +131,7 @@ describe('Protobuf service', () => {
     test('calls methods with google.protobuf.Empty parameters and return values', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const service = schema.getService('dxos.rpc.test.TestService');
+      const service = schema.getService('dxos.test.rpc.TestService');
 
       const server: RpcPeer = createRpcServer({
         service,
@@ -187,8 +187,8 @@ describe('Protobuf service', () => {
     it('call different services', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('dxos.rpc.test.TestService');
-      const PingService = schema.getService('dxos.rpc.test.PingService');
+      const TestService = schema.getService('dxos.test.rpc.TestService');
+      const PingService = schema.getService('dxos.test.rpc.PingService');
 
       const services = createServiceBundle({
         TestService,

@@ -7,13 +7,13 @@ import debug from 'debug';
 import { RpcPort } from '@dxos/rpc';
 import { isNode } from '@dxos/util';
 
-import { SingletonMessage } from '../proto';
+import { SingletonMessage } from './proto';
 
-const log = debug('dxos:client:singleton-port');
+const log = debug('dxos:rpc-worker-proxy:singleton-port');
 
-const IFRAME_ID = 'dxos-client-singleton';
+export const IFRAME_ID = 'dxos-rpc-worker-proxy';
 
-const waitForClient = () => {
+export const waitForClient = () => {
   return new Promise<void>(resolve => {
     const messageHandler = (event: MessageEvent<SingletonMessage>) => {
       if (event.data?.type === SingletonMessage.Type.PROVIDER_READY) {
@@ -38,7 +38,7 @@ const createIframe = (source: string) => {
 
 export const createSingletonPort = async (singletonSource: string): Promise<RpcPort> => {
   if (isNode()) {
-    throw new Error('Connecting to singleton client is not available in Node environment.');
+    throw new Error('Connecting to rpc worker proxy is not available in Node environment.');
   }
 
   const singleton = document.getElementById(IFRAME_ID) as HTMLIFrameElement ??
@@ -58,7 +58,7 @@ export const createSingletonPort = async (singletonSource: string): Promise<RpcP
           return;
         }
 
-        log('Received message from singleton client:', message);
+        log('Received message from worker proxy:', message);
         callback(new Uint8Array(message.data!));
       };
 

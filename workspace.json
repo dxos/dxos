@@ -62,6 +62,7 @@
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/common/rpc",
     "rpc-worker-proxy": "packages/common/rpc-worker-proxy",
+    "rpc-worker-proxy-e2e": "packages/common/rpc-worker-proxy-e2e",
     "signal": "packages/mesh/signal",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
