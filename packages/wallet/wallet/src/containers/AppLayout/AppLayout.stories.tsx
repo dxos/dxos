@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+import { HashRouter } from 'react-router-dom';
 
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -17,10 +18,12 @@ export default {
 // TODO(wittjosiah): Support testing react router componets in stories.
 export const Primary = () => {
   return (
-    <ClientProvider>
-      <ProfileInitializer>
-        <AppLayout />
-      </ProfileInitializer>
-    </ClientProvider>
+    <HashRouter>
+      <ClientProvider>
+        <ProfileInitializer>
+          <AppLayout />
+        </ProfileInitializer>
+      </ClientProvider>
+    </HashRouter>
   );
 };
