@@ -2307,13 +2307,14 @@ importers:
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
       '@playwright/test': ^1.25.1
-      '@testing-library/react': ^11.0.4
-      '@testing-library/react-hooks': 5.1.2
+      '@testing-library/dom': ^8.17.1
+      '@testing-library/react': ^13.3.0
+      '@testing-library/user-event': ^14.4.3
       '@types/debug': ^4.1.7
       '@types/level-js': ~4.0.1
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
-      '@types/testing-library__jest-dom': ~5.9.5
+      '@types/testing-library__jest-dom': ^5.14.5
       '@types/use-subscription': ^1.0.0
       assert: ^2.0.0
       debug: ^4.3.3
@@ -2341,13 +2342,14 @@ importers:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
       '@playwright/test': 1.25.1
-      '@testing-library/react': 11.2.7_biqbaboplfbrettd7655fr4n2y
-      '@testing-library/react-hooks': 5.1.2_e2ahcdagsdonc2lnwoylqhejci
+      '@testing-library/dom': 8.17.1
+      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/user-event': 14.4.3_wl4iynrlixafokvgqnhzlvigei
       '@types/debug': 4.1.7
       '@types/level-js': 4.0.2
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
-      '@types/testing-library__jest-dom': 5.9.5
+      '@types/testing-library__jest-dom': 5.14.5
       '@types/use-subscription': 1.0.0
       level-js: 5.0.2
       playwright: 1.25.1
@@ -2379,6 +2381,9 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/system': ^5.8.1
       '@tanstack/react-table': 8.0.0-beta.3
+      '@testing-library/dom': ^8.17.1
+      '@testing-library/react': ^13.3.0
+      '@testing-library/user-event': ^14.4.3
       '@types/faker': ^5.5.1
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
@@ -2408,6 +2413,9 @@ importers:
       '@mui/material': 5.8.7_bl6qrq6463ovzmqn4cmwv7vydq
       '@mui/system': 5.8.7_kgoqblbzxlux4bm4vftowiq75m
       '@tanstack/react-table': 8.0.0-beta.3_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/dom': 8.17.1
+      '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
+      '@testing-library/user-event': 14.4.3_wl4iynrlixafokvgqnhzlvigei
       '@types/faker': 5.5.9
       '@types/react': 18.0.15
       '@types/react-dom': 18.0.6
@@ -5878,6 +5886,7 @@ packages:
     dependencies:
       core-js-pure: 3.19.3
       regenerator-runtime: 0.13.9
+    dev: false
 
   /@babel/runtime/7.12.1:
     resolution: {integrity: sha512-J5AIf3vPj3UwXaAzb5j1xM4WAQDX3EMgemF8rjCP3SoW09LfRKAXQKt6CoVYl230P6iWdRcBbnLDDdnqWxZSCA==}
@@ -11704,26 +11713,12 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /@testing-library/dom/7.31.2:
-    resolution: {integrity: sha512-3UqjCpey6HiTZT92vODYLPxTBWlM8ZOOjr3LX5F37/VRipW2M1kX6I/Cm4VXzteZqfGfagg8yXywpcOgQBlNsQ==}
-    engines: {node: '>=10'}
-    dependencies:
-      '@babel/code-frame': 7.18.6
-      '@babel/runtime': 7.17.2
-      '@types/aria-query': 4.2.2
-      aria-query: 4.2.2
-      chalk: 4.1.2
-      dom-accessibility-api: 0.5.10
-      lz-string: 1.4.4
-      pretty-format: 26.6.2
-    dev: true
-
   /@testing-library/dom/8.17.1:
     resolution: {integrity: sha512-KnH2MnJUzmFNPW6RIKfd+zf2Wue8mEKX0M3cpX6aKl5ZXrJM1/c/Pc8c2xDNYQCnJO48Sm5ITbMXgqTr3h4jxQ==}
     engines: {node: '>=12'}
     dependencies:
       '@babel/code-frame': 7.18.6
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.18.9
       '@types/aria-query': 4.2.2
       aria-query: 5.0.2
       chalk: 4.1.2
@@ -11732,38 +11727,16 @@ packages:
       pretty-format: 27.5.1
     dev: true
 
-  /@testing-library/react-hooks/5.1.2_e2ahcdagsdonc2lnwoylqhejci:
-    resolution: {integrity: sha512-jwhtDYZ5gQUIX8cmVCVdtwNvuF5EiCOWjokRlTV+o/V0GdtRZDykUllL1OXq5PS4+J33wGLNQeeWzEHcWrH7tg==}
+  /@testing-library/react/13.4.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-sXOGON+WNTh3MLE9rve97ftaZukN3oNf2KjDy7YTx6hcTO2uuLHuCGynMDhFwGw/jYf4OJ2Qk0i4i79qMNNkyw==}
+    engines: {node: '>=12'}
     peerDependencies:
-      react: '>=16.9.0'
-      react-dom: '>=16.9.0'
-      react-test-renderer: '>=16.9.0'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-test-renderer:
-        optional: true
+      react: ^18.0.0
+      react-dom: ^18.0.0
     dependencies:
-      '@babel/runtime': 7.17.2
-      '@types/react': 18.0.15
+      '@babel/runtime': 7.18.9
+      '@testing-library/dom': 8.17.1
       '@types/react-dom': 18.0.6
-      '@types/react-test-renderer': 17.0.1
-      filter-console: 0.1.1
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
-      react-error-boundary: 3.1.4_react@18.2.0
-      react-test-renderer: 18.2.0_react@18.2.0
-    dev: true
-
-  /@testing-library/react/11.2.7_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-tzRNp7pzd5QmbtXNG/mhdcl7Awfu/Iz1RaVHY75zTdOkmHCuzMhRL83gWHSgOAcjS3CCbyfwUHMZgRJb4kAfpA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
-    dependencies:
-      '@babel/runtime': 7.17.2
-      '@testing-library/dom': 7.31.2
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: true
@@ -11775,6 +11748,15 @@ packages:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@babel/runtime': 7.17.2
+      '@testing-library/dom': 8.17.1
+    dev: true
+
+  /@testing-library/user-event/14.4.3_wl4iynrlixafokvgqnhzlvigei:
+    resolution: {integrity: sha512-kCUc5MEwaEMakkO5x7aoD+DLi02ehmEM2QCGWvNqAS1dV/fAvORWEjnjsEIvml59M7Y5kCkWN6fCCyPOe8OL6Q==}
+    engines: {node: '>=12', npm: '>=6'}
+    peerDependencies:
+      '@testing-library/dom': '>=7.21.4'
+    dependencies:
       '@testing-library/dom': 8.17.1
     dev: true
 
@@ -12581,12 +12563,6 @@ packages:
     dependencies:
       '@types/react': 18.0.17
 
-  /@types/react-test-renderer/17.0.1:
-    resolution: {integrity: sha512-3Fi2O6Zzq/f3QR9dRnlnHso9bMl7weKCviFmfF6B4LS1Uat6Hkm15k0ZAQuDz+UBq6B3+g+NM6IT2nr5QgPzCw==}
-    dependencies:
-      '@types/react': 18.0.15
-    dev: true
-
   /@types/react-transition-group/4.4.5:
     resolution: {integrity: sha512-juKD/eiSM3/xZYzjuzH6ZwpP+/lejltmiS3QEzV/vmb/Q8+HfDmxu+Baga8UEMGBqV88Nbg4l2hY/K2DkyaLLA==}
     dependencies:
@@ -12675,8 +12651,8 @@ packages:
   /@types/tapable/1.0.8:
     resolution: {integrity: sha512-ipixuVrh2OdNmauvtT51o3d8z12p6LtFW9in7U79der/kwejjdNchQC5UMn5u/KxNoM7VHHOs/l8KS8uHxhODQ==}
 
-  /@types/testing-library__jest-dom/5.9.5:
-    resolution: {integrity: sha512-ggn3ws+yRbOHog9GxnXiEZ/35Mow6YtPZpd7Z5mKDeZS/o7zx3yAle0ov/wjhVB5QT4N2Dt+GNoGCdqkBGCajQ==}
+  /@types/testing-library__jest-dom/5.14.5:
+    resolution: {integrity: sha512-SBwbxYoyPIvxHbeHxTZX2Pe/74F/tX2/D3mMvzabdeJ25bBojfW0TyB8BHrbq/9zaaKICJZjLP+8r6AeZMFCuQ==}
     dependencies:
       '@types/jest': 28.1.6
     dev: true
@@ -13935,6 +13911,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.17.2
       '@babel/runtime-corejs3': 7.16.3
+    dev: false
 
   /aria-query/5.0.2:
     resolution: {integrity: sha512-eigU3vhqSO+Z8BKDnVLN/ompjhf3pYzecKXz8+whRy+9gZu8n1TCGfwzQUUPnqdHl9ax1Hr9031orZ+UOEYr7Q==}
@@ -20007,11 +19984,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       to-regex-range: 5.0.1
-
-  /filter-console/0.1.1:
-    resolution: {integrity: sha512-zrXoV1Uaz52DqPs+qEwNJWJFAWZpYJ47UNmpN9q4j+/EYsz85uV0DC9k8tRND5kYmoVzL0W+Y75q4Rg8sRJCdg==}
-    engines: {node: '>=8'}
-    dev: true
 
   /finalhandler/1.1.2:
     resolution: {integrity: sha512-aAWcW57uxVNrQZqFXjITpW3sIUQmHGG3qSb9mUah9MgMC4NeWhNOlNjXEYq3HjRAvL6arUviZGGJsBg6z0zsWA==}
@@ -29629,16 +29601,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
-    dev: true
-
-  /react-error-boundary/3.1.4_react@18.2.0:
-    resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
-    engines: {node: '>=10', npm: '>=6'}
-    peerDependencies:
-      react: '>=16.13.1'
-    dependencies:
-      '@babel/runtime': 7.17.2
-      react: 18.2.0
     dev: true
 
   /react-error-overlay/6.0.9:

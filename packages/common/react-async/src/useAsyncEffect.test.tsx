@@ -20,7 +20,9 @@ const Test = () => {
   useAsyncEffect(async (isMounted) => {
     const value = await doAsync('DXOS');
     if (isMounted()) {
-      setValue(value);
+      act(() => {
+        setValue(value);
+      });
     }
   }, []);
 
