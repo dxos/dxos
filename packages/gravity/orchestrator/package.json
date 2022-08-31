@@ -29,7 +29,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@swc-node/register": "~1.4.2",
+    "@swc-node/register": "~1.5.1",
     "debug": "^4.3.3",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12"
