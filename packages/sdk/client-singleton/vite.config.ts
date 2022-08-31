@@ -41,5 +41,8 @@ export default defineConfig({
   plugins: [dxosPlugin()],
   worker: {
     plugins: [dxosPlugin()]
+  },
+  server: {
+    port: 3967 // DXOS
   }
 });

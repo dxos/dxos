@@ -57,6 +57,13 @@
         "^build"
       ]
     },
+    "serve": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto"
+      ]
+    },
     "test": {
       "dependsOn": [
         "^build",

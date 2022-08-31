@@ -11,10 +11,8 @@
     "src"
   ],
   "scripts": {
-    "bundle": "vite build",
     "check": "true",
-    "dev": "vite --port 3967",
-    "preview": "vite preview --port 3967"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
