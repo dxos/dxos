@@ -4,9 +4,8 @@
 
 import React, { useState } from 'react';
 
+import { Client } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
-
-import { Client } from '../packlets/proxy';
 
 export default {
   title: 'client/singleton'

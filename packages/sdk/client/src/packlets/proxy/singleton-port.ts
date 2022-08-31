@@ -16,7 +16,7 @@ const IFRAME_ID = 'dxos-client-singleton';
 const waitForClient = () => {
   return new Promise<void>(resolve => {
     const messageHandler = (event: MessageEvent<SingletonMessage>) => {
-      if (event.data?.type === SingletonMessage.Type.CLIENT_READY) {
+      if (event.data?.type === SingletonMessage.Type.PROVIDER_READY) {
         window.removeEventListener('message', messageHandler);
         resolve();
       }
