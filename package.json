@@ -3,17 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
-  "homepage": "https://github.com/dxos/protocols",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
+  "homepage": "https://github.com/dxos/protocols",
+  "bugs": "https://github.com/dxos/protocols/issues",
+  "repository": "github:dxos/protocols",
   "scripts": {
-    "nx": "nx"
+    "check-dependencies": "syncpack list-mismatches",
+    "fix-dependencies": "syncpack fix-mismatches",
+    "format-package": "syncpack format",
+    "nx": "nx",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -41,7 +40,7 @@
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "^6.5.10",
     "@storybook/testing-library": "^0.0.13",
-    "@swc-node/register": "1.5.1",
+    "@swc-node/register": "~1.5.1",
     "@types/jest": "^28.1.6",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
@@ -53,11 +52,13 @@
     "esbuild": "~0.14.1",
     "esbuild-node-externals": "^1.4.1",
     "eslint": "^8.21.0",
+    "husky": "^8.0.0",
     "nx": "14.5.7",
     "playwright": "^1.25.1", 
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "require-from-string": "^2.0.2",
+    "syncpack": "^8.2.4",
     "typescript": "^4.7.2",
     "vite": "3.0.9",
     "webpack": "^5.74.0"

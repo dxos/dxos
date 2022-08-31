@@ -18,8 +18,8 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/rpc-worker-proxy": "workspace:*",
-    "@dxos/rpc": "workspace:*"
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-worker-proxy": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-async": "workspace:*",
