@@ -12,7 +12,7 @@ import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import { PublicKey } from '@dxos/protocols';
-import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
+import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
@@ -34,7 +34,7 @@ interface BotHandleOptions {
 export class BotHandle {
   localPath?: string;
   readonly update = new Event();
-  private _rpc: ProtoRpcClient<BotService> | null = null;
+  private _rpc: ProtoRpcPeer<BotService> | null = null;
   private readonly _bot: Bot;
   private readonly _log = debug(`dxos:botkit:bot-handle:${this.id}`);
   private _config: Config;
