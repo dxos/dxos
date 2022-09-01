@@ -143,6 +143,7 @@ service BotController {
 message BotConfig {
     Bot.Spec.Echo spec = 1;
 
+    // TODO(dmaretskyi): Use config.proto type.
     google.protobuf.Any client_config = 2;
 }
 
@@ -163,4 +164,6 @@ message Report {
 /// Internal service exposed by bot controller to the bot.
 service BotHost {
     rpc GetConfig(google.protobuf.Empty) returns (BotConfig);
+
+    rpc SendReport(Report) returns (google.protobuf.Empty);
 }

@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "packages/common/websocket-rpc/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/common/websocket-rpc/dist",
+        "tsConfig": "packages/common/websocket-rpc/tsconfig.json",
+        "main": "packages/common/websocket-rpc/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/websocket-rpc/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

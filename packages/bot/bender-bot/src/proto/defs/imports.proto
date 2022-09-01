@@ -3,3 +3,5 @@ syntax = "proto3";
 package dxos;
 
 import "@dxos/protocols/src/proto/dxos/bots.proto";
+import "@dxos/protocols/src/proto/dxos/config.proto";
+import "@dxos/protocols/src/proto/dxos/echo/invitation.proto";
