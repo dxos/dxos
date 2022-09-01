@@ -2,15 +2,15 @@
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Terminology](#2-terminology)
-*   [3. Basic Concepts](#3-basic-concepts)
-    *   [3.1. Signaling](#31-signaling)
-    *   [3.2. Signaling Server](#32-signaling-server)
-    *   [3.3. Signaling Protocol](#33-signaling-protocol)
-    *   [3.4. Client Swarms](#34-client-swarms)
-    *   [3.5. libp2p architecture](#35-libp2p-architecture)
-    *   [3.6. Protocol](#36-protocol)
+- [1. Introduction](#1-introduction)
+- [2. Terminology](#2-terminology)
+- [3. Basic Concepts](#3-basic-concepts)
+  - [3.1. Signaling](#31-signaling)
+  - [3.2. Signaling Server](#32-signaling-server)
+  - [3.3. Signaling Protocol](#33-signaling-protocol)
+  - [3.4. Client Swarms](#34-client-swarms)
+  - [3.5. libp2p architecture](#35-libp2p-architecture)
+  - [3.6. Protocol](#36-protocol)
 
 ## 1. Introduction
 
@@ -53,6 +53,12 @@ The Traversal Using Relays around NAT ([TURN](https://en.wikipedia.org/wiki/TURN
 The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols)) API enables Javascript applications running within a browser to open peer-to-peer connections with each other. WebRTC uses the ICE protocols.
 
 ## 3. Basic Concepts
+
+The MESH technologies encompasses resilient peer-to-peer connectivity across processes running on different platforms and using different transports across the DXOS network.
+
+![Signaling](./diagrams/mesh.drawio.svg)
+
+
 
 ### 3.1. Signaling
 
