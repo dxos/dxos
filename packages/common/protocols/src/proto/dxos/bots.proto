@@ -1,0 +1,166 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package dxos.bot;
+
+option go_package = "github.com/dxos/kube/scheduler/pb";
+
+enum State {
+    INVALID = 0;
+    STOPPED = 1;
+    RUNNING = 2;
+}
+
+message Bot {
+    message Spec {
+        message Echo {
+            bytes party_key = 1;
+
+            google.protobuf.Any invitation = 2;
+        }
+
+        /// URL to the bot executable. KUBEs support file:// and ipfs:// urls.
+        string executable = 1;
+
+        Echo echo = 2;
+    }
+
+    message Stats {
+        message NetworkUsage {
+        }
+
+        message CPUUsage {
+            double cores = 1;
+        }
+
+        message MemoryUsage {
+            int64 bytes = 1;
+        }
+
+        message DiskUsage {
+            int64 bytes = 1;
+        }
+
+        /// Echo stats.
+        message Echo {
+
+        }
+
+        optional google.protobuf.Timestamp executable_downloaded = 1;
+        optional google.protobuf.Timestamp created = 2;
+        optional google.protobuf.Timestamp started = 3;
+        optional google.protobuf.Timestamp stopped = 4;
+        optional google.protobuf.Timestamp last_ping_time = 5;
+
+        optional int32 exit_code = 10;
+        optional string error_message = 11;
+
+        CPUUsage cpu_usage = 20;
+        MemoryUsage memory_usage = 21;
+        DiskUsage disk_usage = 22;
+        NetworkUsage network_usage = 23;
+        Echo echo = 24;
+
+        optional int64 pid = 30;
+    }
+
+    /// Scheduler
+    bytes id = 1;
+
+    /// Current state.
+    State state = 2;
+
+    /// Desired state.
+    State desired_state = 3;
+
+    /// Omitted when returned from the List RPC.
+    optional Spec spec = 4;
+
+    /// Omitted when returned from the List RPC.
+    optional Stats stats = 5;
+
+    /// Identity key of the bot profile.
+    optional bytes identity_key = 6;
+}
+
+message ListResponse {
+    repeated Bot services = 1;
+}
+
+message ServiceRequest {
+    bytes service_id = 1;
+}
+
+message Request {
+    bytes service_id = 1;
+    google.protobuf.Any payload = 2;
+}
+
+message Reply {
+    google.protobuf.Any payload = 1;
+}
+
+message CreateRequest {
+    Bot.Spec spec = 1;
+    optional State desired_state = 2;
+}
+
+message Progress {
+    Bot state = 1;
+}
+
+/// Exposed by bot controller to clients. Allows creation and management of bots.
+service BotController {
+    /// Enumerate all services.
+    rpc List(google.protobuf.Empty) returns (ListResponse);
+
+    /// Query information about a specific service
+    rpc Describe(ServiceRequest) returns (Bot);
+
+    /// Create a new service.
+    rpc Create(CreateRequest) returns (stream Progress);
+
+    /// Remove a service with its identity and persistent storage.
+    rpc Remove(ServiceRequest) returns (google.protobuf.Empty);
+
+    /// Start the bot.
+    rpc Start(ServiceRequest) returns (stream Progress);
+
+    /// Start the bot.
+    rpc Stop(ServiceRequest) returns (stream Progress);
+
+    /// Start the bot.
+    rpc Restart(ServiceRequest) returns (stream Progress);
+
+    // TODO: Upgrade to streaming request to support bi-directional streams.
+    /// Issue an RPC request to the bot instance.
+    rpc Call(Request) returns (stream Reply);
+}
+
+message BotConfig {
+    Bot.Spec.Echo spec = 1;
+
+    google.protobuf.Any client_config = 2;
+}
+
+/// Internal service exposed by bot to the bot controller.
+service BotService {
+    /// Issue an RPC request to the bot instance.
+    rpc Call(Request) returns (stream Reply);
+
+    /// Called by the bot controller to verify that the bot is functional.
+    rpc Healthcheck(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message Report {
+    /// Identity key of the bot profile.
+    optional bytes identity_key = 1;
+}
+
+/// Internal service exposed by bot controller to the bot.
+service BotHost {
+    rpc GetConfig(google.protobuf.Empty) returns (BotConfig);
+}

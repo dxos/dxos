@@ -119,11 +119,15 @@ importers:
 
   packages/bot/bender-bot:
     specifiers:
+      '@dxos/codec-protobuf': workspace:^2.33.10
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       assert: ^2.0.0
       debug: ^4.3.3
       typescript: ^4.7.2
     dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
       debug: 4.3.4
     devDependencies:

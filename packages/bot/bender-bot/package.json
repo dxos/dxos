@@ -17,6 +17,8 @@
     "test": "toolchain test"
   },
   "dependencies": {
+    "@dxos/codec-protobuf": "workspace:^2.33.10",
+    "@dxos/protocols": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3"
   },

@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+package dxos;
+
+import "@dxos/protocols/src/proto/dxos/bots.proto";

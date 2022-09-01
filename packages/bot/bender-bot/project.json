@@ -8,7 +8,7 @@
         "{options.basePath}/gen"
       ],
       "options": {
-        "basePath": "packages/echo/echo-protocol/src/proto"
+        "basePath": "packages/bot/bender-bot/src/proto"
       }
     },
     "build": {
@@ -17,9 +17,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/echo/echo-protocol/dist",
-        "tsConfig": "packages/echo/echo-protocol/tsconfig.json",
-        "main": "packages/echo/echo-protocol/src/index.ts"
+        "outputPath": "packages/bot/bender-bot/dist",
+        "tsConfig": "packages/bot/bender-bot/tsconfig.json",
+        "main": "packages/bot/bender-bot/src/index.ts"
       }
     },
     "lint": {
@@ -29,7 +29,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/echo/echo-protocol/**/*.{ts,js}"
+          "packages/bot/bender-bot/**/*.{ts,js}"
         ]
       }
     }
