@@ -10,6 +10,7 @@
 - [3. Implementation](#3-implementation)
   - [3.1 Client Services](#31-client-services)
   - [3.2 Message Routing within the Browser](#32-message-routing-within-the-browser)
+  - [3.3 Cross-domain Routing](#33-cross-domain-routing)
 - [4. Reference](#4-reference)
 
 ## 1. Introduction
@@ -91,8 +92,17 @@ As tabs are opened and closed, the router may dynamically elect a new instance t
 
 NOTE: The router may elect different tabs to provide WebRTC connectivity to different swarms at the same time (e.g., where swarms correspond to different ECHO Spaces.)
 
-
 [^1]: [WebRTC in SharedWorker](https://hackmd.io/@gozala/S1d2O_ecU)
+
+
+### 3.3 Cross-domain Routing
+
+Shared workers are available across tabs (windows) loaded from the same domain.
+However, users may wish to use their same HALO identity across multiple applications loaded or installed from different domains.
+
+> TODO(wittjosiah): Please validate below.
+
+In this case, the user would install a special HALO application from a given domain (say, `dxos.org`), then applications loaded from other domains would be able to access the HALO application via transport proxies loaded into associated iframes.
 
 
 ## 4. Reference
