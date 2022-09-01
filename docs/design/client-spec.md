@@ -69,6 +69,8 @@ The Client uses the WebRTC transport in order to stream data and achieve NAT tra
 The application stack includes a replicated database that stores the user's identity (HALO) and data spaces (ECHO).
 Applications share these resources, which must be kept consistent across concurrently running application instances.
 
+> TODO(wittjosiah): If the resources are shared then wouldn't they not need to be kept consistent?
+
 ![Browser architecture](./diagrams/client-services-modules.drawio.svg)
 
 ### 3.2 Service Proxies
@@ -82,11 +84,11 @@ The `ServiceHost` is an in-memory endpoint for multiple services, which may be a
 
 In the browser, the main application stack runs within a long running [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker),
 while the application client and UX run within a browser tab.
-In this manner, different applications running in multiple tabs share the same core stack and database.
+In this manner, applications running in multiple tabs on the same origin share the same core stack and database.
 
-Client instances running in the tab include a `ServiceProxy` that provides access to shared modules that are defined by protobuf service APIs (HALO, ECHO, etc.) The `ServiceProxy` communicates with a `ServiceHost` in the shared worker via [window messaging](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+Client instances running in the tab include a `ServiceProxy` that provides access to shared modules that are defined by protobuf service APIs (HALO, ECHO, etc.) The `ServiceProxy` communicates with a `ServiceHost` in the shared worker via [worker messaging](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage).
 
-Unfortunately, shared workers do not support WebRTC [^1].
+Unfortunately, shared workers do not support WebRTC [^1][^2].
 As a consequence, the client stack running in the tab implements a WebRTC proxy that is used by a WebRTC router running in the shared worker.
 This proxy/router mechanism implements the transport abstraction defined by the `NetworkManager`, which is used by services running in the shared worker.
 
@@ -98,16 +100,23 @@ As tabs are opened and closed, the router may dynamically elect a new instance t
 NOTE: The router may elect different tabs to provide WebRTC connectivity to different swarms at the same time (e.g., where swarms correspond to different ECHO Spaces.)
 
 [^1]: [WebRTC in SharedWorker](https://hackmd.io/@gozala/S1d2O_ecU)
+[^2]: [Shared Worker/Client RPC](https://github.com/dxos/braneframe/issues/732)
 
 
 ### 3.4 Cross-domain Routing
 
 Shared workers are available across tabs (windows) loaded from the same domain.
-However, users may wish to use their same HALO identity across multiple applications loaded or installed from different domains.
+However, users may wish to use their same HALO identity across multiple applications loaded or installed from different domains. There are current two solutions to this:
 
-> TODO(wittjosiah): Please validate below.
+> TODO(wittjosiah): Are both valid or is one the canonical solution?
 
-In this case, the user would install a special HALO application from a given domain (say, `dxos.org`), then applications loaded from other domains would be able to access the HALO application via transport proxies loaded into associated iframes.
+1) The client would run in remote mode, deferring to a full client running within an iframe.
+This full client on given domain (say, `dxos.org`) would control your identity, then applications loaded from other domains would be able to access the identity via transport proxies loaded into associated iframes.
+
+2) Each application would authenticate with the root HALO application by exchanging a device invitation.
+This allows a full client to run on each domain, automously operating under the same identity.
+
+> TODO(wittjosiah): Does this imply that each application has a full copy of all of your data? Presumably partial replication is possible, but how is that controlled?
 
 
 ## 4. Reference
