@@ -48,7 +48,6 @@
     "@dxos/messenger-model": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@mui/system": "^5.8.1",
     "@types/color-hash": "^1.0.1",

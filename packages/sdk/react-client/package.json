@@ -27,7 +27,6 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.3.0",

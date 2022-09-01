@@ -40,7 +40,6 @@
     "@babel/core": "^7.18.13",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/esbuild-server": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",

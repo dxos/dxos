@@ -18,15 +18,12 @@
     "/oclif.manifest.json"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
     "prepack": "npm run build && oclif manifest && oclif readme",
     "readme": "oclif readme",
     "run:cmd": "npm run build && ./bin/run config --config ./config/config.yml --json",
-    "run:config": "npm run build && ./bin/run config --config ./config/config.yml --json",
-    "test": "toolchain test"
+    "run:config": "npm run build && ./bin/run config --config ./config/config.yml --json"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -48,7 +45,6 @@
     "react": "^18.1.0"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "@oclif/test": "^2.1.1",
     "@types/chai": "^4.2.15",
     "@types/debug": "^4.1.7",

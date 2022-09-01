@@ -52,7 +52,6 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.2.2",

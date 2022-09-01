@@ -2,6 +2,43 @@
   "sourceRoot": "packages/demos/kitchen-sink/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/demos/kitchen-sink/dist",
+        "tsConfig": "packages/demos/kitchen-sink/tsconfig.json",
+        "main": "packages/demos/kitchen-sink/src/index.ts"
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "packages/demos/kitchen-sink/out/storybook",
+        "config": {
+          "configFolder": "packages/demos/kitchen-sink/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "bundle": {
+      "executor": "@nxext/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/demos/kitchen-sink/out/kitchen-sink",
+        "configFile": "packages/demos/kitchen-sink/vite.config.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -18,6 +55,27 @@
           "packages/demos/kitchen-sink/playwright/tests/*.test.ts"
         ],
         "config": "packages/demos/kitchen-sink/playwright/config.ts"
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/demos/kitchen-sink/out/kitchen-sink",
+        "configFile": "packages/demos/kitchen-sink/vite.config.ts"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/demos/kitchen-sink/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
       }
     }
   },

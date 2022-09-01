@@ -10,18 +10,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "check": "true",
-    "test": "toolchain test"
-  },
-  "dependencies": {
-    "@types/jest": "^27.4.1",
-    "@types/node": "^16.11.27"
-  },
-  "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
-    "typescript": "^4.7.2"
-  },
   "publishConfig": {
     "access": "public"
   }

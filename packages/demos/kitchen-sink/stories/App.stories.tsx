@@ -10,6 +10,7 @@ import { Snackbar } from '@mui/material';
 
 import { InvitationDescriptor, Party } from '@dxos/client';
 import { PartyBuilder, buildTestParty } from '@dxos/client-testing';
+import { Config, Defaults } from '@dxos/config';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { CreatePartyDialog, ExportAction, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 import { useFileDownload } from '@dxos/react-components';
@@ -17,14 +18,12 @@ import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { usePartySerializer } from '@dxos/react-toolkit';
 
 import { App } from '../src';
-// TODO(burdon): Lint issue.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import config from '../src/config.yml';
 
 export default {
   title: 'KitchenSink/App'
 };
+
+const config = new Config(Defaults());
 
 /**
  * Single-player App story.

@@ -26,7 +26,6 @@
     "@dxos/client-testing": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",

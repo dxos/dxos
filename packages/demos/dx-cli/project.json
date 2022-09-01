@@ -2,9 +2,22 @@
   "sourceRoot": "packages/demos/dx-cli/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/demos/dx-cli/dist",
+        "tsConfig": "packages/demos/dx-cli/tsconfig.json",
+        "main": "packages/demos/dx-cli/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "lintFilePatterns": [
           "packages/demos/dx-cli/**/*.{ts,js}"

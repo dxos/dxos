@@ -35,7 +35,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.0",

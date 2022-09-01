@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "node-fetch": "^2.6.0",
