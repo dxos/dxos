@@ -7,7 +7,7 @@
   - [2.1. Identity and Device Management](#21-identity-and-device-management)
   - [2.2. Circles and Collaboration](#22-circles-and-collaboration)
   - [2.3. Branespace Exploration](#23-branespace-exploration)
-- [3. Implementation](#3-implementation)
+- [3. Design Overview](#3-design-overview)
   - [3.1 Client Services](#31-client-services)
   - [3.2 Message Routing within the Browser](#32-message-routing-within-the-browser)
   - [3.3 Cross-domain Routing](#33-cross-domain-routing)
@@ -22,7 +22,7 @@ These applications can run as Progressive Web Apps (PWA) in browsers and mobile 
 
 ## 2. Specification
 
-The basic app should implement the following features:
+The Client should implement the following features:
 
 ### 2.1. Identity and Device Management
 
@@ -57,7 +57,7 @@ The basic app should implement the following features:
 *   Query/navigate/visualize Space graph.
 
 
-## 3. Implementation
+## 3. Design Overview
 
 
 ### 3.1 Client Services
