@@ -2,8 +2,7 @@
   "version": 2,
   "projects": {
     "async": "packages/common/async",
-    "bot-factory-client": "packages/bot/bot-factory-client",
-    "botkit": "packages/bot/botkit",
+    "bender-bot": "packages/bot/bender-bot",
     "broadcast": "packages/mesh/broadcast",
     "browser-mocha": "packages/gravity/browser-mocha",
     "browser-tests": "packages/gravity/browser-tests",
@@ -39,7 +38,6 @@
     "network-generator": "packages/mesh/network-generator",
     "network-manager": "packages/mesh/network-manager",
     "object-model": "packages/echo/object-model",
-    "orchestrator": "packages/gravity/orchestrator",
     "protobuf-compiler-browser-test": "tools/protobuf-compiler-browser-test",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-test": "tools/protobuf-test",
