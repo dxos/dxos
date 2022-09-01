@@ -7,6 +7,7 @@
     "broadcast": "packages/mesh/broadcast",
     "browser-mocha": "packages/gravity/browser-mocha",
     "browser-tests": "packages/gravity/browser-tests",
+    "client-singleton": "packages/sdk/client-singleton",
     "client-testing": "packages/sdk/client-testing",
     "client": "packages/sdk/client",
     "codec-protobuf": "packages/common/codec-protobuf",
@@ -23,8 +24,8 @@
     "echo-protocol": "packages/echo/echo-protocol",
     "echo-testing": "packages/echo/echo-testing",
     "esbuild": "tools/executors/esbuild",
-    "eslint-rules": "tools/eslint-rules",
     "eslint-plugin": "tools/eslint-plugin",
+    "eslint-rules": "tools/eslint-rules",
     "feed-store": "packages/echo/feed-store",
     "halo-protocol": "packages/halo/halo-protocol",
     "hello-world": "packages/demos/hello-world",
@@ -60,6 +61,8 @@
     "registry-client": "packages/sdk/registry-client",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/common/rpc",
+    "rpc-worker-proxy": "packages/common/rpc-worker-proxy",
+    "rpc-worker-proxy-e2e": "packages/common/rpc-worker-proxy-e2e",
     "signal": "packages/mesh/signal",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
@@ -69,6 +72,7 @@
     "util": "packages/common/util",
     "wallet-extension": "packages/wallet/wallet-extension",
     "wallet-playground": "packages/wallet/wallet-playground",
-    "wallet": "packages/wallet/wallet"
+    "wallet": "packages/wallet/wallet",
+    "vite-plugin": "packages/sdk/vite-plugin"
   }
 }

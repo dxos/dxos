@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ProtoRpcClient } from '@dxos/rpc';
+import { ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotFactoryService } from './proto/gen/dxos/bot';
 
 export class BotHandle {
   constructor (
     private readonly _id: string,
-    private _rpc: ProtoRpcClient<BotFactoryService>
+    private _rpc: ProtoRpcPeer<BotFactoryService>
   ) {}
 
   get id (): string {

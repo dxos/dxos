@@ -7,6 +7,10 @@
       "type": "array",
       "description": ""
     },
+    "outdir": {
+      "type": "string",
+      "description": ""
+    },
     "outfile": {
       "type": "string",
       "description": ""
@@ -16,5 +20,5 @@
       "description": ""
     }
   },
-  "required": ["entryPoints", "outfile"]
+  "required": ["entryPoints"]
 }

@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { Event } from '@dxos/async';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
-import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcClient } from '@dxos/rpc';
+import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { PluginRpc } from './plugin-rpc';
@@ -81,7 +81,7 @@ describe('Protocol plugin rpc', () => {
     const clientId = PublicKey.random();
     const connected = new Event();
     let server: RpcPeer | undefined;
-    let client: ProtoRpcClient<Test> | undefined;
+    let client: ProtoRpcPeer<Test> | undefined;
     const serverConnected = connected.waitFor(() => !!server);
     const clientConnected = connected.waitFor(() => !!client);
 
@@ -126,8 +126,8 @@ describe('Protocol plugin rpc', () => {
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();
     const connected = new Event();
-    let client1: ProtoRpcClient<Test> | undefined;
-    let client2: ProtoRpcClient<Test> | undefined;
+    let client1: ProtoRpcPeer<Test> | undefined;
+    let client2: ProtoRpcPeer<Test> | undefined;
     const client1Connected = connected.waitFor(() => !!client1);
     const client2Connected = connected.waitFor(() => !!client2);
 

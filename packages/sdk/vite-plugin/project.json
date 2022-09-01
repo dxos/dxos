@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/sdk/vite-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/vite-plugin/dist",
+        "tsConfig": "packages/sdk/vite-plugin/tsconfig.json",
+        "main": "packages/sdk/vite-plugin/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/vite-plugin/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.rpc.test;
+package dxos.test.rpc;
 
 import "google/protobuf/empty.proto";
 

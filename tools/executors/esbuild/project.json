@@ -7,9 +7,7 @@
       "options": {
         "outputPath": "tools/executors/esbuild/dist",
         "tsConfig": "tools/executors/esbuild/tsconfig.json",
-        "main": "tools/executors/esbuild/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": ["tools/executors/esbuild/*.md"]
+        "main": "tools/executors/esbuild/src/index.ts"
       }
     },
     "lint": {

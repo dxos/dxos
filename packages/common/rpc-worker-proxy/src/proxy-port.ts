@@ -4,8 +4,11 @@
 
 import { MaybePromise } from '@dxos/util';
 
-import { SingletonMessage } from '../packlets/proto';
+import { SingletonMessage } from './proto';
 
+/**
+ * Wrapper around a MessagePort for sending/receiving SingletonMessages.
+ */
 export class ProxyPort {
   constructor (private readonly port: MessagePort) {}
 
