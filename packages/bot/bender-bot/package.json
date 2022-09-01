@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "check": "true",
-    "test": "toolchain test"
+    "test": "toolchain test",
+    "bundle": "node -r @swc-node/register -e 'require(\"./src/build-bot\").buildBot({ entryPoint: \"./src/main.ts\", outfile: \"dist/bundle.js\" })'"
   },
   "dependencies": {
     "@dxos/async": "workspace:^2.33.8",
