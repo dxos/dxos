@@ -18,10 +18,5 @@
   "include": [
     "src",
     "src/interfaces/.ts"
-  ],
-  "references": [
-    {
-      "path": "../../gravity/browser-mocha"
-    }
   ]
 }

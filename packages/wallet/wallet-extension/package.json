@@ -32,7 +32,6 @@
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
-    "@dxos/browser-mocha": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",

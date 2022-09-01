@@ -14,7 +14,7 @@
     "check": "true",
     "dev": "vite",
     "preview": "vite preview",
-    "test": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts"
+    "e2e": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

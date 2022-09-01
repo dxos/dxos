@@ -2,13 +2,13 @@
   "executors": {
     "mocha": {
       "implementation": "./dist/src/main",
-      "schema": "./schema.json",
+      "schema": "./src/schema.json",
       "description": "Runs mocha tests."
     },
     "browser": {
-      "implementation": "./dist/src/browser",
-      "schema": "./schema.json",
-      "description": "TODO"
+      "implementation": "./dist/src/browser/main",
+      "schema": "./src/browser/schema.json",
+      "description": "Runs mocha tests in a browser"
     }
   }
 }

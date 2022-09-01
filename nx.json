@@ -12,6 +12,7 @@
           "build",
           "bundle",
           "check",
+          "e2e",
           "lint",
           "prebuild",
           "proto",
@@ -45,6 +46,13 @@
         "test",
         "proto",
         "build"
+      ]
+    },
+    "e2e": {
+      "dependsOn": [
+        "proto",
+        "build",
+        "bundle"
       ]
     },
     "prebuild": {

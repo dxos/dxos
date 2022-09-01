@@ -9,6 +9,7 @@ import { join } from 'path';
 import { promisify } from 'util';
 
 import { buildTests } from './build';
+import { BrowserExecutorOptions } from './main';
 import { runTests } from './run';
 import { runSetup } from './run-setup';
 
@@ -18,21 +19,7 @@ export enum Browser {
   WEBKIT = 'webkit',
 }
 
-export interface RunOptions {
-  /**
-   * Globs to look for files.
-   */
-  files: string[]
-  browsers: Browser[]
-  headless: boolean
-  stayOpen: boolean
-  setup?: string
-  debug?: boolean
-  browserArgs?: string[]
-  checkLeaks: boolean
-}
-
-export const run = async (options: RunOptions) => {
+export const run = async (options: BrowserExecutorOptions) => {
   if (options.setup) {
     await runSetup(options.setup);
   }
@@ -44,7 +31,7 @@ export const run = async (options: RunOptions) => {
     console.error(e);
   }
 
-  const files = await resolveFiles(options.files);
+  const files = await resolveFiles(options.testPatterns);
 
   await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
@@ -62,11 +49,11 @@ export const run = async (options: RunOptions) => {
     shouldFail ||= (exitCode !== 0);
   }
 
-  if (!options.stayOpen) {
-    process.exit(shouldFail ? 1 : 0);
-  } else {
+  if (options.stayOpen) {
     console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
   }
+
+  return !shouldFail;
 };
 
 const resolveFiles = async (globs: string[]): Promise<string[]> => {

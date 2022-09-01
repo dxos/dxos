@@ -19,7 +19,7 @@
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test",
-    "test:playwright": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
+    "e2e": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "dependencies": {
@@ -87,10 +87,5 @@
   },
   "browserslist": [
     "> 5%"
-  ],
-  "toolchain": {
-    "additionalTestSteps": [
-      "test:playwright"
-    ]
-  }
+  ]
 }

@@ -15,8 +15,7 @@
     "README.md"
   ],
   "scripts": {
-    "check": "true",
-    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -39,7 +38,6 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
-    "@dxos/browser-mocha": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@swc-node/register": "~1.5.1",
@@ -52,10 +50,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "additionalTestSteps": [
-      "test:browser"
-    ]
   }
 }

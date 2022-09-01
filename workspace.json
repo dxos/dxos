@@ -5,7 +5,6 @@
     "bot-factory-client": "packages/bot/bot-factory-client",
     "botkit": "packages/bot/botkit",
     "broadcast": "packages/mesh/broadcast",
-    "browser-mocha": "packages/gravity/browser-mocha",
     "browser-tests": "packages/gravity/browser-tests",
     "client": "packages/sdk/client",
     "client-singleton": "packages/sdk/client-singleton",
