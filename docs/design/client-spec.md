@@ -9,8 +9,9 @@
   - [2.3. Branespace Exploration](#23-branespace-exploration)
 - [3. Design Overview](#3-design-overview)
   - [3.1 Client Services](#31-client-services)
-  - [3.2 Message Routing within the Browser](#32-message-routing-within-the-browser)
-  - [3.3 Cross-domain Routing](#33-cross-domain-routing)
+  - [3.2 Service Proxies](#32-service-proxies)
+  - [3.3 Message Routing within the Browser](#33-message-routing-within-the-browser)
+  - [3.4 Cross-domain Routing](#34-cross-domain-routing)
 - [4. Reference](#4-reference)
 
 ## 1. Introduction
@@ -68,12 +69,16 @@ The Client uses the WebRTC transport in order to stream data and achieve NAT tra
 The application stack includes a replicated database that stores the user's identity (HALO) and data spaces (ECHO).
 Applications share these resources, which must be kept consistent across concurrently running application instances.
 
+![Browser architecture](./diagrams/client-services-modules.drawio.svg)
+
+### 3.2 Service Proxies
+
 The client accesses these resources via async RPCs defined as protobuf services, which may access the `NetworkManager`. 
 The `ServiceHost` is an in-memory endpoint for multiple services, which may be accessed through the Client API via the `ServiceProxy`.
 
 ![Browser architecture](./diagrams/client-services.drawio.svg)
 
-### 3.2 Message Routing within the Browser
+### 3.3 Message Routing within the Browser
 
 In the browser, the main application stack runs within a long running [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker),
 while the application client and UX run within a browser tab.
@@ -95,7 +100,7 @@ NOTE: The router may elect different tabs to provide WebRTC connectivity to diff
 [^1]: [WebRTC in SharedWorker](https://hackmd.io/@gozala/S1d2O_ecU)
 
 
-### 3.3 Cross-domain Routing
+### 3.4 Cross-domain Routing
 
 Shared workers are available across tabs (windows) loaded from the same domain.
 However, users may wish to use their same HALO identity across multiple applications loaded or installed from different domains.
