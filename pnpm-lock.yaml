@@ -28,6 +28,7 @@ importers:
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
       '@dxos/mocha': workspace:*
+      '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
@@ -98,6 +99,7 @@ importers:
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/mocha': link:tools/executors/mocha
+      '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@mdx-js/react': 2.1.3_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
@@ -449,16 +451,13 @@ importers:
       '@mui/icons-material': ^5.8.0
       '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
-      '@playwright/test': ^1.25.1
       '@types/debug': ^4.1.7
       '@types/react': ^18.0.9
       '@types/react-dom': ^18.0.5
       debug: ^4.3.3
-      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       vite: 3.0.9
-      wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -478,13 +477,10 @@ importers:
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/vite-plugin': link:../../sdk/vite-plugin
-      '@playwright/test': 1.25.1
       '@types/debug': 4.1.7
       '@types/react': 18.0.17
       '@types/react-dom': 18.0.6
-      playwright: 1.25.1
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      wait-for-expect: 3.0.2
 
   packages/common/testutils:
     specifiers:
@@ -709,7 +705,6 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/system': ^5.8.1
       '@mui/x-data-grid': ^5.12.3
-      '@playwright/test': ^1.25.1
       '@types/d3': ^7.1.0
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
@@ -730,7 +725,6 @@ importers:
       it-all: 1.0.6
       mobile-detect: ~1.4.5
       mocha: ^8.4.0
-      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       robotjs: ~0.6.0
@@ -777,7 +771,6 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/esbuild-server': 2.29.0_@types+react@18.0.15
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@playwright/test': 1.25.1
       '@types/d3': 7.4.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -793,7 +786,6 @@ importers:
       esbuild-plugin-yaml: 0.0.1
       faker: 5.5.3
       mocha: 8.4.0
-      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       robotjs: 0.6.0
@@ -918,7 +910,6 @@ importers:
       debug: ^4.3.3
       lexical: ~0.3.11
       mocha: ^8.4.0
-      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       ts-node: 10.9.1
@@ -963,7 +954,6 @@ importers:
       '@types/react-dom': 18.0.6
       debug: 4.3.4
       mocha: 8.4.0
-      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       ts-node: 10.9.1_sx5ynny5elbe7xjikueazwirqy
@@ -2253,7 +2243,6 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
-      '@playwright/test': ^1.25.1
       '@testing-library/dom': ^8.17.1
       '@testing-library/react': ^13.3.0
       '@testing-library/user-event': ^14.4.3
@@ -2266,7 +2255,6 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       level-js: ^5.0.2
-      playwright: ^1.25.1
       react: ^18.1.0
       react-dom: ^18.1.0
       react-test-renderer: ^18.1.0
@@ -2288,7 +2276,6 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@mui/material': 5.8.7_bb2bxwco6ptpubzwpazr52qf6i
-      '@playwright/test': 1.25.1
       '@testing-library/dom': 8.17.1
       '@testing-library/react': 13.4.0_biqbaboplfbrettd7655fr4n2y
       '@testing-library/user-event': 14.4.3_wl4iynrlixafokvgqnhzlvigei
@@ -2299,7 +2286,6 @@ importers:
       '@types/testing-library__jest-dom': 5.14.5
       '@types/use-subscription': 1.0.0
       level-js: 5.0.2
-      playwright: 1.25.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-test-renderer: 18.2.0_react@18.2.0
@@ -2999,6 +2985,9 @@ importers:
     specifiers: {}
 
   tools/executors/mocha:
+    specifiers: {}
+
+  tools/executors/playwright:
     specifiers: {}
 
   tools/executors/protobuf-compiler:
