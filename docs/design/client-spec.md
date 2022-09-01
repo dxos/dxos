@@ -8,7 +8,8 @@
   - [2.2. Circles and Collaboration](#22-circles-and-collaboration)
   - [2.3. Branespace Exploration](#23-branespace-exploration)
 - [3. Implementation](#3-implementation)
-  - [3.1 Message Routing within the Browser](#31-message-routing-within-the-browser)
+  - [3.1 Client Services](#31-client-services)
+  - [3.2 Message Routing within the Browser](#32-message-routing-within-the-browser)
 - [4. Reference](#4-reference)
 
 ## 1. Introduction
@@ -58,13 +59,20 @@ The basic app should implement the following features:
 ## 3. Implementation
 
 
-### 3.1 Message Routing within the Browser
+### 3.1 Client Services
 
 DXOS applications are peer-to-peer applications that synchronize state over a network swarm. 
 The Client uses the WebRTC transport in order to stream data and achieve NAT traversal.
 
 The application stack includes a replicated database that stores the user's identity (HALO) and data spaces (ECHO).
 Applications share these resources, which must be kept consistent across concurrently running application instances.
+
+The client accesses these resources via async RPCs defined as protobuf services, which may access the `NetworkManager`. 
+The `ServiceHost` is an in-memory endpoint for multiple services, which may be accessed through the Client API via the `ServiceProxy`.
+
+![Browser architecture](./diagrams/client-services.drawio.svg)
+
+### 3.2 Message Routing within the Browser
 
 In the browser, the main application stack runs within a long running [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker),
 while the application client and UX run within a browser tab.
