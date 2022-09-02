@@ -9,7 +9,7 @@
   - [3.2. Signaling Server](#32-signaling-server)
   - [3.3. Signaling Protocol](#33-signaling-protocol)
   - [3.4. Client Swarms](#34-client-swarms)
-  - [3.5. libp2p architecture](#35-libp2p-architecture)
+  - [3.5. libp2p](#35-libp2p)
   - [3.6. Protocol](#36-protocol)
 
 ## 1. Introduction
@@ -58,8 +58,6 @@ The MESH technologies encompasses resilient peer-to-peer connectivity across pro
 
 ![Signaling](./diagrams/mesh.drawio.svg)
 
-
-
 ### 3.1. Signaling
 
 Signaling enables two or more peers to discover and connect to each other forming a peer-to-peer swarm.
@@ -99,7 +97,7 @@ Each peer maintains a map of connections, which may implement different transpor
 
 ![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
 
-### 3.5. libp2p architecture
+### 3.5. libp2p
 
 <br/> 
 
