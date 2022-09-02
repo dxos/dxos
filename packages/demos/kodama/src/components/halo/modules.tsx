@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Client } from '@dxos/client/client';
+import { Client } from '@dxos/client';
 
 import { useModule } from '../../hooks';
 import { Join, Share } from '../invitations';

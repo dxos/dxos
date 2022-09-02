@@ -12,9 +12,11 @@ import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { RpcPort } from '@dxos/rpc';
 import { createSingletonPort } from '@dxos/rpc-worker-proxy';
+import { isNode } from '@dxos/util';
 
-import { InvalidConfigurationError, ClientServiceProvider, ClientServices, Echo, Halo, HaloSigner } from '../api';
+import { InvalidConfigurationError, ClientServiceProvider, ClientServices, Echo, Halo, HaloSigner, RemoteServiceConnectionTimeout } from '../api';
 import { Runtime } from '../proto';
+import { ClientServiceHost } from '../services';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
@@ -167,29 +169,64 @@ export class Client {
       throw new TimeoutError(`Initialize timed out after ${t / 1000}s.`);
     }, t);
 
-    if (this._options.serviceProvider) {
-      this._serviceProvider = this._options.serviceProvider;
+    if (this._mode === Runtime.Client.Mode.REMOTE) {
+      await this.initializeRemote(onProgressCallback);
+    } else if (this._mode === Runtime.Client.Mode.LOCAL) {
+      await this.initializeLocal(onProgressCallback);
     } else {
-      const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
-      this._serviceProvider = new ClientServiceProxy(
-        this._options.rpcPort ?? await createSingletonPort(singletonSource),
-        this._options.timeout
-      );
+      await this.initializeAuto(onProgressCallback);
     }
-
-    this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider, this._halo);
-
-    await this._serviceProvider.open(onProgressCallback);
-    await this._halo._open();
-    await this._echo._open();
 
     if (typeof window !== 'undefined') {
       await createDevtoolsRpcServer(this, this._serviceProvider);
     }
 
+    this._halo = new HaloProxy(this._serviceProvider);
+    this._echo = new EchoProxy(this._serviceProvider, this._halo);
+
+    await this._halo._open();
+    await this._echo._open();
+
     this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);
+  }
+
+  private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      throw new Error('RPC port is required to run client in remote mode on Node environment.');
+    }
+
+    log('Creating client proxy.');
+    const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
+    this._serviceProvider = new ClientServiceProxy(
+      this._options.rpcPort ?? await createSingletonPort(singletonSource),
+      this._options.timeout
+    );
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
+  private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
+    log('Creating client host.');
+    this._serviceProvider = new ClientServiceHost(this._config, this._options.signer);
+    await this._serviceProvider.open(onProgressCallback);
+  }
+
+  private async initializeAuto (onProgressCallback: Parameters<this['initialize']>[0]) {
+    if (!this._options.rpcPort && isNode()) {
+      await this.initializeLocal(onProgressCallback);
+    } else {
+      try {
+        await this.initializeRemote(onProgressCallback);
+      } catch (error) {
+        if (error instanceof RemoteServiceConnectionTimeout) {
+          log('Failed to connect to remote services. Starting local services.');
+          await this.initializeLocal(onProgressCallback);
+        } else {
+          throw error;
+        }
+      }
+    }
   }
 
   /**

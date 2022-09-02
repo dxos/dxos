@@ -105,7 +105,6 @@ message Runtime {
     /// Milliseconds
     optional int32 invitation_expiration = 5;
 
-    // TODO(wittjosiah): Remove.
     optional Mode mode = 6;
 
     optional string singleton_source = 7;

@@ -11,6 +11,7 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   optimizeDeps: {
+    force: true,
     include: [
       '@dxos/client',
       '@dxos/config',
