@@ -63,19 +63,23 @@ The Client should implement the following features:
 
 ### 3.1 Client Services
 
-DXOS applications are peer-to-peer applications that synchronize state over a network swarm. 
-The Client uses the WebRTC transport in order to stream data and achieve NAT traversal.
+DXOS applications are decentralized applications that synchronize state over peer-to-peer networks. 
+Peers swarm with each other directly using a WebRTC transport, which handles NAT traversal.
 
-The application stack includes a replicated database that stores the user's identity (HALO) and data spaces (ECHO).
-Applications share these resources, which must be kept consistent across concurrently running application instances.
+Applications incorporate pluggable services that depend on core modules (e.g., ECHO, HALO) that, in turn, depend on the WebRTC network stack.
 
-> TODO(wittjosiah): If the resources are shared then wouldn't they not need to be kept consistent?
+<br/>
 
-![Browser architecture](./diagrams/client-services-modules.drawio.svg)
+![Service Modules](./diagrams/client-services-modules.drawio.svg)
+
+<br/>
+
+Resilient WebRTC swarms are managed by the MESH [Signaling services](./mesh-spec.md) running on the KUBE network.
+
 
 ### 3.2 Service Proxies
 
-The client accesses these resources via async RPCs defined as protobuf services, which may access the `NetworkManager`. 
+The client accesses these resources via async RPCs defined as protobuf services, which may access the `SwarmManager`. 
 The `ServiceHost` is an in-memory endpoint for multiple services, which may be accessed through the Client API via the `ServiceProxy`.
 
 ![Browser architecture](./diagrams/client-services.drawio.svg)
@@ -90,7 +94,7 @@ Client instances running in the tab include a `ServiceProxy` that provides acces
 
 Unfortunately, shared workers do not support WebRTC [^1][^2].
 As a consequence, the client stack running in the tab implements a WebRTC proxy that is used by a WebRTC router running in the shared worker.
-This proxy/router mechanism implements the transport abstraction defined by the `NetworkManager`, which is used by services running in the shared worker.
+This proxy/router mechanism implements the transport abstraction defined by the `SwarmManager`, which is used by services running in the shared worker.
 
 ![Browser architecture](./diagrams/client-webrtc-router.drawio.svg)
 
