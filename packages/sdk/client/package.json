@@ -15,7 +15,6 @@
   ],
   "scripts": {
     "check": "true",
-    "cache": "true",
     "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/packlets/proxy/version.ts",
     "test": "toolchain test"
   },

@@ -72,7 +72,7 @@ workflows:
           filters:
             branches:
               only:
-                - wittjosiah/09-02-feat_react-client_Default_to_client_with_services
+                - wittjosiah/09-02-feat_wallet_Add_pwa_functionality
           context:
             - Github
             - Netlify
