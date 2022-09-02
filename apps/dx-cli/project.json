@@ -1,0 +1,26 @@
+{
+  "sourceRoot": "apps/dx-cli/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/dx-cli/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/demos/dx-cli/src/**/*.test.{ts,tsx,js,jsx}"
+        ]
+      },
+      "dependsOn": [
+        "build"
+      ]
+    }
+  }
+}

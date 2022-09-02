@@ -1,0 +1,49 @@
+{
+  "sourceRoot": "e2e/rpc-worker-proxy/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "e2e/rpc-worker-proxy/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "e2e/rpc-worker-proxy/dist",
+        "tsConfig": "e2e/rpc-worker-proxy/tsconfig.json",
+        "main": "e2e/rpc-worker-proxy/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "e2e/rpc-worker-proxy/**/*.{ts,js}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/common/rpc-worker-proxy-e2e/playwright/tests/*.test.ts"
+        ],
+        "config": "packages/common/rpc-worker-proxy-e2e/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "playwright"
+  ]
+}

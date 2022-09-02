@@ -1,0 +1,61 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ES6"
+    ],
+    "noEmit": true,
+    "outDir": "dist",
+    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
+    "types": [
+      "node",
+      "webpack-env",
+      "mocha"
+    ]
+  },
+  "include": [
+    "scripts",
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../../../packages/common/async"
+    },
+    {
+      "path": "../../../packages/common/codec-protobuf"
+    },
+    {
+      "path": "../../../packages/common/protocols"
+    },
+    {
+      "path": "../../../packages/common/rpc"
+    },
+    {
+      "path": "../../../packages/common/util"
+    },
+    {
+      "path": "../../../packages/echo/echo-db"
+    },
+    {
+      "path": "../../../packages/gravity/browser-mocha"
+    },
+    {
+      "path": "../../../packages/sdk/client"
+    },
+    {
+      "path": "../../../packages/sdk/config"
+    },
+    {
+      "path": "../../../packages/sdk/react-client"
+    },
+    {
+      "path": "../../../packages/sdk/react-components"
+    },
+    {
+      "path": "../../../packages/sdk/react-toolkit"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "sourceRoot": "apps/experimental/kai/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/experimental/kai/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/demos/kitchen-sink/playwright/tests/*.test.ts"
+        ],
+        "config": "packages/demos/kitchen-sink/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "playwright"
+  ]
+}
