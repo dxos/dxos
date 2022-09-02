@@ -4,6 +4,11 @@ orbs:
   nx: nrwl/nx@1.5.1
 
 aliases:
+  - &docker_image
+    image: ghcr.io/dxos/circleci-node:latest
+    auth:
+      username: dxos-bot
+      password: $GH_TOKEN
   - &cache_restore
     restore_cache:
       keys:
@@ -16,12 +21,9 @@ aliases:
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
-  main:
+  check:
     docker:
-      - image: ghcr.io/dxos/circleci-node:latest
-        auth:
-          username: dxos-bot
-          password: $GH_TOKEN
+      - *docker_image
     steps:
       - checkout
       - *cache_restore
@@ -39,9 +41,29 @@ jobs:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
 
+  deploy:
+    docker:
+      - *docker_image
+    steps:
+      - run:
+          name: Deploy HALO
+          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir ./packages/wallet/wallet/out/wallet
+          environment:
+            NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
+
 workflows:
-  build:
+  main:
     jobs:
-      - main:
+      - check:
           context:
             - Github
+      - deploy:
+          requires:
+            - check
+          filters:
+            branches:
+              only:
+                - wittjosiah/09-02-feat_react-client_Default_to_client_with_services
+          context:
+            - Github
+            - Netlify
