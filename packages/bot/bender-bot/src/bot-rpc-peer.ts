@@ -6,8 +6,6 @@ import debug from 'debug';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
-import { Any, Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/protocols';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 import { schema } from './proto/gen';
@@ -26,7 +24,7 @@ export class BotRPCPeer {
 
   constructor (
     private readonly _url: string,
-    private readonly _handlers: BotService,
+    private readonly _handlers: BotService
   ) {
     this._socket = new WebSocket(this._url);
     this._socket.onopen = async () => {
@@ -57,15 +55,16 @@ export class BotRPCPeer {
 
     this._rpc = createProtoRpcPeer({
       requested: {
-        BotHost: schema.getService('dxos.bot.BotHost'),
+        BotHost: schema.getService('dxos.bot.BotHost')
       },
       exposed: {
-        BotService: schema.getService('dxos.bot.BotService'),
+        BotService: schema.getService('dxos.bot.BotService')
       },
       handlers: {
-        BotService: this._handlers,
+        BotService: this._handlers
       },
       noHandshake: true,
+      timeout: 1_000_000,
       port: {
         send: msg => {
           this._socket.send(msg);
@@ -83,7 +82,7 @@ export class BotRPCPeer {
     });
   }
 
-  get rpc(): BotHost {
+  get rpc (): BotHost {
     return this._rpc.rpc.BotHost;
   }
 }

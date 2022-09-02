@@ -17,6 +17,7 @@ export const buildBot = async ({ entryPoint, outfile } : BuildBotOptions) => {
     write: true,
     format: 'cjs',
     platform: 'node',
+    sourcemap: true,
     external: [
       '@koush/wrtc',
       'avsc',
