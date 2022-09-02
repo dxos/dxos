@@ -5,7 +5,8 @@
 import debug from 'debug';
 import React, { MutableRefObject, ReactNode, useState } from 'react';
 
-import { Client, ClientOptions } from '@dxos/client';
+import { ClientOptions } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { ConfigProvider } from '@dxos/config';
 import { useAsyncEffect } from '@dxos/react-async';
 import { MaybeFunction, MaybePromise, getAsyncValue } from '@dxos/util'; // TODO(burdon): Deprecate "util"?

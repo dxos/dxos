@@ -9,13 +9,14 @@ import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin
 import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
 import { NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin } from '@dxos/esbuild-plugins';
 
-export const dxosPlugin = (): Plugin => ({
+export const dxosPlugin = (configPath?: string): Plugin => ({
   name: 'dxos',
   config: () => ({
     // TODO(wittjosiah): This shouldn't be required.
     resolve: {
       alias: {
         'node:assert': 'assert/',
+        'node:path': 'path-browserify/',
         'node:util': 'util/'
       }
     },
@@ -23,7 +24,7 @@ export const dxosPlugin = (): Plugin => ({
       esbuildOptions: {
         plugins: [
           EsbuildNodeGlobalsPlugin(),
-          EsbuildConfigPlugin(),
+          EsbuildConfigPlugin({ configPath }),
           // TODO(wittjosiah): This shouldn't be required.
           {
             name: 'sodium-universal-patch',
@@ -43,7 +44,7 @@ export const dxosPlugin = (): Plugin => ({
           // https://github.com/FredKSchott/rollup-plugin-polyfill-node#options
           // TODO(wittjosiah): Specifically target our deps?
           RollupNodeGlobalsPlugin({ include: null }),
-          RollupConfigPlugin(),
+          RollupConfigPlugin({ configPath }),
           // TODO(wittjosiah): Is there a better way to do this? Can we eliminate setImmediate usage?
           {
             name: 'setimmediate-polyfill',

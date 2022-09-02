@@ -39,5 +39,5 @@ export default defineConfig({
       ]
     }
   },
-  plugins: [react(), dxosPlugin()]
+  plugins: [react(), dxosPlugin(__dirname)]
 });
