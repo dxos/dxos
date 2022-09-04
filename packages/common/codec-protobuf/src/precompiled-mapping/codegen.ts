@@ -86,6 +86,7 @@ export const codegen = (name: string, args: string[], gen: (c: (parts: TemplateS
 
   const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`;
 
+  // Create function from generated code.
   // eslint-disable-next-line no-new-func
   return Function(...Object.keys(newCtx), code)(...Object.values(newCtx));
 };
