@@ -83,7 +83,6 @@ export class InvitationRequest {
   cancel () {
     assert(!this._isCanceled, new Error('Invitation is already canceled'));
     this._isCanceled = true;
-
     this.canceled.emit();
   }
 
