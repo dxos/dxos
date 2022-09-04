@@ -2,17 +2,17 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Terminology](#2-terminology)
-- [3. Basic Concepts](#3-basic-concepts)
-  - [3.1. RPC](#31-rpc)
-  - [3.2. Peer-to-Peer Swarms](#32-peer-to-peer-swarms)
-  - [3.3. Applications](#33-applications)
-- [4. Signaling](#4-signaling)
-  - [4.2. Protocol](#42-protocol)
-  - [4.3. Implementation](#43-implementation)
-- [5. Data Replication](#5-data-replication)
-- [6. Issues](#6-issues)
+*   [1. Introduction](#1-introduction)
+*   [2. Terminology](#2-terminology)
+*   [3. Basic Concepts](#3-basic-concepts)
+    *   [3.1. RPC](#31-rpc)
+    *   [3.2. Peer-to-Peer Swarms](#32-peer-to-peer-swarms)
+    *   [3.3. Applications](#33-applications)
+*   [4. Signaling](#4-signaling)
+    *   [4.1. Protocol](#41-protocol)
+    *   [4.2. Implementation](#42-implementation)
+*   [5. Data Replication](#5-data-replication)
+*   [6. Issues](#6-issues)
 
 ## 1. Introduction
 
@@ -70,7 +70,6 @@ Signaling enables two or more peers to discover and connect to each other to cre
 
 ![Signaling](./diagrams/mesh-signaling-peers.drawio.svg)
 
-
 Peers connect to a signaling server that helps orchestrate connections between peers.
 Each signaling server maintains a map of peers that correspond to a swarm discovery key.
 Signaling servers use a pubsub mechanism to share this state so that peers connected to remote signaling servers can discover other peers.
@@ -81,8 +80,7 @@ Peers may exist on multiple platforms including browsers, mobile applications, l
 
 ![Network Manager](./diagrams/mesh-webrtc-networks.drawio.svg)
 
-> - TODO(burdon): Explain different topologies.
-
+> *   TODO(burdon): Explain different topologies.
 
 ## 4. Signaling
 
@@ -98,7 +96,7 @@ All events and messages passing through the system are visible by anyone who can
 Messages can be ciphered and/or signed; this is left as an application concern.
 Peer to peer messages (unlike swarm events) could use point-to-point connections rather than Pub/Sub.
 
-### 4.2. Protocol
+### 4.1. Protocol
 
 The signal server implements the following dxRPC interface.
 
@@ -113,7 +111,7 @@ service Signal {
 }
 ```
 
-### 4.3. Implementation
+### 4.2. Implementation
 
 Each kube maintains:
 
