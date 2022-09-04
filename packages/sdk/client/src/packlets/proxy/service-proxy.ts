@@ -4,7 +4,7 @@
 
 import { promiseTimeout } from '@dxos/async';
 import { OpenProgress } from '@dxos/echo-db';
-import { createBundledRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { createBundledRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../api';
 
@@ -13,7 +13,7 @@ import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServi
  * For example, the services can be located in Wallet Extension.
  */
 export class ClientServiceProxy implements ClientServiceProvider {
-  private readonly _client: ProtoRpcClient<ClientServices>;
+  private readonly _client: ProtoRpcPeer<ClientServices>;
 
   constructor (
     port: RpcPort,

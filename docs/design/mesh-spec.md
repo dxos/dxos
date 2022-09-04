@@ -5,12 +5,14 @@
 *   [1. Introduction](#1-introduction)
 *   [2. Terminology](#2-terminology)
 *   [3. Basic Concepts](#3-basic-concepts)
-    *   [3.1. Signaling](#31-signaling)
-    *   [3.2. Signaling Server](#32-signaling-server)
-    *   [3.3. Signaling Protocol](#33-signaling-protocol)
-    *   [3.4. Client Swarms](#34-client-swarms)
-    *   [3.5. libp2p architecture](#35-libp2p-architecture)
-    *   [3.6. Protocol](#36-protocol)
+    *   [3.1. RPC](#31-rpc)
+    *   [3.2. Peer-to-Peer Swarms](#32-peer-to-peer-swarms)
+    *   [3.3. Applications](#33-applications)
+*   [4. Signaling](#4-signaling)
+    *   [4.1. Protocol](#41-protocol)
+    *   [4.2. Implementation](#42-implementation)
+*   [5. Data Replication](#5-data-replication)
+*   [6. Issues](#6-issues)
 
 ## 1. Introduction
 
@@ -54,58 +56,119 @@ The Web Real-Time Communications protocol ([WebRTC](https://developer.mozilla.or
 
 ## 3. Basic Concepts
 
-### 3.1. Signaling
+The MESH technologies enable resilient point-to-point and peer-to-peer communication between applications and system components.
 
-Signaling enables two or more peers to discover and connect to each other forming a peer-to-peer swarm.
-Peers may exist on multiple platforms, including browser and mobile applications, Web services (including bots), and tools (including the CLI and other terminal applications).
+### 3.1. RPC
 
-### 3.2. Signaling Server
+> TODO(burdon): dxRPC.
 
-Peers connect to a configurable signaling server, typically running on a KUBE node.
-The signaling server maintains a DHT that contains a transient map of discovery keys onto a set of peer keys.
-This DHT is replicated across all signaling servers; entries in the DHT expire after a given TTL.
+### 3.2. Peer-to-Peer Swarms
 
-<br/> 
+Signaling enables two or more peers to discover and connect to each other to create a swarm.
 
-![Signaling](./diagrams/mesh-signal.drawio.svg)
+<br/>
 
-The signaling server implements a socket based endpoint that allows peers to join and leave swarms, and to send and receive messages to and from other peers.
+![Signaling](./diagrams/mesh-signaling-peers.drawio.svg)
 
-### 3.3. Signaling Protocol
+Peers connect to a signaling server that helps orchestrate connections between peers.
+Each signaling server maintains a map of peers that correspond to a swarm discovery key.
+Signaling servers use a pubsub mechanism to share this state so that peers connected to remote signaling servers can discover other peers.
 
-> *   Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)?
->     protocol.
-> *   MST swarm/routing.
-> *   Scope of replication for signaling servers (i.e., subnet/realm vs. global DXNS network?) Security considerations. Peers configured with multiple signal servers (one per network)?
-> *   Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of party invitations).
-> *   Generalize discovery key to generic network assets (i.e., not just party)? E.g., discovery of peers based on agent identity (public key).
-> *   Guaranteed message delivery (or just ACK)? AXE for reliable streams? QUIC, SPDY?
-> *   Presence management (separate from in-party swarm presence?)
-> *   Security considerations (e.g., encryption, authentication, key exchange, hash party/device keys, TTLs)
+### 3.3. Applications
 
-### 3.4. Client Swarms
+Peers may exist on multiple platforms including browsers, mobile applications, long-running Web services, and command line interfaces.
 
-Peers use the signaling server to connect and exchange data with other peers that belong to the same ECHO party.
-The hash of the party key as the discovery key.
-Each peer maintains a map of connections, which may implement different transports (e.g., WebRTC).
+![Network Manager](./diagrams/mesh-webrtc-networks.drawio.svg)
+
+> *   TODO(burdon): Explain different topologies.
+
+## 4. Signaling
+
+Signaling hosts participate in a signaling network, and discover each other through libp2p's DHT, possibly bootstrapped only from other signaling hosts and/or kubes only.
+They rendez-vous on a particular discovery key (CID) on the DHT, allowing for separate signaling networks on the same DHT.
+
+The rest of exchanges happen over Pub/Sub.
+Topics are namespaced between peer topics (messages of type `PeerEvent`), host topics (messages of type `HostEvent`), and swarm topics (messages of type `SwarmEvent`).
+
+When a host announces the availability of a peer, it can request other peers in the swarm announce their presence back through its topic in order to allow for discovery while minimizing receptions.
+
+All events and messages passing through the system are visible by anyone who can connect to the DHT.
+Messages can be ciphered and/or signed; this is left as an application concern.
+Peer to peer messages (unlike swarm events) could use point-to-point connections rather than Pub/Sub.
+
+### 4.1. Protocol
+
+The signal server implements the following dxRPC interface.
+
+<!-- @code(../../packages/mesh/network-manager/src/proto/defs/dxos/mesh/signal.proto#Signal) -->
+
+```protobuf
+option go_package = "github.com/dxos/kube/go/signal/pb";
+service Signal {
+  rpc Join(JoinRequest) returns (stream SwarmEvent);
+  rpc ReceiveMessages(ReceptionRequest) returns (stream Message);
+  rpc SendMessage(Message) returns (google.protobuf.Empty);
+}
+```
+
+### 4.2. Implementation
+
+Each kube maintains:
+
+*   as needed, a subscription to their own topic;
+*   per local participant, lists of:
+    *   swarm memberships with their announcement timeout (announcements must be broadcast periodically, and exits are
+        made explicit whenever possible, including at kube soft shutdown);
+    *   subscriptions for messages;
+*   per swarm with local participants (with a grace period after disconnects so participants can reconnect smoothly):
+    *   a subscription to the swarm's topic;
+    *   a list of known participants, updated through announcements and their expiries;
+
+The sequence diagram below illustrates communications between peers.
+This omits STUN/TURN to focus on communications between peers, their signaling services, and the signaling network.
+
+![Diagram of a P2P connection](diagrams/puml/mesh-signal-multi-host-join.svg)
+
+1.  *Prelude: Bob joins.* Bob is already listening for their messages, and has joined `s0`.
+
+2.  *Alice's arrival.* Upon arrival, Alice subscribes to receive her messages. She joins `s0`.
+    This causes the kube to request announces back, and the family's kube announces back Bob.
+    This also causes the kube to announce her, which gets to Bob.
+
+3.  *Messaging.* As Alice initiates a connection with Bob, she sends a message to him.
+    Further messages might be exchanged between Alice and Bob through their respective kubes and topics.
+
+4.  *Alice's departure.*
+    Later, Alice leaves the swarm.
+    This leads her kube to announce her departure,
+    letting Bob's kube refresh its swarm membership table such that future joiners do not discover her immediately,
+    and notifying Bob of her departure immediately.
+    Because Alice was the last active member of `s0` on her kube, it unsubscribes from `s0`.
+    Because it no longer needs to receive lookup responses, it unsubscribes from `akube`.
+
+5.  Charlie joins the family's kube.
+
+6.  *Bob's re-broadcast.*
+    After a while, Bob's kube reannounces Bob's swarm membership such that any kube's swarm membership table considers it
+    fresh enough to be discovered by incoming clients and not announced as having left to existing ones.
+
+7.  *Bob's departure.*
+    Eventually, Bob gets disconnected from their kube. After a timeout, Bob's kube proceeds to announce the departure to
+    the network and Charlie, and unsubscribe from their peer events.
+
+8.  *The family kube shuts down.*
+    Client streams are closed and topics unsubscribed from. Departures are announced.
+
+## 5. Data Replication
+
+> *   TODO(burdon): [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protocol)
+> *   TODO(burdon): Reference ECHO design.
 
 <br/> 
 
 ![Network Manager](./diagrams/mesh-network-manager.drawio.svg)
 
-### 3.5. libp2p architecture
-
-<br/> 
-
-![Network Manager](./diagrams/mesh-libp2p-signaling.drawio.svg)
-
-<br/> 
-
-![Network Manager](./diagrams/mesh-network-manager-libp2p.drawio.svg)
-
-### 3.6. Protocol
-
-The [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protocol) XXX.
+## 6. Issues
 
 > *   How is data from a connected peer multiplexed into multiple hypercores (if the swarm is not fully connected)? How does bi-directionality work?
 > *   Reference HALO authentication/party admission.
@@ -115,4 +178,13 @@ The [Hypercore protocol](https://github.com/hypercore-protocol/hypercore-protoco
 > *   <https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf>
 > *   Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
 > *   Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star
+
+> *   Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)? protocol.
+> *   MST swarm/routing.
+> *   Scope of replication for signaling servers (i.e., subnet/realm vs. global DXNS network?) Security considerations. Peers configured with multiple signal servers (one per network)?
+> *   Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of party invitations).
+> *   Generalize discovery key to generic network assets (i.e., not just party)? E.g., discovery of peers based on agent identity (public key).
+> *   Guaranteed message delivery (or just ACK)? AXE for reliable streams? QUIC, SPDY?
+> *   Presence management (separate from in-party swarm presence?)
+> *   Security considerations (e.g., encryption, authentication, key exchange, hash party/device keys, TTLs)
 

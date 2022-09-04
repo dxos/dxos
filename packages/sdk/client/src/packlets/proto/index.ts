@@ -15,3 +15,4 @@ export * from './gen/dxos/echo/timeframe';
 export * from './gen/dxos/devtools';
 export * from './gen/dxos/halo/keys';
 export * from './gen/dxos/rpc';
+export * from './gen/dxos/rpc/proxy';

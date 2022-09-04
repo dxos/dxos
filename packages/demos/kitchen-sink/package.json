@@ -22,9 +22,6 @@
     "test:playwright": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
@@ -59,13 +56,13 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "@babel/core": "~7.13.15",
+    "@babel/core": "^7.18.13",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@playwright/test": "^1.14.1",
+    "@playwright/test": "^1.25.1",
     "@types/d3": "~7.0.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
@@ -82,13 +79,16 @@
     "expect": "~27.0.2",
     "faker": "^5.1.0",
     "mocha": "^8.4.0",
-    "playwright": "^1.23.4",
+    "playwright": "^1.25.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "robotjs": "~0.6.0",
     "ts-node": "^10.8.2",
     "typescript": "^4.7.2"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "toolchain": {
     "additionalTestSteps": [
       "test:playwright"
