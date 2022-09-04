@@ -2,16 +2,16 @@
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Ontology](#2-ontology)
-    *   [2.1. HALO](#21-halo)
-        *   [2.1.1. Profiles](#211-profiles)
-        *   [2.1.2. Devices](#212-devices)
-        *   [2.1.3. Circles](#213-circles)
-    *   [2.2. ECHO](#22-echo)
-        *   [2.2.1. Spaces](#221-spaces)
-        *   [2.2.2. Branes](#222-branes)
-        *   [2.2.3. Frames](#223-frames)
+- [1. Introduction](#1-introduction)
+- [2. Ontology](#2-ontology)
+  - [2.1. HALO](#21-halo)
+    - [2.1.1. Profiles](#211-profiles)
+    - [2.1.2. Devices](#212-devices)
+    - [2.1.3. Circles](#213-circles)
+  - [2.2. ECHO](#22-echo)
+    - [2.2.1. Spaces](#221-spaces)
+    - [2.2.2. Branes](#222-branes)
+    - [2.2.3. Frames](#223-frames)
 
 ## 1. Introduction
 
@@ -56,7 +56,10 @@ This section outlines the core concepts of the DXOS system.
 *   A Space is a decentralized collection of data identified by a public key.
 *   Spaces may contain structured data that is kept consistent via unique ECHO data consensus protocols.
 *   Spaces be accessed by multiple Users and Agents.
-*   The data within Spaces may be self-describing using the DXOS decentralized type system.
+*   Spaces may be public or private.
+*   Spaces may contain atomic data records called Items.
+*   Items may be self-describing via the DXOS decentralized type system.
+*   Items may reference other Items within the Space or contained within other Spaces.
 
 #### 2.2.2. Branes
 
