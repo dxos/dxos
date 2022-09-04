@@ -1,0 +1,13 @@
+diff --git a/src/executors/utils/nx-project-paths/index.js b/src/executors/utils/nx-project-paths/index.js
+index 929139232bf12d84b4b6e04523684efd012b5fa7..c4ca5dd47d90fcac3727a4799729e396e9ae95e9 100644
+--- a/src/executors/utils/nx-project-paths/index.js
++++ b/src/executors/utils/nx-project-paths/index.js
+@@ -14,7 +14,7 @@ exports.default = (opts) => {
+         name: 'nx-project-paths',
+         enforce: 'pre',
+         configResolved(config) {
+-            const tsConfigBaseJson = (0, path_1.resolve)(config.root, (0, path_1.join)((0, vite_1.normalizePath)(opts.workspaceRoot), 'tsconfig.base.json'));
++            const tsConfigBaseJson = (0, path_1.resolve)(config.root, (0, path_1.join)((0, vite_1.normalizePath)(opts.workspaceRoot), 'tsconfig.json'));
+             const extensions = getFileExtensions(opts.extensions);
+             resolver = createResolver(tsConfigBaseJson, extensions);
+         },

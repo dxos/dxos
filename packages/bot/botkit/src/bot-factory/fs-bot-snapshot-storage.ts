@@ -8,7 +8,7 @@ import { join } from 'path';
 import { Bot } from '../proto/gen/dxos/bot';
 
 export type BotToRestore = {
-  bot: Bot,
+  bot: Bot
   localPath: string
 }
 
@@ -18,24 +18,24 @@ export interface BotSnapshotStorage {
    * @param bot
    * @param localPath
    */
-  backupBot (bot: Bot, localPath: string | undefined): Promise<void>;
+  backupBot (bot: Bot, localPath: string | undefined): Promise<void>
   /**
    * Imports a bot from a specific storage type.
    * @param id
    */
-  restoreBot (id: string): Promise<BotToRestore>;
+  restoreBot (id: string): Promise<BotToRestore>
   /**
    * Fetches a list of all available bots.
    */
-  listBackupedBot (): Promise<string[]>;
+  listBackupedBot (): Promise<string[]>
   /**
    * Deletes a bot from the storage.
    */
-  deleteBackupedBot (id: string): Promise<void>;
+  deleteBackupedBot (id: string): Promise<void>
   /**
    * Deletes all bots from the storage.
    */
-  reset (): Promise<void>;
+  reset (): Promise<void>
 }
 
 export class FSBotSnapshotStorage implements BotSnapshotStorage {

@@ -1,0 +1,74 @@
+{
+  "sourceRoot": "packages/wallet/wallet/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/wallet/wallet/dist",
+        "tsConfig": "packages/wallet/wallet/tsconfig.json",
+        "main": "packages/wallet/wallet/src/index.ts"
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "packages/wallet/wallet/out/storybook",
+        "config": {
+          "configFolder": "packages/wallet/wallet/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "bundle": {
+      "executor": "@nxext/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/wallet/wallet/out/wallet",
+        "configFile": "packages/wallet/wallet/vite.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/wallet/wallet/**/*.{ts,js}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "configFile": "packages/wallet/wallet/vite.config.ts"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/wallet/wallet/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    }
+  }
+}

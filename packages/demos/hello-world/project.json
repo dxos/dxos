@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/demos/hello-world/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/demos/hello-world/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}

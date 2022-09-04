@@ -2,17 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import fs from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 import { Tail } from 'tail';
 
 import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/crypto';
-import { createRpcClient, ProtoRpcClient } from '@dxos/rpc';
+import { PublicKey } from '@dxos/protocols';
+import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
 import { schema } from '../proto/gen';
@@ -23,8 +23,8 @@ const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;
 
 interface BotHandleOptions {
-  config?: Config,
-  packageSpecifier?: BotPackageSpecifier,
+  config?: Config
+  packageSpecifier?: BotPackageSpecifier
   partyKey?: PublicKey
 }
 
@@ -34,7 +34,7 @@ interface BotHandleOptions {
 export class BotHandle {
   localPath?: string;
   readonly update = new Event();
-  private _rpc: ProtoRpcClient<BotService> | null = null;
+  private _rpc: ProtoRpcPeer<BotService> | null = null;
   private readonly _bot: Bot;
   private readonly _log = debug(`dxos:botkit:bot-handle:${this.id}`);
   private _config: Config;

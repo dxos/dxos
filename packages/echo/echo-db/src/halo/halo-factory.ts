@@ -2,28 +2,28 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import {
   createDeviceInfoMessage,
   createIdentityInfoMessage,
   createKeyAdmitMessage,
   createPartyGenesisMessage,
+  keyPairFromSeedPhrase,
   Keyring,
   KeyType,
   Filter,
-  SecretProvider,
-  KeyHint
+  SecretProvider
 } from '@dxos/credentials';
-import { keyToString, PublicKey, keyPairFromSeedPhrase } from '@dxos/crypto';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { createHaloPartyAdmissionMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
-import { PartyFeedProvider, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PipelineOptions } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
 import {
@@ -35,7 +35,7 @@ import {
  * Options allowed when creating the HALO.
  */
 export interface HaloCreationOptions {
-  identityDisplayName?: string,
+  identityDisplayName?: string
   deviceDisplayName?: string
 }
 
@@ -51,10 +51,10 @@ export class HaloFactory {
     private readonly _snapshotStore: SnapshotStore,
     private readonly _feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
     private readonly _keyring: Keyring,
-    private readonly _options: PartyOptions = {}
+    private readonly _options: PipelineOptions = {}
   ) {}
 
-  async constructParty (hints: KeyHint[]): Promise<HaloParty> {
+  async constructParty (): Promise<HaloParty> {
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     const feedProvider = this._feedProviderFactory(credentialsSigner.getIdentityKey().publicKey);
     const halo = new HaloParty(
@@ -63,7 +63,6 @@ export class HaloFactory {
       feedProvider,
       credentialsSigner,
       this._networkManager,
-      hints,
       undefined,
       this._options
     );
@@ -80,10 +79,11 @@ export class HaloFactory {
       await this._keyring.createKeyRecord({ type: KeyType.DEVICE });
 
     // 1. Create a feed for the HALO.
-    const halo = await this.constructParty([]);
+    const halo = await this.constructParty();
     const feedKey = await halo.getWriteFeedKey();
     const feedKeyPair = this._keyring.getKey(feedKey);
     assert(feedKeyPair);
+    halo._setGenesisFeedKey(feedKey);
 
     // Connect the pipeline.
     await halo.open();
@@ -93,21 +93,21 @@ export class HaloFactory {
      *    B. Device key (the first "member" of the Identity's HALO).
      *    C. Feed key (the feed owned by the Device).
      */
-    await halo.writeCredentialsMessage(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
+    await halo.credentialsWriter.write(createPartyGenesisMessage(this._keyring, identityKey, feedKeyPair.publicKey, deviceKey));
 
     /* 3. Make a special self-signed KeyAdmit message which will serve as an "IdentityGenesis" message. This
      *    message will be copied into other Parties which we create or join.
      */
-    await halo.writeCredentialsMessage(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
+    await halo.credentialsWriter.write(createKeyAdmitMessage(this._keyring, identityKey.publicKey, identityKey));
 
     if (options.identityDisplayName) {
       // 4. Write the IdentityInfo message with descriptive details (eg, display name).
-      await halo.writeCredentialsMessage(createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey));
+      await halo.credentialsWriter.write(createIdentityInfoMessage(this._keyring, options.identityDisplayName, identityKey));
     }
 
     if (options.deviceDisplayName) {
       // 5. Write the DeviceInfo message with descriptive details (eg, display name).
-      await halo.writeCredentialsMessage(createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey));
+      await halo.credentialsWriter.write(createDeviceInfoMessage(this._keyring, options.deviceDisplayName, deviceKey));
     }
 
     // Create special properties item.
@@ -150,7 +150,7 @@ export class HaloFactory {
   }
 
   private async _joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
-    log(`Admitting device with invitation: ${keyToString(invitationDescriptor.invitation)}`);
+    log(`Admitting device with invitation: ${PublicKey.stringify(invitationDescriptor.invitation)}`);
     assert(invitationDescriptor.identityKey);
 
     let identityKey = this._keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
@@ -192,9 +192,10 @@ export class HaloFactory {
     );
 
     await initiator.connect();
-    const { hints } = await initiator.redeemInvitation(secretProvider);
+    const { genesisFeedKey } = await initiator.redeemInvitation(secretProvider);
 
-    const halo = await this.constructParty(hints);
+    const halo = await this.constructParty();
+    halo._setGenesisFeedKey(genesisFeedKey);
     await halo.open();
 
     await initiator.destroy();

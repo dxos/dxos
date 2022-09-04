@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { range } from '@dxos/util';
 
-import { Item, CreateItemOption } from '../api';
 import { ECHO } from '../echo';
+import { CreateItemOption, Item } from '../packlets/database';
 import { DataParty } from '../parties';
 import { createTestInstance, inviteTestPeer } from './testing';
 

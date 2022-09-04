@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/common/typedoc/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/typedoc/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

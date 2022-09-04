@@ -4,10 +4,11 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { PublicKey } from '@dxos/crypto';
 import { SVG, SVGContextProvider } from '@dxos/gem-core';
 import { Graph } from '@dxos/gem-spore';
 import { PeerInfo } from '@dxos/network-manager';
+import type { PublicKey } from '@dxos/protocols';
+import { humanize } from '@dxos/util';
 
 // const classMap: Record<string, string> = {
 //   ME: 'blue',
@@ -51,7 +52,7 @@ export const PeerGraph = ({ peers, size, onClick }: PeerGraphProps) => {
     for (const peer of peers) {
       nodes.push({
         id: peer.id.toHex(),
-        title: peer.id.humanize(),
+        title: humanize(peer.id),
         state: peer.state
       });
 

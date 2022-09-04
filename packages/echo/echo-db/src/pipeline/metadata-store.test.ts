@@ -4,14 +4,15 @@
 
 import expect from 'expect';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { MetadataStore } from './metadata-store';
 
 describe('MetadataStore in-memory', () => {
   it('Creates party and adds feeds to it', async () => {
-    const store = new MetadataStore(createStorage('metadata', StorageType.RAM));
+    const storage = createStorage('', StorageType.RAM);
+    const store = new MetadataStore(storage.directory('metadata'));
     await store.load();
     expect(store.parties?.length).toBe(0);
 
@@ -33,7 +34,8 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Creates party when adding feed', async () => {
-    const store = new MetadataStore(createStorage('metadata', StorageType.RAM));
+    const storage = createStorage('', StorageType.RAM);
+    const store = new MetadataStore(storage.directory('metadata'));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -45,7 +47,8 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Doesn\'t add same feed twice', async () => {
-    const store = new MetadataStore(createStorage('metadata', StorageType.RAM));
+    const storage = createStorage('', StorageType.RAM);
+    const store = new MetadataStore(storage.directory('metadata'));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -60,7 +63,8 @@ describe('MetadataStore in-memory', () => {
 
   // TODO(yivlad): Doesn't work for now.
   it.skip('Resets storage', async () => {
-    const store = new MetadataStore(createStorage('snapshots', StorageType.RAM));
+    const storage = createStorage('snapshots', StorageType.RAM);
+    const store = new MetadataStore(storage.directory(''));
 
     const partyKey = PublicKey.random();
     const feedKey = PublicKey.random();
@@ -71,5 +75,22 @@ describe('MetadataStore in-memory', () => {
 
     await store.clear();
     expect(store.parties?.length).toEqual(0);
+  });
+
+  it('not corrupted', async () => {
+    const storage = createStorage('', StorageType.RAM);
+    const dir = storage.directory('metadata');
+    const metadataStore = new MetadataStore(dir);
+
+    // writing something in metadataStore to save.
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore.setDataFeed(PublicKey.random(), PublicKey.random());
+
+    // using same directory to test if truncates.
+    const metadataStore2 = new MetadataStore(dir);
+    // should owerride previous data.
+    await metadataStore2.setDataFeed(PublicKey.random(), PublicKey.random());
+    await metadataStore2.load();
   });
 });

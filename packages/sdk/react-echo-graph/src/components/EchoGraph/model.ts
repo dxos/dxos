@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { Item, PARTY_ITEM_TYPE } from '@dxos/echo-db';
+import { Item, PARTY_ITEM_TYPE } from '@dxos/client';
 import { GraphData, GraphModel } from '@dxos/gem-spore';
 
 /**
@@ -15,7 +15,7 @@ export class EchoGraphModel implements GraphModel<Item<any>> {
   private readonly _graph: GraphData<Item<any>> = {
     nodes: [],
     links: []
-  }
+  };
 
   get graph () {
     return this._graph;

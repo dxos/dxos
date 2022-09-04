@@ -5,7 +5,8 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "config.proto";
+
+import "./config.proto";
 import "./echo/invitation.proto";
 import "./echo/snapshot.proto";
 import "./halo/keys.proto";
@@ -34,12 +35,12 @@ enum InvitationState {
 
 /// Invitation process created by sender.
 message InvitationRequest {
-  InvitationDescriptor descriptor = 1;
+  optional InvitationDescriptor descriptor = 1;
 
   InvitationState state = 2;
 
   /// Only if state == ERROR.
-  string error = 3;
+  optional string error = 3;
 }
 
 /// Invitation that is being redeemed.
@@ -49,10 +50,10 @@ message RedeemedInvitation {
   InvitationState state = 2;
 
   /// Only if state == ERROR.
-  string error = 3;
+  optional string error = 3;
 
   /// Only on party invitations that are finished.
-  dxos.halo.keys.PubKey partyKey = 4;
+  optional dxos.halo.keys.PubKey partyKey = 4;
 }
 
 message AuthenticateInvitationRequest {
@@ -67,17 +68,17 @@ message AuthenticateInvitationRequest {
 
 message Profile {
   required dxos.halo.keys.PubKey publicKey = 1;
-  string username = 2;
+  optional string username = 2;
 }
 
 message SubscribeProfileResponse {
-  Profile profile = 1;
+  optional Profile profile = 1;
 }
 
 message CreateProfileRequest {
-  string username = 1;
-  bytes publicKey = 2;
-  bytes secretKey = 3;
+  optional string username = 1;
+  optional bytes publicKey = 2;
+  optional bytes secretKey = 3;
 }
 
 message RecoverProfileRequest {
@@ -86,7 +87,7 @@ message RecoverProfileRequest {
 
 message Contact {
   dxos.halo.keys.PubKey publicKey = 1;
-  string displayName = 2;
+  optional string displayName = 2;
 }
 
 message Contacts {
@@ -154,7 +155,7 @@ service HaloService {
 message Party {
   message Member {
     required dxos.halo.keys.PubKey publicKey = 1;
-    string displayName = 2;
+    optional string displayName = 2;
   }
 
   required dxos.halo.keys.PubKey publicKey = 1;
@@ -175,11 +176,11 @@ message GetPartyDetailsRequest {
 
 message PartyDetails {
   /// The timeframe of mutations processed by the client.
-  required dxos.echo.feed.TimeframeVector processed_timeframe = 1;
+  required dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
 message SubscribePartyResponse {
-  Party party = 1;
+  optional Party party = 1;
 }
 
 
@@ -191,7 +192,7 @@ message CreateInvitationRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
-  dxos.halo.keys.PubKey inviteeKey = 2;
+  optional dxos.halo.keys.PubKey inviteeKey = 2;
 }
 
 message PartyActivationOptions {
@@ -202,9 +203,9 @@ message PartyActivationOptions {
 message SetPartyStateRequest {
   required dxos.halo.keys.PubKey partyKey = 1;
 
-  bool open = 2;
-  bool activeGlobal = 3;
-  bool activeDevice = 4;
+  optional bool open = 2;
+  optional bool activeGlobal = 3;
+  optional bool activeDevice = 4;
 }
 
 message SubscribeMembersRequest {
@@ -214,7 +215,7 @@ message SubscribeMembersRequest {
 message SubscribeMembersResponse {
   message PartyMember {
     required dxos.halo.keys.PubKey publicKey = 1;
-    string displayName = 2;
+    optional string displayName = 2;
   }
 
   repeated PartyMember members = 1;

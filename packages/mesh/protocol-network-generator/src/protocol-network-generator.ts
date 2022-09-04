@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { EventEmitter } from 'events';
+import assert from 'node:assert';
 import pump from 'pump';
 import { Stream } from 'stream';
 
@@ -20,10 +20,10 @@ type CreatePeerCallback = (topic: Buffer, id: Buffer, options: any) => Promise<P
 const isStream = (stream: any) => typeof stream === 'object' && typeof stream.pipe === 'function';
 
 interface GenerateOptions {
-  topic?: Buffer,
-  waitForFullConnection?: boolean,
-  peer?: any,
-  protocol?: ProtocolOptions,
+  topic?: Buffer
+  waitForFullConnection?: boolean
+  peer?: any
+  protocol?: ProtocolOptions
   parameters?: any[]
 }
 
@@ -31,7 +31,7 @@ interface GenerateOptions {
 export interface ProtocolNetworkGenerator extends NetworkGenerator {}
 
 export class ProtocolNetworkGenerator extends EventEmitter {
-  private _createPeer: CreatePeerCallback
+  private _createPeer: CreatePeerCallback;
 
   constructor (createPeer: CreatePeerCallback) {
     super();

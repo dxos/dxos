@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/mesh/protocol-network-generator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/protocol-network-generator/dist",
+        "tsConfig": "packages/mesh/protocol-network-generator/tsconfig.json",
+        "main": "packages/mesh/protocol-network-generator/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/protocol-network-generator/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

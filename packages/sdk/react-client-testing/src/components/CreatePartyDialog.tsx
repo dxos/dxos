@@ -15,7 +15,7 @@ export interface CreatePartyDialogProps {
   open: boolean
   title?: string
   modal?: boolean
-  onCreate?: () => void,
+  onCreate?: () => void
   onJoin?: (invitationCode: string) => void
   onImport?: (file: File | string) => void
 }

@@ -1,0 +1,17 @@
+{
+  "sourceRoot": "packages/wallet/wallet-playground/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/wallet/wallet-playground/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

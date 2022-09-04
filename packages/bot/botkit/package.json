@@ -1,22 +1,23 @@
 {
   "name": "@dxos/botkit",
-  "version": "2.33.4",
+  "version": "2.33.8",
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "bin": {
     "bot-factory": "bin/main.js"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
   },
   "files": [
     "bin",
     "dist"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "build:test": "toolchain build:test",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
@@ -25,42 +26,38 @@
     "@dxos/config": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "abort-controller": "~3.0.0",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "download": "^8.0.0",
-    "esbuild": "^0.11.23",
+    "esbuild": "~0.14.1",
     "node-fetch": "^2.6.0",
     "source-map-support": "^0.5.12",
-    "tail": "~2.2.4",
-    "@dxos/echo-protocol": "workspace:*"
+    "tail": "~2.2.4"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.31",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@swc-node/register": "~1.4.2",
+    "@swc-node/register": "~1.5.1",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "@types/node-fetch": "^2.5.10",
     "@types/tail": "~2.2.1",
-    "assert": "^2.0.0",
-    "eslint": "^7.12.1",
     "expect": "~27.0.2",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.5.2",
+    "ts-node": "^10.8.2",
+    "typescript": "^4.7.2",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

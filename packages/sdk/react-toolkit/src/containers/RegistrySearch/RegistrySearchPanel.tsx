@@ -22,7 +22,7 @@ export interface RegistrySearchPanelProps {
 /**
  * Registry search with optional filters.
  */
-// TODO(wittjosiah): Integrate second step (versions) into SearchModel.
+// TODO(wittjosiah): Integrate second step (versions => rename tags) into SearchModel.
 export const RegistrySearchPanel = ({
   model,
   types = [],
@@ -35,6 +35,8 @@ export const RegistrySearchPanel = ({
 
   const resourceTags = Object.keys(resource?.tags ?? {});
 
+  // TODO(wittjosiah): Maybe re-add once integrating with DXQS?
+  //   Resources aren't typed directly and types are only enforced at the record level.
   // const handleTypeSelect = (types: CID[]) => {
   //   setSelectedTypes(types);
   //   model.setFilters([

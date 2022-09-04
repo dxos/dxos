@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { fork } from 'child_process';
 import expect from 'expect';
 import { existsSync } from 'fs';
+import assert from 'node:assert';
 import { join } from 'path';
 
-import { createId, PublicKey } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { PublicKey } from '@dxos/protocols';
+import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
@@ -18,7 +19,7 @@ import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 
-const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
+const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcPeer<BotService>> => {
   const rpc = createRpcClient(
     schema.getService('dxos.bot.BotService'),
     {
@@ -110,7 +111,7 @@ describe('Node container', function () {
         invitation
       });
       const command = PublicKey.random().asUint8Array();
-      await rpcClient.rpc.command({ command: command });
+      await rpcClient.rpc.command({ command });
 
       const item = await party.database.waitForItem<ObjectModel>({ type: TEST_ECHO_TYPE });
       const payload = item.model.get('payload');
@@ -165,7 +166,10 @@ describe('Node container', function () {
         await rpc.open();
 
         const command = PublicKey.random().asUint8Array();
-        const { response } = await rpc.rpc.command({ command });
+        const { response } = await rpc.rpc.command({
+          botId: PublicKey.random().toHex(),
+          command
+        });
         assert(response);
         expect(PublicKey.from(response).toString()).toBe(PublicKey.from(command).toString());
 

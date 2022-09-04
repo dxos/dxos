@@ -2,28 +2,28 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import { EventEmitter } from 'events';
 import { EventedType } from 'ngraph.events';
 import createGraph, { Graph } from 'ngraph.graph';
+import assert from 'node:assert';
 import { PassThrough, Stream } from 'stream';
 
 interface CreateStreamOptions {
-  initiator?: boolean,
-  topic?: Buffer,
-  channel?: Buffer,
+  initiator?: boolean
+  topic?: Buffer
+  channel?: Buffer
   options?: any
 }
 export interface Peer {
-  id: Buffer,
+  id: Buffer
   createStream?: (options: CreateStreamOptions) => Stream
 }
 
 interface Connection {
-  fromPeer: Peer,
-  toPeer: Peer,
+  fromPeer: Peer
+  toPeer: Peer
   stream: Stream
 }
 
@@ -57,15 +57,15 @@ export class IdGenerator {
 }
 
 export interface NetworkOptions {
-  createPeer?: CreatePeerCallback,
+  createPeer?: CreatePeerCallback
   createConnection?: CreateConnectionCallback
 }
 
 export class Network extends EventEmitter {
-  private _createPeer: CreatePeerCallback
-  private _createConnection: CreateConnectionCallback
+  private _createPeer: CreatePeerCallback;
+  private _createConnection: CreateConnectionCallback;
   private _connectionsOpening: Map<any, any>;
-  private _graph: Graph<any, any> & EventedType
+  private _graph: Graph<any, any> & EventedType;
 
   constructor (options: NetworkOptions = {}) {
     super();

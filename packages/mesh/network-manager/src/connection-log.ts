@@ -3,8 +3,8 @@
 //
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';
@@ -27,10 +27,10 @@ export interface ConnectionInfo {
 }
 
 export type ConnectionEvent = {
-    type: 'CONNECTION_STATE_CHANGED',
-    newState: ConnectionState,
+    type: 'CONNECTION_STATE_CHANGED'
+    newState: ConnectionState
   } | {
-    type: 'PROTOCOL_ERROR',
+    type: 'PROTOCOL_ERROR'
     error: string
   } | {
     type: 'PROTOCOL_EXTENSIONS_INITIALIZED'

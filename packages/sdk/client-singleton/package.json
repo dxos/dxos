@@ -1,0 +1,34 @@
+{
+  "name": "@dxos/client-singleton",
+  "version": "2.33.8",
+  "description": "Client which runs as a singleton and proxies via RPC.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "check": "true",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-worker-proxy": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/react-async": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
+    "@types/react": "^18.0.9",
+    "react": "^18.1.0",
+    "vite": "3.0.9"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

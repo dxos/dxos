@@ -3,8 +3,8 @@
 //
 
 import { Authenticator, AuthPlugin } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Creates authenticator network-protocol plugin that guards access to the replicator.

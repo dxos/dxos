@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, PropsWithChildren } from 'react';
 
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -120,7 +120,7 @@ const Content = styled('main', {
   })
 }));
 
-export const SlidingContent: FunctionComponent<ContentProps> = Content;
+export const SlidingContent: FunctionComponent<PropsWithChildren<ContentProps>> = Content;
 
 // ----------------------------------------------------------------------------.
 // Helpers.

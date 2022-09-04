@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
 import { ItemID } from '@dxos/echo-protocol';
@@ -69,11 +69,10 @@ export class TextModel extends Model<Doc, Mutation> {
 
   private async _handleDocUpdated (update: Uint8Array, origin: any) {
     const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
-
     if (!remote) {
       await this.write({
-        update,
-        clientId: this._getState().clientID
+        clientId: this._getState().clientID,
+        update
       });
     }
   }
@@ -93,13 +92,12 @@ export class TextModel extends Model<Doc, Mutation> {
 
     const textContentNodes = [];
     const nodes = node.toArray();
-
     for (const childNode of nodes) {
       textContentNodes.push(this._textContentInner(childNode));
     }
 
     return textContentNodes.join('\n');
-  }
+  };
 
   private _insertInner = (node: unknown, index: number, text: string) => {
     if (node instanceof XmlText) {

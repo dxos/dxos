@@ -7,8 +7,7 @@ import React from 'react';
 import { ChevronRight as ExpandIcon, ExpandMore as CollapseIcon } from '@mui/icons-material';
 import { TreeItem, TreeView } from '@mui/lab';
 
-import { Item } from '@dxos/client';
-import { ObjectModel } from '@dxos/object-model';
+import { Item, ObjectModel } from '@dxos/client';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 
 import { ProfileInitializer, useTestParty } from '../src';
@@ -55,9 +54,9 @@ const Story = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <Story />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <Story />
+    </ProfileInitializer>
+  </ClientProvider>
 );

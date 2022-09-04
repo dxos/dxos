@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -158,7 +158,7 @@ const AutoInvitationGenerator = ({
       const invitation = await party.createInvitation();
       invitation.finished.on(() => setPin(''));
       invitation.connected.on(() => setPin(invitation.secret.toString()));
-
+      // TODO(burdon): Error handling.
       onInvite(invitation.descriptor.encode());
     });
   }, []);

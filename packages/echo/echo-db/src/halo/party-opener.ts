@@ -24,8 +24,8 @@ export const autoPartyOpener = (preferences: Preferences, partyManager: PartyMan
 
     for (const partyDesc of values) {
       if (!partyManager.parties.some(x => x.key === partyDesc.partyKey)) {
-        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()} hints=${JSON.stringify(partyDesc.keyHints)}`);
-        await partyManager.addParty(partyDesc.partyKey, partyDesc.keyHints);
+        log(`Auto-opening new Party from HALO: ${partyDesc.partyKey.toHex()}`);
+        await partyManager.addParty(partyDesc.partyKey, partyDesc.genesisFeed);
       }
     }
   }));

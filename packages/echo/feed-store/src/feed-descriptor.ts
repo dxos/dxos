@@ -2,22 +2,23 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
+import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import type { File, Storage } from '@dxos/random-access-multi-storage';
+import type { PublicKey } from '@dxos/protocols';
+import type { Directory } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
-  storage: Storage,
-  key: PublicKey,
-  hypercore: Hypercore,
-  secretKey?: Buffer,
+  directory: Directory
+  key: PublicKey
+  hypercore: Hypercore
+  secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
 }
@@ -28,7 +29,7 @@ interface FeedDescriptorOptions {
  * Abstract handler for an Hypercore instance.
  */
 export class FeedDescriptor {
-  private readonly _storage: Storage;
+  private readonly _directory: Directory;
   private readonly _key: PublicKey;
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
@@ -40,7 +41,7 @@ export class FeedDescriptor {
 
   constructor (options: FeedDescriptorOptions) {
     const {
-      storage,
+      directory,
       key,
       secretKey,
       valueEncoding,
@@ -48,7 +49,7 @@ export class FeedDescriptor {
       disableSigning = false
     } = options;
 
-    this._storage = storage;
+    this._directory = directory;
     this._valueEncoding = valueEncoding;
     this._hypercore = hypercore;
     this._key = key;
@@ -119,9 +120,19 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => File {
+
+  private _createStorage (dir = ''): (name: string) => HypercoreFile {
     return (name) => {
-      return this._storage.createOrOpen(`${dir}/${name}`);
+      const file = this._directory.createOrOpen(`${dir}/${name}`);
+      // Separation between our internal File API and Hypercore's.
+      return {
+        read: callbackify(file.read.bind(file)),
+        write: callbackify(file.write.bind(file)),
+        del: callbackify(file.truncate.bind(file)),
+        stat: callbackify(file.stat.bind(file)),
+        close: callbackify(file.close.bind(file)),
+        destroy: callbackify(file.delete.bind(file))
+      } as HypercoreFile;
     };
   }
 
@@ -155,3 +166,15 @@ const MOCK_CRYPTO = {
     cb(null, true);
   }
 };
+
+/**
+ * File API that hypercore uses to read/write from storage.
+ */
+interface HypercoreFile {
+  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void
+  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void
+  del (offset: number, size: number, cb?: (err: Error | null) => void): void
+  stat (cb: (err: Error | null, data?: {size: number}) => void): void
+  close (cb?: (err: Error | null) => void): void
+  destroy (cb?: (err: Error | null) => void): void
+}

@@ -20,7 +20,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../client"
+      "path": "../../common/react-async"
     },
     {
       "path": "../../echo/echo-db"
@@ -32,7 +32,7 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../../common/react-async"
+      "path": "../client"
     },
     {
       "path": "../react-client"

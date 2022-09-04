@@ -24,9 +24,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {

@@ -7,3 +7,15 @@ package:
       build:
         command: npm run build
         outdir: out/book
+
+runtime:
+  client:
+    storage:
+      persistent: true
+  services:
+    signal:
+      server: wss://demo.kube.dxos.network/dxos/signal
+    ice:
+      - urls: turn:demo.kube.dxos.network:3478
+        username: dxos
+        credential: dxos

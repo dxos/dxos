@@ -1,7 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
   },
   "include": [
     "src",
@@ -9,12 +13,6 @@
     "browser-test"
   ],
   "references": [
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../halo/credentials"
-    },
     {
       "path": "../../common/crypto"
     },
@@ -25,14 +23,16 @@
       "path": "../../echo/object-model"
     },
     {
-      "path": "../browser-mocha"
+      "path": "../../halo/credentials"
     },
     {
       "path": "../../mesh/signal"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../browser-mocha"
     }
-  ],
-  "types": [
-    "node",
-    "@types/mocha"
   ]
 }

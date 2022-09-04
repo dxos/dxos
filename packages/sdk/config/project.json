@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/sdk/config/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/sdk/config/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/config/dist",
+        "tsConfig": "packages/sdk/config/tsconfig.json",
+        "main": "packages/sdk/config/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/config/**/*.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
+}

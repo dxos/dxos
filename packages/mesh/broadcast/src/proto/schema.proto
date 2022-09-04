@@ -10,7 +10,7 @@ message Packet {
   bytes origin = 2;
 
   // Represents the current sender's ID of the message.
-  bytes from = 3;
+  optional bytes from = 3;
 
   // Represents an opaque blob of data, it can contain any data that the publisher wants to send.
   bytes data = 4;

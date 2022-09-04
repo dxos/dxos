@@ -17,31 +17,19 @@
   ],
   "references": [
     {
-      "path": "../../common/crypto"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/react-async"
-    },
-    {
-      "path": "../react-registry-client"
+      "path": "../../bot/bot-factory-client"
     },
     {
       "path": "../../common/async"
     },
     {
-      "path": "../../bot/bot-factory-client"
+      "path": "../../common/debug"
     },
     {
-      "path": "../client"
+      "path": "../../common/protocols"
     },
     {
-      "path": "../config"
-    },
-    {
-      "path": "../../halo/credentials"
+      "path": "../../common/react-async"
     },
     {
       "path": "../../echo/echo-db"
@@ -53,6 +41,15 @@
       "path": "../../echo/object-model"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../client"
+    },
+    {
+      "path": "../config"
+    },
+    {
       "path": "../react-client"
     },
     {
@@ -60,6 +57,9 @@
     },
     {
       "path": "../react-components"
+    },
+    {
+      "path": "../react-registry-client"
     },
     {
       "path": "../registry-client"

@@ -9,19 +9,19 @@
   ],
   "references": [
     {
-      "path": "../broadcast"
+      "path": "../../common/async"
     },
     {
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/protocols"
     },
     {
-      "path": "../protocol"
+      "path": "../broadcast"
     },
     {
-      "path": "../../common/async"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-network-generator"

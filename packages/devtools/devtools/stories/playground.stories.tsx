@@ -9,6 +9,7 @@ import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 import { ConfigObject, defs } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
+import { RegistryProvider } from '@dxos/react-registry-client';
 import { RpcPort, createLinkedPorts } from '@dxos/rpc';
 
 import { ErrorBoundary, PanelsContainer, sections, theme } from '../src';
@@ -19,34 +20,45 @@ export default {
 };
 
 const DevTools = ({ port }: { port: RpcPort }) => (
-<ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ClientProvider
+  <ErrorBoundary>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ClientProvider
+        config={{
+          runtime: {
+            client: {
+              mode: defs.Runtime.Client.Mode.REMOTE
+            }
+          }
+        }}
+        options={{
+          rpcPort: port
+        }}
+      >
+        <RegistryProvider
           config={{
             runtime: {
-              client: {
-                mode: defs.Runtime.Client.Mode.REMOTE
+              services: {
+                dxns: {
+                  server: 'wss://node1.devnet.dxos.network/dxns/ws'
+                }
               }
             }
-          }}
-          options={{
-            rpcPort: port
-          }}
-        >
+          }}>
           <PanelsContainer sections={sections} />
-        </ClientProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+        </RegistryProvider>
+      </ClientProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
 
 // TODO(burdon): ErrorBoundary with indicator.
 export const Controls = () => (
-<FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
-      <ClientProvider>
-        <PlaygroundControls />
-      </ClientProvider>
-    </FullScreen>
+  <FullScreen sx={{ alignItems: 'center', backgroundColor: '#EEE' }}>
+    <ClientProvider>
+      <PlaygroundControls />
+    </ClientProvider>
+  </FullScreen>
 );
 
 export const Primary = () => {

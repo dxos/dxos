@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { FeedStoreIterator, MessageSelector, Timeframe } from '@dxos/echo-protocol';
+import { FeedSelector, FeedStoreIterator, MessageSelector } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from './metadata-store';
@@ -19,7 +19,7 @@ const log = debug('dxos:echo-db:party-feed-provider');
 const warn = debug('dxos:echo-db:party-feed-provider:warn');
 
 export class PartyFeedProvider {
-  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex())
+  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(x => x.toHex());
   readonly feedOpened = new Event<FeedDescriptor>();
 
   constructor (
@@ -31,19 +31,6 @@ export class PartyFeedProvider {
 
   getFeeds (): FeedDescriptor[] {
     return Array.from(this._feeds.values());
-  }
-
-  @synchronized
-  async openKnownFeeds () {
-    for (const feedKey of this._metadataStore.getParty(this._partyKey)?.feedKeys ?? []) {
-      if (!this._feeds.has(feedKey)) {
-        const fullKey = this._keyring.getFullKey(feedKey);
-        const feed = fullKey?.secretKey
-          ? await this._feedStore.openReadWriteFeed(fullKey.publicKey, fullKey.secretKey)
-          : await this._feedStore.openReadOnlyFeed(feedKey);
-        this._trackFeed(feed);
-      }
-    }
   }
 
   @synchronized
@@ -103,8 +90,8 @@ export class PartyFeedProvider {
     return feed;
   }
 
-  async createIterator (messageSelector: MessageSelector, initialTimeframe?: Timeframe) {
-    const iterator = new FeedStoreIterator(() => true, messageSelector, initialTimeframe ?? new Timeframe());
+  async createIterator (messageSelector: MessageSelector, feedSelector: FeedSelector, initialTimeframe?: Timeframe) {
+    const iterator = new FeedStoreIterator(feedSelector, messageSelector, initialTimeframe ?? new Timeframe());
     for (const feed of this._feeds.values()) {
       iterator.addFeedDescriptor(feed);
     }

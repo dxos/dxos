@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/demos/kitchen-sink/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/demos/kitchen-sink/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}

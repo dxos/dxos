@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import {
@@ -15,15 +15,11 @@ import {
   PartyEventType,
   SignedMessage
 } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
-import { FeedKey, FeedWriter, IHaloStream, PartyKey, HaloStateSnapshot, WriteReceipt } from '@dxos/echo-protocol';
+import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
-
-export interface CredentialWriter {
-  writeHaloMessage (message: HaloMessage): Promise<WriteReceipt>
-}
 
 export interface CredentialProcessor {
   processMessage (message: IHaloStream): Promise<void>
@@ -47,12 +43,10 @@ export interface PartyStateProvider {
 /**
  * TODO(burdon): Wrapper/Bridge between HALO APIs.
  */
-export class PartyProcessor implements CredentialWriter, CredentialProcessor, PartyStateProvider {
+export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private readonly _state: PartyState;
 
-  private _outboundHaloStream: FeedWriter<HaloMessage> | undefined;
-
-  readonly feedAdded = new Event<FeedKey>()
+  readonly feedAdded = new Event<FeedKey>();
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 
@@ -146,16 +140,6 @@ export class PartyProcessor implements CredentialWriter, CredentialProcessor, Pa
     const { data } = message;
     this._haloMessages.push(data);
     await this._state.processMessages([data]);
-  }
-
-  setOutboundStream (stream: FeedWriter<HaloMessage>) {
-    this._outboundHaloStream = stream;
-  }
-
-  async writeHaloMessage (message: HaloMessage): Promise<WriteReceipt> {
-    assert(this._outboundHaloStream, 'Party is closed or read-only');
-    // TODO(marik-d): Wait for the message to be processed?
-    return this._outboundHaloStream.write(message);
   }
 
   makeSnapshot (): HaloStateSnapshot {

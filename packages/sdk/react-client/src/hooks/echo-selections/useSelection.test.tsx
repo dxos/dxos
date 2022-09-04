@@ -9,14 +9,15 @@ import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 
 import { useSelection } from './useSelection';
 
 const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';
 
-const useTestComponents = async () => {
+const createTestComponents = async () => {
   const config = {};
   const client = new Client(config);
   await client.initialize();
@@ -53,9 +54,9 @@ afterEach(() => {
   rootContainer = null;
 });
 
-describe.only('useSelection', () => {
+describe('useSelection', () => {
   it('gets updated items selection', async () => {
-    const { party } = await useTestComponents();
+    const { party } = await createTestComponents();
     act(() => {
       ReactDOM.render(<UseSelectionTestComponent party={party} />, rootContainer);
     });

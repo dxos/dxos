@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import React, { SyntheticEvent, useState, useRef } from 'react';
 
 import { Button, TextField } from '@mui/material';
@@ -17,8 +17,8 @@ export const ImportDialog = ({
   onClose,
   decrypter
 }: {
-  open: boolean,
-  onClose: (text?: string) => void,
+  open: boolean
+  onClose: (text?: string) => void
   decrypter: (text: string, passphrase: string) => Promise<string>
 }) => {
   const buttonRef = useRef(null);

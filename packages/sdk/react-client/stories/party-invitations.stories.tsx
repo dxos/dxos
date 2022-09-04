@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 
 import { PartyInvitation, InvitationDescriptor } from '@dxos/client';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import {
@@ -40,7 +40,7 @@ const PartyInvitationContainer = () => {
   const [partyKey, setPartyKey] = useState<PublicKey>();
   const [invitationCode, setInvitationCode] = useState<string>();
   const [contact, setContact] = useState<string>();
-  const [contacts] = useContacts();
+  const contacts = useContacts();
   const [pin, setPin] = useState('');
 
   const resetInvitations = () => {
@@ -128,8 +128,8 @@ const PartyInvitationContainer = () => {
 };
 
 interface Status {
-  error?: any,
-  party?: string,
+  error?: any
+  party?: string
   invitation?: PartyInvitation
 }
 

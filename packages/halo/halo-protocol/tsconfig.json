@@ -11,14 +11,14 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/debug"
     },
     {
       "path": "../../common/util"
-    }
+    },
+    {
+      "path": "../../halo/credentials"
+    },
   ],
   "types": [
     "mocha",

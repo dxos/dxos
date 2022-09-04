@@ -20,13 +20,16 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
       "path": "../echo-protocol"
     },
     {
       "path": "../feed-store"
-    },
-    {
-      "path": "../../common/util"
     }
   ]
 }

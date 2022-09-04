@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
-import { PublicKeyLike } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import type { PublicKeyLike } from '@dxos/protocols';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
@@ -24,7 +24,7 @@ export interface ReplicatorContextInfo {
   /**
    * Passed from protocol.getContext()
    */
-  context: any,
+  context: any
   /**
    * Peer id, loaded from protocol.getSession()
    */
@@ -39,7 +39,7 @@ export interface ReplicatorMiddleware {
   /**
    * Returns a list of local feeds to replicate.
    */
-  load: LoadFunction,
+  load: LoadFunction
 
   /**
    * Subscribe to new local feeds being opened.
@@ -61,7 +61,7 @@ export class Replicator {
   private readonly _peers = new Map<Protocol, Peer>();
   private _options: {timeout: number};
   private _load: LoadFunction;
-  private _subscribe: SubscribeFunction
+  private _subscribe: SubscribeFunction;
   private _replicate: ReplicateFunction;
 
   constructor (middleware: ReplicatorMiddleware, options?: {timeout: number}) {

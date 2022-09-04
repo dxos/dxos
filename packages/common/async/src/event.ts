@@ -4,21 +4,19 @@
 
 import { throwUnhandledRejection } from '@dxos/debug';
 
-// TODO(burdon): Rename (don't have both "event" and "events" files). Deprecate "events"?
-
 export type Effect = () => (() => void) | undefined;
 
 /**
  * Effect that's been added to a specific Event.
  */
 interface MaterializedEffect {
-  effect: Effect,
+  effect: Effect
   cleanup: (() => void) | undefined
 }
 
 interface EventEmitterLike {
-  on(event: string, cb: (data: any) => void): void;
-  off(event: string, cb: (data: any) => void): void;
+  on(event: string, cb: (data: any) => void): void
+  off(event: string, cb: (data: any) => void): void
 }
 
 /**
@@ -51,6 +49,7 @@ interface EventEmitterLike {
  * 6. Removes the cases where event names intersect when used in cases with inheritance.
  * 7. Remove the need to namespace events when developing a class with events that will be used as a base-class.
  */
+// TODO(burdon): Rename EventListener.
 export class Event<T = void> implements ReadOnlyEvent<T> {
   static wrap<T> (emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();
@@ -313,7 +312,7 @@ export interface ReadOnlyEvent<T = void> {
    * @param callback
    * @returns function that unsubscribes this event listener
    */
-  on(callback: (data: T) => void): () => void;
+  on(callback: (data: T) => void): () => void
 
   /**
    * Unsubscribe this callback from new events. Inncludes persistent and once-listeners.
@@ -324,7 +323,7 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  off(callback: (data: T) => void): void;
+  off(callback: (data: T) => void): void
 
   /**
    * Register a callback to be called only once when the next event is emitted.
@@ -333,32 +332,32 @@ export interface ReadOnlyEvent<T = void> {
    *
    * @param callback
    */
-  once(callback: (data: T) => void): () => void;
+  once(callback: (data: T) => void): () => void
 
   /**
    * An async iterator that iterates over events.
    *
    * This iterator runs indefinitely.
    */
-  [Symbol.asyncIterator](): AsyncIterator<T>;
+  [Symbol.asyncIterator](): AsyncIterator<T>
 
   /**
    * Returns a promise that resolves with the first event emitted that matches the provided predicate.
    *
    * @param predicate
    */
-  waitFor(predicate: (data: T) => boolean): Promise<T>;
+  waitFor(predicate: (data: T) => boolean): Promise<T>
 
   /**
    * Returns a promise that resolves once a specific number of events was emitted since this method was called.
    * @param expectedCount
    */
-  waitForCount(expectedCount: number): Promise<T>;
+  waitForCount(expectedCount: number): Promise<T>
 
   /**
    * Turn any variant of `Event<T>` into an `Event<void>` discarding the callback parameter.
    */
-  discardParameter(): Event<void>;
+  discardParameter(): Event<void>
 }
 
 /**

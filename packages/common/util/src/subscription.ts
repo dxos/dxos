@@ -10,6 +10,7 @@ export type Unsubscribe = () => void;
 /**
  * Tracks a number of subscriptions to free them all together.
  */
+// TODO(burdon): Move to async?
 export class SubscriptionGroup {
   private _subscriptions: Unsubscribe[] = [];
 

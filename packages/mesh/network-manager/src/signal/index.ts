@@ -3,7 +3,7 @@
 //
 
 export * from './in-memory-signal-manager';
-export * from './interface';
-export * from './signal-api';
-export * from './websocket-rpc';
-export * from './websocket-signal-manager';
+export * from './signal-client';
+export * from './signal-manager';
+export * from './signal-messaging';
+export * from './signal-manager-impl';

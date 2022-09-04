@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/gravity/browser-tests/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/gravity/browser-tests/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

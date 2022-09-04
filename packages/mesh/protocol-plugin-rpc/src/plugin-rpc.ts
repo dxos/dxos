@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
@@ -16,8 +16,8 @@ interface SerializedObject {
 }
 
 interface Connection {
-  peer: Protocol,
-  cleanup?: () => Promise<void> | void,
+  peer: Protocol
+  cleanup?: () => Promise<void> | void
   receive: Event<SerializedObject>
 }
 

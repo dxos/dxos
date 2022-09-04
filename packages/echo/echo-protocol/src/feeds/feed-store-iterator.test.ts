@@ -2,19 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import faker from 'faker';
+import assert from 'node:assert';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair, keyToString, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { codec, createTestItemMutation, schema } from '../proto';
-import { Timeframe } from '../spacetime';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
@@ -29,14 +29,14 @@ describe('feed store iterator', () => {
       numMessages: 10
     };
 
-    const feedStore = new FeedStore(createStorage('', StorageType.RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: codec });
 
     //
     // Create the ordered feed stream.
     //
 
     // Update when processed downstream.
-    let currentTimeframe = new Timeframe();
+    const currentTimeframe = new Timeframe();
 
     // TODO(burdon): Factor out/generalize.
     // Select message based on timeframe.
@@ -45,8 +45,8 @@ describe('feed store iterator', () => {
 
       // Create list of allowed candidates.
       const next = candidates.map((candidate, i) => {
-        assert(candidate.data?.echo?.timeframe);
-        const { data: { echo: { timeframe } } } = candidate;
+        assert(candidate.data?.timeframe);
+        const { data: { timeframe } } = candidate;
         const dependencies = Timeframe.dependencies(timeframe, currentTimeframe);
         if (!dependencies.isEmpty()) {
           return undefined;
@@ -58,7 +58,7 @@ describe('feed store iterator', () => {
       // TODO(burdon): Create test for this (eg, feed with depedencies hasn't synced yet).
       if (!next.length) {
         log('Waiting for dependencies...', candidates.map((candidate, i) => ({
-          i, timeframe: candidate?.data?.echo?.timeframe
+          i, timeframe: candidate?.data?.timeframe
         })));
         return undefined;
       }
@@ -108,52 +108,14 @@ describe('feed store iterator', () => {
 
       // Write data.
       await pify(feed.append.bind(feed))(message);
-      log('Write:', keyToString(feed.key), value, timeframe);
+      log('Write:', PublicKey.stringify(feed.key), value, timeframe);
     }
 
-    return;
-
-    //
-    // Consume iterator.
-    //
-    let j = 0;
-    const [counter, updateCounter] = latch(config.numMessages);
-    setImmediate(async () => {
-      for await (const message of iterator) {
-        assert(message.data?.echo?.mutation);
-
-        const { key: feedKey, seq, data: { echo: { itemId, timeframe, mutation } } } = message;
-        assert(itemId);
-        assert(timeframe);
-        assert(mutation);
-
-        const { key, value: word } = schema.getCodecForType('dxos.echo.testing.TestItemMutation').decode(mutation);
-        const i = parseInt(key!);
-        log('Read:', j, { i, word }, i === j, timeframe);
-
-        // Check order.
-        expect(i).toBe(j);
-
-        // Update timeframe for node.
-        currentTimeframe = Timeframe.merge(currentTimeframe, new Timeframe([[PublicKey.from(feedKey), seq]]));
-
-        updateCounter();
-        j++;
-      }
-    });
-
-    await counter;
-    await iterator.close();
-    await feedStore.close();
-
-    // Test expected number of messages.
-    expect(Array.from(feeds.values())
-      .reduce((sum, feed: HypercoreFeed) => sum + feed.length, 0)).toBe(config.numMessages);
   });
 
   test('skipping initial messages', async () => {
-    const feedStore = new FeedStore(createStorage('', StorageType.RAM), {
-      valueEncoding: schema.getCodecForType('dxos.echo.testing.TestItemMutation')
+    const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), {
+      valueEncoding: schema.getCodecForType('dxos.test.echo.TestItemMutation')
     });
 
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];
@@ -172,7 +134,7 @@ describe('feed store iterator', () => {
     iterator.addFeedDescriptor(descriptor1);
     iterator.addFeedDescriptor(descriptor2);
 
-    const [counter, updateCounter] = latch(3);
+    const [counter, updateCounter] = latch({ count: 3 });
     const messages: any[] = [];
     setImmediate(async () => {
       for await (const message of iterator) {

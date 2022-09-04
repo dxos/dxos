@@ -21,32 +21,45 @@ void (async () => {
     await promisify(rmdir)(distDir);
   }
 
+  const config = {
+    outdir: distDir,
+    write: true,
+    bundle: true,
+    plugins: [
+      NodeModulesPlugin()
+    ],
+    watch: process.argv.includes('--watch') ? {
+      onRebuild: ((error) => {
+        if (error) {
+          console.error(chalk.red('\nBuild failed.'));
+        } else {
+          console.log(chalk.green('\nRebuild finished.'));
+        }
+      })
+    } : false
+  };
+
   try {
     await build({
+      ...config,
       entryPoints: [
-        join(srcDir, 'background.ts'),
-        join(srcDir, 'content.ts'),
-        join(srcDir, 'devtools.ts'),
-        join(srcDir, 'panel.ts'),
-        join(srcDir, 'sandbox.ts')
-      ],
-      outdir: distDir,
-      write: true,
-      bundle: true,
+        'background.ts',
+        'content.ts'
+      ].map(entryPoint => join(srcDir, entryPoint))
+    });
+
+    await build({
+      ...config,
+      entryPoints: [
+        'devtools.ts',
+        'panel.ts',
+        'sandbox.ts'
+      ].map(entryPoint => join(srcDir, entryPoint)),
       plugins: [
-        NodeModulesPlugin(),
+        ...config.plugins,
         NodeGlobalsPolyfillPlugin(),
         FixMemdownPlugin()
-      ],
-      watch: process.argv.includes('--watch') ? {
-        onRebuild: ((error) => {
-          if (error) {
-            console.error(chalk.red('\nBuild failed.'));
-          } else {
-            console.log(chalk.green('\nRebuild finished.'));
-          }
-        })
-      } : false
+      ]
     });
   } catch (err) {
     console.error(err);

@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { SnapshotStore } from './snapshot-store';
@@ -15,7 +16,7 @@ const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('SnapshotStore', () => {
   test('in-memory', async () => {
-    const store = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
+    const store = new SnapshotStore(createStorage('', StorageType.RAM).directory('snapshots'));
 
     const key1 = createPublicKey();
     const key2 = createPublicKey();
@@ -25,10 +26,14 @@ describe('SnapshotStore', () => {
 
     const snapshot: PartySnapshot = {
       partyKey: key1.asBuffer(),
+      halo: {
+        messages: []
+      },
       database: {
         items: [{
           itemId: createId(),
-          itemType: 'example:test'
+          itemType: 'example:test',
+          modelType: 'example:model'
         }],
         links: []
       }

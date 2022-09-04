@@ -24,10 +24,10 @@ const baseTheme = createMuiTheme({
 });
 
 export const Fullscreen = () => (
-<ThemeProvider theme={baseTheme}>
-      <CssBaseline />
-      <FullScreenComponent>
-        <Root />
-      </FullScreenComponent>
-    </ThemeProvider>
+  <ThemeProvider theme={baseTheme}>
+    <CssBaseline />
+    <FullScreenComponent>
+      <Root />
+    </FullScreenComponent>
+  </ThemeProvider>
 );

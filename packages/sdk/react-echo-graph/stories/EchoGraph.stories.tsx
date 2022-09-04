@@ -6,8 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, css } from '@mui/material';
 
-import { PARTY_ITEM_TYPE } from '@dxos/echo-db';
-import { ItemID } from '@dxos/echo-protocol';
+import { ItemID, PARTY_ITEM_TYPE } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 // TODO(kaplanski): Review execSelection, itemAdapter, typeMeta. Too ambigiuous to be exported concepts.
 import {
@@ -88,23 +87,23 @@ const AppWithEditor = () => {
 };
 
 export const Primary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <App />
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <App />
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 export const Secondary = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <AppWithEditor />
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <AppWithEditor />
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const embedStyles = {
@@ -122,13 +121,13 @@ const embedStyles = {
 };
 
 export const Embedded = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <FullScreen>
-          <Box sx={embedStyles}>
-            <App />
-          </Box>
-        </FullScreen>
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <FullScreen>
+        <Box sx={embedStyles}>
+          <App />
+        </Box>
+      </FullScreen>
+    </ProfileInitializer>
+  </ClientProvider>
 );

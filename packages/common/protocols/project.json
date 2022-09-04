@@ -1,0 +1,37 @@
+{
+  "sourceRoot": "packages/common/protocols/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/common/protocols/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/protocols/dist",
+        "tsConfig": "packages/common/protocols/tsconfig.json",
+        "main": "packages/common/protocols/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/protocols/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

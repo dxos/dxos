@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -27,6 +27,7 @@ export class Identity implements IdentityCredentials {
   private readonly _deviceKeyChain: KeyChain;
 
   /**
+   * @param _keyring
    * @param _halo HALO party. Must be open.
    */
   constructor (
@@ -86,6 +87,7 @@ export class Identity implements IdentityCredentials {
   /**
    * HALO party. Must be open.
    */
+  // TODO(burdon): Remove.
   get halo (): HaloParty {
     return this._halo;
   }
@@ -99,8 +101,6 @@ export class Identity implements IdentityCredentials {
     );
   }
 }
-
-export type IdentityProvider = () => Identity | undefined;
 
 const getDeviceKeyChainFromHalo = (halo: HaloParty, deviceKey: KeyRecord) => {
   try {

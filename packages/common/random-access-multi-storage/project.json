@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/common/random-access-multi-storage/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/random-access-multi-storage/dist",
+        "tsConfig": "packages/common/random-access-multi-storage/tsconfig.json",
+        "main": "packages/common/random-access-multi-storage/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/random-access-multi-storage/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

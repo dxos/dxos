@@ -1,0 +1,80 @@
+{
+  "extends": "nx/presets/npm.json",
+  "npmScope": "dxos",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "bundle",
+          "check",
+          "lint",
+          "prebuild",
+          "proto",
+          "test"
+        ],
+        "parallel": 6,
+        "accessToken": "ZGVlNTQ0ODctNGI4ZS00MTc0LTljZDQtMzFlMzJkOTViMmQyfHJlYWQtd3JpdGU="
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto",
+        "prebuild"
+      ]
+    },
+    "bundle": {
+      "dependsOn": [
+        "^bundle",
+        "build",
+        "proto",
+        "prebuild"
+      ]
+    },
+    "check": {
+      "dependsOn": [
+        "lint",
+        "test",
+        "proto",
+        "build"
+      ]
+    },
+    "prebuild": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "proto": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "serve": {
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "proto"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "^build",
+        "proto"
+      ]
+    }
+  },
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    }
+  }
+}

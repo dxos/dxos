@@ -6,8 +6,9 @@ syntax = "proto3";
 
 package dxos.halo.keys;
 
-import "signed.proto";
 import "google/protobuf/any.proto";
+
+import "./signed.proto";
 
 //
 // The type/use of a public key.
@@ -31,45 +32,45 @@ message PrivKey {
 
 message KeyRecord {
   /**
-   * - The `KeyType` type of the key. This is often unknown for keys from other sources.
+   * The `KeyType` type of the key. This is often unknown for keys from other sources.
    */
   required KeyType type = 1;
 
   /**
-   * - The public key as a Buffer (required).
+   * The public key as a Buffer (required).
    */
   required PubKey publicKey = 2;
 
   /**
-   * - The secret key as a Buffer (this will never be visible outside the Keyring).
+   * The secret key as a Buffer (this will never be visible outside the Keyring).
    */
-  PrivKey secretKey = 3;
+  optional PrivKey secretKey = 3;
 
   /**
-   * - Is this key from a Greeting "hint"?
+   * Is this key from a Greeting "hint"?
    */
-  bool hint = 4;
+  optional bool hint = 4;
 
   /**
-   * - Is this our key? Usually true if `secretKey` is present,
-   *          may be false for "inception keys" such as the Party key.
+   * Determines if this is our key?
+   * Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
    */
-  bool own = 5;
+  optional bool own = 5; // TODO(burdon): Rename "local" or "private".
 
   /**
-   * - Is this key to be trusted?
+   * Is this key to be trusted?
    */
-  bool trusted = 6;
+  optional bool trusted = 6; // TODO(burdon): Rename "trust". How is this determined?
 
   /**
-   * - An RFC-3339 date/time string for when the key was added to the Keyring.
+   * An RFC-3339 date/time string for when the key was added to the Keyring.
    */
-  string added = 7;
+  optional string added = 7;
 
   /**
-   * - An RFC-3339 date/time string for when the key was created.
+   * An RFC-3339 date/time string for when the key was created.
    */
-  string created = 8;
+  optional string created = 8;
 }
 
 message KeyRecordList {

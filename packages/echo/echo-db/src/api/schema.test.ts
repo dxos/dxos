@@ -9,8 +9,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { createInMemoryDatabase } from '../database';
-import { Database } from './database';
+import { createInMemoryDatabase, Database } from '../packlets/database';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';
@@ -45,7 +44,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(newField);
@@ -60,7 +59,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(newField);
@@ -74,7 +73,7 @@ describe('Schema', () => {
     const key = 'name';
     const schema = await createTestSchema(database);
     const firstField = {
-      key: key,
+      key,
       required: true
     };
     await schema.addField(firstField);

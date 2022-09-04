@@ -7,12 +7,12 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { schema, ItemID, MockFeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
-import { ItemDemuxer, ItemManager } from '../database';
+import { ItemDemuxer, ItemManager } from '../packlets/database';
 import { createTestInstance } from '../testing';
 
 const log = debug('dxos:snapshot:test');

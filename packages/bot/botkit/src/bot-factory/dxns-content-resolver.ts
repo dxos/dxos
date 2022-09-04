@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { CID, DXN, RegistryClient } from '@dxos/registry-client';
 
@@ -16,7 +16,7 @@ export interface ContentResolver {
    * Resolves resource identifier to a specifier where the content can be downloaded from.
    * @returns A specifier where the content can be downloaded from.
    */
-  resolve: ({ name }: { name: string }) => Promise<ContentResolverResult>;
+  resolve: ({ name }: { name: string }) => Promise<ContentResolverResult>
 }
 
 export class DXNSContentResolver implements ContentResolver {

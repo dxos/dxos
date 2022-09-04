@@ -2,19 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
-import { discoveryKey, keyToString, PublicKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { ProtocolProvider } from './network-manager';
 
 const log = debug('dxos:network-manager:protocol-factory');
 
 interface ProtocolFactoryOptions {
-  plugins: any[],
-  getTopics: () => Buffer[],
+  plugins: any[]
+  getTopics: () => Buffer[]
   session: Record<string, any>
 }
 
@@ -36,7 +37,7 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
       discoveryToPublicKey: (dk) => {
         const publicKey = getTopics().find(topic => discoveryKey(topic).equals(dk));
         if (publicKey) {
-          protocol.setContext({ topic: keyToString(publicKey) });
+          protocol.setContext({ topic: PublicKey.stringify(publicKey) });
         }
         assert(publicKey, 'PublicKey not found in discovery.');
         return publicKey;
@@ -56,12 +57,12 @@ export const protocolFactory = ({ session = {}, plugins = [], getTopics }: Proto
 };
 
 export interface Plugin {
-  createExtension: () => Extension;
+  createExtension: () => Extension
 }
 
 export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugins: Plugin[]) => protocolFactory({
   getTopics: () => [topic.asBuffer()],
-  session: { peerId: keyToString(peerId.asBuffer()) },
+  session: { peerId: PublicKey.stringify(peerId.asBuffer()) },
   plugins
 });
 
@@ -71,6 +72,6 @@ export const createProtocolFactory = (topic: PublicKey, peerId: PublicKey, plugi
  */
 export const transportProtocolProvider = (rendezvousKey: Buffer, peerId: Buffer, protocolPlugin: any): ProtocolProvider => protocolFactory({
   getTopics: () => [rendezvousKey],
-  session: { peerId: keyToString(peerId) },
+  session: { peerId: PublicKey.stringify(peerId) },
   plugins: [protocolPlugin]
 });

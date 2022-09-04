@@ -2,21 +2,21 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false,
-    "outDir": "dist",
     "lib": [
       "DOM",
       "ESNext"
     ],
+    "noImplicitAny": false,
+    "outDir": "dist",
     "paths": {
       "@polkadot/api/augment": [
-        "./src/polkadot/interfaces/augment-api.ts"
+        "./packages/sdk/registry-client/src/polkadot/interfaces/augment-api.ts"
       ],
       "@polkadot/types/augment": [
-        "./src/polkadot/interfaces/augment-types.ts"
+        "./packages/sdk/registry-client/src/polkadot/interfaces/augment-types.ts"
       ],
       "sample-polkadotjs-typegen/*": [
-        "./src/*"
+        "./packages/sdk/registry-client/src/*"
       ]
     }
   },
@@ -32,22 +32,22 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../config"
-    },
-    {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/protocols"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../halo/credentials"
+    },
+    {
       "path": "../client"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../config"
     }
   ]
 }

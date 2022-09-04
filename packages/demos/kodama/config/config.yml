@@ -1,0 +1,13 @@
+version: 1
+
+runtime:
+  services:
+    ipfs:
+      server: 'https://ipfs-pub1.kube.dxos.network'
+    signal:
+#     server: 'wss://demo.kube.dxos.network/dxos/signal'
+      server: 'ws://localhost:8888/.well-known/dx/signal'
+    ice:
+      - urls: 'turn:demo.kube.dxos.network:3478'
+        username: 'dxos'
+        credential: 'dxos'

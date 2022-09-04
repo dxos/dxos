@@ -2,19 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { Timeframe, WriteReceipt } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
-import { PartyFeedProvider, PartyProtocolFactory, PartyCore, PartyOptions } from '../pipeline';
+import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
 import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
@@ -30,9 +28,9 @@ export const HALO_PARTY_DEVICE_PREFERENCES_TYPE = 'dxos:item/halo/device/prefere
 /**
  * A record in HALO party representing a party that user is currently a member of.
  */
-export interface JoinedParty {
-  partyKey: PublicKey,
-  keyHints: KeyHint[]
+export type JoinedParty = {
+  partyKey: PublicKey
+  genesisFeed: PublicKey
 }
 
 /**
@@ -41,12 +39,14 @@ export interface JoinedParty {
 export class HaloParty {
   public readonly update = new Event<void>();
 
-  private readonly _partyCore: PartyCore;
+  private readonly _partyCore: PartyPipeline;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
 
   private readonly _contactManager: ContactManager;
   private readonly _preferences: Preferences;
+
+  private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
     modelFactory: ModelFactory,
@@ -54,17 +54,15 @@ export class HaloParty {
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _credentialsSigner: CredentialsSigner,
     private readonly _networkManager: NetworkManager,
-    private readonly _hints: KeyHint[] = [],
-    _initialTimeframe: Timeframe | undefined,
-    _options: PartyOptions
+    private readonly _initialTimeframe: Timeframe | undefined,
+    _options: PipelineOptions
   ) {
-    this._partyCore = new PartyCore(
+    this._partyCore = new PartyPipeline(
       _credentialsSigner.getIdentityKey().publicKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
       _credentialsSigner.getIdentityKey().publicKey,
-      _initialTimeframe,
       _options
     );
 
@@ -122,6 +120,10 @@ export class HaloParty {
     return this._partyCore.processor.feedKeys;
   }
 
+  get credentialsWriter () {
+    return this._partyCore.credentialsWriter;
+  }
+
   async getWriteFeedKey () {
     const feed = await this._feedProvider.createOrOpenWritableFeed();
     return feed.key;
@@ -129,6 +131,13 @@ export class HaloParty {
 
   get processor () {
     return this._partyCore.processor;
+  }
+
+  /**
+   * @internal
+   */
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;
   }
 
   /**
@@ -141,11 +150,17 @@ export class HaloParty {
       return this;
     }
 
-    await this._partyCore.open(this._hints);
+    assert(this._genesisFeedKey);
+    await this._partyCore.open({
+      genesisFeedKey: this._genesisFeedKey,
+      initialTimeframe: this._initialTimeframe
+    });
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -165,7 +180,11 @@ export class HaloParty {
     // Replication.
     await this._protocol.start([
       createReplicatorPlugin(this._feedProvider),
-      createAuthPlugin(createAuthenticator(this._partyCore.processor, this._credentialsSigner), peerId),
+      createAuthPlugin(createAuthenticator(
+        this._partyCore.processor,
+        this._credentialsSigner,
+        this._partyCore.credentialsWriter
+      ), peerId),
       createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);
 
@@ -194,10 +213,6 @@ export class HaloParty {
     this.update.emit();
 
     return this;
-  }
-
-  writeCredentialsMessage (message: HaloMessage): Promise<WriteReceipt> {
-    return this._partyCore.writeCredentialsMessage(message);
   }
 
   async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {

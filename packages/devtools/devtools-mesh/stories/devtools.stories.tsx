@@ -8,26 +8,27 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
-import { PublicKey } from '@dxos/crypto';
 import {
   FullyConnectedTopology,
   Swarm,
   MMSTTopology,
   StarTopology,
   NetworkManager,
-  SignalApi,
   SignalManager,
   SwarmMapper,
   transportProtocolProvider,
   PeerInfo,
   Topology,
   SwarmInfo,
-  ConnectionLog
+  ConnectionLog,
+  CommandTrace,
+  SignalStatus
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
-import { PeerGraph, SignalStatus, SignalTrace, SwarmDetails } from '../src';
+import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 
 export default {
   title: 'Devtools/Topology'
@@ -67,9 +68,9 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
   const [topology, setTopology] = useState<() => Topology>(() => () => new FullyConnectedTopology());
 
   const [controlPeer, setControlPeer] = useState<{
-    swarm: Swarm,
-    map: SwarmMapper,
-    signal: SignalManager,
+    swarm: Swarm
+    map: SwarmMapper
+    signal: SignalManager
     log: ConnectionLog
   }>();
 
@@ -110,12 +111,12 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
     controlPeer && setPeerMap(controlPeer.map.peers);
   }, [controlPeer]);
 
-  const [signalStatus, setSignalStatus] = useState<SignalApi.Status[]>([]);
+  const [signalStatus, setSignalStatus] = useState<SignalStatus[]>([]);
   useEffect(() => controlPeer?.signal.statusChanged.on(status => {
     setSignalStatus(status);
   }), [controlPeer]);
 
-  const [signalTrace, setSignalTrace] = useState<SignalApi.CommandTrace[]>([]);
+  const [signalTrace, setSignalTrace] = useState<CommandTrace[]>([]);
   useEffect(() => controlPeer?.signal.commandTrace.on(msg => {
     setSignalTrace(msgs => [...msgs, msg]);
   }), [controlPeer]);
@@ -168,7 +169,7 @@ const GraphDemo = ({ topic }: { topic: PublicKey }) => {
             </div>
             <Routes>
               <Route path='/'>
-                <SignalStatus status={signalStatus} />
+                <SignalStatusComp status={signalStatus} />
                 <SignalTrace trace={signalTrace} />
               </Route>
               <Route path='/swarms'>

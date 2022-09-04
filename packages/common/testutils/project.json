@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/common/testutils/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/testutils/dist",
+        "tsConfig": "packages/common/testutils/tsconfig.json",
+        "main": "packages/common/testutils/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/testutils/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

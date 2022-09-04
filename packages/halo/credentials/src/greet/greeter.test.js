@@ -21,27 +21,20 @@ const createKeyring = async () => {
   await keyring.createKeyRecord({ type: KeyType.PARTY });
   await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   await keyring.createKeyRecord({ type: KeyType.DEVICE });
+  await keyring.createKeyRecord({ type: KeyType.FEED });
   return keyring;
 };
 
-const createGreeter = (keyring, hints = []) => new Greeter(
+const createGreeter = (keyring) => new Greeter(
   keyring.findKey(Filter.matches({ type: KeyType.PARTY })).publicKey,
-  messages => messages,
-  () => hints
+  keyring.findKey(Filter.matches({ type: KeyType.FEED })).publicKey,
+  messages => messages
 );
 
 it('Good invitation', async () => {
   const keyring = await createKeyring();
   const secret = '0000';
-
-  const hints = [
-    { publicKey: randomBytes(32), type: KeyType.IDENTITY },
-    { publicKey: randomBytes(32), type: KeyType.DEVICE },
-    { publicKey: randomBytes(32), type: KeyType.FEED },
-    { publicKey: randomBytes(32), type: KeyType.FEED }
-  ];
-
-  const greeter = createGreeter(keyring, hints);
+  const greeter = createGreeter(keyring);
 
   const secretProvider = async () => Buffer.from(secret);
   const secretValidator = async (invitation, secret) => secret && arraysEqual(secret, invitation.secret);
@@ -105,10 +98,7 @@ it('Good invitation', async () => {
       }
     };
 
-    const response = await greeter.handleMessage(message.payload, invitation.id, randomBytes());
-
-    expect(response.hints.keys).toEqual(hints.keys);
-    expect(response.hints.feeds).toEqual(hints.feeds);
+    await greeter.handleMessage(message.payload, invitation.id, randomBytes());
 
     // The `FINISH` command informs the Greeter the Invitee is done.
     {

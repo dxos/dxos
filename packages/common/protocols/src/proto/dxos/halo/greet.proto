@@ -6,10 +6,11 @@ syntax = "proto3";
 
 package dxos.credentials.greet;
 
-import "keys.proto";
-import "party.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/wrappers.proto";
+
+import "./keys.proto";
+import "./party.proto";
 
 //
 // Greeting protocol:
@@ -57,7 +58,7 @@ message Command {
   Type command = 1;
 
   // Auth secret (PIN, hash, AuthMessage, etc.).
-  bytes secret = 2;
+  optional bytes secret = 2;
 
   // TODO(burdon): These seem to be signed messages? In which case we already know the type.
   // TODO(dboreham): static typing of contained messages is not yet supported, change from any when it is.
@@ -95,8 +96,7 @@ message NotarizeResponse {
   // and key hints necessary to bootstrap the invitee into the Party.
   repeated google.protobuf.Any copies = 1;
 
-  // Feed and key hints necessary to bootstrap the invitee into the Party.
-  repeated KeyHint hints = 2;
+  PubKey genesisFeed = 3;
 };
 
 // TODO(dmaretskyi): Verify if this is valid. Wouldn't the knowledge of the party's public key be enough to verify the rest of credential messages?

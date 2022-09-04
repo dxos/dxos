@@ -5,13 +5,13 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { defaultSecretProvider, Keyring } from '@dxos/credentials';
-import { generateSeedPhrase, keyPairFromSeedPhrase, PublicKey } from '@dxos/crypto';
+import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
@@ -26,10 +26,11 @@ describe('HALO', () => {
       .registerModel(ObjectModel);
 
     const networkManager = new NetworkManager();
-    const snapshotStore = new SnapshotStore(createStorage('snapshots', StorageType.RAM));
-    const metadataStore = new MetadataStore(createStorage('metadata', StorageType.RAM));
+    const storage = createStorage('', StorageType.RAM);
+    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const metadataStore = new MetadataStore(storage.directory('metadata'));
     const keyring = new Keyring();
-    const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,
@@ -39,12 +40,12 @@ describe('HALO', () => {
     );
 
     return new HALO({
-      keyring: keyring,
-      networkManager: networkManager,
-      metadataStore: metadataStore,
+      keyring,
+      networkManager,
+      metadataStore,
       feedProviderFactory,
-      modelFactory: modelFactory,
-      snapshotStore: snapshotStore,
+      modelFactory,
+      snapshotStore,
       options: {}
     });
   };

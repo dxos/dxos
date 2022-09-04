@@ -15,46 +15,58 @@
       "path": "../../bot/bot-factory-client"
     },
     {
+      "path": "../../bot/botkit"
+    },
+    {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
-      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"
     },
     {
-      "path": "../../echo/echo-db"
-    },
-    {
-      "path": "../../mesh/network-manager"
-    },
-    {
-      "path": "../../echo/object-model"
-    },
-    {
-      "path": "../../mesh/protocol-plugin-rpc"
-    },
-    {
       "path": "../../common/protocols"
-    },
-    {
-      "path": "../../sdk/registry-client"
     },
     {
       "path": "../../common/rpc"
     },
     {
-      "path": "../../bot/botkit"
+      "path": "../../common/testutils"
+    },
+    {
+      "path": "../../common/testutils"
     },
     {
       "path": "../../common/util"
     },
     {
+      "path": "../../echo/echo-db"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../echo/object-model"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-rpc"
+    },
+    {
+      "path": "../../mesh/signal"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/registry-client"
     }
   ]
 }

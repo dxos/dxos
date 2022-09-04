@@ -3,7 +3,8 @@
 //
 
 import { Suite } from '@dxos/benchmark-suite';
-import { createKeyPair, PublicKey } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedStore } from './feed-store';
@@ -21,7 +22,7 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage('.benchmark'), { valueEncoding: 'utf8' });
+  const fs = new FeedStore(createStorage('').directory('.benchmark'), { valueEncoding: 'utf8' });
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
   suite.beforeAll(() => Promise.all(range(maxFeeds).map(async i => {

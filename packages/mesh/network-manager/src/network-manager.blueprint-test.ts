@@ -9,9 +9,9 @@ import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -25,21 +25,16 @@ const log = debug('dxos:network-manager:test');
 interface CreatePeerOptions {
   topic: PublicKey
   peerId: PublicKey
-  inMemory?: boolean
   topology?: Topology
   signal?: string[]
   ice?: any
 }
 
-const signalApiPort = 12098;
-const signalApiUrl = 'ws://0.0.0.0:' + signalApiPort;
-
 const createPeer = async ({
   topic,
   peerId,
-  inMemory,
   topology = new FullyConnectedTopology(),
-  signal = !inMemory ? [signalApiUrl] : undefined,
+  signal,
   ice
 }: CreatePeerOptions) => {
   const networkManager = new NetworkManager({ signal, ice });
@@ -55,14 +50,14 @@ const createPeer = async ({
   };
 };
 
-const sharedTests = (inMemory: boolean) => {
+const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: string }) => {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { plugin: plugin1, networkManager: nm1 } = await createPeer({ topic, peerId: peer1Id, inMemory });
-    const { plugin: plugin2, networkManager: nm2 } = await createPeer({ topic, peerId: peer2Id, inMemory });
+    const { plugin: plugin1, networkManager: nm1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined });
+    const { plugin: plugin2, networkManager: nm2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined });
 
     const received: any[] = [];
     const mockReceive = (p: Protocol, s: string) => {
@@ -74,24 +69,22 @@ const sharedTests = (inMemory: boolean) => {
     plugin2.on('connect', async () => {
       await plugin2.send(peer1Id.asBuffer(), 'Foo');
     });
-
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('Foo');
     });
-
     await nm1.destroy();
     await nm2.destroy();
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000).retries(10);
 
   it('join and leave swarm', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, inMemory });
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, inMemory });
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -117,11 +110,53 @@ const sharedTests = (inMemory: boolean) => {
     log('Peer1 destroyed');
     await networkManager2.destroy();
     log('Peer2 destroyed');
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000).retries(10);
+
+  it('join and leave swarm and reconnect', async () => {
+    const topic = PublicKey.random();
+    const peer1Id = PublicKey.random();
+    const peer2Id = PublicKey.random();
+
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signal: !inMemory ? [signalUrl!] : undefined });
+
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
+
+    log('Connected');
+
+    const disconnectPromises = Promise.all([
+      Event.wrap(plugin1, 'disconnect').waitForCount(1),
+      Event.wrap(plugin2, 'disconnect').waitForCount(1)
+    ]);
+
+    const connectPromises = Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
+
+    log('Disconnecting peer2');
+    await networkManager2.leaveProtocolSwarm(topic);
+
+    log('Reconnecting peer2');
+    const newPeer2Id = PublicKey.random();
+    networkManager2.joinProtocolSwarm({ topic, peerId: newPeer2Id, protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2), topology: new FullyConnectedTopology() });
+
+    await disconnectPromises;
+
+    await connectPromises;
+
+    await networkManager1.destroy();
+    log('Peer1 destroyed');
+    await networkManager2.destroy();
+    log('Peer2 destroyed');
+  }).timeout(10_000).retries(10);
 };
 
 // eslint-disable-next-line jest/no-export
-export const webRTCTests = () => {
+export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -132,7 +167,7 @@ export const webRTCTests = () => {
     peer2Id = PublicKey.random();
   });
 
-  sharedTests(false);
+  sharedTests({ inMemory: false, signalUrl });
 
   it.skip('two peers with different signal & turn servers', async () => {
     const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
@@ -158,7 +193,7 @@ export const webRTCTests = () => {
 
     await networkManager1.destroy();
     await networkManager2.destroy();
-  }).timeout(10_000).retries(3);
+  }).timeout(10_000).retries(10);
 
   describe('StarTopology', () => {
     it('two peers connect to each other', async () => {
@@ -181,13 +216,13 @@ export const webRTCTests = () => {
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('Foo');
       });
-    }).timeout(10_000).retries(3);
+    }).timeout(10_000).retries(10);
   });
 };
 
 // eslint-disable-next-line jest/no-export
 export function inMemoryTests () {
-  sharedTests(true);
+  sharedTests({ inMemory: true });
 
   it('two swarms at the same time', async () => {
     const topicA = PublicKey.random();
@@ -197,10 +232,10 @@ export function inMemoryTests () {
     const peerB1Id = PublicKey.random();
     const peerB2Id = PublicKey.random();
 
-    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id, inMemory: true });
-    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id, inMemory: true });
-    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id, inMemory: true });
-    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id, inMemory: true });
+    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id });
+    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id });
+    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id });
+    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id });
 
     const receivedA: any[] = [];
     const mockReceiveA = (p: Protocol, s: string) => {
@@ -241,9 +276,9 @@ export function inMemoryTests () {
 
       await Promise.all(range(peersPerTopic).map(async (_, index) => {
         const peerId = PublicKey.random();
-        const { plugin } = await createPeer({ topic, peerId, inMemory: true });
+        const { plugin } = await createPeer({ topic, peerId });
 
-        const [done, pongReceived] = latch(peersPerTopic - 1);
+        const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
 
         plugin.on('connect', async (protocol: Protocol) => {
           const { peerId } = protocol.getSession() ?? {};
@@ -455,5 +490,5 @@ export function inMemoryTests () {
         ]
       }
     );
-  }).timeout(30_000).retries(3);
+  }).timeout(30_000).retries(10);
 }

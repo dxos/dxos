@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { Signer, SigningKey } from '../keys';
 import { wrapMessage } from '../party';
@@ -36,7 +36,7 @@ export const createAuthMessage = (
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,
-    feedKey: feedKey,
+    feedKey,
     feedAdmit
   };
 

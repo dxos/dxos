@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "packages/common/async/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/common/async/dist",
+        "tsConfig": "packages/common/async/tsconfig.json",
+        "main": "packages/common/async/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/async/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

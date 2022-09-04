@@ -7,7 +7,7 @@ import React, { ReactNode, createContext } from 'react';
 import { Box } from '@mui/material';
 
 interface IconRadioGroupContextProps {
-  value: string,
+  value: string
   onChange: (value: string) => void
 }
 
@@ -24,9 +24,9 @@ export const IconRadioGroup = ({
   value,
   onChange
 }: IconRadioGroupProps) => (
-<Box>
-      <IconRadioGroupContext.Provider value={{ value, onChange }}>
-        {children}
-      </IconRadioGroupContext.Provider>
-    </Box>
+  <Box>
+    <IconRadioGroupContext.Provider value={{ value, onChange }}>
+      {children}
+    </IconRadioGroupContext.Provider>
+  </Box>
 );

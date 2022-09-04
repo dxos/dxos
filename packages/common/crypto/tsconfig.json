@@ -6,5 +6,9 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../protocols"
+    }
+  ]
 }

@@ -3,10 +3,9 @@
 //
 
 import { Message as HaloMessage } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { EchoEnvelope, FeedMessage } from './proto';
-import { Timeframe } from './spacetime/timeframe';
 
 //
 // Keys.
@@ -26,8 +25,8 @@ export type SwarmKey = Uint8Array;
 export type FeedKey = PublicKey;
 
 export type FeedMeta = {
-  feedKey: FeedKey;
-  seq: number;
+  feedKey: FeedKey
+  seq: number
 }
 
 export interface MutationMeta extends FeedMeta {
@@ -45,11 +44,11 @@ export interface MutationMetaWithTimeframe extends MutationMeta {
 // TODO(burdon): Move to FeedStore (since not a hypercore data structure).
 export interface IFeedGenericBlock<T> {
   // TODO(dmaretskyi): It's a buffer for some reason.
-  key: FeedKey;
-  seq: number;
-  sync: boolean;
-  path: string;
-  data: T;
+  key: FeedKey
+  seq: number
+  sync: boolean
+  path: string
+  data: T
 }
 
 /**
@@ -61,17 +60,17 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
   seq: block.seq
 });
 
-export type FeedBlock = IFeedGenericBlock<FeedMessage>;
+export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
 export interface IHaloStream {
-  meta: FeedMeta;
+  meta: FeedMeta
   // TODO(telackey): Rename `dxos.halo.IHaloEnvelope`.
-  data: HaloMessage;
+  data: HaloMessage
 }
 
 export interface IEchoStream {
-  meta: MutationMetaWithTimeframe;
-  data: EchoEnvelope;
+  meta: MutationMetaWithTimeframe
+  data: EchoEnvelope
 }
 
 //

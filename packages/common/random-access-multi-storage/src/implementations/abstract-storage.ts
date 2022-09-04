@@ -2,51 +2,75 @@
 // Copyright 2021 DXOS.org
 //
 
-import { File } from '../interfaces/File';
+import { Directory, File } from '../interfaces';
 import { Storage } from '../interfaces/Storage';
 import { StorageType } from '../interfaces/storage-types';
+import { getFullPath } from '../utils';
 
 /**
  * Base class for all storage implementations.
  */
 export abstract class AbstractStorage implements Storage {
-  protected readonly _root: string;
-  protected _files: Map<string, File>;
+  protected readonly _files = new Map<string, File>();
   public abstract type: StorageType
 
-  constructor (root: string) {
-    this._root = root;
-    this._files = new Map<string, File>();
+  constructor (protected readonly _path: string) {
   }
 
-  public createOrOpen (filename: string, opts = {}): File {
-    const file = this._create(filename, opts);
+  public directory (path = ''): Directory {
+    return new Directory(
+      getFullPath(this._path, path),
+      this._createFile.bind(this),
+      this._destroyFilesInPath.bind(this));
+  }
+
+  protected _getFileIfExists (filename: string): File | null {
+    if (this._files.has(filename)) {
+      const file = this._files.get(filename);
+      if (file && !file._isDestroyed()) {
+        return file;
+      }
+    }
+    return null;
+  }
+
+  protected _addFile (filename: string, file: File) {
     this._files.set(filename, file);
-    return file;
-  }
-
-  public async delete (filename: string) {
-    throw new Error('not implemented');
-  }
-
-  private _close () {
-    return Promise.all(
-      Array.from(this._files.values())
-        .map(file => file.close().catch((error: any) => console.error(error.message)))
-    );
   }
 
   async destroy () {
     try {
-      await this._close();
+      await this._closeFilesInPath('');
+      await this._destroyFilesInPath('');
       await this._destroy();
-      this._files.clear();
     } catch (error: any) {
       console.error(error);
     }
   }
 
-  public abstract subDir (path: string): Storage
-  protected abstract _create (filename: string, opts?: any): File;
+  private _closeFilesInPath (path: string) {
+    const filesInPath = this._selectFilesInPath(path);
+    return Promise.all(
+      Array.from(filesInPath.values())
+        .map(file => file.close().catch((error: any) => console.error(error.message)))
+    );
+  }
+
+  protected _destroyFilesInPath (path: string) {
+    const filesInPath = this._selectFilesInPath(path);
+    const destroyPromise = Promise.all(
+      Array.from(filesInPath.values())
+        .map(file => file.delete().catch((error: any) => console.error(error.message)))
+    );
+    Array.from(filesInPath.keys()).forEach(filePath => this._files.delete(filePath));
+    return destroyPromise;
+  }
+
+  private _selectFilesInPath (path: string): Map<string, File> {
+    const fullPath = getFullPath(this._path, path);
+    return new Map([...this._files].filter(([filePath, _]) => filePath.includes(fullPath)));
+  }
+
+  protected abstract _createFile (filename: string, path: string, opts?: any): File;
   protected abstract _destroy (): Promise<void>;
 }

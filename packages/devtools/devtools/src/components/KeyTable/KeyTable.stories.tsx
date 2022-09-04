@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
 import { KeyRecord, KeyType } from '../../proto/gen/dxos/halo/keys';

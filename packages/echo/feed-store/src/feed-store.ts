@@ -2,24 +2,24 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import { Storage } from '@dxos/random-access-multi-storage';
+import type { PublicKey } from '@dxos/protocols';
+import { Directory } from '@dxos/random-access-multi-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 export interface CreateDescriptorOptions {
-  key: PublicKey,
+  key: PublicKey
   secretKey?: Buffer
 }
 
 export interface CreateReadWriteFeedOptions {
-  key: PublicKey,
+  key: PublicKey
   secretKey: Buffer
 }
 
@@ -45,7 +45,7 @@ export interface FeedStoreOptions {
  * into a persist repository storage.
  */
 export class FeedStore {
-  private _storage: Storage;
+  private _directory: Directory;
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
   private _descriptors: Map<string, FeedDescriptor>;
@@ -56,13 +56,13 @@ export class FeedStore {
   readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
   /**
-   * @param storage RandomAccessStorage to use by default by the feeds.
+   * @param directory RandomAccessStorage to use by default by the feeds.
    * @param options Feedstore options.
    */
-  constructor (storage: Storage, options: FeedStoreOptions = {}) {
-    assert(storage, 'The storage is required.');
+  constructor (directory: Directory, options: FeedStoreOptions = {}) {
+    assert(directory, 'The storage is required.');
 
-    this._storage = storage;
+    this._directory = directory;
 
     const {
       valueEncoding,
@@ -79,7 +79,7 @@ export class FeedStore {
    * @type {RandomAccessStorage}
    */
   get storage () {
-    return this._storage;
+    return this._directory;
   }
 
   @synchronized
@@ -114,7 +114,7 @@ export class FeedStore {
     const { key, secretKey } = options;
 
     const descriptor = new FeedDescriptor({
-      storage: this._storage,
+      directory: this._directory,
       key,
       secretKey,
       valueEncoding: this._valueEncoding,

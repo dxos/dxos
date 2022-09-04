@@ -15,9 +15,9 @@ export default {
 };
 
 export const Primary = () => (
-<ClientProvider config={ONLINE_CONFIG}>
-      <ProfileInitializer>
-        <App />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider config={ONLINE_CONFIG}>
+    <ProfileInitializer>
+      <App />
+    </ProfileInitializer>
+  </ClientProvider>
 );

@@ -5,8 +5,8 @@
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/crypto';
 import type { HypercoreFeed } from '@dxos/feed-store';
+import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/protocols';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedKey } from '../types';
@@ -45,9 +45,9 @@ export const createMockFeedWriterFromStream = (strem: NodeJS.WritableStream): Fe
 });
 
 export class MockFeedWriter<T> implements FeedWriter<T> {
-  readonly messages: T[] = []
+  readonly messages: T[] = [];
 
-  readonly written = new Event<[T, WriteReceipt]>()
+  readonly written = new Event<[T, WriteReceipt]>();
 
   constructor (
     readonly feedKey = PublicKey.random()

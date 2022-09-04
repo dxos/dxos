@@ -1,39 +1,39 @@
 {
   "name": "@dxos/bot-factory-client",
-  "version": "2.33.4",
+  "version": "2.33.8",
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/index.js": "./dist/browser.js",
+    "node:assert": "assert"
+  },
   "scripts": {
-    "build": "toolchain build",
-    "build:test": "toolchain build:test",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/credentials": "workspace:*",
-    "@dxos/crypto": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "assert": "^2.0.0",
     "debug": "^4.3.3"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.31",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
-    "eslint": "^7.12.1",
     "expect": "~27.0.2",
-    "typescript": "^4.5.2"
+    "jsonify": "^0.0.0",
+    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"

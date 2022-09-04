@@ -4,18 +4,19 @@
 
 // DXOS testing browser.
 
-import assert from 'assert';
 import debug from 'debug';
 import eos from 'end-of-stream';
 import expect from 'expect';
+import assert from 'node:assert';
 import pify from 'pify';
 import pump from 'pump';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString, randomBytes, PublicKey, createKeyPair } from '@dxos/crypto';
+import { randomBytes, createKeyPair } from '@dxos/crypto';
 import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { Keyring } from '../keys';
@@ -70,7 +71,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = new FeedStore(createStorage('feed', StorageType.RAM), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   const append = pify(feed.append.bind(feed));
@@ -82,7 +83,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const auth = new AuthPlugin(peerId, authenticator, [Replicator.extension]);
   const authPromise = new Promise((resolve) => {
     auth.on('authenticated', (incomingPeerId) => {
-      log(`Authenticated ${keyToString(incomingPeerId)} on ${keyToString(peerId)}`);
+      log(`Authenticated ${PublicKey.stringify(incomingPeerId)} on ${PublicKey.stringify(peerId)}`);
       resolve(true);
     });
   });
@@ -111,7 +112,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const proto = new Protocol({
     streamOptions: { live: true },
     discoveryKey: partyKey.asBuffer(),
-    userSession: { peerId: keyToString(peerId), credentials },
+    userSession: { peerId: PublicKey.stringify(peerId), credentials },
     initiator: !!protocolOptions?.initiator
   })
     .setExtension(auth.createExtension())
@@ -183,7 +184,7 @@ it('Auth & Repl (GOOD)', async () => {
   await waitForExpect(async () => {
     const msgs = await getMessages(node1, node2);
     expect(msgs).toContain(message1);
-    log(`${message1} on ${keyToString(node2.id)}.`);
+    log(`${message1} on ${PublicKey.stringify(node2.id)}.`);
   });
 
   const message2 = randomBytes(32).toString('hex');
@@ -191,7 +192,7 @@ it('Auth & Repl (GOOD)', async () => {
   await waitForExpect(async () => {
     const msgs = await getMessages(node2, node1);
     expect(msgs).toContain(message2);
-    log(`${message2} on ${keyToString(node1.id)}.`);
+    log(`${message2} on ${PublicKey.stringify(node1.id)}.`);
   });
 
   connection.destroy();

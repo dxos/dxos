@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { Serializable, fork, ChildProcess } from 'child_process';
 import debug from 'debug';
 import * as fs from 'fs';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
@@ -87,10 +87,10 @@ export class NodeContainer implements BotContainer {
 }
 
 export interface IpcProcessLike {
-  on(event: 'message', listener: (message: Serializable) => void): void;
-  off(event: 'message', listener: (message: Serializable) => void): void;
+  on(event: 'message', listener: (message: Serializable) => void): void
+  off(event: 'message', listener: (message: Serializable) => void): void
 
-  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean;
+  send?(message: Serializable, callback?: ((error: Error | null) => void) | undefined): boolean
 }
 
 export const createIpcPort = (proc: IpcProcessLike): RpcPort => ({
