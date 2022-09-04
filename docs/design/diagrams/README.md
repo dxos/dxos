@@ -1,7 +1,6 @@
 # Diagrams
 
-Create and edit diagrams using `draw.io` or and save as Editable SVG images.
-Or use the [VS Code Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension.
-
-Grid: 12x12
+*   Use the [VS Code Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension.
+*   Create a new file with the following file extension: `example.drawio.svg`.
+*   Edit the grid size: 12x12
 
