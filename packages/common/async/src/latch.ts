@@ -11,6 +11,7 @@ type LatchProps = {
 
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
+ * @deprecated Use `until`.
  */
 export const latch = ({ count = 1, timeout }: LatchProps = {}) => {
   assert(count > 0);

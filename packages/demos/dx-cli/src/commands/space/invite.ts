@@ -5,8 +5,9 @@
 import { CliUx } from '@oclif/core';
 import chalk from 'chalk';
 
-import { latch, sleep } from '@dxos/async';
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
+import { truncateKey } from '@dxos/debug';
 
 import { BaseCommand } from '../../base-command';
 import { printMembers, selectSpace } from '../../util';
@@ -33,7 +34,7 @@ export default class Invite extends BaseCommand {
 
       const party = parties.find(party => party.key.toHex().startsWith(key));
       if (!party) {
-        this.log('Invalid key');
+        this.log(`Invalid key: ${truncateKey(key)}`);
         return;
       }
 
@@ -44,16 +45,9 @@ export default class Invite extends BaseCommand {
       this.log(chalk`\n{blue Invitation}: ${descriptor}`);
       this.log(chalk`\n{red Secret}: ${secret}\n`);
 
-      const [promise, resolve, reject] = latch({ timeout: timeout * 1_000 });
-
-      // TODO(burdon): Async error handling (see kodama).
-      invitation.canceled.on(resolve);
-      invitation.finished.on(resolve);
-      invitation.error.on(reject);
-
       try {
         CliUx.ux.action.start('Waiting for peer to connect');
-        await promise;
+        await invitation.wait(timeout * 1_000);
         CliUx.ux.action.stop();
 
         const { value: members } = party.queryMembers();
@@ -62,8 +56,9 @@ export default class Invite extends BaseCommand {
         // TODO(burdon): Wait to replicate.
         await sleep(5_000);
       } catch (err: any) {
-        invitation.cancel();
         CliUx.ux.action.stop(String(err));
+
+        invitation.cancel();
       }
     });
   }
