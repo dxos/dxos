@@ -13,7 +13,7 @@ const createClient = () => ({} as Client);
 
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Experimental API', () => {
-  test('Basic', async () => {
+  test('All aspects', async () => {
     const client = createClient();
 
     // Create profile.
@@ -22,7 +22,7 @@ describe.skip('Experimental API', () => {
       const publicKey = client.halo.profile.publicKey;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
 
-      // Recovery.
+      // Recover profile.
       // TODO(burdon): Currently requires another device to be online (to sync profile and complete.)
       {
         const client = createClient();
@@ -41,7 +41,15 @@ describe.skip('Experimental API', () => {
     // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     {
       const apps = client.meta.queryRecords({ type: 'org.dxos.app' });
-      expect(apps).toBeDefined();
+      void apps.onUpdate((records, subscription) => {
+        expect(subscription.query.type).toStrictEqual('org.dxos.app');
+        if (records.length > 0) {
+          subscription.cancel();
+        }
+      });
+
+      const app = await client.meta.createRecord({ type: 'org.dxos.app' });
+      expect(app).toBeDefined();
     }
 
     // Query contacts within circle.
@@ -52,25 +60,6 @@ describe.skip('Experimental API', () => {
         const receipt = await client.messenger.send(contact.publicKey, { message: `Hello ${profile.username}!` });
         expect(receipt.recipient).toBe(contact.publicKey);
       }));
-    }
-
-    // Query spaces withing brane.
-    {
-      const spaces = client.brane.querySpaceKeys();
-
-      // Create subscription.
-      const space = await client.brane.getSpace(spaces.elements[0]);
-      const result = space.database.queryItems({ type: 'org.dxos.contact' });
-      const count = result.elements.length;
-      const subscription = result.onUpdate((items: Item[]) => {
-        if (items.length > count) {
-          subscription.cancel();
-        }
-      });
-
-      // Create item.
-      const item = await space.database.createItem({ type: 'org.dxos.contact' });
-      expect(item.publicKey).toBeDefined();
     }
 
     // Create space and send invitation.
@@ -96,10 +85,27 @@ describe.skip('Experimental API', () => {
       });
     }
 
-    // Query items across all spaces.
+    // Query spaces within brane.
     {
+      const spaces = client.brane.querySpaceKeys();
+      const space = await client.brane.getSpace(spaces.elements[0]);
+
+      // Create subscription.
+      const result = space.database.queryItems({ type: 'org.dxos.contact' });
+      const count = result.elements.length;
+      const subscription = result.onUpdate((items: Item[]) => {
+        if (items.length > count) {
+          subscription.cancel();
+        }
+      });
+
+      // Create item.
+      const item = await space.database.createItem({ type: 'org.dxos.contact' });
+      expect(item.publicKey).toBeDefined();
+
+      // Query items across all spaces.
       const items = client.brane.queryItems({ type: 'org.dxos.contact' });
-      console.log(items.elements);
+      expect(items.elements.length).toBeGreaterThan(0);
     }
   });
 });

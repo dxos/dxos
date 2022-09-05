@@ -31,10 +31,19 @@ export interface Client {
 //
 
 export interface Meta {
-  queryRecords (query?: any): Result<Record>
+  createRecord (record: RecordData): Promise<Record>
+  queryRecords (query?: MetaQuery): Result<Record, MetaQuery>
 }
 
-export interface Record {
+export interface MetaQuery {
+  get type (): string
+}
+
+export interface RecordData {
+  get type (): string
+}
+
+export interface Record extends RecordData {
   get publicKey (): PublicKey
 }
 
@@ -144,9 +153,12 @@ export interface Result<Element, Query = {}> {
   get elements (): Element[]
 
   // Subscribe to changes.
-  onUpdate (cb: (elements: Element[]) => void): Subscription
+  onUpdate (cb: (elements: Element[], subscription: Subscription<Element, Query>) => void): Subscription<Element, Query>
 }
 
-export interface Subscription {
+export interface Subscription<Element, Query> {
+  get query (): Query
+  get result (): Result<Element, Query>
+
   cancel (): void
 }
