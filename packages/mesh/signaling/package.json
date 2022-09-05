@@ -1,0 +1,70 @@
+{
+  "name": "@dxos/network-manager",
+  "version": "2.33.8",
+  "description": "Network Manager",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "check": "true",
+    "test": "toolchain test",
+    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup tests-setup.js 'src/network-manager.browser-test.ts' --browser=chromium --browser=firefox"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/credentials": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/protocol-plugin-presence": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3",
+    "isomorphic-ws": "^4.0.1",
+    "nanomessage-rpc": "^3.0.0",
+    "simple-peer": "9.11.0",
+    "ws": "^7.4.4",
+    "xor-distance": "^2.0.0"
+  },
+  "devDependencies": {
+    "@dxos/browser-mocha": "workspace:*",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/signal": "workspace:*",
+    "@dxos/testutils": "workspace:*",
+    "@swc-node/register": "~1.5.1",
+    "@types/debug": "^4.1.7",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^16.11.27",
+    "@types/simple-peer": "9.11.3",
+    "@types/ws": "^7.4.0",
+    "earljs": "~0.1.10",
+    "expect": "~27.0.2",
+    "fast-check": "~2.14.0",
+    "mocha": "^8.4.0",
+    "typescript": "^4.7.2",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "forceCloseTests": true,
+    "testingFramework": "mocha",
+    "additionalTestSteps": [
+      "test:browser"
+    ]
+  }
+}

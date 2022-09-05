@@ -146,7 +146,7 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
@@ -200,7 +200,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
@@ -1228,7 +1228,7 @@ importers:
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/text-model': link:../../echo/text-model
@@ -1295,7 +1295,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
@@ -1364,7 +1364,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
@@ -1444,7 +1444,7 @@ importers:
       '@dxos/feed-store': link:../feed-store
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/model-factory': link:../model-factory
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/object-model': link:../object-model
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
@@ -1891,7 +1891,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
@@ -2355,7 +2355,7 @@ importers:
       assert: 2.0.0
     devDependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/network-manager': link:../network-manager
+      '@dxos/network-manager': link:../signaling
       '@dxos/protocols': link:../../common/protocols
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
@@ -2387,6 +2387,79 @@ importers:
       '@types/debug': 4.1.7
       '@types/node': 16.11.27
       '@types/node-fetch': 2.5.12
+
+  packages/mesh/signaling:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/browser-mocha': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/protocol-plugin-presence': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@koush/wrtc': ^0.5.3
+      '@swc-node/register': ~1.5.1
+      '@types/debug': ^4.1.7
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
+      '@types/simple-peer': 9.11.3
+      '@types/ws': ^7.4.0
+      assert: ^2.0.0
+      debug: ^4.3.3
+      earljs: ~0.1.10
+      expect: ~27.0.2
+      fast-check: ~2.14.0
+      isomorphic-ws: ^4.0.1
+      mocha: ^8.4.0
+      nanomessage-rpc: ^3.0.0
+      simple-peer: 9.11.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+      ws: ^7.4.4
+      xor-distance: ^2.0.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/debug': link:../../common/debug
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
+      '@koush/wrtc': 0.5.3
+      assert: 2.0.0
+      debug: 4.3.4
+      isomorphic-ws: 4.0.1_ws@7.5.6
+      nanomessage-rpc: 3.2.0
+      simple-peer: 9.11.0
+      ws: 7.5.6
+      xor-distance: 2.0.0
+    devDependencies:
+      '@dxos/browser-mocha': link:../../gravity/browser-mocha
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@dxos/signal': link:../signal
+      '@dxos/testutils': link:../../common/testutils
+      '@swc-node/register': 1.5.1_typescript@4.7.4
+      '@types/debug': 4.1.7
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
+      '@types/simple-peer': 9.11.3
+      '@types/ws': 7.4.7
+      earljs: 0.1.12_typescript@4.7.4
+      expect: 27.0.6
+      fast-check: 2.14.0
+      mocha: 8.4.0
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
 
   packages/sdk/client:
     specifiers:
@@ -2463,7 +2536,7 @@ importers:
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/feed-store': link:../../echo/feed-store
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/network-manager': link:../../mesh/signaling
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
@@ -6401,7 +6474,7 @@ packages:
     hasBin: true
     dependencies:
       exec-sh: 0.3.6
-      minimist: 1.2.5
+      minimist: 1.2.6
 
   /@colors/colors/1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -24387,7 +24460,7 @@ packages:
     resolution: {integrity: sha512-OLhxz05EzUtsAmOMzuupt1lHYXCNib0ECyuZ/PZOx9TrZcC8vL0x+DUG3TL+GLX3yHG45e6YGjIm0XwDc3q3og==}
     engines: {node: '>= 10.14.2'}
     dependencies:
-      '@babel/types': 7.18.7
+      '@babel/types': 7.18.13
       '@jest/types': 26.6.2
       '@types/babel__traverse': 7.14.2
       '@types/prettier': 2.4.2
@@ -30986,7 +31059,7 @@ packages:
       execa: 1.0.0
       fb-watchman: 2.0.1
       micromatch: 3.1.10
-      minimist: 1.2.5
+      minimist: 1.2.6
       walker: 1.0.8
     transitivePeerDependencies:
       - supports-color

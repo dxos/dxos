@@ -64,6 +64,7 @@
     "rpc-worker-proxy": "packages/common/rpc-worker-proxy",
     "rpc-worker-proxy-e2e": "packages/common/rpc-worker-proxy-e2e",
     "signal": "packages/mesh/signal",
+    "signaling": "packages/mesh/signaling",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
