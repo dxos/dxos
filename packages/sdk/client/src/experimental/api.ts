@@ -103,9 +103,10 @@ export interface Space {
   get database (): Database
   queryMembers (query?: any): Result<Member>
   // TODO(burdon): Move to Circle? Or move queryInvitations to Brane (for symmetry)?
-  createInvitation (key: PublicKey): Invitation
+  createInvitation (key: PublicKey, role: Role): Invitation
 }
 
+// TODO(burdon): Are admins also members and readers?
 export enum Role {
   ADMIN, MEMBER, READER
 }

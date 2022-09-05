@@ -7,7 +7,7 @@ import { it as test } from 'mocha';
 
 import { validateKeyPair } from '@dxos/crypto';
 
-import { Client, InvitationOffer, Item } from './api';
+import { Client, InvitationOffer, Item, Role } from './api';
 
 const createClient = () => ({} as Client);
 
@@ -38,10 +38,10 @@ describe.skip('Experimental API', () => {
       expect(devices.elements).toHaveLength(1);
     }
 
-    // TODO(burdon): Query DXNS metagraph (e.g., KUBEs, applications, type system).
+    // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     {
-      const types = client.meta.queryRecords({ type: 'org.dxos.contact' });
-      expect(types).toBeDefined();
+      const apps = client.meta.queryRecords({ type: 'org.dxos.app' });
+      expect(apps).toBeDefined();
     }
 
     // Query contacts within circle.
@@ -76,11 +76,11 @@ describe.skip('Experimental API', () => {
     {
       const space = await client.brane.createSpace();
       const contacts = client.circle.queryContacts({ name: 'alice' });
-      const invitation = space.createInvitation(contacts.elements[0].publicKey);
+      const invitation = space.createInvitation(contacts.elements[0].publicKey, Role.ADMIN);
       await client.messenger.send(contacts.elements[0].publicKey, invitation);
       await invitation.wait();
 
-      const members = space.queryMembers();
+      const members = space.queryMembers({ role: Role.ADMIN });
       expect(members.elements).toHaveLength(2);
     }
 
