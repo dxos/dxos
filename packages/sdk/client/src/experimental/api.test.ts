@@ -11,6 +11,7 @@ import { Client, InvitationOffer, Item } from './api';
 
 const createClient = () => ({} as Client);
 
+// eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Experimental API', () => {
   test('Basic', async () => {
     const client = createClient();
@@ -47,6 +48,7 @@ describe.skip('Experimental API', () => {
       const space = await client.brane.getSpace(spaces.elements[0]);
       const result = space.queryItems({ type: 'org.dxos.contact' });
       const subscription = result.onUpdate((items: Item[]) => {
+        console.log(items.length);
         subscription.cancel();
       });
     }
