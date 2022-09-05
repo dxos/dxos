@@ -41,17 +41,19 @@ describe.skip('Experimental API', () => {
 
     // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     {
-      const apps = client.meta.queryRecords({ type: 'org.dxos.app' });
+      type AppRecord = { name: string }
+      const AppRecordType = 'org.dxos.app';
+
+      const apps = client.meta.queryRecords({ type: AppRecordType });
       void apps.onUpdate((records, subscription) => {
-        expect(subscription.query.type).toStrictEqual('org.dxos.app');
+        expect(subscription.query.type).toStrictEqual(AppRecordType);
         if (records.length > 0) {
           subscription.cancel();
         }
       });
 
-      type AppRecord = { name: string }
-      const app = await client.meta.createRecord<AppRecord>({ type: 'org.dxos.app', data: { name: 'Tetris' } });
-      expect(app.type).toStrictEqual('org.dxos.app');
+      const app = await client.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
+      expect(app.type).toStrictEqual(AppRecordType);
       expect(app.data.name).toStrictEqual('Tetris');
     }
 
