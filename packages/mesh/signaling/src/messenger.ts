@@ -1,29 +1,39 @@
-import { PublicKey } from "packages/common/protocols/dist/src"
-import { PeerId } from "packages/halo/credentials/dist/src/typedefs"
+
 import { Any } from "./proto/gen/google/protobuf"
 import { SignalManager } from "./signal-manager"
-
+import { PublicKey } from '@dxos/protocols';
 
 interface MessengerOptions {
   ownPeerId: PublicKey
-  receive: (author: PeerId, payload: Any) => Promise<void>
+  receive: (author: PublicKey, payload: Any) => Promise<void>
   signalManager: SignalManager
 }
 
 export class Messenger {
-  private readonly _ownPeerId: PublicKey
-  private readonly _receive: (author: PeerId, payload: Any) => Promise<void>
-  private readonly _signalManager: SignalManager
+  private readonly _ownPeerId: PublicKey;
+  private readonly _receive: (author: PublicKey, payload: Any) => Promise<void>;
+  private readonly _signalManager: SignalManager;
 
   constructor ({
     ownPeerId,
     receive,
     signalManager
   }: MessengerOptions) {
-    this._ownPeerId = ownPeerId
-    this._receive = receive
-    this._signalManager = signalManager
+    this._ownPeerId = ownPeerId;
+    this._receive = receive;
+
+    this._signalManager = signalManager;
+    this._signalManager.subscribeMessages(this._ownPeerId);
+    this._signalManager.onMessage.on(([author, recipient, payload]) => this._receive(author, payload));
   }
 
+  public get ownPeerId (): PublicKey {
+    return this._ownPeerId
+  }
+
+  // TODO(mykola): make reliable.
+  async message (recipient: PublicKey, payload: Any): Promise<void> {
+    return this._signalManager.message(this._ownPeerId, recipient, payload);
+  }
 }
 
