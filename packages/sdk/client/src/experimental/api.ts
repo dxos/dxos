@@ -13,9 +13,9 @@ import { PublicKey } from '@dxos/protocols';
 //
 
 /**
- * Root object.
+ * Framework root object for DXOS network peers.
  * - Configurable.
- * - Container for major independent subsystems.
+ * - Singleton container and factory (using configuration) for independent subsystems.
  * - Establishes proxy/service linkage.
  */
 export interface Client {
@@ -31,7 +31,7 @@ export interface Client {
 //
 
 export interface Meta {
-  createRecord (record: RecordData): Promise<Record>
+  createRecord<Type> (record: RecordData<Type>): Promise<Record<Type>>
 
   // TODO(burdon): GraphQL queries?
   queryRecords (query?: MetaQuery): Result<Record, MetaQuery>
@@ -69,6 +69,7 @@ export interface Receipt {
 
 export interface Halo {
   get profile (): Profile
+  get device (): Device
   createProfile (): Promise<Buffer>
   recoverProfile (privateKey: Buffer): Promise<Profile>
   queryDevices (query?: any): Result<Device>
@@ -163,6 +164,5 @@ export interface Result<Element, Query = {}> {
 export interface Subscription<Element, Query> {
   get query (): Query
   get result (): Result<Element, Query>
-
   cancel (): void
 }

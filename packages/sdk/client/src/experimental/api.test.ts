@@ -21,6 +21,7 @@ describe.skip('Experimental API', () => {
       const privateKey = await client.halo.createProfile();
       const publicKey = client.halo.profile.publicKey;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
+      expect(client.halo.device).toBeDefined();
 
       // Recover profile.
       // TODO(burdon): Currently requires another device to be online (to sync profile and complete.)
@@ -48,8 +49,10 @@ describe.skip('Experimental API', () => {
         }
       });
 
-      const app = await client.meta.createRecord({ type: 'org.dxos.app' });
-      expect(app).toBeDefined();
+      type AppRecord = { name: string }
+      const app = await client.meta.createRecord<AppRecord>({ type: 'org.dxos.app', data: { name: 'Tetris' } });
+      expect(app.type).toStrictEqual('org.dxos.app');
+      expect(app.data.name).toStrictEqual('Tetris');
     }
 
     // Query contacts within circle.
