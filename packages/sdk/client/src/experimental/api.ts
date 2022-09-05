@@ -4,6 +4,9 @@
 
 import { PublicKey } from '@dxos/protocols';
 
+// TODO(burdon): Queries/subscriptions.
+// TODO(burdon): Common error handling.
+
 //
 // Client
 //
@@ -97,9 +100,24 @@ export interface Brane {
 
 export interface Space {
   get publicKey (): PublicKey
-  queryItems (query?: any): Result<Item>
+  get database (): Database
+  queryMembers (query?: any): Result<Member>
   // TODO(burdon): Move to Circle? Or move queryInvitations to Brane (for symmetry)?
   createInvitation (key: PublicKey): Invitation
+}
+
+export enum Role {
+  ADMIN, MEMBER, READER
+}
+
+export interface Member {
+  get profile (): Profile
+  get role (): Role
+}
+
+export interface Database {
+  createItem (data: any): Promise<Item>
+  queryItems (query?: any): Result<Item>
 }
 
 export interface Item {

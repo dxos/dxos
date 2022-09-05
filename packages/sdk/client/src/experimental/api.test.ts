@@ -49,7 +49,7 @@ describe.skip('Experimental API', () => {
       const contacts = client.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
         const profile = contact.profile;
-        await client.messenger.send(contact.publicKey, { message: `hello: ${profile.username}` });
+        await client.messenger.send(contact.publicKey, { message: `Hello ${profile.username}!` });
       }));
     }
 
@@ -59,11 +59,17 @@ describe.skip('Experimental API', () => {
 
       // Create subscription.
       const space = await client.brane.getSpace(spaces.elements[0]);
-      const result = space.queryItems({ type: 'org.dxos.contact' });
+      const result = space.database.queryItems({ type: 'org.dxos.contact' });
+      const count = result.elements.length;
       const subscription = result.onUpdate((items: Item[]) => {
-        console.log(items.length);
-        subscription.cancel();
+        if (items.length > count) {
+          subscription.cancel();
+        }
       });
+
+      // Create item.
+      const item = await space.database.createItem({ type: 'org.dxos.contact' });
+      expect(item.publicKey).toBeDefined();
     }
 
     // Create space and send invitation.
@@ -73,6 +79,9 @@ describe.skip('Experimental API', () => {
       const invitation = space.createInvitation(contacts.elements[0].publicKey);
       await client.messenger.send(contacts.elements[0].publicKey, invitation);
       await invitation.wait();
+
+      const members = space.queryMembers();
+      expect(members.elements).toHaveLength(2);
     }
 
     // Receive invitations.
