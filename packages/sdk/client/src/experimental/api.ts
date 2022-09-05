@@ -5,24 +5,6 @@
 import { PublicKey } from '@dxos/protocols';
 
 //
-// Testing
-//
-
-export class TestClient implements Client {
-  get messenger () {
-    return {} as Messenger;
-  }
-
-  get circle () {
-    return {} as Circle;
-  }
-
-  get brane () {
-    return {} as Brane;
-  }
-}
-
-//
 // Client
 //
 

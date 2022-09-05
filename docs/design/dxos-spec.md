@@ -2,16 +2,17 @@
 
 <!-- @toc -->
 
-- [1. Introduction](#1-introduction)
-- [2. Ontology](#2-ontology)
-  - [2.1. HALO](#21-halo)
-    - [2.1.1. Profiles](#211-profiles)
-    - [2.1.2. Devices](#212-devices)
-    - [2.1.3. Circles](#213-circles)
-  - [2.2. ECHO](#22-echo)
-    - [2.2.1. Spaces](#221-spaces)
-    - [2.2.2. Branes](#222-branes)
-    - [2.2.3. Frames](#223-frames)
+*   [1. Introduction](#1-introduction)
+*   [2. Ontology](#2-ontology)
+    *   [2.1. HALO](#21-halo)
+        *   [2.1.1. Profiles](#211-profiles)
+        *   [2.1.2. Devices](#212-devices)
+        *   [2.1.3. Circles](#213-circles)
+    *   [2.2. ECHO](#22-echo)
+        *   [2.2.1. Spaces](#221-spaces)
+        *   [2.2.2. Branes](#222-branes)
+        *   [2.2.3. Frames](#223-frames)
+*   [3. Tests](#3-tests)
 
 ## 1. Introduction
 
@@ -70,4 +71,59 @@ This section outlines the core concepts of the DXOS system.
 *   Frames are application components that implement user interfaces that are able to display and manipulate data within a Space or across a User's Brane.
 *   Frames may be dynamically discoverable (and loaded or activated) by querying decentralized registries.
 *   Frames may declare bindings that are associated with the DXOS decentralized type system.
+
+## 3. Tests
+
+<!-- @code(../../packages/sdk/client/src/experimental/api.test.ts, link) -->
+
+```ts
+//
+// Copyright 2020 DXOS.org
+//
+
+import expect from 'expect';
+
+import { TestClient } from './api';
+
+describe('Experimental API', () => {
+  test('Basic', async () => {
+    const client = new TestClient();
+
+    // Query contacts within circle.
+    {
+      const contacts = client.circle.queryContacts();
+      await Promise.all(contacts.elements.map(async contact => {
+        await client.messenger.send(contact.key, {});
+      }));
+    }
+
+    // Query spaces withing brane.
+    {
+      const spaces = client.brane.querySpaces();
+      spaces.elements.forEach(space => {
+        const items = space.query();
+        console.log(items.elements);
+      });
+    }
+
+    // Create space and send invitation.
+    // TODO(burdon): Receive invitations and other messages.
+    {
+      const space = await client.brane.createSpace();
+      const contacts = client.circle.queryContacts({ name: 'alice' });
+      const invitation = space.createInvitation(contacts.elements[0].key);
+      await client.messenger.send(contacts.elements[0].key, invitation);
+      await invitation.wait();
+    }
+
+    // Query items across all spaces.
+    {
+      const items = client.brane.querySpaces({ type: 'org.dxos.contact' });
+      console.log(items.elements);
+    }
+
+    expect(true).toBeTruthy();
+  });
+});
+```
 
