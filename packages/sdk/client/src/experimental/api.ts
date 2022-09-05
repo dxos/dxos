@@ -8,7 +8,14 @@ import { PublicKey } from '@dxos/protocols';
 // Client
 //
 
+/**
+ * Root object.
+ * - Configurable.
+ * - Container for major independent subsystems.
+ * - Establishes proxy/server linkage.
+ */
 export interface Client {
+  get halo (): Halo
   get messenger (): Messenger
   get circle () : Circle
   get brane (): Brane
@@ -26,18 +33,32 @@ export interface Messenger {
 // HALO
 //
 
+export interface Halo {
+  get profile (): Profile
+  createProfile (): Promise<Buffer>
+  recoverProfile (privateKey: Buffer): Promise<Profile>
+}
+
 export interface Circle {
   queryDevices (query?: any): Result<Device>
   queryContacts (query?: any): Result<Contact>
   queryInvitations (query?: any): Result<InvitationOffer>
 }
 
+export interface Profile {
+  get publicKey (): PublicKey
+  get username (): string
+}
+
+// TODO(burdon): Device management
 export interface Device {
-  key: PublicKey
+  get publicKey (): PublicKey
+  get name (): string
 }
 
 export interface Contact {
-  key: PublicKey
+  get publicKey (): PublicKey
+  get profile (): Profile
 }
 
 export interface Invitation {
@@ -61,14 +82,14 @@ export interface Brane {
 }
 
 export interface Space {
-  key: PublicKey
+  get publicKey (): PublicKey
   queryItems (query?: any): Result<Item>
   // TODO(burdon): Move to Circle?
   createInvitation (key: PublicKey): Invitation
 }
 
 export interface Item {
-  key: PublicKey
+  get publicKey (): PublicKey
 }
 
 //
