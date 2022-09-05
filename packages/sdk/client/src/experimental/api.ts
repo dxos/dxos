@@ -32,6 +32,8 @@ export interface Client {
 
 export interface Meta {
   createRecord (record: RecordData): Promise<Record>
+
+  // TODO(burdon): GraphQL queries?
   queryRecords (query?: MetaQuery): Result<Record, MetaQuery>
 }
 
@@ -39,11 +41,13 @@ export interface MetaQuery {
   get type (): string
 }
 
-export interface RecordData {
+export interface RecordData<Type = {}> {
+  // Type identifies FQ protobuf message type.
   get type (): string
+  get data (): Type
 }
 
-export interface Record extends RecordData {
+export interface Record<Type = {}> extends RecordData<Type> {
   get publicKey (): PublicKey
 }
 
