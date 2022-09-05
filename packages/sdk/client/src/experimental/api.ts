@@ -12,13 +12,26 @@ import { PublicKey } from '@dxos/protocols';
  * Root object.
  * - Configurable.
  * - Container for major independent subsystems.
- * - Establishes proxy/server linkage.
+ * - Establishes proxy/service linkage.
  */
 export interface Client {
   get halo (): Halo
-  get messenger (): Messenger
   get circle () : Circle
   get brane (): Brane
+  get meta (): Meta
+  get messenger (): Messenger
+}
+
+//
+// META
+//
+
+export interface Meta {
+  queryRecords (query?: any): Result<Record>
+}
+
+export interface Record {
+  get publicKey (): PublicKey
 }
 
 //
@@ -37,10 +50,10 @@ export interface Halo {
   get profile (): Profile
   createProfile (): Promise<Buffer>
   recoverProfile (privateKey: Buffer): Promise<Profile>
+  queryDevices (query?: any): Result<Device>
 }
 
 export interface Circle {
-  queryDevices (query?: any): Result<Device>
   queryContacts (query?: any): Result<Contact>
   queryInvitations (query?: any): Result<InvitationOffer>
 }

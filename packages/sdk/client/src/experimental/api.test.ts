@@ -23,13 +23,25 @@ describe.skip('Experimental API', () => {
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
 
       // Recovery.
+      // TODO(burdon): Currently requires another device to be online (to sync profile and complete.)
       {
         const client = createClient();
         expect(client.halo.profile).not.toBeDefined();
-        // TODO(burdon): Does this require another device to be online (to auth and/or to sync profiles?)
         const profile = await client.halo.recoverProfile(privateKey);
         expect(profile.publicKey).toBe(client.halo.profile.publicKey);
       }
+    }
+
+    // TODO(burdon): Manage devices.
+    {
+      const devices = client.halo.queryDevices();
+      expect(devices.elements).toHaveLength(1);
+    }
+
+    // TODO(burdon): Query DXNS graph (e.g., type system).
+    {
+      const types = client.meta.queryRecords({ type: 'org.dxos.contact' });
+      expect(types).toBeDefined();
     }
 
     // Query contacts within circle.
