@@ -49,7 +49,8 @@ describe.skip('Experimental API', () => {
       const contacts = client.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
         const profile = contact.profile;
-        await client.messenger.send(contact.publicKey, { message: `Hello ${profile.username}!` });
+        const receipt = await client.messenger.send(contact.publicKey, { message: `Hello ${profile.username}!` });
+        expect(receipt.recipient).toBe(contact.publicKey);
       }));
     }
 
@@ -100,7 +101,5 @@ describe.skip('Experimental API', () => {
       const items = client.brane.queryItems({ type: 'org.dxos.contact' });
       console.log(items.elements);
     }
-
-    expect(true).toBeTruthy();
   });
 });

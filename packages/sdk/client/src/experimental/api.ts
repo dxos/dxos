@@ -4,8 +4,9 @@
 
 import { PublicKey } from '@dxos/protocols';
 
-// TODO(burdon): Queries/subscriptions.
+// TODO(burdon): Typed queries/subscriptions.
 // TODO(burdon): Common error handling.
+// TODO(burdon): ECHO database should not depend on the high-level framework.
 
 //
 // Client
@@ -42,7 +43,11 @@ export interface Record {
 //
 
 export interface Messenger {
-  send (key: PublicKey, message: any): Promise<void>
+  send (key: PublicKey, message: any): Promise<Receipt>
+}
+
+export interface Receipt {
+  get recipient (): PublicKey
 }
 
 //
@@ -129,12 +134,17 @@ export interface Item {
 // Generic
 //
 
-export interface Result<T> {
+/**
+ * Generic async query and response.
+ */
+export interface Result<Element, Query = {}> {
+  get query (): Query
+
   // Cached results are immediately available.
-  get elements (): T[]
+  get elements (): Element[]
 
   // Subscribe to changes.
-  onUpdate (cb: (elements: T[]) => void): Subscription
+  onUpdate (cb: (elements: Element[]) => void): Subscription
 }
 
 export interface Subscription {
