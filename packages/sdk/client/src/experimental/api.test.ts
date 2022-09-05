@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Client } from './api';
+import { Client, InvitationOffer, Item } from './api';
 
 describe.skip('Experimental API', () => {
   test('Basic', async () => {
@@ -21,15 +21,17 @@ describe.skip('Experimental API', () => {
 
     // Query spaces withing brane.
     {
-      const spaces = client.brane.querySpaces();
-      spaces.elements.forEach(space => {
-        const items = space.query();
-        console.log(items.elements);
+      const spaces = client.brane.querySpaceKeys();
+
+      // Create subscription.
+      const space = await client.brane.getSpace(spaces.elements[0]);
+      const result = space.queryItems({ type: 'org.dxos.contact' });
+      const subscription = result.onUpdate((items: Item[]) => {
+        subscription.cancel();
       });
     }
 
     // Create space and send invitation.
-    // TODO(burdon): Receive invitations and other messages.
     {
       const space = await client.brane.createSpace();
       const contacts = client.circle.queryContacts({ name: 'alice' });
@@ -38,9 +40,20 @@ describe.skip('Experimental API', () => {
       await invitation.wait();
     }
 
+    // Receive invitations.
+    {
+      const invitations = client.circle.queryInvitations();
+      const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
+        if (invitations.length) {
+          await invitations[0].accept();
+          subscription.cancel();
+        }
+      });
+    }
+
     // Query items across all spaces.
     {
-      const items = client.brane.querySpaces({ type: 'org.dxos.contact' });
+      const items = client.brane.queryItems({ type: 'org.dxos.contact' });
       console.log(items.elements);
     }
 
