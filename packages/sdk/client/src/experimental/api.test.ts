@@ -48,7 +48,8 @@ describe.skip('Experimental API', () => {
     {
       const contacts = client.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
-        await client.messenger.send(contact.publicKey, {});
+        const profile = contact.profile;
+        await client.messenger.send(contact.publicKey, { message: `hello: ${profile.username}` });
       }));
     }
 
