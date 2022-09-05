@@ -12,7 +12,7 @@
         *   [2.2.1. Spaces](#221-spaces)
         *   [2.2.2. Branes](#222-branes)
         *   [2.2.3. Frames](#223-frames)
-*   [3. Tests](#3-tests)
+*   [3. API](#3-api)
 
 ## 1. Introduction
 
@@ -72,7 +72,7 @@ This section outlines the core concepts of the DXOS system.
 *   Frames may be dynamically discoverable (and loaded or activated) by querying decentralized registries.
 *   Frames may declare bindings that are associated with the DXOS decentralized type system.
 
-## 3. Tests
+## 3. API
 
 <!-- @code(../../packages/sdk/client/src/experimental/api.test.ts, link) -->
 
