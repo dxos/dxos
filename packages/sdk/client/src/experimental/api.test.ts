@@ -17,8 +17,11 @@ describe.skip('Experimental API', () => {
   test('All aspects', async () => {
     const client = createClient();
 
-    // Create profile.
+    //
+    // Create and recover profiles.
+    //
     {
+      // Create profile.
       const privateKey = await client.halo.createProfile();
       const publicKey = client.halo.profile.identityKey;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
@@ -34,12 +37,14 @@ describe.skip('Experimental API', () => {
       }
     }
 
+    //
     // Manage devices.
+    //
     {
       const devices = client.halo.queryDevices();
       expect(devices.elements).toHaveLength(1);
 
-      // Create new device.
+      // Create and authenticate new device.
       {
         devices.onUpdate((devices, subscription) => {
           if (devices.length > 1) {
@@ -67,25 +72,9 @@ describe.skip('Experimental API', () => {
       }
     }
 
-    // Query DXNS metagraph (e.g., KUBEs, applications, type system).
-    {
-      type AppRecord = { name: string }
-      const AppRecordType = 'org.dxos.app';
-
-      const apps = client.meta.queryRecords({ type: AppRecordType });
-      void apps.onUpdate((records, subscription) => {
-        expect(subscription.query.type).toStrictEqual(AppRecordType);
-        if (records.length > 0) {
-          subscription.cancel();
-        }
-      });
-
-      const app = await client.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
-      expect(app.type).toStrictEqual(AppRecordType);
-      expect(app.data.name).toStrictEqual('Tetris');
-    }
-
+    //
     // Query contacts within circle.
+    //
     {
       const contacts = client.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
@@ -94,8 +83,11 @@ describe.skip('Experimental API', () => {
       }));
     }
 
+    //
     // Create invitation to new peer (requires key exchange handshake).
+    //
     {
+      // Create Space.
       const space = await client.brane.createSpace();
       const invitation = space.createInvitation(Role.ADMIN);
       setImmediate(async () => {
@@ -105,16 +97,20 @@ describe.skip('Experimental API', () => {
       });
 
       {
+        // Accept invitation.
         const client = createClient();
         const offer = client.brane.createInvitationOffer(invitation.offerKey);
         const spaceKey = await offer.accept(invitation.secret);
+
         const space = await client.brane.getSpace(spaceKey);
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
       }
     }
 
+    //
     // Create space and send invitation to existing contact.
+    //
     {
       const space = await client.brane.createSpace();
       const contacts = client.circle.queryContacts({ name: 'alice' });
@@ -126,7 +122,9 @@ describe.skip('Experimental API', () => {
       expect(members.elements).toHaveLength(2);
     }
 
+    //
     // Receive invitations from existing contact.
+    //
     {
       const invitations = client.circle.queryInvitations();
       const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
@@ -138,7 +136,9 @@ describe.skip('Experimental API', () => {
       });
     }
 
+    //
     // Query spaces within brane.
+    //
     {
       const spaces = client.brane.querySpaceKeys();
       const space = await client.brane.getSpace(spaces.elements[0]);
@@ -159,6 +159,28 @@ describe.skip('Experimental API', () => {
       // Query items across all spaces.
       const items = client.brane.queryItems({ type: 'org.dxos.contact' });
       expect(items.elements.length).toBeGreaterThan(0);
+    }
+
+    //
+    // Query DXNS metagraph (e.g., KUBEs, applications, type system).
+    //
+    {
+      type AppRecord = { name: string }
+      const AppRecordType = 'org.dxos.app';
+
+      // Query records.
+      const apps = client.meta.queryRecords({ type: AppRecordType });
+      void apps.onUpdate((records, subscription) => {
+        expect(subscription.query.type).toStrictEqual(AppRecordType);
+        if (records.length > 0) {
+          subscription.cancel();
+        }
+      });
+
+      // Create record.
+      const app = await client.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
+      expect(app.type).toStrictEqual(AppRecordType);
+      expect(app.data.name).toStrictEqual('Tetris');
     }
   });
 });
