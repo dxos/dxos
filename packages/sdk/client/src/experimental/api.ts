@@ -63,7 +63,6 @@ export interface Profile {
   get username (): string
 }
 
-// TODO(burdon): Device management
 export interface Device {
   get publicKey (): PublicKey
   get name (): string
@@ -75,10 +74,12 @@ export interface Contact {
 }
 
 export interface Invitation {
+  // Wait for peer to complete.
   wait (): Promise<void>
 }
 
 export interface InvitationOffer {
+  // Accept and authenticate.
   accept (secret?: string): Promise<void>
 }
 
@@ -97,7 +98,7 @@ export interface Brane {
 export interface Space {
   get publicKey (): PublicKey
   queryItems (query?: any): Result<Item>
-  // TODO(burdon): Move to Circle?
+  // TODO(burdon): Move to Circle? Or move queryInvitations to Brane (for symmetry)?
   createInvitation (key: PublicKey): Invitation
 }
 
@@ -109,14 +110,14 @@ export interface Item {
 // Generic
 //
 
-export interface Subscription {
-  cancel (): void
-}
-
 export interface Result<T> {
   // Cached results are immediately available.
   get elements (): T[]
 
   // Subscribe to changes.
   onUpdate (cb: (elements: T[]) => void): Subscription
+}
+
+export interface Subscription {
+  cancel (): void
 }

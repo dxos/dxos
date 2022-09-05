@@ -38,7 +38,7 @@ describe.skip('Experimental API', () => {
       expect(devices.elements).toHaveLength(1);
     }
 
-    // TODO(burdon): Query DXNS graph (e.g., type system).
+    // TODO(burdon): Query DXNS metagraph (e.g., KUBEs, applications, type system).
     {
       const types = client.meta.queryRecords({ type: 'org.dxos.contact' });
       expect(types).toBeDefined();
