@@ -10,10 +10,10 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
-import { SwarmMessage } from './proto/gen/dxos/mesh/swarm';
-import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
+import { SignalMethods } from './signal-methods';
 import { SignalManager } from './signal-manager';
-import { SignalClientImpl } from './signal-client-impl';
+import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
+import { Any } from './proto/gen/google/protobuf';
 
 const log = debug('dxos:signaling:signal-manager-impl');
 
@@ -32,7 +32,7 @@ export class SignalManagerImpl implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, payload: Any]>();
 
   constructor (
     private readonly _hosts: string[]
@@ -40,9 +40,9 @@ export class SignalManagerImpl implements SignalManager {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalClientImpl(
+      const server = new SignalClient(
         host,
-        async (author, recipient, msg) => this.onMessage.emit([author, recipient, msg])
+        async (author, recipient, payload) => this.onMessage.emit([author, recipient, payload])
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on(data => this.swarmEvent.emit(data));
@@ -147,7 +147,7 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (author: PublicKey, recipient: PublicKey, payload: Any) {
+  async message (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
     log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
       server.message(author, recipient, payload).catch(err => {
@@ -156,7 +156,11 @@ export class SignalManagerImpl implements SignalManager {
     }
   }
 
-  async destroy () {
+  async subscribeMessages (peerId: PublicKey): Promise<void> {
+
+  }
+
+  async close () {
     this._destroyed = true;
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);

@@ -12,7 +12,7 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
 import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
-import { SignalClient } from './signal-client';
+import { SignalMethods } from './signal-methods';
 
 describe('SignalClient', () => {
   let broker1: TestBroker;

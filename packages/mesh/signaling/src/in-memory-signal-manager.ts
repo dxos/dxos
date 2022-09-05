@@ -8,16 +8,17 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
+import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { SwarmMessage } from './proto/gen/dxos/mesh/swarm';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
+import { Any } from './proto/gen/google/protobuf';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
-  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, networkMessage: SwarmMessage]>();
+  readonly onMessage = new Event<[author: PublicKey, recipient: PublicKey, payload: Any]>();
 
   constructor () {
     state.swarmEvent.on(data => this.swarmEvent.emit(data));
@@ -27,7 +28,7 @@ export class InMemorySignalManager implements SignalManager {
     return [];
   }
 
-  join (topic: PublicKey, peerId: PublicKey) {
+  async join (topic: PublicKey, peerId: PublicKey) {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet(x => x.toHex()));
     }
@@ -55,7 +56,7 @@ export class InMemorySignalManager implements SignalManager {
     }
   }
 
-  leave (topic: PublicKey, peerId: PublicKey) {
+  async leave (topic: PublicKey, peerId: PublicKey) {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet(x => x.toHex()));
     }
@@ -71,13 +72,17 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit([topic, swarmEvent]);
   }
 
-  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
+  async message (author: PublicKey, recipient: PublicKey, payload: Any) {
     assert(recipient);
     assert(state.connections.get(recipient), 'Peer not connected');
-    state.connections.get(recipient)!.onMessage.emit([author, recipient, msg]);
+    state.connections.get(recipient)!.onMessage.emit([author, recipient, payload]);
   }
 
-  async destroy () {}
+  async subscribeMessages (peerId: PublicKey): Promise<void>{
+
+  }
+
+  async close () {}
 }
 
 // TODO(burdon): Remove global singleton.
