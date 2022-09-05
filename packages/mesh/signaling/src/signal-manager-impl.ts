@@ -9,12 +9,13 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
+import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { SwarmMessage } from './proto/gen/dxos/mesh/swarm';
 import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
+import { SignalClientImpl } from './signal-client-impl';
 
-const log = debug('dxos:network-manager:signal-manager-impl');
+const log = debug('dxos:signaling:signal-manager-impl');
 
 export class SignalManagerImpl implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
@@ -39,7 +40,7 @@ export class SignalManagerImpl implements SignalManager {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
     assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
     for (const host of this._hosts) {
-      const server = new SignalClient(
+      const server = new SignalClientImpl(
         host,
         async (author, recipient, msg) => this.onMessage.emit([author, recipient, msg])
       );
@@ -57,14 +58,14 @@ export class SignalManagerImpl implements SignalManager {
     return Array.from(this._servers.values()).map(server => server.getStatus());
   }
 
-  join (topic: PublicKey, peerId: PublicKey) {
+  async join (topic: PublicKey, peerId: PublicKey) {
     assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     log(`Join ${topic} ${peerId}`);
     this._topicsJoined.set(topic, peerId);
     this._scheduleReconcile();
   }
 
-  leave (topic: PublicKey, peerId: PublicKey) {
+  async leave (topic: PublicKey, peerId: PublicKey) {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     log(`Leave ${topic} ${peerId}`);
     this._topicsJoined.delete(topic);
@@ -146,10 +147,10 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (author: PublicKey, recipient: PublicKey, msg: SwarmMessage) {
+  async message (author: PublicKey, recipient: PublicKey, payload: Any) {
     log(`Signal ${recipient}`);
     for (const server of this._servers.values()) {
-      server.message(author, recipient, msg).catch(err => {
+      server.message(author, recipient, payload).catch(err => {
         log(`Error signaling: ${err}`);
       });
     }
