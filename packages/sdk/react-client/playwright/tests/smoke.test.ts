@@ -7,6 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 test.describe('Smoke test', () => {
   // TODO(wittjosiah): Renable once singleton client has stable hosted location.
+  test('placeholder to ensure exit success when no tests run', () => {});
   test.skip('Renders tutorial from descriptor', async ({ page }) => {
     await page.goto('#/__story/stories-client-stories-tsx/Primary');
 

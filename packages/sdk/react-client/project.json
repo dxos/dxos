@@ -32,9 +32,19 @@
         ],
         "jsdom": true
       }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/react-client/playwright/tests/*.test.ts"
+        ],
+        "config": "packages/sdk/react-client/playwright/config.ts"
+      }
     }
   },
   "implicitDependencies": [
-    "mocha"
+    "mocha",
+    "playwright"
   ]
 }

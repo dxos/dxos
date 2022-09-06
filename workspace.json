@@ -41,6 +41,7 @@
     "network-manager": "packages/mesh/network-manager",
     "object-model": "packages/echo/object-model",
     "orchestrator": "packages/gravity/orchestrator",
+    "playwright": "tools/executors/playwright",
     "protobuf-compiler": "tools/executors/protobuf-compiler",
     "protobuf-compiler-browser-test": "tools/protobuf-compiler-browser-test",
     "protobuf-test": "tools/protobuf-test",

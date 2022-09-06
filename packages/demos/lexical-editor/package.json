@@ -13,7 +13,6 @@
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test",
-    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "dependencies": {
@@ -54,7 +53,6 @@
     "@types/react-dom": "^18.0.5",
     "debug": "^4.3.3",
     "mocha": "^8.4.0",
-    "playwright": "^1.25.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "ts-node": "10.9.1",
