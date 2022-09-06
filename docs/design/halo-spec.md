@@ -273,7 +273,9 @@ The HALO protocol definitions are defined in the [References](#8-appendix) secti
     The schema format is inspired by the [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model).
 *   Claims may represent ownership or access to digital assets, including KUBE nodes and ECHO Spaces.
 
-<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto#Credential, link) -->
+
+<sub>`@dxos/halo-protocol`[`[src/proto/defs/credentials.proto]`](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 message Credential {
@@ -584,7 +586,9 @@ The protocol protocol buffer schema are defined [here](./refs/credentials.proto)
 
 ### 8.1. Protocol Schema
 
-<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto) -->
+<!-- @code(../../packages/halo/halo-protocol/src/proto/defs/credentials.proto, link) -->
+
+<sub>`@dxos/halo-protocol`[`[src/proto/defs/credentials.proto]`](../../packages/halo/halo-protocol/src/proto/defs/credentials.proto)</sub>
 
 ```protobuf
 //
