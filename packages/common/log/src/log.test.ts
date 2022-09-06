@@ -17,3 +17,8 @@ describe('log', () => {
     log`obj = ${{ foo: 'bar' }}`()
   })
 })
+
+// const key = 100;
+// log.warn`Invalid key: ${key}`({ foo: 100 });
+
+// log.warn(`This is better but doesn't work.`, { foo: 100 });

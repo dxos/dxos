@@ -12,13 +12,13 @@ export function register() {
       const sourceMap = getSourceMap(filename)
 
       // Write code for debugging
-      // const path = join(process.cwd(), '.trace-compiled', filename)
-      // mkdirSync(dirname(path), { recursive: true })
-      // writeFileSync(path, output.code, { encoding: 'utf-8' })
-      // writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' })
-      // if(sourceMap) {
-      //   writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap, { encoding: 'utf-8' })
-      // }
+      const path = join(process.cwd(), '.trace-compiled', filename)
+      mkdirSync(dirname(path), { recursive: true })
+      writeFileSync(path, output.code, { encoding: 'utf-8' })
+      writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' })
+      if(sourceMap) {
+        writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap, { encoding: 'utf-8' })
+      }
 
       return output.code
     } catch(err) {

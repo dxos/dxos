@@ -24,5 +24,5 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
     buffer += inspect(entry.ctx, false, undefined, true);
   }
 
-  console.log(`${level} ${buffer}`);
+  console.log(`${entry.meta?.file} ${level} ${buffer}`);
 }
