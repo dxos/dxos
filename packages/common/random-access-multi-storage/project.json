@@ -31,6 +31,14 @@
           "packages/common/random-access-multi-storage/src/**/*.test.{ts,js}"
         ]
       }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "packages/common/random-access-multi-storage/src/**/*.browser-test.ts"
+        ]
+      }
     }
   },
   "implicitDependencies": [

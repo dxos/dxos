@@ -11,8 +11,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium --browser=firefox --browser=webkit"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -23,18 +22,8 @@
     "source-map-support": "^0.5.12"
   },
   "devDependencies": {
-    "@dxos/browser-mocha": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/signal": "workspace:*"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "toolchain": {
-    "additionalTestSteps": [
-      "test:browser"
-    ]
   }
 }
