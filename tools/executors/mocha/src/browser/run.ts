@@ -11,14 +11,15 @@ import { v4 } from 'uuid';
 
 import { Lock, trigger } from '@dxos/async';
 
-import { Browser, RunOptions } from './runner';
+import { BrowserExecutorOptions } from './main';
+import { Browser } from './runner';
 
 /**
  * Timeout for testing framework to initialize and to load tests.
  */
 const INIT_TIMEOUT = 10_000;
 
-export const runTests = async (bundleFile: string, browser: Browser, options: Omit<RunOptions, 'browsers' | 'files'>): Promise<number> => {
+export const runTests = async (bundleFile: string, browser: Browser, options: Omit<BrowserExecutorOptions, 'browsers' | 'files'>): Promise<number> => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
 
   await fs.mkdir(userDataDir, { recursive: true });
@@ -59,7 +60,7 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Om
   const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string);
   assert(packageDir);
 
-  await page.goto(`file://${join(packageDir, './src/index.html')}`);
+  await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
   const [getPromise, resolve] = trigger<number>();
   await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {

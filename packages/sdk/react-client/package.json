@@ -10,7 +10,7 @@
     "book": "toolchain book",
     "build:book": "toolchain build:book",
     "check": "true",
-    "test:playwright": "playwright test --config ./tests/playwright/config.ts"
+    "e2e": "playwright test --config ./tests/playwright/config.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
