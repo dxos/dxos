@@ -157,7 +157,8 @@ export class SignalManagerImpl implements SignalManager {
   }
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {
-
+    log(`Subscribed for message stream peerId=${peerId}`);
+    Array.from(this._servers.values()).forEach(async (signalClient: SignalClient) => await signalClient.subscribeMessages(peerId));
   }
 
   async close () {

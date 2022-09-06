@@ -23,7 +23,11 @@ describe('Messenger', () => {
 
   const setup = (): {messenger: Messenger, received: [author: PublicKey, payload: Any][]} => {
     const received: [author: PublicKey, payload: Any][] = [];
-    const receiveMock = async (author: PublicKey, payload: Any) => { received.push([author, payload]) };
+    const receiveMock = async (author: PublicKey, payload: Any) => { 
+      console.log('Pushing');
+      received.push([author, payload]) 
+    };
+
     const signalManager =  new SignalManagerImpl([broker.url()]);
     afterTest(() => signalManager.close());
 
@@ -40,7 +44,7 @@ describe('Messenger', () => {
   };
 
   it.only('Message between peers', async () => {
-    const {messenger: messenger1, received: received1} = setup();
+    const {messenger: messenger1} = setup();
     const {messenger: messenger2, received: received2} = setup();
 
     const payload: Any = {
@@ -52,7 +56,7 @@ describe('Messenger', () => {
 
     await waitForExpect(() => {
       expect(received2[0]).toEqual([messenger1.ownPeerId, payload])
-    });
+    }, 3_000);
 
   });
 });

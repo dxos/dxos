@@ -2,12 +2,15 @@
 import { Any } from "./proto/gen/google/protobuf"
 import { SignalManager } from "./signal-manager"
 import { PublicKey } from '@dxos/protocols';
+import debug from "debug";
 
 interface MessengerOptions {
   ownPeerId: PublicKey
   receive: (author: PublicKey, payload: Any) => Promise<void>
   signalManager: SignalManager
 }
+
+const log = debug('dxos:signaling:messenger');
 
 export class Messenger {
   private readonly _ownPeerId: PublicKey;
@@ -24,7 +27,10 @@ export class Messenger {
 
     this._signalManager = signalManager;
     this._signalManager.subscribeMessages(this._ownPeerId);
-    this._signalManager.onMessage.on(([author, recipient, payload]) => this._receive(author, payload));
+    this._signalManager.onMessage.on(([author, recipient, payload]) => {
+      log(`Received message from ${author}`);
+      this._receive(author, payload)
+    });
   }
 
   public get ownPeerId (): PublicKey {
