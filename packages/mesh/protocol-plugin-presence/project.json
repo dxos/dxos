@@ -32,6 +32,16 @@
           "packages/mesh/protocol-plugin-presence/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/mesh/protocol-plugin-presence/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/mesh/protocol-plugin-presence/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
   "implicitDependencies": [

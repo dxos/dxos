@@ -23,6 +23,16 @@
           "packages/mesh/protocol-network-generator/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/mesh/protocol-network-generator/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/mesh/protocol-network-generator/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

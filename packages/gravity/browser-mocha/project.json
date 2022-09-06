@@ -2,6 +2,21 @@
   "sourceRoot": "packages/gravity/browser-mocha/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/gravity/browser-mocha/dist",
+        "tsConfig": "packages/gravity/browser-mocha/tsconfig.json",
+        "main": "packages/gravity/browser-mocha/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/gravity/browser-mocha/*.md"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

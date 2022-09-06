@@ -23,6 +23,17 @@
           "packages/sdk/client-testing/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client-testing/src/**/*.test.{ts,js}"
+        ]
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

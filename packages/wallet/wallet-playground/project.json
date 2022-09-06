@@ -2,6 +2,21 @@
   "sourceRoot": "packages/wallet/wallet-playground/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/wallet/wallet-playground/dist",
+        "tsConfig": "packages/wallet/wallet-playground/tsconfig.json",
+        "main": "packages/wallet/wallet-playground/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/wallet/wallet-playground/*.md"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

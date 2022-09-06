@@ -9,8 +9,7 @@
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",
@@ -23,8 +22,7 @@
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "node-fetch": "^2.6.0",
-    "react": "^18.1.0",
-    "typescript": "^4.7.2"
+    "react": "^18.1.0"
   },
   "peerDependencies": {
     "react": "*"

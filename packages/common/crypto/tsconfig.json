@@ -9,6 +9,9 @@
   "references": [
     {
       "path": "../protocols"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import React, { useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
@@ -34,7 +34,7 @@ const Test = () => {
   );
 };
 
-let rootContainer: any;
+let rootContainer: HTMLElement;
 
 beforeEach(() => {
   rootContainer = document.createElement('div');
@@ -43,18 +43,17 @@ beforeEach(() => {
 
 afterEach(() => {
   document.body.removeChild(rootContainer);
-  rootContainer = null;
 });
 
 describe('useStateMutator', () => {
   it('udpates the value.', async () => {
     act(() => {
-      ReactDOM.render(<Test />, rootContainer);
+      createRoot(rootContainer).render(<Test />);
     });
 
     const pre = rootContainer.querySelector('pre');
     await waitForExpect(() => {
-      const data = JSON.parse(pre.textContent);
+      const data = JSON.parse(pre?.textContent ?? '{}');
       expect(data).toEqual({ complex, items: [1, 2, 3] });
     });
   });
