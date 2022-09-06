@@ -17,8 +17,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -32,18 +31,10 @@
   "devDependencies": {
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
-    "@types/mocha": "^8.2.2",
-    "expect": "~27.0.2",
-    "faker": "^5.1.0",
-    "typescript": "^4.7.2"
+    "faker": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

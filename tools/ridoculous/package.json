@@ -49,9 +49,8 @@
     "@types/protocol-buffers-schema": "^3.4.1",
     "@types/yargs": "~16.0.1",
     "diff": "~5.1.0",
-    "expect": "~27.0.2",
     "mocha": "^8.4.0",
-    "ts-node": "^10.8.2",
+    "ts-node": "10.9.1",
     "typescript": "^4.7.2"
   },
   "mocha": {

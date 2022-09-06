@@ -17,8 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/bot-factory-client": "workspace:*",
@@ -45,20 +44,12 @@
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@swc-node/register": "~1.5.1",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "@types/node-fetch": "^2.5.10",
-    "@types/tail": "~2.2.1",
-    "expect": "~27.0.2",
-    "ts-node": "^10.8.2",
-    "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "@types/tail": "~2.2.1"
   },
   "publishConfig": {
     "access": "public"

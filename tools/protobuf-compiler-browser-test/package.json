@@ -21,7 +21,6 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/mocha": "^8.2.2",
     "browser-mocha": "^1.4.8",
-    "expect": "~27.0.2",
     "mocha": "^8.4.0",
     "typescript": "^4.7.2"
   }

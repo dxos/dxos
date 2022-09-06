@@ -1,0 +1,14 @@
+{
+  "executors": {
+    "mocha": {
+      "implementation": "./dist/src/main",
+      "schema": "./schema.json",
+      "description": "Runs mocha tests."
+    },
+    "browser": {
+      "implementation": "./dist/src/browser",
+      "schema": "./schema.json",
+      "description": "TODO"
+    }
+  }
+}

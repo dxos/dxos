@@ -2,14 +2,28 @@
   "sourceRoot": "packages/wallet/wallet-extension/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/wallet/wallet-extension/dist",
-        "packages/wallet/wallet-extension/src/proto/gen"
+        "{options.basePath}{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/wallet/wallet-extension/src/proto/"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/wallet/wallet-extension/dist",
+        "tsConfig": "packages/wallet/wallet-extension/tsconfig.json",
+        "main": "packages/wallet/wallet-extension/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages/wallet/wallet-extension/*.md"
+        ]
       }
     },
     "lint": {

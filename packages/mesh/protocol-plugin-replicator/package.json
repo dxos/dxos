@@ -17,8 +17,7 @@
     "index.js"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -34,18 +33,13 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/random-access-multi-storage": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
-    "@types/jest": "^28.1.6",
     "@types/pify": "^3.0.2",
     "end-of-stream": "^1.4.1",
-    "jest": "^28.1.3",
     "multi-read-stream": "^2.0.0",
-    "pify": "~5.0.0",
-    "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "pify": "~5.0.0"
   },
   "publishConfig": {
     "access": "public"

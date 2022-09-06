@@ -17,6 +17,9 @@
   "references": [
     {
       "path": "../debug"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

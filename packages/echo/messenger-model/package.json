@@ -9,24 +9,14 @@
     "dist"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*"
   },
-  "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/mocha": "^8.2.2",
-    "expect": "~27.0.2",
-    "typescript": "^4.7.2"
-  },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }
