@@ -1,0 +1,14 @@
+packages:
+  - packages/bot/*
+  - packages/common/*
+  - packages/demos/*
+  - packages/devtools/*
+  - packages/echo/*
+  - packages/gravity/*
+  - packages/halo/*
+  - packages/mesh/*
+  - packages/sdk/*
+  - packages/wallet/*
+  - tools/deprecated/*
+  - tools/executors/*
+  - tools/*

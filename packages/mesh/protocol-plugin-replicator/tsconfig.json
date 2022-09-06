@@ -18,6 +18,9 @@
       "path": "../../common/crypto"
     },
     {
+      "path": "../../common/protocols"
+    },
+    {
       "path": "../../common/random-access-multi-storage"
     },
     {
@@ -27,7 +30,7 @@
       "path": "../../echo/feed-store"
     },
     {
-      "path": "../protocol"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-network-generator"

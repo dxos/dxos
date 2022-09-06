@@ -4,8 +4,11 @@
 
 import faker from 'faker';
 
-import { AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata } from '../api';
-import { decodeProtobuf } from '../encoding';
+import { decodeProtobuf } from '@dxos/codec-protobuf';
+
+import {
+  AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata
+} from '../api';
 import { schemaJson } from '../proto';
 
 /**
@@ -38,8 +41,8 @@ export const registerMockResource = async (registry: RegistryClient, params: {
 export const registerMockRecord = async (
   registry: RegistryClient,
   params: {
-    typeRecord?: CID,
-    data?: unknown,
+    typeRecord?: CID
+    data?: unknown
     meta?: RecordMetadata
   }
 ): Promise<CID> => {
@@ -73,8 +76,8 @@ export const mockTypeMessageNames = [
  * Generates a single random type record.
  */
 export const registerMockTypeRecord = (registry: RegistryClient, params: {
-    messageName?: string,
-    protobufDefs?: protobuf.Root,
+    messageName?: string
+    protobufDefs?: protobuf.Root
     meta?: TypeRecordMetadata
   } = {}): Promise<CID> => registry.registerTypeRecord(
   params.messageName ?? faker.random.arrayElement(mockTypeMessageNames),

@@ -7,14 +7,15 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import faker from 'faker';
 import React, { useState } from 'react';
 
-import { Item, Party } from '@dxos/client';
-import { ObjectModel, OrderedList } from '@dxos/object-model';
+import { Item, Party, ObjectModel, OrderedList } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
 import { ProfileInitializer } from '../src';
-import { ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem, ListItemDef, ResetButton, StorybookContainer } from './helpers';
-import { moveItemInArray, updateSourceAndTargetState } from './helpers/utils';
+import {
+  ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem,
+  ListItemDef, ResetButton, StorybookContainer, moveItemInArray, updateSourceAndTargetState
+} from './helpers';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -116,6 +117,10 @@ const ListStory = () => {
 
     setList(listItem);
     setParty(newParty);
+
+    return () => {
+      orderedList?.destroy();
+    };
   }, []);
 
   // TODO(kaplanski): Replace currentOrder with orderedList.values triggering re-render.
@@ -188,11 +193,11 @@ const ListStory = () => {
 };
 
 export const List = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <ListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <ListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleListStory = () => {
@@ -238,6 +243,10 @@ const MultipleListStory = () => {
       id: orderedList.id,
       values: orderedList.values
     })));
+
+    return () => {
+      orderedLists?.forEach(orderedList => orderedList.destroy());
+    };
   }, []);
 
   const getListItems = (listId: string) => {
@@ -427,11 +436,11 @@ const MultipleListStory = () => {
 };
 
 export const MultipleList = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleListStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleListStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const TYPE_TEST_PERSON = 'example:type/person';
@@ -503,6 +512,11 @@ const TableStory = () => {
     setColumnOrder(newColumnOrderedList.values);
     setInitialRowOrder(newRowOrderedList.values);
     setInitialColumnOrder(newColumnOrderedList.values);
+
+    return () => {
+      rowOrderedList?.destroy();
+      columnOrderedList?.destroy();
+    };
   }, []);
 
   const handleDragEnd = async ({ over }: DragEndEvent) => {
@@ -584,11 +598,11 @@ const TableStory = () => {
 };
 
 export const Table = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <TableStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <TableStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );
 
 const MultipleContainersStory = () => {
@@ -653,6 +667,10 @@ const MultipleContainersStory = () => {
     setColumnOrderedList(newColumnOrderedList);
     setColumnOrder(newColumnOrderedList.values);
     setInitialColumnOrder(newColumnOrderedList.values);
+
+    return () => {
+      orderedLists?.forEach(orderedList => orderedList.destroy());
+    };
   }, []);
 
   const getContainerItems = (containerId: string) => {
@@ -862,9 +880,9 @@ const MultipleContainersStory = () => {
 };
 
 export const MultipleContainers = () => (
-<ClientProvider>
-      <ProfileInitializer>
-        <MultipleContainersStory />
-      </ProfileInitializer>
-    </ClientProvider>
+  <ClientProvider>
+    <ProfileInitializer>
+      <MultipleContainersStory />
+    </ProfileInitializer>
+  </ClientProvider>
 );

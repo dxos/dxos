@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import {
@@ -15,8 +15,8 @@ import {
   PartyEventType,
   SignedMessage
 } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
@@ -46,7 +46,7 @@ export interface PartyStateProvider {
 export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private readonly _state: PartyState;
 
-  readonly feedAdded = new Event<FeedKey>()
+  readonly feedAdded = new Event<FeedKey>();
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 

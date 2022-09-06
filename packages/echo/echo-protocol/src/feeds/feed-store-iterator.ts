@@ -2,15 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { keyToString, PublicKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { Timeframe } from '../spacetime';
 import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
@@ -22,8 +21,8 @@ const STALL_TIMEOUT = 1000;
  * - Construction separate from open.
  */
 
-export type MessageSelector = (candidates: FeedBlock[]) => number | undefined;
-export type FeedSelector = (descriptor: FeedDescriptor) => boolean;
+export type MessageSelector = (candidates: FeedBlock[]) => number | undefined
+export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
@@ -37,10 +36,10 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
   /** Feed key as hex => feed state */
   private readonly _openFeeds = new Map<string, {
-    descriptor: FeedDescriptor,
-    iterator: AsyncIterator<FeedBlock[]>,
-    sendQueue: FeedBlock[], // TODO(burdon): Why "send"?
-    frozen: boolean,
+    descriptor: FeedDescriptor
+    iterator: AsyncIterator<FeedBlock[]>
+    sendQueue: FeedBlock[] // TODO(burdon): Why "send"?
+    frozen: boolean
   }>();
 
   private readonly _trigger = new Trigger();
@@ -128,9 +127,10 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
     assert(descriptor.feed, 'Feed is not initialized');
     const stream = new Readable({ objectMode: true })
-      .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }));
+      // TODO(wittjosiah): Type this.
+      .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }) as any);
 
-    this._openFeeds.set(keyToString(descriptor.key.asBuffer()), {
+    this._openFeeds.set(descriptor.key.toHex(), {
       descriptor,
       iterator: stream[Symbol.asyncIterator](),
       sendQueue: [],
@@ -165,7 +165,8 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     }
 
     const pickedCandidate = candidates[selected];
-    const feed = this._openFeeds.get(keyToString(pickedCandidate.key));
+    // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+    const feed = this._openFeeds.get(PublicKey.stringify(pickedCandidate.key as unknown as Buffer));
     assert(feed);
 
     return feed.sendQueue.shift();

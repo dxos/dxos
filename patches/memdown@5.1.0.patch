@@ -1,0 +1,45 @@
+diff --git a/immediate-node.js b/immediate-node.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0e260a9cc8452a82f759d6463f3ade83ed06ac4
+--- /dev/null
++++ b/immediate-node.js
+@@ -0,0 +1,2 @@
++// Renamed from immediate.js because of issues with module resolution.
++module.exports = setImmediate
+diff --git a/immediate.js b/immediate.js
+deleted file mode 100644
+index f09f984cbf531e7a6261dffacc51f9dca4648461..0000000000000000000000000000000000000000
+diff --git a/memdown.js b/memdown.js
+index 654906aba5df560dad3f23804deb00b5742cd2a8..03047ab5cdab1ba2ca4aa8356ed66e6b13b59a16 100644
+--- a/memdown.js
++++ b/memdown.js
+@@ -7,7 +7,7 @@ var Buffer = require('safe-buffer').Buffer
+ 
+ // In Node, use global.setImmediate. In the browser, use a consistent
+ // microtask library to give consistent microtask experience to all browsers
+-var setImmediate = require('./immediate')
++var setImmediate = require('./immediate-node')
+ var NONE = {}
+ 
+ // TODO (perf): replace ltgt.compare with a simpler, buffer-only comparator
+diff --git a/package.json b/package.json
+index 03fc3e1ebfb730ca91b4b659335a5a17884cf160..83b779817955b865f547b15af724290830b7a63f 100644
+--- a/package.json
++++ b/package.json
+@@ -18,14 +18,14 @@
+   },
+   "files": [
+     "memdown.js",
+-    "immediate.js",
++    "immediate-node.js",
+     "immediate-browser.js",
+     "UPGRADING.md",
+     "CHANGELOG.md",
+     "CONTRIBUTORS.md"
+   ],
+   "browser": {
+-    "./immediate.js": "./immediate-browser.js"
++    "./immediate-node.js": "./immediate-browser.js"
+   },
+   "dependencies": {
+     "abstract-leveldown": "~6.2.1",

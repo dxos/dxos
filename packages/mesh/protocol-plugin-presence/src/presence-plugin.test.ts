@@ -8,9 +8,9 @@ import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
-import { keyToString } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { PublicKey } from '@dxos/protocols';
 
 import { PresencePlugin } from './presence-plugin';
 
@@ -34,7 +34,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId): Promise<an
     },
     discoveryKey: topic,
     initiator: !!initiator,
-    userSession: { peerId: keyToString(peerId) }
+    userSession: { peerId: PublicKey.stringify(peerId) }
   })
     .setExtension(presence.createExtension())
     .init()

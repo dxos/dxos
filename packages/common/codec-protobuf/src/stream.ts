@@ -2,17 +2,32 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 const log = debug('dxos:codec-protobuf:stream');
 
 type Producer<T> = (callbacks: {
-  next: (message: T) => void,
+  /**
+   * Advises that the producer is ready to stream the data.
+   * Called automatically with the first call to `next`.
+   */
+  ready: () => void
+
+  /**
+   * Sends a message into the stream.
+   */
+  next: (message: T) => void
+
+  /**
+   * Closes the stream.
+   * Optional error can be provided.
+   */
   close: (error?: Error) => void
 }) => (() => void) | void
 
 export type StreamItem<T> =
+  | { ready: true }
   | { data: T }
   | { closed: true, error?: Error }
 
@@ -31,6 +46,9 @@ export class Stream<T> {
     return new Promise(resolve => {
       const items: StreamItem<T>[] = [];
 
+      stream.onReady(() => {
+        items.push({ ready: true });
+      });
       stream.subscribe(
         data => {
           items.push({ data });
@@ -47,12 +65,28 @@ export class Stream<T> {
     });
   }
 
+  /**
+   * Maps all data coming through the stream.
+   */
+  static map<T, U> (source: Stream<T>, map: (data: T) => U): Stream<U> {
+    return new Stream(({ ready, next, close }) => {
+      source.onReady(ready);
+      source.subscribe(data => next(map(data)), close);
+
+      return () => source.close();
+    });
+  }
+
   private _messageHandler?: (msg: T) => void;
   private _closeHandler?: (error?: Error) => void;
+  private _readyHandler?: () => void;
 
   private _isClosed = false;
   private _closeError: Error | undefined;
   private _dispose: (() => void) | undefined;
+  private _readyPromise: Promise<void>;
+  private _resolveReadyPromise!: () => void;
+  private _isReady = false;
 
   /**
    * Buffer messages before subscription. Set to null when buffer is no longer needed.
@@ -60,12 +94,22 @@ export class Stream<T> {
   private _buffer: T[] | null = [];
 
   constructor (producer: Producer<T>) {
-    const disposeCb = producer({
+    this._readyPromise = new Promise(resolve => {
+      this._resolveReadyPromise = resolve;
+    });
+
+    const disposeCallback = producer({
+      ready: () => {
+        this._markAsReady();
+      },
+
       next: msg => {
         if (this._isClosed) {
           log('Stream is closed, dropping message.');
           return;
         }
+
+        this._markAsReady();
 
         if (this._messageHandler) {
           try {
@@ -79,6 +123,7 @@ export class Stream<T> {
           this._buffer.push(msg);
         }
       },
+
       close: err => {
         if (this._isClosed) {
           return;
@@ -95,12 +140,21 @@ export class Stream<T> {
         }
       }
     });
-    if (disposeCb) {
-      this._dispose = disposeCb;
+
+    if (disposeCallback) {
+      this._dispose = disposeCallback;
     }
   }
 
-  subscribe (onMessage: (msg: T) => void, onClose: (error?: Error) => void) {
+  private _markAsReady () {
+    if (!this._isReady) {
+      this._isReady = true;
+      this._readyHandler?.();
+      this._resolveReadyPromise();
+    }
+  }
+
+  subscribe (onMessage: (msg: T) => void, onClose?: (error?: Error) => void) {
     assert(!this._messageHandler, 'Stream is already subscribed to.');
     assert(!this._closeHandler, 'Stream is already subscribed to.');
     assert(this._buffer); // Must be not-null.
@@ -113,16 +167,36 @@ export class Stream<T> {
         throwUnhandledRejection(error);
       }
     }
+
     this._buffer = null;
 
     // Stream might have allready been closed.
     if (this._isClosed) {
-      onClose(this._closeError);
+      onClose?.(this._closeError);
       return;
     }
 
     this._messageHandler = onMessage;
     this._closeHandler = onClose;
+  }
+
+  /**
+   * Resolves when stream is ready.
+   */
+  waitUntilReady (): Promise<void> {
+    return this._readyPromise;
+  }
+
+  /**
+   * Registers a callback to be called when stream is ready.
+   */
+  onReady (onReady: () => void): void {
+    assert(!this._readyHandler, 'Stream already has a handler for the ready event.');
+    this._readyHandler = onReady;
+
+    if (this._isReady) {
+      onReady();
+    }
   }
 
   /**

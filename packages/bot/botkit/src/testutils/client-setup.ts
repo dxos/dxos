@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Client, Party } from '@dxos/client';
+import { Party } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { Config } from '@dxos/config';
 
 import * as proto from '../proto/gen/dxos/echo/invitation';
 
 export interface ClientSetup {
-  client: Client,
-  party: Party,
-  invitation: proto.InvitationDescriptor,
+  client: Client
+  party: Party
+  invitation: proto.InvitationDescriptor
 }
 
 export const setupClient = async (config?: Config): Promise<ClientSetup> => {

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { DXN, RegistryRecord, ResourceSet } from '@dxos/registry-client';
 
@@ -12,14 +12,14 @@ import { useAsync } from './useAsync';
 const BOT_TYPE_DXN = DXN.parse('dxos:type/bot');
 
 export interface BotData {
-  dxn: DXN,
-  tag?: string,
-  version?: string,
-  description?: string,
+  dxn: DXN
+  tag?: string
+  version?: string
+  description?: string
   created?: string
 }
 export interface Result {
-  bots: BotData[],
+  bots: BotData[]
   error?: unknown
 }
 
@@ -59,6 +59,6 @@ export const useBots = (): Result => {
 
   return {
     bots: data,
-    error: error
+    error
   };
 };

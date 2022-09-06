@@ -2,9 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
-import { randomBytes, PublicKey, PublicKeyLike } from '@dxos/crypto';
+import { randomBytes } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 import { assertValidPublicKey, Signer } from '../keys';
 import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
@@ -38,7 +39,7 @@ export const createPartyGenesisMessage = (
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
       partyKey: partyKeyPair.publicKey,
-      feedKey: feedKey,
+      feedKey,
       admitKey: admitKeyPair.publicKey,
       admitKeyType: admitKeyPair.type
     }
@@ -91,7 +92,7 @@ export const createFeedAdmitMessage = (
     type: PartyCredential.Type.FEED_ADMIT,
     feedAdmit: {
       partyKey,
-      feedKey: feedKey
+      feedKey
     }
   };
 

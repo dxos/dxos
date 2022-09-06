@@ -10,8 +10,8 @@ export const QRCode = ({
 }: {
   value: string
 }) => (
-<QRCodeReact
-      value={value}
-      size={256}
-    />
+  <QRCodeReact
+    value={value}
+    size={256}
+  />
 );

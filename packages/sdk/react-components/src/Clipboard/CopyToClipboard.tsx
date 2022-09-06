@@ -14,14 +14,14 @@ export const CopyToClipboard = ({
   onCopy,
   icon: Icon = CopyIcon
 } : {
-  text: string,
-  onCopy?: (text: string) => void,
+  text: string
+  onCopy?: (text: string) => void
   icon?: OverridableComponent<SvgIconTypeMap<unknown, 'svg'>>
 }) => (
-<Clipboard
-      text={text}
-      onCopy={value => onCopy?.(value)}
-    >
-      <Icon />
-    </Clipboard>
+  <Clipboard
+    text={text}
+    onCopy={value => onCopy?.(value)}
+  >
+    <Icon />
+  </Clipboard>
 );

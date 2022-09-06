@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
-import { humanize, keyToString } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
+
+import { humanize } from './human-hash';
 
 /**
  * JSON.stringify replacer.
@@ -18,7 +20,7 @@ export function jsonReplacer (this: any, key: string, value: any): any {
   if (value !== null && typeof value === 'object' && value.type === 'Buffer' && Array.isArray(value.data)) {
     if (value.data.length === 32) {
       const key = Buffer.from(value.data);
-      return `[${humanize(key)}]:[${keyToString(key)}]`;
+      return `[${humanize(key)}]:[${PublicKey.stringify(key)}]`;
     } else {
       return Buffer.from(value.data).toString('hex');
     }

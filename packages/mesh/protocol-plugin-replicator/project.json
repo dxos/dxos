@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/mesh/protocol-plugin-replicator/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/mesh/protocol-plugin-replicator/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/protocol-plugin-replicator/dist",
+        "tsConfig": "packages/mesh/protocol-plugin-replicator/tsconfig.json",
+        "main": "packages/mesh/protocol-plugin-replicator/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/protocol-plugin-replicator/**/*.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
+}

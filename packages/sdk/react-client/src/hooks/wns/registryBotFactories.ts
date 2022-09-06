@@ -16,8 +16,8 @@ const log = debug('dxos:react-client');
  * See also: `useRegistryBots` hook.
  */
 interface RegistryBotFactoryRecord {
-  topic: string,
-  name?: string,
+  topic: string
+  name?: string
   names: string[]
 }
 

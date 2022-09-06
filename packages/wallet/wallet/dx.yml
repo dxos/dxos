@@ -1,0 +1,20 @@
+version: 1
+
+package:
+  modules:
+    - name: dxos:app/wallet
+      type: dxos:type/app
+      build:
+        command: npm run build
+
+runtime:
+  client:
+    storage:
+      persistent: true
+  services:
+    signal:
+      server: wss://demo.kube.dxos.network/dxos/signal
+    ice:
+      - urls: turn:demo.kube.dxos.network:3478
+        username: dxos
+        credential: dxos

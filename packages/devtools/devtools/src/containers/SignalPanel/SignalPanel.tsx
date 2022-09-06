@@ -2,32 +2,28 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import React from 'react';
 
 import { Box } from '@mui/material';
 
-// code import { PeerGraph } from '@dxos/devtools-mesh';
-import { SignalStatus, SignalTrace } from '@dxos/devtools-mesh';
-import { SignalApi } from '@dxos/network-manager';
-import { useClient } from '@dxos/react-client';
+import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
+import { SignalState, SignalStatus } from '@dxos/network-manager';
+import { useDevtools, useStream } from '@dxos/react-client';
 
-import { useStream } from '../../hooks';
 import { SubscribeToSignalStatusResponse } from '../../proto';
 
-const stringToState = (state: string): SignalApi.State => {
-  const dict: Record<string, SignalApi.State> = {
-    CONNECTING: SignalApi.State.CONNECTING,
-    RE_CONNECTING: SignalApi.State.RE_CONNECTING,
-    CONNECTED: SignalApi.State.CONNECTED,
-    DISCONNECTED: SignalApi.State.DISCONNECTED,
-    CLOSED: SignalApi.State.CLOSED
+const stringToState = (state: string): SignalState => {
+  const dict: Record<string, SignalState> = {
+    CONNECTING: SignalState.CONNECTING,
+    RE_CONNECTING: SignalState.RE_CONNECTING,
+    CONNECTED: SignalState.CONNECTED,
+    DISCONNECTED: SignalState.DISCONNECTED,
+    CLOSED: SignalState.CLOSED
   };
   return dict[state];
 };
 
-const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalApi.Status => {
-  assert(server.connectionStarted && server.host && server.lastStateChange && server.reconnectIn && server.state);
+const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,
@@ -38,10 +34,9 @@ const signalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): Sig
 };
 
 export const SignalPanel = () => {
-  const client = useClient();
-  const devtoolsHost = client.services.DevtoolsHost;
-  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus()) ?? {};
-  const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace()) ?? {};
+  const devtoolsHost = useDevtools();
+  const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), {});
+  const { events } = useStream(() => devtoolsHost.subscribeToSignalTrace(), {});
   if (!servers || !events) {
     return null;
   }
@@ -57,7 +52,7 @@ export const SignalPanel = () => {
       overflowX: 'auto'
     }}>
       {servers.length >= 1 && (
-        <SignalStatus status={servers.map(signalStatus)} />
+        <SignalStatusComp status={servers.map(signalStatus)} />
       )}
       {events.length < 1 && (
         <SignalTrace trace={events?.map(event => JSON.parse(event))} />

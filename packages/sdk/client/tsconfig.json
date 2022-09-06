@@ -8,7 +8,7 @@
     "outDir": "dist",
     "types": [
       "node",
-      "mocha"
+      "mocha",
     ]
   },
   "include": [
@@ -20,9 +20,6 @@
     },
     {
       "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"

@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/sdk/client-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/client-testing/dist",
+        "tsConfig": "packages/sdk/client-testing/tsconfig.json",
+        "main": "packages/sdk/client-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client-testing/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

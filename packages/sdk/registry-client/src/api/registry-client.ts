@@ -2,16 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import protobuf from 'protobufjs';
 
+import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import {
   RecordExtension,
-  decodeExtensionPayload, decodeProtobuf, encodeExtensionPayload,
-  encodeProtobuf, sanitizeExtensionData
+  decodeExtensionPayload,
+  encodeExtensionPayload,
+  sanitizeExtensionData
 } from '../encoding';
 import { Record as RawRecord } from '../proto';
 import { AccountKey } from './account-key';
@@ -22,17 +24,17 @@ import { Filtering, Filter } from './filtering';
 import { Authority, RegistryClientBackend } from './registry';
 
 export type ResourceSet = {
-  name: DXN,
+  name: DXN
   tags: Record<string, CID>
 }
 
 export type RegistryRecord<T = any> = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   payload: RecordExtension<T>
 }
 
 export type RegistryType = Omit<RawRecord, 'payload' | 'type'> & {
-  cid: CID,
+  cid: CID
   type: {
     /**
      * FQN of the root message in the protobuf definitions.
@@ -64,8 +66,8 @@ export interface TypeRecordMetadata extends RecordMetadata {
  * Main API for DXNS registry.
  */
 export class RegistryClient {
-  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String())
-  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String())
+  private readonly _recordCache = new ComplexMap<CID, Promise<RegistryRecord | undefined>>(cid => cid.toB58String());
+  private readonly _typeCache = new ComplexMap<CID, Promise<RegistryType | undefined>>(cid => cid.toB58String());
 
   constructor (
     private readonly _backend: RegistryClientBackend

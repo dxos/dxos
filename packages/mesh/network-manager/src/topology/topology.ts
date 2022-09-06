@@ -2,30 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 
 export interface SwarmController {
   /**
    * Get current state.
    */
-  getState(): SwarmState;
+  getState(): SwarmState
 
   /**
    * Initiate a connection.
    */
-  connect(peer: PublicKey): void;
+  connect(peer: PublicKey): void
 
   /**
    * Disconnect from a peer.
    */
-  disconnect(peer: PublicKey): void;
-
-  /**
-   * Trigger a lookup of any other peers swarming on this topic.
-   *
-   * Updates will be propagated through `update` method.
-   */
-  lookup(): void;
+  disconnect(peer: PublicKey): void
 }
 
 export interface SwarmState {
@@ -53,24 +46,24 @@ export interface Topology {
    *
    * @param controller
    */
-  init(controller: SwarmController): void;
+  init(controller: SwarmController): void
 
   /**
    * Called when swarm state is updated.
    */
-  update(): void;
+  update(): void
 
   /**
    * Called when remote peer offers a connection.
    *
    * @returns true - to accept the connection, false - to reject.
    */
-  onOffer(peer: PublicKey): Promise<boolean>;
+  onOffer(peer: PublicKey): Promise<boolean>
 
   /**
    * Called when swarm is destroyed or topology is changed.
    *
    * Any error thrown here will be a critical error for the swarm.
    */
-  destroy(): Promise<void>;
+  destroy(): Promise<void>
 }

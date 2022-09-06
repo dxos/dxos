@@ -2,19 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import memdown from 'memdown';
+import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
 import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -25,14 +25,17 @@ import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DataServiceRouter } from './packlets/database';
 import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
-import { MetadataStore, STORAGE_VERSION, PartyFeedProvider } from './pipeline';
+import { STORAGE_VERSION, MetadataStore, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
 
 const log = debug('dxos:echo');
 const error = log.extend('error');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PartyFilter { }
+export interface PartyFilter {
+  open?: boolean
+  partyKeys?: PublicKey[]
+}
 
 /**
  * Various options passed to `ECHO.create`.
@@ -52,7 +55,7 @@ export interface EchoCreationOptions {
   /**
    * Networking provider. Defaults to in-memory networking.
    */
-  networkManagerOptions?: NetworkManagerOptions,
+  networkManagerOptions?: NetworkManagerOptions
 
   /**
    * Whether to save and load snapshots. Defaults to `true`.
@@ -66,8 +69,8 @@ export interface EchoCreationOptions {
   snapshotInterval?: number
 
   // TODO(burdon): Comments.
-  readLogger?: (msg: any) => void;
-  writeLogger?: (msg: any) => void;
+  readLogger?: (msg: any) => void
+  writeLogger?: (msg: any) => void
 }
 
 /**
@@ -82,18 +85,19 @@ export interface EchoCreationOptions {
  * Messages are streamed into the pipeline (from the `FeedStore`) in logical order, determined by the
  * `Timeframe` (which implements a vector clock).
  */
-// TODO(burdon): Create ECHOError class for public errors.
 export class ECHO {
-  private readonly _halo: HALO;
   private readonly _keyring: Keyring;
+
+  // TODO(burdon): Factor out.
+  private readonly _halo: HALO;
+  private readonly _partyManager: PartyManager;
+  private readonly _subscriptions = new SubscriptionGroup();
 
   private readonly _storage: Storage;
   private readonly _feedStore: FeedStore;
   private readonly _modelFactory: ModelFactory;
   private readonly _networkManager: NetworkManager;
   private readonly _snapshotStore: SnapshotStore;
-  private readonly _partyManager: PartyManager;
-  private readonly _subs = new SubscriptionGroup();
   private readonly _metadataStore: MetadataStore;
   private readonly _dataServiceRouter: DataServiceRouter;
 
@@ -150,7 +154,7 @@ export class ECHO {
     this._partyManager = new PartyManager(
       this._metadataStore,
       this._snapshotStore,
-      () => this.halo.identity,
+      () => this._halo.identity,
       partyFactory
     );
 
@@ -158,7 +162,7 @@ export class ECHO {
       keyring: this._keyring,
       networkManager: this._networkManager,
       metadataStore: this._metadataStore,
-      feedProviderFactory: feedProviderFactory,
+      feedProviderFactory,
       modelFactory: this._modelFactory,
       snapshotStore: this._snapshotStore,
       options
@@ -167,7 +171,7 @@ export class ECHO {
     this._halo.identityReady.once(() => {
       // It might be the case that halo gets closed before this has a chance to execute.
       if (this.halo.identity?.halo.isOpen) {
-        this._subs.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
+        this._subscriptions.push(autoPartyOpener(this.halo.identity.preferences!, this._partyManager));
       }
     });
 
@@ -257,22 +261,20 @@ export class ECHO {
       return;
     }
 
-    this._subs.unsubscribe();
+    this._subscriptions.unsubscribe();
 
     await this.halo.close();
 
     await this._partyManager.close();
-
     await this._feedStore.close();
 
     await this.networkManager.destroy();
   }
 
   /**
-  * Removes all data and closes this ECHO instance.
-  *
-  * The instance will be in an unusable state at this point and a page refresh is recommended.
-  */
+   * Removes all data and closes this ECHO instance.
+   * The instance will be in an unusable state at this point and a page refresh is recommended.
+   */
   // TODO(burdon): Enable re-open.
   async reset () {
     await this.close();
@@ -300,40 +302,37 @@ export class ECHO {
 
     const party = await this._partyManager.createParty();
     await party.open();
-
     return party;
   }
 
   /**
-  * Clones an existing party from a snapshot.
-  * @param snapshot
-  */
+   * Clones an existing party from a snapshot.
+   * @param snapshot
+   */
   async cloneParty (snapshot: PartySnapshot) {
     await this.open();
 
     const party = await this._partyManager.cloneParty(snapshot);
     await party.open();
-
     return party;
   }
 
   /**
-  * Returns an individual party by it's key.
-  * @param {PartyKey} partyKey
-  */
+   * Returns an individual party by it's key.
+   * @param {PartyKey} partyKey
+   */
   getParty (partyKey: PartyKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }
 
-    const party = this._partyManager.parties.find(party => party.key.equals(partyKey));
-    return party;
+    return this._partyManager.parties.find(party => party.key.equals(partyKey));
   }
 
   /**
-  * Queries for a set of Parties matching the optional filter.
-  * @param {PartyFilter} filter
-  */
+   * Queries for a set of Parties matching the optional filter.
+   * @param {PartyFilter} filter
+   */
   // eslint-disable-next-line unused-imports/no-unused-vars
   queryParties (filter?: PartyFilter): ResultSet<DataParty> {
     if (!this._partyManager.isOpen) {
@@ -342,20 +341,38 @@ export class ECHO {
 
     return new ResultSet(
       this._partyManager.update.discardParameter(),
-      () => this._partyManager.parties
+      () => {
+        const parties = this._partyManager.parties;
+        if (filter) {
+          return parties.filter(party => {
+            if (filter.open !== undefined && Boolean(filter.open) !== Boolean(party.isOpen)) {
+              return false;
+            }
+
+            if (filter.partyKeys && !filter.partyKeys.some(partyKey => partyKey.equals(party.key))) {
+              return false;
+            }
+
+            return true;
+          });
+        }
+
+        return parties;
+      }
     );
   }
 
   /**
-  * Joins a party that was created by another peer and starts replicating with it.
-  * @param invitationDescriptor Invitation descriptor passed from another peer.
-  * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
-  */
+   * Joins a party that was created by another peer and starts replicating with it.
+   * @param invitationDescriptor Invitation descriptor passed from another peer.
+   * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
+   */
   async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =
-      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ?? raise(new IdentityNotInitializedError()));
+      secretProvider ?? OfflineInvitationClaimer.createSecretProvider(this.halo.identity?.createCredentialsSigner() ??
+        raise(new IdentityNotInitializedError()));
 
     return this._partyManager.joinParty(invitationDescriptor, actualSecretProvider);
   }

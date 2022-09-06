@@ -4,10 +4,10 @@
 
 /* eslint-disable jest/no-conditional-expect */
 
-import assert from 'assert';
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
+import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import {
@@ -18,19 +18,22 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import {
-  createKeyPair, PublicKey,
+  createKeyPair,
   randomBytes,
   sign,
-  SIGNATURE_LENGTH, verify
+  SIGNATURE_LENGTH,
+  verify
 } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec, EchoEnvelope, Timeframe } from '@dxos/echo-protocol';
+import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
+import { humanize } from '@dxos/util';
 
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../packlets/database';
@@ -131,17 +134,19 @@ describe('Party manager', () => {
 
     // TODO(burdon): Create multiple feeds.
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const feedKey = await keyring.addKeyRecord({
       publicKey: PublicKey.from(feed.key),
       secretKey: feed.secretKey,
       type: KeyType.FEED
     });
 
-    const feedStream = createWritableFeedStream(feed);
-    feedStream.write(createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey));
+    await feed.append({
+      timeframe: new Timeframe(),
+      halo: createPartyGenesisMessage(keyring, partyKey, feedKey.publicKey, identityKey)
+    });
 
-    await partyManager.addParty(partyKey.publicKey, [PublicKey.from(feed.key)]);
+    await partyManager.addParty(partyKey.publicKey, feed.key);
 
     await update;
   });
@@ -182,6 +187,7 @@ describe('Party manager', () => {
       assert(keyRecord, 'Key is not found in keyring');
       assert(keyRecord.secretKey, 'Missing secret key');
       await metadataStore.addPartyFeed(partyKey.publicKey, keyRecord.publicKey);
+      await metadataStore.setGenesisFeed(partyKey.publicKey, keyRecord.publicKey);
 
       // TODO(burdon): Create multiple feeds.
       const { feed } = await feedStore.openReadWriteFeed(keyRecord.publicKey, keyRecord.secretKey);
@@ -318,11 +324,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }
@@ -399,10 +405,10 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
         }
       }
     }
@@ -456,11 +462,11 @@ describe('Party manager', () => {
       expect(members.length).toBe(2);
       for (const member of members) {
         if (identityA.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityA.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityA.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityA.displayName);
         }
         if (identityB.identityKey!.publicKey.equals(member.publicKey)) {
-          expect(member.displayName).toEqual(identityB.identityKey!.publicKey.humanize());
+          expect(member.displayName).toEqual(humanize(identityB.identityKey!.publicKey));
           expect(member.displayName).toEqual(identityB.displayName);
         }
       }

@@ -14,6 +14,7 @@ describe('Stream', () => {
     });
 
     expect(await Stream.consume(stream)).toEqual([
+      { ready: true },
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },
@@ -36,6 +37,7 @@ describe('Stream', () => {
     });
 
     expect(await Stream.consume(stream)).toEqual([
+      { ready: true },
       { data: 'foo' },
       { data: 'bar' },
       { data: 'baz' },

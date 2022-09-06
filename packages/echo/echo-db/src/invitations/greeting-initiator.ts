@@ -2,11 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
 import {
+  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   createEnvelopeMessage,
   createGreetingBeginMessage,
   createGreetingFinishMessage,
@@ -19,12 +20,11 @@ import {
   Message,
   SecretProvider,
   WithTypeUrl,
-  ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   SignedMessage,
   NotarizeResponse
 } from '@dxos/credentials';
-import { keyToString, PublicKey } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -34,6 +34,11 @@ import { InvitationDescriptor, InvitationDescriptorType } from './invitation-des
 const log = debug('dxos:echo-db:greeting-initiator');
 
 const DEFAULT_TIMEOUT = 30_000;
+
+export interface InvitationResult {
+  partyKey: PublicKey
+  genesisFeedKey: PublicKey
+}
 
 /**
  * Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
@@ -47,10 +52,9 @@ export class GreetingInitiator {
 
   /**
    * @param _networkManager
-   * @param _identity
    * @param _invitationDescriptor
-   * @param _feedInitializer Callback to open or create a write feed for this party and return it's keypair.
-   * @param _getMessagesToNotarize Returns a list of credential messages that the inviter will be asked to write into the control feed.
+   * @param _getMessagesToNotarize
+   *  Returns a list of credential messages that the inviter will be asked to write into the control feed.
    */
   constructor (
     private readonly _networkManager: NetworkManager,
@@ -88,13 +92,14 @@ export class GreetingInitiator {
     // Therefore at present the greeter discovers the invitation id from session metadata, via the invitee's peer id.
     // TODO(dboreham): Invitation is actually invitationID.
     const localPeerId = invitation;
-    log('Local PeerId:', keyToString(localPeerId));
+    log('Local PeerId:', PublicKey.stringify(localPeerId));
     this._greeterPlugin = new GreetingCommandPlugin(Buffer.from(localPeerId), new Greeter().createMessageHandler());
 
-    log(keyToString(localPeerId), 'connecting to', keyToString(swarmKey));
+    log(PublicKey.stringify(localPeerId), 'connecting to', PublicKey.stringify(swarmKey));
 
     const peerJoinedWaiter = waitForEvent(this._greeterPlugin, 'peer:joined',
-      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId), timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
+      (remotePeerId: any) => remotePeerId && Buffer.from(responderPeerId).equals(remotePeerId),
+      timeout, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT);
 
     await this._networkManager.joinProtocolSwarm({
       topic: PublicKey.from(swarmKey),
@@ -112,7 +117,7 @@ export class GreetingInitiator {
   /**
    * Called after connecting to initiate greeting protocol exchange.
    */
-  async redeemInvitation (secretProvider: SecretProvider): Promise<{ partyKey: PublicKey, hints: PublicKey[] }> {
+  async redeemInvitation (secretProvider: SecretProvider): Promise<InvitationResult> {
     assert(this._state === GreetingState.CONNECTED);
     const { swarmKey } = this._invitationDescriptor;
 
@@ -170,9 +175,10 @@ export class GreetingInitiator {
     await this.disconnect();
 
     this._state = GreetingState.SUCCEEDED;
+    assert(notarizeResponse.genesisFeed);
     return {
       partyKey,
-      hints: notarizeResponse.feedHints ?? []
+      genesisFeedKey: notarizeResponse.genesisFeed
     };
   }
 

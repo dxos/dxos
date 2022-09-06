@@ -16,8 +16,6 @@ import {
   useTheme
 } from '@mui/material';
 
-import { keyToString } from '@dxos/crypto';
-import { truncateKey } from '@dxos/debug';
 import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { JsonTreeView } from '@dxos/react-components';
 
@@ -92,7 +90,7 @@ export const MessageTable = ({
         {
           // Messages with feed metadata.
           messages.map(({ key: feedKey, seq, data }) => {
-            const key = keyToString(feedKey);
+            const key = feedKey.toString();
             const rowKey = `key-${key}-${seq}`;
             const type = getType(data);
 
@@ -109,7 +107,7 @@ export const MessageTable = ({
                   style={{ color: colorHash.hex(key) }}
                   title={key}
                 >
-                  {truncateKey(key, 8)}
+                  {feedKey.truncate(8)}
                 </TableCell>
 
                 {/* Number. */}

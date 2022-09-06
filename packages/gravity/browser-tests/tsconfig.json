@@ -1,7 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
   },
   "include": [
     "src",
@@ -30,9 +34,5 @@
     {
       "path": "../browser-mocha"
     }
-  ],
-  "types": [
-    "node",
-    "@types/mocha"
   ]
 }

@@ -5,7 +5,8 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { defaultTestingConfig, Client } from '@dxos/client';
+import { defaultTestingConfig } from '@dxos/client';
+import { Client } from '@dxos/client/client';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
@@ -16,7 +17,7 @@ describe('Client - nonpersistent', () => {
     await client.initialize();
 
     await client.destroy();
-  });
+  }).retries(10);
 
   it('create profile', async () => {
     const client = new Client();
@@ -32,7 +33,7 @@ describe('Client - nonpersistent', () => {
     expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
-  });
+  }).retries(10);
 
   it('create party', async () => {
     const client = new Client();
@@ -48,11 +49,10 @@ describe('Client - nonpersistent', () => {
 
     const item = await party.database.createItem({ model: ObjectModel });
     await item.model.set('foo', 'bar');
-
     expect(item.model.get('foo')).toEqual('bar');
 
     await client.destroy();
-  });
+  }).timeout(10_000).retries(10);
 
   it('invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
@@ -86,7 +86,7 @@ describe('Client - nonpersistent', () => {
 
     await client.destroy();
     await otherClient.destroy();
-  }).timeout(10_000).retries(2);
+  }).timeout(10_000).retries(10);
 
   it('offline invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
@@ -125,5 +125,5 @@ describe('Client - nonpersistent', () => {
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(20_000).retries(2);
+  }).timeout(20_000).retries(10);
 });

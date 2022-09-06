@@ -13,7 +13,11 @@
     "src",
     "test"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../protocols"
+    }
+  ],
   "types": [
     "jest",
     "node"

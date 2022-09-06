@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/mesh/protocol-plugin-rpc/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/mesh/protocol-plugin-rpc/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/protocol-plugin-rpc/dist",
+        "tsConfig": "packages/mesh/protocol-plugin-rpc/tsconfig.json",
+        "main": "packages/mesh/protocol-plugin-rpc/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/protocol-plugin-rpc/**/*.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
+}

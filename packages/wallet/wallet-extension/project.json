@@ -1,0 +1,27 @@
+{
+  "sourceRoot": "packages/wallet/wallet-extension/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/wallet/wallet-extension/dist",
+        "packages/wallet/wallet-extension/src/proto/gen"
+      ],
+      "options": {
+        "script": "build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/wallet/wallet-extension/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

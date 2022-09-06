@@ -11,10 +11,10 @@ import { Dialog } from '@dxos/react-components';
 import { handleKey } from '../helpers';
 
 export interface ProfileDialogProps {
-  open: boolean;
-  onCreate: ({ username }: { username: string }) => void;
-  onCancel?: () => void;
-  onJoinHalo?: () => void;
+  open: boolean
+  onCreate: ({ username }: { username: string }) => void
+  onCancel?: () => void
+  onJoinHalo?: () => void
 }
 
 /**

@@ -7,7 +7,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "dist",
     "removeComments": false,
@@ -29,9 +29,6 @@
   "references": [
     {
       "path": "../../common/async"
-    },
-    {
-      "path": "../../common/crypto"
     },
     {
       "path": "../../common/debug"

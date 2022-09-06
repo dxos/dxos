@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
@@ -60,7 +60,7 @@ export class ItemDemuxer {
 
         const modelOpts: ModelConstructionOptions = {
           itemId,
-          modelType: modelType,
+          modelType,
           snapshot: {
             mutations: mutation ? [{ mutation, meta }] : undefined
           }

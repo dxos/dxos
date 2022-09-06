@@ -16,6 +16,7 @@ export * from './Passcode';
 export * from './QRCode';
 export * from './SearchAutocomplete';
 export * from './Searchbar';
+export * from './Skeleton';
 export * from './SlidingDrawer';
 export * from './Toolbar';
 export * from './VirtualTable';

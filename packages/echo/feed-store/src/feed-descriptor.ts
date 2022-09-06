@@ -2,23 +2,23 @@
 // Copyright 2019 DXOS.org
 //
 
-import assert from 'assert';
 import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
 import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
+import type { PublicKey } from '@dxos/protocols';
 import type { Directory } from '@dxos/random-access-multi-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
-  directory: Directory,
-  key: PublicKey,
-  hypercore: Hypercore,
-  secretKey?: Buffer,
+  directory: Directory
+  key: PublicKey
+  hypercore: Hypercore
+  secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
 }
@@ -171,10 +171,10 @@ const MOCK_CRYPTO = {
  * File API that hypercore uses to read/write from storage.
  */
 interface HypercoreFile {
-  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void;
-  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void;
-  del (offset: number, size: number, cb?: (err: Error | null) => void): void;
-  stat (cb: (err: Error | null, data?: {size: number}) => void): void;
-  close (cb?: (err: Error | null) => void): void;
-  destroy (cb?: (err: Error | null) => void): void;
+  read (offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void
+  write (offset: number, data: Buffer, cb?: (err: Error | null) => void): void
+  del (offset: number, size: number, cb?: (err: Error | null) => void): void
+  stat (cb: (err: Error | null, data?: {size: number}) => void): void
+  close (cb?: (err: Error | null) => void): void
+  destroy (cb?: (err: Error | null) => void): void
 }

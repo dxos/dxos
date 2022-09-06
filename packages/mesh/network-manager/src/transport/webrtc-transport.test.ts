@@ -8,17 +8,18 @@ import { Duplex } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
-import { discoveryKey, PublicKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { WebrtcTransport } from './webrtc-transport';
+import { WebRTCTransport } from './webrtc-transport';
 
-describe('WebrtcTransport', () => {
+describe('WebRTCTransport', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
-    const connection = new WebrtcTransport(
+    const connection = new WebRTCTransport(
       true,
       new Duplex(),
       PublicKey.random(),
@@ -50,7 +51,7 @@ describe('WebrtcTransport', () => {
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-    const connection1 = new WebrtcTransport(
+    const connection1 = new WebRTCTransport(
       true,
       protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
       peer1Id,
@@ -59,7 +60,7 @@ describe('WebrtcTransport', () => {
       topic,
       async msg => {
         await sleep(10);
-        await connection2.signal(msg);
+        await connection2.signal(msg.data.signal);
       }
     );
     afterTest(() => connection1.close());
@@ -67,7 +68,7 @@ describe('WebrtcTransport', () => {
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-    const connection2 = new WebrtcTransport(
+    const connection2 = new WebRTCTransport(
       false,
       protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
       peer2Id,
@@ -76,7 +77,7 @@ describe('WebrtcTransport', () => {
       topic,
       async msg => {
         await sleep(10);
-        await connection1.signal(msg);
+        await connection1.signal(msg.data.signal);
       }
     );
     afterTest(() => connection2.close());

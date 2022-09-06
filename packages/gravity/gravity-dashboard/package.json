@@ -1,0 +1,79 @@
+{
+  "name": "@dxos/gravity-dashboard",
+  "version": "2.31.7",
+  "private": true,
+  "description": "Gravity dashboard.",
+  "bugs": {
+    "url": "https://github.com/dxos/protocols/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dxos/protocols.git"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "book": "esbuild-server book",
+    "build": "npm run clean && tsc --build",
+    "clean": "rm -rf ./dist",
+    "lint": "eslint --format codeframe './+(src|stories)/**/*.[j|t]s[x]'",
+    "test": "jest --rootDir ./src --verbose --passWithNoTests"
+  },
+  "browserslist": [
+    "> 5%"
+  ],
+  "eslintConfig": {
+    "extends": "plugin:@dxos/react"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "d3": "<rootDir>/../../../../node_modules/d3/dist/d3.min.js"
+    }
+  },
+  "dependencies": {
+    "@dxos/gem-core": "2.2.1-beta.11",
+    "d3": "^7.4.4",
+    "debug": "^4.3.3",
+    "use-resize-observer": "^9.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/esbuild-book-knobs": "~2.28.3",
+    "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/esbuild-server": "~2.29.0",
+    "@dxos/eslint-plugin": "workspace:*",
+    "@emotion/css": "^11.7.1",
+    "@emotion/react": "^11.9.0",
+    "@types/d3": "^7.1.0",
+    "@types/debug": "^4.1.7",
+    "@types/faker": "^5.5.1",
+    "@types/jest": "^28.1.6",
+    "@types/lodash": "^4.14.182",
+    "eslint": "^8.21.0",
+    "eslint-plugin-react": "^7.30.0",
+    "expect": "~27.0.2",
+    "faker": "^5.1.0",
+    "jest": "^28.1.3",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "ts-jest": "^28.0.7",
+    "typescript": "^4.7.2"
+  },
+  "peerDependencies": {
+    "@emotion/css": ">=11.0.0",
+    "@emotion/react": ">=11.0.0",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

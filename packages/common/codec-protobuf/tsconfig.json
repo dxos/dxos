@@ -4,6 +4,7 @@
     "outDir": "dist"
   },
   "include": [
+    "scripts",
     "src",
     "test"
   ],

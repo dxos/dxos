@@ -11,9 +11,9 @@ interface Argv {
   stayOpen?: boolean
   headless?: boolean
   debug: boolean
-  setup?: string,
-  browserArg?: string[],
-  checkLeaks: boolean,
+  setup?: string
+  browserArg?: string[]
+  checkLeaks: boolean
   browser?: Browser[]
 }
 

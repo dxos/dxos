@@ -16,8 +16,8 @@ export const ClientPanel = ({
   profile = {},
   parties = []
 }: {
-  client: Client,
-  profile?: Partial<ReturnType<typeof useProfile>>,
+  client: Client
+  profile?: Partial<ReturnType<typeof useProfile>>
   parties?: Party[]
 }) => {
   const data = (parties.length !== 0) ? { parties: parties.map(({ key }) => key.toHex()) } : undefined;
@@ -28,7 +28,7 @@ export const ClientPanel = ({
         <JsonPanel value={client.config} />
       </Box>
       <Box sx={{ padding: 1 }}>
-        <JsonPanel value={client.info()} />
+        <JsonPanel value={client.info} />
       </Box>
       <Box sx={{ padding: 1 }}>
         <JsonPanel value={profile?.username} />

@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 
-import { SignalApi } from '../signal';
+import { Signal } from '../proto/gen/dxos/mesh/swarm';
+import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 
 const log = debug('dxos:network-manager:swarm:connection');
@@ -35,6 +36,16 @@ export enum ConnectionState {
   WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
 
   /**
+   * Peer rejected offer.
+   */
+  ACCEPTED = 'ACCEPTED',
+
+  /**
+   * Peer rejected offer.
+   */
+  REJECTED = 'REJECTED',
+
+  /**
    * Connection is established.
    */
   CONNECTED = 'CONNECTED',
@@ -45,15 +56,15 @@ export enum ConnectionState {
   CLOSED = 'CLOSED',
 }
 
+/**
+ * Represents a connection to a remote peer.
+ */
 export class Connection {
   private _state: ConnectionState = ConnectionState.INITIAL;
-
   private _transport: Transport | undefined;
-
-  private _bufferedSignals: SignalApi.SignalMessage[] = [];
+  private _bufferedSignals: Signal[] = [];
 
   readonly stateChanged = new Event<ConnectionState>();
-
   readonly errors = new ErrorStream();
 
   constructor (
@@ -62,7 +73,7 @@ export class Connection {
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
-    private readonly _sendSignal: (msg: SignalApi.SignalMessage) => Promise<void>,
+    private readonly _signalMessaging: SignalMessaging,
     private readonly _protocol: Protocol,
     private readonly _transportFactory: TransportFactory
   ) {}
@@ -79,11 +90,42 @@ export class Connection {
     return this._protocol;
   }
 
+  initiate () {
+    this._signalMessaging.offer({
+      author: this.ownId,
+      recipient: this.remoteId,
+      sessionId: this.sessionId,
+      topic: this.topic,
+      data: { offer: {} }
+    })
+      .then(answer => {
+        log(`Received answer: ${JSON.stringify(answer)} topic=${this.topic} ownId=${this.ownId} remoteId=${this.remoteId}`);
+        if (this.state !== ConnectionState.INITIAL) {
+          log('Ignoring answer.');
+          return;
+        }
+
+        if (answer.accept) {
+          try {
+            this.connect();
+          } catch (err: any) {
+            this.errors.raise(err);
+          }
+        } else {
+          // If the peer rejected our connection remove it from the set of candidates.
+          this._changeState(ConnectionState.REJECTED);
+        }
+        this._changeState(ConnectionState.ACCEPTED);
+      })
+      .catch(err => {
+        this.errors.raise(err);
+      });
+  }
+
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
 
-    this._state = this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION;
-    this.stateChanged.emit(this._state);
+    this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);
     this._transport = this._transportFactory({
@@ -93,12 +135,11 @@ export class Connection {
       sessionId: this.sessionId,
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: this._sendSignal
+      sendSignal: this._signalMessaging.signal.bind(this._signalMessaging)
     });
 
     this._transport.connected.once(() => {
-      this._state = ConnectionState.CONNECTED;
-      this.stateChanged.emit(this._state);
+      this._changeState(ConnectionState.CONNECTED);
     });
 
     this._transport.closed.once(() => {
@@ -110,31 +151,36 @@ export class Connection {
 
     // Replay signals that were received before transport was created.
     for (const signal of this._bufferedSignals) {
-      this._transport.signal(signal);
+      void this._transport.signal(signal); // TODO(burdon): Remove async?
     }
+
     this._bufferedSignals = [];
   }
 
-  signal (msg: SignalApi.SignalMessage) {
+  async signal (msg: SignalMessage) {
+    assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
       return;
     }
-    if (msg.data.type === 'offer' && this._state === ConnectionState.INITIATING_CONNECTION) {
-      throw new Error('Invalid state: Cannot send offer to an initiating peer.');
-    }
-    assert(msg.id.equals(this.remoteId));
-    assert(msg.remoteId.equals(this.ownId));
+    assert(msg.data.signal);
+    assert(msg.author?.equals(this.remoteId));
+    assert(msg.recipient?.equals(this.ownId));
 
     if (this._state === ConnectionState.INITIAL) {
-      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data.type}`);
-      this._bufferedSignals.push(msg);
+      log(`${this.ownId} buffered signal from ${this.remoteId}: ${msg.data}`);
+      this._bufferedSignals.push(msg.data.signal);
       return;
     }
 
     assert(this._transport, 'Connection not ready to accept signals.');
-    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data.type}`);
-    this._transport.signal(msg);
+    log(`${this.ownId} received signal from ${this.remoteId}: ${msg.data}`);
+    await this._transport.signal(msg.data.signal);
+  }
+
+  private _changeState (state: ConnectionState): void {
+    this._state = state;
+    this.stateChanged.emit(state);
   }
 
   @synchronized
@@ -154,7 +200,6 @@ export class Connection {
 
     log(`Closed ${this.ownId}`);
 
-    this._state = ConnectionState.CLOSED;
-    this.stateChanged.emit(this._state);
+    this._changeState(ConnectionState.CLOSED);
   }
 }

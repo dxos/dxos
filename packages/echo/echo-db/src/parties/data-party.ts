@@ -2,16 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot, Timeframe } from '@dxos/echo-protocol';
+import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';
@@ -30,7 +30,7 @@ export const PARTY_TITLE_PROPERTY = 'title'; // TODO(burdon): Remove (should not
 
 // TODO(burdon): Factor out public API.
 export interface PartyMember {
-  publicKey: PublicKey,
+  publicKey: PublicKey
   displayName?: string
 }
 
@@ -46,7 +46,8 @@ export class DataParty {
   private readonly _preferences?: PartyPreferences;
   private _invitationManager?: InvitationFactory;
   private _protocol?: PartyProtocolFactory;
-  private _feedHints: PublicKey[] = []
+
+  private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
     partyKey: PartyKey,
@@ -81,7 +82,7 @@ export class DataParty {
       key: this.key.toHex(),
       isOpen: this.isOpen,
       isActive: this.isActive,
-      feedKeys: this._feedProvider.getFeeds().length,
+      feedKeys: this._feedProvider.getFeeds().length, // TODO(burdon): feeds.
       timeframe: this.isOpen ? this._partyCore.timeframe : undefined,
       properties: this.isOpen ? this.getPropertiesSet().expectOne().model.toObject() : undefined
     };
@@ -141,11 +142,16 @@ export class DataParty {
     await this._preferences?.setLastKnownTitle(title);
   }
 
+  get genesisFeedKey (): PublicKey {
+    assert(this._genesisFeedKey);
+    return this._genesisFeedKey;
+  }
+
   /**
    * @internal
    */
-  _setFeedHints (feedHints: PublicKey[]) {
-    this._feedHints = feedHints;
+  _setGenesisFeedKey (genesisFeedKey: PublicKey) {
+    this._genesisFeedKey = genesisFeedKey;
   }
 
   /**
@@ -161,8 +167,9 @@ export class DataParty {
     // TODO(dmaretskyi): May be undefined in some tests.
     const party = this._metadataStore.getParty(this._partyCore.key);
 
+    assert(this._genesisFeedKey);
     await this._partyCore.open({
-      feedHints: this._feedHints,
+      genesisFeedKey: this._genesisFeedKey,
       initialTimeframe: this._initialTimeframe,
       targetTimeframe: party?.latestTimeframe
     });
@@ -175,6 +182,7 @@ export class DataParty {
 
     this._invitationManager = new InvitationFactory(
       this._partyCore.processor,
+      this._genesisFeedKey,
       this._credentialsSigner,
       this._partyCore.credentialsWriter,
       this._networkManager

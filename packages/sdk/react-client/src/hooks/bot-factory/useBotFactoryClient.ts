@@ -5,8 +5,8 @@
 import { createContext, useContext } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
+import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { NetworkManager } from '@dxos/network-manager';
 
 export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
 

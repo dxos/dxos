@@ -16,7 +16,7 @@
    * path segment in the "$schema" field for all your Rush config files.  This will ensure
    * correct error-underlining and tab-completion for editors such as VS Code.
    */
-  "rushVersion": "5.75.0",
+  "rushVersion": "5.58.0",
 
   /**
    * The next field selects which package manager should be installed and determines its version.
@@ -789,7 +789,7 @@
     },
 
     //
-    // demos
+    // tutorials
     //
 
     {
@@ -803,10 +803,6 @@
     {
       "packageName": "@dxos/lexical-editor",
       "projectFolder": "packages/demos/lexical-editor"
-    },
-    {
-      "packageName": "@dxos/todos",
-      "projectFolder": "packages/demos/todos"
     },
     {
       "packageName": "@dxos/tutorials-tasks-app",
@@ -825,6 +821,10 @@
     {
       "packageName": "@dxos/browser-tests",
       "projectFolder": "packages/gravity/browser-tests"
+    },
+    {
+      "packageName": "@dxos/gravity-dashboard",
+      "projectFolder": "packages/gravity/gravity-dashboard"
     },
     {
       "packageName": "@dxos/gravity-orchestrator",

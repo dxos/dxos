@@ -8,10 +8,11 @@ import multi from 'multi-read-stream';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
-import { createKeyPair, discoveryKey, PublicKey } from '@dxos/crypto';
+import { createKeyPair, discoveryKey } from '@dxos/crypto';
 import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { boolGuard } from '@dxos/util';
 
@@ -23,9 +24,9 @@ jest.setTimeout(30000);
 const noop = () => {};
 
 interface MiddlewareOptions {
-  feedStore: FeedStore,
-  onUnsubscribe?: (feedStore: FeedStore) => void,
-  onLoad?: (feedStore: FeedStore) => HypercoreFeed[],
+  feedStore: FeedStore
+  onUnsubscribe?: (feedStore: FeedStore) => void
+  onLoad?: (feedStore: FeedStore) => HypercoreFeed[]
 }
 
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {

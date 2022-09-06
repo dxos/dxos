@@ -8,10 +8,10 @@
   ],
   "references": [
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../common/codec-protobuf"
     },
     {
       "path": "../../common/util"

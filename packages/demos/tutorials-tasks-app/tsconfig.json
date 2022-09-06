@@ -15,7 +15,7 @@
       "ESNext",
       "ES6"
     ],
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
@@ -36,9 +36,6 @@
     "stories"
   ],
   "references": [
-    {
-      "path": "../../common/crypto"
-    },
     {
       "path": "../../echo/echo-db"
     },

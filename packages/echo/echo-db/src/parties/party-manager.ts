@@ -2,20 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 import unionWith from 'lodash.unionwith';
+import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { KeyHint, KeyType, SecretProvider } from '@dxos/credentials';
-import { PublicKey } from '@dxos/crypto';
+import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed } from '@dxos/debug';
 import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { ComplexMap, boolGuard } from '@dxos/util';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexMap, boolGuard, Provider } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
-import { IdentityCredentialsProvider } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE, PARTY_TITLE_PROPERTY } from './data-party';
 import { PartyFactory } from './party-factory';
@@ -25,9 +25,9 @@ export const CONTACT_DEBOUNCE_INTERVAL = 500;
 const log = debug('dxos:echo-db:party-manager');
 
 export interface OpenProgress {
-  haloOpened: boolean;
-  partiesOpened?: number;
-  totalParties?: number;
+  haloOpened: boolean
+  partiesOpened?: number
+  totalParties?: number
 }
 
 /**
@@ -42,16 +42,12 @@ export class PartyManager {
   // Map of parties by party key.
   private readonly _parties = new ComplexMap<PublicKey, DataParty>(key => key.toHex());
 
-  // Unsubscribe handlers.
-  // TODO(burdon): Never used.
-  private readonly _onCloseHandlers: (() => void)[] = [];
-
   private _open = false;
 
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _snapshotStore: SnapshotStore,
-    private readonly _identityProvider: IdentityCredentialsProvider,
+    private readonly _identityProvider: Provider<IdentityCredentials | undefined>,
     private readonly _partyFactory: PartyFactory
   ) {}
 
@@ -96,11 +92,15 @@ export class PartyManager {
         const snapshot = await this._snapshotStore.load(partyKey);
 
         const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
+        if (!metadata.genesisFeedKey) {
+          log(`Skipping loading party with missing genesis feed key: ${partyKey}`);
+          continue;
+        }
 
         const party = snapshot
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
-        party._setFeedHints(metadata.feedKeys ?? []);
+        party._setGenesisFeedKey(metadata.genesisFeedKey);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -124,9 +124,6 @@ export class PartyManager {
       return;
     }
     this._open = false;
-
-    // Clean-up.
-    this._onCloseHandlers.forEach(callback => callback());
 
     // Close parties.
     for (const party of this._parties.values()) {
@@ -163,7 +160,7 @@ export class PartyManager {
    * Construct a party object and start replicating with the remote peer that created that party.
    */
   @synchronized
-  async addParty (partyKey: PartyKey, feedHints: PublicKey[] = []) {
+  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -176,11 +173,14 @@ export class PartyManager {
       return this._parties.get(partyKey);
     }
 
-    log(`Adding party partyKey=${partyKey.toHex()} hints=${feedHints.length}`);
+    log(`Adding party partyKey=${partyKey.toHex()}`);
     const party = await this._partyFactory.constructParty(partyKey);
-    party._setFeedHints(feedHints);
-    await party.open();
+    party._setGenesisFeedKey(genesisFeedKey);
+
     await this._metadataStore.addParty(party.key);
+    await this._metadataStore.setGenesisFeed(party.key, genesisFeedKey);
+
+    await party.open();
     this._setParty(party);
     return party;
   }
@@ -327,14 +327,9 @@ export class PartyManager {
       return;
     }
 
-    const keyHints: KeyHint[] = [
-      ...party.processor.memberKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.UNKNOWN })),
-      ...party.processor.feedKeys.map(publicKey => ({ publicKey: publicKey, type: KeyType.FEED }))
-    ];
-
     await identity.preferences.recordPartyJoining({
       partyKey: party.key,
-      keyHints
+      genesisFeed: party.genesisFeedKey
     });
   }
 }

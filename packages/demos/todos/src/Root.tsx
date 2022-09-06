@@ -18,7 +18,7 @@ function render(App: ComponentType) {
           </ThemeProvider>
         </HelmetProvider>
       </RecoilRoot>
-    </StrictMode>,
+    </StrictMode>
   );
 }
 

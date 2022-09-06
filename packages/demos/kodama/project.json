@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "packages/demos/kodama/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/demos/kodama/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}

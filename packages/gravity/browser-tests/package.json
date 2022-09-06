@@ -1,24 +1,18 @@
 {
   "name": "@dxos/browser-tests",
-  "version": "2.33.4",
+  "version": "2.33.8",
   "private": true,
   "description": "Browser tests for SDK.",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
+  "bugs": "https://github.com/dxos/protocols/issues",
+  "repository": "github:dxos/protocols",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
     "build": "toolchain build",
-    "build:test": "toolchain build:test",
-    "lint": "toolchain lint",
+    "check": "true",
     "test": "toolchain test",
     "test:browser": "test $(uname -r) = '21.1.0' || browser-mocha --setup browser-test/setup.js 'browser-test/**/*.test.ts' --checkLeaks=false --browser=chromium --browser=firefox --browser=webkit"
   },
@@ -32,13 +26,13 @@
   },
   "devDependencies": {
     "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "~1.0.33",
+    "@dxos/protocols": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
+    "@dxos/random-access-multi-storage": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@types/mocha": "~8.2.2",
-    "eslint": "^7.12.1",
+    "@types/mocha": "^8.2.2",
     "expect": "~27.0.2",
-    "mocha": "~8.4.0",
+    "mocha": "^8.4.0",
     "typescript": "^4.7.2"
   },
   "publishConfig": {

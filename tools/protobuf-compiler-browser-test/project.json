@@ -1,0 +1,17 @@
+{
+  "sourceRoot": "tools/protobuf-compiler-browser-test/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "tools/protobuf-compiler-browser-test/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

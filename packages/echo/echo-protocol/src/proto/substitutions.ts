@@ -4,9 +4,7 @@
 
 import { timestampSubstitutions } from '@dxos/codec-protobuf';
 import { codec, Message } from '@dxos/credentials';
-import { publicKeySubstitutions } from '@dxos/crypto';
-
-import { timeframeSubstitutions } from '../spacetime';
+import { publicKeySubstitutions, timeframeSubstitutions } from '@dxos/protocols';
 
 export default {
   ...timestampSubstitutions,

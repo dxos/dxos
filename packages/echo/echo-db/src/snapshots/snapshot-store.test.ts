@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 
 import { SnapshotStore } from './snapshot-store';
@@ -25,10 +26,14 @@ describe('SnapshotStore', () => {
 
     const snapshot: PartySnapshot = {
       partyKey: key1.asBuffer(),
+      halo: {
+        messages: []
+      },
       database: {
         items: [{
           itemId: createId(),
-          itemType: 'example:test'
+          itemType: 'example:test',
+          modelType: 'example:model'
         }],
         links: []
       }

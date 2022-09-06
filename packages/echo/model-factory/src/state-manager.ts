@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import {
+import type {
   FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
 } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';
@@ -55,13 +55,11 @@ type OptimisticMutation = {
  * - Optimistic mutations.
  */
 export class StateManager<M extends Model> {
-  private _modelMeta: ModelMeta | null = null;
-
-  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
-
-  private _model: M | null = null;
-
   private readonly _mutationProcessed = new Event<MutationMeta>();
+
+  private _modelMeta: ModelMeta | null = null;
+  private _stateMachine: StateMachine<StateOf<M>, MutationOf<Model>, unknown> | null = null;
+  private _model: M | null = null;
 
   /**
    * Mutations that were applied on top of the _snapshot.

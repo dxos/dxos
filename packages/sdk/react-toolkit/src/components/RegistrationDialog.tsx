@@ -21,7 +21,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { generateSeedPhrase } from '@dxos/crypto';
+import { generateSeedPhrase } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 
 import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
@@ -51,8 +51,8 @@ export interface RegistrationDialogProps {
   modal?: boolean
   debug?: boolean
   onRestore: (seedPhrase: string) => void // TODO(burdon): Optional (hide option).
-  onComplete: (seedPhrase: string, username: string) => void,
-  onJoinHalo?: () => void,
+  onComplete: (seedPhrase: string, username: string) => void
+  onJoinHalo?: () => void
 }
 
 /**

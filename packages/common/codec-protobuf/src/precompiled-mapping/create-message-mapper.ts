@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
+import assert from 'node:assert';
 import * as pb from 'protobufjs';
 
 import { MapingDescriptors } from '../mapping';
@@ -19,9 +19,9 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
     cache[type.fullName].map = codegen(`${type.name}$map`, ['obj', 'extraArgs'], c => {
       c`const res = {};`;
       for (const field of type.fieldsArray) {
+        field.resolve();
         c`if(obj.${field.name} !== undefined && obj.${field.name} !== null) {`; {
           const genMapScalar = (value: string) => {
-            field.resolve();
             const substitution = field.resolvedType && substitutions[field.resolvedType.fullName.slice(1)];
             if (substitution) {
               c`${ref(substitution)}(${value}, ...extraArgs)`;
@@ -33,7 +33,6 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             }
           };
 
-          // TODO(dmaretskyi): Support maps.
           if (field.repeated) {
             c`res.${field.name} = obj.${field.name}.map(item => `;
             genMapScalar('item');
@@ -52,10 +51,49 @@ const createMessageMapperCached = (type: pb.Type, substitutions: MapingDescripto
             c`;`;
           }
         } c`}`;
+        if (!field.getOption('proto3_optional') && !field.repeated && !field.map && !field.partOf) {
+          c`else {`; {
+            if (field.resolvedType instanceof pb.Type) {
+              const mapper = createMessageMapperCached(field.resolvedType, substitutions, cache);
+              c`res.${field.name} = ${ref(mapper)}.map({}, extraArgs);`;
+            } else if (field.resolvedType instanceof pb.Enum) {
+              `res.${field.name} = 0;`;
+            } else {
+              c`res.${field.name} = ${getDefaultValue(field.type)};`;
+            }
+          } c`}`;
+        }
       }
       c`return res;`;
     });
   }
 
   return cache[type.fullName];
+};
+
+const getDefaultValue = (type: string): string => {
+  switch (type) {
+    case 'double':
+    case 'float':
+    case 'int32':
+    case 'sfixed32':
+    case 'uint32':
+    case 'sint32':
+    case 'fixed32':
+      return '0';
+    case 'sint64':
+    case 'int64':
+    case 'uint64':
+    case 'fixed64':
+    case 'sfixed64':
+      return '"0"';
+    case 'bool':
+      return 'false';
+    case 'string':
+      return '""';
+    case 'bytes':
+      return 'new Uint8Array()';
+    default:
+      throw new Error(`Unknown type: ${type}`);
+  }
 };

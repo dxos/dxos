@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import { promises as fs } from 'fs';
+import assert from 'node:assert';
 import { dirname, join } from 'path';
 import pkgUp from 'pkg-up';
 import { chromium, firefox, webkit } from 'playwright';

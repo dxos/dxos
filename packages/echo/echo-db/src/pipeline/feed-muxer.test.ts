@@ -8,10 +8,11 @@ import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
 import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
-import { createId, createKeyPair, PublicKey } from '@dxos/crypto';
-import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream, Timeframe } from '@dxos/echo-protocol';
+import { createId, createKeyPair } from '@dxos/crypto';
+import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream } from '@dxos/echo-protocol';
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { jsonReplacer } from '@dxos/util';
 
@@ -62,7 +63,7 @@ describe('FeedMuxer', () => {
     // TODO(burdon): Check order (re-use feed-store-iterator test logic).
     //
     const numMessages = 5;
-    const [counter, updateCounter] = latch(numMessages);
+    const [counter, updateCounter] = latch({ count: numMessages });
     const echoProcessor = async (message: IEchoStream) => {
       log('Processed:', JSON.stringify(message, jsonReplacer, 2));
       updateCounter();
@@ -127,7 +128,8 @@ describe('FeedMuxer', () => {
     await pipeline.outboundEchoStream!.write({
       itemId: '123',
       genesis: {
-        itemType: 'foo'
+        itemType: 'foo',
+        modelType: 'bar'
       }
     });
 
@@ -137,7 +139,8 @@ describe('FeedMuxer', () => {
     expect((echoMessages[0] as any).data).toEqual({
       itemId: '123',
       genesis: {
-        itemType: 'foo'
+        itemType: 'foo',
+        modelType: 'bar'
       }
     });
   });

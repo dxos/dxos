@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
+import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
@@ -28,7 +28,7 @@ const log = debug('dxos:echo-db:data-service-router');
  * Routes DataService requests to different DataServiceHost instances based on party id.
  */
 export class DataServiceRouter implements DataService {
-  private readonly _trackedParties = new ComplexMap<PartyKey, DataServiceHost>(x => x.toHex())
+  private readonly _trackedParties = new ComplexMap<PartyKey, DataServiceHost>(x => x.toHex());
 
   trackParty (key: PartyKey, host: DataServiceHost) {
     log(`Tracking party: ${key}`);

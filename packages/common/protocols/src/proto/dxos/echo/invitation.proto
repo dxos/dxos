@@ -22,8 +22,8 @@ message InvitationDescriptor {
   bytes invitation = 3;
 
   /// Only present if type == OFFLINE.
-  bytes identityKey = 4;
+  optional bytes identityKey = 4;
 
   /// Must be stripped out when passing to another peer.
-  bytes secret = 5;
+  optional bytes secret = 5;
 }

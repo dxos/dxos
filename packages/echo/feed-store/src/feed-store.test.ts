@@ -4,13 +4,14 @@
 
 /* eslint-disable jest/no-done-callback */
 
-import assert from 'assert';
 import hypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
 
 import { sleep } from '@dxos/async';
-import { PublicKey, createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
@@ -18,7 +19,7 @@ import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
 
 interface KeyPair {
-  key: PublicKey,
+  key: PublicKey
   secretKey: Buffer
 }
 

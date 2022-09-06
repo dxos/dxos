@@ -6,10 +6,10 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
-import { PublicKey } from '@dxos/crypto';
-import { EchoEnvelope, MockFeedWriter, Timeframe } from '@dxos/echo-protocol';
+import { EchoEnvelope, MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';

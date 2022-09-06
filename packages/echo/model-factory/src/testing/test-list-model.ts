@@ -2,13 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import { schema, TestListMutation } from '@dxos/echo-protocol';
+import type { TestListMutation } from '@dxos/echo-protocol';
 
 import { Model } from '../model';
+import { schema } from '../proto';
 import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
 
 class TestListModelStateMachine implements StateMachine<TestListMutation[], TestListMutation, any> {
-  private _messages: TestListMutation[] = []
+  private _messages: TestListMutation[] = [];
 
   getState (): TestListMutation[] {
     return this._messages;
@@ -34,7 +35,7 @@ export class TestListModel extends Model<TestListMutation[], TestListMutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/test-list',
     stateMachine: () => new TestListModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.testing.TestListMutation')
+    mutationCodec: schema.getCodecForType('dxos.test.echo.TestListMutation')
   };
 
   get messages () {
