@@ -54,6 +54,7 @@ export class Pipeline {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
+  private _isBeingConsumed = false;
 
   private _iterator = new FeedStoreIterator(
     () => true,
@@ -69,8 +70,19 @@ export class Pipeline {
     });
   }
 
-  get iterator (): AsyncIterable<FeedBlock> {
-    return this._iterator;
+  /**
+   * Will iterate over the ordered messages from the added feeds.
+   * 
+   * Updates the timeframe clock after the message has bee processed.
+   */
+  async * consume(): AsyncIterable<FeedBlock> {
+    assert(!this._isBeingConsumed, 'Pipeline is already being consumed.');
+    this._isBeingConsumed = true;
+
+    for await (const block of this._iterator) {
+      yield block;
+      this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
+    }
   }
 
   addFeed (feed: FeedDescriptor) {
