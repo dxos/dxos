@@ -978,7 +978,6 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/eslint-plugin': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -996,7 +995,6 @@ importers:
       compare-semver: ~1.1.0
       date-format: ~4.0.11
       esbuild: ^0.14.49
-      eslint: ^8.21.0
       expect: ~27.0.2
       ink: ^3.2.0
       ink-select-input: ~4.2.1
@@ -1041,7 +1039,6 @@ importers:
       react: 18.2.0
       yargs: 16.2.0
     devDependencies:
-      '@dxos/eslint-plugin': link:../../../../toolchains/eslint-plugin
       '@dxos/protocols-toolchain': link:../../../../toolchains/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
@@ -1052,7 +1049,6 @@ importers:
       '@types/react': 18.0.15
       '@types/yargs': 16.0.4
       esbuild: 0.14.49
-      eslint: 8.22.0
       expect: 27.0.6
       mocha: 8.4.0
       supervisor: 0.12.0
