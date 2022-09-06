@@ -72,7 +72,7 @@ workflows:
           filters:
             branches:
               only:
-                - wittjosiah/09-02-feat_wallet_Add_pwa_functionality
+                - production
           context:
             - Github
             - Netlify
