@@ -76,6 +76,8 @@ This section outlines the core concepts of the DXOS system.
 
 <!-- @code(../../packages/sdk/client/src/experimental/api.test.ts, link) -->
 
+<sub>`@dxos/client`[`[src/experimental/api.test.ts]`](../../packages/sdk/client/src/experimental/api.test.ts)</sub>
+
 ```ts
 //
 // Copyright 2020 DXOS.org
@@ -94,25 +96,25 @@ const createClient = () => ({} as Client);
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Experimental API', () => {
   test('All aspects', async () => {
-    const client = createClient();
+    const client1 = createClient();
 
     //
     // Create and recover profiles.
     //
     {
       // Create profile.
-      const privateKey = await client.halo.createProfile();
-      const publicKey = client.halo.profile.identityKey;
+      const privateKey = await client1.halo.createProfile();
+      const publicKey = client1.halo.profile.identityKey;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
-      expect(client.halo.device).toBeDefined();
+      expect(client1.halo.device).toBeDefined();
 
       // Recover profile.
       // TODO(burdon): Currently requires another device to be online (to sync profile and complete.)
       {
-        const client = createClient();
-        expect(client.halo.profile).not.toBeDefined();
-        const profile = await client.halo.recoverProfile(privateKey);
-        expect(PublicKey.equals(profile.identityKey, client.halo.profile.identityKey)).toBeTruthy();
+        const client2 = createClient();
+        expect(client2.halo.profile).not.toBeDefined();
+        const profile = await client2.halo.recoverProfile(privateKey);
+        expect(PublicKey.equals(profile.identityKey, client2.halo.profile.identityKey)).toBeTruthy();
       }
     }
 
@@ -120,7 +122,7 @@ describe.skip('Experimental API', () => {
     // Manage devices.
     //
     {
-      const devices = client.halo.queryDevices();
+      const devices = client1.halo.queryDevices();
       expect(devices.elements).toHaveLength(1);
 
       // Create and authenticate new device.
@@ -133,15 +135,15 @@ describe.skip('Experimental API', () => {
         });
 
         // New device initiates the request to join.
-        const newClient = createClient();
-        expect(newClient.halo.profile).not.toBeDefined();
-        const request = newClient.halo.createDeviceAdmissionRequest();
+        const client2 = createClient();
+        expect(client2.halo.profile).not.toBeDefined();
+        const request = client2.halo.createDeviceAdmissionRequest();
 
         // Accept new device.
-        const challenge = client.halo.createDeviceAdmissionChallenge(request.requestKey);
+        const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
         setImmediate(async () => {
           const deviceKey = await challenge.wait();
-          expect(PublicKey.equals(deviceKey, newClient.halo.device.deviceKey)).toBeTruthy();
+          expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
         });
 
         // Authenticate.
@@ -155,9 +157,9 @@ describe.skip('Experimental API', () => {
     // Query contacts within circle.
     //
     {
-      const contacts = client.circle.queryContacts();
+      const contacts = client1.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
-        const receipt = await client.messenger.send(contact.identityKey, { message: `Hello ${contact.username}!` });
+        const receipt = await client1.messenger.send(contact.identityKey, { message: `Hello ${contact.username}!` });
         expect(receipt.recipient).toBe(contact.identityKey);
       }));
     }
@@ -167,7 +169,7 @@ describe.skip('Experimental API', () => {
     //
     {
       // Create Space.
-      const space = await client.brane.createSpace();
+      const space = await client1.brane.createSpace();
       const invitation = space.createInvitation(Role.ADMIN);
       setImmediate(async () => {
         await invitation.wait();
@@ -177,11 +179,11 @@ describe.skip('Experimental API', () => {
 
       {
         // Accept invitation.
-        const client = createClient();
-        const offer = client.brane.createInvitationOffer(invitation.offerKey);
+        const client2 = createClient();
+        const offer = client2.brane.createInvitationOffer(invitation.offerKey);
         const spaceKey = await offer.accept(invitation.secret);
 
-        const space = await client.brane.getSpace(spaceKey);
+        const space = await client2.brane.getSpace(spaceKey);
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
       }
@@ -191,10 +193,10 @@ describe.skip('Experimental API', () => {
     // Create space and send invitation to existing contact.
     //
     {
-      const space = await client.brane.createSpace();
-      const contacts = client.circle.queryContacts({ name: 'alice' });
+      const space = await client1.brane.createSpace();
+      const contacts = client1.circle.queryContacts({ name: 'alice' });
       const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].identityKey);
-      await client.messenger.send(contacts.elements[0].identityKey, invitation);
+      await client1.messenger.send(contacts.elements[0].identityKey, invitation);
       await invitation.wait();
 
       const members = space.queryMembers({ role: Role.ADMIN });
@@ -205,7 +207,7 @@ describe.skip('Experimental API', () => {
     // Receive invitations from existing contact.
     //
     {
-      const invitations = client.circle.queryInvitations();
+      const invitations = client1.circle.queryInvitations();
       const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
         if (invitations.length) {
           const spaceKey = await invitations[0].accept();
@@ -219,8 +221,8 @@ describe.skip('Experimental API', () => {
     // Query spaces within brane.
     //
     {
-      const spaces = client.brane.querySpaceKeys();
-      const space = await client.brane.getSpace(spaces.elements[0]);
+      const spaces = client1.brane.querySpaceKeys();
+      const space = await client1.brane.getSpace(spaces.elements[0]);
 
       // Create subscription.
       const result = space.database.queryItems({ type: 'org.dxos.contact' });
@@ -236,7 +238,7 @@ describe.skip('Experimental API', () => {
       expect(item.publicKey).toBeDefined();
 
       // Query items across all spaces.
-      const items = client.brane.queryItems({ type: 'org.dxos.contact' });
+      const items = client1.brane.queryItems({ type: 'org.dxos.contact' });
       expect(items.elements.length).toBeGreaterThan(0);
     }
 
@@ -248,7 +250,7 @@ describe.skip('Experimental API', () => {
       const AppRecordType = 'org.dxos.app';
 
       // Query records.
-      const apps = client.meta.queryRecords({ type: AppRecordType });
+      const apps = client1.meta.queryRecords({ type: AppRecordType });
       void apps.onUpdate((records, subscription) => {
         expect(subscription.query.type).toStrictEqual(AppRecordType);
         if (records.length > 0) {
@@ -257,7 +259,7 @@ describe.skip('Experimental API', () => {
       });
 
       // Create record.
-      const app = await client.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
+      const app = await client1.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
       expect(app.type).toStrictEqual(AppRecordType);
       expect(app.data.name).toStrictEqual('Tetris');
     }
