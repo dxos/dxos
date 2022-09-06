@@ -53,6 +53,19 @@
           "packages/sdk/registry-client/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/registry-client/src/**/*.test.{ts,js}"
+        ]
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha",
+    "protobuf-compiler"
+  ]
 }

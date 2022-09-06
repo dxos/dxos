@@ -38,6 +38,16 @@
           "packages/common/codec-protobuf/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/common/codec-protobuf"
+      ],
+      "options": {
+        "jestConfig": "packages/common/codec-protobuf/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
   "implicitDependencies": [

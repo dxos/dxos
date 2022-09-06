@@ -13,11 +13,9 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
+    "build": "toolchain bundle:app",
     "check": "true",
-    "prepublishOnly": "npm run test && npm run build",
-    "start": "toolchain start",
-    "test": "toolchain test"
+    "start": "toolchain start"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -37,17 +35,10 @@
     "@babel/core": "^7.18.13",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
-    "esbuild": "~0.14.1",
-    "expect": "~27.0.2",
     "faker": "^5.1.0",
-    "mocha": "^8.4.0",
-    "supervisor": "~0.12.0",
-    "ts-node": "^10.8.2",
-    "typescript": "^4.7.2"
+    "supervisor": "~0.12.0"
   },
   "publishConfig": {
     "access": "public"

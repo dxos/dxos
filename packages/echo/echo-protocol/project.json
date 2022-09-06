@@ -32,6 +32,16 @@
           "packages/echo/echo-protocol/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/echo/echo-protocol/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/echo/echo-protocol/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
   "implicitDependencies": [

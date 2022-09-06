@@ -32,9 +32,18 @@
           "packages/sdk/config/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/config/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

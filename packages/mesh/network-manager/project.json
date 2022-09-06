@@ -32,9 +32,31 @@
           "packages/mesh/network-manager/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/network-manager/src/**/*.test.{ts,js}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/network-manager/src/network-manager.browser-test.ts"
+        ],
+        "browsers": [
+          "chromium",
+          "firefox"
+        ],
+        "setup": "packages/mesh/network-manager/tests-setup.js"
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

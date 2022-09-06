@@ -21,6 +21,17 @@
           "packages/echo/echo-testing/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/echo/echo-testing/src/**/*.test.{ts,js}"
+        ]
+      }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

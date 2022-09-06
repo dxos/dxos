@@ -1,7 +1,11 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest",
+      "node"
+    ]
   },
   "include": [
     "src",
@@ -13,10 +17,9 @@
   "references": [
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
-  ],
-  "types": [
-    "jest",
-    "node"
   ]
 }

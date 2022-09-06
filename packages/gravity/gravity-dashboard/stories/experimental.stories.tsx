@@ -314,7 +314,7 @@ const createObjects = (n = 5): Kube[] => Array.from({ length: n }).map(() => ({
 
 const Container = () => {
   const context = useSvgContext();
-  const zoom = useZoom({ extent: [1, 8], zoom: 4 });
+  const zoom = useZoom({ extent: [1, 8] });
   const groupRef = useRef();
 
   const layout = new MeshLayout(context);

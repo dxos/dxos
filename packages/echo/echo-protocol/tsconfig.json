@@ -30,6 +30,9 @@
     },
     {
       "path": "../feed-store"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

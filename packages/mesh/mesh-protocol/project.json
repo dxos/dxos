@@ -32,9 +32,18 @@
           "packages/mesh/mesh-protocol/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/mesh-protocol/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

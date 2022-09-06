@@ -16,6 +16,9 @@
     },
     {
       "path": "../network-generator"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }
