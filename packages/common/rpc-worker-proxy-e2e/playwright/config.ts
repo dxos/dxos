@@ -6,7 +6,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   use: {
-    headless: !!process.env.CI || !!process.env.HEADLESS
+    headless: process.env.HEADLESS !== 'false'
   },
   webServer: {
     command: 'pnpm run dev',

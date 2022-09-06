@@ -4,8 +4,8 @@
 
 import expect from 'expect';
 
-import { schema } from '../../protobuf-compiler/test/proto/gen';
-import { Scalars } from '../../protobuf-compiler/test/proto/gen/dxos/test';
+import { schema } from '../../executors/protobuf-compiler/test/proto/gen';
+import { Scalars } from '../../executors/protobuf-compiler/test/proto/gen/dxos/test';
 
 it('bytes fields get decoded to Uint8Array', () => {
   const codec = schema.getCodecForType('dxos.test.Scalars');

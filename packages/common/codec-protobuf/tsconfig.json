@@ -8,5 +8,9 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

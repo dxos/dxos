@@ -32,9 +32,18 @@
           "packages/echo/model-factory/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/echo/model-factory/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }
