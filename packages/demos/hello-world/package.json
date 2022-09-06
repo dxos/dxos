@@ -10,8 +10,7 @@
     "book": "esbuild-server book --mdx",
     "build": "tsc --noEmit && npm run book -- --build",
     "check": "true",
-    "start": "toolchain start",
-    "test:playwright": "mocha -r ts-node/register/transpile-only './playwright/**/*.test.ts'"
+    "start": "toolchain start"
   },
   "dependencies": {
     "@dxos/client": "workspace:*",

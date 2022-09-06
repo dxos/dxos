@@ -19,7 +19,6 @@
     "prepublishOnly": "npm run test && npm run build",
     "start": "toolchain start",
     "test": "toolchain test",
-    "e2e": "playwright test --config ./playwright/config.ts ./playwright/tests/*.test.ts",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "dependencies": {
@@ -62,7 +61,6 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@playwright/test": "^1.25.1",
     "@types/d3": "^7.1.0",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.1",
@@ -78,7 +76,6 @@
     "esbuild-plugin-yaml": "~0.0.1",
     "faker": "^5.1.0",
     "mocha": "^8.4.0",
-    "playwright": "^1.25.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "robotjs": "~0.6.0",

@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "playwright": {
+      "implementation": "./dist/src/main",
+      "schema": "./schema.json",
+      "description": "Runs playwright tests."
+    }
+  }
+}
