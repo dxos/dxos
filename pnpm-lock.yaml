@@ -27,6 +27,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mocha': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
@@ -98,6 +99,7 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
+      '@dxos/log': link:packages/common/log
       '@dxos/mocha': link:tools/executors/mocha
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler

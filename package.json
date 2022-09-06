@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
+    "@dxos/log": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/esbuild": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",

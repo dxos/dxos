@@ -3,7 +3,10 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
+
 import '@swc-node/register';
+import '@dxos/log/register';
+
 import glob from 'glob';
 import Mocha from 'mocha';
 import { resolve } from 'path';

@@ -80,5 +80,7 @@ export function debugInfo (target: any, propertyKey: string, descriptor: Propert
 };
 
 export function getCurrentOwnershipScope(thisRef: any) {
-  return thisRef[kOwnershipScope] ?? (globalThis as any)[kCurrentOwnershipScope];
+  return undefined
+  // TODO(dmaretskyi): Disabled for now.
+  // return thisRef[kOwnershipScope] ?? (globalThis as any)[kCurrentOwnershipScope];
 }
