@@ -328,6 +328,23 @@ importers:
     devDependencies:
       '@dxos/protocols': link:../protocols
 
+  packages/common/log:
+    specifiers:
+      '@swc/core': ~1.2.210
+      '@types/mocha': ~8.2.2
+      '@types/node': ^16.11.27
+      debug: ^4.3.3
+      pirates: ~4.0.5
+      typescript: ^4.7.2
+    dependencies:
+      debug: 4.3.4
+    devDependencies:
+      '@swc/core': 1.2.242
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
+      pirates: 4.0.5
+      typescript: 4.7.4
+
   packages/common/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*

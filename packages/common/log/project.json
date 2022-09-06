@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/common/debug/src",
+  "sourceRoot": "packages/common/log/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/common/debug/dist",
-        "tsConfig": "packages/common/debug/tsconfig.json",
-        "main": "packages/common/debug/src/index.ts"
+        "outputPath": "packages/common/log/dist",
+        "tsConfig": "packages/common/log/tsconfig.json",
+        "main": "packages/common/log/src/index.ts"
       }
     },
     "lint": {
@@ -20,9 +20,20 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/common/debug/**/*.{ts,js}"
+          "packages/common/log/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/log/src/**/*.test.{ts,js}"
         ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }
