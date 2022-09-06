@@ -24,6 +24,7 @@ export const mapFeedWriter = <T, U>(map: (arg: T) => MaybePromise<U>, writer: Fe
   write: async message => writer.write(await map(message))
 });
 
+// TODO(dmaretskyi): Change to take feed descriptor.
 export const createFeedWriter = <T>(feed: HypercoreFeed): FeedWriter<T> => ({
   write: async message => {
     const seq = await pify(feed.append.bind(feed))(message);
