@@ -32,6 +32,7 @@
     "kai": "packages/demos/kai",
     "kitchen-sink": "packages/demos/kitchen-sink",
     "kodama": "packages/demos/kodama",
+    "log": "packages/common/log",
     "lexical-editor": "packages/demos/lexical-editor",
     "mesh-protocol": "packages/mesh/mesh-protocol",
     "messenger-model": "packages/echo/messenger-model",
