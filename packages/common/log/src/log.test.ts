@@ -1,4 +1,4 @@
-import { log } from '.'
+import { log } from './log'
 
 describe('log', () => {
   it('levels', () => {

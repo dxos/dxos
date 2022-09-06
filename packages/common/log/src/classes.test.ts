@@ -1,4 +1,4 @@
-import { log } from '.'
+import { log } from './log'
 import { inspect } from 'util'
 import { debugInfo, getCurrentOwnershipScope, ownershipClass } from './ownership'
 
