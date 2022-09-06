@@ -32,9 +32,18 @@
           "packages/halo/halo-protocol/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/halo/halo-protocol/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

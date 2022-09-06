@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "src/**/*",
@@ -34,9 +37,9 @@
     },
     {
       "path": "../protocol-network-generator"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
-  ],
-  "types": [
-    "jest"
   ]
 }

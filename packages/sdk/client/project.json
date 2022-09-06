@@ -54,10 +54,19 @@
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
     "esbuild",
+    "mocha",
     "protobuf-compiler"
   ]
 }
