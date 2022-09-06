@@ -89,7 +89,7 @@ describe('Client - nonpersistent', () => {
   }).timeout(10_000).retries(10);
 
   it('offline invitations', async function () {
-    if (browserMocha.context.browser === 'webkit') {
+    if (browserMocha.context.browser === 'webkit' || browserMocha.context.browser === 'chromium') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }

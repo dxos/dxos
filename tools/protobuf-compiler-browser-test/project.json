@@ -13,5 +13,24 @@
         ]
       }
     }
-  }
+    // TODO(wittjosiah): This test is broken.
+    // "e2e": {
+    //   "executor": "@dxos/mocha:browser",
+    //   "options": {
+    //     "testPatterns": [
+    //       "tools/protobuf-compiler-browser-test/browser-test/*.test.ts"
+    //     ],
+    //     "browsers": [
+    //       "chromium"
+    //     ],
+    //     "setup": "tools/protobuf-compiler-browser-test/browser-test/setup.js"
+    //   },
+    //   "dependsOn": [
+    //     "^build"
+    //   ]
+    // }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }
