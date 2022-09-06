@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { synchronized } from '@dxos/async';
+import { promiseTimeout, synchronized } from '@dxos/async';
 import { Config, ConfigObject } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
@@ -198,10 +198,11 @@ export class Client {
 
     log('Creating client proxy.');
     const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
-    this._serviceProvider = new ClientServiceProxy(
-      this._options.rpcPort ?? await createSingletonPort(singletonSource),
-      this._options.timeout
-    );
+    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? await promiseTimeout(
+      createSingletonPort(singletonSource),
+      300,
+      new RemoteServiceConnectionTimeout()
+    ));
     await this._serviceProvider.open(onProgressCallback);
   }
 
