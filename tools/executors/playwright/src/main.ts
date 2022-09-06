@@ -16,6 +16,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   console.info('Executing "playwright"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
+  // TODO(wittjosiah): Run dev server.
+
   // Based on https://github.com/marksandspencer/nx-plugins/blob/2a46e582e59512ea4caae20cbdc30103d0d1921b/packages/nx-playwright/src/executors/playwright-executor/executor.ts#L24.
   const success = await Promise.resolve()
     .then(async () => {

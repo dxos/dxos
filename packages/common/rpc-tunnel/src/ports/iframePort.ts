@@ -20,13 +20,15 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement): RpcPort => ({
       return;
     }
 
+    // TODO(wittjosiah): Use transfer argument.
+    // const data = message.buffer;
     iframe.contentWindow.postMessage(
       {
         type: 'parent',
         data: message
       },
-      ORIGIN,
-      [message]
+      ORIGIN
+      // [data]
     );
   },
   subscribe: callback => {
@@ -47,13 +49,14 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement): RpcPort => ({
 
 export const createIframePort = (): RpcPort => ({
   send: async message => {
+    // const data = message.buffer;
     window.parent.postMessage(
       {
         type: 'child',
         data: message
       },
-      ORIGIN,
-      [message]
+      ORIGIN
+      // [data]
     );
   },
   subscribe: callback => {
