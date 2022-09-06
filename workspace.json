@@ -26,6 +26,7 @@
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-rules": "tools/eslint-rules",
     "feed-store": "packages/echo/feed-store",
+    "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-protocol": "packages/halo/halo-protocol",
     "hello-world": "packages/demos/hello-world",
     "kai": "packages/demos/kai",
