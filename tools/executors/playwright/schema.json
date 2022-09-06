@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "testPatterns": {
+      "type": "array",
+      "description": "Globs of tests"
+    },
+    "config": {
+      "type": "string",
+      "description": "Location of the playwright config file"
+    }
+  },
+  "required": ["testPatterns", "config"]
+}

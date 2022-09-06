@@ -9,8 +9,7 @@
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",
-    "check": "true",
-    "e2e": "playwright test --config ./tests/playwright/config.ts"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -30,7 +29,6 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
-    "@playwright/test": "^1.25.1",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.4.3",
@@ -41,7 +39,6 @@
     "@types/testing-library__jest-dom": "^5.14.5",
     "@types/use-subscription": "^1.0.0",
     "level-js": "^5.0.2",
-    "playwright": "^1.25.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-test-renderer": "^18.1.0"

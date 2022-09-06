@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "tools/executors/playwright/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/executors/playwright/dist",
+        "tsConfig": "tools/executors/playwright/tsconfig.json",
+        "main": "tools/executors/playwright/src/main.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/executors/playwright/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

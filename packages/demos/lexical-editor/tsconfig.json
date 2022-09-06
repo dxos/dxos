@@ -13,8 +13,7 @@
   },
   "include": [
     "src",
-    "stories",
-    "playwright"
+    "stories"
   ],
   "references": [
     {
