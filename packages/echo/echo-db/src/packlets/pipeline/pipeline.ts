@@ -54,8 +54,6 @@ export class Pipeline {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
-  private _writableFeed: FeedDescriptor | undefined = undefined;
-  private _feedWriter: FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined = undefined;
 
   private _iterator = new FeedStoreIterator(
     () => true,
@@ -75,18 +73,9 @@ export class Pipeline {
     return this._iterator;
   }
 
-  get writer (): FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined {
-    return this._feedWriter;
-  }
-
   addFeed (feed: FeedDescriptor) {
     assert(!this._feeds.has(feed.key), 'Feed already added.');
     this._feeds.set(feed.key, feed);
-
-    if (feed.writable) {
-      this._writableFeed = feed;
-      this._feedWriter = createFeedWriter(this._writableFeed.feed);
-    }
 
     this._iterator.addFeedDescriptor(feed);
   }
@@ -95,11 +84,19 @@ export class Pipeline {
     this._iterator.close();
   }
 
+  //
+  // Timeframe clock methods.
+  //
+
   get timeframe () {
     return this._timeframeClock.timeframe;
   }
 
   get timeframeUpdate () {
     return this._timeframeClock.update;
+  }
+
+  async waitUntilReached (target: Timeframe) {
+    await this._timeframeClock.waitUntilReached(target);
   }
 }

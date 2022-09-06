@@ -14,7 +14,7 @@ import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
 
-describe('pipeline/Pipeline', () => {
+describe.only('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
     const pipeline = new Pipeline(new Timeframe());
 
@@ -44,25 +44,9 @@ describe('pipeline/Pipeline', () => {
       });
     }
 
-    // Your own writable feed.
-    {
-      const { publicKey, secretKey } = createKeyPair();
-      const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
-      pipeline.addFeed(feed);
-      expect(pipeline.writer).toBeDefined();
-
-      for (const msgIdx in range(messagesPerFeed)) {
-        await pipeline.writer!.write({
-          echo: {
-            itemId: `own-${msgIdx}`
-          }
-        });
-      }
-    }
-
     let msgCount = 0;
     for await (const msg of pipeline.iterator) {
-      if (++msgCount === (numFeeds + 1) * messagesPerFeed) {
+      if (++msgCount === numFeeds * messagesPerFeed) {
         pipeline.stop();
       }
     }
