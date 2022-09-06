@@ -11,17 +11,16 @@
         ]
       }
     },
-    "e2e": {
-      "executor": "@dxos/playwright:playwright",
+    "test": {
+      "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
-          "packages/demos/kitchen-sink/playwright/tests/*.test.ts"
-        ],
-        "config": "packages/demos/kitchen-sink/playwright/config.ts"
+          "apps/experimental/kai/src/**/*.test.{ts,tsx,js,jsx}"
+        ]
       }
     }
   },
   "implicitDependencies": [
-    "playwright"
+    "mocha"
   ]
 }

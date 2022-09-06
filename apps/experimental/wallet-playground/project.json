@@ -2,6 +2,17 @@
   "sourceRoot": "apps/experimental/wallet-playground/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "apps/experimental/wallet-playground/dist",
+        "tsConfig": "apps/experimental/wallet-playground/tsconfig.json",
+        "main": "apps/experimental/wallet-playground/src/index.ts"
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [
@@ -13,24 +24,5 @@
         ]
       }
     }
-    // TODO(wittjosiah): This test is broken.
-    // "e2e": {
-    //   "executor": "@dxos/mocha:browser",
-    //   "options": {
-    //     "testPatterns": [
-    //       "tools/protobuf-compiler-browser-test/browser-test/*.test.ts"
-    //     ],
-    //     "browsers": [
-    //       "chromium"
-    //     ],
-    //     "setup": "tools/protobuf-compiler-browser-test/browser-test/setup.js"
-    //   },
-    //   "dependsOn": [
-    //     "^build"
-    //   ]
-    // }
-  },
-  "implicitDependencies": [
-    "mocha"
-  ]
+  }
 }

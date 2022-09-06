@@ -8,13 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/gravity/browser-tests/dist",
-        "tsConfig": "packages/gravity/browser-tests/tsconfig.json",
-        "main": "packages/gravity/browser-tests/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": [
-          "packages/gravity/browser-tests/*.md"
-        ]
+        "outputPath": "e2e/client/dist",
+        "tsConfig": "e2e/client/tsconfig.json",
+        "main": "e2e/client/src/index.ts"
       }
     },
     "lint": {
@@ -32,9 +28,9 @@
       "executor": "@dxos/mocha:browser",
       "options": {
         "testPatterns": [
-          "packages/gravity/browser-tests/browser-test/**/*.test.ts"
+          "e2e/client/browser-test/**/*.test.ts"
         ],
-        "setup": "packages/gravity/browser-tests/browser-test/setup.js"
+        "setup": "e2e/client/browser-test/setup.js"
       }
     }
   },

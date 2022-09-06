@@ -8,13 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/wallet/wallet-playground/dist",
-        "tsConfig": "packages/wallet/wallet-playground/tsconfig.json",
-        "main": "packages/wallet/wallet-playground/src/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
-        "assets": [
-          "packages/wallet/wallet-playground/*.md"
-        ]
+        "outputPath": "e2e/protobuf-compiler/dist",
+        "tsConfig": "e2e/protobuf-compiler/tsconfig.json",
+        "main": "e2e/protobuf-compiler/src/index.ts"
       }
     },
     "lint": {
@@ -28,5 +24,24 @@
         ]
       }
     }
-  }
+    // TODO(wittjosiah): This test is broken.
+    // "e2e": {
+    //   "executor": "@dxos/mocha:browser",
+    //   "options": {
+    //     "testPatterns": [
+    //       "e2e/protobuf-compiler/browser-test/*.test.ts"
+    //     ],
+    //     "browsers": [
+    //       "chromium"
+    //     ],
+    //     "setup": "e2e/protobuf-compiler/browser-test/setup.js"
+    //   },
+    //   "dependsOn": [
+    //     "^build"
+    //   ]
+    // }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

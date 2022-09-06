@@ -13,9 +13,6 @@
   ],
   "references": [
     {
-      "path": "../../packages/gravity/browser-mocha"
-    },
-    {
       "path": "../../packages/common/codec-protobuf"
     },
     {

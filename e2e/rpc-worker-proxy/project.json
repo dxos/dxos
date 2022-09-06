@@ -37,9 +37,9 @@
       "executor": "@dxos/playwright:playwright",
       "options": {
         "testPatterns": [
-          "packages/common/rpc-worker-proxy-e2e/playwright/tests/*.test.ts"
+          "e2e/rpc-worker-proxy/playwright/tests/*.test.ts"
         ],
-        "config": "packages/common/rpc-worker-proxy-e2e/playwright/config.ts"
+        "config": "e2e/rpc-worker-proxy/playwright/config.ts"
       }
     }
   },

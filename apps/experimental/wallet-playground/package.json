@@ -10,7 +10,6 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
     "bundle": "toolchain bundle:app",
     "check": "true",
     "start": "toolchain start"

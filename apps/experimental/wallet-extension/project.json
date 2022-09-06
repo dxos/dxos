@@ -8,7 +8,7 @@
         "{options.basePath}{options.outputPath}"
       ],
       "options": {
-        "basePath": "packages/wallet/wallet-extension/src/proto/"
+        "basePath": "apps/experimental/wallet-extension/src/proto/"
       }
     },
     "build": {
@@ -17,12 +17,12 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/wallet/wallet-extension/dist",
-        "tsConfig": "packages/wallet/wallet-extension/tsconfig.json",
-        "main": "packages/wallet/wallet-extension/src/index.ts",
+        "outputPath": "apps/experimental/wallet-extension/dist",
+        "tsConfig": "apps/experimental/wallet-extension/tsconfig.json",
+        "main": "apps/experimental/wallet-extension/src/index.ts",
         "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
-          "packages/wallet/wallet-extension/*.md"
+          "apps/experimental/wallet-extension/*.md"
         ]
       }
     },

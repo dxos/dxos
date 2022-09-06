@@ -10,17 +10,6 @@
           "apps/hello-world/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
-      "options": {
-        "testPatterns": [
-          "packages/demos/kai/src/**/*.test.{ts,tsx,js,jsx}"
-        ]
-      }
     }
-  },
-  "implicitDependencies": [
-    "mocha"
-  ]
+  }
 }

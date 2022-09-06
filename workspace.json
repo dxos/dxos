@@ -17,7 +17,7 @@
     "devtools": "packages/devtools/devtools",
     "devtools-extension": "packages/devtools/devtools-extension",
     "devtools-mesh": "packages/devtools/devtools-mesh",
-    "dx-cli": "packages/demos/dx-cli",
+    "dx-cli": "apps/dx-cli",
     "echo-db": "packages/echo/echo-db",
     "echo-protocol": "packages/echo/echo-protocol",
     "echo-testing": "packages/echo/echo-testing",
@@ -71,7 +71,6 @@
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "typedoc": "packages/common/typedoc",
     "util": "packages/common/util",
-    "wallet": "packages/wallet/wallet",
     "wallet-extension": "apps/experimental/wallet-extension",
     "wallet-playground": "apps/experimental/wallet-playground",
     "vite-plugin": "tools/vite-plugin"
