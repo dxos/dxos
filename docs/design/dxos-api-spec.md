@@ -91,8 +91,6 @@ import { PublicKey } from '@dxos/protocols';
 
 import { Client, InvitationOffer, Item, Role } from './api';
 
-const createClient = () => ({} as Client);
-
 // eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Experimental API', () => {
   test('All aspects', async () => {
@@ -111,7 +109,7 @@ describe.skip('Experimental API', () => {
       // Recover profile.
       // TODO(burdon): Currently requires another device to be online (to sync profile and complete.)
       {
-        const client2 = createClient();
+        const client2 = new Client();
         expect(client2.halo.profile).not.toBeDefined();
         const profile = await client2.halo.recoverProfile(privateKey);
         expect(PublicKey.equals(profile.publicKey, client2.halo.profile.publicKey)).toBeTruthy();
@@ -135,7 +133,7 @@ describe.skip('Experimental API', () => {
         });
 
         // New device initiates the request to join.
-        const client2 = createClient();
+        const client2 = new Client();
         expect(client2.halo.profile).not.toBeDefined();
         const request = client2.halo.createDeviceAdmissionRequest();
 
@@ -179,7 +177,7 @@ describe.skip('Experimental API', () => {
 
       {
         // Accept invitation.
-        const client2 = createClient();
+        const client2 = new Client();
         const offer = client2.spaces.createInvitationOffer(invitation.offerKey);
         const spaceKey = await offer.accept(invitation.secret);
 
