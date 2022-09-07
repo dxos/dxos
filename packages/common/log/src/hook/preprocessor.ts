@@ -1,4 +1,4 @@
-import { Argument, ArrowFunctionExpression, AssignmentExpression, BlockStatement, CallExpression, ClassMember, ClassMethod, ComputedPropName, Declaration, Expression, Fn, FunctionDeclaration, Identifier, Import, MemberExpression, Module, ParenthesisExpression, PrivateName, Program, ReturnStatement, SequenceExpression, Span, Statement, Super, transformSync, UpdateExpression } from "@swc/core";
+import { Argument, ArrowFunctionExpression, AssignmentExpression, BlockStatement, CallExpression, ClassMember, ClassMethod, ComputedPropName, Declaration, Expression, Fn, FunctionDeclaration, Identifier, Import, MemberExpression, Module, ParenthesisExpression, PrivateName, Program, ReturnStatement, SequenceExpression, Span, Statement, Super, transformSync, TsType, UpdateExpression } from "@swc/core";
 import { Visitor } from "@swc/core/Visitor.js";
 
 export function preprocess(code: string, filename: string) {
@@ -8,6 +8,10 @@ export function preprocess(code: string, filename: string) {
     plugin: (m) => new TraceInjector(filename).visitProgram(m),
     jsc: {
       target: 'es2022',
+      parser: {
+        syntax: 'typescript',
+        decorators: true,
+      }
     },
   });
 }
@@ -20,6 +24,10 @@ class TraceInjector extends Visitor {
     private readonly filename: string,
   ) {
     super()
+  }
+
+  override visitTsType(n: TsType) {
+    return n
   }
 
   override visitCallExpression(n: CallExpression): Expression {
