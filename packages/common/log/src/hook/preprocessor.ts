@@ -1,11 +1,11 @@
-import { Argument, ArrowFunctionExpression, AssignmentExpression, BlockStatement, CallExpression, ClassMember, ClassMethod, ComputedPropName, Declaration, Expression, Fn, FunctionDeclaration, Identifier, Import, MemberExpression, Module, ParenthesisExpression, PrivateName, Program, ReturnStatement, SequenceExpression, Span, Statement, Super, transformSync, TsType, UpdateExpression } from "@swc/core";
+import { CallExpression, Expression, Import, Program, Span, Super, transformSync, TsType } from "@swc/core";
 import { Visitor } from "@swc/core/Visitor.js";
 
 export function preprocess(code: string, filename: string) {
   return transformSync(code, {
     // sourceMaps: true,
     // sourceFileName: filename,
-    plugin: (m) => new TraceInjector(filename).visitProgram(m),
+    plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
     jsc: {
       target: 'es2022',
       parser: {
@@ -23,21 +23,45 @@ export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
 
 class TraceInjector extends Visitor {
   programSpan!: Span
+  private _linePositions: number[] = []
   constructor(
     private readonly filename: string,
+    private readonly code: string,
   ) {
     super()
+
+    this._linePositions.push(0);
+    for(let i = 0; i < code.length; i++) {
+      if(code[i] === '\n') {
+        this._linePositions.push(i + 1);
+      }
+    }
+  }
+
+  private _getLineAndColumn(position: number) {
+    let line = this._linePositions.findIndex((linePosition) => linePosition > position);
+    if(line === -1) {
+      line = this._linePositions.length;
+    }
+    const column = position - this._linePositions[line - 1];
+    console.log(position, line, this._linePositions, this.code.length);
+    return { line, column };
   }
 
   override visitTsType(n: TsType) {
     return n
   }
 
+  override visitProgram(node: Program) {
+    this.programSpan = node.span;
+    return super.visitProgram(node);
+  }
   override visitCallExpression(n: CallExpression): Expression {
     if (
       isLoggerFuncExpression(n.callee) ||
       n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object)
     ) {
+      console.log(n.span);
       // Matches expressions of form: 
       // log(...)
       // <obj>.log(...)
@@ -82,7 +106,7 @@ class TraceInjector extends Visitor {
                 },
                 value: {
                   type: 'NumericLiteral',
-                  value: 1,
+                  value: this._getLineAndColumn(n.span.start - this.programSpan.start).line,
                   span: ZERO_SPAN,
                 }
               },
