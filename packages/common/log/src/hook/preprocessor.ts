@@ -44,7 +44,6 @@ class TraceInjector extends Visitor {
       line = this._linePositions.length;
     }
     const column = position - this._linePositions[line - 1];
-    console.log(position, line, this._linePositions, this.code.length);
     return { line, column };
   }
 
@@ -61,11 +60,9 @@ class TraceInjector extends Visitor {
       isLoggerFuncExpression(n.callee) ||
       n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object)
     ) {
-      console.log(n.span);
       // Matches expressions of form: 
       // log(...)
-      // <obj>.log(...)
-      // <obj>.log.<level>(...)
+      // log.<level>(...)
 
       if (n.arguments.length === 1) {
         n.arguments.push({

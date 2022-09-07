@@ -1,5 +1,6 @@
 import { inspect } from "util";
 import { LogLevel, logLevelIndex, LogProcessor } from "./log";
+import chalk from 'chalk'
 
 const minLogLevel = logLevelIndex((process.env.DX_LOG_LEVEL?.toLowerCase() ?? 'info') as LogLevel);
 
@@ -8,12 +9,12 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
     return;
   }
 
-  const level = entry.level.toUpperCase().padEnd(5);
+  const level = chalk[LEVEL_COLORS[entry.level]](entry.level.toUpperCase().padEnd(5));
 
   let buffer = '';
 
   if (entry.meta) {
-    buffer += `${entry.meta.file}:${entry.meta.line} `;
+    buffer += chalk.gray(`${entry.meta.file}:${entry.meta.line} `);
   }
 
   buffer += `${level} ${entry.message}`;
@@ -24,4 +25,11 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
   }
 
   console.log(buffer);
+}
+
+const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
+  debug: 'blue',
+  info: 'white',
+  warn: 'yellow',
+  error: 'red'
 }
