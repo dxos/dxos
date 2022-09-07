@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-export function preprocess(code: string, filename: string) {
+import { CallExpression, Expression, Import, Program, Span, Super, transformSync, TsType } from '@swc/core';
+import Visitor from '@swc/core/Visitor';
+
+export const preprocess = (code: string, filename: string) => {
   return transformSync(code, {
     sourceMaps: true,
     inlineSourcesContent: true,
@@ -12,11 +15,11 @@ export function preprocess(code: string, filename: string) {
       target: 'es2022',
       parser: {
         syntax: 'typescript',
-        decorators: true,
-      },
-    },
+        decorators: true
+      }
+    }
   });
-}
+};
 
 const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 
@@ -61,7 +64,7 @@ class TraceInjector extends Visitor {
   override visitCallExpression (n: CallExpression): Expression {
     if (
       isLoggerFuncExpression(n.callee) ||
-      n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object)
+      (n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object))
     ) {
       // Matches expressions of form:
       // log(...)
@@ -107,6 +110,7 @@ class TraceInjector extends Visitor {
                 },
                 value: {
                   type: 'NumericLiteral',
+
                   value: this._getLineAndColumn(n.span.start - this.programSpan.start).line,
                   span: ZERO_SPAN
                 }

@@ -5,14 +5,20 @@
 import { log } from './log';
 
 describe('log', () => {
+  it('line numbers', () => {
+    log.warn('LOG LINE 9');
+    try {
+      throw new Error('ERROR ON LINE 10');
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
   it('levels', () => {
     log('Default level log message');
     log.debug('Debug level log message');
     log.info('Info level log message');
     log.warn('Warn level log message');
-
-    // throw new Error('xxxxxx');
-
     log.error('Error level log message');
   });
 

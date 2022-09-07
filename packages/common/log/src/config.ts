@@ -39,7 +39,7 @@ const levels: {[index: string]: LogLevel} = {
 
 export const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
 
-export type LogProcessor = (config: LogConfig, entry: LogEntry) => void;
+export type LogProcessor = (config: LogConfig, entry: LogEntry) => void
 
 export enum LogProcessorType {
   CONSOLE = 'console',
