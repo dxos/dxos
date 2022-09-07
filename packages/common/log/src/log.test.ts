@@ -8,7 +8,7 @@ describe('log', () => {
   it('line numbers', () => {
     log.warn('LOG LINE 9');
     try {
-      throw new Error('ERROR ON LINE 10');
+      throw new Error('ERROR ON LINE 11');
     } catch (err) {
       console.error(err);
     }

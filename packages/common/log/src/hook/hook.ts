@@ -18,9 +18,8 @@ export const register = () => {
         SourcemapMap.set(filename, output.map);
       }
 
-      const sourceMap = getSourceMap(filename)
-
       // Write code for debugging
+      // const sourceMap = getSourceMap(filename)
       // const path = join(process.cwd(), '.trace-compiled', filename);
       // mkdirSync(dirname(path), { recursive: true });
       // writeFileSync(path, output.code, { encoding: 'utf-8' });
