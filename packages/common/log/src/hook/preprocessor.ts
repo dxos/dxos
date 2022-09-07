@@ -3,15 +3,16 @@ import { Visitor } from "@swc/core/Visitor.js";
 
 export function preprocess(code: string, filename: string) {
   return transformSync(code, {
-    // sourceMaps: true,
-    // sourceFileName: filename,
+    sourceMaps: true,
+    inlineSourcesContent: true,
+    sourceFileName: filename,
     plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
     jsc: {
       target: 'es2022',
       parser: {
         syntax: 'typescript',
         decorators: true,
-      }
+      },
     },
   });
 }
