@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
+  },
+  "include": [
+    "src",
+    "browser-test"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/codec-protobuf"
+    },
+    {
+      "path": "../../tools/executors/protobuf-compiler"
+    }
+  ]
+}

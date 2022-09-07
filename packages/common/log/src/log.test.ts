@@ -13,7 +13,7 @@ describe('log', () => {
     log.warn('LOG LINE 11');
 
     try {
-      throw new Error('ERROR ON LINE 14');
+      throw new Error('ERROR ON LINE 16');
     } catch (err: any) {
       log.catch(err);
     }

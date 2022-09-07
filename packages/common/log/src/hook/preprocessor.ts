@@ -28,6 +28,7 @@ export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
 
 class TraceInjector extends Visitor {
   programSpan!: Span;
+  spanOffset = 0;
   private _linePositions: number[] = [];
   constructor (
     private readonly filename: string,
@@ -57,6 +58,11 @@ class TraceInjector extends Visitor {
   }
 
   override visitProgram (node: Program) {
+    this.spanOffset = this.code.indexOf('import');
+    if (this.spanOffset === -1) {
+      this.spanOffset = 0;
+    }
+
     this.programSpan = node.span;
     return super.visitProgram(node);
   }
@@ -111,7 +117,7 @@ class TraceInjector extends Visitor {
                 value: {
                   type: 'NumericLiteral',
 
-                  value: this._getLineAndColumn(n.span.start - this.programSpan.start).line,
+                  value: this._getLineAndColumn(n.span.start - this.programSpan.start + this.spanOffset).line,
                   span: ZERO_SPAN
                 }
               },
