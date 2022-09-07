@@ -9,6 +9,7 @@ import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from '
 import { SourcemapMap } from "@swc-node/sourcemap-support";
 import { loadSync } from 'sorcery'
 
+// TODO(dmaretskyi): Move to separate package in tools.
 
 export const register = () => {
   addHook((code, filename) => {
