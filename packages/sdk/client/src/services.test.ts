@@ -10,8 +10,8 @@ import { failUndefined } from '@dxos/debug';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { Client } from './client';
 import { InvitationRequest, RedeemedInvitation } from './packlets/proto';
+import { Client } from './packlets/proxy';
 
 const setup = async () => {
   const client = new Client();

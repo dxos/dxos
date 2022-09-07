@@ -17,7 +17,6 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       '@dxos/client',
-      '@dxos/client/client',
       '@dxos/config',
       '@dxos/protocols',
       '@dxos/react-async',

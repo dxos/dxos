@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { Client } from '@dxos/client/client';
+import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { MetadataStore } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';

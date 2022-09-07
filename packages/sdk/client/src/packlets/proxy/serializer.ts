@@ -4,7 +4,7 @@
 
 import { Party } from '../api';
 import { schema } from '../proto';
-import { Client } from './client-proxy';
+import { Client } from './client';
 
 const partyCodec = schema.getCodecForType('dxos.echo.snapshot.PartySnapshot');
 
