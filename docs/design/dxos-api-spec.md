@@ -157,7 +157,7 @@ describe.skip('Experimental API', () => {
     // Query contacts within circle.
     //
     {
-      const contacts = client1.circle.queryContacts();
+      const contacts = client1.contacts.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
         const receipt = await client1.messenger.send(contact.publicKey, { message: `Hello ${contact.username}!` });
         expect(receipt.recipient).toBe(contact.publicKey);
@@ -194,7 +194,7 @@ describe.skip('Experimental API', () => {
     //
     {
       const space = await client1.spaces.createSpace();
-      const contacts = client1.circle.queryContacts({ name: 'alice' });
+      const contacts = client1.contacts.queryContacts({ name: 'alice' });
       const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].publicKey);
       await client1.messenger.send(contacts.elements[0].publicKey, invitation);
       await invitation.wait();
@@ -207,7 +207,7 @@ describe.skip('Experimental API', () => {
     // Receive invitations from existing contact.
     //
     {
-      const invitations = client1.circle.queryInvitations();
+      const invitations = client1.contacts.queryInvitations();
       const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
         if (invitations.length) {
           const spaceKey = await invitations[0].accept();
