@@ -2,7 +2,7 @@ import { log } from './log'
 import { inspect } from 'util'
 import { debugInfo, getCurrentOwnershipScope, ownershipClass } from './ownership'
 
-describe.skip('classes', () => {
+describe('classes', () => {
   it('field instance', () => {
     @ownershipClass
     class Inner {

@@ -1,6 +1,6 @@
 import { log } from './log'
 
-describe.only('log', () => {
+describe('log', () => {
   it('levels', () => {
     log(`Default level log message`)
     log.debug(`Debug level log message`)

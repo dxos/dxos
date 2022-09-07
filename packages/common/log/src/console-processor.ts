@@ -2,10 +2,8 @@ import { inspect } from "util";
 import { LogLevel, logLevelIndex, LogProcessor } from "./log";
 import chalk from 'chalk'
 
-const minLogLevel = logLevelIndex((process.env.DX_LOG_LEVEL?.toLowerCase() ?? 'info') as LogLevel);
-
 export const CONSOLE_PROCESSOR: LogProcessor = entry => {
-  if (logLevelIndex(entry.level) < minLogLevel) {
+  if (!shouldLog(entry.level, entry.meta?.file ?? '')) {
     return;
   }
 
@@ -41,4 +39,26 @@ const getRelativeFilename = (filename: string) => {
     return filename.slice(filename.indexOf('/packages/') + '/packages/'.length);
   }
   return filename
+}
+
+const logFilter = ('process' in globalThis ? process?.env?.DX_LOG : undefined) ?? 'warn';
+
+const parsedFilters = logFilter.split(',').map(filter => {
+  if(!filter.includes(':')) {
+    return {
+      level: logLevelIndex(filter as LogLevel),
+      pattern: undefined
+    }
+  }
+
+  const [pattern, level] = filter.split(':');
+  return {
+    level: logLevelIndex(level as LogLevel),
+    pattern,
+  }
+})
+
+function shouldLog(level: LogLevel, path: string): boolean {
+  const levelIndex = logLevelIndex(level);
+  return parsedFilters.some(filter => filter.pattern ? path.includes(filter.pattern) && levelIndex >= filter.level : levelIndex >= filter.level);
 }

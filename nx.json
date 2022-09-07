@@ -75,7 +75,7 @@
     "test": {
       "inputs": [
         {
-          "env": "DX_LOG_LEVEL"
+          "env": "DX_LOG"
         }
       ],
       "dependsOn": [

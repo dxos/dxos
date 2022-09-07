@@ -75,7 +75,7 @@ export function ownershipClass<T extends {new(...args: any[]): {}}>(constr: T){
 }
 
 export function debugInfo (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  console.log(target, propertyKey, descriptor);
+  // console.log(target, propertyKey, descriptor);
   (target[kDebugInfoProperties] ??= []).push(propertyKey)
 };
 
