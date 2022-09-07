@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './client-proxy';
+export * from './client';
 export * from './devtools';
 export * from './echo-proxy';
 export * from './halo-proxy';

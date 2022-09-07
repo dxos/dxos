@@ -5,8 +5,7 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { defaultTestingConfig } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { defaultTestingConfig, Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 

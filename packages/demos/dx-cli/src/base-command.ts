@@ -10,7 +10,7 @@ import yaml from 'js-yaml';
 import * as path from 'path';
 
 import { sleep } from '@dxos/async';
-import { Client } from '@dxos/client/client';
+import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 
 const log = debug('dxos:cli:main');

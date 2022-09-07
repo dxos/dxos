@@ -8,8 +8,7 @@ import expect from 'expect';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Item, ObjectModel, OrderedList } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 import { SubscriptionGroup } from '@dxos/util';
 
 const createTestComponents = async () => {
