@@ -49,7 +49,10 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
-      - run: pnpm nx bundle halo-app
+      - run:
+          command: pnpm nx bundle halo-app --skip-nx-cache
+          environment:
+            NODE_OPTIONS: --max_old_space_size=8198
       - run:
           name: Deploy HALO
           command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
