@@ -227,7 +227,7 @@ describe.skip('Experimental API', () => {
       const space = await client1.spaces.getSpace(spaces[0].publicKey);
 
       // Create subscription.
-      const result = space.database.queryItems({ type: 'org.dxos.contact' });
+      const result = space.queryItems({ type: 'org.dxos.contact' });
       const count = result.elements.length;
       const subscription = result.onUpdate((items: Item[]) => {
         if (items.length > count) {
@@ -236,7 +236,7 @@ describe.skip('Experimental API', () => {
       });
 
       // Create item.
-      const item = await space.database.createItem({ type: 'org.dxos.contact' });
+      const item = await space.createItem({ type: 'org.dxos.contact' });
       expect(item.publicKey).toBeDefined();
 
       // Query items across all spaces.
