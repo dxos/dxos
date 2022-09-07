@@ -17,12 +17,12 @@ const KEYS_TO_FILE = {
   __CONFIG_DEFAULTS__: 'dx.yml'
 };
 
-export const definitions = ({ dynamic, publicUrl }: ConfigPluginOpts) => {
+export const definitions = ({ configPath, dynamic, publicUrl }: ConfigPluginOpts) => {
   return Object.entries(KEYS_TO_FILE).reduce((prev, [key, value]) => {
     let content = {};
 
     try {
-      content = yaml.load(readFileSync(resolve(CWD, value), 'utf-8')) as any;
+      content = yaml.load(readFileSync(resolve(configPath ?? CWD, value), 'utf-8')) as any;
     } catch (error: any) {
       log(`Failed to load file ${value}:`, error);
     }

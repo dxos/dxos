@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { clientServiceBundle } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { clientServiceBundle, Client } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { createBundledRpcServer } from '@dxos/rpc';
 import { openPort } from '@dxos/rpc-worker-proxy';
