@@ -7,7 +7,6 @@
   "types": "dist/src/index.d.ts",
   "browser": {
     "./dist/src/index.js": "./dist/browser/index.js",
-    "./dist/src/client.js": "./dist/browser/client.js",
     "node:assert": "assert"
   },
   "files": [

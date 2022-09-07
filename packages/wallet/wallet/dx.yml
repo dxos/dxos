@@ -9,6 +9,7 @@ package:
 
 runtime:
   client:
+    mode: local
     storage:
       persistent: true
   services:

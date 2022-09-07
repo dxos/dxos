@@ -7,8 +7,7 @@ import userEvent from '@testing-library/user-event';
 import expect from 'expect';
 import React from 'react';
 
-import { Party } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { Party, Client } from '@dxos/client';
 
 import { useSelection } from './useSelection';
 

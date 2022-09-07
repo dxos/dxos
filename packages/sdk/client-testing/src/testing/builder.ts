@@ -5,8 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { Party } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { Party, Client } from '@dxos/client';
 
 export class Builder {
   _client?: Client;

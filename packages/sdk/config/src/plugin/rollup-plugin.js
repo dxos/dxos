@@ -6,11 +6,11 @@ import assert from 'assert';
 
 import { definitions } from './definitions';
 
-export function ConfigPlugin ({ dynamic = false, publicUrl = '' } = {}) {
+export function ConfigPlugin ({ configPath, dynamic = false, publicUrl = '' } = {}) {
   dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
-  const contents = Object.entries(definitions({ dynamic, publicUrl }))
+  const contents = Object.entries(definitions({ configPath, dynamic, publicUrl }))
     .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
     .join('\n');
 
