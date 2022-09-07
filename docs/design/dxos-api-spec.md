@@ -104,7 +104,7 @@ describe.skip('Experimental API', () => {
     {
       // Create profile.
       const privateKey = await client1.halo.createProfile();
-      const publicKey = client1.halo.profile.publicKey;
+      const { publicKey } = client1.halo.profile;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
       expect(client1.halo.device).toBeDefined();
 
@@ -169,7 +169,7 @@ describe.skip('Experimental API', () => {
     //
     {
       // Create Space.
-      const space = await client1.brane.createSpace();
+      const space = await client1.spaces.createSpace();
       const invitation = space.createInvitation(Role.ADMIN);
       setImmediate(async () => {
         await invitation.wait();
@@ -180,10 +180,10 @@ describe.skip('Experimental API', () => {
       {
         // Accept invitation.
         const client2 = createClient();
-        const offer = client2.brane.createInvitationOffer(invitation.offerKey);
+        const offer = client2.spaces.createInvitationOffer(invitation.offerKey);
         const spaceKey = await offer.accept(invitation.secret);
 
-        const space = await client2.brane.getSpace(spaceKey);
+        const space = await client2.spaces.getSpace(spaceKey);
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
       }
@@ -193,7 +193,7 @@ describe.skip('Experimental API', () => {
     // Create space and send invitation to existing contact.
     //
     {
-      const space = await client1.brane.createSpace();
+      const space = await client1.spaces.createSpace();
       const contacts = client1.circle.queryContacts({ name: 'alice' });
       const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].publicKey);
       await client1.messenger.send(contacts.elements[0].publicKey, invitation);
@@ -221,8 +221,8 @@ describe.skip('Experimental API', () => {
     // Query spaces within brane.
     //
     {
-      const spaces = client1.brane.querySpaceKeys();
-      const space = await client1.brane.getSpace(spaces.elements[0]);
+      const spaces = client1.spaces.querySpaceKeys();
+      const space = await client1.spaces.getSpace(spaces.elements[0]);
 
       // Create subscription.
       const result = space.database.queryItems({ type: 'org.dxos.contact' });
@@ -238,7 +238,7 @@ describe.skip('Experimental API', () => {
       expect(item.publicKey).toBeDefined();
 
       // Query items across all spaces.
-      const items = client1.brane.queryItems({ type: 'org.dxos.contact' });
+      const items = client1.spaces.queryItems({ type: 'org.dxos.contact' });
       expect(items.elements.length).toBeGreaterThan(0);
     }
 
