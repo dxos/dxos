@@ -10,12 +10,18 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
 
   const level = entry.level.toUpperCase().padEnd(5);
 
-  let buffer = entry.message;
+  let buffer = '';
+
+  if (entry.meta) {
+    buffer += `${entry.meta.file}:${entry.meta.line} `;
+  }
+
+  buffer += `${level} ${entry.message}`;
 
   if(entry.ctx && Object.keys(entry.ctx).length > 0) {
     buffer += ' '
     buffer += inspect(entry.ctx, false, undefined, true);
   }
 
-  console.log(`${entry.meta?.file} ${level} ${buffer}`);
+  console.log(buffer);
 }

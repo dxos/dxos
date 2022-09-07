@@ -73,6 +73,11 @@
       ]
     },
     "test": {
+      "inputs": [
+        {
+          "env": "DX_LOG_LEVEL"
+        }
+      ],
       "dependsOn": [
         "^build",
         "proto"
