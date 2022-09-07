@@ -1,13 +1,16 @@
-import { mkdirSync, writeFileSync } from 'fs';
-import { dirname, extname, join, parse } from 'path';
+//
+// Copyright 2022 DXOS.org
+//
+
 import { addHook } from 'pirates';
+
 import { getCurrentOwnershipScope } from '../ownership';
 import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
 import { SourcemapMap } from "@swc-node/sourcemap-support";
 import { loadSync } from 'sorcery'
 
 
-export function register() {
+export const register = () => {
   addHook((code, filename) => {
     try {
       const output = preprocess(code, filename)
@@ -18,39 +21,41 @@ export function register() {
       const sourceMap = getSourceMap(filename)
 
       // Write code for debugging
-      const path = join(process.cwd(), '.trace-compiled', filename)
-      mkdirSync(dirname(path), { recursive: true })
-      writeFileSync(path, output.code, { encoding: 'utf-8' })
-      writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' })
-      if (sourceMap) {
-        writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap, { encoding: 'utf-8' })
-      }
+      // const path = join(process.cwd(), '.trace-compiled', filename);
+      // mkdirSync(dirname(path), { recursive: true });
+      // writeFileSync(path, output.code, { encoding: 'utf-8' });
+      // writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
+      // if (sourceMap) {
+      //   writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}.map`, sourceMap, { encoding: 'utf-8' });
+      // }
 
-      return output.code
+      return output.code;
     } catch (err) {
-      console.error(err)
-      throw err
+      console.error(err);
+      throw err;
     }
   }, {
-    extensions: ['.ts'],
+    extensions: ['.ts']
   });
 
-  function getSourceMap(filename: string): string | undefined {
+  const getSourceMap = (filename: string): string | undefined => {
     try {
-      const { retrieveSourceMap } = require('source-map-support')
-      const sourceMap = retrieveSourceMap(filename)
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { retrieveSourceMap } = require('source-map-support');
+      const sourceMap = retrieveSourceMap(filename);
       if (sourceMap) {
-        return typeof sourceMap.map === 'string' ? sourceMap.map : JSON.stringify(sourceMap.map)
+        return typeof sourceMap.map === 'string' ? sourceMap.map : JSON.stringify(sourceMap.map);
       }
-    } catch (err) { }
+    } catch (err) {}
 
     try {
-      const { SourcemapMap } = require('@swc-node/sourcemap-support')
-      const sourceMap = SourcemapMap.get(filename)
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { SourcemapMap } = require('@swc-node/sourcemap-support');
+      const sourceMap = SourcemapMap.get(filename);
       if (sourceMap) {
-        return sourceMap
+        return sourceMap;
       }
-    } catch (err) { }
+    } catch (err) {}
 
     return undefined;
   }
@@ -60,10 +65,10 @@ export function register() {
   patchSourceMaps()
 }
 
-const BUGCHECK_STRING = 'If you see this messages then it means that the source code preprocessor for @dxos/log is broken.'
-  + ' It probably has misinterpreted an unrelated call for a logger invocation.';
+const BUGCHECK_STRING = 'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
+' It probably has misinterpreted an unrelated call for a logger invocation.';
 
-function registerGlobals() {
+const registerGlobals = () => {
   (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = getCurrentOwnershipScope;
   (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
 }

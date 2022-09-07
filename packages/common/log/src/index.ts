@@ -1,3 +1,6 @@
-export * from './log'
-export { DEBUG_PROCESSOR } from './debug-processor'
-export { CONSOLE_PROCESSOR } from './console-processor'
+//
+// Copyright 2022 DXOS.org
+//
+
+export * from './log';
+export { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';

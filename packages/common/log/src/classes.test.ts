@@ -1,13 +1,16 @@
-import { log } from './log'
-import { inspect } from 'util'
-import { debugInfo, getCurrentOwnershipScope, ownershipClass } from './ownership'
+//
+// Copyright 2022 DXOS.org
+//
+
+import { log } from './log';
+import { debugInfo, ownershipClass } from './ownership';
 
 describe('classes', () => {
   it('field instance', () => {
     @ownershipClass
     class Inner {
-      run() {
-        log(`Running`)
+      run () {
+        log('Running');
       }
     }
 
@@ -15,17 +18,17 @@ describe('classes', () => {
     class Outer {
       inner = new Inner();
 
-      constructor(
-        private readonly _id: string,
+      constructor (
+        private readonly _id: string
       ) {}
 
       @debugInfo
-      get id() {
+      get id () {
         return this._id;
       }
 
-      run() {
-        this.inner.run()
+      run () {
+        this.inner.run();
       }
     }
 
@@ -34,13 +37,13 @@ describe('classes', () => {
 
     foo.run();
     bar.run();
-  })
+  });
 
   it('return values', async () => {
     @ownershipClass
     class Instance {
-      run() {
-        log(`Running`)
+      run () {
+        log('Running');
       }
     }
 
@@ -48,17 +51,17 @@ describe('classes', () => {
     class Factory {
       inner = new Instance();
 
-      constructor(
-        private readonly _id: string,
+      constructor (
+        private readonly _id: string
       ) {}
 
       @debugInfo
-      get id() {
+      get id () {
         return this._id;
       }
 
-      async create() {
-        return new Instance()
+      async create () {
+        return new Instance();
       }
     }
 
@@ -69,5 +72,5 @@ describe('classes', () => {
     const barInstance = await bar.create();
     fooInstance.run();
     barInstance.run();
-  })
-})
+  });
+});

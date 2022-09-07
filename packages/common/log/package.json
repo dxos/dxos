@@ -24,7 +24,7 @@
   "devDependencies": {
     "@swc-node/sourcemap-support": "^0.2.0",
     "@swc/core": "~1.2.248",
-    "@types/mocha": "~8.2.2",
+    "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
