@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// The import order here is important.
+// NOTE: The import order here is important.
 // The `require` hooks that are registered in those modules will be run in the same order as they are imported.
 // We want the logger preprocessor to be run on typescript source first.
 // Then the SWC will transpile the typescript source to javascript.

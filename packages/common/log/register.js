@@ -1,1 +1,5 @@
-require('./dist/src/hook/register')
+//
+// Copyright 2022 DXOS.org
+//
+
+require('./dist/src/hook/register');

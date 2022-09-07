@@ -16,6 +16,7 @@ export const removeTrailing = (content: string) => {
       break;
     }
   }
+
   if (n < lines.length - 1) {
     lines.splice(n + 1);
     content = lines.join('\n');

@@ -1,69 +1,73 @@
-import { inspect } from "util";
+//
+// Copyright 2022 DXOS.org
+//
 
-const kOwnershipScope = Symbol('kOwnershipScope')
-const kCurrentOwnershipScope = Symbol('kCurrentOwnershipScope')
-const kDebugInfoProperties = Symbol('kDebugInfoProperties')
+import { inspect } from 'util';
+
+const kOwnershipScope = Symbol('kOwnershipScope');
+const kCurrentOwnershipScope = Symbol('kCurrentOwnershipScope');
+const kDebugInfoProperties = Symbol('kDebugInfoProperties');
 
 export class OwnershipScope {
   public instance: any;
 
-  constructor(
+  constructor (
     public constr: any,
     public parent?: OwnershipScope
   ) {}
 
-  getInfo() {
-    if(!this.instance) {
-      return {}
+  getInfo () {
+    if (!this.instance) {
+      return {};
     }
     const props = this.constr.prototype[kDebugInfoProperties] ?? [];
-    const info: any = {}
-    for(const prop of props) {
+    const info: any = {};
+    for (const prop of props) {
       info[prop] = this.instance[prop];
     }
-    return info
+    return info;
   }
 
-  [inspect.custom]() {
+  [inspect.custom] () {
     return {
       className: this.constr.name,
       info: this.getInfo(),
-      parent: this.parent,
-    }
+      parent: this.parent
+    };
   }
 }
 
-function decorateMethodWeakReturnOwnership(prototype: any, key: string) {
-  const original = prototype[key]
+function decorateMethodWeakReturnOwnership (prototype: any, key: string) {
+  const original = prototype[key];
   prototype[key] = function (...args: any) {
     const res = original.apply(this, ...args);
 
-    if(res && typeof res.then === 'function') {
+    if (res && typeof res.then === 'function') {
       res.then((value: any) => {
-        if(kOwnershipScope in value) {
-          value[kOwnershipScope].parent ??= this[kOwnershipScope]
+        if (kOwnershipScope in value) {
+          value[kOwnershipScope].parent ??= this[kOwnershipScope];
         }
-      })
+      });
     } else {
-      if(res && kOwnershipScope in res) {
-        res[kOwnershipScope].parent ??= this[kOwnershipScope]
+      if (res && kOwnershipScope in res) {
+        res[kOwnershipScope].parent ??= this[kOwnershipScope];
       }
     }
 
-    return res
-  }
+    return res;
+  };
 
 }
 
-export function ownershipClass<T extends {new(...args: any[]): {}}>(constr: T){
-  for(const key of Object.getOwnPropertyNames(constr.prototype)) {
-    if(key !== 'constructor' && typeof constr.prototype[key] === 'function') {
-      decorateMethodWeakReturnOwnership(constr.prototype, key)
+export function ownershipClass<T extends {new (...args: any[]): {}}>(constr: T) {
+  for (const key of Object.getOwnPropertyNames(constr.prototype)) {
+    if (key !== 'constructor' && typeof constr.prototype[key] === 'function') {
+      decorateMethodWeakReturnOwnership(constr.prototype, key);
     }
   }
 
   return class extends constr {
-    constructor(...args: any[]) {
+    constructor (...args: any[]) {
       const currentCausality = (globalThis as any)[kCurrentOwnershipScope];
       (globalThis as any)[kCurrentOwnershipScope] = new OwnershipScope(constr, currentCausality);
       super(...args);
@@ -71,16 +75,12 @@ export function ownershipClass<T extends {new(...args: any[]): {}}>(constr: T){
       (this as any)[kOwnershipScope].instance = this;
       (globalThis as any)[kCurrentOwnershipScope] = currentCausality;
     }
-  }
+  };
 }
 
-export function debugInfo (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+export const debugInfo = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
   // console.log(target, propertyKey, descriptor);
-  (target[kDebugInfoProperties] ??= []).push(propertyKey)
+  (target[kDebugInfoProperties] ??= []).push(propertyKey);
 };
 
-export function getCurrentOwnershipScope(thisRef: any) {
-  return undefined
-  // TODO(dmaretskyi): Disabled for now.
-  // return thisRef[kOwnershipScope] ?? (globalThis as any)[kCurrentOwnershipScope];
-}
+export const getCurrentOwnershipScope = (thisRef: any) => undefined;

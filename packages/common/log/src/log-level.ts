@@ -1,11 +1,15 @@
+//
+// Copyright 2022 DXOS.org
+//
 
+// TODO(burdon): Enum?
 export type LogLevel =
-| 'debug'
-| 'info'
-| 'warn'
-| 'error'
+  | 'debug'
+  | 'info'
+  | 'warn'
+  | 'error'
 
-export function logLevelIndex(level: LogLevel): number {
+export const logLevelIndex = (level: LogLevel): number => {
   switch (level) {
     case 'debug':
       return 0;
@@ -18,4 +22,4 @@ export function logLevelIndex(level: LogLevel): number {
     default:
       return 0;
   }
-}
+};
