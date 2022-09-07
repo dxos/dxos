@@ -45,9 +45,9 @@ jobs:
             equal: [ production, <<pipeline.git.branch>> ]
           steps:
             - persist_to_workspace:
-                root: packages/wallet/wallet/out
+                root: apps/halo/out
                 paths:
-                  - wallet
+                  - halo
 
   deploy:
     docker:
@@ -60,7 +60,7 @@ jobs:
       - run: pnpm install
       - run:
           name: Deploy HALO
-          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir /tmp/out/wallet
+          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir /tmp/out/halo
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
 
