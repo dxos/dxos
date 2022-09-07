@@ -19,8 +19,9 @@ export type LogContext = Record<string, any>
 export interface LogEntry {
   level: LogLevel
   message: string
-  ctx: LogContext | undefined
-  meta: LogMetadata | undefined
+  ctx?: LogContext
+  meta?: LogMetadata
+  error?: Error
 }
 
 export enum LogLevel {
@@ -35,6 +36,13 @@ const levels: {[index: string]: LogLevel} = {
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
   error: LogLevel.ERROR
+};
+
+export const shortLevelName = {
+  [LogLevel.DEBUG]: 'DBG',
+  [LogLevel.INFO]: 'INF',
+  [LogLevel.WARN]: 'WRN',
+  [LogLevel.ERROR]: 'ERR'
 };
 
 export const parseLogLevel = (level: string, defValue = LogLevel.WARN) => levels[level.toLowerCase()] ?? defValue;
@@ -52,7 +60,7 @@ export enum LogProcessorType {
 
 export interface LogConfig {
   processor?: string
-  filter?: string // DX_LOG
+  filter?: string | LogLevel
 }
 
 export const defaultConfig: LogConfig = {
@@ -61,22 +69,24 @@ export const defaultConfig: LogConfig = {
 };
 
 export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {
-  if (!config.filter) {
-    return false;
+  if (config.filter === undefined) {
+    return true;
   }
 
   // TODO(burdon): Cache as part of config object.
-  const filters = config.filter
-    .split(/,\s+/)
-    .map(filter => {
-      const [pattern, level] = filter.split(':');
-      return level ? {
-        level: parseLogLevel(level),
-        pattern
-      } : {
-        level: parseLogLevel(pattern)
-      };
-    });
+  const filters = (typeof config.filter === 'number')
+    ? [{ level: config.filter }]
+    : config.filter
+      .split(/,\s+/)
+      .map(filter => {
+        const [pattern, level] = filter.split(':');
+        return level ? {
+          level: parseLogLevel(level),
+          pattern
+        } : {
+          level: parseLogLevel(pattern)
+        };
+      });
 
   return filters.some(filter => level >= filter.level && (!filter.pattern || path.includes(filter.pattern)));
 };

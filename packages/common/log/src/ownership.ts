@@ -56,7 +56,6 @@ function decorateMethodWeakReturnOwnership (prototype: any, key: string) {
 
     return res;
   };
-
 }
 
 export function ownershipClass<T extends {new (...args: any[]): {}}>(constr: T) {
