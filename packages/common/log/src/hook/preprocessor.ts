@@ -32,15 +32,13 @@ class TraceInjector extends Visitor {
 
   override visitCallExpression(n: CallExpression): Expression {
     if(
-      n.callee.type === 'TaggedTemplateExpression' && (
-        isLoggerFuncExpression(n.callee.tag) ||
-        n.callee.tag.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.tag.object)
-      )
+      isLoggerFuncExpression(n.callee) ||
+      n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object)
     ) {
       // Matches expressions of form: 
-      // log`...`(...)
-      // <obj>.log`...`(...)
-      // <obj>.log.<level>`...`(...)
+      // log(...)
+      // <obj>.log(...)
+      // <obj>.log.<level>(...)
 
       if(n.arguments.length === 0) {
         n.arguments.push({
@@ -122,6 +120,6 @@ class TraceInjector extends Visitor {
   }
 }
 
-const isLoggerFuncExpression = (e: Expression) => 
+const isLoggerFuncExpression = (e: Expression | Super | Import) => 
   e.type === 'Identifier' && e.value === 'log' ||
   e.type === 'MemberExpression' && e.property.type === 'Identifier' && e.property.value === 'log'

@@ -7,7 +7,7 @@ describe.skip('classes', () => {
     @ownershipClass
     class Inner {
       run() {
-        log`Running`()
+        log(`Running`)
       }
     }
 
@@ -40,7 +40,7 @@ describe.skip('classes', () => {
     @ownershipClass
     class Instance {
       run() {
-        log`Running`()
+        log(`Running`)
       }
     }
 

@@ -10,14 +10,7 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
 
   const level = entry.level.toUpperCase().padEnd(5);
 
-  let buffer = ''
-  for(const part of entry.message) {
-    buffer += part;
-    const param = entry.params.shift();
-    if (param !== undefined) {
-      buffer += inspect(param);
-    }
-  }
+  let buffer = entry.message;
 
   if(entry.ctx && Object.keys(entry.ctx).length > 0) {
     buffer += ' '

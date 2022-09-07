@@ -49,5 +49,9 @@ export function register() {
     return undefined;
   }
 
+  registerGlobals()
+}
+
+function registerGlobals() {
   (globalThis as any).getCurrentOwnershipScope = getCurrentOwnershipScope;
 }
