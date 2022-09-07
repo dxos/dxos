@@ -1310,6 +1310,7 @@ importers:
       chalk: ^4.1.0
       columnify: ^1.6.0
       debug: ^4.3.3
+      echo-db:workspace:*: link:@dxos/echo-db:workspace:*
       faker: ^5.1.0
       json-stable-stringify: ^1.0.1
       lodash.defaultsdeep: ^4.6.1
@@ -1337,6 +1338,7 @@ importers:
       base-x: 3.0.9
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
+      echo-db:workspace:*: link:@dxos/echo-db:workspace:*
       json-stable-stringify: 1.0.1
       lodash.defaultsdeep: 4.6.1
       lodash.unionwith: 4.6.0

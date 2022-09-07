@@ -1,6 +1,7 @@
 import { inspect } from "util";
-import { LogLevel, logLevelIndex, LogProcessor } from "./log";
+import { LogProcessor } from "./log";
 import chalk from 'chalk'
+import { LogLevel, logLevelIndex } from "./log-level";
 
 export const CONSOLE_PROCESSOR: LogProcessor = entry => {
   if (!shouldLog(entry.level, entry.meta?.file ?? '')) {

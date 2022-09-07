@@ -1,5 +1,6 @@
 import { CONSOLE_PROCESSOR } from "./console-processor"
 import { DEBUG_PROCESSOR } from "./debug-processor"
+import { LogLevel } from "./log-level"
 import type { OwnershipScope } from "./ownership"
 
 export type LogCtx = Record<string, any>
@@ -29,12 +30,6 @@ export interface LogMetadata {
   bugcheck?: string
 }
 
-export type LogLevel =
-  | 'debug'
-  | 'info'
-  | 'warn'
-  | 'error'
-
 export interface LogEntry {
   level: LogLevel
   message: string
@@ -50,20 +45,6 @@ export function setProcessor(processor: LogProcessor) {
   logProcessor = processor;
 }
 
-export function logLevelIndex(level: LogLevel): number {
-  switch (level) {
-    case 'debug':
-      return 0;
-    case 'info':
-      return 1;
-    case 'warn':
-      return 2;
-    case 'error':
-      return 3;
-    default:
-      return 0;
-  }
-}
 
 function performLog(level: LogLevel, message: string, ctx?: LogCtx, meta?: LogMetadata) {
     logProcessor({
