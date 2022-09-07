@@ -53,6 +53,7 @@
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
+        "outputPath": "packages/wallet/wallet/out/wallet",
         "configFile": "packages/wallet/wallet/vite.config.ts"
       }
     },
