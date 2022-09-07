@@ -14,7 +14,8 @@ export const CONSOLE_PROCESSOR: LogProcessor = entry => {
   let buffer = '';
 
   if (entry.meta) {
-    buffer += chalk.gray(`${entry.meta.file}:${entry.meta.line} `);
+    const filename = getRelativeFilename(entry.meta.file)
+    buffer += chalk.gray(`${filename}:${entry.meta.line} `);
   }
 
   buffer += `${level} ${entry.message}`;
@@ -32,4 +33,12 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   info: 'white',
   warn: 'yellow',
   error: 'red'
+}
+
+const getRelativeFilename = (filename: string) => {
+  // Very ugly, I know. But it works, and I couldn't find a better way to do it easily.
+  if(filename.includes('/packages/')) {
+    return filename.slice(filename.indexOf('/packages/') + '/packages/'.length);
+  }
+  return filename
 }
