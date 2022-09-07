@@ -6,13 +6,20 @@ import { addHook } from 'pirates';
 
 import { getCurrentOwnershipScope } from '../ownership';
 import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import { SourcemapMap } from "@swc-node/sourcemap-support";
+import { loadSync } from 'sorcery'
+
 
 export const register = () => {
   addHook((code, filename) => {
     try {
-      const output = preprocess(code, filename);
-      const sourceMap = getSourceMap(filename);
-      //
+      const output = preprocess(code, filename)
+      if (output.map) {
+        SourcemapMap.set(filename, output.map);
+      }
+
+      const sourceMap = getSourceMap(filename)
+
       // Write code for debugging
       // const path = join(process.cwd(), '.trace-compiled', filename);
       // mkdirSync(dirname(path), { recursive: true });
@@ -51,10 +58,12 @@ export const register = () => {
     } catch (err) {}
 
     return undefined;
-  };
+  }
 
-  registerGlobals();
-};
+  registerGlobals()
+
+  patchSourceMaps()
+}
 
 const BUGCHECK_STRING = 'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
 ' It probably has misinterpreted an unrelated call for a logger invocation.';
@@ -62,4 +71,53 @@ const BUGCHECK_STRING = 'If you see this message then it means that the source c
 const registerGlobals = () => {
   (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = getCurrentOwnershipScope;
   (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
-};
+}
+
+/**
+ * Patches @swc-node/sourcemap-support to combine source maps from multiple compilation steps.
+ * 
+ * We have two compilation steps: the logger preprocessor that inserts log metadata,
+ * and the SWC TS to JS compiler.
+ * There's a bug in SWC which makes it ignore the input source map from the previous compilation step.
+ * 
+ * The source maps get put into the SourcemapMap from @swc-node/sourcemap-support.
+ * We patch the set method to check if there's already a source map from the previous compilation step,
+ * and combine then together.
+ */
+function patchSourceMaps() {
+  const orig = SourcemapMap.set;
+  SourcemapMap.set = function (this: typeof SourcemapMap, key: string, value: string) {
+    if (SourcemapMap.get(key)) {
+      return orig.call(this, key, combineSourceMaps(SourcemapMap.get(key), value));
+    } else {
+      return orig.call(this, key, value);
+    }
+  } as any
+}
+
+/**
+ * Combines two source maps for the same file and outputs a new source map.
+ * 
+ * @param prevMap Source map from the first compilation step.
+ * @param newMap Source map from the second compilation step.
+ */
+function combineSourceMaps(prevMap: string, nextMap: string) {
+  const prev = JSON.parse(prevMap)
+  const newMap = JSON.parse(nextMap)
+
+  newMap.sources[0] = '/prev';
+  const generated = loadSync('/new', {
+    content: {
+      '/new': newMap.sourcesContent[0],
+      '/prev': prev.sourcesContent[0],
+    },
+    sourcemaps: {
+      '/new': newMap,
+      '/prev': prev,
+    }
+  }).apply()
+
+  generated.sources[0] = '/' + generated.sources[0]
+
+  return JSON.stringify(generated);
+}

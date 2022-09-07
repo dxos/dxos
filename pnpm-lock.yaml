@@ -334,21 +334,25 @@ importers:
 
   packages/common/log:
     specifiers:
+      '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': ~1.2.248
       '@types/mocha': ~8.2.2
       '@types/node': ^16.11.27
       chalk: ^4.1.0
       debug: ^4.3.3
       pirates: ~4.0.5
+      sorcery: ^0.10.0
       typescript: ^4.7.2
     dependencies:
       chalk: 4.1.2
       debug: 4.3.4
     devDependencies:
+      '@swc-node/sourcemap-support': 0.2.0
       '@swc/core': 1.2.248
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       pirates: 4.0.5
+      sorcery: 0.10.0
       typescript: 4.7.4
 
   packages/common/protocols:
@@ -19260,6 +19264,10 @@ packages:
   /es6-object-assign/1.1.0:
     resolution: {integrity: sha512-MEl9uirslVwqQU369iHNWZXsI8yaZYGg/D65aOgZkeyFJwHYSxilf7rQzXKI7DdDuBPrBXbfk3sl9hJhmd5AUw==}
 
+  /es6-promise/3.3.1:
+    resolution: {integrity: sha512-SOp9Phqvqn7jtEUxPWdWfWoLmyt2VaJ6MpvP9Comy1MceMXqE6bxvaTu4iaxpYYPzhny28Lc+M87/c2cPK6lDg==}
+    dev: true
+
   /es6-promisify/6.1.1:
     resolution: {integrity: sha512-HBL8I3mIki5C1Cc9QjKUenHtnG0A5/xA8Q/AllRcfiwl2CZFXGK7ddBiCoRwAix4i2KxcQfjtIVcrVbB3vbmwg==}
     dev: true
@@ -32528,6 +32536,15 @@ packages:
   /safer-buffer/2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
+  /sander/0.5.1:
+    resolution: {integrity: sha512-3lVqBir7WuKDHGrKRDn/1Ye3kwpXaDOMsiRP1wd6wpZW56gJhsbp5RqQpA6JG/P+pkXizygnr1dKR8vzWaVsfA==}
+    dependencies:
+      es6-promise: 3.3.1
+      graceful-fs: 4.2.10
+      mkdirp: 0.5.5
+      rimraf: 2.7.1
+    dev: true
+
   /sane/4.1.0:
     resolution: {integrity: sha512-hhbzAgTIX8O7SHfp2c8/kREfEn4qO/9q8C9beyY6+tvZ87EpoZ3i1RIEvp27YBswnNbY9mWd6paKVmKbAgLfZA==}
     engines: {node: 6.* || 8.* || >= 10.*}
@@ -33274,6 +33291,16 @@ packages:
     resolution: {integrity: sha512-WgtVLfGl347/zS1oTuLaOAvVD5zijgjphAJHgbbnBJGgexnr+C1ULSj0j7ftoGxpuxR4PaV635NkwFemG8m/5w==}
     dependencies:
       atomic-sleep: 1.0.0
+    dev: true
+
+  /sorcery/0.10.0:
+    resolution: {integrity: sha512-R5ocFmKZQFfSTstfOtHjJuAwbpGyf9qjQa1egyhvXSbM7emjrtLXtGdZsDJDABC85YBfVvrOiGWKSYXPKdvP1g==}
+    hasBin: true
+    dependencies:
+      buffer-crc32: 0.2.13
+      minimist: 1.2.6
+      sander: 0.5.1
+      sourcemap-codec: 1.4.8
     dev: true
 
   /sort-keys-length/1.0.1:

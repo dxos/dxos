@@ -2,22 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CallExpression, Expression, Import, Program, Span, Super, transformSync, TsType } from '@swc/core';
-import { Visitor } from '@swc/core/Visitor.js';
-
-export const preprocess = (code: string, filename: string) => transformSync(code, {
-  inlineSourcesContent: true,
-  sourceMaps: 'inline',
-  sourceFileName: filename,
-  plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
-  jsc: {
-    target: 'es2022',
-    parser: {
-      syntax: 'typescript',
-      decorators: true
-    }
-  }
-});
+export function preprocess(code: string, filename: string) {
+  return transformSync(code, {
+    sourceMaps: true,
+    inlineSourcesContent: true,
+    sourceFileName: filename,
+    plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
+    jsc: {
+      target: 'es2022',
+      parser: {
+        syntax: 'typescript',
+        decorators: true,
+      },
+    },
+  });
+}
 
 const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 
