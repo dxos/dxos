@@ -11,10 +11,8 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { SwarmMessage } from './proto/gen/dxos/mesh/swarm';
-import { SignalClient } from './signal-client';
 import { Any } from './proto/gen/google/protobuf';
-import { schema } from './proto/gen';
+import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
   let broker1: TestBroker;
@@ -45,9 +43,9 @@ describe('SignalClient', () => {
     await api2.join(topic, peer2);
 
     const payload: Any = {
-      type_url: "something",
+      type_url: 'something',
       value: Buffer.from('0')
-    }
+    };
     await api2.message(peer2, peer1, payload);
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([peer2, peer1, payload]);
@@ -84,9 +82,9 @@ describe('SignalClient', () => {
     await api1.join(topic, peer1);
 
     const payload: Any = {
-      type_url: "something",
+      type_url: 'something',
       value: Buffer.from('0')
-    }
+    };
     await api1.message(peer2, peer1, payload);
 
     await waitForExpect(() => {
@@ -137,9 +135,9 @@ describe('SignalClient', () => {
     const sessionId = PublicKey.random();
 
     const payload: Any = {
-      type_url: "something",
+      type_url: 'something',
       value: Buffer.from('0')
-    }
+    };
     await api1.message(peer2, peer1, payload);
 
     await waitForExpect(() => {

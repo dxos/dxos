@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
-import { Any } from './proto/gen/google/protobuf';
 
 export class InMemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
@@ -77,7 +77,7 @@ export class InMemorySignalManager implements SignalManager {
     state.connections.get(recipient)!.onMessage.emit([author, recipient, payload]);
   }
 
-  async subscribeMessages (peerId: PublicKey): Promise<void> {};
+  async subscribeMessages (peerId: PublicKey): Promise<void> {}
 
   async close () {}
 }

@@ -10,11 +10,9 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { schema } from './proto/gen';
 import { Message, SwarmEvent } from './proto/gen/dxos/mesh/signal';
-import { SwarmMessage } from './proto/gen/dxos/mesh/swarm';
-import { SignalRPCClient } from './signal-rpc-client';
 import { SignalMethods } from './signal-methods';
+import { SignalRPCClient } from './signal-rpc-client';
 
 const log = debug('dxos:signaling:signal-client');
 
@@ -250,13 +248,14 @@ export class SignalClient implements SignalMethods {
   async subscribeMessages (peerId: PublicKey): Promise<void> {
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
-      return;
+      this._messageStreams.get(peerId)?.close();
+      this._messageStreams.delete(peerId);
     }
 
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
-    messageStream.subscribe(async (message: Message) => 
-    await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), message.payload));
+    messageStream.subscribe(async (message: Message) =>
+      await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), message.payload));
 
     // Saving message stream.
     if (!this._messageStreams.has(peerId)) {

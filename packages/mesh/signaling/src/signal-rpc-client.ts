@@ -107,7 +107,7 @@ export class SignalRPCClient {
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload: payload
+      payload
     });
   }
 

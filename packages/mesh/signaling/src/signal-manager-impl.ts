@@ -5,15 +5,14 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, sleep, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
-import { SignalMethods } from './signal-methods';
-import { SignalManager } from './signal-manager';
-import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { Any } from './proto/gen/google/protobuf';
+import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
+import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:signaling:signal-manager-impl');
 
@@ -159,6 +158,7 @@ export class SignalManagerImpl implements SignalManager {
   async subscribeMessages (peerId: PublicKey): Promise<void> {
     log(`Subscribed for message stream peerId=${peerId}`);
     Array.from(this._servers.values()).forEach(async (signalClient: SignalClient) => await signalClient.subscribeMessages(peerId));
+    await sleep(100);
   }
 
   async close () {

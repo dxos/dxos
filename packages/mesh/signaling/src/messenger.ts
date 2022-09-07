@@ -1,8 +1,14 @@
 
-import { Any } from "./proto/gen/google/protobuf"
-import { SignalManager } from "./signal-manager"
+//
+// Copyright 2022 DXOS.org
+//
+
+import debug from 'debug';
+
 import { PublicKey } from '@dxos/protocols';
-import debug from "debug";
+
+import { Any } from './proto/gen/google/protobuf';
+import { SignalManager } from './signal-manager';
 
 interface MessengerOptions {
   ownPeerId: PublicKey
@@ -29,12 +35,12 @@ export class Messenger {
     this._signalManager.subscribeMessages(this._ownPeerId);
     this._signalManager.onMessage.on(([author, recipient, payload]) => {
       log(`Received message from ${author}`);
-      this._receive(author, payload)
+      this._receive(author, payload);
     });
   }
 
   public get ownPeerId (): PublicKey {
-    return this._ownPeerId
+    return this._ownPeerId;
   }
 
   // TODO(mykola): make reliable.
@@ -42,4 +48,3 @@ export class Messenger {
     return this._signalManager.message(this._ownPeerId, recipient, payload);
   }
 }
-
