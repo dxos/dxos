@@ -83,7 +83,7 @@ const App = () => {
           id='test-iframe'
           // If main app is loaded from 127.0.0.1, localhost is cross-origin.
           //   https://stackoverflow.com/a/5268240/2804332
-          src='http://localhost:5173'
+          src='http://localhost:5173/iframe.html'
           style={{
             flexGrow: 1
           }}

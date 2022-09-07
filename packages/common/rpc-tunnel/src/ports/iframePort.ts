@@ -11,7 +11,7 @@ import { MessageData } from '../message';
 const log = debug('dxos:rpc-tunnel:iframe-port');
 
 /**
- * Create a port into an iframe.
+ * Create a RPC port into an iframe.
  * @param iframe Instance of the iframe.
  * @param origin Origin of the iframe to send messages to.
  * @returns RPC port for messaging.
@@ -28,7 +28,7 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement, origin: string
     iframe.contentWindow.postMessage(
       {
         type: 'parent',
-        data: message
+        data
       },
       origin,
       [data]
@@ -51,7 +51,7 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement, origin: string
 });
 
 /**
- * Create a port from an iframe to its parent.
+ * Create a RPC port from an iframe to its parent.
  * @param origin Origin of the parent to send messages to.
  * @returns RPC port for messaging.
  */
@@ -61,7 +61,7 @@ export const createIframePort = (origin: string): RpcPort => ({
     window.parent.postMessage(
       {
         type: 'child',
-        data: message
+        data
       },
       origin,
       [data]

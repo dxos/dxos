@@ -2,10 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import debug from 'debug';
+
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { TestStreamService } from './proto';
+
+const log = debug('dxos:rpc-tunnel-e2e:test-client');
 
 const STORAGE_KEY = 'testclient';
 
@@ -35,18 +39,21 @@ export class TestClient {
     const TestStreamService: TestStreamService = {
       testCall: req => new Stream(({ next, close }) => {
         if (req.data !== 'requestData') {
+          log('Invalid request, closing...');
           close();
           return;
         }
 
+        log('Opening stream...');
         next({ data: String(this.value) });
 
         setInterval(() => {
-          this.value++;
+          this._value++;
           this._update.emit();
           next({ data: String(this.value) });
+          log(`Value incremented to ${this._value}`);
 
-          if (this.value > 1000000) {
+          if (this._value > 1000000) {
             close();
           }
         }, 10);
