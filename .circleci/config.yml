@@ -69,6 +69,7 @@ workflows:
             branches:
               only:
                 - production
+                - wittjosiah/09-07-ci_Don_t_rely_on_affected_to_build_for_deploy
           context:
             - Github
             - Netlify
