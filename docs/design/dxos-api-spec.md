@@ -123,7 +123,7 @@ describe.skip('Experimental API', () => {
     //
     {
       const devices = client1.halo.getDevices();
-      expect(devices.elements).toHaveLength(1);
+      expect(devices).toHaveLength(1);
 
       // Create and authenticate new device.
       {
@@ -140,7 +140,7 @@ describe.skip('Experimental API', () => {
         const request = client2.halo.createDeviceAdmissionRequest();
 
         // Accept new device.
-        const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
+        const challenge = client1.halo.acceptDeviceAdmissionRequest(request.key);
         setImmediate(async () => {
           const deviceKey = await challenge.wait();
           expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
