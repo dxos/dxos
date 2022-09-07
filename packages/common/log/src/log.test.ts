@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { LogLevel } from './config';
 import { log } from './log';
 
 // TODO(burdon): Override with LOG_FILTER
+// import { LogLevel } from './config';
 // log.config.filter = LogLevel.INFO;
 
 describe('log', () => {
   it('line numbers', () => {
-    log.warn('LOG LINE 11');
+    log.warn('LOG LINE 13');
 
     try {
       throw new Error('ERROR ON LINE 16');
