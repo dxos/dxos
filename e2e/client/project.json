@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "e2e/client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "e2e/client/dist",
+        "tsConfig": "e2e/client/tsconfig.json",
+        "main": "e2e/client/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "e2e/client/**/*.{ts,js}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "e2e/client/browser-test/**/*.test.ts"
+        ],
+        "setup": "e2e/client/browser-test/setup.js"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}
