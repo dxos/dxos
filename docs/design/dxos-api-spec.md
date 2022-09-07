@@ -104,7 +104,7 @@ describe.skip('Experimental API', () => {
     {
       // Create profile.
       const privateKey = await client1.halo.createProfile();
-      const publicKey = client1.halo.profile.identityKey;
+      const publicKey = client1.halo.profile.publicKey;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
       expect(client1.halo.device).toBeDefined();
 
@@ -114,7 +114,7 @@ describe.skip('Experimental API', () => {
         const client2 = createClient();
         expect(client2.halo.profile).not.toBeDefined();
         const profile = await client2.halo.recoverProfile(privateKey);
-        expect(PublicKey.equals(profile.identityKey, client2.halo.profile.identityKey)).toBeTruthy();
+        expect(PublicKey.equals(profile.publicKey, client2.halo.profile.publicKey)).toBeTruthy();
       }
     }
 
@@ -159,8 +159,8 @@ describe.skip('Experimental API', () => {
     {
       const contacts = client1.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
-        const receipt = await client1.messenger.send(contact.identityKey, { message: `Hello ${contact.username}!` });
-        expect(receipt.recipient).toBe(contact.identityKey);
+        const receipt = await client1.messenger.send(contact.publicKey, { message: `Hello ${contact.username}!` });
+        expect(receipt.recipient).toBe(contact.publicKey);
       }));
     }
 
@@ -195,8 +195,8 @@ describe.skip('Experimental API', () => {
     {
       const space = await client1.brane.createSpace();
       const contacts = client1.circle.queryContacts({ name: 'alice' });
-      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].identityKey);
-      await client1.messenger.send(contacts.elements[0].identityKey, invitation);
+      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].publicKey);
+      await client1.messenger.send(contacts.elements[0].publicKey, invitation);
       await invitation.wait();
 
       const members = space.queryMembers({ role: Role.ADMIN });
