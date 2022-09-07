@@ -122,7 +122,7 @@ describe.skip('Experimental API', () => {
     // Manage devices.
     //
     {
-      const devices = client1.halo.queryDevices();
+      const devices = client1.halo.getDevices();
       expect(devices.elements).toHaveLength(1);
 
       // Create and authenticate new device.
