@@ -220,28 +220,32 @@ describe.skip('Experimental API', () => {
     }
 
     //
-    // Query spaces within brane.
+    // Query spaces.
     //
     {
       const spaces = client1.spaces.all();
       const space = await client1.spaces.getSpace(spaces[0].publicKey);
 
       // Create subscription.
-      const result = space.queryItems({ type: 'org.dxos.contact' });
-      const count = result.elements.length;
-      const subscription = result.onUpdate((items: Item[]) => {
-        if (items.length > count) {
-          subscription.cancel();
-        }
+      const result = space.getItems({ type: 'org.dxos.contact' });
+      const count = result.length;
+      const subscription = result.observe({
+        async added(items: Item[]) {
+          if (items.length >= count) {
+            subscription.cancel(); // we might need this to be awaitable too?
+          }
+        },
+        async removed(items: Item[]) {},
+        async changed(oldItem: Item, newItem: Item) {},
       });
 
       // Create item.
-      const item = await space.createItem({ type: 'org.dxos.contact' });
+      const item = space.createItem({ type: 'org.dxos.contact' });
       expect(item.publicKey).toBeDefined();
 
       // Query items across all spaces.
-      const items = client1.spaces.queryItems({ type: 'org.dxos.contact' });
-      expect(items.elements.length).toBeGreaterThan(0);
+      const items = client1.spaces.getItems({ type: 'org.dxos.contact' });
+      expect(items.length).toBeGreaterThan(0);
     }
 
     //
