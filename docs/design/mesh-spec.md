@@ -100,7 +100,9 @@ Peer to peer messages (unlike swarm events) could use point-to-point connections
 
 The signal server implements the following dxRPC interface.
 
-<!-- @code(../../packages/mesh/network-manager/src/proto/defs/dxos/mesh/signal.proto#Signal) -->
+<!-- @code(../../packages/mesh/network-manager/src/proto/defs/dxos/mesh/signal.proto#Signal, link) -->
+
+<sub>`@dxos/network-manager`[`[src/proto/defs/dxos/mesh/signal.proto]`](../../packages/mesh/network-manager/src/proto/defs/dxos/mesh/signal.proto)</sub>
 
 ```protobuf
 option go_package = "github.com/dxos/kube/go/signal/pb";

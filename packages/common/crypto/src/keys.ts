@@ -21,8 +21,11 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
     assert(seed.length >= 32, 'Seedphrase too sort. Expecting length of 32.');
     return crypto.keyPair(seed.slice(0, 32));
   }
+
   return crypto.keyPair();
 };
+
+export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) => crypto.validateKeyPair({ publicKey, secretKey });
 
 export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
 
