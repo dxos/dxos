@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -14,8 +13,6 @@ import { createIframeParentPort, createIframePort } from '@dxos/rpc-tunnel';
 import { schema } from './proto';
 import { TestClient } from './test-client';
 
-debug.enable('*');
-
 const IN_IFRAME = window.parent !== window;
 
 const App = () => {
@@ -26,7 +23,7 @@ const App = () => {
 
   useAsyncEffect(async () => {
     if (IN_IFRAME) {
-      const port = createIframePort();
+      const port = createIframePort('http://127.0.0.1:5173');
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
@@ -42,7 +39,7 @@ const App = () => {
 
       client.subscribe(value => setValue(String(value)));
     } else {
-      const port = await createIframeParentPort(iframeRef.current!);
+      const port = await createIframeParentPort(iframeRef.current!, 'http://localhost:5173');
       const client = createProtoRpcPeer({
         requested: {
           TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
@@ -84,7 +81,9 @@ const App = () => {
         <iframe
           ref={iframeRef}
           id='test-iframe'
-          src='http://127.0.0.1:5173'
+          // If main app is loaded from 127.0.0.1, localhost is cross-origin.
+          //   https://stackoverflow.com/a/5268240/2804332
+          src='http://localhost:5173'
           style={{
             flexGrow: 1
           }}

@@ -10,10 +10,7 @@ import { MessageData } from '../message';
 
 const log = debug('dxos:rpc-tunnel:iframe-port');
 
-// TODO(wittjosiah): Is this unsecure? Does not seem to work without *.
-const ORIGIN = '*';
-
-export const createIframeParentPort = (iframe: HTMLIFrameElement): RpcPort => ({
+export const createIframeParentPort = (iframe: HTMLIFrameElement, origin: string): RpcPort => ({
   send: async message => {
     if (!iframe.contentWindow) {
       log('Iframe content window missing');
@@ -27,7 +24,7 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement): RpcPort => ({
         type: 'parent',
         data: message
       },
-      ORIGIN,
+      origin,
       [data]
     );
   },
@@ -47,7 +44,7 @@ export const createIframeParentPort = (iframe: HTMLIFrameElement): RpcPort => ({
   }
 });
 
-export const createIframePort = (): RpcPort => ({
+export const createIframePort = (origin: string): RpcPort => ({
   send: async message => {
     const data = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
     window.parent.postMessage(
@@ -55,7 +52,7 @@ export const createIframePort = (): RpcPort => ({
         type: 'child',
         data: message
       },
-      ORIGIN,
+      origin,
       [data]
     );
   },
