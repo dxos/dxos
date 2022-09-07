@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 import { getCurrentOwnershipScope } from '../ownership';
-import { preprocess } from './preprocessor';
+import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
 
 export function register() {
   addHook((code, filename) => {
@@ -52,6 +52,10 @@ export function register() {
   registerGlobals()
 }
 
+const BUGCHECK_STRING = 'If you see this messages then it means that the source code preprocessor for @dxos/log is broken.'
++ ' It probably has misinterpreted an unrelated call for a logger invocation.';
+
 function registerGlobals() {
-  (globalThis as any).getCurrentOwnershipScope = getCurrentOwnershipScope;
+  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = getCurrentOwnershipScope;
+  (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
 }

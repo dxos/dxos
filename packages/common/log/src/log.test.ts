@@ -1,12 +1,12 @@
 import { log } from './log'
 
-describe('log', () => {
+describe.only('log', () => {
   it('levels', () => {
-    log(`Default`)
-    log.debug(`Debug`)
-    log.info(`Info`)
-    log.warn(`Warn`)
-    log.error(`Error`)
+    log(`Default level log message`)
+    log.debug(`Debug level log message`)
+    log.info(`Info level log message`)
+    log.warn(`Warn level log message`)
+    log.error(`Error level log message`)
   })
 
   it('formatting', () => {

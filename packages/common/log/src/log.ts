@@ -23,6 +23,10 @@ export interface LogMetadata {
   file: string,
   line: number,
   ownershipScope: OwnershipScope | undefined
+  /**
+   * Just to help the developer to easily debug preprocessor hook bugs.
+   */
+  bugcheck?: string
 }
 
 export type LogLevel =
@@ -40,7 +44,7 @@ export interface LogEntry {
 
 export type LogProcessor = (entry: LogEntry) => void;
 
-let logProcessor: LogProcessor = DEBUG_PROCESSOR;
+let logProcessor: LogProcessor = CONSOLE_PROCESSOR;
 
 export function setProcessor(processor: LogProcessor) {
   logProcessor = processor;

@@ -18,6 +18,9 @@ export function preprocess(code: string, filename: string) {
 
 const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 
+export const ID_GET_CURRENT_OWNERSHIP_SCOPE = 'dxlog_getCurrentOwnershipScope';
+export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
+
 class TraceInjector extends Visitor {
   programSpan!: Span
   constructor(
@@ -31,7 +34,7 @@ class TraceInjector extends Visitor {
   }
 
   override visitCallExpression(n: CallExpression): Expression {
-    if(
+    if (
       isLoggerFuncExpression(n.callee) ||
       n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object)
     ) {
@@ -40,7 +43,7 @@ class TraceInjector extends Visitor {
       // <obj>.log(...)
       // <obj>.log.<level>(...)
 
-      if(n.arguments.length === 0) {
+      if (n.arguments.length === 1) {
         n.arguments.push({
           expression: {
             type: 'ObjectExpression',
@@ -49,7 +52,7 @@ class TraceInjector extends Visitor {
           }
         })
       }
-      if(n.arguments.length === 1) {
+      if (n.arguments.length === 2) {
         n.arguments.push({
           expression: {
             type: 'ObjectExpression',
@@ -95,7 +98,7 @@ class TraceInjector extends Visitor {
                   type: 'CallExpression',
                   callee: {
                     type: 'Identifier',
-                    value: 'getCurrentOwnershipScope',
+                    value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
                     optional: false,
                     span: ZERO_SPAN,
                   },
@@ -107,7 +110,22 @@ class TraceInjector extends Visitor {
                   }],
                   span: ZERO_SPAN,
                 }
-              }
+              },
+              {
+                type: 'KeyValueProperty',
+                key: {
+                  type: 'Identifier',
+                  value: 'bugcheck',
+                  optional: false,
+                  span: ZERO_SPAN,
+                },
+                value: {
+                  type: 'Identifier',
+                  value: ID_BUGCHECK_STRING,
+                  optional: false,
+                  span: ZERO_SPAN,
+                },
+              },
             ],
             span: ZERO_SPAN,
           }
@@ -120,6 +138,5 @@ class TraceInjector extends Visitor {
   }
 }
 
-const isLoggerFuncExpression = (e: Expression | Super | Import) => 
-  e.type === 'Identifier' && e.value === 'log' ||
-  e.type === 'MemberExpression' && e.property.type === 'Identifier' && e.property.value === 'log'
+const isLoggerFuncExpression = (e: Expression | Super | Import) =>
+  e.type === 'Identifier' && e.value === 'log'
