@@ -20,9 +20,9 @@ realpath() {
 BASE_DIR=$(realpath "$PWD/../../")
 
 yarn ts-node --esm ./src/main.ts \
-  --verbose \
   --files "design/**/*.md" \
   --base-dir $BASE_DIR/docs \
   --out-dir $BASE_DIR/docs \
   --auto-number \
+#  --verbose \
 #  --dry-run

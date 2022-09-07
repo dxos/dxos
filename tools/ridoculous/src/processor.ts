@@ -3,6 +3,7 @@
 //
 
 import chalk from 'chalk';
+import { diffLines } from 'diff';
 import * as fs from 'fs';
 import glob from 'glob';
 import * as path from 'path';
@@ -39,19 +40,26 @@ export const processFiles = async ({
 
     // TODO(burdon): Catch errors.
     // https://github.com/vfile/vfile#filehistory
-    const text = await parser.process(await read(filename));
+    const text = await read(filename);
+    const o = text.toString();
+    const xx = await parser.process(text);
 
-    const parts = path.parse(filename);
-    const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
-    const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
-    const dirname = path.dirname(outFilename);
-    if (!fs.existsSync(dirname)) {
-      fs.mkdirSync(dirname, { recursive: true });
-    }
+    // Only write if different.
+    const count = diffLines(o, xx.toString() + '\n').length;
+    if (count > 1) {
+      const parts = path.parse(filename);
+      const f = path.format({ ...parts, base: undefined, ext: html ? '.html' : '.md' });
+      const outFilename = path.join(outDir, path.relative(baseDir ?? '.', f));
+      console.log(`Updating: ${chalk.green(outFilename)}`);
 
-    console.log(`Writing: ${chalk.green(outFilename)}`);
-    if (!dryRun) {
-      fs.writeFileSync(outFilename, text.toString() + '\n', 'utf8');
+      if (!dryRun) {
+        const dirname = path.dirname(outFilename);
+        if (!fs.existsSync(dirname)) {
+          fs.mkdirSync(dirname, { recursive: true });
+        }
+
+        fs.writeFileSync(outFilename, text.toString() + '\n', 'utf8');
+      }
     }
   }
 };
