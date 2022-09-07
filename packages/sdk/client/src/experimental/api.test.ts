@@ -154,7 +154,7 @@ describe.skip('Experimental API', () => {
 
       // Create item.
       const item = await space.database.createItem({ type: 'org.dxos.contact' });
-      expect(item.publicKey).toBeDefined();
+      expect(item.id).toBeDefined();
 
       // Query items across all spaces.
       const items = client1.brane.queryItems({ type: 'org.dxos.contact' });

@@ -4,6 +4,7 @@
 
 import { PublicKey } from '@dxos/protocols';
 
+// TODO(burdon): Proxy/service abstraction?
 // TODO(burdon): Typed queries/subscriptions.
 // TODO(burdon): Common error handling.
 // TODO(burdon): ECHO database should not depend on the high-level framework.
@@ -19,6 +20,7 @@ import { PublicKey } from '@dxos/protocols';
  * - Singleton container and factory (using configuration) for independent subsystems.
  * - Establishes proxy/service linkage.
  */
+// TODO(burdon): Create stateless (well-formed) root object (e.g., Profile).
 export interface Client {
   get halo (): Halo
   get circle (): Circle
@@ -172,6 +174,10 @@ export interface Member {
   get role (): Role
 }
 
+//
+// Database
+//
+
 // TODO(burdon): Typed queries and items out-of-scope for this level (Database may be pluggable within a Space).
 export interface Database {
   createItem (data: any): Promise<Item>
@@ -179,8 +185,8 @@ export interface Database {
 }
 
 export interface Item {
-  get spaceKey (): PublicKey
-  get publicKey (): PublicKey
+  get id (): PublicKey
+  get spaceKey (): PublicKey // TODO(burdon): Id or key?
 }
 
 //
