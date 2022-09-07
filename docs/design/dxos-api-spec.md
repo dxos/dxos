@@ -100,8 +100,10 @@ describe.skip('Experimental API', () => {
     // Create and recover profiles.
     //
     {
-      // Create profile.
-      const privateKey = await client1.halo.createProfile();
+      
+      // Obtain a profile from the user's wallet
+      expect(client.halo.profile).not.toBeDefined();
+      const { privateKey } = await client1.halo.getProfile(); // pops HALO UI if necessary
       const { publicKey } = client1.halo.profile;
       expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
       expect(client1.halo.device).toBeDefined();
@@ -208,8 +210,8 @@ describe.skip('Experimental API', () => {
       const invitations = client1.contacts.queryInvitations();
       const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
         if (invitations.length) {
-          const spaceKey = await invitations[0].accept();
-          expect(spaceKey).toBeDefined();
+          const space = await invitations[0].accept();
+          expect(space).toBeDefined();
           subscription.cancel();
         }
       });
@@ -219,8 +221,8 @@ describe.skip('Experimental API', () => {
     // Query spaces within brane.
     //
     {
-      const spaces = client1.spaces.querySpaceKeys();
-      const space = await client1.spaces.getSpace(spaces.elements[0]);
+      const spaces = client1.spaces.all();
+      const space = await client1.spaces.getSpace(spaces[0].publicKey);
 
       // Create subscription.
       const result = space.database.queryItems({ type: 'org.dxos.contact' });
