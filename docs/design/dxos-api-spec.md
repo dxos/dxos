@@ -179,10 +179,10 @@ describe.skip('Experimental API', () => {
         // Accept invitation.
         const client2 = new Client();
         const challenge = client2.spaces.joinSpace(invitation);
-        const spaceKey = await challenge.accept(invitation.secret);
+        const space = await challenge.accept(invitation.secret);
 
-        const space = await client2.spaces.getSpace(spaceKey);
-        const members = space.queryMembers();
+        const space2 = await client2.spaces.getSpace(space.publicKey);
+        const members = space2.queryMembers();
         expect(members.elements).toHaveLength(2);
       }
     }
