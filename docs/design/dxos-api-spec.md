@@ -178,8 +178,8 @@ describe.skip('Experimental API', () => {
       {
         // Accept invitation.
         const client2 = new Client();
-        const offer = client2.spaces.createInvitationOffer(invitation.offerKey);
-        const spaceKey = await offer.accept(invitation.secret);
+        const challenge = client2.spaces.joinSpace(invitation);
+        const spaceKey = await challenge.accept(invitation.secret);
 
         const space = await client2.spaces.getSpace(spaceKey);
         const members = space.queryMembers();
