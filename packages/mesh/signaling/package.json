@@ -40,6 +40,7 @@
     "xor-distance": "^2.0.0"
   },
   "devDependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/browser-mocha": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/signal": "workspace:*",

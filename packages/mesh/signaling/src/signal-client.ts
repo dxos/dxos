@@ -223,7 +223,7 @@ export class SignalClient implements SignalMethods {
   }
 
   async message (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
-    return this._client.sendMessage(author, recipient, payload);
+    await this._client.sendMessage(author, recipient, payload);
   }
 
   @synchronized
@@ -254,8 +254,10 @@ export class SignalClient implements SignalMethods {
 
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
-    messageStream.subscribe(async (message: Message) =>
-      await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), message.payload));
+    messageStream.subscribe(async (message: Message) => {
+      await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), message.payload);
+      console.log('received');
+    });
 
     // Saving message stream.
     if (!this._messageStreams.has(peerId)) {

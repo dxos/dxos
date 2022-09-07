@@ -45,6 +45,6 @@ export class Messenger {
 
   // TODO(mykola): make reliable.
   async message (recipient: PublicKey, payload: Any): Promise<void> {
-    return this._signalManager.message(this._ownPeerId, recipient, payload);
+    await this._signalManager.message(this._ownPeerId, recipient, payload);
   }
 }

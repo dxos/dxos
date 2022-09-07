@@ -148,17 +148,13 @@ export class SignalManagerImpl implements SignalManager {
 
   async message (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
     log(`Signal ${recipient}`);
-    for (const server of this._servers.values()) {
-      server.message(author, recipient, payload).catch(err => {
-        log(`Error signaling: ${err}`);
-      });
-    }
+    await Promise.all([...this._servers.values()].map((server: SignalClient) => 
+      server.message(author, recipient, payload).catch(err => console.log(`Error signaling: ${err}`))));
   }
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {
     log(`Subscribed for message stream peerId=${peerId}`);
-    Array.from(this._servers.values()).forEach(async (signalClient: SignalClient) => await signalClient.subscribeMessages(peerId));
-    await sleep(100);
+    await Promise.all([...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId)));
   }
 
   async close () {

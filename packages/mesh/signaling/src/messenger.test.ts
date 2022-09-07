@@ -24,17 +24,21 @@ describe('Messenger', () => {
     broker.stop();
   });
 
-  const setup = (): {messenger: Messenger, received: [author: PublicKey, payload: Any][]} => {
+  const setup = async (): Promise<{messenger: Messenger, received: [author: PublicKey, payload: Any][]}> => {
     const received: [author: PublicKey, payload: Any][] = [];
     const receiveMock = async (author: PublicKey, payload: Any) => {
       received.push([author, payload]);
     };
 
+    const peerId = PublicKey.random();
+
     const signalManager = new SignalManagerImpl([broker.url()]);
+    // Add another subscribe besides one in constructor to fix race condition.
+    await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.close());
 
     const messenger = new Messenger({
-      ownPeerId: PublicKey.random(),
+      ownPeerId: peerId,
       receive: receiveMock,
       signalManager
     });
@@ -45,28 +49,28 @@ describe('Messenger', () => {
     };
   };
 
-  Array(5).fill(0).forEach(() => {
-    it.only('Message between peers', async () => {
-      const { messenger: messenger1 } = setup();
-      const { messenger: messenger2, received: received2 } = setup();
+  Array(500).fill(0).forEach(() => {
+  it.only('Message between peers', async () => {
+    const { messenger: messenger1 } = await setup();
+    const { messenger: messenger2, received: received2 } = await setup();
 
-      const payload: Any = {
-        type_url: 'a',
-        value: Buffer.from('0')
-      };
+    const payload: Any = {
+      type_url: 'a',
+      value: Buffer.from('0')
+    };
 
-      await messenger1.message(messenger2.ownPeerId, payload);
+    await messenger1.message(messenger2.ownPeerId, payload);
 
-      await waitForExpect(() => {
-        expect(received2[0]).toEqual([messenger1.ownPeerId, payload]);
-      }, 5_000);
-    });
+    await waitForExpect(() => {
+      expect(received2[0]).toEqual([messenger1.ownPeerId, payload]);
+    }, 5_000);
+  });
   });
 
   it('Message 3 peers', async () => {
-    const { messenger: messenger1, received: received1 } = setup();
-    const { messenger: messenger2, received: received2 } = setup();
-    const { messenger: messenger3, received: received3 } = setup();
+    const { messenger: messenger1, received: received1 } = await setup();
+    const { messenger: messenger2, received: received2 } = await setup();
+    const { messenger: messenger3, received: received3 } = await setup();
 
     {
       const payload: Any = {
