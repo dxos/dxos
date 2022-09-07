@@ -4,8 +4,8 @@
 
 import { inspect } from 'util';
 
-import type { LogProcessor } from '../log';
+import type { LogProcessor } from '../config';
 
-export const DEBUG_PROCESSOR: LogProcessor = entry => {
+export const DEBUG_PROCESSOR: LogProcessor = (config, entry) => {
   console.log(inspect(entry, false, null, true));
 };

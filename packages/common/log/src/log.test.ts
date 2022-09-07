@@ -11,7 +11,8 @@ describe('log', () => {
     log.info('Info level log message');
     log.warn('Warn level log message');
 
-    throw new Error('xxxxxx');
+    // throw new Error('xxxxxx');
+
     log.error('Error level log message');
   });
 

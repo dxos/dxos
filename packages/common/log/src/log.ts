@@ -2,55 +2,45 @@
 // Copyright 2022 DXOS.org
 //
 
-import { LogLevel } from './log-level';
-import type { OwnershipScope } from './ownership';
-import { CONSOLE_PROCESSOR } from './processors';
+import {
+  defaultConfig,
+  LogConfig,
+  LogContext,
+  LogLevel,
+  LogMetadata,
+  LogProcessor,
+  LogProcessorType
+} from './config';
+import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
 
-export type LogContext = Record<string, any>
+export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void
 
-export type LogFn = (message: string, ctx?: LogContext, meta?: LogMetadata) => void
+export interface Log extends Logger {
+  config: LogConfig
 
-export interface Log extends LogFn {
-  debug: LogFn
-  info: LogFn
-  warn: LogFn
-  error: LogFn
+  debug: Logger
+  info: Logger
+  warn: Logger
+  error: Logger
 }
 
-export const log: Log = (...params) => performLog('debug', ...params);
+export const log: Log = (...params) => processLog(LogLevel.DEBUG, ...params);
 
-log.debug = (...params) => performLog('debug', ...params);
-log.info = (...params) => performLog('info', ...params);
-log.warn = (...params) => performLog('warn', ...params);
-log.error = (...params) => performLog('error', ...params);
+log.config = defaultConfig;
 
-export interface LogMetadata {
-  file: string
-  line: number
-  ownershipScope: OwnershipScope | undefined
-  /**
-   * Just to help the developer to easily debug preprocessor hook bugs.
-   */
-  bugcheck?: string
-}
+log.debug = (...params) => processLog(LogLevel.DEBUG, ...params);
+log.info = (...params) => processLog(LogLevel.INFO, ...params);
+log.warn = (...params) => processLog(LogLevel.WARN, ...params);
+log.error = (...params) => processLog(LogLevel.ERROR, ...params);
 
-export interface LogEntry {
-  level: LogLevel
-  message: string
-  ctx: LogContext | undefined
-  meta: LogMetadata | undefined
-}
-
-export type LogProcessor = (entry: LogEntry) => void;
-
-let logProcessor: LogProcessor = CONSOLE_PROCESSOR;
-
-export const setProcessor = (processor: LogProcessor) => {
-  logProcessor = processor;
+export const processors: {[index: string]: LogProcessor} = {
+  [LogProcessorType.CONSOLE]: CONSOLE_PROCESSOR,
+  [LogProcessorType.DEBUG]: DEBUG_PROCESSOR
 };
 
-const performLog = (level: LogLevel, message: string, ctx?: LogContext, meta?: LogMetadata) => {
-  logProcessor({
+const processLog = (level: LogLevel, message: string, ctx?: LogContext, meta?: LogMetadata) => {
+  const processor = processors[log.config.processor!] ?? CONSOLE_PROCESSOR;
+  processor(log.config, {
     level,
     message,
     ctx,
