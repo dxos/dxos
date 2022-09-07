@@ -252,20 +252,26 @@ describe.skip('Experimental API', () => {
     // Query DXNS metagraph (e.g., KUBEs, applications, type system).
     //
     {
+      import { Client, Record } from "@dxos/dxns";
+
       type AppRecord = { name: string }
       const AppRecordType = 'org.dxos.app';
 
+      const dxns = new Client();
+      
       // Query records.
-      const apps = client1.meta.queryRecords({ type: AppRecordType });
-      void apps.onUpdate((records, subscription) => {
-        expect(subscription.query.type).toStrictEqual(AppRecordType);
-        if (records.length > 0) {
-          subscription.cancel();
+      const apps = dxns.queryRecords({ type: AppRecordType });
+      apps.observe({
+        async added(records: Record<AppRecord>[], subscription) {
+          expect(subscription.query.type).toStrictEqual(AppRecordType);
+          if (records.length > 0) {
+            subscription.cancel();
+          }
         }
       });
 
       // Create record.
-      const app = await client1.meta.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
+      const app = await dxns.createRecord<AppRecord>({ type: AppRecordType, data: { name: 'Tetris' } });
       expect(app.type).toStrictEqual(AppRecordType);
       expect(app.data.name).toStrictEqual('Tetris');
     }
