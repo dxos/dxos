@@ -173,8 +173,8 @@ describe.skip('Experimental API', () => {
       const invitation = space.createInvitation(Role.ADMIN);
       setImmediate(async () => {
         await invitation.wait();
-        const members = space.queryMembers();
-        expect(members.elements).toHaveLength(2);
+        const members = space.getMembers();
+        expect(members).toHaveLength(2);
       });
 
       {
@@ -184,8 +184,8 @@ describe.skip('Experimental API', () => {
         const space = await challenge.accept(invitation.secret);
 
         const space2 = await client2.spaces.getSpace(space.publicKey);
-        const members = space2.queryMembers();
-        expect(members.elements).toHaveLength(2);
+        const members = space2.getMembers();
+        expect(members).toHaveLength(2);
       }
     }
 
@@ -194,13 +194,13 @@ describe.skip('Experimental API', () => {
     //
     {
       const space = await client1.spaces.createSpace();
-      const contacts = client1.contacts.queryContacts({ name: 'alice' });
-      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].publicKey);
-      await client1.messenger.send(contacts.elements[0].publicKey, invitation);
+      const contacts = client1.contacts.getContacts({ name: 'alice' });
+      const invitation = space.createInvitation(Role.ADMIN, contacts[0].publicKey);
+      await client1.messenger.send(contacts[0].publicKey, invitation);
       await invitation.wait();
 
-      const members = space.queryMembers({ role: Role.ADMIN });
-      expect(members.elements).toHaveLength(2);
+      const members = space.getMembers({ role: Role.ADMIN });
+      expect(members).toHaveLength(2);
     }
 
     //
