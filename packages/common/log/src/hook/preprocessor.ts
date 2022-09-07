@@ -28,7 +28,7 @@ export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
 
 class TraceInjector extends Visitor {
   programSpan!: Span;
-  spanOffset = 0
+  spanOffset = 0;
   private _linePositions: number[] = [];
   constructor (
     private readonly filename: string,
@@ -59,7 +59,7 @@ class TraceInjector extends Visitor {
 
   override visitProgram (node: Program) {
     this.spanOffset = this.code.indexOf('import');
-    if(this.spanOffset === -1) {
+    if (this.spanOffset === -1) {
       this.spanOffset = 0;
     }
 
