@@ -79,7 +79,7 @@ export class InMemorySignalManager implements SignalManager {
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {}
 
-  async close () {}
+  async destroy () {}
 }
 
 // TODO(burdon): Remove global singleton.

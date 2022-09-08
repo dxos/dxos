@@ -35,7 +35,7 @@ describe('Messenger', () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
     // Add another subscribe besides one in constructor to fix race condition.
     await signalManager.subscribeMessages(peerId);
-    afterTest(() => signalManager.close());
+    afterTest(() => signalManager.destroy());
 
     const messenger = new Messenger({
       ownPeerId: peerId,

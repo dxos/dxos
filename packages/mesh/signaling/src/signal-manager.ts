@@ -17,5 +17,5 @@ export interface SignalManager extends SignalMethods {
   onMessage: Event<[author: PublicKey, recipient: PublicKey, payload: Any]>
 
   getStatus (): SignalStatus[]
-  close(): Promise<void>
+  destroy(): Promise<void>
 }

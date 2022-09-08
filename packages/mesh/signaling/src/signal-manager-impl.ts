@@ -157,7 +157,7 @@ export class SignalManagerImpl implements SignalManager {
     await Promise.all([...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId)));
   }
 
-  async close () {
+  async destroy () {
     this._destroyed = true;
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);
