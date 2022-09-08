@@ -7,10 +7,12 @@ import { RamStorage } from './implementations/ram-storage';
 import { Storage } from './interfaces/Storage';
 import { StorageType } from './interfaces/storage-types';
 
+// TODO(dmaretskyi): Root isn't required for RAM.
 export const createStorage = (
   root: string,
   type?: StorageType
 ): Storage => {
+  // TODO(dmaretskyi): Switch statement.
   if (type === undefined) {
     return new NodeStorage(root);
   }
@@ -20,5 +22,6 @@ export const createStorage = (
   if (type === StorageType.NODE) {
     return new NodeStorage(root);
   }
+
   throw new Error(`Unsupported storage: ${type}`);
 };

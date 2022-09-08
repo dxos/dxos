@@ -17,6 +17,10 @@ export class Callback<T extends (...args: any[]) => any> {
     return this._callback(...args);
   }
 
+  public callIfSet(...args: Parameters<T>): ReturnType<T> | undefined {
+    return this._callback?.(...args);
+  }
+
   public set(callback: T) {
     assert(!this._callback, 'Callback already set');
     this._callback = callback;

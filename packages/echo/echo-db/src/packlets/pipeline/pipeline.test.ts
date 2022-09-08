@@ -13,23 +13,22 @@ import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
+import { afterTest } from '@dxos/testutils';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
     const pipeline = new Pipeline(new Timeframe());
+    afterTest(() => pipeline.stop());
 
     const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory(), { valueEncoding: codec });
 
     // Remote feeds from other peers.
     const numFeeds = 5; const messagesPerFeed = 10;
     for (const feedIdx in range(numFeeds)) {
-      // Simulate replicating a remote feed.
       const { publicKey, secretKey } = createKeyPair();
-      const remoteFeed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
-      const localFeed = await feedStore.openReadOnlyFeed(PublicKey.from(publicKey));
-      pump(localFeed.feed.replicate(false), remoteFeed.feed.replicate(true));
+      const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
-      pipeline.addFeed(localFeed);
+      pipeline.addFeed(feed);
 
       setTimeout(async () => {
         for (const msgIdx in range(messagesPerFeed)) {
@@ -39,7 +38,7 @@ describe('pipeline/Pipeline', () => {
               itemId: `${feedIdx}-${msgIdx}`
             }
           };
-          await remoteFeed.append(msg);
+          await feed.append(msg);
         }
       });
     }

@@ -12,11 +12,10 @@ import { ComplexMap } from '@dxos/util';
 
 import { TimeframeClock } from '../database';
 import { createMessageSelector } from './message-selector';
+import { log } from '@dxos/log'
 
 const STALL_TIMEOUT = 1000;
 
-const log = debug('dxos:echo-db:pipeline');
-const warn = debug('dxos:echo-db:pipeline:warn');
 
 /**
  * A multi-reader pipeline that operates on feeds.
@@ -68,7 +67,7 @@ export class Pipeline {
     private readonly _initialTimeframe: Timeframe
   ) {
     this._iterator.stalled.on(candidates => {
-      warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
+      log.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
     });
   }
 
@@ -94,8 +93,8 @@ export class Pipeline {
     this._iterator.addFeedDescriptor(feed);
   }
 
-  stop () {
-    this._iterator.close();
+  async stop () {
+    await this._iterator.close();
   }
 
   //

@@ -48,6 +48,7 @@ export class FeedStore {
   private _directory: Directory;
   private _valueEncoding: ValueEncoding | undefined;
   private _hypercore: Hypercore;
+  // TODO(dmaretskyi): Convert to ComplexMap.
   private _descriptors: Map<string, FeedDescriptor>;
 
   /**
@@ -92,7 +93,7 @@ export class FeedStore {
    * Create a feed to Feedstore
    */
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
-    const descriptor = this._descriptors.get(key.toString());
+    const descriptor = this._descriptors.get(key.toHex());
     if (descriptor && descriptor.secretKey) {
       return descriptor;
     }
@@ -103,7 +104,7 @@ export class FeedStore {
    * Create a readonly feed to Feedstore
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
-    const descriptor = this._descriptors.get(key.toString()) ?? await this._createDescriptor({ key });
+    const descriptor = this._descriptors.get(key.toHex()) ?? await this._createDescriptor({ key });
     return descriptor;
   }
 
