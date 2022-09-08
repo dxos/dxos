@@ -24,8 +24,7 @@
         ],
         "outfile": "packages/common/codec-protobuf/dist/browser.js",
         "bundlePackages": [
-          "protobufjs",
-          "lodash.merge"
+          "protobufjs"
         ]
       }
     },
