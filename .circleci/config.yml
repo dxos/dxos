@@ -50,7 +50,7 @@ jobs:
       - run: pnpm install
       - *cache_save
       - run:
-          command: pnpm nx bundle halo-app --skip-nx-cache
+          command: pnpm nx bundle halo-app
           environment:
             NODE_OPTIONS: --max_old_space_size=8198
       - run:
@@ -72,7 +72,6 @@ workflows:
             branches:
               only:
                 - production
-                - wittjosiah/09-07-ci_Don_t_rely_on_affected_to_build_for_deploy
           context:
             - Github
             - Netlify
