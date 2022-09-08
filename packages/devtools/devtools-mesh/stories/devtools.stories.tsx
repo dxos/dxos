@@ -14,16 +14,18 @@ import {
   MMSTTopology,
   StarTopology,
   NetworkManager,
-  SignalManager,
   SwarmMapper,
   transportProtocolProvider,
   PeerInfo,
   Topology,
   SwarmInfo,
   ConnectionLog,
+} from '@dxos/network-manager';
+import {
+  SignalManager,
   CommandTrace,
   SignalStatus
-} from '@dxos/network-manager';
+} from '@dxos/signaling';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';

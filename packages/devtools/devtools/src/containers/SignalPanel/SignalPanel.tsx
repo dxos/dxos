@@ -7,7 +7,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 import { SignalStatusComp, SignalTrace } from '@dxos/devtools-mesh';
-import { SignalState, SignalStatus } from '@dxos/network-manager';
+import { SignalState, SignalStatus } from '@dxos/signaling';
 import { useDevtools, useStream } from '@dxos/react-client';
 
 import { SubscribeToSignalStatusResponse } from '../../proto';

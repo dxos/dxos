@@ -13,8 +13,9 @@ import { afterTest } from '@dxos/testutils';
 
 import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { MessageRouter } from './message-router';
-import { SignalClient } from './signal-client';
 import { OfferMessage, SignalMessage } from './signal-messaging';
+import { SignalClient } from '@dxos/signaling';
+import { Any } from '@dxos/codec-protobuf';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -51,7 +52,7 @@ describe('MessageRouter', () => {
     let api: SignalClient;
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: (author, recipient, msg: SwarmMessage) => api.message(author, recipient, msg).catch((_) => { }),
+      sendMessage: (author, recipient, msg: Any) => api.message(author, recipient, msg).catch((_) => { }),
       onSignal,
       onOffer
     });
@@ -245,7 +246,7 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   describe('Reliability', () => {
-    type SendMessageArgs = [author: PublicKey, recipient: PublicKey, meg: SwarmMessage];
+    type SendMessageArgs = [author: PublicKey, recipient: PublicKey, payload: Any];
 
     const setup = ({
       onSignal1 = async () => { },

@@ -10,8 +10,8 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
 import { MessageRouter } from './message-router';
-import { SignalManagerImpl } from './signal-manager-impl';
 import { SignalMessage } from './signal-messaging';
+import { SignalManagerImpl } from 'packages/mesh/signaling/dist/src';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;

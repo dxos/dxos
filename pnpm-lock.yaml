@@ -1173,6 +1173,7 @@ importers:
       '@dxos/react-toolkit': workspace:*
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/signaling': workspace:*
       '@dxos/text-model': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -1210,6 +1211,7 @@ importers:
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/signaling': link:../../mesh/signaling
       '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
       '@emotion/styled': 11.9.3_je6n67eb6zf6fgezjglv2qo2su
       '@mui/icons-material': 5.8.4_3qrniyd4fth4fdw4jngl7l7ure
@@ -1346,6 +1348,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/signaling': workspace:*
       '@dxos/util': workspace:*
       '@emotion/css': ^11.7.1
       '@emotion/react': ^11.9.0
@@ -1368,6 +1371,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/signaling': link:../../mesh/signaling
       '@dxos/util': link:../../common/util
       '@emotion/css': 11.7.1_@babel+core@7.18.13
       '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
@@ -2484,6 +2488,7 @@ importers:
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-worker-proxy': workspace:*
+      '@dxos/signaling': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
@@ -2520,6 +2525,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/rpc-worker-proxy': link:../../common/rpc-worker-proxy
+      '@dxos/signaling': link:../../mesh/signaling
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0

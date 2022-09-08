@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { SignalState, SignalStatus } from '@dxos/network-manager';
+import { SignalState, SignalStatus } from '@dxos/signaling';
 
 const getColor = (state: SignalState) => {
   switch (state) {
