@@ -3,7 +3,7 @@
 //
 
 import chalk from 'chalk';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 import { LogLevel, LogProcessor, shouldLog } from '../config';
 

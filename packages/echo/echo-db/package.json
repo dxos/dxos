@@ -16,6 +16,7 @@
     "check": "true"
   },
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -36,7 +37,6 @@
     "base-x": "~3.0.9",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
-    "echo-db:workspace:*": "link:@dxos/echo-db:workspace:*",
     "json-stable-stringify": "^1.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.unionwith": "^4.6.0",
