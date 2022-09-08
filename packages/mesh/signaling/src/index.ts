@@ -3,3 +3,5 @@
 //
 
 export * from './messenger';
+export * from './signal-manager';
+export * from './in-memory-signal-manager'

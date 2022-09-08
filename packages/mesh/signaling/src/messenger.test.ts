@@ -97,7 +97,7 @@ describe('Messenger', () => {
         type_url: 'c',
         value: Buffer.from('2')
       };
-      await messenger2.message(messenger1.ownPeerId, payload);
+      messenger2.message(messenger1.ownPeerId, payload);
       await waitForExpect(() => {
         expect(received1[0]).toEqual([messenger2.ownPeerId, payload]);
       }, 3_000);
