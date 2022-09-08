@@ -50,13 +50,11 @@ describe('pipeline/Pipeline', () => {
     pipeline.addFeed(localFeed);
     pipeline.setWriteFeed(localFeed);
     for (const msgIdx in range(messagesPerFeed)) {
-      const msg: FeedMessage = {
-        timeframe: new Timeframe(),
+      await pipeline.writer!.write({
         echo: {
           itemId: `local-${msgIdx}`
         }
-      };
-      await localFeed.append(msg); 
+      }); 
     }
     
     let msgCount = 0;
