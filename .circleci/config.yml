@@ -59,12 +59,28 @@ jobs:
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
 
+  full_test:
+    docker:
+      - image: ghcr.io/dxos/circleci-node:latest
+        auth:
+          username: dxos-bot
+          password: $GH_TOKEN
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpx playwright install
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx run-many --target=test --skip-nx-cache
+
 workflows:
   main:
     jobs:
       - check:
           context:
             - Github
+
   deploy:
     jobs:
       - deploy:
@@ -75,3 +91,16 @@ workflows:
           context:
             - Github
             - Netlify
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "4 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - full_test:
+          context:
+            - Github
