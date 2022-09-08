@@ -10,13 +10,13 @@ import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
 import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { SubscriptionGroup } from '@dxos/util';
-import { log } from '@dxos/log'
 
 import { ResultSet } from './api';
 import { HALO } from './halo';
