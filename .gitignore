@@ -99,3 +99,6 @@ storybook-static
 .benchmark
 
 *.cpuprofile
+
+.trace-compiled/
+
