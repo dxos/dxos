@@ -81,26 +81,26 @@ describe('Messenger', () => {
       }, 3_000);
     }
 
-    // {
-    //   const payload: Any = {
-    //     type_url: 'b',
-    //     value: Buffer.from('1')
-    //   }
-    //   messenger1.message(messenger3.ownPeerId, payload);
-    //   await waitForExpect(() => {
-    //     expect(received3[0]).toEqual([messenger1.ownPeerId, payload])
-    //   }, 3_000);
-    // }
+    {
+      const payload: Any = {
+        type_url: 'b',
+        value: Buffer.from('1')
+      };
+      await messenger1.message(messenger3.ownPeerId, payload);
+      await waitForExpect(() => {
+        expect(received3[0]).toEqual([messenger1.ownPeerId, payload]);
+      }, 3_000);
+    }
 
-    // {
-    //   const payload: Any = {
-    //     type_url: 'c',
-    //     value: Buffer.from('2')
-    //   }
-    //   messenger2.message(messenger1.ownPeerId, payload);
-    //   await waitForExpect(() => {
-    //     expect(received1[0]).toEqual([messenger2.ownPeerId, payload])
-    //   }, 3_000);
-    // }
+    {
+      const payload: Any = {
+        type_url: 'c',
+        value: Buffer.from('2')
+      };
+      await messenger2.message(messenger1.ownPeerId, payload);
+      await waitForExpect(() => {
+        expect(received1[0]).toEqual([messenger2.ownPeerId, payload]);
+      }, 3_000);
+    }
   });
 });

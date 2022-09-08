@@ -132,8 +132,6 @@ describe('SignalClient', () => {
     await sleep(3000);
     await api2.join(topic, peer2);
 
-    const sessionId = PublicKey.random();
-
     const payload: Any = {
       type_url: 'something',
       value: Buffer.from('0')

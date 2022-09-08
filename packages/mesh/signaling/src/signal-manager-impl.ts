@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { Event, sleep, synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
@@ -148,7 +148,7 @@ export class SignalManagerImpl implements SignalManager {
 
   async message (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
     log(`Signal ${recipient}`);
-    await Promise.all([...this._servers.values()].map((server: SignalClient) => 
+    await Promise.all([...this._servers.values()].map((server: SignalClient) =>
       server.message(author, recipient, payload).catch(err => console.log(`Error signaling: ${err}`))));
   }
 

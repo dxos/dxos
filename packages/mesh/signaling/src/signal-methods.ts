@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from 'packages/common/protocols/dist/src';
+import { PublicKey } from '@dxos/protocols';
 
 import { Any } from './proto/gen/google/protobuf';
 
