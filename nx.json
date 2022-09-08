@@ -73,6 +73,14 @@
       ]
     },
     "test": {
+      "inputs": [
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
       "dependsOn": [
         "^build",
         "proto"

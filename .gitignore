@@ -100,5 +100,5 @@ storybook-static
 
 *.cpuprofile
 
-.trace-compiled/
-
+# Debug logging for require hooks
+.trace-compiled

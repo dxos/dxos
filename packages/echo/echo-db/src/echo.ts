@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import memdown from 'memdown';
 import assert from 'node:assert';
 
@@ -11,6 +10,7 @@ import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -27,9 +27,6 @@ import { IdentityNotInitializedError, InvalidStorageVersionError } from './packl
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { STORAGE_VERSION, MetadataStore, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
-
-const log = debug('dxos:echo');
-const error = log.extend('error');
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {
@@ -284,7 +281,7 @@ export class ECHO {
         await this._storage.destroy();
       }
     } catch (err: any) {
-      error('Error clearing storage:', err);
+      log.error(`Error clearing storage: ${err}`);
     }
 
     await this.halo.reset();
