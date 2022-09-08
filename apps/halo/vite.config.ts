@@ -26,17 +26,8 @@ export default defineConfig({
   },
   build: {
     commonjsOptions: {
-      // TODO(wittjosiah): Why must org scope be omitted for this to work?
-      // https://github.com/vitejs/vite/issues/5668#issuecomment-968125763
       include: [
-        /client/,
-        /config/,
-        /protocols/,
-        /react-async/,
-        /react-client/,
-        /react-components/,
-        /react-toolkit/,
-        /util/,
+        /packages/,
         /node_modules/
       ]
     }
