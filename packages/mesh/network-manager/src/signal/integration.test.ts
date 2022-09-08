@@ -7,11 +7,11 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
+import { SignalManagerImpl } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messaging';
-import { SignalManagerImpl } from 'packages/mesh/signaling/dist/src';
 
 describe('Signal Integration Test', () => {
   let broker: TestBroker;
@@ -57,8 +57,8 @@ describe('Signal Integration Test', () => {
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
 
-    peerNetworking1.signalManager.join(topic, peer1);
-    peerNetworking2.signalManager.join(topic, peer2);
+    await peerNetworking1.signalManager.join(topic, peer1);
+    await peerNetworking2.signalManager.join(topic, peer2);
 
     await promise1;
     await promise2;

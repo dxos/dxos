@@ -5,13 +5,13 @@
 import assert from 'assert';
 import debug from 'debug';
 
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet, exponentialBackoffInterval, MakeOptional, SubscriptionGroup } from '@dxos/util';
 
+import { schema } from '../proto/gen';
 import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
-import { Any } from '@dxos/codec-protobuf';
-import { schema } from '../proto/gen';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void
@@ -64,9 +64,9 @@ export class MessageRouter implements SignalMessaging {
     if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
-    } 
+    }
     const message: SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').decode(payload.value);
-    
+
     log(`receive message: ${JSON.stringify(message)} from ${author} to ${recipient}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
@@ -140,8 +140,8 @@ export class MessageRouter implements SignalMessaging {
     await this._encodeAndSend(author, recipient, networkMessage);
   }
 
-  private async _encodeAndSend(author: PublicKey, recipient: PublicKey, message: SwarmMessage) {
-    await this._sendMessage(author, recipient, {type_url: 'dxos.mesh.swarm.SwarmMessage', value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message)});
+  private async _encodeAndSend (author: PublicKey, recipient: PublicKey, message: SwarmMessage) {
+    await this._sendMessage(author, recipient, { type_url: 'dxos.mesh.swarm.SwarmMessage', value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message) });
   }
 
   private async _resolveAnswers (message: SwarmMessage): Promise<void> {

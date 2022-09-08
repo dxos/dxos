@@ -18,4 +18,3 @@ export interface SignalConnection {
    */
   leave (topic: PublicKey, peerId: PublicKey): void
 }
-

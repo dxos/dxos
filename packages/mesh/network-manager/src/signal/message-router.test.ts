@@ -7,15 +7,15 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
+import { SignalClient } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 
-import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
+import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messaging';
-import { SignalClient } from '@dxos/signaling';
-import { Any } from '@dxos/codec-protobuf';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
