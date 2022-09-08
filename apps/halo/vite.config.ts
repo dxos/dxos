@@ -25,10 +25,7 @@ export default defineConfig({
     ]
   },
   build: {
-    minify: false,
     commonjsOptions: {
-      // TODO(wittjosiah): Why must org scope be omitted for this to work?
-      // https://github.com/vitejs/vite/issues/5668#issuecomment-968125763
       include: [
         /packages/,
         /node_modules/
