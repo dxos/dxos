@@ -54,12 +54,28 @@
 
 ## Design
 
+### Goals
+
+- Reuse DNS protocol for name federation registration, discovery, and replication.
+- Leverage DNSLink for IPFS file distribution and discovery.
+
+### Implementation
+
+- Each KUBE runs a DNS server.
+- Publicly accessible KUBE servers may be registered as DNS servers for a domain (via a `NS` record).
+- `TXT` records contain CIDs of DMG records.
+- DMG records contain CIDs of files to be served.
+
 ![KUBE DNS](./diagrams/dns.drawio.svg)
+
+> - ISSUE: Private networks and `localhost`?
 
 
 ## Resources
 
 - https://www.abetterinternet.org
+- https://docs.ipfs.tech/concepts/dnslink/#dnslink
+- https://github.com/miekg/dns
 
 ### Secure hosting/delivery of software to browser
 
