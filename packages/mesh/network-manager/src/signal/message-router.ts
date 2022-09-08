@@ -10,6 +10,8 @@ import { ComplexMap, ComplexSet, exponentialBackoffInterval, MakeOptional, Subsc
 
 import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { OfferMessage, SignalMessage, SignalMessaging } from './signal-messaging';
+import { Any } from '@dxos/codec-protobuf';
+import { schema } from '../proto/gen';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void
@@ -17,7 +19,7 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>
+  sendMessage?: (author: PublicKey, recipient: PublicKey, message: Any) => Promise<void>
   onOffer?: (message: OfferMessage) => Promise<Answer>
   onSignal?: (message: SignalMessage) => Promise<void>
   retryDelay?: number
@@ -30,7 +32,7 @@ const log = debug('dxos:network-manager:message-router');
  */
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, message: SwarmMessage) => Promise<void>;
+  private readonly _sendMessage: (author: PublicKey, recipient: PublicKey, payload: Any) => Promise<void>;
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap(key => key.toHex());
@@ -58,7 +60,13 @@ export class MessageRouter implements SignalMessaging {
     this._timeout = timeout;
   }
 
-  async receiveMessage (author: PublicKey, recipient: PublicKey, message: SwarmMessage): Promise<void> {
+  async receiveMessage (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
+    if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
+      // Ignore not swarm messages.
+      return;
+    } 
+    const message: SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').decode(payload.value);
+    
     log(`receive message: ${JSON.stringify(message)} from ${author} to ${recipient}`);
     if (!message.data?.ack) {
       if (this._receivedMessages.has(message.messageId!)) {
@@ -108,7 +116,7 @@ export class MessageRouter implements SignalMessaging {
     const cancelRetry = exponentialBackoffInterval(async () => {
       log(`retrying message: ${JSON.stringify(networkMessage)}`);
       try {
-        await this._sendMessage(author, recipient, networkMessage);
+        await this._encodeAndSend(author, recipient, networkMessage);
       } catch (error) {
         log(`ERROR failed to send message: ${error}`);
       }
@@ -129,7 +137,11 @@ export class MessageRouter implements SignalMessaging {
     this._subscriptions.push(cancelRetry);
     this._subscriptions.push(() => clearTimeout(timeout));
 
-    await this._sendMessage(author, recipient, networkMessage);
+    await this._encodeAndSend(author, recipient, networkMessage);
+  }
+
+  private async _encodeAndSend(author: PublicKey, recipient: PublicKey, message: SwarmMessage) {
+    await this._sendMessage(author, recipient, {type_url: 'dxos.mesh.swarm.SwarmMessage', value: schema.getCodecForType('dxos.mesh.swarm.SwarmMessage').encode(message)});
   }
 
   private async _resolveAnswers (message: SwarmMessage): Promise<void> {
@@ -190,7 +202,7 @@ export class MessageRouter implements SignalMessaging {
       messageId: PublicKey.random()
     };
     log(`sent ack: ${JSON.stringify(ackMessage)}`);
-    await this._sendMessage(author, recipient, ackMessage);
+    await this._encodeAndSend(author, recipient, ackMessage);
   }
 
   destroy (): void {
