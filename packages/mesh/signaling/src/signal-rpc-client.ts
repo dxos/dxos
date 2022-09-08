@@ -109,7 +109,6 @@ export class SignalRPCClient {
       recipient: recipient.asUint8Array(),
       payload
     });
-    console.log('sent');
   }
 
   async close () {

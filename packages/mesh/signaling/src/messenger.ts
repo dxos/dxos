@@ -32,7 +32,7 @@ export class Messenger {
     this._receive = receive;
 
     this._signalManager = signalManager;
-    this._signalManager.subscribeMessages(this._ownPeerId);
+    this._signalManager.subscribeMessages(this._ownPeerId).then(() => log('Subscribed for messages')).catch((error) => { throw error; });
     this._signalManager.onMessage.on(([author, recipient, payload]) => {
       log(`Received message from ${author}`);
       this._receive(author, payload);

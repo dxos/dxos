@@ -248,15 +248,13 @@ export class SignalClient implements SignalMethods {
   async subscribeMessages (peerId: PublicKey): Promise<void> {
     // Do nothing if already subscribed.
     if (this._messageStreams.has(peerId)) {
-      this._messageStreams.get(peerId)?.close();
-      this._messageStreams.delete(peerId);
+      return;
     }
 
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
     messageStream.subscribe(async (message: Message) => {
       await this._onMessage(PublicKey.from(message.author), PublicKey.from(message.recipient), message.payload);
-      console.log('received');
     });
 
     // Saving message stream.

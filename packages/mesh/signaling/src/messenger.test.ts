@@ -49,8 +49,7 @@ describe('Messenger', () => {
     };
   };
 
-  Array(500).fill(0).forEach(() => {
-  it.only('Message between peers', async () => {
+  it('Message between peers', async () => {
     const { messenger: messenger1 } = await setup();
     const { messenger: messenger2, received: received2 } = await setup();
 
@@ -64,7 +63,6 @@ describe('Messenger', () => {
     await waitForExpect(() => {
       expect(received2[0]).toEqual([messenger1.ownPeerId, payload]);
     }, 5_000);
-  });
   });
 
   it('Message 3 peers', async () => {
