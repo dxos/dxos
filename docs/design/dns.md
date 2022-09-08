@@ -52,16 +52,14 @@
 - `srv.us`
 
 
-## Browser
+## Design
 
+![KUBE DNS](./diagrams/dns.drawio.svg)
 
 
 ## Resources
 
 - https://www.abetterinternet.org
-
-
-## Goals
 
 ### Secure hosting/delivery of software to browser
 
@@ -78,3 +76,4 @@
   - HTML Script integrity check
     - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attr-integrity
   - HALO validates integrity using credential presentation in custom header
+
