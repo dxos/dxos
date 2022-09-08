@@ -17,6 +17,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",

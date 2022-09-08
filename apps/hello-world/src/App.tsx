@@ -4,17 +4,19 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
+import { Box, Button, Checkbox, Dialog, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
-import { Item, ObjectModel, Party } from '@dxos/client';
-import { useClient, useSelection } from '@dxos/react-client';
+import { clientServiceBundle, Item, ObjectModel, Party } from '@dxos/client';
+import { useAsyncEffect } from '@dxos/react-async';
+import { useClient, useProfile, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
 import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-toolkit';
+import { createProtoRpcPeer } from '@dxos/rpc';
+import { createIframeParentPort } from '@dxos/rpc-tunnel';
 
-/**
- * @constructor
- */
-export const App = () => {
+const HALO_ORIGIN = 'http://localhost:5173';
+
+const Main = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
 
@@ -135,5 +137,49 @@ export const App = () => {
         onUpload={handleImport}
       />
     </Box>
+  );
+};
+
+const LoginDialog = () => {
+  const [iframe, setIframe] = useState<HTMLIFrameElement | null>(null);
+  const client = useClient();
+
+  useAsyncEffect(async () => {
+    if (!iframe) {
+      return;
+    }
+
+    const port = createIframeParentPort(iframe, HALO_ORIGIN);
+    const peer = createProtoRpcPeer({
+      requested: {},
+      exposed: clientServiceBundle,
+      handlers: client.services,
+      port
+    });
+    await peer.open();
+  }, [iframe]);
+
+  return (
+    <Dialog open>
+      <iframe
+        ref={setIframe}
+        src={`${HALO_ORIGIN}#/auth/${encodeURIComponent(window.origin)}`}
+        style={{ border: 0 }}
+      />
+    </Dialog>
+  );
+};
+
+export const App = () => {
+  const profile = useProfile();
+
+  if (!profile) {
+    return (
+      <LoginDialog />
+    );
+  }
+
+  return (
+    <Main />
   );
 };
