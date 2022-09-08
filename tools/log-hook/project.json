@@ -23,14 +23,6 @@
           "tools/log-hook/**/*.{ts,js}"
         ]
       }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
-      "options": {
-        "testPatterns": [
-          "tools/log-hook/src/**/*.test.{ts,js}"
-        ]
-      }
     }
   }
 }
