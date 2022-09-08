@@ -1,0 +1,36 @@
+{
+  "sourceRoot": "tools/log-hook/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "tools/log-hook/dist",
+        "tsConfig": "tools/log-hook/tsconfig.json",
+        "main": "tools/log-hook/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "tools/log-hook/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "tools/log-hook/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  }
+}

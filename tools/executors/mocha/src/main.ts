@@ -6,7 +6,7 @@
 // The `require` hooks that are registered in those modules will be run in the same order as they are imported.
 // We want the logger preprocessor to be run on typescript source first.
 // Then the SWC will transpile the typescript source to javascript.
-import '@dxos/log/register';
+import '@dxos/log-hook/register';
 import '@swc-node/register';
 
 import type { ExecutorContext } from '@nrwl/devkit';

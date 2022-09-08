@@ -27,7 +27,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/eslint-plugin': workspace:*
       '@dxos/eslint-plugin-rules': workspace:*
-      '@dxos/log': workspace:*
+      '@dxos/log-hook': workspace:*
       '@dxos/mocha': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
@@ -100,7 +100,7 @@ importers:
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/eslint-plugin': link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
-      '@dxos/log': link:packages/common/log
+      '@dxos/log-hook': link:tools/log-hook
       '@dxos/mocha': link:tools/executors/mocha
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
@@ -2958,6 +2958,23 @@ importers:
       '@types/node': 16.11.27
       mocha: 8.4.0
       ts-node: 10.9.1_sx5ynny5elbe7xjikueazwirqy
+      typescript: 4.7.4
+
+  tools/log-hook:
+    specifiers:
+      '@swc-node/sourcemap-support': ^0.2.0
+      '@swc/core': ~1.2.248
+      '@types/node': ^16.11.27
+      pirates: ~4.0.5
+      sorcery: ^0.10.0
+      typescript: ^4.7.2
+    dependencies:
+      '@swc-node/sourcemap-support': 0.2.0
+      '@swc/core': 1.2.248
+      pirates: 4.0.5
+      sorcery: 0.10.0
+    devDependencies:
+      '@types/node': 16.11.27
       typescript: 4.7.4
 
   tools/protobuf-test:
@@ -10399,7 +10416,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.122
-    dev: true
     optional: true
 
   /@swc/core-android-arm64/1.2.242:
@@ -10420,7 +10436,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
-    dev: true
     optional: true
 
   /@swc/core-darwin-arm64/1.2.242:
@@ -10437,7 +10452,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-darwin-x64/1.2.242:
@@ -10454,7 +10468,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-freebsd-x64/1.2.242:
@@ -10475,7 +10488,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
-    dev: true
     optional: true
 
   /@swc/core-linux-arm-gnueabihf/1.2.242:
@@ -10496,7 +10508,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
-    dev: true
     optional: true
 
   /@swc/core-linux-arm64-gnu/1.2.242:
@@ -10513,7 +10524,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-linux-arm64-musl/1.2.242:
@@ -10530,7 +10540,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-linux-x64-gnu/1.2.242:
@@ -10547,7 +10556,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-linux-x64-musl/1.2.242:
@@ -10564,7 +10572,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core-win32-arm64-msvc/1.2.242:
@@ -10585,7 +10592,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
-    dev: true
     optional: true
 
   /@swc/core-win32-ia32-msvc/1.2.242:
@@ -10606,7 +10612,6 @@ packages:
     requiresBuild: true
     dependencies:
       '@swc/wasm': 1.2.130
-    dev: true
     optional: true
 
   /@swc/core-win32-x64-msvc/1.2.242:
@@ -10623,7 +10628,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@swc/core/1.2.242:
@@ -10665,7 +10669,6 @@ packages:
       '@swc/core-win32-arm64-msvc': 1.2.248
       '@swc/core-win32-ia32-msvc': 1.2.248
       '@swc/core-win32-x64-msvc': 1.2.248
-    dev: true
 
   /@swc/wasm/1.2.122:
     resolution: {integrity: sha512-sM1VCWQxmNhFtdxME+8UXNyPNhxNu7zdb6ikWpz0YKAQQFRGT5ThZgJrubEpah335SUToNg8pkdDF7ibVCjxbQ==}
@@ -16901,7 +16904,6 @@ packages:
 
   /es6-promise/3.3.1:
     resolution: {integrity: sha512-SOp9Phqvqn7jtEUxPWdWfWoLmyt2VaJ6MpvP9Comy1MceMXqE6bxvaTu4iaxpYYPzhny28Lc+M87/c2cPK6lDg==}
-    dev: true
 
   /es6-promisify/6.1.1:
     resolution: {integrity: sha512-HBL8I3mIki5C1Cc9QjKUenHtnG0A5/xA8Q/AllRcfiwl2CZFXGK7ddBiCoRwAix4i2KxcQfjtIVcrVbB3vbmwg==}
@@ -24224,7 +24226,6 @@ packages:
     hasBin: true
     dependencies:
       minimist: 1.2.6
-    dev: true
 
   /mkdirp/1.0.4:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
@@ -28135,7 +28136,6 @@ packages:
       graceful-fs: 4.2.10
       mkdirp: 0.5.5
       rimraf: 2.7.1
-    dev: true
 
   /sane/4.1.0:
     resolution: {integrity: sha512-hhbzAgTIX8O7SHfp2c8/kREfEn4qO/9q8C9beyY6+tvZ87EpoZ3i1RIEvp27YBswnNbY9mWd6paKVmKbAgLfZA==}
@@ -28760,7 +28760,6 @@ packages:
       minimist: 1.2.6
       sander: 0.5.1
       sourcemap-codec: 1.4.8
-    dev: true
 
   /sort-keys-length/1.0.1:
     resolution: {integrity: sha512-GRbEOUqCxemTAk/b32F2xa8wDTs+Z1QHOkbhJDQTvv/6G3ZkbJ+frYWsTcc7cBB3Fu4wy4XlLCuNtJuMn7Gsvw==}
