@@ -40,27 +40,22 @@ jobs:
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
-      - when:
-          condition:
-            equal: [ production, <<pipeline.git.branch>> ]
-          steps:
-            - persist_to_workspace:
-                root: apps/halo/out
-                paths:
-                  - halo
 
   deploy:
     docker:
       - *docker_image
     steps:
-      - attach_workspace:
-          at: /tmp/out
       - checkout
       - *cache_restore
       - run: pnpm install
+      - *cache_save
+      - run:
+          command: pnpm nx bundle halo-app
+          environment:
+            NODE_OPTIONS: --max_old_space_size=8198
       - run:
           name: Deploy HALO
-          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir /tmp/out/halo
+          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
 
@@ -70,9 +65,9 @@ workflows:
       - check:
           context:
             - Github
+  deploy:
+    jobs:
       - deploy:
-          requires:
-            - check
           filters:
             branches:
               only:
