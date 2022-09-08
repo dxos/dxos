@@ -5,17 +5,14 @@
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { timed } from '@dxos/debug';
-import {
-  createFeedWriter, DatabaseSnapshot, EchoEnvelope, FeedMessage, FeedWriter, mapFeedWriter, PartyKey, PartySnapshot
-} from '@dxos/echo-protocol';
+import { failUndefined, timed } from '@dxos/debug';
+import { DatabaseSnapshot, EchoEnvelope, FeedMessage, FeedWriter, mapFeedWriter, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { Credential } from '@dxos/halo-protocol/src/proto';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
 import { Pipeline } from '../packlets/pipeline';
 
-import { FeedDescriptor } from '@dxos/feed-store';
 import debug from 'debug';
 import { Database, FeedDatabaseBackend } from '../packlets/database';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
@@ -72,7 +69,6 @@ export class PartyPipeline {
   private _database?: Database;
   private _partyProcessor?: PartyProcessor;
   private _pipeline?: Pipeline;
-  private _feedWriter: FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined;
 
   constructor (
     private readonly _partyKey: PartyKey,
@@ -123,8 +119,8 @@ export class PartyPipeline {
   }
 
   get credentialsWriter (): FeedWriter<Credential> {
-    assert(this._feedWriter, 'No writable feed');
-    return mapFeedWriter<Credential, Omit<FeedMessage, 'timeframe'>>(credential => ({ halo: { credential } }), this._feedWriter)
+    assert(this._pipeline?.writer, 'No writable feed or pipeline is not open.');
+    return mapFeedWriter<Credential, Omit<FeedMessage, 'timeframe'>>(credential => ({ halo: { credential } }), this._pipeline.writer)
   }
 
   /**
@@ -175,17 +171,14 @@ export class PartyPipeline {
     this._pipeline.addFeed(genesisFeed);
 
     // Writable feed
-    this._feedWriter = createFeedWriterWithTimeframe(writableFeed, () => {
-      assert(this._pipeline, 'Pipeline not open.');
-      return this._pipeline.timeframe;
-    });
+    this._pipeline.setWriteFeed(writableFeed);
 
     //
     // Database
     //
 
     const databaseBackend = new FeedDatabaseBackend(
-      mapFeedWriter<EchoEnvelope, Omit<FeedMessage, 'timeframe'>>(echo => ({ echo }), this._feedWriter),
+      mapFeedWriter<EchoEnvelope, Omit<FeedMessage, 'timeframe'>>(echo => ({ echo }), this._pipeline.writer ?? failUndefined()),
       this._databaseSnapshot,
       { snapshots: true }
     );
@@ -276,10 +269,3 @@ export class PartyPipeline {
   }
 }
 
-function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<Omit<FeedMessage, 'timeframe'>> {
-  const writer = createFeedWriter<FeedMessage>(feed.feed);
-  return mapFeedWriter<Omit<FeedMessage, 'timeframe'>, FeedMessage>(msg => ({
-    ...msg,
-    timeframe: getTimeframe()
-  }), writer);
-}

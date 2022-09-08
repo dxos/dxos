@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter } from '@dxos/echo-protocol';
+import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
@@ -62,6 +62,8 @@ export class Pipeline {
     this._initialTimeframe
   );
 
+  private _writer: FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined = undefined;
+
   constructor (
     private readonly _initialTimeframe: Timeframe
   ) {
@@ -111,4 +113,26 @@ export class Pipeline {
   async waitUntilReached (target: Timeframe) {
     await this._timeframeClock.waitUntilReached(target);
   }
+
+  //
+  // Writable feed.
+  //
+
+  get writer(): FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined {
+    return this._writer;
+  }
+
+  setWriteFeed (feed: FeedDescriptor) {
+    assert(!this._writer, 'Writer already set.');
+
+    this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
+  }
+}
+
+function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<Omit<FeedMessage, 'timeframe'>> {
+  const writer = createFeedWriter<FeedMessage>(feed.feed);
+  return mapFeedWriter<Omit<FeedMessage, 'timeframe'>, FeedMessage>(msg => ({
+    ...msg,
+    timeframe: getTimeframe()
+  }), writer);
 }

@@ -44,6 +44,21 @@ describe('pipeline/Pipeline', () => {
       });
     }
 
+    // Local feed.
+    const { publicKey, secretKey } = createKeyPair();
+    const localFeed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    pipeline.addFeed(localFeed);
+    pipeline.setWriteFeed(localFeed);
+    for (const msgIdx in range(messagesPerFeed)) {
+      const msg: FeedMessage = {
+        timeframe: new Timeframe(),
+        echo: {
+          itemId: `local-${msgIdx}`
+        }
+      };
+      await localFeed.append(msg); 
+    }
+    
     let msgCount = 0;
     for await (const msg of pipeline.consume()) {
       if (++msgCount === numFeeds * messagesPerFeed) {
