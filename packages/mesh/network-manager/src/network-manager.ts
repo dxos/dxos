@@ -8,15 +8,16 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { InMemorySignalManager, OfferMessage, SignalManager, SignalManagerImpl } from './signal';
+import { OfferMessage } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
+import { PublicKey } from '@dxos/protocols';
+import { InMemorySignalManager, SignalManager, SignalManagerImpl } from '@dxos/signaling';
 
 export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
 
