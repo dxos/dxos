@@ -13,6 +13,7 @@ import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from '
 
 // TODO(dmaretskyi): Move to separate package in tools.
 
+// Here be dragons.
 export const register = () => {
   addHook((code, filename) => {
     try {
