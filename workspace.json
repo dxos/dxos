@@ -32,6 +32,8 @@
     "kai": "apps/experimental/kai",
     "kitchen-sink": "apps/experimental/kitchen-sink",
     "kodama": "apps/experimental/kodama",
+    "log": "packages/common/log",
+    "log-hook": "tools/log-hook",
     "lexical-editor": "apps/experimental/lexical-editor",
     "mesh-protocol": "packages/mesh/mesh-protocol",
     "messenger-model": "packages/echo/messenger-model",
