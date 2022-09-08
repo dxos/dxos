@@ -74,7 +74,7 @@ const BUGCHECK_STRING = 'FOO If you see this message then it means that the sour
 ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
 const registerGlobals = () => {
-  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = () => null;//getCurrentOwnershipScope;
+  (globalThis as any)[ID_GET_CURRENT_OWNERSHIP_SCOPE] = () => null;// getCurrentOwnershipScope;
   (globalThis as any)[ID_BUGCHECK_STRING] = BUGCHECK_STRING;
 };
 
