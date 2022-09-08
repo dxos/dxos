@@ -75,7 +75,10 @@
     "test": {
       "inputs": [
         {
-          "env": "DX_LOG"
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PROCESSOR"
         }
       ],
       "dependsOn": [
