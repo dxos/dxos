@@ -9,8 +9,8 @@ import { TextIndex } from './text-index';
 export type Getter = (item: any, path: string) => any;
 
 interface MatcherOptions {
-  getter: Getter;
-  textIndex?: TextIndex;
+  getter: Getter
+  textIndex?: TextIndex
 }
 
 /**

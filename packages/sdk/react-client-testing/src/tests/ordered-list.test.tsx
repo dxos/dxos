@@ -2,16 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { screen, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import expect from 'expect';
-import 'raf/polyfill';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
 
-import { sleep } from '@dxos/async';
-import { Item, ObjectModel, OrderedList } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 import { SubscriptionGroup } from '@dxos/util';
 
 const createTestComponents = async () => {
@@ -53,27 +50,15 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   };
 
   return (
-    <ul onClick={handleChangeOrder}>
+    <ul data-testid='click' onClick={handleChangeOrder}>
       {order.map(id => (
-        <li key={id}>
+        <li data-testid='item' key={id}>
           {items.find(item => item.id === id)!.id}
         </li>
       ))}
     </ul>
   );
 };
-
-let rootContainer: HTMLDivElement | null;
-
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
-
-afterEach(() => {
-  document.body.removeChild(rootContainer as HTMLDivElement);
-  rootContainer = null;
-});
 
 describe('OrderedList', () => {
   it('reorders', async () => {
@@ -85,20 +70,18 @@ describe('OrderedList', () => {
     const orderedList = new OrderedList(list.model);
     await orderedList.init(items.map(item => item.id));
 
-    act(() => {
-      ReactDOM.render(<Test items={items} orderedList={orderedList} />, rootContainer);
-    });
+    render(<Test items={items} orderedList={orderedList} />);
 
-    const ul = document.querySelector('ul');
-    expect(ul?.childElementCount).toEqual(3);
-    ul?.childNodes.forEach((node, i) => {
+    expect((await screen.findAllByTestId('item')).length).toEqual(3);
+    screen.getAllByTestId('item').forEach((node, i) => {
       expect(node.textContent).toBe(orderedList.values[i]);
     });
 
-    ul?.click();
-    await sleep(100); // It does not render quick enough.
-    ul?.childNodes.forEach((node, i) => {
-      expect(node.textContent).toBe(orderedList.values[i]);
+    await userEvent.click(screen.getByTestId('click'));
+    await waitFor(() => {
+      screen.getAllByTestId('item').forEach((node, i) => {
+        expect(node.textContent).toBe(orderedList.values[i]);
+      });
     });
   });
 });

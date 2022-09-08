@@ -1,0 +1,49 @@
+{
+  "sourceRoot": "packages/mesh/mesh-protocol/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/mesh/mesh-protocol/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/mesh-protocol/dist",
+        "tsConfig": "packages/mesh/mesh-protocol/tsconfig.json",
+        "main": "packages/mesh/mesh-protocol/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/mesh-protocol/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/mesh-protocol/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha",
+    "protobuf-compiler"
+  ]
+}

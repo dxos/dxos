@@ -1,0 +1,30 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../protocols"
+    },
+    {
+      "path": "../rpc"
+    },
+    {
+      "path": "../util"
+    }
+  ]
+}

@@ -2,16 +2,11 @@
   "name": "@dxos/protocol-network-generator",
   "version": "2.33.8",
   "description": "Protocol network generator.",
-  "homepage": "https://github.com/dxos/protocol/tree/master/packages/protocol-network-generator#readme",
-  "bugs": {
-    "url": "https://github.com/dxos/protocol/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocol.git"
-  },
   "license": "MIT",
   "author": "DXOS.org",
+  "homepage": "https://github.com/dxos/protocols/tree/main/packages/mesh/protocol-network-generator#readme",
+  "bugs": "https://github.com/dxos/protocols/issues",
+  "repository": "github:dxos/protocols",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
@@ -22,10 +17,7 @@
     "index.js"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/network-generator": "workspace:*",
@@ -33,14 +25,8 @@
     "pump": "^3.0.0"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^28.1.6",
-    "@types/node": "^16.11.27",
-    "@types/pump": "^1.1.0",
-    "eslint": "^8.21.0",
-    "typescript": "^4.7.2"
+    "@types/pump": "^1.1.0"
   },
   "publishConfig": {
     "access": "public"

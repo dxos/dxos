@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, mockFn } from 'earljs';
+import { expect } from 'earljs';
 import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
@@ -11,9 +11,10 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Answer, SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { MessageRouter } from './message-router';
 import { SignalClient } from './signal-client';
+import { OfferMessage, SignalMessage } from './signal-messaging';
 
 describe('MessageRouter', () => {
   let topic: PublicKey;
@@ -41,16 +42,16 @@ describe('MessageRouter', () => {
     onSignal = (async () => { }) as any,
     onOffer = async () => ({ accept: true })
   }: {
-    signalApiUrl: string;
-    onSignal?: (msg: SignalMessage) => Promise<void>;
-    onOffer?: (msg: SignalMessage) => Promise<Answer>;
+    signalApiUrl: string
+    onSignal?: (msg: SignalMessage) => Promise<void>
+    onOffer?: (msg: OfferMessage) => Promise<Answer>
   }) => {
 
     // eslint-disable-next-line prefer-const
     let api: SignalClient;
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: (msg: SignalMessage) => api.signal(msg).catch((_) => { }),
+      sendMessage: (author, recipient, msg: SwarmMessage) => api.message(author, recipient, msg).catch((_) => { }),
       onSignal,
       onOffer
     });
@@ -58,7 +59,7 @@ describe('MessageRouter', () => {
 
     api = new SignalClient(
       signalApiUrl,
-      async (msg: SignalMessage) => router.receiveMessage(msg)
+      router.receiveMessage.bind(router)
     );
 
     afterTest(() => api.close());
@@ -69,7 +70,10 @@ describe('MessageRouter', () => {
   };
 
   test('signaling between 2 clients', async () => {
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received: SignalMessage[] = [];
+    const signalMock1 = async (msg: SignalMessage) => {
+      received.push(msg);
+    };
     const { api: api1 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url(), onSignal: signalMock1 });
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter({ signalApiUrl: broker1.url() });
 
@@ -77,8 +81,8 @@ describe('MessageRouter', () => {
     await api2.join(topic, peer2);
 
     const msg: SignalMessage = {
-      id: peer2,
-      remoteId: peer1,
+      author: peer2,
+      recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
@@ -86,7 +90,7 @@ describe('MessageRouter', () => {
     await router2.signal(msg);
 
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg]);
+      expect(received[0]).toBeAnObjectWith(msg);
     }, 4_000);
   }).timeout(5_000);
 
@@ -110,17 +114,21 @@ describe('MessageRouter', () => {
     await api2.join(topic, peer2);
 
     const answer = await router1.offer({
-      id: peer1,
-      remoteId: peer2,
+      author: peer1,
+      recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
       data: { offer: { } }
     });
+
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 
   test('signaling between 3 clients', async () => {
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received1: SignalMessage[] = [];
+    const signalMock1 = async (msg: SignalMessage) => {
+      received1.push(msg);
+    };
     const { api: api1, router: router1 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -128,7 +136,10 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock2 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received2: SignalMessage[] = [];
+    const signalMock2 = async (msg: SignalMessage) => {
+      received2.push(msg);
+    };
     const { api: api2, router: router2 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -136,7 +147,10 @@ describe('MessageRouter', () => {
         onOffer:
           async () => ({ accept: true })
       });
-    const signalMock3 = mockFn<(msg: SignalMessage) => Promise<void>>().resolvesTo();
+    const received3: SignalMessage[] = [];
+    const signalMock3 = async (msg: SignalMessage) => {
+      received3.push(msg);
+    };
     const { api: api3, router: router3 } = await createSignalClientAndMessageRouter(
       {
         signalApiUrl: broker1.url(),
@@ -152,41 +166,41 @@ describe('MessageRouter', () => {
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
-      id: peer1,
-      remoteId: peer3,
+      author: peer1,
+      recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: '1to3' } }
     };
     await router1.signal(msg1to3);
     await waitForExpect(() => {
-      expect(signalMock3).toHaveBeenCalledWith([msg1to3]);
+      expect(received3[0]).toBeAnObjectWith(msg1to3);
     }, 4_000);
 
     // sending signal from peer2 to peer3.
     const msg2to3: SignalMessage = {
-      id: peer2,
-      remoteId: peer3,
+      author: peer2,
+      recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: '2to3' } }
     };
     await router2.signal(msg2to3);
     await waitForExpect(() => {
-      expect(signalMock3).toHaveBeenCalledWith([msg2to3]);
+      expect(received3[1]).toBeAnObjectWith(msg2to3);
     }, 4_000);
 
     // sending signal from peer3 to peer1.
     const msg3to1: SignalMessage = {
-      id: peer3,
-      remoteId: peer1,
+      author: peer3,
+      recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
       data: { signal: { json: '3to1' } }
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg3to1]);
+      expect(received1[0]).toBeAnObjectWith(msg3to1);
     }, 4_000);
   }).timeout(5_000);
 
@@ -211,8 +225,8 @@ describe('MessageRouter', () => {
 
     // sending offer from peer1 to peer2.
     const answer1 = await router1.offer({
-      id: peer1,
-      remoteId: peer2,
+      author: peer1,
+      recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
       data: { offer: {} }
@@ -221,8 +235,8 @@ describe('MessageRouter', () => {
 
     // sending offer from peer2 to peer1.
     const answer2 = await router2.offer({
-      id: peer2,
-      remoteId: peer1,
+      author: peer2,
+      recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
       data: { offer: {} }
@@ -231,26 +245,28 @@ describe('MessageRouter', () => {
   }).timeout(5_000);
 
   describe('Reliability', () => {
+    type SendMessageArgs = [author: PublicKey, recipient: PublicKey, meg: SwarmMessage];
+
     const setup = ({
       onSignal1 = async () => { },
       onSignal2 = async () => { },
       // Imitates signal network disruptions (e. g. message doubling, ).
-      messageDisruption = msg => [msg]
+      messageDisruption = data => [data]
     }: {
-      onSignal1?: (msg: SignalMessage) => Promise<void>;
-      onSignal2?: (msg: SignalMessage) => Promise<void>;
-      messageDisruption?: (msg: SignalMessage) => SignalMessage[];
-    }): {mr1: MessageRouter; mr2: MessageRouter} => {
+      onSignal1?: (msg: SignalMessage) => Promise<void>
+      onSignal2?: (msg: SignalMessage) => Promise<void>
+      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[]
+    }): {mr1: MessageRouter, mr2: MessageRouter} => {
 
       const mr1: MessageRouter = new MessageRouter({
-        sendMessage: async msg => messageDisruption(msg).forEach(msg => mr2.receiveMessage(msg)),
+        sendMessage: async (...data) => messageDisruption(data).forEach(data => mr2.receiveMessage(...data)),
         onOffer: async () => ({ accept: true }),
         onSignal: onSignal1
       });
       afterTest(() => mr1.destroy());
 
       const mr2: MessageRouter = new MessageRouter({
-        sendMessage: async msg => messageDisruption(msg).forEach(msg => mr1.receiveMessage(msg)),
+        sendMessage: async (...data) => messageDisruption(data).forEach(data => mr1.receiveMessage(...data)),
         onOffer: async () => ({ accept: true }),
         onSignal: onSignal2
       });
@@ -263,10 +279,10 @@ describe('MessageRouter', () => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
-      const unreliableConnection = (msg: SignalMessage): SignalMessage[] => {
+      const unreliableConnection = (data: SendMessageArgs): SendMessageArgs[] => {
         i++;
         if (i % 3 !== 0) {
-          return [msg];
+          return [data];
         }
         return [];
       };
@@ -285,8 +301,8 @@ describe('MessageRouter', () => {
       // Setup sends messages directly to between. So we don`t need to specify any ids.
       Array(3).fill(0).forEach(async () => {
         await mr2.signal({
-          id: PublicKey.random(),
-          remoteId: PublicKey.random(),
+          author: PublicKey.random(),
+          recipient: PublicKey.random(),
           sessionId: PublicKey.random(),
           topic: PublicKey.random(),
           data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
@@ -300,7 +316,7 @@ describe('MessageRouter', () => {
 
     test('ignoring doubled messages', async () => {
       // Message got doubled going through signal network.
-      const doublingMessage = (msg: SignalMessage) => [msg, msg];
+      const doublingMessage = (data: SendMessageArgs) => [data, data];
 
       const received: SignalMessage[] = [];
       const signalMock1 = async (msg: SignalMessage) => {
@@ -314,8 +330,8 @@ describe('MessageRouter', () => {
 
       // sending message.
       await mr2.signal({
-        id: PublicKey.random(),
-        remoteId: PublicKey.random(),
+        author: PublicKey.random(),
+        recipient: PublicKey.random(),
         sessionId: PublicKey.random(),
         topic: PublicKey.random(),
         data: { signal: { json: 'asd' } }

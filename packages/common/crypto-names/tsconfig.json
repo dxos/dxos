@@ -9,5 +9,9 @@
     "scripts",
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

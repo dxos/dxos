@@ -28,3 +28,6 @@ export const getAsyncValue = async <T> (value: MaybeFunction<MaybePromise<T>>) =
     return value;
   }
 };
+
+export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> &
+  Partial<Pick<Type, Key>>;

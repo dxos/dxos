@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest"
+    ]
   },
   "include": [
     "src/**/*",
@@ -9,13 +12,13 @@
   ],
   "references": [
     {
+      "path": "../mesh-protocol"
+    },
+    {
       "path": "../network-generator"
     },
     {
-      "path": "../protocol"
+      "path": "./tsconfig.spec.json"
     }
-  ],
-  "types": [
-    "jest"
   ]
 }

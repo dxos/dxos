@@ -3,13 +3,38 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/echo/echo-db/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/echo/echo-db/dist",
+        "tsConfig": "packages/echo/echo-db/tsconfig.json",
+        "main": "packages/echo/echo-db/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "eslintConfig": "packages/echo/echo-db/eslintConfig.json",
+        "lintFilePatterns": [
+          "packages/echo/echo-db/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/echo/echo-db/src/**/*.test.{ts,js}"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

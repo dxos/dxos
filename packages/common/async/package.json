@@ -2,15 +2,10 @@
   "name": "@dxos/async",
   "version": "2.33.8",
   "description": "Async utils.",
-  "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
-  },
   "license": "MIT",
   "author": "DXOS.org",
+  "bugs": "https://github.com/dxos/protocols/issues",
+  "repository": "github:dxos/protocols",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
@@ -21,22 +16,11 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "assert": "^2.0.0"
-  },
-  "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^28.1.6",
-    "@types/node": "^16.11.27",
-    "eslint": "^8.21.0",
-    "typescript": "^4.7.2"
   },
   "publishConfig": {
     "access": "public"

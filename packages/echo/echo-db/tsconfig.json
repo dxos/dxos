@@ -32,9 +32,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../gravity/browser-mocha"
-    },
-    {
       "path": "../../halo/credentials"
     },
     {
@@ -44,7 +41,7 @@
       "path": "../../mesh/network-manager"
     },
     {
-      "path": "../../mesh/protocol"
+      "path": "../../mesh/mesh-protocol"
     },
     {
       "path": "../../mesh/protocol-plugin-presence"

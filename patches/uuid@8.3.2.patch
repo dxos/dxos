@@ -1,0 +1,15 @@
+diff --git a/dist/esm-browser/index.js b/dist/esm-browser/index.js
+index 1db6f6d25b2b6a79d6c650cac2fad395408e1ac2..03c526c526774c0e119ef1566f346675ee478aca 100644
+--- a/dist/esm-browser/index.js
++++ b/dist/esm-browser/index.js
+@@ -1,7 +1,8 @@
+ export { default as v1 } from './v1.js';
+-export { default as v3 } from './v3.js';
+ export { default as v4 } from './v4.js';
+-export { default as v5 } from './v5.js';
++// v35.js overwrites window.URL in the rollup bundle.
++// export { default as v3 } from './v3.js';
++// export { default as v5 } from './v5.js';
+ export { default as NIL } from './nil.js';
+ export { default as version } from './version.js';
+ export { default as validate } from './validate.js';

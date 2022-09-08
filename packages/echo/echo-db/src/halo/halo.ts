@@ -28,17 +28,17 @@ import type { CreateProfileOptions } from './types';
 const log = debug('dxos:echo');
 
 export interface ProfileInfo {
-  publicKey: PublicKey,
+  publicKey: PublicKey
   username: string | undefined
 }
 
 export interface HaloConfiguration {
-  keyring: Keyring,
-  networkManager: NetworkManager,
-  metadataStore: MetadataStore,
-  modelFactory: ModelFactory,
-  snapshotStore: SnapshotStore,
-  feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider,
+  keyring: Keyring
+  networkManager: NetworkManager
+  metadataStore: MetadataStore
+  modelFactory: ModelFactory
+  snapshotStore: SnapshotStore
+  feedProviderFactory: (partyKey: PublicKey) => PartyFeedProvider
   options: PipelineOptions
 }
 

@@ -3,13 +3,38 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/common/react-async/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/common/react-async/dist",
+        "tsConfig": "packages/common/react-async/tsconfig.json",
+        "main": "packages/common/react-async/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/react-async/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "jsdom": true
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

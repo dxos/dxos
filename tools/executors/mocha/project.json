@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "tools/executors/mocha/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/executors/mocha/dist",
+        "tsConfig": "tools/executors/mocha/tsconfig.json",
+        "main": "tools/executors/mocha/src/main.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/executors/mocha/**/*.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "async",
+    "log-hook"
+  ]
+}

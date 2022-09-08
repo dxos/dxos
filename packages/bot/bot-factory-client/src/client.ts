@@ -10,7 +10,7 @@ import type { Party } from '@dxos/client';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
 import { PublicKey } from '@dxos/protocols';
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';
 import { schema } from './proto/gen';
@@ -22,7 +22,7 @@ const log = debug('dxos:bot-factory-client');
  * BotFactory client.
  */
 export class BotFactoryClient {
-  private _rpc?: ProtoRpcClient<BotFactoryService>;
+  private _rpc?: ProtoRpcPeer<BotFactoryService>;
   private _connectedTopic?: PublicKey;
   private _isReady = false;
 

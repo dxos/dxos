@@ -2,15 +2,64 @@
   "sourceRoot": "packages/bot/bot-factory-client/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-script",
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
       "outputs": [
-        "packages/bot/bot-factory-client/dist",
-        "packages/bot/bot-factory-client/src/proto/gen"
+        "{options.basePath}/gen"
       ],
       "options": {
-        "script": "build"
+        "basePath": "packages/bot/bot-factory-client/src/proto"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/bot/bot-factory-client/dist",
+        "tsConfig": "packages/bot/bot-factory-client/tsconfig.json",
+        "main": "packages/bot/bot-factory-client/src/index.ts"
+      }
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/bot/bot-factory-client/src/index.ts"
+        ],
+        "outfile": "packages/bot/bot-factory-client/dist/browser.js",
+        "bundlePackages": [
+          "@dxos/network-manager"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/bot/bot-factory-client/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/bot/bot-factory-client/src/**/*.test.{ts,js}"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha",
+    "protobuf-compiler"
+  ]
 }

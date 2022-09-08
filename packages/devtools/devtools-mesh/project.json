@@ -3,12 +3,25 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/devtools/devtools-mesh/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/devtools/devtools-mesh/dist",
+        "tsConfig": "packages/devtools/devtools-mesh/tsconfig.json",
+        "main": "packages/devtools/devtools-mesh/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/devtools/devtools-mesh/**/*.{ts,tsx,js,jsx}"
+        ]
       }
     }
   }

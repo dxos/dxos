@@ -11,9 +11,6 @@
       "mocha"
     ]
   },
-  "exclude": [
-    "node_modules"
-  ],
   "include": [
     "src",
     "stories"

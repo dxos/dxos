@@ -13,12 +13,10 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -46,9 +44,6 @@
     "pify": "~5.0.0"
   },
   "devDependencies": {
-    "@dxos/browser-mocha": "workspace:*",
-    "@dxos/eslint-plugin": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
     "@types/debug": "^4.1.7",
@@ -57,13 +52,9 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.unionwith": "^4.6.6",
     "@types/memdown": "^3.0.0",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "eslint": "^8.21.0",
-    "expect": "~27.0.2",
     "faker": "^5.1.0",
     "memdown": "^5.1.0",
     "mocha": "^8.4.0",
@@ -72,8 +63,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "basePath": {
+      "type": "string",
+      "description": ""
+    },
+    "srcPath": {
+      "type": "string",
+      "description": "",
+      "default": "**/*.proto"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "",
+      "default": "gen"
+    },
+    "substitutionsPath": {
+      "type": "string",
+      "description": "",
+      "default": "substitutions.ts"
+    }
+  },
+  "required": ["basePath"]
+}

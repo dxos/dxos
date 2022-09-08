@@ -3,13 +3,38 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/sdk/react-client-testing/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/sdk/react-client-testing/dist",
+        "tsConfig": "packages/sdk/react-client-testing/tsconfig.json",
+        "main": "packages/sdk/react-client-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/react-client-testing/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/react-client-testing/src/**/*.test.{ts,tsx,js,jsx}"
+        ],
+        "jsdom": true
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

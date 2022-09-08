@@ -1,0 +1,41 @@
+{
+  "sourceRoot": "apps/experimental/wallet-extension/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}{options.outputPath}"
+      ],
+      "options": {
+        "basePath": "apps/experimental/wallet-extension/src/proto/"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "apps/experimental/wallet-extension/dist",
+        "tsConfig": "apps/experimental/wallet-extension/tsconfig.json",
+        "main": "apps/experimental/wallet-extension/src/index.ts",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "apps/experimental/wallet-extension/*.md"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "apps/experimental/wallet-extension/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

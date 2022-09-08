@@ -7,7 +7,7 @@ import debug from 'debug';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
 import { clientServiceBundle, ClientServiceProvider } from '../api';
-import { Client } from './client-proxy';
+import { Client } from './client';
 
 const log = debug('dxos:client:devtools');
 const error = log.extend('error');

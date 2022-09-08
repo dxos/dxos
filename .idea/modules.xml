@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/protocols.iml" filepath="$PROJECT_DIR$/.idea/protocols.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/dxos.iml" filepath="$PROJECT_DIR$/.idea/dxos.iml" />
     </modules>
   </component>
 </project>

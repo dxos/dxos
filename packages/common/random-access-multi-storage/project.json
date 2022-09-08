@@ -3,13 +3,45 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/common/random-access-multi-storage/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/common/random-access-multi-storage/dist",
+        "tsConfig": "packages/common/random-access-multi-storage/tsconfig.json",
+        "main": "packages/common/random-access-multi-storage/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/random-access-multi-storage/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/random-access-multi-storage/src/**/*.test.{ts,js}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "packages/common/random-access-multi-storage/src/**/*.browser-test.ts"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../proto/gen/dxos/mesh/signalMessage';
+import { SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
@@ -33,8 +33,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock1 = mockFn<(msg: SignalMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock1 = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock1);
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
@@ -43,16 +42,15 @@ describe('SignalClient', () => {
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);
 
-    const msg: SignalMessage = {
-      id: peer2,
-      remoteId: peer1,
+    const msg: SwarmMessage = {
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
+      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
+      messageId: PublicKey.random()
     };
-    await api2.signal(msg);
+    await api2.message(peer2, peer1, msg);
     await waitForExpect(() => {
-      expect(signalMock1).toHaveBeenCalledWith([msg]);
+      expect(signalMock1).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(500);
 
@@ -79,24 +77,22 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
     await api1.join(topic, peer1);
 
-    const msg: SignalMessage = {
-      id: peer2,
-      remoteId: peer1,
+    const msg: SwarmMessage = {
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } }
+      data: { signal: { json: JSON.stringify({ 'asd': 'asd' }) } },
+      messageId: PublicKey.random()
     };
-    await api1.signal(msg);
+    await api1.message(peer2, peer1, msg);
 
     await waitForExpect(() => {
-      expect(signalMock).toHaveBeenCalledWith([msg]);
+      expect(signalMock).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(500);
 
@@ -129,8 +125,7 @@ describe('SignalClient', () => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
-    const signalMock = mockFn<(msg: SignalMessage) => Promise<void>>()
-      .resolvesTo();
+    const signalMock = mockFn<(author: PublicKey, recipient: PublicKey, msg: SwarmMessage) => Promise<void>>().resolvesTo();
 
     const api1 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api1.close());
@@ -143,17 +138,16 @@ describe('SignalClient', () => {
 
     const sessionId = PublicKey.random();
 
-    const msg: SignalMessage = {
-      id: peer2,
-      remoteId: peer1,
+    const msg: SwarmMessage = {
       sessionId,
       topic,
-      data: { offer: { json: 'bar' } }
+      data: { offer: { json: 'bar' } },
+      messageId: PublicKey.random()
     };
-    await api1.signal(msg);
+    await api1.message(peer2, peer1, msg);
 
     await waitForExpect(() => {
-      expect(signalMock).toHaveBeenCalledWith([msg]);
+      expect(signalMock).toHaveBeenCalledWith([peer2, peer1, msg]);
     }, 4_000);
   }).timeout(5_000);
 });

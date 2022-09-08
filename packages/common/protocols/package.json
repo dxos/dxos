@@ -15,10 +15,7 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
-    "check": "toolchain check",
-    "lint": "toolchain lint",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -27,15 +24,9 @@
     "util": "^0.12.4"
   },
   "devDependencies": {
-    "@dxos/eslint-plugin": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/jest": "^28.1.6",
-    "@types/node": "^16.11.27",
     "@types/randombytes": "^2.0.0",
-    "debug": "^4.3.3",
-    "eslint": "^8.21.0",
-    "typescript": "^4.7.2"
+    "debug": "^4.3.3"
   },
   "publishConfig": {
     "access": "public"

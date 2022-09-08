@@ -3,13 +3,37 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/sdk/client-testing/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/sdk/client-testing/dist",
+        "tsConfig": "packages/sdk/client-testing/tsconfig.json",
+        "main": "packages/sdk/client-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client-testing/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client-testing/src/**/*.test.{ts,js}"
+        ]
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

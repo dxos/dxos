@@ -3,12 +3,35 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-script",
+      "executor": "@nrwl/js:tsc",
       "outputs": [
-        "packages/common/debug/dist"
+        "{options.outputPath}"
       ],
       "options": {
-        "script": "build"
+        "outputPath": "packages/common/debug/dist",
+        "tsConfig": "packages/common/debug/tsconfig.json",
+        "main": "packages/common/debug/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/debug/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/common/debug/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/common/debug/jest.config.ts",
+        "passWithNoTests": true
       }
     }
   }

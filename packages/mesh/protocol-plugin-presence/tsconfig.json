@@ -21,10 +21,13 @@
       "path": "../broadcast"
     },
     {
-      "path": "../protocol"
+      "path": "../mesh-protocol"
     },
     {
       "path": "../protocol-network-generator"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

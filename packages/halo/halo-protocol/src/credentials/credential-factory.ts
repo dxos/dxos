@@ -14,8 +14,8 @@ import { SIGNATURE_TYPE_ED25519 } from './verifier';
 
 export type CreateCredentialParams = {
   subject: PublicKey
-  assertion: MessageType,
-  issuer: PublicKey,
+  assertion: MessageType
+  issuer: PublicKey
   keyring: Keyring
   /**
    * Provided if it is different from issuer.
@@ -24,7 +24,7 @@ export type CreateCredentialParams = {
   /**
    * Provided if signing key is different from issuer.
    */
-  chain?: Chain,
+  chain?: Chain
 
   nonce?: Uint8Array
 }

@@ -4,8 +4,13 @@
     "outDir": "dist"
   },
   "include": [
+    "scripts",
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

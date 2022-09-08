@@ -18,15 +18,14 @@ import { Timeframe } from '@dxos/protocols';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { Client } from './client';
 import { clientServiceBundle } from './packlets/api';
-import { Client as ClientProxy } from './packlets/proxy';
+import { Client } from './packlets/proxy';
 
 describe('Client', () => {
   //
   // Suite is called for local and remote client configurations.
   //
-  const testSuite = (createClient: () => Promise<ClientProxy>) => {
+  const testSuite = (createClient: () => Promise<Client>) => {
     describe('initialization', () => {
       // TODO(wittjosiah): Review timeout.
       test('initialize and destroy', async () => {
@@ -310,7 +309,7 @@ describe('Client', () => {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new ClientProxy({ }, { rpcPort: proxyPort });
+      return new Client({}, { rpcPort: proxyPort });
     });
   });
 
