@@ -2,11 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useContext } from 'react';
+import { Context, createContext, useContext } from 'react';
 
+import { Client } from '@dxos/client';
 import { raise } from '@dxos/debug';
 
-import { ClientContext } from './context';
+interface ClientContextProps {
+  client: Client
+}
+
+export const ClientContext: Context<ClientContextProps | undefined> =
+  createContext<ClientContextProps | undefined>(undefined);
 
 /**
  * Hook returning instance of DXOS client.

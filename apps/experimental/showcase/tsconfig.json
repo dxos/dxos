@@ -1,0 +1,36 @@
+{
+  "extends": "@tsconfig/docusaurus/tsconfig.json",
+  "include": ["src", "loader.js"],
+  "exclude": [
+    ".git",
+    ".github",
+    ".idea",
+    "common",
+    "dist",
+    "node_modules",
+    "out",
+    "public"
+  ],
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmit": false,
+    "composite": true,
+    "outDir": "dist",
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "allowJs": true,
+    "target": "es5"
+  }
+}

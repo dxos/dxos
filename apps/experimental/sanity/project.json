@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "apps/experimental/sanity/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/experimental/sanity/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}

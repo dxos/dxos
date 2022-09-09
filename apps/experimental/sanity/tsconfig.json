@@ -1,0 +1,36 @@
+{
+  "include": ["src"],
+  "exclude": [
+    ".git",
+    ".github",
+    ".idea",
+    "common",
+    "dist",
+    "node_modules",
+    "out",
+    "public"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2018",
+    "paths": {
+      "@docusaurus/BrowserOnly": ["node_modules/@docusaurus/module-type-aliases"]
+    },
+    "baseUrl": "./"
+  }
+}

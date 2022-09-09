@@ -5,7 +5,9 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
+import { Message as HaloMessage, SignedMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
+import { FeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
@@ -104,15 +106,15 @@ export class HaloParty {
   // (eg, identity, credentials, device management.)
   //
 
-  get identityInfo () {
+  get identityInfo (): SignedMessage | undefined {
     return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
-  get identityGenesis () {
+  get identityGenesis (): SignedMessage | undefined {
     return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
-  get credentialMessages () {
+  get credentialMessages (): Map<string, SignedMessage> {
     return this._partyCore.processor.credentialMessages;
   }
 
@@ -120,7 +122,7 @@ export class HaloParty {
     return this._partyCore.processor.feedKeys;
   }
 
-  get credentialsWriter () {
+  get credentialsWriter (): FeedWriter<HaloMessage> {
     return this._partyCore.credentialsWriter;
   }
 

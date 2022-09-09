@@ -1,6 +1,10 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import debug from 'debug';
 import React, { StrictMode, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'react-dom';
 
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
@@ -29,7 +33,7 @@ const App = () => {
         setError(error.message);
       }
       setClosed(true);
-    })
+    });
   }, []);
 
   return (
@@ -41,8 +45,9 @@ const App = () => {
   );
 };
 
-createRoot(document.getElementById('root')!).render(
+render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
+  document.getElementById('root')
 );

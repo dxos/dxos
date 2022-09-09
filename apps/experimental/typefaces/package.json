@@ -1,0 +1,10 @@
+{
+  "name": "@dxos/typefaces",
+  "version": "1.0.0-beta.19",
+  "private": true,
+  "description": "Repo for self-hosting our typefaces.",
+  "repository": "https://github.com/dxos/website/tree/master/packages/typefaces#readme",
+  "license": "GPL-3.0",
+  "author": "info@dxos.org",
+  "main": "/dist/index.js"
+}

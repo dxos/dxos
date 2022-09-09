@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createContext, useContext } from 'react';
+import { Context, createContext, useContext } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
 
-export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
+export const BotFactoryClientContext: Context<BotFactoryClient | undefined> =
+  createContext<BotFactoryClient | undefined>(undefined);
 
 export const useBotFactoryClient = (required = true): BotFactoryClient | undefined => {
   const client = useContext(BotFactoryClientContext);
