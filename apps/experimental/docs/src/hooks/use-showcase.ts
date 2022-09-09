@@ -3,27 +3,13 @@
 //
 
 import { useEffect, useState } from 'react';
-
-import { ResourceRecord, RegistryDataRecord, CID } from '@dxos/registry-client';
-import { useRegistry } from '@dxos/react-registry-client';
-
 import 'setimmediate';
 import hash from 'string-hash';
+
+import { useRegistry } from '@dxos/react-registry-client';
+import { App, RegistryRecord, ResourceSet } from '@dxos/registry-client';
+
 import { SHOWCASE_APPS } from '../data';
-
-// TODO(wittjosiah): Use proto definitions.
-export interface App {
-  hash: Uint8Array
-  repository?: string
-  repositoryVersion?: string
-  license?: string
-  keywords?: string[]
-  displayName?: string
-  contentType?: string[]
-  extension?: any
-}
-
-export type AppResource = ResourceRecord<RegistryDataRecord<App>>;
 
 const BASE_URL = 'https://ipfs1.kube.dxos.network/ipfs/';
 
@@ -47,47 +33,48 @@ const imageGallery = [
   'banner-7.jpg',
   'banner-8.jpg',
   'banner-9.jpg'
-]
+];
 
 const getDefaultImage = (hashParam: Uint8Array) => {
   const hashString = hashParam.toString();
-  const number = hash(hashString) // number
-  return `/img/showcase/${imageGallery[ number % imageGallery.length]}`
+  const number = hash(hashString); // number
+  return `/img/showcase/${imageGallery[number % imageGallery.length]}`;
 };
 
 // TODO(zarco): use random images provided by Rich.
-export const useShowcaseDemos = () => { 
+export const useShowcaseDemos = () => {
   const [demos, setDemos] = useState<ShowcaseDemo[]>([]);
   const registry = useRegistry();
 
   useEffect(() => {
     setImmediate(async () => {
-      const resources = await registry.queryResources();
+      const resources = await registry.listResources();
       const resourceRecords = await Promise.all(
         resources.map(async resource => {
           // TODO(wittjosiah): Factor out filtering of bad data to registry-client.
           try {
-            return await registry.getResourceRecord(resource.id, 'latest');
+            const record = await registry.getRecordByName(resource.name.with({ tag: 'latest' }));
+            return { resource, record };
           } catch (error: any) {
-            console.log(`Failed to get record [${resource.id.toString()}]: ${error.message}`);
+            console.log(`Failed to get record [${resource.name.toString()}]: ${error.message}`);
           }
         })
       );
-      
+
       const demos: ShowcaseDemo[] = resourceRecords
-        .filter((resource): resource is AppResource => !!resource)
-        .filter(({ resource }) => SHOWCASE_APPS.includes(resource.id.toString()))
+        .filter((resourceRecord): resourceRecord is { resource: ResourceSet, record: RegistryRecord<App> } => !!resourceRecord)
+        .filter(({ record }) => SHOWCASE_APPS.includes(record.cid.toString()))
         .map(({ resource, record }) => {
-          const id = resource.id.toString();
+          const id = resource.name.toString();
           return { // TODO(zarco): Add a `imageHash` property for record inside `data`.
             id,
-            title: record.data.displayName ?? id,
-            description: record.meta.description ?? '',
-            location: `${BASE_URL}${CID.from(record.data.hash).toString()}`,
-            tags: record.data.keywords ?? [],
+            title: record.displayName ?? id,
+            description: record.description ?? '',
+            location: `${BASE_URL}${record.cid.toString()}`,
+            tags: [],
             // TODO(zarco): Assume that an app will have the image in `${BASE_URL}${cid}/preview.png`.
-            image: getDefaultImage(record.data.hash)
-          }
+            image: getDefaultImage(record.cid.value)
+          };
         });
 
       setDemos(demos);
@@ -95,4 +82,4 @@ export const useShowcaseDemos = () => {
   }, []);
 
   return demos;
-}
+};

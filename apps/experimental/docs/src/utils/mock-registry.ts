@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { DXN, MemoryRegistryClient, createMockResourceRecord } from '@dxos/registry-client';
 
 const TYPE_APP = '.dxos.type.App';

@@ -1,17 +1,18 @@
-import * as React from 'react';
+//
+// Copyright 2022 DXOS.org
+//
 
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import * as React from 'react';
 
-import { Box, Tooltip, ToggleButtonGroup, ToggleButton, Collapse } from '@mui/material';
-import { MUIStyledCommonProps } from '@mui/system';
-import { IconButton } from '@mui/material';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import CodeRoundedIcon from '@mui/icons-material/CodeRounded';
-
+import GitHubIcon from '@mui/icons-material/GitHub';
+import { Box, Tooltip, ToggleButtonGroup, ToggleButton, Collapse, IconButton } from '@mui/material';
 import { styled, alpha, useTheme } from '@mui/material/styles';
+import { MUIStyledCommonProps } from '@mui/system';
 
-import { JavaScriptIcon, TypeScriptIcon } from './icons';
 import { HighlightedCode } from './HighlightedCode';
+import { JavaScriptIcon, TypeScriptIcon } from './icons';
 
 const Root = styled('div')(({ theme }) => ({
   marginBottom: 40,
@@ -19,17 +20,17 @@ const Root = styled('div')(({ theme }) => ({
   marginRight: theme.spacing(-2),
   [theme.breakpoints.up('sm')]: {
     marginLeft: 0,
-    marginRight: 0,
-  },
+    marginRight: 0
+  }
 }));
 
 interface DemoRootProps extends MUIStyledCommonProps {
-  hiddenToolbar: any,
+  hiddenToolbar: any
   bg: any
 }
 
 const DemoRoot = styled('div', {
-  shouldForwardProp: (prop) => prop !== 'hiddenToolbar' && prop !== 'bg',
+  shouldForwardProp: (prop) => prop !== 'hiddenToolbar' && prop !== 'bg'
 })<DemoRootProps>(({ theme, hiddenToolbar, bg }) => ({
   position: 'relative',
   outline: 0,
@@ -40,15 +41,15 @@ const DemoRoot = styled('div', {
     borderRadius: 10,
     ...(bg === 'outlined' && {
       borderLeftWidth: 1,
-      borderRightWidth: 1,
+      borderRightWidth: 1
     }),
     /* Make no difference between the demo and the markdown. */
     ...(bg === 'inline' && {
-      padding: theme.spacing(3),
+      padding: theme.spacing(3)
     }),
     ...(hiddenToolbar && {
-      paddingTop: theme.spacing(3),
-    }),
+      paddingTop: theme.spacing(3)
+    })
   },
   /* Isolate the demo with an outline. */
   ...(bg === 'outlined' && {
@@ -56,17 +57,17 @@ const DemoRoot = styled('div', {
     backgroundColor: theme.palette.background.paper,
     border: `1px solid ${alpha(theme.palette.action.active, 0.12)}`,
     borderLeftWidth: 0,
-    borderRightWidth: 0,
+    borderRightWidth: 0
   }),
   /* Prepare the background to display an inner elevation. */
   ...(bg === true && {
     padding: theme.spacing(3),
     backgroundColor:
-      theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100],
+      theme.palette.mode === 'dark' ? theme.palette.grey[900] : theme.palette.grey[100]
   }),
   ...(hiddenToolbar && {
-    paddingTop: theme.spacing(2),
-  }),
+    paddingTop: theme.spacing(2)
+  })
 }));
 
 const Code = styled(HighlightedCode)(({ theme }) => ({
@@ -74,12 +75,12 @@ const Code = styled(HighlightedCode)(({ theme }) => ({
   marginBottom: theme.spacing(1),
   marginTop: theme.spacing(2),
   [theme.breakpoints.up('sm')]: {
-    marginTop: theme.spacing(0),
+    marginTop: theme.spacing(0)
   },
   '& pre': {
     margin: '0 auto',
-    maxHeight: 'min(68vh, 1000px)',
-  },
+    maxHeight: 'min(68vh, 1000px)'
+  }
 }));
 
 const StyledToggleButtons = styled(ToggleButtonGroup)(({ theme }) => ({
@@ -112,32 +113,38 @@ const DemoToolbar = ({
   };
   return (
     <Box sx={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-between' }}>
-      <Box sx={{flex: 1}}>
-        {collapseOpen && <StyledToggleButtons
-          sx={{ 
+      <Box sx={{ flex: 1 }}>
+        {collapseOpen && (
+<StyledToggleButtons
+          sx={{
             margin: '8px 0'
           }}
           exclusive
           value={codeMode}
           onChange={onCodeModeSelect}
         >
-          {showJSButton && <ToggleButton
+          {showJSButton && (
+<ToggleButton
             sx={toggleButtonStyles}
             value={'JS'}
           >
             <JavaScriptIcon sx={{ fontSize: 20 }} />
-          </ToggleButton>}
-          {showTSButton && <ToggleButton
+          </ToggleButton>
+          )}
+          {showTSButton && (
+<ToggleButton
             sx={toggleButtonStyles}
             value={'TS'}
           >
             <TypeScriptIcon sx={{ fontSize: 20 }} />
-          </ToggleButton>}
-        </StyledToggleButtons>}
+          </ToggleButton>
+          )}
+        </StyledToggleButtons>
+        )}
       </Box>
       <Box>
         {showCollapseButton && (
-          <Tooltip title="Show the full source">
+          <Tooltip title='Show the full source'>
             <IconButton
               sx={{
                 marginTop: 1,
@@ -152,7 +159,7 @@ const DemoToolbar = ({
           </Tooltip>
         )}
         {showExampleButton && githubUrl && (
-          <Tooltip title="Go to Github">
+          <Tooltip title='Go to Github'>
             <IconButton
               sx={{
                 marginTop: 1,
@@ -169,12 +176,12 @@ const DemoToolbar = ({
       </Box>
     </Box>
   );
-}
+};
 
 export enum CodeMode {
   JS = 'JS',
   TS = 'TS'
-};
+}
 
 export const Demo = ({ component, rawContent, collapsible, githubUrl, collapsibleDefaultOpened }) => {
   const [codeMode, setCodeMode] = React.useState<CodeMode>(CodeMode.JS);
@@ -184,7 +191,7 @@ export const Demo = ({ component, rawContent, collapsible, githubUrl, collapsibl
       setCodeMode(CodeMode.TS);
     }
   }, []);
-  
+
   return (
     <Root>
       <DemoRoot
@@ -209,24 +216,28 @@ export const Demo = ({ component, rawContent, collapsible, githubUrl, collapsibl
         collapseOpen={open}
         onCodeModeSelect={(_, mode) => {
           if (mode && mode !== codeMode) {
-              setCodeMode(mode);
-            }
+            setCodeMode(mode);
           }
+        }
         }
         onCollapse={() => {
           setOpen(!open);
         }}
       />
       <Collapse in={open}>
-        {codeMode === CodeMode.JS && !!rawContent.js && <Code
+        {codeMode === CodeMode.JS && !!rawContent.js && (
+<Code
           code={rawContent.js}
           language={'jsx'}
-        />}
-        {codeMode === CodeMode.TS && !!rawContent.ts && <Code
+        />
+        )}
+        {codeMode === CodeMode.TS && !!rawContent.ts && (
+<Code
           code={rawContent.ts}
           language={'tsx'}
-        />}
+        />
+        )}
       </Collapse>
     </Root>
   );
-}
+};

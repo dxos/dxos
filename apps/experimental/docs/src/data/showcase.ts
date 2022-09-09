@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 export const SHOWCASE_APPS = [
   'dxos:esbook.hello-world',
   'dxos:esbook.kitchen-sink',

@@ -7,7 +7,6 @@ import React, { useEffect } from 'react';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-
 const Main = () => {
   const client = useClient();
   const profile = useProfile();
@@ -21,7 +20,7 @@ const Main = () => {
   return (
     <JsonTreeView data={profile} />
   );
-}
+};
 
 export const SanityApp = () => {
   return (
@@ -30,6 +29,5 @@ export const SanityApp = () => {
     </ClientProvider>
   );
 };
-
 
 export default SanityApp;

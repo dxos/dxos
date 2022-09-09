@@ -1,4 +1,6 @@
-import * as React from 'react';
+//
+// Copyright 2022 DXOS.org
+//
 
 const Hello = () => {
   return (
@@ -6,6 +8,6 @@ const Hello = () => {
       HELLO WORLD!!
     </div>
   );
-}
+};
 
 export default Hello;

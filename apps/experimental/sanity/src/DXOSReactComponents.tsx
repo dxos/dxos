@@ -3,6 +3,7 @@
 //
 
 import React from 'react';
+
 import { JsonTreeView } from '@dxos/react-components';
 
 export const DXOSReactComponents = () => {

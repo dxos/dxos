@@ -244,6 +244,7 @@ importers:
       '@docusaurus/core': 2.1.0
       '@docusaurus/preset-classic': 2.1.0
       '@docusaurus/theme-classic': 2.1.0
+      '@docusaurus/theme-common': 2.1.0
       '@docusaurus/types': 2.1.0
       '@dxos/config': workspace:*
       '@dxos/react-client': workspace:*
@@ -261,6 +262,7 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/styles': ^5.2.3
       '@tsconfig/docusaurus': ^1.0.6
+      '@types/string-hash': ^1.1.1
       clsx: ^1.1.1
       docusaurus-plugin-sass: ^0.2.1
       node-polyfill-webpack-plugin: ^1.1.4
@@ -280,6 +282,7 @@ importers:
       '@docusaurus/core': 2.1.0_coe2saodzr6velnhige3ek3zsy
       '@docusaurus/preset-classic': 2.1.0_bay7tnxndrr4ygds4p7igxs3hq
       '@docusaurus/theme-classic': 2.1.0_3tgeifm2vmwrlpqlopppsnjtcu
+      '@docusaurus/theme-common': 2.1.0_coe2saodzr6velnhige3ek3zsy
       '@docusaurus/types': 2.1.0_sfoxds7t5ydpegc3knd667wn6m
       '@dxos/config': link:../../../packages/sdk/config
       '@dxos/react-client': link:../../../packages/sdk/react-client
@@ -312,6 +315,7 @@ importers:
     devDependencies:
       '@babel/core': 7.18.13
       '@tsconfig/docusaurus': 1.0.6
+      '@types/string-hash': 1.1.1
       typescript: 4.7.4
 
   apps/experimental/kai:
@@ -663,35 +667,53 @@ importers:
   apps/experimental/showcase:
     specifiers:
       '@algolia/client-search': ^4.14.2
+      '@babel/core': ^7.18.13
       '@docusaurus/core': 2.1.0
       '@docusaurus/module-type-aliases': 2.1.0
       '@docusaurus/preset-classic': 2.1.0
       '@docusaurus/theme-classic': 2.1.0
       '@docusaurus/theme-common': 2.1.0
       '@docusaurus/types': 2.1.0
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
       '@mui/styles': ^5.2.3
       '@mui/system': ^5.8.1
       '@tsconfig/docusaurus': ^1.0.6
+      '@types/lodash': ^4.14.182
+      '@types/prop-types': ^15.7.5
+      lodash: ^4.17.21
+      prop-types: ^15.8.1
       react: ^17.0.2
       react-dom: ^17.0.2
+      remark: ~14.0.2
+      remark-react: ^5.0.1
       typescript: ^4.7.2
     devDependencies:
       '@algolia/client-search': 4.14.2
+      '@babel/core': 7.18.13
       '@docusaurus/core': 2.1.0_coe2saodzr6velnhige3ek3zsy
       '@docusaurus/module-type-aliases': 2.1.0_sfoxds7t5ydpegc3knd667wn6m
       '@docusaurus/preset-classic': 2.1.0_bay7tnxndrr4ygds4p7igxs3hq
       '@docusaurus/theme-classic': 2.1.0_3tgeifm2vmwrlpqlopppsnjtcu
       '@docusaurus/theme-common': 2.1.0_coe2saodzr6velnhige3ek3zsy
       '@docusaurus/types': 2.1.0_sfoxds7t5ydpegc3knd667wn6m
+      '@emotion/react': 11.9.3_u2aypivye4tius5ftakppbroiy
+      '@emotion/styled': 11.9.3_2w7x3jlgezktc4gauegs5xdsga
       '@mui/icons-material': 5.8.4_j6jjs3uxpqtrrssejenj4ftmau
-      '@mui/material': 5.8.7_sfoxds7t5ydpegc3knd667wn6m
+      '@mui/material': 5.8.7_bk6rmx7robimclftfia7dcxft4
       '@mui/styles': 5.10.3_react@17.0.2
-      '@mui/system': 5.8.7_react@17.0.2
+      '@mui/system': 5.8.7_z5dax4wbbvawomfdisf4dzswiq
       '@tsconfig/docusaurus': 1.0.6
+      '@types/lodash': 4.14.184
+      '@types/prop-types': 15.7.5
+      lodash: 4.17.21
+      prop-types: 15.8.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+      remark: 14.0.2
+      remark-react: 5.0.1
       typescript: 4.7.4
 
   apps/experimental/typefaces:
@@ -7166,7 +7188,6 @@ packages:
       '@emotion/serialize': 1.0.4
       '@emotion/utils': 1.1.0
       react: 17.0.2
-    dev: false
 
   /@emotion/styled/11.9.3_h6kyh55hctfrqy2463uiei4x44:
     resolution: {integrity: sha512-o3sBNwbtoVz9v7WB1/Y/AmXl69YHmei2mrVnK7JgyBJ//Rst5yqPZCecEJlMlJrFeWHp+ki/54uN265V2pEcXA==}
@@ -7861,7 +7882,6 @@ packages:
     engines: {node: '>=4'}
     dependencies:
       unist-util-visit: 1.4.1
-    dev: false
 
   /@mapbox/node-pre-gyp/1.0.9:
     resolution: {integrity: sha512-aDF3S3rK9Q2gey/WAttUlISduDItz5BU3306M9Eyv6/oS40aMprnopshtlKTykxRNIBEZuRMaZAnbrQ4QtKGyw==}
@@ -8059,7 +8079,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.18.9
-      '@mui/material': 5.8.7_sfoxds7t5ydpegc3knd667wn6m
+      '@mui/material': 5.8.7_bk6rmx7robimclftfia7dcxft4
       react: 17.0.2
 
   /@mui/icons-material/5.8.4_lad7dcrpjtpe65tf4nzti3hgyq:
@@ -8253,7 +8273,6 @@ packages:
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
       react-transition-group: 4.4.2_sfoxds7t5ydpegc3knd667wn6m
-    dev: false
 
   /@mui/material/5.8.7_j6sw2p2tdbh6crpcmkxtmmhma4:
     resolution: {integrity: sha512-Oo62UhrgEi+BMLr3nUEASJgScE2/hhq14CbBUmrVV3GQlEGtqMZsy26Vb0AqEmphFeN3TXlsbM9aeW5yq8ZFlw==}
@@ -8317,6 +8336,7 @@ packages:
       react-dom: 17.0.2_react@17.0.2
       react-is: 17.0.2
       react-transition-group: 4.4.2_sfoxds7t5ydpegc3knd667wn6m
+    dev: true
 
   /@mui/material/5.8.7_tnpa4zk7r4tswtohiv24iafdgm:
     resolution: {integrity: sha512-Oo62UhrgEi+BMLr3nUEASJgScE2/hhq14CbBUmrVV3GQlEGtqMZsy26Vb0AqEmphFeN3TXlsbM9aeW5yq8ZFlw==}
@@ -8432,8 +8452,8 @@ packages:
     dependencies:
       '@babel/runtime': 7.18.9
       '@emotion/cache': 11.9.3
-      '@emotion/react': 11.9.3_ojifsuyn6iuplkhus525glrlo4
-      '@emotion/styled': 11.9.3_h6kyh55hctfrqy2463uiei4x44
+      '@emotion/react': 11.9.3_u2aypivye4tius5ftakppbroiy
+      '@emotion/styled': 11.9.3_2w7x3jlgezktc4gauegs5xdsga
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 17.0.2
@@ -8492,6 +8512,7 @@ packages:
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 17.0.2
+    dev: true
 
   /@mui/system/5.8.7_t4v2ig6j532zggk4vxuuplsqcq:
     resolution: {integrity: sha512-yFoFbfO42FWeSUDrFPixYjpqySQMqVMOSbSlAxiKnwFpvXGGn/bkfQTboCRNO31fvES29FJLQd4mwwMHd5mXng==}
@@ -8576,7 +8597,6 @@ packages:
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 17.0.2
-    dev: false
 
   /@mui/types/7.1.4:
     resolution: {integrity: sha512-uveM3byMbthO+6tXZ1n2zm0W3uJCQYtwt/v5zV5I77v2v18u0ITkb8xwhsDD2i3V2Kye7SaNR6FFJ6lMuY/WqQ==}
@@ -22401,7 +22421,6 @@ packages:
       style-to-object: 0.2.3
       unist-util-is: 2.1.3
       web-namespaces: 1.1.4
-    dev: false
 
   /hast-to-hyperscript/9.0.1:
     resolution: {integrity: sha512-zQgLKqF+O2F72S1aa4y2ivxzSlko3MAvxkwG8ehGmNiqd98BIN3JM1rAJPmplEyLmGLO2QZYJtIneOSZ2YbJuA==}
@@ -22451,7 +22470,6 @@ packages:
     resolution: {integrity: sha512-AIeKHuHx0Wk45nSkGVa2/ujQYTksnDl8gmmKo/mwQi7ag7IBZ8cM3nJ2G86SajbjGP/HRpud6kMkPtcM2i0Tlw==}
     dependencies:
       xtend: 4.0.2
-    dev: false
 
   /hast-util-to-estree/2.0.2:
     resolution: {integrity: sha512-UQrZVeBj6A9od0lpFvqHKNSH9zvDrNoyWKbveu1a2oSCXEDUI+3bnd6BoiQLPnLrcXXn/jzJ6y9hmJTTlvf8lQ==}
@@ -26225,7 +26243,6 @@ packages:
     resolution: {integrity: sha512-CJXEdoLfiISCDc2JB6QLb79pYfI6+GcIH+W2ox9nMc7od0Pz+bovcHsiq29xAQY6ayqe/9CsK2VzkSJdg1pFYA==}
     dependencies:
       unist-util-visit: 1.4.1
-    dev: false
 
   /mdast-util-definitions/4.0.0:
     resolution: {integrity: sha512-k8AJ6aNnUkB7IE+5azR9h81O5EQ/cTDXtWdMq9Kk5KcEW/8ritU5CeLg/9HhOC++nALHBlaogJ5jz0Ybk3kPMQ==}
@@ -26398,7 +26415,6 @@ packages:
       unist-util-position: 3.1.0
       unist-util-visit: 1.4.1
       xtend: 4.0.2
-    dev: false
 
   /mdast-util-to-markdown/1.3.0:
     resolution: {integrity: sha512-6tUSs4r+KK4JGTTiQ7FfHmVOaDrLQJPmpjD6wPMlHGUVXoG9Vjc3jIeP+uyBWRf8clwB2blM+W7+KrlMYQnftA==}
@@ -31368,7 +31384,6 @@ packages:
       hast-to-hyperscript: 6.0.0
       hast-util-sanitize: 1.3.1
       mdast-util-to-hast: 4.0.0
-    dev: false
 
   /remark-rehype/10.1.0:
     resolution: {integrity: sha512-EFmR5zppdBp0WQeDVZ/b66CWJipB2q2VLNFMabzDSGR66Z2fQii83G5gTBbgGEnEEA0QRussvrFHxk1HWGJskw==}
@@ -31397,7 +31412,6 @@ packages:
       '@types/mdast': 3.0.10
       mdast-util-to-markdown: 1.3.0
       unified: 10.1.1
-    dev: false
 
   /remark/14.0.2:
     resolution: {integrity: sha512-A3ARm2V4BgiRXaUo5K0dRvJ1lbogrbXnhkJRmD0yw092/Yl0kOCZt1k9ZeElEwkZsWGsMumz6qL5MfNJH9nOBA==}
@@ -31408,7 +31422,6 @@ packages:
       unified: 10.1.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /remove-trailing-separator/1.1.0:
     resolution: {integrity: sha512-/hS+Y0u3aOfIETiaiirUFwDBDzmXPvO+jAfKTitUngIPzdKc6Z0LoFjM/CK5PL4C+eKwHohlHAb6H0VFfmmUsw==}
@@ -33263,7 +33276,6 @@ packages:
     resolution: {integrity: sha512-1d/k4EY2N7jVLOqf2j04dTc37TPOv/hHxZmvpg8Pdh8UYydxeu/C1W1U4vD8alzf5V2Gt7rLsmkr4dxAlDm9ng==}
     dependencies:
       inline-style-parser: 0.1.1
-    dev: false
 
   /style-to-object/0.3.0:
     resolution: {integrity: sha512-CzFnRRXhzWIdItT3OmF8SQfWyahHhjq3HwcMNCNLn+N7klOOqPjMeG/4JSu77D7ypZdGvSzvkrbyeTMizz2VrA==}
@@ -34019,7 +34031,6 @@ packages:
 
   /trim-lines/1.1.3:
     resolution: {integrity: sha512-E0ZosSWYK2mkSu+KEtQ9/KqarVjA9HztOSX+9FDdNacRAq29RRV6ZQNgob3iuW8Htar9vAfEa6yyt5qBAHZDBA==}
-    dev: false
 
   /trim-newlines/1.0.0:
     resolution: {integrity: sha512-Nm4cF79FhSTzrLKGDMi3I4utBtFv8qKy4sq1enftf2gMdpqI8oVQTAfySkTz5r49giVzDj88SVZXP4CeYQwjaw==}
@@ -34555,7 +34566,6 @@ packages:
     resolution: {integrity: sha512-v6xbUPP7ILrT15fHGrNyHc1Xda8H3xVhP7/HAIotHOhVPjH5dCXA097C3Rry1Q2O+HbOLCao4hfPB+EYEjHgVg==}
     dependencies:
       object-assign: 4.1.1
-    dev: false
 
   /unist-builder/2.0.3:
     resolution: {integrity: sha512-f98yt5pnlMWlzP539tPc4grGMsFaQQlP/vM396b00jngsiINumNmsY8rkXjfoi1c6QaM8nQ3vaGDuoKWbe/1Uw==}
@@ -34579,11 +34589,9 @@ packages:
 
   /unist-util-is/2.1.3:
     resolution: {integrity: sha512-4WbQX2iwfr/+PfM4U3zd2VNXY+dWtZsN1fLnWEi2QQXA4qyDYAZcDMfXUX0Cu6XZUHHAO9q4nyxxLT4Awk1qUA==}
-    dev: false
 
   /unist-util-is/3.0.0:
     resolution: {integrity: sha512-sVZZX3+kspVNmLWBPAB6r+7D9ZgAFPNWm66f7YNb420RlQSbn+n8rG8dGZSkrER7ZIXGQYNm5pqC3v3HopH24A==}
-    dev: false
 
   /unist-util-is/4.1.0:
     resolution: {integrity: sha512-ZOQSsnce92GrxSqlnEEseX0gi7GH9zTJZ0p9dtu87WRb/37mMPO2Ilx1s/t9vBHrFhbgweUwb+t7cIn5dxPhZg==}
@@ -34632,7 +34640,6 @@ packages:
     resolution: {integrity: sha512-DyN5vD4NE3aSeB+PXYNKxzGsfocxp6asDc2XXE3b0ekO2BaRUpBicbbUygfSvYfUz1IkmjFR1YF7dPklraMZ2g==}
     dependencies:
       unist-util-is: 3.0.0
-    dev: false
 
   /unist-util-visit-parents/3.1.1:
     resolution: {integrity: sha512-1KROIZWo6bcMrZEwiH2UrXDyalAa0uqzWCxCJj6lPOvTve2WkfgCytoDTPaMnodXh1WrXOq0haVYHj99ynJlsg==}
@@ -34656,7 +34663,6 @@ packages:
     resolution: {integrity: sha512-AvGNk7Bb//EmJZyhtRUnNMEpId/AZ5Ph/KUpTI09WHQuDZHKovQ1oEv3mfmKpWKtoMzyMC4GLBm1Zy5k12fjIw==}
     dependencies:
       unist-util-visit-parents: 2.1.2
-    dev: false
 
   /unist-util-visit/2.0.3:
     resolution: {integrity: sha512-iJ4/RczbJMkD0712mGktuGpm/U4By4FfDonL7N/9tATGIF4imikjOuagyMY53tnZq3NP6BcmlrHhEKAfGWjh7Q==}

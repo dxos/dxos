@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import React from 'react';
 
 import {
@@ -8,16 +12,14 @@ import {
   CardMedia,
   Button,
   Typography,
-  CardActionArea,
-  Chip,
-  Stack
+  CardActionArea
 } from '@mui/material';
-import { ShowcaseDemo } from "../hooks";
 
+import { ShowcaseDemo } from '../hooks';
 
 export const ShowcaseCard = ({ data }: { data: ShowcaseDemo }) => {
   return (
-    <Card 
+    <Card
       variant='outlined'
       sx={{
         flex: 1,
@@ -34,8 +36,8 @@ export const ShowcaseCard = ({ data }: { data: ShowcaseDemo }) => {
           flexDirection: 'column',
           alignItems: 'stretch',
           flex: 1,
-          minHeight: '100%',
-        }} 
+          minHeight: '100%'
+        }}
         LinkComponent='a'
         href={data.location}
         target='_blank'
@@ -44,11 +46,11 @@ export const ShowcaseCard = ({ data }: { data: ShowcaseDemo }) => {
           {/* TODO(zarco): Use Image Fallback package to use a default image. */}
           {/* 300x160 aspect ratio */}
           <CardMedia
-            component="img"
-            width="300"
-            height="160"
+            component='img'
+            width='300'
+            height='160'
             image={data.image}
-            alt="DXOS Logo"
+            alt='DXOS Logo'
           />
         </Box>
         <CardContent>

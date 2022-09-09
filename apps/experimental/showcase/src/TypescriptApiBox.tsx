@@ -2,41 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
-import PropTypes from 'prop-types';
-import React, {Component, Fragment} from 'react';
+import styled from '@emotion/styled';
 import extend from 'lodash/extend';
 import partition from 'lodash/partition';
-import remark from 'remark';
-import remark2react from 'remark-react';
-import styled from '@emotion/styled';
-import { HighlightedCode } from './HighlightedCode';
+import PropTypes from 'prop-types';
+import React, { Component, Fragment } from 'react';
+import { remark } from 'remark';
+// TODO(wittjosiah): Deprecated.
 
-export const smallCaps = {
-  letterSpacing: '0.142em',
-  textTransform: 'uppercase'
-};
-
-export const TableWrapper = styled.div({
+const TableWrapper = styled.div({
   overflow: 'auto',
   marginBottom: '1.45rem'
 });
 
-const tableBorder = `1px solid var(--ifm-toc-border-color)`;
-
-export const StyledTable = styled.table({
+const StyledTable = styled.table({
   border: 'none',
   borderSpacing: 0,
   borderRadius: 0,
-  [['th', 'td']]: {
-    padding: '5px 10px'
-  },
   thead: {
     tr: {
-      border: tableBorder
+      border: '1px solid var(--ifm-toc-border-color)'
     }
   },
   th: {
-    ...smallCaps,
+    letterSpacing: '0.142em',
+    textTransform: 'uppercase',
     fontSize: 13,
     fontWeight: 'normal',
     color: 'black',
@@ -47,6 +37,7 @@ export const StyledTable = styled.table({
     }
   },
   td: {
+    padding: '5px 10px',
     verticalAlign: 'top',
     p: {
       fontSize: 'inherit',
@@ -97,11 +88,9 @@ const BodySubheading = styled.h6({
   fontWeight: 'bold'
 });
 
-function _allText(data) {
-  return [data.shortText, data.text].filter(Boolean).join('\n\n');
-}
+const _allText = (data) => [data.shortText, data.text].filter(Boolean).join('\n\n');
 
-function _summary(rawData) {
+const _summary = (rawData) => {
   if (rawData.comment) {
     return _allText(rawData.comment);
   }
@@ -110,31 +99,21 @@ function _summary(rawData) {
     rawData.signatures[0].comment &&
     _allText(rawData.signatures[0].comment)
   );
-}
+};
 
-function _isReflectedProperty(data) {
-  return (
-    data.kindString === 'Property' &&
+const _isReflectedProperty = (data) => data.kindString === 'Property' &&
     data.type &&
-    data.type.type === 'reflection'
-  );
-}
+    data.type.type === 'reflection';
 
-function _parameterString(names, leftDelim, rightDelim) {
+const _parameterString = (names: string[], leftDelim?: string, rightDelim?: string) => {
   leftDelim = leftDelim || '(';
   rightDelim = rightDelim || ')';
   return leftDelim + names.join(', ') + rightDelim;
-}
+};
 
-function _typeId(type) {
-  return type.fullName || type.name;
-}
+const _typeId = (type) => type.fullName || type.name;
 
-function isReadableName(name) {
-  // Something like: `__namedParameters` won't be marked as readableName.
-  return name.substring(0, 2) !== '__';
-}
-
+const isReadableName = (name) => name.substring(0, 2) !== '__';
 
 /*
 * remark2react uses:
@@ -144,39 +123,40 @@ function isReadableName(name) {
 *   </code>
 * </pre>
 */
-const CodeComponent = ({ children }) => {
-  // Parse manually code children to avoid colission with `code` tag.
-  const codeContent = children?.[0]?.props.children?.toString();
-  return (
-    <HighlightedCode code={codeContent} language='tsx' />
-  );
-};
+// const CodeComponent = ({ children }) => {
+//   // Parse manually code children to avoid colission with `code` tag.
+//   const codeContent = children?.[0]?.props.children?.toString();
+//   return (
+//     <HighlightedCode code={codeContent} language='tsx' />
+//   );
+// };
 
 // TODO(wittjosiah): Code syntax highlighting. Docusaurus MDX?
-function mdToReact(text) {
+const mdToReact = (text) => {
   const sanitized = text.replace(/\{@link (\w*)\}/g, '[$1](#$1)');
   return remark()
-  .use(remark2react, {
-    remarkReactComponents: {
-      pre: CodeComponent // This replaces any `pre` tag with our CodeComponent.
-    }
-  })
-  .processSync(sanitized).contents;
-}
+    // .use(remark2react, {
+    //   remarkReactComponents: {
+    //     pre: CodeComponent // This replaces any `pre` tag with our CodeComponent.
+    //   }
+    // })
+    .processSync(sanitized).toString();
+};
 
 // Based on https://github.com/apollographql/gatsby-theme-apollo/blob/6e9f6ce4166d495b5768edd30a593c24e8b46dae/packages/gatsby-theme-apollo-docs/src/components/typescript-api-box.js
 // TODO(wittjosiah): Rewrite in Typescript, better handle React components, reduce edge cases which fall back to displaying 'any'.
-export class TypescriptApiBox extends Component {
+export class TypescriptApiBox extends Component<{ name: string, docs: any, react: any }> {
   static propTypes = {
     name: PropTypes.string.isRequired,
-    docs: PropTypes.any.isRequired
+    docs: PropTypes.any.isRequired,
+    react: PropTypes.any
   };
 
-  get dataByKey() {
+  get dataByKey () {
     const dataByKey = {};
 
-    function traverse(tree, parentName) {
-      let {name} = tree;
+    const traverse = (tree: any, parentName?: string) => {
+      let { name } = tree;
       if (['Accessor', 'Constructor', 'Interface', 'Method', 'Namespace', 'Property'].includes(tree.kindString)) {
         name = `${parentName}.${tree.name}`;
         // add the parentName to the data so we can reference it for ids
@@ -191,17 +171,17 @@ export class TypescriptApiBox extends Component {
           traverse(child, name);
         });
       }
-    }
-    
+    };
+
     traverse(this.props.docs);
 
     return dataByKey;
   }
 
-  templateArgs(rawData, isReact = false) {
+  templateArgs (rawData, isReact = false) {
     const parameters = this._parameters(rawData, this.dataByKey, isReact);
     const split = partition(parameters, 'isOptions');
-    const groups = [];
+    const groups: { name: string, members: any[] }[] = [];
     if (split[1]?.length > 0) {
       groups.push({
         name: 'Arguments',
@@ -216,7 +196,7 @@ export class TypescriptApiBox extends Component {
       });
     }
 
-    if ('Interface' === rawData.kindString) {
+    if (rawData.kindString === 'Interface') {
       groups.push({
         name: 'Properties',
         members: this._objectProperties(rawData)
@@ -224,7 +204,7 @@ export class TypescriptApiBox extends Component {
     }
 
     let type;
-    if ('Type alias' === rawData.kindString) {
+    if (rawData.kindString === 'Type alias') {
       // this means it's an object type
       if (rawData.type.declaration && rawData.type.declaration.children) {
         groups.push({
@@ -235,7 +215,7 @@ export class TypescriptApiBox extends Component {
         type = this._type(rawData);
       }
     }
-    
+
     const children = rawData.children?.filter(child => !child.flags.isPrivate) ?? [];
 
     return {
@@ -253,13 +233,13 @@ export class TypescriptApiBox extends Component {
       children: {
         properties: children.filter(child => child.kindString === 'Property'),
         accessors: children.filter(child => child.kindString === 'Accessor'),
-        methods: children.filter(child => child.kindString === 'Method') 
+        methods: children.filter(child => child.kindString === 'Method')
       }
     };
   }
 
   // This is just literally the name of the type, nothing fancy, except for references
-  _typeName = type => {
+  _typeName = (type: any) => {
     if (type.type === 'array') {
       return `[${this._typeName(type.elementType)}]`;
     } else if (type.type === 'intrinsic') {
@@ -268,7 +248,7 @@ export class TypescriptApiBox extends Component {
       }
       return type.name;
     } else if (type.type === 'union') {
-      const typeNames = [];
+      const typeNames: string[] = [];
       for (let i = 0; i < type.types.length; i++) {
         // Try to get the type name for this type.
         const typeName = this._typeName(type.types[i]);
@@ -302,19 +282,19 @@ export class TypescriptApiBox extends Component {
     }
   };
 
-  _objectProperties(rawData) {
+  _objectProperties (rawData) {
     const signatures = Array.isArray(rawData.indexSignature)
       ? rawData.indexSignature
       : [];
     return signatures
       .map(signature => {
         const parameterString = this._indexParameterString(signature);
-        return extend(this._parameter(signature), {name: parameterString});
+        return extend(this._parameter(signature), { name: parameterString });
       })
       .concat(rawData.children.map(this._parameter));
   }
 
-  _indexParameterString(signature) {
+  _indexParameterString (signature) {
     const parameterNamesAndTypes = signature.parameters.map(
       param => param.name + ':' + this._typeName(param.type)
     );
@@ -322,8 +302,8 @@ export class TypescriptApiBox extends Component {
   }
 
   // Render the type of a data object. It's pretty confusing, to say the least
-  _type = (data, skipSignature) => {
-    const {type} = data;
+  _type = (data: any, skipSignature?: any) => {
+    const { type } = data;
 
     if (data.kindString === 'Method') {
       return this._type(data.signatures[0]);
@@ -340,7 +320,7 @@ export class TypescriptApiBox extends Component {
     const isReflected =
       data.kindString === 'Type alias' || type?.type === 'reflection';
     if (isReflected && type?.declaration) {
-      const {declaration} = type;
+      const { declaration } = type;
       if (declaration.signatures) {
         return this._type(declaration.signatures[0]);
       }
@@ -377,7 +357,7 @@ export class TypescriptApiBox extends Component {
 
   // XXX: not sure whether to use the 'kind' enum from TS or just run with the
   // strings. Strings seem safe enough I guess
-  _signature(rawData, parameters) {
+  _signature (rawData, parameters) {
     let dataForSignature = rawData;
     if (_isReflectedProperty(rawData)) {
       dataForSignature = rawData.type.declaration;
@@ -392,7 +372,7 @@ export class TypescriptApiBox extends Component {
     // if it is a function, and therefore has arguments
     const signature = dataForSignature.signatures?.[0];
     if (signature) {
-      const {name} = rawData;
+      const { name } = rawData;
       const parameterString = _parameterString(
         parameters.map(param => param.name)
       );
@@ -420,7 +400,7 @@ export class TypescriptApiBox extends Component {
   });
 
   // Takes the data about a function / constructor and parses out the named params
-  _parameters(rawData, dataByKey, isReact = false) {
+  _parameters (rawData, dataByKey, isReact = false) {
     if (_isReflectedProperty(rawData)) {
       return this._parameters(rawData.type.declaration, dataByKey);
     }
@@ -465,7 +445,7 @@ export class TypescriptApiBox extends Component {
     });
   }
 
-  render() {
+  render () {
     const rawData = this.dataByKey[this.props.name];
     if (typeof rawData === 'undefined') {
       // TODO: account for things that past versions may reference, but have
@@ -477,7 +457,7 @@ export class TypescriptApiBox extends Component {
       <>
         <Header>
           <MainHeading title={args.name} id={args.id}>
-            <StyledCode className="language-">
+            <StyledCode className='language-'>
               <a href={`#${args.id}`}>{args.signature}</a>
             </StyledCode>
           </MainHeading>
@@ -485,8 +465,8 @@ export class TypescriptApiBox extends Component {
             <Subheading>
               <a
                 href={`https://github.com/${args.repo}/blob/${args.branch}/${args.filepath}#L${args.lineno}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                target='_blank'
+                rel='noopener noreferrer'
               >
                 ({args.filepath}, line {args.lineno})
               </a>
@@ -502,7 +482,7 @@ export class TypescriptApiBox extends Component {
               <Fragment key={index}>
                 <BodySubheading>{group.name}</BodySubheading>
                 <TableWrapper>
-                  <StyledTable className="field-table">
+                  <StyledTable className='field-table'>
                     <thead>
                       <tr>
                         <th>
@@ -517,12 +497,12 @@ export class TypescriptApiBox extends Component {
                         <tr key={index}>
                           <td>
                             <h6>
-                              <StyledCode className="language-">
+                              <StyledCode className='language-'>
                                 {member.name}
                               </StyledCode>
                             </h6>
                             <p>
-                              <StyledCode className="language-">
+                              <StyledCode className='language-'>
                                 {member.type}
                               </StyledCode>
                             </p>

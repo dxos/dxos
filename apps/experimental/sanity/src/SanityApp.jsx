@@ -9,10 +9,10 @@ import React, { useEffect } from 'react';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-
 const Main = () => {
   const client = useClient();
   const profile = useProfile();
+
   useEffect(() => {
     setImmediate(async () => {
       if (!profile) {
@@ -20,10 +20,11 @@ const Main = () => {
       }
     });
   }, [profile]);
+
   return (
     <JsonTreeView data={profile} />
   );
-}
+};
 
 export const SanityApp = () => {
   return (

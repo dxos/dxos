@@ -1,13 +1,13 @@
-import 'setimmediate';
-import React from 'react';
+//
+// Copyright 2022 DXOS.org
+//
 
+import 'setimmediate';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import Layout from '@theme/Layout';
+import React from 'react';
 
-import { 
-  Box,
-  Button
-} from '@mui/material';
+import { Box } from '@mui/material';
 
 import { ShowcaseCard } from '../components';
 
@@ -17,22 +17,23 @@ const Constants = {
   TITLE: 'DXOS Showcase',
   DESCRIPTION: 'List of apps & frames people are building with DXOS',
   EDIT_URL: 'https://github.com/dxos/web/edit/main/packages/docs/src/data/showcase.ts'
-}
+};
 
 const ShowcaseList = () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { useShowcaseDemos } = require('../hooks');
   const demos = useShowcaseDemos();
 
   return (
     <>
-      {demos.map(data => (
+      {demos.map((data: any) => (
         <Box
           key={data.id}
           className='col col--3 margin-bottom--md'
           sx={{
             display: 'flex',
             flex: 1
-          }} 
+          }}
         >
           <ShowcaseCard data={data} />
         </Box>
@@ -65,6 +66,7 @@ const Showcase = () => {
           <Box className='row'>
             <BrowserOnly fallback={<div>Loading...</div>}>
               {() => {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
                 const { RegistryInitializer } = require('@dxos/react-registry-client');
 
                 return (

@@ -1,7 +1,11 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import * as React from 'react';
 
 interface HelloProps {
-  message?: string 
+  message?: string
 }
 
 const Hello = (props: HelloProps) => {
@@ -10,6 +14,6 @@ const Hello = (props: HelloProps) => {
       HELLO WORLD!!
     </div>
   );
-}
+};
 
 export default Hello;

@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 export * from './Simple';
 export * from './MaterialSimple';
 export * from './SimpleWithState';

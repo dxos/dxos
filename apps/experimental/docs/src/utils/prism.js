@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 const prism = require('prismjs');
 require('prismjs/components/prism-css');
 require('prismjs/components/prism-diff');
@@ -7,7 +11,7 @@ require('prismjs/components/prism-jsx');
 require('prismjs/components/prism-markup');
 require('prismjs/components/prism-tsx');
 
-function highlight(code, language) {
+const highlight = (code, language) => {
   let prismLanguage;
   switch (language) {
     case 'ts':
@@ -41,6 +45,6 @@ function highlight(code, language) {
   }
 
   return prism.highlight(code, prismLanguage);
-}
+};
 
 module.exports = highlight;
