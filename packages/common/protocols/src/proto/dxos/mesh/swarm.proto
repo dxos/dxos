@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+import "../halo/keys.proto";
 
 package dxos.mesh.swarm;
 
