@@ -11,10 +11,10 @@ export interface SignalConnection {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join (topic: PublicKey, peerId: PublicKey): void
+  join (topic: PublicKey, peerId: PublicKey): Promise<void>
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave (topic: PublicKey, peerId: PublicKey): void
+  leave (topic: PublicKey, peerId: PublicKey): Promise<void>
 }

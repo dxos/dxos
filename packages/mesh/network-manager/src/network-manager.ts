@@ -20,7 +20,7 @@ import {
 import { ComplexMap } from "@dxos/util";
 
 import { ConnectionLog } from "./connection-log";
-import { OfferMessage } from "./signal";
+import { OfferMessage, SignalConnection } from "./signal";
 import { MessageRouter } from "./signal/message-router";
 import { Swarm, SwarmMapper } from "./swarm";
 import { Topology } from "./topology";
@@ -35,7 +35,7 @@ export type ProtocolProvider = (opts: {
 }) => Protocol;
 
 export interface NetworkManagerOptions {
-  signal?: string[];
+  signalManager?: SignalManager;
   ice?: any[];
   /**
    * Enable connection logging for devtools.
@@ -58,6 +58,7 @@ export class NetworkManager {
   );
   private readonly _signalManager: SignalManager;
   private readonly _messageRouter: MessageRouter;
+  private readonly _signalConnection: SignalConnection;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -70,9 +71,7 @@ export class NetworkManager {
         accept: false,
       };
 
-    this._signalManager = options.signal
-      ? new SignalManagerImpl(options.signal)
-      : new InMemorySignalManager();
+    this._signalManager = options.signalManager ?? new InMemorySignalManager();
 
     this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
       this._swarms.get(topic)?.onSwarmEvent(event)
@@ -87,6 +86,11 @@ export class NetworkManager {
       onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
       onOffer: (msg) => onOffer(msg),
     });
+
+    this._signalConnection = {
+      join: (topic: PublicKey, peerId: PublicKey) => this._signalManager.join(topic, peerId),
+      leave: (topic: PublicKey, peerId: PublicKey) => this._signalManager.leave(topic, peerId)
+    }
 
     if (options.log) {
       this._connectionLog = new ConnectionLog();
@@ -158,7 +162,7 @@ export class NetworkManager {
     });
 
     this._swarms.set(topic, swarm);
-    this._signalManager
+    this._signalConnection
       .join(topic, peerId)
       .catch((error) => log(`Error: ${error}`));
     this._maps.set(topic, new SwarmMapper(swarm, presence));
@@ -180,7 +184,7 @@ export class NetworkManager {
     const map = this._maps.get(topic)!;
     const swarm = this._swarms.get(topic)!;
 
-    await this._signalManager.leave(topic, swarm.ownPeerId);
+    await this._signalConnection.leave(topic, swarm.ownPeerId);
 
     map.destroy();
     this._maps.delete(topic);
