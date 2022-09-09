@@ -86,7 +86,7 @@ export class SignalClient implements SignalMethods {
   readonly statusChanged = new Event<SignalStatus>();
 
   readonly commandTrace = new Event<CommandTrace>();
-  readonly swarmEvent = new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>();
+  readonly swarmEvent = new Event<{topic: PublicKey; swarmEvent: SwarmEvent}>();
 
   private readonly _swarmStreams = new ComplexMap<PublicKey, Stream<SwarmEvent>>(key => key.toHex());
   private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(key => key.toHex());
@@ -233,7 +233,7 @@ export class SignalClient implements SignalMethods {
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
     swarmStream.subscribe((swarmEvent: SwarmEvent) => {
-      this.swarmEvent.emit([topic, swarmEvent]);
+      this.swarmEvent.emit({topic, swarmEvent});
     });
 
     // Saving swarm stream.
