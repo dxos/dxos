@@ -10,8 +10,8 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
 
+import { Message, Signal } from './proto';
 import { schema } from './proto/gen';
-import { Message, Signal } from './proto/gen/dxos/mesh/signal';
 interface Services {
   Signal: Signal
 }

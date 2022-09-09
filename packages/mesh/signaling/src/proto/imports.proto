@@ -1,5 +1,3 @@
 syntax = "proto3";
 
-import "@dxos/protocols/src/proto/dxos/mesh/reliablePayload.proto";
 import "@dxos/protocols/src/proto/dxos/mesh/signal.proto";
-import "@dxos/protocols/src/proto/dxos/mesh/swarm.proto";

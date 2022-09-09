@@ -9,7 +9,7 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { SwarmEvent } from './proto';
 import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';

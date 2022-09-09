@@ -10,7 +10,7 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Message, SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { Message, SwarmEvent } from './proto';
 import { SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 

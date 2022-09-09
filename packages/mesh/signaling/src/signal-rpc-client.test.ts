@@ -7,7 +7,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { Message, SwarmEvent } from './proto/gen/dxos/mesh/signal';
+import { Message, SwarmEvent } from './proto';
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', () => {
