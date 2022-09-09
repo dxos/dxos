@@ -7,7 +7,7 @@
   - [2.1. HALO](#21-halo)
     - [2.1.1. Profiles](#211-profiles)
     - [2.1.2. Devices](#212-devices)
-    - [2.1.3. Circles](#213-circles)
+    - [2.1.3. Contacts](#213-contacts)
   - [2.2. ECHO](#22-echo)
     - [2.2.1. Spaces](#221-spaces)
     - [2.2.2. Branes](#222-branes)
@@ -65,6 +65,24 @@ The HALO application may be invoked / started by the user or the OS for the foll
 - the user clicked on a link in another app (such as Discord, or a QR code in a camera app) that starts with `dx://` or `https://halo.dxos.org...`
 - the user is trying to sign into a 3P application that uses the HALO SDK
 
+The HALO application exposes these key entities and verbs to users:
+- Identities (list, use to sign in, create, import, delete)
+- Devices (list, revoke)
+- Application authorizations (list, revoke)
+
+Here is the information hierarchy of the HALO application:
+- HALO Application / Home
+  - Identities
+    - applications using each identity
+    - devices with each identity
+  - Devices
+    - Identities on each device
+  - Applications
+    - identities used by each application
+    - devies application is installed on
+  - Contacts
+  - Settings
+
 #### 2.1.2 Browser Profiles
 The HALO app is constrained within a Browser profile which isolates local storage, cookies, history and other personal data between different silos in the browser. This means the HALO application state and list of managed identities will be reset with every new browser profile. 
 
@@ -85,15 +103,15 @@ Using the HALO app, users can:
 
 #### 2.1.3. Devices
 
-- Users maintain a set of devices that are associated with a Profile.
-- Devices include browsers, mobile apps, and remote network Agents.
+- Users maintain a set of devices that are associated with each Identity.
+- Devices include browsers (browser profiles), mobile apps, and any other processes using the client (i.e. a remote bot).
 - Devices may be de-activated.
-- Devices store securely both HALO and ECHO data.
+- Devices securely store both HALO and ECHO data.
 
-#### 2.1.3. Circles
+#### 2.1.3. Contacts
 
-- Users maintain a set of contacts that are collectively known as a Circle.
-- Contacts are associated with another User's Profile DID and metadata (e.g., display name, avatar, etc.)
+- Users maintain a set of contacts accumulated from interactions over spaces and invites
+- Contacts are associated with another User's Profile DID and metadata (e.g., display name, avatar, etc.) when users join spaces or interact with each other.
 
 ### 2.2. ECHO
 
