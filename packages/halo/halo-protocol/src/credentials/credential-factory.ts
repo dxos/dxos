@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Keyring } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 
-import { Chain, Credential } from '../proto';
+import { AdmittedFeed, Chain, Credential, PartyMember } from '../proto';
 import { getSignaturePayload, sign } from './signing';
 import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519 } from './verifier';
@@ -66,8 +66,8 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
   return credential;
 };
 
-export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicKey): Promise<Credential> => {
-  return createCredential({
+export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicKey) =>
+  createCredential({
     subject: partyKey,
     issuer: partyKey,
     assertion: {
@@ -76,4 +76,35 @@ export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicK
     },
     keyring
   });
-};
+
+export const createGenesisCredentialSequence = async (
+  keyring: Keyring,
+  partyKey: PublicKey,
+  identityKey: PublicKey,
+  deviceKey: PublicKey,
+  feedKey: PublicKey
+) => [
+  await createPartyGenesisCredential(keyring, partyKey),
+  await createCredential({
+    issuer: partyKey,
+    subject: identityKey,
+    assertion: {
+      '@type': 'dxos.halo.credentials.PartyMember',
+      partyKey,
+      role: PartyMember.Role.ADMIN
+    },
+    keyring
+  }),
+  await createCredential({
+    issuer: identityKey,
+    subject: feedKey,
+    assertion: {
+      '@type': 'dxos.halo.credentials.AdmittedFeed',
+      partyKey,
+      identityKey,
+      deviceKey,
+      designation: AdmittedFeed.Designation.CONTROL
+    },
+    keyring,
+  })
+]

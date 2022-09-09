@@ -3,7 +3,7 @@ import { Keyring, KeyType } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { AdmittedFeed, createCredential, PartyMember } from '@dxos/halo-protocol';
+import { AdmittedFeed, createCredential, createGenesisCredentialSequence, PartyMember } from '@dxos/halo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
 import { afterTest } from '@dxos/testutils';
@@ -20,7 +20,7 @@ describe('space/ControlPipeline', () => {
       const { publicKey, secretKey } = createKeyPair();
       return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     }
-    
+
     const keyring = new Keyring();
     const { publicKey: spaceKey } = await keyring.createKeyRecord({ type: KeyType.PARTY });
     const { publicKey: identityKey } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
@@ -51,36 +51,32 @@ describe('space/ControlPipeline', () => {
     // Genesis
     //
     {
-      await controlPipeline.writer!.write({
-        halo: { credential: await createCredential({
-          issuer: spaceKey,
-          subject: spaceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.PartyGenesis',
-            partyKey: spaceKey
-          },
-          keyring
-        })
-      } })
-     
-      await controlPipeline.writer!.write({
-        halo: { credential: await createCredential({
-          issuer: spaceKey,
-          subject: identityKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.PartyMember',
-            partyKey: spaceKey,
-            role: PartyMember.Role.ADMIN
-          },
-          keyring
-        })
-      } })
-      expect(admittedFeeds).toEqual([]);
+      const genesisMessages = await createGenesisCredentialSequence(
+        keyring,
+        spaceKey,
+        identityKey,
+        deviceKey,
+        genesisFeed.key,
+      )
+      for (const credential of genesisMessages) {
+        await controlPipeline.writer?.write({
+          halo: {
+            credential
+          }
+        });
+      }
+      await waitForExpect(() => {
+        expect(admittedFeeds).toEqual([genesisFeed.key]);
+      })
+    }
 
-      await controlPipeline.writer!.write({
-        halo: { credential: await createCredential({
+    // New control feed.
+    const controlFeed2 = await createFeed();
+    await controlPipeline.writer!.write({
+      halo: {
+        credential: await createCredential({
           issuer: identityKey,
-          subject: genesisFeed.key,
+          subject: controlFeed2.key,
           assertion: {
             '@type': 'dxos.halo.credentials.AdmittedFeed',
             partyKey: spaceKey,
@@ -90,48 +86,30 @@ describe('space/ControlPipeline', () => {
           },
           keyring,
         })
-      } })
-      await waitForExpect(() => {
-        expect(admittedFeeds).toEqual([genesisFeed.key]);
-      })
-    }
-
-    // New control feed.
-    const controlFeed2 = await createFeed();    
-    await controlPipeline.writer!.write({
-      halo: { credential: await createCredential({
-        issuer: identityKey,
-        subject: controlFeed2.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: spaceKey,
-          identityKey,
-          deviceKey,
-          designation: AdmittedFeed.Designation.CONTROL
-        },
-        keyring,
-      })
-    } })
+      }
+    })
     await waitForExpect(() => {
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
     })
-    
+
     // New data feed.
-    const dataFeed = await createFeed();    
+    const dataFeed = await createFeed();
     await controlPipeline.writer!.write({
-      halo: { credential: await createCredential({
-        issuer: identityKey,
-        subject: dataFeed.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: spaceKey,
-          identityKey,
-          deviceKey,
-          designation: AdmittedFeed.Designation.DATA
-        },
-        keyring,
-      })
-    } })
+      halo: {
+        credential: await createCredential({
+          issuer: identityKey,
+          subject: dataFeed.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: spaceKey,
+            identityKey,
+            deviceKey,
+            designation: AdmittedFeed.Designation.DATA
+          },
+          keyring,
+        })
+      }
+    })
     await waitForExpect(() => {
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
     })
@@ -139,18 +117,20 @@ describe('space/ControlPipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const otherFeed = await createFeed();
     dataFeed.append({
-      halo: { credential: await createCredential({
-        issuer: identityKey,
-        subject: otherFeed.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: spaceKey,
-          identityKey,
-          deviceKey,
-          designation: AdmittedFeed.Designation.DATA
-        },
-        keyring,
-      }) },
+      halo: {
+        credential: await createCredential({
+          issuer: identityKey,
+          subject: otherFeed.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: spaceKey,
+            identityKey,
+            deviceKey,
+            designation: AdmittedFeed.Designation.DATA
+          },
+          keyring,
+        })
+      },
       timeframe: new Timeframe()
     })
 
