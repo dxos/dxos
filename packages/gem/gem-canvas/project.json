@@ -1,0 +1,31 @@
+{
+  "sourceRoot": "packages/gem/gem-canvas/src",
+  "projectType": "library",
+  "tags": ["scope:gem"],
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/gem/gem-canvas/dist",
+        "tsConfig": "packages/gem/gem-canvas/tsconfig.json",
+        "main": "packages/gem/gem-canvas/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/gem/gem-canvas/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["packages/gem/gem-canvas/coverage"],
+      "options": {
+        "jestConfig": "packages/gem/gem-canvas/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

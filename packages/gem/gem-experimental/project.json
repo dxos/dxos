@@ -1,0 +1,33 @@
+{
+  "sourceRoot": "packages/gem/gem-experimental/src",
+  "projectType": "library",
+  "tags": ["scope:gem"],
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/gem/gem-experimental/dist",
+        "tsConfig": "packages/gem/gem-experimental/tsconfig.json",
+        "main": "packages/gem/gem-experimental/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/gem/gem-experimental/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["packages/gem/gem-experimental/coverage"],
+      "options": {
+        "jestConfig": "packages/gem/gem-experimental/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

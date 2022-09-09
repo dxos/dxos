@@ -16,8 +16,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/gem-core": "2.2.1-beta.11",
-    "@dxos/gem-spore": "2.2.1-beta.11"
+    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-spore": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -36,10 +36,10 @@
     "@mui/lab": "^5.0.0-alpha.83",
     "@mui/material": "^5.8.1",
     "@mui/system": "^5.8.1",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/react": "^18.0.9",
-    "clsx": "^1.1.0",
-    "faker": "^5.1.0",
+    "clsx": "^1.1.1",
+    "faker": "^5.5.3",
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
   },

@@ -8,10 +8,10 @@ semverGroups:
       - '**'
   - range: ~
     packages:
+      - '**'
+    dependencies:
       - esbuild
       - '@swc-node/register'
-    dependencies:
-      - '**'
   - range: ''
     packages:
       - '**'

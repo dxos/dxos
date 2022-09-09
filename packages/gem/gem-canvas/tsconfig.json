@@ -1,0 +1,23 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "strict": false
+  },
+  "include": [
+    "src",
+    "stories"
+  ],
+  "references": [
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

@@ -57,6 +57,12 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['react'] = '^18.0.0'
       break;
     }
+
+    case 'simple-react-console': {
+      packageJson.peerDependencies['react'] = '^18.0.0'
+      packageJson.peerDependencies['react-dom'] = '^18.0.0'
+      break;
+    }
   }
 
   return packageJson
