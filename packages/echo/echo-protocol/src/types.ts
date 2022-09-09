@@ -59,6 +59,7 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
   seq: block.seq
 });
 
+// TODO(dmaretskyi): Rename to Message.
 export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
 export interface IHaloStream {

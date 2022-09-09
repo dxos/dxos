@@ -98,11 +98,18 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     return this._generatorInstance;
   }
 
-  /**
-   * @private
-   */
+  getEndTimeframe() {
+    this._reevaluateFeeds();
+
+    return new Timeframe(
+      Array.from(this._openFeeds.values())
+      .filter(feed => feed.descriptor.feed.length > 0)
+      .map(feed => [feed.descriptor.key, feed.descriptor.feed.length - 1])
+    );
+  }
+
   // TODO(burdon): Comment.
-  private async _reevaluateFeeds () {
+  private _reevaluateFeeds () {
     // eslint-disable-next-line unused-imports/no-unused-vars
     for (const [keyHex, feed] of this._openFeeds) {
       if (!this._feedSelector(feed.descriptor)) {
@@ -239,7 +246,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
           return;
         }
 
-        await this._reevaluateFeeds();
+        this._reevaluateFeeds();
 
         // TODO(burdon): This always seems to be undefined.
         const message = this._popSendQueue();

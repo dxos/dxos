@@ -14,7 +14,7 @@ import { log } from '@dxos/log'
 import waitForExpect from 'wait-for-expect';
 
 describe('space/ControlPipeline', () => {
-  test('admits feeds', async () => {
+  test.only('admits feeds', async () => {
     const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
@@ -37,7 +37,7 @@ describe('space/ControlPipeline', () => {
     })
 
     const admittedFeeds: PublicKey[] = [];
-    controlPipeline.onFeedAdmitted.set(info => {
+    controlPipeline.onFeedAdmitted.set(async info => {
       log.debug('feed admitted')
       admittedFeeds.push(info.key);
     });
@@ -65,9 +65,8 @@ describe('space/ControlPipeline', () => {
           }
         });
       }
-      await waitForExpect(() => {
-        expect(admittedFeeds).toEqual([genesisFeed.key]);
-      })
+      await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+      expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
     // New control feed.
@@ -88,9 +87,8 @@ describe('space/ControlPipeline', () => {
         })
       }
     })
-    await waitForExpect(() => {
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
-    })
+    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
 
     // New data feed.
     const dataFeed = await createFeed();
@@ -110,9 +108,8 @@ describe('space/ControlPipeline', () => {
         })
       }
     })
-    await waitForExpect(() => {
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
-    })
+    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const otherFeed = await createFeed();
@@ -134,10 +131,10 @@ describe('space/ControlPipeline', () => {
       timeframe: new Timeframe()
     })
 
+    
+
     // TODO(dmaretskyi): Count ignored messages.
-    // TODO(dmaretskyi): Wait for queues to be emptied (or last timeframe message to be processed).
-    // Make sure all events are processed.
-    await sleep(10)
+    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
   });
 });

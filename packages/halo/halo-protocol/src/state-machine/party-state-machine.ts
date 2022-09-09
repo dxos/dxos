@@ -24,13 +24,8 @@ export class PartyStateMachine {
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
 
-  get memberAdmitted (): ReadOnlyEvent<MemberInfo> {
-    return this._members.memberAdmitted;
-  }
-
-  get feedAdmitted (): ReadOnlyEvent<FeedInfo> {
-    return this._feeds.feedAdmitted;
-  }
+  readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
+  readonly onMemberAdmitted = this._members.onMemberAdmitted;
 
   constructor (
     private readonly _partyKey: PublicKey
@@ -87,7 +82,7 @@ export class PartyStateMachine {
           log.warn(`Party member ${credential.issuer} is not authorized to invite new members.`);
           return false;
         }
-        this._members.process(credential);
+        await this._members.process(credential);
         break;
       case 'dxos.halo.credentials.AdmittedFeed':
         if (!this._genesisCredential) {
@@ -99,7 +94,7 @@ export class PartyStateMachine {
           return false;
         }
         // TODO(dmaretskyi): Check that the feed owner is a member of the party.
-        this._feeds.process(credential, fromFeed);
+        await this._feeds.process(credential, fromFeed);
         break;
     }
 

@@ -104,12 +104,12 @@ export class PartyPipeline {
 
   get timeframe () {
     assert(this._pipeline, 'Party not open.');
-    return this._pipeline.timeframe;
+    return this._pipeline.state.timeframe;
   }
 
   get timeframeUpdate () {
     assert(this._pipeline, 'Party not open.');
-    return this._pipeline.timeframeUpdate;
+    return this._pipeline.state.currentTimeframeUpdate;
   }
 
   async getWriteFeed () {
@@ -204,14 +204,14 @@ export class PartyPipeline {
     if (this._options.snapshots) {
       createAutomaticSnapshots(
         this, // TODO(burdon): Don't pass `this`.
-        this._pipeline.timeframeUpdate,
+        this._pipeline.state.currentTimeframeUpdate,
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
       );
     }
 
     if (targetTimeframe) {
-      await this._pipeline.waitUntilReached(targetTimeframe);
+      await this._pipeline.state.waitUntilReached(targetTimeframe);
     }
 
     // TODO(dmaretskyi): Do we want to asset here that the writable feed has been admitted to the pipeline.
@@ -249,7 +249,7 @@ export class PartyPipeline {
 
     return {
       partyKey: this.key.asUint8Array(),
-      timeframe: this._pipeline!.timeframe,
+      timeframe: this._pipeline!.state.timeframe,
       timestamp: Date.now(),
       database: this.database.createSnapshot(),
       halo: this.processor.makeSnapshot()

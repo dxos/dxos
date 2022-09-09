@@ -17,14 +17,14 @@ export class ControlPipeline {
   private readonly _partyStateMachine: PartyStateMachine;
   private readonly _subscriptions = new SubscriptionGroup();
 
-  public readonly onFeedAdmitted = new Callback<(info: FeedInfo) => void>()
+  public readonly onFeedAdmitted = new Callback<(info: FeedInfo) => Promise<void>>()
 
   constructor(params: ControlPipelineParams) {
     this._pipeline = new Pipeline(params.initialTimeframe);
     this._pipeline.addFeed(params.genesisFeed);
 
     this._partyStateMachine = new PartyStateMachine(params.spaceKey);
-    this._subscriptions.push(this._partyStateMachine.feedAdmitted.on(async info => {
+    this._partyStateMachine.onFeedAdmitted.set(async info => {
       log('Feed admitted', { info })
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(params.genesisFeed.key)) {
         try {
@@ -34,8 +34,8 @@ export class ControlPipeline {
         }
       }
 
-      this.onFeedAdmitted.callIfSet(info);
-    }))
+      await this.onFeedAdmitted.callIfSet(info);
+    })
   }
 
   start() {
@@ -70,5 +70,9 @@ export class ControlPipeline {
 
   setWriteFeed(feed: FeedDescriptor) {
     this._pipeline.setWriteFeed(feed);
+  }
+
+  get pipelineState() {
+    return this._pipeline.state;
   }
 }

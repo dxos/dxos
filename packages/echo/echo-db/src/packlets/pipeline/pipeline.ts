@@ -13,6 +13,7 @@ import { ComplexMap } from '@dxos/util';
 import { TimeframeClock } from '../database';
 import { createMessageSelector } from './message-selector';
 import { log } from '@dxos/log'
+import { Event } from '@dxos/async';
 
 const STALL_TIMEOUT = 1000;
 
@@ -97,20 +98,20 @@ export class Pipeline {
     await this._iterator.close();
   }
 
-  //
-  // Timeframe clock methods.
-  //
-
-  get timeframe () {
-    return this._timeframeClock.timeframe;
-  }
-
-  get timeframeUpdate () {
-    return this._timeframeClock.update;
-  }
-
-  async waitUntilReached (target: Timeframe) {
-    await this._timeframeClock.waitUntilReached(target);
+  get state(): PipelineState {
+    const self = this;
+    return {
+      get timeframe() {
+        return self._timeframeClock.timeframe 
+      },
+      get endTimeframe() {
+        return self._iterator.getEndTimeframe()
+      },
+      currentTimeframeUpdate: this._timeframeClock.update,
+      waitUntilReached: async (target) => {
+          await self._timeframeClock.waitUntilReached(target)
+      },
+    }
   }
 
   //
@@ -134,4 +135,14 @@ function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () =>
     ...msg,
     timeframe: getTimeframe()
   }), writer);
+}
+
+export interface PipelineState {
+  readonly currentTimeframeUpdate: Event<Timeframe>,
+  
+  readonly timeframe: Timeframe
+
+  readonly endTimeframe: Timeframe
+
+  waitUntilReached: (target: Timeframe) => Promise<void>;
 }

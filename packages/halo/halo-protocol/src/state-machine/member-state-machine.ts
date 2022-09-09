@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-import { ComplexMap } from '@dxos/util';
+import { Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 import { Credential, PartyMember } from '../proto';
@@ -27,7 +27,7 @@ export class MemberStateMachine {
    */
   private _members = new ComplexMap<PublicKey, MemberInfo>(key => key.toHex());
 
-  readonly memberAdmitted = new Event<MemberInfo>();
+  readonly onMemberAdmitted = new Callback<(info: MemberInfo) => Promise<void>>();
 
   constructor (
     private readonly _partyKey: PublicKey
@@ -47,7 +47,7 @@ export class MemberStateMachine {
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  process (credential: Credential) {
+  async process (credential: Credential) {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.PartyMember');
     assert(assertion.partyKey.equals(this._partyKey));
@@ -59,6 +59,6 @@ export class MemberStateMachine {
       assertion
     };
     this._members.set(credential.subject.id, info);
-    this.memberAdmitted.emit(info);
+    await this.onMemberAdmitted.callIfSet(info);
   }
 }
