@@ -1,5 +1,5 @@
 import { FeedDescriptor } from "@dxos/feed-store";
-import { AdmittedFeed, FeedInfo, PartyStateMachine } from "@dxos/halo-protocol";
+import { AdmittedFeed, FeedInfo, MemberInfo, PartyState, PartyStateMachine } from "@dxos/halo-protocol";
 import { PublicKey, Timeframe } from "@dxos/protocols";
 import { Pipeline } from "../pipeline";
 import { log } from '@dxos/log'
@@ -18,6 +18,7 @@ export class ControlPipeline {
   private readonly _subscriptions = new SubscriptionGroup();
 
   public readonly onFeedAdmitted = new Callback<(info: FeedInfo) => Promise<void>>()
+  public readonly onMemberAdmitted: Callback<(info: MemberInfo) => Promise<void>>;
 
   constructor(params: ControlPipelineParams) {
     this._pipeline = new Pipeline(params.initialTimeframe);
@@ -36,6 +37,7 @@ export class ControlPipeline {
 
       await this.onFeedAdmitted.callIfSet(info);
     })
+    this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
   }
 
   start() {
@@ -75,4 +77,15 @@ export class ControlPipeline {
   get pipelineState() {
     return this._pipeline.state;
   }
+
+  get partyState(): PartyState {
+    return this._partyStateMachine;
+  }
 }
+
+
+const controlPipeline = new ControlPipeline()
+
+controlPipeline.onFeedAdmitted.set(async info => {
+
+})

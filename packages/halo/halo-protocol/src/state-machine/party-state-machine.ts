@@ -13,12 +13,19 @@ import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 import { log } from '@dxos/log'
 
+export interface PartyState {
+  readonly genesisCredential: Credential | undefined
+  readonly members: ReadonlyMap<PublicKey, MemberInfo>
+  readonly feeds: ReadonlyMap<PublicKey, FeedInfo>
+  readonly credentials: Credential[]
+}
+
 /**
  * Validates and processes credentials for a single party.
  * Keeps a list of members and feeds.
  * Keeps and in-memory index of credentials and allows to query them.
  */
-export class PartyStateMachine {
+export class PartyStateMachine implements PartyState {
   private readonly _members = new MemberStateMachine(this._partyKey);
   private readonly _feeds = new FeedStateMachine(this._partyKey);
   private readonly _credentials: Credential[] = [];
