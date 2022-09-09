@@ -139,15 +139,15 @@ const createLink: D3Callable = <N extends GraphNode> (
   group: D3Selection,
   options: GraphRendererOptions<N>
 ) => {
-  if (options.onLinkClick && false) {
-    // Shadow path with wide stroke for click handler.
-    group.append('path')
-      .attr('class', 'click')
-      .on('click', (event: MouseEvent) => {
-        const link = d3.select<SVGLineElement, GraphLayoutLink<N>>(event.target as SVGLineElement).datum();
-        options.onLinkClick(link, event);
-      });
-  }
+  // if (options.onLinkClick) {
+  //   // Shadow path with wide stroke for click handler.
+  //   group.append('path')
+  //     .attr('class', 'click')
+  //     .on('click', (event: MouseEvent) => {
+  //       const link = d3.select<SVGLineElement, GraphLayoutLink<N>>(event.target as SVGLineElement).datum();
+  //       options.onLinkClick(link, event);
+  //     });
+  // }
 
   group.append('path')
     .attr('class', 'link')
@@ -202,22 +202,22 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .join('g')
       .attr('class', 'guides')
       .selectAll<SVGCircleElement, { cx: number, cy: number, r: number }>('circle.guide')
-        .data(layout.guides ?? [])
-        .join(
-          enter => enter
-            .append('circle')
-            .attr('r', 0),
-          update => update,
-          exit => exit
-            .transition()
-            .duration(500)
-            .attr('r', 0)
-            .remove()
-        )
-        .attr('class', 'guide')
-        .attr('cx', d => d.cx)
-        .attr('cy', d => d.cy)
-        .attr('r', d => d.r);
+      .data(layout.guides ?? [])
+      .join(
+        enter => enter
+          .append('circle')
+          .attr('r', 0),
+        update => update,
+        exit => exit
+          .transition()
+          .duration(500)
+          .attr('r', 0)
+          .remove()
+      )
+      .attr('class', 'guide')
+      .attr('cx', d => d.cx)
+      .attr('cy', d => d.cy)
+      .attr('r', d => d.r);
 
     //
     // Links
@@ -228,11 +228,11 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .join('g')
       .attr('class', 'links')
       .selectAll<SVGPathElement, GraphLayoutLink<N>>('g')
-        .data(layout.graph?.links ?? [], d => d.id)
-        .join(
-          enter => enter.append('g').call(createLink, this.options)
-        )
-        .call(updateLink, this.options, layout.graph.nodes);
+      .data(layout.graph?.links ?? [], d => d.id)
+      .join(
+        enter => enter.append('g').call(createLink, this.options)
+      )
+      .call(updateLink, this.options, layout.graph.nodes);
 
     //
     // Nodes
@@ -243,12 +243,12 @@ export class GraphRenderer<N extends GraphNode> extends Renderer<GraphLayout<N>,
       .join('g')
       .attr('class', 'nodes')
       .selectAll<SVGCircleElement, GraphLayoutNode<N>>('g')
-        .data(layout.graph?.nodes ?? [], d => d.id)
-        .join(
-          enter => enter.append('g').call(createNode, this.options)
-        )
-        .call(updateNode, this.options)
-        // .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
+      .data(layout.graph?.nodes ?? [], d => d.id)
+      .join(
+        enter => enter.append('g').call(createNode, this.options)
+      )
+      .call(updateNode, this.options);
+    // .attr('class', d => clsx('node', this.options.classes?.node?.(d)));
   }
 
   /**

@@ -13,11 +13,11 @@ export const SVGContextDef = createContext<SVGContext>(undefined);
  */
 export const useSvgContext = (): SVGContext => {
   return useContext<SVGContext>(SVGContextDef);
-}
+};
 
 /**
  * Create new context (as hook).
  */
 export const createSvgContext = (scale?: Scale): SVGContext => {
   return useMemo(() => new SVGContext(scale), []);
-}
+};

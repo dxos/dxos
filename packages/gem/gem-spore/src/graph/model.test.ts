@@ -4,8 +4,8 @@
 
 import faker from 'faker';
 
-import { GraphBuilder } from './model';
 import { TestNode } from '../testing';
+import { GraphBuilder } from './model';
 
 test('GraphBuilder', () => {
   const model = new GraphBuilder<TestNode>()

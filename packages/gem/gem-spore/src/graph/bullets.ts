@@ -34,7 +34,7 @@ export const createBullets = (
         // Match source node.
         if (source.id === nodeId) {
           const path = d3.select(links[i]);
-          let p = path.node().getPointAtLength(0);
+          const p = path.node().getPointAtLength(0);
 
           const bullet = d3.select(group)
             .append('circle')
@@ -50,13 +50,12 @@ export const createBullets = (
             .duration(minDuration + Math.random() * maxDuration)
             .ease(d3.easeLinear)
             .tween('pathTween', function () {
-              let node = this;
-              let length = path.node().getTotalLength();
-              let r = d3.interpolate(0, length);
+              const length = path.node().getTotalLength();
+              const r = d3.interpolate(0, length);
 
               return (t) => {
-                let point = path.node().getPointAtLength(r(t));
-                d3.select(node)
+                const point = path.node().getPointAtLength(r(t));
+                d3.select(this)
                   .attr('cx', point.x)
                   .attr('cy', point.y);
               };
@@ -67,12 +66,12 @@ export const createBullets = (
               d3.select(this).remove();
 
               // Propagate with circuit breaker to prevent infinite recursion.
-              let num = d3.select(group).selectAll('circle.bullet').size();
+              const num = d3.select(group).selectAll('circle.bullet').size();
               if (num < max) {
                 selection.call(createBullets(group, target.id));
               }
             });
         }
       });
-  }
+  };
 };

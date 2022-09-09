@@ -3,13 +3,13 @@
 //
 
 import clsx from 'clsx';
-import debug from 'debug';
 import * as d3 from 'd3';
-
-const log = debug('gem:canvas:render');
+import debug from 'debug';
 
 import { Control } from './control';
 import { elementStyles } from './styles';
+
+const log = debug('gem:canvas:render');
 
 /**
  * Paint the D3 controls.
@@ -62,7 +62,7 @@ export const renderControls = (controlsGroup, controlManager, debug = false) => 
     })
 
     // Update controls.
-    .attr('class', d => clsx('control', elementStyles['default'], elementStyles[d.data.style]))
+    .attr('class', d => clsx('control', elementStyles.default, elementStyles[d.data.style]))
     .each((control, i, nodes) => {
       // Draw if modified.
       if (!modified || modified.includes(control.element.id)) {

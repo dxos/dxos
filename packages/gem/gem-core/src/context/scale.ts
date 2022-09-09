@@ -83,7 +83,7 @@ export class Scale {
         height: height2
       };
     }
-  }
+  };
 
   /**
    * Map screen to model.
@@ -126,5 +126,5 @@ export class Scale {
         height
       };
     }
-  }
+  };
 }

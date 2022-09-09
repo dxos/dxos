@@ -6,9 +6,9 @@ import debug from 'debug';
 import faker from 'faker';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ElementData, ElementDataType, ElementId, ElementType } from './element';
-
 import { EventEmitter } from '@dxos/gem-core';
+
+import { ElementData, ElementDataType, ElementId, ElementType } from './element';
 
 const log = debug('gem:canvas:model');
 
@@ -47,7 +47,7 @@ export class ElementModel {
     log('updated', JSON.stringify(element));
     this.subscription.emit(Array.from(this._elements.values()));
     return element;
-  };
+  }
 
   async delete (id: ElementId): Promise<ElementId> {
     const deleted = [id];
@@ -63,7 +63,7 @@ export class ElementModel {
     log('deleted', deleted);
     this.subscription.emit(Array.from(this._elements.values()));
     return id;
-  };
+  }
 }
 
 export const useMemoryElementModel = (provider?: () => ElementData<any>[]): [ElementData<any>[], ElementModel] => {

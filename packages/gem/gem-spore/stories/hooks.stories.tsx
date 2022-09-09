@@ -3,9 +3,9 @@
 //
 
 import clsx from 'clsx';
+import * as d3 from 'd3';
 import debug from 'debug';
 import faker from 'faker';
-import * as d3 from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
@@ -31,7 +31,7 @@ import {
   createTree,
   defaultGraphStyles,
   defaultMarkerStyles,
-  linkerRenderer,
+  linkerRenderer
 } from '../src';
 import { styles } from './helpers';
 
@@ -74,14 +74,14 @@ const PrimaryComponent = ({ model }: ComponentProps) => {
   useEffect(() => {
     const unsubscribeModel = model.updated.on(graph => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
-    projector.start();
+    void projector.start();
     model.update();
 
     return () => {
       unsubscribeModel();
       unsubscribeProjector();
-      projector.stop();
-    }
+      void projector.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -182,13 +182,13 @@ const SecondaryComponent = ({ model }: ComponentProps) => {
   useEffect(() => {
     const unsubscribeModel = model.updated.on(graph => projector.update(graph));
     const unsubscribeProjector = projector.updated.on(({ layout }) => renderer.update(layout));
-    projector.start();
+    void projector.start();
     model.update();
 
     return () => {
       unsubscribeModel();
       unsubscribeProjector();
-      projector.stop();
+      void projector.stop();
     };
   }, []);
 
@@ -217,7 +217,7 @@ export const Primary = () => {
       </SVGContextProvider>
     </FullScreen>
   );
-}
+};
 
 const Info = () => (
   <div
@@ -247,4 +247,4 @@ export const Secondary = () => {
       </KnobsProvider>
     </FullScreen>
   );
-}
+};

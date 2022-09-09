@@ -22,13 +22,13 @@ export class Part<MODEL> {
     this._projector.update(model);
   }
 
-  start () {
+  async start () {
     // Listen for projector updates.
     this._updateListener = this._projector.updated.on(({ layout }) => {
       this._renderer.update(layout);
     });
 
-    this._projector.start();
+    await this._projector.start();
   }
 
   async stop () {

@@ -47,11 +47,9 @@ export const createSimulationDrag = <N extends GraphNode>(
   };
 
   return d3.drag()
-    .filter(function (event: MouseEvent) {
-      return !event.ctrlKey;
-    })
+    .filter((event: MouseEvent) => !event.ctrlKey)
 
-    .on('start', function (event: D3DragEvent) {
+    .on('start', (event: D3DragEvent) => {
       source = event.subject;
       if (options?.onDrop && keyMod(event.sourceEvent, 'linkMod')) {
         mode = Mode.LINK;
@@ -93,7 +91,7 @@ export const createSimulationDrag = <N extends GraphNode>(
       }
     })
 
-    .on('end', function (event: D3DragEvent) {
+    .on('end', (event: D3DragEvent) => {
       // d3.select(this).style('pointer-events', undefined);
 
       switch (mode) {

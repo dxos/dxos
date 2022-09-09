@@ -47,8 +47,8 @@ export class ControlManager implements ControlGetter {
         // TODO(burdon): Hack to add dependencies.
         if (control.element.type === 'line') {
           const data: Line = control.data;
-          if (data.source?.id && controlManager.getControl(data.source?.id)?.modified
-            || data.target?.id && controlManager.getControl(data.target?.id)?.modified) {
+          if ((data.source?.id && controlManager.getControl(data.source?.id)?.modified) ||
+            (data.target?.id && controlManager.getControl(data.target?.id)?.modified)) {
             modified.add(control.element.id);
           }
         }
@@ -56,7 +56,7 @@ export class ControlManager implements ControlGetter {
     }
 
     return Array.from(modified);
-  };
+  }
 
   /**
    * Update the cache with the provided set of elements.

@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import faker from 'faker';
-import React, { useEffect, useRef, useState} from 'react';
-import { css } from '@emotion/css';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Knobs, KnobsProvider, useButton } from '@dxos/esbuild-book-knobs';
 import { FullScreen, Grid, Point, SVG, SVGContextProvider } from '@dxos/gem-core';
@@ -107,7 +107,7 @@ type Data = {
 const curves = [
   d3.curveCatmullRomClosed,
   d3.curveBasisClosed,
-  d3.curveCardinalClosed,
+  d3.curveCardinalClosed
   // d3.curveLinearClosed
 ];
 
@@ -134,7 +134,7 @@ const generate = ({
     // TODO(burdon): Generate relative to previous point (more closely approximate contour).
     const points: Point[] = Array.from({ length: a }).map((_, i) => [
       cx + Math.sin(start + i * (Math.PI * 2 / a)) * faker.datatype.number(bounds),
-      cy + Math.cos(start + i * (Math.PI * 2 / a)) * faker.datatype.number(bounds) / aspect,
+      cy + Math.cos(start + i * (Math.PI * 2 / a)) * faker.datatype.number(bounds) / aspect
     ]);
 
     return {
@@ -142,9 +142,9 @@ const generate = ({
       color: inverted ? colors[colors.length - 1 - i % colors.length] : colors[i % colors.length],
       line,
       points
-    }
+    };
   });
-}
+};
 
 const path = path => path
   .style('fill', d => d.color)
@@ -209,8 +209,8 @@ const Shape = ({ showDots = true }) => {
 
   return (
     <g ref={ref} />
-  )
-}
+  );
+};
 
 export const Primary = () => {
   const showGrid = false;

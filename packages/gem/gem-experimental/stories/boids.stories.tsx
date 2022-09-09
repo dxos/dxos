@@ -44,80 +44,66 @@ const styles = {
   `
 };
 
-let flockmateRadius = 60;
-let separationDistance = 30;
+const flockmateRadius = 60;
+const separationDistance = 30;
 
 //
 // Utils
 //
 
-function randomVelocity({ maxVelocity }) {
-  return new Vec2(1 - Math.random() * 2, 1 - Math.random() * 2).scale(maxVelocity);
-}
+const randomVelocity = ({ maxVelocity }) => new Vec2(1 - Math.random() * 2, 1 - Math.random() * 2).scale(maxVelocity);
 
-function radialVelocity(p, { maxVelocity }) {
-  return new Vec2(Math.sin(2 * Math.PI * p), Math.cos(2 * Math.PI * p)).scale(maxVelocity);
-}
+const radialVelocity = (p, { maxVelocity }) => new Vec2(Math.sin(2 * Math.PI * p), Math.cos(2 * Math.PI * p)).scale(maxVelocity);
 
-function initializeRandom({ num, maxVelocity }, { width, height }) {
-  return d3.range(num).map(() => {
-    return {
-      position: new Vec2(Math.random() * width, Math.random() * height),
-      velocity: randomVelocity({ maxVelocity })
-    };
-  });
-}
+const initializeRandom = ({ num, maxVelocity }, { width, height }) => d3.range(num).map(() => {
+  return {
+    position: new Vec2(Math.random() * width, Math.random() * height),
+    velocity: randomVelocity({ maxVelocity })
+  };
+});
 
-function initializePhyllotaxis({ num, maxVelocity }, { width, height }) {
-  return d3.range(num).map((d, i) => {
-    let θ = Math.PI * i * (Math.sqrt(5) - 1);
-    let r = Math.sqrt(i) * 200 / Math.sqrt(num);
+const initializePhyllotaxis = ({ num, maxVelocity }, { width, height }) => d3.range(num).map((d, i) => {
+  const θ = Math.PI * i * (Math.sqrt(5) - 1);
+  const r = Math.sqrt(i) * 200 / Math.sqrt(num);
 
-    return {
-      position: new Vec2(width / 2 + r * Math.cos(θ),height / 2 - r * Math.sin(θ)),
-      velocity: radialVelocity(i / num, { maxVelocity })
-    };
-  });
-}
+  return {
+    position: new Vec2(width / 2 + r * Math.cos(θ), height / 2 - r * Math.sin(θ)),
+    velocity: radialVelocity(i / num, { maxVelocity })
+  };
+});
 
-function initializeSine({ num, maxVelocity }, { width, height }) {
-  return d3.range(num).map(i => {
-    let angle = 2 * Math.PI * i / num;
-    let x = width * i / num;
-    let y = height / 2 + Math.sin(angle) * height / 4;
+const initializeSine = ({ num, maxVelocity }, { width, height }) => d3.range(num).map(i => {
+  const angle = 2 * Math.PI * i / num;
+  const x = width * i / num;
+  const y = height / 2 + Math.sin(angle) * height / 4;
 
-    return {
-      position: new Vec2(x, y),
-      velocity: radialVelocity(i / num, { maxVelocity })
-    };
-  });
-}
+  return {
+    position: new Vec2(x, y),
+    velocity: radialVelocity(i / num, { maxVelocity })
+  };
+});
 
-function initializeCircle({ num, maxVelocity }, { width, height }) {
-  return d3.range(num).map(i => {
-    let angle = i * 2 * Math.PI / num;
-    let x = 200 * Math.sin(angle);
-    let y = 200 * Math.cos(angle);
+const initializeCircle = ({ num, maxVelocity }, { width, height }) => d3.range(num).map(i => {
+  const angle = i * 2 * Math.PI / num;
+  const x = 200 * Math.sin(angle);
+  const y = 200 * Math.cos(angle);
 
-    return {
-      position: new Vec2(x + width / 2, y + height / 2),
-      velocity: new Vec2(-x, -y).scale(maxVelocity)
-    };
-  });
-}
+  return {
+    position: new Vec2(x + width / 2, y + height / 2),
+    velocity: new Vec2(-x, -y).scale(maxVelocity)
+  };
+});
 
-function initializeCircleRandom({ num, maxVelocity }, { width, height }) {
-  return d3.range(num).map(i => {
-    let angle = i * 2 * Math.PI / num;
-    let x = 200 * Math.sin(angle);
-    let y = 200 * Math.cos(angle);
+const initializeCircleRandom = ({ num, maxVelocity }, { width, height }) => d3.range(num).map(i => {
+  const angle = i * 2 * Math.PI / num;
+  const x = 200 * Math.sin(angle);
+  const y = 200 * Math.cos(angle);
 
-    return {
-      position: new Vec2(x + width / 2, y + height / 2),
-      velocity: randomVelocity({ maxVelocity }).scale(maxVelocity)
-    };
-  });
-}
+  return {
+    position: new Vec2(x + width / 2, y + height / 2),
+    velocity: randomVelocity({ maxVelocity }).scale(maxVelocity)
+  };
+});
 
 const initializeFunction = {
   initializeRandom,
@@ -134,7 +120,7 @@ const coloringFunction = {
   'Movement': b => d3.interpolateSpectral(d3.mean(b.last))
 };
 
-function updateBoid(b, context, { width, height }, { radius, coloring, maxVelocity }) {
+const updateBoid = (b, context, { width, height }, { radius, coloring, maxVelocity }) => {
   // Update position.
   b.position.add(b.velocity.add(b.acceleration).truncate(maxVelocity));
 
@@ -154,9 +140,9 @@ function updateBoid(b, context, { width, height }, { radius, coloring, maxVeloci
   context.fillStyle = coloringFunction[coloring](b);
   context.arc(b.position.x, b.position.y, radius, 0, 2 * Math.PI);
   context.fill();
-}
+};
 
-function renderObstacles(context, obstacles) {
+const renderObstacles = (context, obstacles) => {
   context.fillStyle = '#EEE';
   context.filter = 'blur(8px)';
 
@@ -167,9 +153,9 @@ function renderObstacles(context, obstacles) {
   });
 
   context.filter = 'blur(0)';
-}
+};
 
-function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, config) {
+const tick = (boids, obstacles, canvas, offscreenCanvas, { width, height }, config) => {
   const { trail, maxVelocity, alignment, cohesion, separation } = config;
 
   // Vapor trail.
@@ -187,7 +173,7 @@ function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, conf
 
   // Update physics.
   boids.forEach(b1 => {
-    let forces = {
+    const forces = {
       alignment: new Vec2(),
       cohesion: new Vec2(),
       separation: new Vec2(),
@@ -198,8 +184,8 @@ function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, conf
     // TODO(burdon): Create force to obstacles/edge (based on angle and distance).
     let avoid = false;
     obstacles.forEach(o => {
-      let diff = o.position.clone().subtract(b1.position);
-      let distance = diff.length();
+      const diff = o.position.clone().subtract(b1.position);
+      const distance = diff.length();
       if (distance < o.radius) {
         forces.avoidance.add(diff.clone().scaleTo(-1 / distance)).active = true;
         avoid = true;
@@ -209,10 +195,12 @@ function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, conf
     // Flocking (compare with others).
     if (!avoid) {
       boids.forEach(b2 => {
-        if (b1 === b2) return;
+        if (b1 === b2) {
+          return;
+        }
 
-        let diff = b2.position.clone().subtract(b1.position);
-        let distance = diff.length();
+        const diff = b2.position.clone().subtract(b1.position);
+        const distance = diff.length();
 
         if (distance && distance < separationDistance) {
           forces.separation.add(diff.clone().scaleTo(-1 / distance)).active = true;
@@ -227,7 +215,7 @@ function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, conf
 
     // Compute forces.
     b1.acceleration = new Vec2();
-    for (let key in forces) {
+    for (const key in forces) {
       if (forces[key].active && config[key]) {
         forces[key]
           .scaleTo(maxVelocity)
@@ -249,9 +237,9 @@ function tick(boids, obstacles, canvas, offscreenCanvas, { width, height }, conf
 
   // Update and render boids.
   boids.forEach(boid => updateBoid(boid, context, { width, height }, config));
-}
+};
 
-function generateObstacles({ width, height }, config) {
+const generateObstacles = ({ width, height }, config) => {
   const { numObstacles = 0 } = config;
 
   const obstacles = [];
@@ -263,9 +251,9 @@ function generateObstacles({ width, height }, config) {
   }
 
   return obstacles;
-}
+};
 
-function generateBoids({ width, height }, config) {
+const generateBoids = ({ width, height }, config) => {
   const { num, startingPosition } = config;
   const boids = initializeFunction[`initialize${startingPosition}`](config, { width, height });
   boids.forEach((b, i) => {
@@ -274,9 +262,11 @@ function generateBoids({ width, height }, config) {
   });
 
   return boids;
-}
+};
 
-const map = array => array.reduce((map, value) => { map[value] = value; return map; }, {});
+const map = array => array.reduce((map, value) => {
+  map[value] = value; return map;
+}, {});
 
 const Flock = () => {
   const canvas = useRef(null);
@@ -290,13 +280,13 @@ const Flock = () => {
   const numObstacles = useNumber('Obstacles', { min: 1, max: 10 }, 5);
   const startingPosition = useSelect('Start', map(['Random', 'Circle', 'CircleRandom', 'Sine', 'Phyllotaxis']));
   const coloring = useSelect('Coloring', map(['Movement', 'Grey', 'Rainbow']));
-  const radius = useNumber('Size', { min: 1, max: 20, step: .5 }, 2);
+  const radius = useNumber('Size', { min: 1, max: 20, step: 0.5 }, 2);
   const trail = useNumber('Trail', { min: 0, max: 20 }, 10);
-  const maxVelocity = useNumber('Velocity', { min: 1, max: 5, step: .1 }, 2);
-  const alignment = useNumber('Alignment', { min: 0, max: 10, step: .1 }, 3);
-  const cohesion = useNumber('Cohension', { min: 0, max: 10, step: .1 }, 3);
-  const separation = useNumber('Separation', { min: 0, max: 10, step: .1 }, 3);
-  const avoidance = useNumber('Avoidance', { min: 0, max: 10, step: .1 }, 3);
+  const maxVelocity = useNumber('Velocity', { min: 1, max: 5, step: 0.1 }, 2);
+  const alignment = useNumber('Alignment', { min: 0, max: 10, step: 0.1 }, 3);
+  const cohesion = useNumber('Cohension', { min: 0, max: 10, step: 0.1 }, 3);
+  const separation = useNumber('Separation', { min: 0, max: 10, step: 0.1 }, 3);
+  const avoidance = useNumber('Avoidance', { min: 0, max: 10, step: 0.1 }, 3);
 
   useEffect(() => {
     if (width && height) {

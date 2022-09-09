@@ -19,7 +19,7 @@ export type ZoomOptions = {
 
 export const defaultOptions: ZoomOptions = {
   enabled: true,
-  extent: [1/2, 2],
+  extent: [1 / 2, 2],
   onDblClick: (zoom: ZoomHandler) => zoom.reset()
 };
 
@@ -64,7 +64,7 @@ export class ZoomHandler {
       d3.select(this._context.svg)
         .call(this._zoom)
         .on('dblclick.zoom',
-          this._options?.onDblClick ?  () => this._options.onDblClick(this) : null);
+          this._options?.onDblClick ? () => this._options.onDblClick(this) : null);
     } else {
       d3.select(this._context.svg)
         .on('.zoom', null); // Unbind the internal event handler.
@@ -102,7 +102,7 @@ export const useZoom = (options: ZoomOptions = defaultOptions): ZoomHandler => {
     });
 
     zoom.init();
-  }, [zoom])
+  }, [zoom]);
 
   return zoom;
 };

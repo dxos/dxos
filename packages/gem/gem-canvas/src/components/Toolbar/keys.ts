@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { D3Callable } from '@dxos/gem-core';
+
 import { getEventMod } from '../../controls';
 import { Action, ActionType, actions } from './actions';
-
-import { D3Callable } from '@dxos/gem-core';
 
 const bindings = Object.values(actions).flatMap(value => value);
 
@@ -16,8 +16,8 @@ export const createKeyHandlers = (
   onAction: (action: Action) => void
 ): D3Callable => {
   return selection => selection
-    .on('keydown', function (event: KeyboardEvent) {
-      const binding = bindings.find(binding => (binding.key === event.key) && (!binding.mod || event[binding.mod]))
+    .on('keydown', (event: KeyboardEvent) => {
+      const binding = bindings.find(binding => (binding.key === event.key) && (!binding.mod || event[binding.mod]));
       if (binding) {
         if (binding.action.type === ActionType.SHOW_KEYMAP) {
           console.log(JSON.stringify(bindings, undefined, 2));

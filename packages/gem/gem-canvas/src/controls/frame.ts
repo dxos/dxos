@@ -59,8 +59,8 @@ const connectionHandles: Handle[] = [
   { type: 'connection', id: 'n', p: [0, 1] },
   { type: 'connection', id: 'e', p: [1, 0] },
   { type: 'connection', id: 's', p: [0, -1] },
-  { type: 'connection', id: 'w', p: [-1, 0] },
-]
+  { type: 'connection', id: 'w', p: [-1, 0] }
+];
 
 export const getConectionHandle = (handleId: string): Handle => connectionHandles.find(({ id }) => id === handleId);
 
@@ -78,7 +78,7 @@ export const getConnection = (event): Connection => {
       handle: handle?.id
     };
   }
-}
+};
 
 /**
  * Track source/target conections while dragging.
@@ -105,7 +105,7 @@ export class ConnectionTracker {
     return this._source;
   }
 
-  update(event: Event, end = false) {
+  update (event: Event, end = false) {
     this._target = this._highlight(event);
     if (end) {
       this.end();
@@ -173,7 +173,7 @@ type DragCallback<T> = (
  * @param scale
  * @param onUpdate
  */
-const dragHandle = <T extends any>(
+const dragHandle = <T>(
   scale: Scale,
   onUpdate: DragCallback<T>
 ): DragBehavior<any, any, any> => {
@@ -186,7 +186,7 @@ const dragHandle = <T extends any>(
     .container(function () {
       return this.closest('svg'); // Container for d3.pointer.
     })
-    .on('start', function (event: D3DragEvent) {
+    .on('start', (event: D3DragEvent) => {
       subject = event.subject;
       start = scale.translate([event.x, event.y]);
     })
@@ -222,45 +222,45 @@ export const createFrame = (scale: Scale): D3Callable => {
 
     const container = group
       .selectAll('g.frame')
-        .data(active ? ['frame'] : [])
-        .join('g')
-        .attr('class', 'frame')
+      .data(active ? ['frame'] : [])
+      .join('g')
+      .attr('class', 'frame');
 
     // eslint-disable indent
     // Frame container.
     container
       .selectAll('rect.frame-border')
-        .data(['frame-border'])
-        .join('rect')
-        .attr('class', 'frame-border')
-        .attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height);
+      .data(['frame-border'])
+      .join('rect')
+      .attr('class', 'frame-border')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height);
 
     // Resize handles.
     container
       .selectAll('g.resize-handles') // TODO(burdon): Just append.
-        .data(resizable ? ['frame-resize-handles'] : [])
-        .join('g')
-        .attr('class', 'resize-handles')
-        .raise()
+      .data(resizable ? ['frame-resize-handles'] : [])
+      .join('g')
+      .attr('class', 'resize-handles')
+      .raise()
 
       .selectAll<SVGElement, Handle>('circle')
-        .data(resizeHandles, handle => handle.id)
-        .join('circle')
-        .style('cursor', handle => handle.cursor)
-        .attr('cx', ({ p }) => cx + p[0] * width / 2)
-        .attr('cy', ({ p }) => cy - p[1] * height / 2)
-        .attr('r', FrameProps.controlRadius)
+      .data(resizeHandles, handle => handle.id)
+      .join('circle')
+      .style('cursor', handle => handle.cursor)
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy - p[1] * height / 2)
+      .attr('r', FrameProps.controlRadius)
 
-        .call(dragHandle<Handle>(scale, (handle, delta, mod, commit) => {
-          const bounds = computeBounds({ x, y, width, height }, handle, delta);
-          const data = control.createFromBounds(bounds, mod, commit);
-          if (control.checkBounds(data)) {
-            control.onUpdate(data, commit);
-          }
-        }));
+      .call(dragHandle<Handle>(scale, (handle, delta, mod, commit) => {
+        const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        const data = control.createFromBounds(bounds, mod, commit);
+        if (control.checkBounds(data)) {
+          control.onUpdate(data, commit);
+        }
+      }));
     // eslint-enable indent
   };
 };
@@ -275,24 +275,24 @@ export const createControlHandles = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('g.control-handles')
-        .data(resizable ? ['control-handles'] : [])
-        .join('g')
-        .attr('class', 'control-handles')
+      .data(resizable ? ['control-handles'] : [])
+      .join('g')
+      .attr('class', 'control-handles')
 
       .selectAll<SVGElement, ControlHandle>('circle')
-        .data(points)
-        .join(enter => {
-          return enter
-            .append('circle')
-            .call(dragHandle<ControlHandle>(scale, (point, delta, mod, commit, connection) => {
-              const data = control.updateControlPoint(point, delta, commit, connection);
-              control.onUpdate(data, commit);
-            }));
-        })
-        .style('cursor', 'move')
-        .attr('cx', p => p.point[0])
-        .attr('cy', p => p.point[1])
-        .attr('r', FrameProps.controlRadius);
+      .data(points)
+      .join(enter => {
+        return enter
+          .append('circle')
+          .call(dragHandle<ControlHandle>(scale, (point, delta, mod, commit, connection) => {
+            const data = control.updateControlPoint(point, delta, commit, connection);
+            control.onUpdate(data, commit);
+          }));
+      })
+      .style('cursor', 'move')
+      .attr('cx', p => p.point[0])
+      .attr('cy', p => p.point[1])
+      .attr('r', FrameProps.controlRadius);
     // eslint-enable indent
   };
 };
@@ -311,26 +311,25 @@ export const createConectionHandles = (scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll<SVGElement, Handle[]>('g.connection-handles')
-        .data(active ? [connectionHandles] : [])
-        .join('g')
-        .attr('class', 'connection-handles')
+      .data(active ? [connectionHandles] : [])
+      .join('g')
+      .attr('class', 'connection-handles')
 
       .selectAll<SVGElement, Handle>('circle')
-        .data(d => d, handle => handle.id)
-        .join(enter => {
-          return enter
-            .append('circle')
-          // TODO(burdon): Support drag from connection point to start line.
-          // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
-          //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
-          //   const data = control.createFromBounds(bounds, mod, commit);
-          //   control.onUpdate(data, commit);
-          // }));
-        })
-        .attr('cx', ({ p }) => cx + p[0] * width / 2)
-        .attr('cy', ({ p }) => cy - p[1] * height / 2)
-        .attr('r', FrameProps.connectionRadius);
+      .data(d => d, handle => handle.id)
+      .join(enter => {
+        return enter
+          .append('circle');
+        // TODO(burdon): Support drag from connection point to start line.
+        // .call(handleDrag<Handle>((handle, delta, mod, commit) => {
+        //   const bounds = computeBounds({ x, y, width, height }, handle, delta);
+        //   const data = control.createFromBounds(bounds, mod, commit);
+        //   control.onUpdate(data, commit);
+        // }));
+      })
+      .attr('cx', ({ p }) => cx + p[0] * width / 2)
+      .attr('cy', ({ p }) => cy - p[1] * height / 2)
+      .attr('r', FrameProps.connectionRadius);
     // eslint-enable indent
   };
 };
-

@@ -4,8 +4,8 @@
 
 import React, { ReactNode } from 'react';
 
-import { defaultGridStyles } from '../styles';
 import { useZoom, ZoomExtent } from '../hooks';
+import { defaultGridStyles } from '../styles';
 
 export interface ZoomProps {
   extent?: ZoomExtent

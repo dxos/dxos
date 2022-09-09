@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import update from 'immutability-helper';
 import faker from 'faker';
+import update from 'immutability-helper';
 
 import { useStateRef } from '@dxos/gem-core';
 
@@ -12,9 +12,9 @@ import { createNode, createLink } from './data';
 import { TestNode } from './types';
 
 export type ObjectMutator<T> = [
-  T,                      // Current value.
-  (data: T) => void,      // Set value.
-  (mutation: any) => T    // Apply update mutation.
+  T, // Current value.
+  (data: T) => void, // Set value.
+  (mutation: any) => T // Apply update mutation.
 ]
 
 /**

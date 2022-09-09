@@ -12,7 +12,7 @@ import { THREEx } from '../lib';
 const config = {
   mesh: {
     // https://threejs.org/docs/#api/en/core/Object3D.lookAt
-    orientation: [0.4, 1.2, .5],
+    orientation: [0.4, 1.2, 0.5],
     scale: {
       x: 3.5,
       y: 3,
@@ -92,12 +92,16 @@ export const Waves = () => {
 
     // Camera motion.
     const onRenderFcts: any[] = [];
-    onRenderFcts.push((delta: number) => { mesh.rotation.z += config.rotation.z * delta; });
-    onRenderFcts.push(() => { renderer.render(scene, camera); });
+    onRenderFcts.push((delta: number) => {
+      mesh.rotation.z += config.rotation.z * delta;
+    });
+    onRenderFcts.push(() => {
+      renderer.render(scene, camera);
+    });
 
     // Animation.
     let lastTime: number = null;
-    let frame = requestAnimationFrame(function animate (now) {
+    let frame = requestAnimationFrame((now) => {
       frame = requestAnimationFrame(animate);
       lastTime = lastTime || now - 1000 / 60;
       const deltaMsec = Math.min(200, now - lastTime);
@@ -120,4 +124,3 @@ export const Waves = () => {
 };
 
 export default Waves;
-

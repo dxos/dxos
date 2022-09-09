@@ -42,8 +42,8 @@ export class TestGraphModel implements GraphModel<TestNode> {
     this.update();
   }
 
-  createNodes (node: TestNode = undefined, n: number = 1, update = true) {
-    Array.from({ length: n }).map(() => {
+  createNodes (node: TestNode = undefined, n = 1, update = true) {
+    Array.from({ length: n }).forEach(() => {
       const child = createNode();
       const parent = node || faker.random.arrayElement(this._graph.nodes);
       this._graph.nodes.push(child);

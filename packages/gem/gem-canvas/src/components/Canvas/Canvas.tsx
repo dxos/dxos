@@ -87,14 +87,14 @@ export const Canvas = ({
   // TODO(burdon): Multi-select.
   const handleSelect = (element: ElementData<any>, edit?: boolean) => {
     onSelect?.({ element, state: edit ? ControlState.EDITING : ControlState.SELECTED });
-  }
+  };
 
   //
   // Deselect.
   //
   useEffect(() => {
     d3.select(svgContext.svg)
-      .on('click', function (event) {
+      .on('click', (event) => {
         // TODO(burdon): Better way to test containing group?
         if (event.target.parentNode) {
           const control = d3.select(event.target.parentNode).datum();

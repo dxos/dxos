@@ -22,7 +22,7 @@ export const getEventMod = (event: KeyboardEvent): Modifiers => ({
   constrain: event.shiftKey
 });
 
-type DragCallback<T> = (
+type DragCallback = (
   p1: Point,
   p2: Point,
   mod: Modifiers,
@@ -41,7 +41,7 @@ type DragCallback<T> = (
  */
 export const dragBounds = (
   context: ControlContext,
-  onUpdate: DragCallback<any>,
+  onUpdate: DragCallback,
   onStart?: () => void
 ): DragBehavior<any, any, any> => {
   const tracker = new ConnectionTracker();
@@ -52,20 +52,20 @@ export const dragBounds = (
     .container(function () {
       return this.closest('svg'); // Container for d3.pointer.
     })
-    .on('start', function (event: D3DragEvent) {
+    .on('start', (event: D3DragEvent) => {
       const scale = context.scale();
       tracker.start(event.sourceEvent);
       start = scale.screen.snapPoint(scale.translate([event.x, event.y]));
       onStart?.();
     })
-    .on('drag', function (event: D3DragEvent) {
+    .on('drag', (event: D3DragEvent) => {
       const scale = context.scale();
       const mod = getEventMod(event.sourceEvent);
       tracker.update(event.sourceEvent);
       const current = scale.translate([event.x, event.y]);
       onUpdate(start, current, mod, false, tracker.source);
     })
-    .on('end', function (event: D3DragEvent) {
+    .on('end', (event: D3DragEvent) => {
       const scale = context.scale();
       tracker.update(event.sourceEvent, true);
       const current = scale.screen.snapPoint(scale.translate([event.x, event.y]));
@@ -89,10 +89,10 @@ export const dragMove = (
     .container(function () {
       return this.closest('svg'); // Container for d3.pointer.
     })
-    .on('start', function (event: D3DragEvent) {
+    .on('start', (event: D3DragEvent) => {
       start = [event.x, event.y];
     })
-    .on('drag', function (event: D3DragEvent) {
+    .on('drag', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
       const current: Point = [event.x, event.y];
       const delta: Point = [current[0] - start[0], current[1] - start[1]];
@@ -100,7 +100,7 @@ export const dragMove = (
         onMove(delta, mod);
       }
     })
-    .on('end', function (event: D3DragEvent) {
+    .on('end', (event: D3DragEvent) => {
       const mod = getEventMod(event.sourceEvent);
       const current: Point = [event.x, event.y];
       const delta: Point = [current[0] - start[0], current[1] - start[1]];

@@ -52,7 +52,7 @@ export const elementStyles = {
       fill: #f3e5f5;
       stroke: #8e24aa;
     }
-  `),
+  `)
 };
 
 export const canvasStyles = css`

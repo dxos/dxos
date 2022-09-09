@@ -3,8 +3,8 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 import useResizeAware from 'react-resize-aware';
+import * as THREE from 'three';
 
 export const defaultConfig = {
   radius: 800,
@@ -228,7 +228,7 @@ class KubeRenderer {
       if (this._running) {
         requestAnimationFrame(render);
       }
-    }
+    };
 
     render();
     return this;
@@ -250,14 +250,16 @@ export const Kube = ({ config = {} }) => {
     kube.init(container.current).start();
     setKube(kube);
 
-    return () => void kube.stop();
+    return () => {
+      void kube.stop();
+    };
   }, []);
 
   useEffect(() => {
     if (kube) {
       kube.setSize(size.width, size.height);
     }
-  }, [kube, size])
+  }, [kube, size]);
 
   return (
     <div>

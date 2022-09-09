@@ -6,9 +6,9 @@ import faker from 'faker';
 
 import { Vector } from '@dxos/gem-core';
 
-import { ElementData, Ellipse, Line, Path, Rect } from '../../src';
+import { ElementData, Line, Rect } from '../../src';
 
-const check = <T extends any>(value: T): T => value;
+const check = <T>(value: T): T => value;
 
 const ids = [
   faker.datatype.uuid(),
@@ -67,7 +67,7 @@ export const generator = (): ElementData<any>[] => [
         handle: 'e'
       }
     })
-  },
+  }
 
   /*
   {

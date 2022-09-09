@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React  from 'react';
 import { css } from '@emotion/css';
+import React from 'react';
 
 import {
   FullScreen,
@@ -12,7 +12,7 @@ import {
   useGrid,
   useSvgContext,
   useZoom,
-  createSvgContext,
+  createSvgContext
 } from '../src';
 
 // Pros
@@ -73,7 +73,7 @@ export const Primary = () => {
       </SVGContextProvider>
     </FullScreen>
   );
-}
+};
 
 export const Secondary = () => {
   const context = createSvgContext();
@@ -85,4 +85,4 @@ export const Secondary = () => {
       </SVGContextProvider>
     </FullScreen>
   );
-}
+};

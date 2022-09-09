@@ -27,7 +27,6 @@ export const emptyGraph: GraphData<any> = {
   links: []
 };
 
-
 //
 // Layout
 // Graph layout used by graph renderers.
@@ -56,7 +55,7 @@ export type GraphLayout<N extends GraphNode> = {
   }
 
   guides?: {
-    type: 'circle', // TODO(burdon): Create typed guides.
+    type: 'circle' // TODO(burdon): Create typed guides.
     cx: number
     cy: number
     r: number

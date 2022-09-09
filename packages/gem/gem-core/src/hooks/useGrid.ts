@@ -102,7 +102,7 @@ const defaultOptions: GridOptions = {
  * Grid handler.
  */
 export class GridController {
-  _visible: boolean = false;
+  _visible = false;
 
   constructor (
     private readonly _ref: RefObject<SVGGElement>,

@@ -3,8 +3,8 @@
 //
 
 import { ElementData, ElementType } from '../model';
-import { EllipseControl, LineControl, PathControl, RectControl } from './types';
 import { ControlConstructor, ControlContext, ControlGetter } from './control';
+import { EllipseControl, LineControl, PathControl, RectControl } from './types';
 
 const constructors = {
   'ellipse': EllipseControl,

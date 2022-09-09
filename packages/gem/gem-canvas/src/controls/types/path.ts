@@ -40,19 +40,6 @@ const createPath = (scale: Scale): D3Callable => {
 };
 
 /**
- * Check not too small.
- * @param data
- * @param commit
- */
-const valid = (data: Path, commit: boolean) => {
-  if (commit) {
-    const { points } = data;
-  }
-
-  return data;
-};
-
-/**
  * Path control.
  */
 export class PathControl extends Control<Path> {

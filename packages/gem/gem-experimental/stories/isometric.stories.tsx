@@ -56,7 +56,7 @@ const timerCallback = (callback) => {
 class Dataset {
   _data = [];
 
-  get data() {
+  get data () {
     return this._data.sort(({ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }) => {
       // Distance from origin (then by height).
       const d = (x, y) => Math.sqrt(x * x + y * y);
@@ -68,7 +68,7 @@ class Dataset {
     });
   }
 
-  add(item) {
+  add (item) {
     this._data.push(Object.assign({ id: `i-${this._data.length}` }, item));
     return this;
   }
@@ -130,33 +130,33 @@ const Component = () => {
     const s = 18;
     for (let x = 0; x < s; x++) {
       for (let y = 0; y < s; y++) {
-        const h = Math.random() + .1;
+        const h = Math.random() + 0.1;
         grid.add({
-          a: Math.PI / 4, x, y, z: 0, h: h, style: 'grey'
+          a: Math.PI / 4, x, y, z: 0, h, style: 'grey'
         });
       }
     }
 
     generator
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 1,   h: 3.5, style: 's1' })
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 4.5, h:  .5, style: 's2' })
-      .add({ a: Math.PI / 4, x: 0, y: s, z: 0,   h: 1,   style: 's3' });
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 1, h: 3.5, style: 's1' })
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 4.5, h: 0.5, style: 's2' })
+      .add({ a: Math.PI / 4, x: 0, y: s, z: 0, h: 1, style: 's3' });
 
     const interval = setInterval(timerCallback(period => {
       const d = Math.PI / s * 2;
 
-      const da = daRef.current + .01;
+      const da = daRef.current + 0.01;
       daRef.current = da;
 
       grid.data.forEach((item) => {
         const { x, y } = item;
-        item.h = 1 + Math.cos(da + d * (x - y)) * .9;
+        item.h = 1 + Math.cos(da + d * (x - y)) * 0.9;
         item.style = x > 11 ? 's1' : x > 5 ? 's2' : 's3';
       });
 
       const data = generator.data.find(({ id }) => id === 'i-1');
       if (data) {
-        data.a += period * .001;
+        data.a += period * 0.001;
       }
 
       paint(canvas.current, grid, generator);
@@ -170,7 +170,7 @@ const Component = () => {
       {resizeListener}
       <canvas ref={canvas} width={width} height={height} />
     </div>
-  )
+  );
 };
 
 export const Primary = () => {

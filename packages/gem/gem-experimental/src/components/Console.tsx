@@ -14,7 +14,7 @@ const styles = css`
     fontFamily: 'monospace',
     fontSize: 18,
     lineHeight: 1,
-    height: lineHeight * 5,
+    height: ${lineHeight} * 5,
     padding: 0
   }
 `;
@@ -30,7 +30,7 @@ const Console = () => {
     }, 1000);
 
     return () => clearTimeout(timeout);
-  }
+  };
 
   // https://pixeledpie.com/simple-react-console/index.html
   return (

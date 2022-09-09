@@ -3,13 +3,12 @@
 //
 
 import { FunctionComponent } from 'react';
+
 import {
   RadioButtonUnchecked as CircleIcon,
   ArrowRightAlt as LineIcon,
-  Timeline as PathIcon,
   Crop32 as RectIcon,
-  GridOn as GridIcon,
-  ZoomOutMapOutlined as ZoomOutIcon
+  GridOn as GridIcon
 } from '@mui/icons-material';
 
 import { Modifiers } from '@dxos/gem-core';
@@ -61,7 +60,7 @@ export const actions: { [index: string]: Binding[] } = {
       icon: LineIcon,
       label: 'Line',
       action: { type: ActionType.TOOL_SELECT, tool: 'line' }
-    },
+    }
     // {
     //   key: 'p',
     //   icon: PathIcon,
@@ -76,7 +75,7 @@ export const actions: { [index: string]: Binding[] } = {
       icon: GridIcon,
       label: 'Toggle grid',
       action: { type: ActionType.TOGGLE_GRID }
-    },
+    }
     // {
     //   icon: ZoomOutIcon,
     //   label: 'Reset zoom',

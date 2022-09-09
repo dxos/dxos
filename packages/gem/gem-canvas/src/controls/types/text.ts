@@ -12,10 +12,10 @@ export const createText = ({
   onUpdate,
   onCancel
 }: {
-  bounds: ScreenBounds,
-  text: string,
-  editable?: boolean,
-  onUpdate?: (text: string) => void,
+  bounds: ScreenBounds
+  text: string
+  editable?: boolean
+  onUpdate?: (text: string) => void
   onCancel?: () => void
 }): D3Callable => {
   const { x, y, width, height } = bounds;
@@ -37,16 +37,16 @@ export const createText = ({
       .selectAll('foreignObject')
       .data(editable ? ['editable'] : [])
       .join('foreignObject')
-        .style('width', width)
-        .style('height', height)
-        .attr('x', x)
-        .attr('y', y - 0.5) // Seems off by a sub-pixel (retina screen only?)
+      .style('width', width)
+      .style('height', height)
+      .attr('x', x)
+      .attr('y', y - 0.5) // Seems off by a sub-pixel (retina screen only?)
 
       .selectAll('input')
       .data([{ id: 'text', text }], ({ id }) => id)
       .join(enter => {
         // Create and focus.
-        const input =  enter.append('xhtml:input');
+        const input = enter.append('xhtml:input');
         if (input.node()) {
           setTimeout(() => {
             (input.node() as HTMLInputElement)?.focus();
@@ -54,36 +54,36 @@ export const createText = ({
         }
         return input;
       })
-        .style('width', '100%')
-        .style('height', '100%')
-        .style('border', 'none')
-        .style('outline', 'none')
-        .style('padding', 0)
-        .style('text-align', 'center')
-        .style('background', 'transparent')
-        .attr('type', 'text')
-        .property('value', d => d.text)
-        .on('blur', function (event) {
-          const text = (event.target as HTMLInputElement).value;
-          onUpdate?.(text);
-        })
-        .on('keydown', function (event: KeyboardEvent, d) {
-          const text = (event.target as HTMLInputElement).value;
-          switch (event.key) {
-            // TODO(burdon): Update when lose focus.
-            case 'Enter': {
-              onUpdate?.(text);
-              break;
-            }
-            case 'Escape': {
-              (event.target as HTMLInputElement).value = d.text;
-              onCancel?.();
-              break;
-            }
+      .style('width', '100%')
+      .style('height', '100%')
+      .style('border', 'none')
+      .style('outline', 'none')
+      .style('padding', 0)
+      .style('text-align', 'center')
+      .style('background', 'transparent')
+      .attr('type', 'text')
+      .property('value', d => d.text)
+      .on('blur', (event) => {
+        const text = (event.target as HTMLInputElement).value;
+        onUpdate?.(text);
+      })
+      .on('keydown', (event: KeyboardEvent, d) => {
+        const text = (event.target as HTMLInputElement).value;
+        switch (event.key) {
+          // TODO(burdon): Update when lose focus.
+          case 'Enter': {
+            onUpdate?.(text);
+            break;
           }
+          case 'Escape': {
+            (event.target as HTMLInputElement).value = d.text;
+            onCancel?.();
+            break;
+          }
+        }
 
-          event.stopPropagation();
-        });
+        event.stopPropagation();
+      });
     // eslint-enable indent
   };
-}
+};

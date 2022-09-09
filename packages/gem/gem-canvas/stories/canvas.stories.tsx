@@ -24,7 +24,6 @@ import {
   createKeyHandlers,
   useMemoryElementModel
 } from '../src';
-
 import { generator } from './helpers';
 
 const log = debug('gem:canvas:story');
@@ -92,7 +91,7 @@ const Container = () => {
     setTool(undefined);
     setSelection({ element, state: ControlState.SELECTED });
     return true; // TODO(burdon): Chance to reject commit.
-  }
+  };
 
   const handleUpdate = async (element: ElementData<any>) => {
     await model.update(element);
@@ -211,4 +210,4 @@ export const Primary = () => {
   return (
     <Container />
   );
-}
+};

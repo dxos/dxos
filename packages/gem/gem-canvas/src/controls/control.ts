@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { D3Callable, Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem-core';
+
 import { ElementData, ElementDataType, ElementId, ElementType } from '../model';
 import { Connection, ControlHandle } from './frame';
-
-import { D3Callable, Modifiers, Point, Screen, ScreenBounds, Scale, Vertex } from '@dxos/gem-core';
 
 export interface ControlContext {
   scale: () => Scale
@@ -37,7 +37,7 @@ export interface ControlConstructor<T extends ElementDataType> {
     onSelect?: (element: ElementData<T>) => void,
     onUpdate?: (element: ElementData<T>, commit?: boolean) => void,
     onCreate?: (type: ElementType, data: T) => void
-  ): Control<T>;
+  ): Control<T>
 }
 
 /**

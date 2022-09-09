@@ -46,7 +46,7 @@ export class Screen {
       x + width / 2,
       y + height / 2
     ];
-  }
+  };
 
   static contains = (bounds: ScreenBounds, point: Point): boolean => {
     const [x, y] = point;
@@ -60,7 +60,7 @@ export class Screen {
     }
 
     return true;
-  }
+  };
 
   /**
    * Distance between two points.

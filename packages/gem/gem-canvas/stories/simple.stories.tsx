@@ -3,15 +3,13 @@
 //
 
 import debug from 'debug';
-import React  from 'react';
+import React from 'react';
 
 import { FullScreen, SVGContextProvider } from '@dxos/gem-core';
 
 import { Canvas, useMemoryElementModel } from '../src';
-
 import { generator } from './helpers';
 
-const log = debug('gem:canvas:story');
 debug.enable('gem:canvas:*,-*:render');
 
 export default {

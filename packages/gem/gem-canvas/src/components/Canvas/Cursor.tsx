@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as d3 from 'd3';
 import clsx from 'clsx';
+import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 
 import { Modifiers, Point, useStateRef, useSvgContext } from '@dxos/gem-core';
-
-import { Tool } from '../../tools';
 
 import {
   Connection,
@@ -19,9 +17,10 @@ import {
   SelectionModel,
   createControl,
   dragBounds,
-  elementStyles,
+  elementStyles
 } from '../../controls';
 import { ElementDataType, ElementType } from '../../model';
+import { Tool } from '../../tools';
 
 export interface CursorProps {
   context: ControlContext
@@ -107,14 +106,14 @@ export const Cursor = ({
         cursor.onUpdate(data, false);
         d3.select(cursorGroup.current)
           .selectAll('g')
-            .data([cursor])
-            .join('g')
-            .attr('class', clsx('cursor', elementStyles['default']))
-            // Allow mouse events to flow-through to elements below (e.g., hover).
-            .style('pointer-events', 'none')
-            .each((element, i, nodes) => {
-              d3.select(nodes[i]).call(element.draw());
-            });
+          .data([cursor])
+          .join('g')
+          .attr('class', clsx('cursor', elementStyles.default))
+        // Allow mouse events to flow-through to elements below (e.g., hover).
+          .style('pointer-events', 'none')
+          .each((element, i, nodes) => {
+            d3.select(nodes[i]).call(element.draw());
+          });
       }
     };
 

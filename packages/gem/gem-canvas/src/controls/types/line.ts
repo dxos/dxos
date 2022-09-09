@@ -26,7 +26,7 @@ const createHidden = (pos1: Point, pos2: Point) => {
     height: w
   };
 
-  const theta =  (adj === 0) ? (opp < 0 ? Math.PI / 2 : Math.PI * 3 / 2) : Math.atan(opp / adj);
+  const theta = (adj === 0) ? (opp < 0 ? Math.PI / 2 : Math.PI * 3 / 2) : Math.atan(opp / adj);
 
   // https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform#rotate
   const transform = `rotate(${theta * 180 / Math.PI}, ${bounds.x}, ${bounds.y}) translate(${-w / 4}, ${-w / 2})`;
@@ -43,7 +43,7 @@ const createHidden = (pos1: Point, pos2: Point) => {
  */
 const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
   return (group: D3Selection, control: Control<Line>) => {
-    let { source, target } = control.data;
+    const { source, target } = control.data;
 
     const pos1 = getPos(cache, source);
     const pos2 = getPos(cache, target);
@@ -59,14 +59,14 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     // eslint-disable indent
     group
       .selectAll('line')
-        .data(['main'])
-        .join('line')
-        .attr('marker-end', () => 'url(#marker_arrow)')
-        .style('pointer-events', 'none')
-        .attr('x1', x1)
-        .attr('y1', y1)
-        .attr('x2', x2)
-        .attr('y2', y2);
+      .data(['main'])
+      .join('line')
+      .attr('marker-end', () => 'url(#marker_arrow)')
+      .style('pointer-events', 'none')
+      .attr('x1', x1)
+      .attr('y1', y1)
+      .attr('x2', x2)
+      .attr('y2', y2);
 
     // TODO(burdon): Convert to polyline with multiple hidden rects.
     /*
@@ -86,18 +86,18 @@ const createLine = (cache: ControlGetter, scale: Scale): D3Callable => {
     //  fill="none" stroke-miterlimit="10" pointer-events="stroke" visibility="hidden" stroke-width="9"
     group
       .selectAll('rect.line-touch')
-        .data(control.active ? [] : [bounds])
-        .join('rect')
-        .attr('class', 'line-touch')
-        .attr('transform', transform)
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-        .attr('width', d => d.width)
-        .attr('height', d => d.height)
-        .style('cursor', 'default')
-        .on('click', function () {
-          control.onSelect(true);
-        });
+      .data(control.active ? [] : [bounds])
+      .join('rect')
+      .attr('class', 'line-touch')
+      .attr('transform', transform)
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
+      .attr('width', d => d.width)
+      .attr('height', d => d.height)
+      .style('cursor', 'default')
+      .on('click', () => {
+        control.onSelect(true);
+      });
     // eslint-enable indent
   };
 };
@@ -155,7 +155,7 @@ export class LineControl extends Control<Line> {
   }
 
   override getControlPoints (): ControlHandle[] {
-    let { source, target } = this.data;
+    const { source, target } = this.data;
     const pos1 = getPos(this.elements, source);
     const pos2 = getPos(this.elements, target);
     return [pos1, pos2].filter(Boolean).map((p, i) => ({ i, point: this.scale.model.toPoint(p) }));

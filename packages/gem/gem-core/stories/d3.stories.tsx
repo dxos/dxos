@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import * as d3 from 'd3';
 import React, { useEffect } from 'react';
-import { css } from '@emotion/css';
 
 import {
   Bounds,
@@ -90,7 +90,7 @@ const data: DataItem[] = [
       style: {
         'text-anchor': 'end'
       }
-    },
+    }
   },
   {
     type: 'rect',
@@ -203,7 +203,7 @@ const Component = () => {
       .join('g')
       .each(({ type, data }, i, nodes) => {
         const el = d3.select(nodes[i])
-          .attr('class', data['class']);
+          .attr('class', data.class);
 
         switch (type) {
           case 'circle': {
@@ -257,7 +257,7 @@ const Component = () => {
       className={styles}
     >
       <g ref={grid?.ref} className={defaultGridStyles} />
-      <g ref={zoom?.ref}/>
+      <g ref={zoom?.ref} />
     </svg>
   );
 };
@@ -270,4 +270,4 @@ export const Primary = () => {
       </SVGContextProvider>
     </FullScreen>
   );
-}
+};

@@ -37,7 +37,7 @@ export const SVGContextProvider = ({ context: provided, children }: SVGCOntextPr
       d3.select(context.svg)
         .attr('visibility', 'hidden'); // Hide until first resized.
     }
-  }, [width, height])
+  }, [width, height]);
 
   return (
     <SVGContextDef.Provider value={context}>

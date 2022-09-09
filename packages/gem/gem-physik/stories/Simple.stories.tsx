@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
 import Matter from 'matter-js';
+import React, { useEffect, useRef } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
 import { FullScreen } from '@dxos/gem-core';
@@ -54,7 +54,7 @@ export const Primary = () => {
     // Renderer.
     Render.run(Render.create({
       canvas: canvasRef.current,
-      engine: engine,
+      engine,
       options: {
         width,
         height,

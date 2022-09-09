@@ -4,6 +4,8 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { useSvgContext } from '@dxos/gem-core';
+
 import {
   createSimulationDrag,
   AttributesOptions,
@@ -11,11 +13,9 @@ import {
   GraphModel,
   GraphLayoutNode,
   GraphRenderer,
-  LabelOptions,
+  LabelOptions
 } from '../graph';
 import { defaultGraphStyles } from './styles';
-
-import { useSvgContext } from '@dxos/gem-core';
 
 export interface GraphProps {
   className?: string
@@ -76,7 +76,9 @@ export const Graph = ({
 
   useEffect(() => {
     void projector.start();
-    return () => void projector.stop();
+    return () => {
+      void projector.stop();
+    };
   }, []);
 
   return (

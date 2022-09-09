@@ -16,7 +16,7 @@ import {
   GraphLayoutNode,
   Markers,
   TestGraphModel,
-  TestNode,
+  TestNode
 } from '../src';
 
 export default {
@@ -34,7 +34,7 @@ export const Primary = () => {
         <SVG>
           <Markers />
           <Grid axis />
-          <Zoom extent={[1/2, 2]}>
+          <Zoom extent={[1 / 2, 2]}>
             <Graph
               model={model}
               drag
@@ -76,7 +76,7 @@ export const Secondary = () => {
         <SVG>
           <Markers />
           <Grid axis />
-          <Zoom extent={[1/2, 2]}>
+          <Zoom extent={[1 / 2, 2]}>
             <Graph
               model={model}
               drag
@@ -93,9 +93,9 @@ export const Secondary = () => {
 export const Tertiary = ({ graph = true }) => {
   const selected = useMemo(() => new Set(), []);
   const model = useMemo(() => {
-    return graph ?
-      new TestGraphModel(createGraph(30, 20)) :
-      new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })))
+    return graph
+      ? new TestGraphModel(createGraph(30, 20))
+      : new TestGraphModel(convertTreeToGraph(createTree({ depth: 4 })));
   }, []);
 
   return (
@@ -104,7 +104,7 @@ export const Tertiary = ({ graph = true }) => {
         <SVG>
           <Markers />
           <Grid axis />
-          <Zoom extent={[1/2, 2]}>
+          <Zoom extent={[1 / 2, 2]}>
             <Graph
               model={model}
               drag

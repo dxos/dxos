@@ -9,7 +9,7 @@ import { Dispatch, RefObject, SetStateAction, useEffect, useRef, useState } from
  * E.g., to use in callbacks where the state value is stale.
  * @param initialValue
  */
-export const useStateRef = <V extends any>(
+export const useStateRef = <V>(
   initialValue?: V | (() => V)
 ): [V, Dispatch<SetStateAction<V>>, RefObject<V>] => {
   const [value, setValue] = useState<V>(initialValue);
@@ -27,7 +27,7 @@ export const useStateRef = <V extends any>(
  * @param initialValue
  * @param deps
  */
-export const useDynamicRef = <V extends any>(
+export const useDynamicRef = <V>(
   initialValue: () => V,
   deps: any[]
 ): RefObject<V> => {
@@ -40,7 +40,7 @@ export const useDynamicRef = <V extends any>(
   }, deps);
 
   return ref;
-}
+};
 
 /**
  * State setters to force repaint.
@@ -54,4 +54,4 @@ export const useTimestamp = (deps?): [number, () => void, number] => {
   }, deps ?? []);
 
   return [timestamp, () => setTimestamp({ timestamp: Date.now(), previous: timestamp }), previous];
-}
+};

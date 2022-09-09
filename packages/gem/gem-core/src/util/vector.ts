@@ -38,7 +38,7 @@ export class Vector {
     const cx = FractionUtil.add(x, FractionUtil.multiply(width, [1, 2]));
     const cy = FractionUtil.add(y, FractionUtil.multiply(height, [1, 2]));
     return { x: cx, y: cy };
-  }
+  };
 
   /**
    * Calculate centered left edge.
@@ -48,7 +48,7 @@ export class Vector {
     const cx = x;
     const cy = FractionUtil.add(y, FractionUtil.multiply(height, [1, 2]));
     return { x: cx, y: cy };
-  }
+  };
 
   /**
    * Calculate centered right edge.
@@ -58,5 +58,5 @@ export class Vector {
     const cx = FractionUtil.add(x, width);
     const cy = FractionUtil.add(y, FractionUtil.multiply(height, [1, 2]));
     return { x: cx, y: cy };
-  }
+  };
 }

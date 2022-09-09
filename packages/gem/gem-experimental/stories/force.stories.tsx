@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import faker from 'faker';
 import React, { useEffect, useRef, useState } from 'react';
 import { ForceGraph3D } from 'react-force-graph';
-import faker from 'faker';
 
 import { createGraph } from '@dxos/gem-spore';
 
@@ -53,7 +53,7 @@ export const Primary = ({ distance = 1000 }) => {
 
   return (
     <ForceGraph3D
-      backgroundColor="#FFF"
+      backgroundColor='#FFF'
       ref={graph}
       graphData={data}
       enableNodeDrag={false}

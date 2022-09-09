@@ -40,7 +40,7 @@ export class SVGContext {
   }
 
   get size (): Size {
-    return this._size
+    return this._size;
   }
 
   /**

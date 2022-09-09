@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { css } from '@emotion/css';
 import clsx from 'clsx';
 import React from 'react';
-import { css } from '@emotion/css';
-
-import { canvasStyles, elementStyles, styleNames } from '../../controls';
-import { Tool } from '../../tools';
-import { Action, Binding, actions } from './actions';
 
 import {
   Clear as HideIcon,
   Edit as ToggleMinimizedIcon
 } from '@mui/icons-material';
+
+import { canvasStyles, elementStyles, styleNames } from '../../controls';
+import { Tool } from '../../tools';
+import { Action, Binding, actions } from './actions';
 
 // TODO(burdon): Factor out.
 export interface PaletteProps {
@@ -36,13 +36,13 @@ export const Palette = ({ onSelect }: PaletteProps) => {
               y={1}
               width={22}
               height={22}
-              onClick={() => onSelect(style)}/>
+              onClick={() => onSelect(style)} />
           </g>
         ))}
       </svg>
     </div>
   );
-}
+};
 
 const styles = css`
   display: flex;
@@ -67,7 +67,7 @@ const styles = css`
 
 export interface ToolbarProps {
   tool?: Tool
-  minimized?: boolean;
+  minimized?: boolean
   onMinimize?: (state: boolean) => void
   onAction?: (action: Action) => void
   onStyle: (style: string) => void
@@ -93,7 +93,7 @@ export const Toolbar = ({
   return (
     <div className={styles} style={{ width: '100%' }}>
       <div style={{ width: 200 }}>
-        {actions['tools'].map((binding: Binding) => {
+        {actions.tools.map((binding: Binding) => {
           const { action, icon: Icon, label } = binding;
           const { tool } = action;
           return (
@@ -114,8 +114,8 @@ export const Toolbar = ({
       />
 
       <div style={{ display: 'flex', width: 200 }}>
-        <div style={{ flex: 1 }}/>
-        {actions['view'].map((binding: Binding, i) => {
+        <div style={{ flex: 1 }} />
+        {actions.view.map((binding: Binding, i) => {
           const { action, icon: Icon, label } = binding;
           return (
             <button

@@ -25,7 +25,7 @@ const createArrow = (length: number, offset: number, start: boolean): D3Callable
     .attr('orient', 'auto')
     .attr('refX', offset)
     .append('path')
-      .attr('d', path);
+    .attr('d', path);
 };
 
 const createDot = (size: number): D3Callable => (el) => {
@@ -35,7 +35,7 @@ const createDot = (size: number): D3Callable => (el) => {
     .attr('viewBox', `-${size},-${size},${size * 2},${size * 2}`)
     .attr('orient', 'auto')
     .append('circle')
-      .attr('r', size / 2 - 1);
+    .attr('r', size / 2 - 1);
 };
 
 /**
@@ -46,28 +46,28 @@ const createDot = (size: number): D3Callable => (el) => {
 export const createMarkers = ({ arrowSize = 12 }: MarkerOptions = {}): D3Callable => group => {
   return group
     .selectAll('marker')
-      .data([
-        {
-          id: 'marker-arrow-start',
-          generator: createArrow(arrowSize, -0.5, true),
-          className: 'arrow'
-        },
-        {
-          id: 'marker-arrow-end',
-          generator: createArrow(arrowSize, 0.5, false),
-          className: 'arrow'
-        },
-        {
-          id: 'marker-dot',
-          generator: createDot(8),
-          className: 'dot'
-        }
-      ])
-      .join('marker')
-        .attr('id', d => d.id)
-        .attr('markerUnits', 'strokeWidth')
-        .attr('class', d => d.className)
-        .each((d, i, nodes) => {
-          d3.select(nodes[i]).call(d.generator);
-        });
+    .data([
+      {
+        id: 'marker-arrow-start',
+        generator: createArrow(arrowSize, -0.5, true),
+        className: 'arrow'
+      },
+      {
+        id: 'marker-arrow-end',
+        generator: createArrow(arrowSize, 0.5, false),
+        className: 'arrow'
+      },
+      {
+        id: 'marker-dot',
+        generator: createDot(8),
+        className: 'dot'
+      }
+    ])
+    .join('marker')
+    .attr('id', d => d.id)
+    .attr('markerUnits', 'strokeWidth')
+    .attr('class', d => d.className)
+    .each((d, i, nodes) => {
+      d3.select(nodes[i]).call(d.generator);
+    });
 };

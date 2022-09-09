@@ -16,7 +16,7 @@ export class FractionUtil {
    */
   static toFraction = (n: Num): Fraction => {
     return typeof n === 'number' ? [n, 1] : n;
-  }
+  };
 
   static validate = (...fraction: Fraction[]): Fraction[] => {
     fraction.forEach(([n, d]) => {
@@ -35,7 +35,7 @@ export class FractionUtil {
   static toNumber = ([n, d]: Fraction): number => {
     FractionUtil.validate([n, d]);
     return n / d;
-  }
+  };
 
   /**
    * Round the number to the nearest fraction.
@@ -60,7 +60,7 @@ export class FractionUtil {
    */
   static equals = (n1: Fraction, n2: Fraction) => {
     return (n1[0] * n2[1]) === (n1[1] * n2[0]);
-  }
+  };
 
   /**
    * @param {Fraction}
@@ -68,7 +68,7 @@ export class FractionUtil {
    */
   static isZero = ([n]: Fraction): boolean => {
     return n === 0;
-  }
+  };
 
   //
   // Normalization.
@@ -103,7 +103,7 @@ export class FractionUtil {
 
     // TODO(burdon): Convert to number if d == 1.
     return [n, d];
-  }
+  };
 
   /**
    * Return common factors.
@@ -123,7 +123,7 @@ export class FractionUtil {
     }
 
     return factors;
-  }
+  };
 
   //
   // Basic arithmetic.
@@ -138,7 +138,7 @@ export class FractionUtil {
     const d = n1[1] * n2[1]; // Same denom.
     const n = (n1[0] * n2[1]) + (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
-  }
+  };
 
   /**
    * @param n1
@@ -149,7 +149,7 @@ export class FractionUtil {
     const d = n1[1] * n2[1]; // Same denom.
     const n = (n1[0] * n2[1]) - (n2[0] * n1[1]);
     return FractionUtil.simplify([n, d]);
-  }
+  };
 
   /**
    * @param n1
@@ -160,7 +160,7 @@ export class FractionUtil {
     const n = n1[0] * n2[0];
     const d = n1[1] * n2[1];
     return FractionUtil.simplify([n, d]);
-  }
+  };
 
   /**
    * @param n1
@@ -171,5 +171,5 @@ export class FractionUtil {
     const n = n1[0] * n2[1];
     const d = n1[1] * n2[0];
     return FractionUtil.simplify([n, d]);
-  }
+  };
 }
