@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import useResizeAware from 'react-resize-aware';
 import * as THREE from 'three';
 
-import { THREEx } from '../lib';
+import { THREEx } from '../libs';
 
 const config = {
   mesh: {
@@ -102,6 +102,9 @@ export const Waves = () => {
     // Animation.
     let lastTime: number = null;
     let frame = requestAnimationFrame((now) => {
+      // TODO(wittjosiah): Fix undefined.
+      // eslint-disable-next-line
+      // @ts-ignore
       frame = requestAnimationFrame(animate);
       lastTime = lastTime || now - 1000 / 60;
       const deltaMsec = Math.min(200, now - lastTime);
