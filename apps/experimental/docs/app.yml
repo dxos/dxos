@@ -1,7 +1,0 @@
-build: yarn build
-name: docs
-author: DXOS.org
-license: GPL-3.0
-description: Docs App
-keywords: []
-repository: 'https://github.com/dxos/docs'
