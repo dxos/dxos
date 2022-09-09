@@ -61,8 +61,8 @@ describe('SignalClient', () => {
     const api2 = new SignalClient(broker1.url(), async () => {});
     afterTest(() => api2.close());
 
-    const promise1 = api1.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
-    const promise2 = api2.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
+    const promise1 = api1.swarmEvent.waitFor(({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
+    const promise2 = api2.swarmEvent.waitFor(({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
 
     await api1.join(topic, peer1);
     await api2.join(topic, peer2);

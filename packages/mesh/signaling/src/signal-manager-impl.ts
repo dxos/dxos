@@ -30,8 +30,8 @@ export class SignalManagerImpl implements SignalManager {
 
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
-  readonly swarmEvent = new Event<{topic: PublicKey; swarmEvent: SwarmEvent}>();
-  readonly onMessage = new Event<{author: PublicKey; recipient: PublicKey; payload: Any}>();
+  readonly swarmEvent = new Event<{topic: PublicKey, swarmEvent: SwarmEvent}>();
+  readonly onMessage = new Event<{author: PublicKey, recipient: PublicKey, payload: Any}>();
 
   constructor (
     private readonly _hosts: string[]
@@ -41,7 +41,7 @@ export class SignalManagerImpl implements SignalManager {
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async (author, recipient, payload) => this.onMessage.emit({author, recipient, payload})
+        async (author, recipient, payload) => this.onMessage.emit({ author, recipient, payload })
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on(data => this.swarmEvent.emit(data));

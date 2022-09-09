@@ -13,8 +13,8 @@ import { SignalMethods } from './signal-methods';
 export interface SignalManager extends SignalMethods {
   statusChanged: Event<SignalStatus[]>
   commandTrace: Event<CommandTrace>
-  swarmEvent: Event<{topic: PublicKey; swarmEvent: SwarmEvent}>
-  onMessage: Event<{author: PublicKey; recipient: PublicKey; payload: Any}>
+  swarmEvent: Event<{topic: PublicKey, swarmEvent: SwarmEvent}>
+  onMessage: Event<{author: PublicKey, recipient: PublicKey, payload: Any}>
 
   getStatus (): SignalStatus[]
   destroy(): Promise<void>
