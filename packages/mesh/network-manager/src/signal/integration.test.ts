@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { expect } from "earljs";
+import waitForExpect from "wait-for-expect";
 
-import { PublicKey } from '@dxos/protocols';
-import { createTestBroker, TestBroker } from '@dxos/signal';
-import { SignalManagerImpl } from '@dxos/signaling';
-import { afterTest } from '@dxos/testutils';
+import { PublicKey } from "@dxos/protocols";
+import { createTestBroker, TestBroker } from "@dxos/signal";
+import { SignalManagerImpl } from "@dxos/signaling";
+import { afterTest } from "@dxos/testutils";
 
-import { MessageRouter } from './message-router';
-import { SignalMessage } from './signal-messaging';
+import { MessageRouter } from "./message-router";
+import { SignalMessage } from "./signal-messaging";
 
-describe('Signal Integration Test', () => {
+describe("Signal Integration Test", () => {
   let broker: TestBroker;
 
   before(async () => {
@@ -26,7 +26,9 @@ describe('Signal Integration Test', () => {
 
   const setup = () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
-    signalManager.onMessage.on(data => messageRouter.receiveMessage(...data));
+    signalManager.onMessage.on(({ author, recipient, payload }) =>
+      messageRouter.receiveMessage(author, recipient, payload)
+    );
 
     const receivedSignals: SignalMessage[] = [];
     const signalMock = async (msg: SignalMessage) => {
@@ -35,18 +37,18 @@ describe('Signal Integration Test', () => {
     const messageRouter = new MessageRouter({
       sendMessage: signalManager.message.bind(signalManager),
       onSignal: signalMock,
-      onOffer: async () => ({ accept: true })
+      onOffer: async () => ({ accept: true }),
     });
     afterTest(() => messageRouter.destroy());
 
     return {
       signalManager,
       receivedSignals,
-      messageRouter
+      messageRouter,
     };
   };
 
-  it('two peers connecting', async () => {
+  it("two peers connecting", async () => {
     const peerNetworking1 = setup();
     const peerNetworking2 = setup();
 
@@ -54,8 +56,16 @@ describe('Signal Integration Test', () => {
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
-    const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(([, swarmEvent]) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
+    const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
+      ({swarmEvent}) =>
+        !!swarmEvent.peerAvailable &&
+        peer2.equals(swarmEvent.peerAvailable.peer)
+    );
+    const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
+      ({swarmEvent}) =>
+        !!swarmEvent.peerAvailable &&
+        peer1.equals(swarmEvent.peerAvailable.peer)
+    );
 
     await peerNetworking1.signalManager.join(topic, peer1);
     await peerNetworking2.signalManager.join(topic, peer2);
@@ -63,25 +73,29 @@ describe('Signal Integration Test', () => {
     await promise1;
     await promise2;
 
-    expect(await peerNetworking1.messageRouter.offer({
-      topic,
-      author: peer1,
-      recipient: peer2,
-      sessionId: PublicKey.random(),
-      data: {
-        offer: {}
-      }
-    })).toBeAnObjectWith({ accept: true });
+    expect(
+      await peerNetworking1.messageRouter.offer({
+        topic,
+        author: peer1,
+        recipient: peer2,
+        sessionId: PublicKey.random(),
+        data: {
+          offer: {},
+        },
+      })
+    ).toBeAnObjectWith({ accept: true });
 
-    expect(await peerNetworking2.messageRouter.offer({
-      topic,
-      author: peer2,
-      recipient: peer1,
-      sessionId: PublicKey.random(),
-      data: {
-        offer: {}
-      }
-    })).toBeAnObjectWith({ accept: true });
+    expect(
+      await peerNetworking2.messageRouter.offer({
+        topic,
+        author: peer2,
+        recipient: peer1,
+        sessionId: PublicKey.random(),
+        data: {
+          offer: {},
+        },
+      })
+    ).toBeAnObjectWith({ accept: true });
 
     {
       const message: SignalMessage = {
@@ -90,8 +104,8 @@ describe('Signal Integration Test', () => {
         recipient: peer2,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({ 'foo': 'bar' }) }
-        }
+          signal: { json: JSON.stringify({ foo: "bar" }) },
+        },
       };
       await peerNetworking1.messageRouter.signal(message);
 
@@ -107,8 +121,8 @@ describe('Signal Integration Test', () => {
         recipient: peer1,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({ 'foo': 'bar' }) }
-        }
+          signal: { json: JSON.stringify({ foo: "bar" }) },
+        },
       };
       await peerNetworking2.messageRouter.signal(message);
 
