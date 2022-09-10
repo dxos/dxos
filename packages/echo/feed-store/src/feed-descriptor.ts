@@ -9,7 +9,7 @@ import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import type { PublicKey } from '@dxos/protocols';
-import type { Directory } from '@dxos/random-access-multi-storage';
+import type { Directory } from '@dxos/random-access-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';

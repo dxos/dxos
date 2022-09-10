@@ -192,15 +192,17 @@ export class BotHandle {
   async forceStop (): Promise<Bot> {
     try {
       await this._reportingStream?.close();
-    } catch (error: any) {
-      this._log(`Failed to close report stream: ${error}`);
+    } catch (err: any) {
+      this._log(`Failed to close report stream: ${err}`);
     }
+
     this._reportingStream = undefined;
     try {
       await promiseTimeout(this.rpc.stop(), 3000, new Error('Stopping bot timed out'));
-    } catch (error: any) {
-      this._log(`Failed to stop bot: ${error}`);
+    } catch (err: any) {
+      this._log(`Failed to stop bot: ${err}`);
     }
+
     await this._botContainer.kill(this.id);
     await this.update.waitForCondition(() => this.bot.status === Bot.Status.STOPPED);
     this._log('Bot stopped');

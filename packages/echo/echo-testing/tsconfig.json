@@ -9,7 +9,7 @@
   ],
   "references": [
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../echo-db"

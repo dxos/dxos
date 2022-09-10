@@ -7,7 +7,7 @@ import leveljs from 'level-js';
 import memdown from 'memdown';
 
 import { defs } from '@dxos/config';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';
 
 import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
@@ -38,7 +38,7 @@ export const createStorageObjects = (config: defs.Runtime.Client.Storage) => {
   }
 
   return {
-    storage: createStorage(`${path}/`, persistent ? toStorageType(storageType) : StorageType.RAM),
+    storage: createStorage({ type: persistent ? toStorageType(storageType) : StorageType.RAM, root: `${path}/` }),
     keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
 };
