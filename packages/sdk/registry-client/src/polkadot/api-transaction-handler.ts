@@ -61,8 +61,8 @@ export class ApiTransactionHandler {
               });
             }
           }).catch(reject);
-        } catch (error) {
-          reject(error);
+        } catch (err) {
+          reject(err);
         }
       });
     });
