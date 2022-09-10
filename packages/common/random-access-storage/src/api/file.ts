@@ -4,37 +4,17 @@
 
 import promisify from 'pify';
 
-export interface Callback<DataType> {
-  (err: Error | null, data?: DataType): void
-}
-
-/**
- * Interface of file objects returned by `random-access-*` implementations.
- * https://github.com/random-access-storage/random-access-file
- */
-export interface RandomAccessFile {
-  read(offset: number, size: number, cb?: Callback<Buffer>): void
-  write(offset: number, data: Buffer, cb?: Callback<void>): void
-  del(offset: number, size: number, cb?: Callback<void>): void
-  stat(cb: Callback<FileStat>): void
-  close(cb?: Callback<void>): void
-  destroy(cb?: Callback<void>): void
-
-  closed: boolean
-  destroyed: boolean
-}
-
-export type RandomAccessFileConstructor = (filename: string, opts?: {}) => RandomAccessFile
-
-export interface FileStat {
-  size: number
-}
+import { FileStat, RandomAccessFile } from './random-access-file';
 
 /**
  * Random access file wrapper.
  */
 export class File {
   constructor (protected readonly _file: RandomAccessFile) {}
+
+  get filename () {
+    return this._file.filename;
+  }
 
   /**
    * Read Buffer from file starting from offset to offset+size.

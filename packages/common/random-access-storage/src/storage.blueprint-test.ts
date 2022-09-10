@@ -160,7 +160,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('write in directory/subDirectory/file', async () => {
       const storage = createStorage();
       const dir = storage.directory('directory');
-      const subDir = dir.createDirectory('subDirectory');
+      const subDir = dir.directory('subDirectory');
 
       const file = subDir.createOrOpen('file');
       const buffer = Buffer.from(randomText());

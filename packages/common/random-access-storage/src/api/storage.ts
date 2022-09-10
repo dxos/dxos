@@ -14,7 +14,8 @@ export enum StorageType {
 
 export interface Storage {
   readonly type: StorageType
-  directory: (path?: string) => Directory
+  readonly size: number
+  directory: (path?: string) => Directory // TODO(burdon): Rename mkdir.
   destroy: () => Promise<void>
 }
 

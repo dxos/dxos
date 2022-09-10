@@ -22,6 +22,6 @@ export class NodeStorage extends AbstractStorage {
   }
 
   async _destroy () {
-    await del(this._path);
+    await del(this.path);
   }
 }

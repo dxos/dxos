@@ -4,16 +4,14 @@
 
 import { join } from 'node:path';
 
-import { StorageType, File, RandomAccessFileConstructor } from '../api';
+import { File, RandomAccessFileConstructor } from '../api';
 import { AbstractStorage } from './abstract-storage';
 
 /**
- * Base class for NodeJS random access files.
+ * Base class for random access files based on IDB.
  * https://www.npmjs.com/package/abstract-random-access
  */
 export abstract class RandomAccessStorage extends AbstractStorage {
-  public override type: StorageType = StorageType.IDB;
-
   private readonly _fileStorage: RandomAccessFileConstructor;
 
   constructor (path: string) {
@@ -39,7 +37,7 @@ export abstract class RandomAccessStorage extends AbstractStorage {
   protected override async _destroy () {
     // eslint-disable-next-line no-undef
     return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(this._path);
+      const request = indexedDB.deleteDatabase(this.path);
       request.onsuccess = () => {
         resolve();
       };

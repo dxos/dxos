@@ -21,6 +21,7 @@ export class RamStorage extends AbstractStorage {
       existingFile._reopen();
       return existingFile!;
     }
+
     const file = new File(ram());
     this._addFile(fullPath, file);
     return file;

@@ -4,4 +4,5 @@
 
 export * from './directory';
 export * from './file';
+export * from './random-access-file';
 export * from './storage';
