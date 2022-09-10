@@ -14,6 +14,7 @@ export interface Callback<DataType> {
  * Interface of file objects returned by `random-access-*` implementations.
  * https://github.com/random-access-storage/random-access-file
  */
+// TODO(burdon): Reconcile with HypercoreFile.
 export interface RandomAccessFile {
   read (offset: number, size: number, cb?: Callback<Buffer>): void
   write (offset: number, data: Buffer, cb?: Callback<void>): void

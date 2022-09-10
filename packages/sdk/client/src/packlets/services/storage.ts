@@ -38,7 +38,7 @@ export const createStorageObjects = (config: defs.Runtime.Client.Storage) => {
   }
 
   return {
-    storage: createStorage(`${path}/`, persistent ? toStorageType(storageType) : StorageType.RAM),
+    storage: createStorage({ type: persistent ? toStorageType(storageType) : StorageType.RAM, root: `${path}/` }),
     keyStorage: createKeyStorage(`${path}/keystore`, persistent ? toKeyStorageType(keyStorage) : 'ram')
   };
 };

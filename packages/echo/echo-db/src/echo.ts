@@ -105,7 +105,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    storage = createStorage('', StorageType.RAM),
+    storage = createStorage({ type: StorageType.RAM }),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { StorageConstructor, StorageType } from './api';
+import { Storage, StorageConstructor, StorageType } from './api';
 import { FirefoxStorage } from './implementations/firefox-storage';
 import { IDbStorage } from './implementations/idb-storage';
 import { RamStorage } from './implementations/ram-storage';
@@ -13,7 +13,7 @@ export { StorageType };
 // https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search
 // https://chrome.google.com/webstore/detail/clear-cache-for-chrome/lcebokhepdpopanpieoopnjiehmoabfp?hl=en-US
 
-export const createStorage: StorageConstructor = (root: string, type?: StorageType) => {
+export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
     return ((window as any).IDBMutableFile) ? new FirefoxStorage(root) : new IDbStorage(root);
   }

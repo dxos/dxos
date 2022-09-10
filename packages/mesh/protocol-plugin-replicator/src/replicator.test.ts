@@ -72,7 +72,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 };
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory('feed'), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(
     PublicKey.from(publicKey),

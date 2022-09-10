@@ -51,7 +51,7 @@ describe('Client - persistent', () => {
   }).timeout(10_000).retries(10);
 
   it('MetadataStore save/load', async () => {
-    const storage = createStorage('', StorageType.IDB);
+    const storage = createStorage({ type: StorageType.IDB });
     const directory = storage.directory('metadata');
     const partyKey = PublicKey.random();
 

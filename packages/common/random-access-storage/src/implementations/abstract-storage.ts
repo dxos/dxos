@@ -65,8 +65,7 @@ export abstract class AbstractStorage implements Storage {
   }
 
   private async _closeFilesInPath (path: string): Promise<void> {
-    const filesInPath = Array.from(this._getFilesInPath(path).values());
-    await Promise.all(filesInPath.map(
+    await Promise.all([...this._getFilesInPath(path).values()].map(
       file => file.close().catch((err: any) => log.catch(err))
     ));
   }
@@ -75,14 +74,7 @@ export abstract class AbstractStorage implements Storage {
     await Promise.all([...this._getFilesInPath(path)].map(([path, file]) => {
       return file.delete()
         .then(() => this._files.delete(path))
-        .catch((error: any) => console.error(error.message));
+        .catch((error: any) => log.error(error.message));
     }));
-    // const filesInPath = this._getFilesInPath(path);
-    // await Promise.all(
-    //   Array.from(filesInPath.values())
-    //     .map(file => file.delete().catch((error: any) => console.error(error.message)))
-    // );
-    // Array.from(filesInPath.keys()).forEach(filePath => this._files.delete(filePath));
-    // return destroyPromise;
   }
 }

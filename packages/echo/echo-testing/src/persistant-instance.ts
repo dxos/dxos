@@ -9,6 +9,6 @@ import { ECHO } from '@dxos/echo-db';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 export const createPersistentInstance = (storagePath: string) => new ECHO({
-  storage: createStorage(storagePath, StorageType.NODE),
+  storage: createStorage({ type: StorageType.NODE, root: storagePath }),
   keyStorage: jsondown(join(storagePath, 'keys.json'))
 });

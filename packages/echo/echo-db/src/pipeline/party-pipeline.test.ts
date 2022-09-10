@@ -26,7 +26,7 @@ import { PartyPipeline } from './party-pipeline';
 
 describe('PartyPipeline', () => {
   const setup = async () => {
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -134,7 +134,7 @@ describe('PartyPipeline', () => {
   });
 
   test('does not open unrelated feeds', async () => {
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
@@ -273,7 +273,7 @@ describe('PartyPipeline', () => {
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 

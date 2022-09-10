@@ -25,18 +25,18 @@ const write = async (file: File, data = 'test') => {
 };
 
 before(() => del(ROOT_DIRECTORY));
-// after(() => del(ROOT_DIRECTORY));
+after(() => del(ROOT_DIRECTORY));
 
 describe('testing node storage types', () => {
   it('create storage with node file by default', async () => {
     const dir = temp();
-    const storage = createStorage(dir);
+    const storage = createStorage({ root: dir });
     expect(storage.type).toBe(StorageType.NODE);
   });
 
   it('create file', async () => {
     const dir = temp();
-    const storage = createStorage(dir);
+    const storage = createStorage({ root: dir });
     const storageDir = storage.directory('dir');
 
     const file = storageDir.createOrOpen('file');
@@ -47,7 +47,7 @@ describe('testing node storage types', () => {
 
   it('delete directory', async () => {
     const dir = temp();
-    const storage = createStorage(dir);
+    const storage = createStorage({ root: dir });
     const storageDir = storage.directory('dir');
 
     const file = storageDir.createOrOpen('file');
@@ -60,7 +60,7 @@ describe('testing node storage types', () => {
 
   it('destroy storage', async () => {
     const dir = temp();
-    const storage = createStorage(dir);
+    const storage = createStorage({ root: dir });
     const storageDir = storage.directory('dir');
 
     const file = storageDir.createOrOpen('file');
@@ -72,12 +72,12 @@ describe('testing node storage types', () => {
   });
 
   it('should throw an assert error if invalid type for platform', () => {
-    expect(() => createStorage('error', StorageType.IDB)).toThrow(/Invalid/);
+    expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
   });
 
   it('file exists and destroyes in subDirectory', async () => {
     const dir = temp();
-    const storage = createStorage(dir);
+    const storage = createStorage({ root: dir });
     const storageDir = storage.directory('dir');
     const storageSubDirectory = storageDir.directory('sub');
     const file = storageSubDirectory.createOrOpen('file');
@@ -88,6 +88,6 @@ describe('testing node storage types', () => {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  storageTests(StorageType.RAM, () => createStorage(ROOT_DIRECTORY, StorageType.RAM));
-  storageTests(StorageType.NODE, () => createStorage(ROOT_DIRECTORY, StorageType.NODE));
+  storageTests(StorageType.RAM, () => createStorage({ type: StorageType.RAM, root: ROOT_DIRECTORY }));
+  storageTests(StorageType.NODE, () => createStorage({ type: StorageType.NODE, root: ROOT_DIRECTORY }));
 });

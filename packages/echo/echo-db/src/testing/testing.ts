@@ -34,7 +34,7 @@ export interface TestOptions {
 export const createTestInstance = async ({
   verboseLogging = false,
   initialize = false,
-  storage = createStorage('', StorageType.RAM),
+  storage = createStorage({ type: StorageType.RAM }),
   keyStorage = undefined,
   networkManagerOptions,
   snapshots = true,

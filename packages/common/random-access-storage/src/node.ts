@@ -6,7 +6,7 @@ import { Storage, StorageConstructor, StorageType } from './api';
 import { NodeStorage } from './implementations/node-storage';
 import { RamStorage } from './implementations/ram-storage';
 
-export const createStorage: StorageConstructor = (root: string, type?: StorageType): Storage => {
+export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
     return new NodeStorage(root);
   }

@@ -26,7 +26,7 @@ describe('HALO', () => {
       .registerModel(ObjectModel);
 
     const networkManager = new NetworkManager();
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
     const metadataStore = new MetadataStore(storage.directory('metadata'));
     const keyring = new Keyring();

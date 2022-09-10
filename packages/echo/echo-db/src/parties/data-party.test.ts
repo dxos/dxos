@@ -26,7 +26,7 @@ import { DataParty } from './data-party';
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
 
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
     const metadataStore = new MetadataStore(storage.directory('metadata'));
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
