@@ -55,11 +55,11 @@ class PartyService implements IPartyService {
             members: party.queryMembers().value
           }
         });
-      } catch (error) {
-        if (error instanceof InvalidStateError) {
+      } catch (err) {
+        if (err instanceof InvalidStateError) {
           // Do nothing.
         } else {
-          throw error;
+          throw err;
         }
       }
     };
@@ -186,8 +186,8 @@ class PartyService implements IPartyService {
           if (invitation.type === InvitationDescriptorType.OFFLINE) {
             close();
           }
-        } catch (error: any) {
-          next({ state: InvitationState.ERROR, error: error.message });
+        } catch (err: any) {
+          next({ state: InvitationState.ERROR, error: err.message });
           close();
         }
       });

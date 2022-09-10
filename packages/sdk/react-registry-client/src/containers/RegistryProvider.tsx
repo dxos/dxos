@@ -41,8 +41,8 @@ export const RegistryProvider = ({
         try {
           const context = await createRegistryContext(config);
           setContext(context);
-        } catch (error: any) {
-          setError(error);
+        } catch (err: any) {
+          setError(err);
         }
       });
     }

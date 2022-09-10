@@ -130,17 +130,17 @@ export class GreetingCommandPlugin extends EventEmitter {
     let result;
     try {
       result = await extension.send(encoded, { oneway });
-    } catch (error: any) {
+    } catch (err: any) {
       // TODO(dboreham): Temporary work around for `https://github.com/dxos/protocol/issues/12`.
-      if (!(error instanceof Error)) {
-        if (error.code) {
-          throw new Error(error.code);
+      if (!(err instanceof Error)) {
+        if (err.code) {
+          throw new Error(err.code);
         } else {
-          log('Unknown error:', error);
+          log('Unknown error:', err);
           throw new Error('Unknown error');
         }
       } else {
-        throw error;
+        throw err;
       }
     }
 

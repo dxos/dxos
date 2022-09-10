@@ -49,7 +49,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@koush/wrtc": "^0.5.3",

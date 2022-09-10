@@ -4,7 +4,5 @@
 
 // The default module is for Node (otherwise import browser).
 
+export * from './api';
 export * from './node';
-export * from './interfaces/storage-types';
-export * from './interfaces/';
-export * from './interfaces/Storage';

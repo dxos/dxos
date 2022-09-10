@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@dxos/object-model": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@types/faker": "^5.5.1",
     "@types/lodash.times": "^4.3.6",
     "abstract-leveldown": "~7.0.0",

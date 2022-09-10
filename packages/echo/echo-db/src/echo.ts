@@ -15,7 +15,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
-import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
@@ -105,7 +105,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    storage = createStorage('', StorageType.RAM),
+    storage = createStorage({ type: StorageType.RAM }),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,

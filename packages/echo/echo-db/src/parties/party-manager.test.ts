@@ -31,7 +31,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 import { humanize } from '@dxos/util';
 
@@ -59,7 +59,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
 const setup = async () => {
   const keyring = new Keyring();
 
-  const storage = createStorage('', StorageType.RAM);
+  const storage = createStorage({ type: StorageType.RAM });
   const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
   const metadataStore = new MetadataStore(storage.directory('metadata'));
   const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
@@ -152,7 +152,7 @@ describe('Party manager', () => {
   });
 
   test('Create from cold start', async () => {
-    const storage = createStorage('', StorageType.RAM);
+    const storage = createStorage({ type: StorageType.RAM });
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
     const keyring = new Keyring();
     const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
