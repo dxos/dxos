@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { MetadataStore } from './metadata-store';
 

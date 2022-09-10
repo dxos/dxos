@@ -23,8 +23,8 @@ export const definitions = ({ configPath, dynamic, publicUrl }: ConfigPluginOpts
 
     try {
       content = yaml.load(readFileSync(resolve(configPath ?? CWD, value), 'utf-8')) as any;
-    } catch (error: any) {
-      log(`Failed to load file ${value}:`, error);
+    } catch (err: any) {
+      log(`Failed to load file ${value}:`, err);
     }
 
     return {

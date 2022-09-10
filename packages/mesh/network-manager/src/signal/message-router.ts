@@ -109,8 +109,8 @@ export class MessageRouter implements SignalMessaging {
       log(`retrying message: ${JSON.stringify(networkMessage)}`);
       try {
         await this._sendMessage(author, recipient, networkMessage);
-      } catch (error) {
-        log(`ERROR failed to send message: ${error}`);
+      } catch (err) {
+        log(`ERROR failed to send message: ${err}`);
       }
     }, this._retryDelay);
 

@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createBatchStream } from './create-batch-stream';
 import { FeedStore } from './feed-store';

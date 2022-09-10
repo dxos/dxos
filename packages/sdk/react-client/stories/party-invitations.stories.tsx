@@ -149,8 +149,8 @@ const PartyJoinContainer = () => {
 
       const party = await invitation.getParty();
       setStatus({ party: party.key.toHex() });
-    } catch (error: any) {
-      setStatus({ error });
+    } catch (err: any) {
+      setStatus({ error: err });
     }
   };
 

@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
-import { Directory } from '@dxos/random-access-multi-storage';
+import { Directory } from '@dxos/random-access-storage';
 
 const log = debug('dxos:snapshot-store');
 /**

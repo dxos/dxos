@@ -7,7 +7,7 @@ import pify from 'pify';
 import { createKeyPair } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { codec, FeedMessage } from '../proto';
 import { createFeedWriter } from './feed-writer';

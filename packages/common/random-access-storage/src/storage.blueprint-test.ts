@@ -5,7 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { File, Storage, StorageType } from './interfaces';
+import { File, Storage, StorageType } from './api';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => Storage) {
@@ -160,7 +160,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('write in directory/subDirectory/file', async () => {
       const storage = createStorage();
       const dir = storage.directory('directory');
-      const subDir = dir.subDirectory('subDirectory');
+      const subDir = dir.createDirectory('subDirectory');
 
       const file = subDir.createOrOpen('file');
       const buffer = Buffer.from(randomText());

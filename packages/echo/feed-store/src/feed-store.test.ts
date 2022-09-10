@@ -12,7 +12,7 @@ import tempy from 'tempy';
 import { sleep } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
+import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';

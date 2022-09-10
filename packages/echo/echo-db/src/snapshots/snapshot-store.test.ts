@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { PartySnapshot } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { SnapshotStore } from './snapshot-store';
 

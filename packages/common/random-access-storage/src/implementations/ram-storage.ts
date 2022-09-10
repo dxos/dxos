@@ -5,8 +5,7 @@
 import { join } from 'node:path';
 import ram from 'random-access-memory';
 
-import { File } from '../interfaces';
-import { StorageType } from '../interfaces/storage-types';
+import { File, StorageType } from '../api';
 import { AbstractStorage } from './abstract-storage';
 
 /**

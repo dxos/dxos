@@ -11,7 +11,7 @@ import tempy from 'tempy';
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 

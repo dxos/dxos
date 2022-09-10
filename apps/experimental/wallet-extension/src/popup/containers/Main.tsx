@@ -26,8 +26,8 @@ export const Main = () => {
         const remoteConfig = new Config(await client.services.SystemService.getConfig());
         setPolkadotAddress(remoteConfig.get('runtime.services.dxns.address') ?? await client.halo.getDevicePreference('DXNSAddress'));
         setDXNSAccount(remoteConfig.get('runtime.services.dxns.account') ?? await client.halo.getGlobalPreference('DXNSAccount'));
-      } catch (error: any) {
-        setError(error);
+      } catch (err: any) {
+        setError(err);
       }
     });
   }, []);

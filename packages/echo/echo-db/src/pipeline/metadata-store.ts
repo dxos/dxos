@@ -9,7 +9,7 @@ import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { Directory } from '@dxos/random-access-multi-storage';
+import { Directory } from '@dxos/random-access-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.

@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { NetworkManagerOptions } from '@dxos/network-manager';
-import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { ECHO } from '../echo';

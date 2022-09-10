@@ -773,7 +773,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/signal': workspace:*
       source-map-support: ^0.5.12
     dependencies:
@@ -785,7 +785,7 @@ importers:
       source-map-support: 0.5.21
     devDependencies:
       '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/random-access-multi-storage': link:../../packages/common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../packages/common/random-access-storage
       '@dxos/signal': link:../../packages/mesh/signal
 
   e2e/protobuf-compiler:
@@ -1053,8 +1053,9 @@ importers:
       '@types/randombytes': 2.0.0
       debug: 4.3.4
 
-  packages/common/random-access-multi-storage:
+  packages/common/random-access-storage:
     specifiers:
+      '@dxos/log': workspace:*
       '@types/pify': ^3.0.2
       assert: ^2.0.0
       del: ^5.1.0
@@ -1066,6 +1067,7 @@ importers:
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
     dependencies:
+      '@dxos/log': link:../log
       assert: 2.0.0
       del: 5.1.0
       path-browserify: 1.0.1
@@ -1427,7 +1429,7 @@ importers:
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@types/columnify': ^1.5.1
@@ -1466,7 +1468,7 @@ importers:
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       base-x: 3.0.9
@@ -1499,7 +1501,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/chance': ^1.1.0
       '@types/debug': ^4.1.7
@@ -1526,7 +1528,7 @@ importers:
       pify: 5.0.0
       readable-stream: 3.6.0
     devDependencies:
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/chance': 1.1.3
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
@@ -1541,7 +1543,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@types/faker': ^5.5.1
       '@types/lodash.times': ^4.3.6
       abstract-leveldown: ~7.0.0
@@ -1555,7 +1557,7 @@ importers:
       faker: 5.5.3
       lodash.times: 4.3.2
     devDependencies:
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/faker': 5.5.9
       '@types/lodash.times': 4.3.6
       abstract-leveldown: 7.0.0
@@ -1568,7 +1570,7 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
@@ -1605,7 +1607,7 @@ importers:
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../../common/crypto
       '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1
       '@types/from2': 2.3.1
@@ -1813,7 +1815,7 @@ importers:
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/encoding-down': ^5.0.0
@@ -1866,7 +1868,7 @@ importers:
       stream-to-array: 2.3.0
     devDependencies:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/debug': 4.1.7
       '@types/encoding-down': 5.0.0
       '@types/end-of-stream': 1.4.1
@@ -2094,7 +2096,7 @@ importers:
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
@@ -2118,7 +2120,7 @@ importers:
       '@dxos/feed-store': link:../../echo/feed-store
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1
       '@types/pify': 3.0.2
@@ -2189,7 +2191,7 @@ importers:
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-worker-proxy': workspace:*
@@ -2243,7 +2245,7 @@ importers:
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/react-async': link:../../common/react-async
       '@dxos/testutils': link:../../common/testutils
       '@koush/wrtc': 0.5.3
@@ -2263,7 +2265,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/random-access-multi-storage': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@types/columnify': ^1.5.1
@@ -2289,7 +2291,7 @@ importers:
       faker: 5.5.3
       js-yaml: 4.1.0
     devDependencies:
-      '@dxos/random-access-multi-storage': link:../../common/random-access-multi-storage
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/testutils': link:../../common/testutils
       '@types/columnify': 1.5.1
       '@types/debug': 4.1.7
@@ -23526,7 +23528,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
@@ -25100,9 +25102,9 @@ packages:
     resolution: {integrity: sha512-4sITrrzEbPcr0aNV28QyOmgn6C9yKiF8k92jn4buYAK8wmA5xo1qL3II5/gT1r7wxbXBflSduZ2K3FbtOrtGkA==}
     engines: {node: '>=10.0'}
     dependencies:
-      JSONStream: 1.3.5
       clone-deep: 4.0.1
       download-stats: 0.3.4
+      JSONStream: 1.3.5
       moment: 2.29.1
       node-fetch: 2.6.7
       paged-request: 2.0.2
@@ -30161,7 +30163,6 @@ packages:
       semver: 7.3.7
       typescript: 4.7.4
       yargs-parser: 20.2.9
-    dev: false
 
   /ts-jest/27.1.4_dp7knfxphemncsb4b5rk37mcqm:
     resolution: {integrity: sha512-qjkZlVPWVctAezwsOD1OPzbZ+k7zA5z3oxII4dGdZo5ggX/PL7kvwTM0pXTr10fAtbiVpJaL3bWd502zAhpgSQ==}

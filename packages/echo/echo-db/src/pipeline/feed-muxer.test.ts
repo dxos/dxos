@@ -13,7 +13,7 @@ import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream }
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';

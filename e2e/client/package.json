@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/signal": "workspace:*"
   }
 }

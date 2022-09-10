@@ -6,8 +6,7 @@ import del from 'del';
 import { join } from 'node:path';
 import raf from 'random-access-file';
 
-import { File } from '../interfaces';
-import { StorageType } from '../interfaces/storage-types';
+import { File, StorageType } from '../api';
 import { AbstractStorage } from './abstract-storage';
 
 /**

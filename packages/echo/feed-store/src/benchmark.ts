@@ -5,7 +5,7 @@
 import { Suite } from '@dxos/benchmark-suite';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage } from '@dxos/random-access-multi-storage';
+import { createStorage } from '@dxos/random-access-storage';
 
 import { FeedStore } from './feed-store';
 

@@ -8,8 +8,7 @@ import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 
-import { File } from './interfaces/File';
-import { StorageType } from './interfaces/storage-types';
+import { File, StorageType } from './api';
 import { createStorage } from './node';
 import { storageTests } from './storage.blueprint-test';
 
@@ -76,7 +75,7 @@ describe('testing node storage types', () => {
     const directory = temp();
     const storage = createStorage(directory);
     const storageDir = storage.directory('dir');
-    const storageSubDirectory = storageDir.subDirectory('sub');
+    const storageSubDirectory = storageDir.createDirectory('sub');
     const file = storageSubDirectory.createOrOpen('file');
     await write(file);
     await expect(fs.access(path.join(directory, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
