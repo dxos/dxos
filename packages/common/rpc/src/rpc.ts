@@ -93,8 +93,8 @@ export class RpcPeer {
     this._unsubscribe = this._options.port.subscribe(async msg => {
       try {
         await this._receive(msg);
-      } catch (error) {
-        log(error);
+      } catch (err) {
+        log(err);
       }
     }) as any;
 

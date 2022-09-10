@@ -114,9 +114,9 @@ export class Stream<T> {
         if (this._messageHandler) {
           try {
             this._messageHandler(msg);
-          } catch (error: any) {
+          } catch (err: any) {
             // Stop error propagation.
-            throwUnhandledRejection(error);
+            throwUnhandledRejection(err);
           }
         } else {
           assert(this._buffer);
@@ -134,9 +134,9 @@ export class Stream<T> {
         this._dispose?.();
         try {
           this._closeHandler?.(err);
-        } catch (error: any) {
+        } catch (err: any) {
           // Stop error propagation.
-          throwUnhandledRejection(error);
+          throwUnhandledRejection(err);
         }
       }
     });
@@ -162,9 +162,9 @@ export class Stream<T> {
     for (const message of this._buffer) {
       try {
         onMessage(message);
-      } catch (error: any) {
+      } catch (err: any) {
         // Stop error propagation.
-        throwUnhandledRejection(error);
+        throwUnhandledRejection(err);
       }
     }
 
