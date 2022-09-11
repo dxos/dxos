@@ -60,9 +60,9 @@ const setup = async () => {
   const keyring = new Keyring();
 
   const storage = createStorage({ type: StorageType.RAM });
-  const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-  const metadataStore = new MetadataStore(storage.directory('metadata'));
-  const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+  const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+  const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+  const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
   const networkManager = new NetworkManager();
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
@@ -153,10 +153,10 @@ describe('Party manager', () => {
 
   test('Create from cold start', async () => {
     const storage = createStorage({ type: StorageType.RAM });
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const keyring = new Keyring();
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
