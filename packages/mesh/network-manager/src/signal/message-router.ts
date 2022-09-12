@@ -262,8 +262,8 @@ export class MessageRouter implements SignalMessaging {
     const answer = await this._onOffer(offerMessage);
     answer.offerMessageId = message.messageId;
     await this._sendReliableMessage({
-      recipient,
-      author,
+      author: recipient,
+      recipient: author,
       message: {
         topic: message.topic,
         sessionId: message.sessionId,
