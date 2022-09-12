@@ -39,7 +39,7 @@ export class Messenger {
 
   // TODO(mykola): make reliable.
   async message ({ author, recipient, payload }: Message): Promise<void> {
-    await this._signalManager.message(author, recipient, payload);
+    await this._signalManager.message({ author, recipient, payload });
   }
 
   listen ({

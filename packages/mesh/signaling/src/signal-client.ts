@@ -257,12 +257,16 @@ export class SignalClient implements SignalMethods {
     this._messageStreams.delete(topic);
   }
 
-  async message (
-    author: PublicKey,
-    recipient: PublicKey,
+  async message ({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey
+    recipient: PublicKey
     payload: Any
-  ): Promise<void> {
-    await this._client.sendMessage(author, recipient, payload);
+  }): Promise<void> {
+    await this._client.sendMessage({ author, recipient, payload });
   }
 
   @synchronized
@@ -274,7 +278,7 @@ export class SignalClient implements SignalMethods {
       !this._swarmStreams.has(topic),
       'Already subscribed to swarm events.'
     );
-    const swarmStream = await this._client.join(topic, peerId);
+    const swarmStream = await this._client.join({ topic, peerId });
     // Subscribing to swarm events.
     // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
     swarmStream.subscribe((swarmEvent: SwarmEvent) => {

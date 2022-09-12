@@ -172,16 +172,20 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (
-    author: PublicKey,
-    recipient: PublicKey,
+  async message ({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey
+    recipient: PublicKey
     payload: Any
-  ): Promise<void> {
+  }): Promise<void> {
     log(`Signal ${recipient}`);
     await Promise.all(
       [...this._servers.values()].map((server: SignalClient) =>
         server
-          .message(author, recipient, payload)
+          .message({ author, recipient, payload })
           .catch((err) => console.log(`Error signaling: ${err}`))
       )
     );

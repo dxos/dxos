@@ -13,7 +13,7 @@ import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
-export class InMemorySignalManager implements SignalManager {
+export class SignalManagerInMemory implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
@@ -85,7 +85,7 @@ export class InMemorySignalManager implements SignalManager {
     state.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async message (author: PublicKey, recipient: PublicKey, payload: Any) {
+  async message ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
     assert(recipient);
     assert(state.connections.get(recipient), 'Peer not connected');
     state.connections
@@ -106,7 +106,7 @@ const state = {
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>((x) => x.toHex()),
 
   // Map of connections for each peer for signaling.
-  connections: new ComplexMap<PublicKey, InMemorySignalManager>((x) =>
+  connections: new ComplexMap<PublicKey, SignalManagerInMemory>((x) =>
     x.toHex()
   )
 };

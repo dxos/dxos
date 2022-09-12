@@ -32,11 +32,15 @@ export interface SignalMethods {
   /**
    * Send message to peer.
    */
-  message: (
-    author: PublicKey,
-    recipient: PublicKey,
+  message: ({
+    author,
+    recipient,
+    payload
+  }: {
+    author: PublicKey
+    recipient: PublicKey
     payload: Any
-  ) => Promise<void>
+  }) => Promise<void>
 
   /**
    * Start receiving messages from
