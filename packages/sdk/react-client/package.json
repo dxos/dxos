@@ -22,6 +22,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
+    "@dxos/signaling": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

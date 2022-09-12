@@ -4,6 +4,7 @@
 
 import debug from 'debug';
 import assert from 'node:assert';
+import { SignalManagerImpl } from '@dxos/signaling';
 
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
@@ -52,7 +53,8 @@ const main = async () => {
   const signal = config.get('runtime.services.signal.server');
   assert(signal, 'Signal server must be provided');
   const networkManager = new NetworkManager({
-    signal: [signal]
+    // TODO(mykola): SignalManager need to be subscribed for message receiving first.
+    signalManager: new SignalManagerImpl([signal])
   });
   const topicString = config.get('runtime.services.bot.topic');
   assert(topicString, 'Topic must be provided');

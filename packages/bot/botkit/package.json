@@ -31,6 +31,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/signaling": "workspace:*",
     "abort-controller": "~3.0.0",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

@@ -19,16 +19,17 @@ import {
   PeerInfo,
   Topology,
   SwarmInfo,
-  ConnectionLog,
+  ConnectionLog
 } from '@dxos/network-manager';
-import {
-  SignalManager,
-  CommandTrace,
-  SignalStatus
-} from '@dxos/signaling';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
+import {
+  SignalManager,
+  CommandTrace,
+  SignalStatus,
+  SignalManagerImpl
+} from '@dxos/signaling';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 
@@ -37,8 +38,10 @@ export default {
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
+  const signalManager = new SignalManagerImpl(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
+  await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
-    signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
+    signalManager,
     log: true
   });
   const presencePlugin = new PresencePlugin(peerId.asBuffer());

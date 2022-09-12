@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { SignalManagerImpl } from '@dxos/signaling';
 import { createContext, useContext } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
@@ -22,7 +23,8 @@ export const useBotFactoryClient = (required = true): BotFactoryClient | undefin
 export const createBotFactoryClient = async (config: Config): Promise<BotFactoryClient> => {
   const signal = config.get('runtime.services.signal.server');
   const networkManager = new NetworkManager({
-    signal: signal ? [signal] : undefined,
+    // TODO(mykola): SignalManager need to be subscribed for message receiving first.
+    signalManager: signal ? new SignalManagerImpl([signal]) : undefined,
     ice: config.get('runtime.services.ice'),
     log: true
   });

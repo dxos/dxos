@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { SignalManagerImpl } from '@dxos/signaling';
+
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
@@ -32,8 +34,8 @@ export class ClientServiceHost implements ClientServiceProvider {
       storage,
       keyStorage,
       networkManagerOptions: {
-        signal: this._config.get('runtime.services.signal.server')
-          ? [this._config.get('runtime.services.signal.server')!] : undefined,
+        // TODO(mykola): SignalManager need to be subscribed for message receiving first.
+        signalManager: this._config.get('runtime.services.signal.server') ? new SignalManagerImpl([this._config.get('runtime.services.signal.server')!]) : undefined,
         ice: this._config.get('runtime.services.ice'),
         log: true
       },
