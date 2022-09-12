@@ -31,7 +31,7 @@
     "@dxos/react-client-testing": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.27",
+    "@types/node": "^16.11.58",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
     "@types/url-join": "~4.0.1",
