@@ -2,17 +2,18 @@
 
 <!-- @toc -->
 
-*   [1. Introduction](#1-introduction)
-*   [2. Ontology](#2-ontology)
-    *   [2.1. HALO](#21-halo)
-        *   [2.1.1. Profiles](#211-profiles)
-        *   [2.1.2. Devices](#212-devices)
-        *   [2.1.3. Circles](#213-circles)
-    *   [2.2. ECHO](#22-echo)
-        *   [2.2.1. Spaces](#221-spaces)
-        *   [2.2.2. Branes](#222-branes)
-        *   [2.2.3. Frames](#223-frames)
-*   [3. API](#3-api)
+- [1. Introduction](#1-introduction)
+- [2. Ontology](#2-ontology)
+  - [2.1. HALO](#21-halo)
+    - [2.1.1. Identities](#211-identities)
+    - [Profiles](#profiles)
+    - [2.1.2. Devices](#212-devices)
+    - [2.1.3. Circles](#213-circles)
+  - [2.2. ECHO](#22-echo)
+    - [2.2.1. Spaces](#221-spaces)
+    - [2.2.2. Branes](#222-branes)
+    - [2.2.3. Frames](#223-frames)
+- [3. API](#3-api)
 
 ## 1. Introduction
 
@@ -27,14 +28,21 @@ This section outlines the core concepts of the DXOS system.
 *   HALO protocols and components relate to identity, privacy, security, and collaboration.
 *   The HALO application is a software wallet that contains secrets (i.e., private keys) and credentials (e.g., decentralized credentials that may be used to access network services).
 
-#### 2.1.1. Profiles
+#### 2.1.1. Identities
 
 *   Users can create an unlimited number of self-sovereign identities.
-*   Identities are controlled by public-private key pairs.
-*   References may be shared via DIDs that contain public keys used to verify signatures.
-    The DXOS blockchain implements a DID resolver.
 *   Identities are not connected to each other in any way.
+*   Identities are controlled by public-private keypairs.
+*   There may be multiple keypairs to support expiration and key rotation.
+*   References may be shared via DIDs that contain public keys used to verify signatures.
+    DIDs provide stable references that don't change when keys are rotated.
+*   The DXOS blockchain may implement a DID resolver.
 *   Agents include both human Users and long-lived autonomous systems, which may be sovereign, or controlled by (belong to) Users.
+
+#### Profiles
+
+*   Profiles are publicly visible structured documents associated with an Identity.
+*   Profiles may include metadata such as a display name, avatar, etc.
 
 #### 2.1.2. Devices
 
@@ -46,7 +54,7 @@ This section outlines the core concepts of the DXOS system.
 #### 2.1.3. Circles
 
 *   Users maintain a set of contacts that are collectively known as a Circle.
-*   Contacts are associated with another User's Profile DID and metadata (e.g., display name, avatar, etc.)
+*   Contacts are associated with another User's Identity DID and and Profile.
 
 ### 2.2. ECHO
 

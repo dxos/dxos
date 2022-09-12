@@ -12,14 +12,14 @@ import { FeedStore } from '@dxos/feed-store';
 import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
   test.only('admits feeds', async () => {
-    const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
       return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);

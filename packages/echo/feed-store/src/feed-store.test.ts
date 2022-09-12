@@ -12,7 +12,7 @@ import tempy from 'tempy';
 import { sleep } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { Storage, StorageType, createStorage } from '@dxos/random-access-multi-storage';
+import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
@@ -35,13 +35,15 @@ const createDefault = async () => {
 
   return {
     directory,
-    feedStore: createFeedStore(createStorage(directory, StorageType.NODE), { valueEncoding: 'utf-8' })
+    feedStore: createFeedStore(createStorage({ type: StorageType.NODE, root: directory }), { valueEncoding: 'utf-8' })
   };
 };
 
-const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>): Promise<Record<string, FeedDescriptor>> => Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-  [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
-)));
+const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>):
+  Promise<Record<string, FeedDescriptor>> =>
+  Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
+    [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
+  )));
 
 const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
@@ -56,10 +58,10 @@ describe('FeedStore', () => {
   const keys = createKeyPairs();
 
   test('Config default', async () => {
-    const feedStore = await createFeedStore(createStorage('', StorageType.RAM));
+    const feedStore = await createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
-    const feedStore2 = new FeedStore(createStorage('', StorageType.RAM).directory('feed'));
+    const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).directory('feed'));
     expect(feedStore2).toBeInstanceOf(FeedStore);
   });
 
@@ -133,7 +135,7 @@ describe('FeedStore', () => {
   });
 
   test('Default codec: binary', async () => {
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM));
+    const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
     const { publicKey, secretKey } = createKeyPair();
@@ -144,7 +146,7 @@ describe('FeedStore', () => {
   });
 
   test('on close error should unlock the descriptor', async () => {
-    const feedStore = createFeedStore(createStorage('', StorageType.RAM), {
+    const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }), {
       hypercore: () => ({
         opened: true,
         ready: (cb: () => void) => {
