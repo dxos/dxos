@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
 import { FeedKey } from '@dxos/echo-protocol';
-import { Timeframe } from '@dxos/protocols';
 import { log } from '@dxos/log';
+import { Timeframe } from '@dxos/protocols';
 
 /**
  * Keeps state of the last timeframe that was processed by ECHO.
@@ -34,7 +34,7 @@ export class TimeframeClock {
 
   @timed(5_000)
   async waitUntilReached (target: Timeframe) {
-    log.debug(`waitUntilReached`, { target, current: this._timeframe });
+    log.debug('waitUntilReached', { target, current: this._timeframe });
     await this.update.waitForCondition(() => Timeframe.dependencies(target, this._timeframe).isEmpty());
   }
 }

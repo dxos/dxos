@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createKeyPair } from '@dxos/crypto';
@@ -10,10 +9,10 @@ import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
-import { afterTest } from '@dxos/testutils';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
@@ -53,9 +52,9 @@ describe('pipeline/Pipeline', () => {
         echo: {
           itemId: `local-${msgIdx}`
         }
-      }); 
+      });
     }
-    
+
     let msgCount = 0;
     for await (const msg of pipeline.consume()) {
       if (++msgCount === numFeeds * messagesPerFeed) {

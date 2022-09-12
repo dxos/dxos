@@ -4,12 +4,12 @@
 
 import debug from 'debug';
 
+import { Event } from '@dxos/async';
+import { Timeframe } from '@dxos/protocols';
 import { humanize } from '@dxos/util';
 
 import { PartyPipeline } from '../pipeline';
 import { SnapshotStore } from './snapshot-store';
-import { Timeframe } from '@dxos/protocols';
-import { Event } from '@dxos/async';
 
 const log = debug('dxos:snapshot-generator');
 

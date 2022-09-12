@@ -3,20 +3,18 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
+import { Event } from '@dxos/async';
 import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
+import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { TimeframeClock } from '../database';
 import { createMessageSelector } from './message-selector';
-import { log } from '@dxos/log'
-import { Event } from '@dxos/async';
 
 const STALL_TIMEOUT = 1000;
-
 
 /**
  * A multi-reader pipeline that operates on feeds.
@@ -74,10 +72,10 @@ export class Pipeline {
 
   /**
    * Will iterate over the ordered messages from the added feeds.
-   * 
+   *
    * Updates the timeframe clock after the message has bee processed.
    */
-  async * consume(): AsyncIterable<FeedBlock> {
+  async * consume (): AsyncIterable<FeedBlock> {
     assert(!this._isBeingConsumed, 'Pipeline is already being consumed.');
     this._isBeingConsumed = true;
 
@@ -98,27 +96,27 @@ export class Pipeline {
     await this._iterator.close();
   }
 
-  get state(): PipelineState {
+  get state (): PipelineState {
     const self = this;
     return {
-      get timeframe() {
-        return self._timeframeClock.timeframe 
+      get timeframe () {
+        return self._timeframeClock.timeframe;
       },
-      get endTimeframe() {
-        return self._iterator.getEndTimeframe()
+      get endTimeframe () {
+        return self._iterator.getEndTimeframe();
       },
       currentTimeframeUpdate: this._timeframeClock.update,
       waitUntilReached: async (target) => {
-          await self._timeframeClock.waitUntilReached(target)
-      },
-    }
+        await self._timeframeClock.waitUntilReached(target);
+      }
+    };
   }
 
   //
   // Writable feed.
   //
 
-  get writer(): FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined {
+  get writer (): FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined {
     return this._writer;
   }
 
@@ -129,20 +127,20 @@ export class Pipeline {
   }
 }
 
-function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<Omit<FeedMessage, 'timeframe'>> {
+const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<Omit<FeedMessage, 'timeframe'>> => {
   const writer = createFeedWriter<FeedMessage>(feed.feed);
   return mapFeedWriter<Omit<FeedMessage, 'timeframe'>, FeedMessage>(msg => ({
     ...msg,
     timeframe: getTimeframe()
   }), writer);
-}
+};
 
 export interface PipelineState {
-  readonly currentTimeframeUpdate: Event<Timeframe>,
-  
+  readonly currentTimeframeUpdate: Event<Timeframe>
+
   readonly timeframe: Timeframe
 
   readonly endTimeframe: Timeframe
 
-  waitUntilReached: (target: Timeframe) => Promise<void>;
+  waitUntilReached: (target: Timeframe) => Promise<void>
 }

@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
@@ -11,10 +12,9 @@ import { Credential } from '@dxos/halo-protocol/src/proto';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { SubscriptionGroup } from '@dxos/util';
-import { Pipeline } from '../packlets/pipeline';
 
-import debug from 'debug';
 import { Database, FeedDatabaseBackend } from '../packlets/database';
+import { Pipeline } from '../packlets/pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
 import { consumePipeline } from './feed-muxer';
 import { PartyFeedProvider } from './party-feed-provider';
@@ -32,7 +32,7 @@ export interface PipelineOptions {
   snapshotInterval?: number
 }
 
-const log = debug(`dxos:echo-db:pipeline`);
+const log = debug('dxos:echo-db:pipeline');
 
 export interface OpenOptions {
   /**
@@ -120,7 +120,7 @@ export class PartyPipeline {
 
   get credentialsWriter (): FeedWriter<Credential> {
     assert(this._pipeline?.writer, 'No writable feed or pipeline is not open.');
-    return mapFeedWriter<Credential, Omit<FeedMessage, 'timeframe'>>(credential => ({ halo: { credential } }), this._pipeline.writer)
+    return mapFeedWriter<Credential, Omit<FeedMessage, 'timeframe'>>(credential => ({ halo: { credential } }), this._pipeline.writer);
   }
 
   /**
@@ -153,7 +153,7 @@ export class PartyPipeline {
         return;
       }
 
-      if(feedKey.equals(genesisFeedKey)) {
+      if (feedKey.equals(genesisFeedKey)) {
         return; // Ignore genesis feed as it is explicitly added to the pipeline during bootstrap.
       }
 
@@ -268,4 +268,3 @@ export class PartyPipeline {
     this._databaseSnapshot = snapshot.database;
   }
 }
-

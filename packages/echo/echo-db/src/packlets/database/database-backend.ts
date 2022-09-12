@@ -23,15 +23,13 @@ const log = debug('dxos:echo-db:database-backend');
  * Creates data snapshots.
  */
 export interface DatabaseBackend {
+  isReadOnly: boolean
+
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>
   close(): Promise<void>
 
-  isReadOnly: boolean
-
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined
-
   createSnapshot(): DatabaseSnapshot
-
   createDataServiceHost(): DataServiceHost
 }
 

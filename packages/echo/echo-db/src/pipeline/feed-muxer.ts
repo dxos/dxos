@@ -6,9 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { checkType } from '@dxos/debug';
-import {
-  createFeedMeta, FeedBlock, IEchoStream
-} from '@dxos/echo-protocol';
+import { createFeedMeta, FeedBlock, IEchoStream } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
@@ -18,20 +16,19 @@ const log = debug('dxos:echo-db:pipeline');
 
 /**
  * Will start reading feed blocks from the iterator.
- * 
+ *
  * Exits when the iterator is closed.
  * For database messages looks up the owning member and updates the clock.
  */
-export function consumePipeline(
+export const consumePipeline = (
   iterator: AsyncIterable<FeedBlock>,
   haloProcessor: CredentialProcessor & PartyStateProvider,
   processEcho: (msg: IEchoStream) => Promise<void>,
   onError: (err: Error) => Promise<void>
-) {
+) => {
   // This will exit cleanly once FeedStoreIterator is closed.
   setImmediate(async () => {
     for await (const block of iterator) {
-
       try {
         const { data: message } = block;
 
@@ -79,4 +76,4 @@ export function consumePipeline(
       }
     }
   });
-}
+};
