@@ -54,10 +54,8 @@ export class SignalManagerImpl implements SignalManager {
       'Only a single signaling server connection is supported'
     );
     for (const host of this._hosts) {
-      const server = new SignalClient(
-        host,
-        async (author, recipient, payload) =>
-          this.onMessage.emit({ author, recipient, payload })
+      const server = new SignalClient(host, async (message) =>
+        this.onMessage.emit(message)
       );
       // TODO(mykola): Add subscription group
       server.swarmEvent.on((data) => this.swarmEvent.emit(data));

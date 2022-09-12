@@ -105,11 +105,15 @@ export class SignalClient implements SignalMethods {
    */
   constructor (
     private readonly _host: string,
-    private readonly _onMessage: (
-      author: PublicKey,
-      recipient: PublicKey,
+    private readonly _onMessage: ({
+      author,
+      recipient,
+      payload
+    }: {
+      author: PublicKey
+      recipient: PublicKey
       payload: Any
-    ) => Promise<void>
+    }) => Promise<void>
   ) {
     this._setState(SignalState.CONNECTING);
     this._createClient();
@@ -303,11 +307,11 @@ export class SignalClient implements SignalMethods {
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
     messageStream.subscribe(async (message: Message) => {
-      await this._onMessage(
-        PublicKey.from(message.author),
-        PublicKey.from(message.recipient),
-        message.payload
-      );
+      await this._onMessage({
+        author: PublicKey.from(message.author),
+        recipient: PublicKey.from(message.recipient),
+        payload: message.payload
+      });
     });
 
     // Saving message stream.
