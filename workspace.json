@@ -28,6 +28,7 @@
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-app": "apps/halo",
     "halo-protocol": "packages/halo/halo-protocol",
+    "keyring": "packages/halo/keyring",
     "hello-world": "apps/hello-world",
     "kai": "apps/experimental/kai",
     "kitchen-sink": "apps/experimental/kitchen-sink",
