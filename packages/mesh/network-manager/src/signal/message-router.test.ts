@@ -2,22 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from "earljs";
-import { it as test, describe } from "mocha";
-import waitForExpect from "wait-for-expect";
+import { expect } from 'earljs';
+import { it as test, describe } from 'mocha';
+import waitForExpect from 'wait-for-expect';
 
-import { Awaited } from "@dxos/async";
-import { Any } from "@dxos/codec-protobuf";
-import { PublicKey } from "@dxos/protocols";
-import { createTestBroker } from "@dxos/signal";
-import { Messenger, SignalClient, SignalManagerImpl } from "@dxos/signaling";
-import { afterTest } from "@dxos/testutils";
+import { Awaited } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/protocols';
+import { createTestBroker } from '@dxos/signal';
+import { Messenger, SignalManagerImpl } from '@dxos/signaling';
+import { afterTest } from '@dxos/testutils';
 
-import { Answer } from "../proto/gen/dxos/mesh/swarm";
-import { MessageRouter } from "./message-router";
-import { OfferMessage, SignalMessage } from "./signal-messaging";
+import { Answer } from '../proto/gen/dxos/mesh/swarm';
+import { MessageRouter } from './message-router';
+import { OfferMessage, SignalMessage } from './signal-messaging';
 
-describe("MessageRouter", () => {
+describe('MessageRouter', () => {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
@@ -37,11 +37,11 @@ describe("MessageRouter", () => {
   const createSignalClientAndMessageRouter = async ({
     signalApiUrl,
     onSignal = (async () => {}) as any,
-    onOffer = async () => ({ accept: true }),
+    onOffer = async () => ({ accept: true })
   }: {
-    signalApiUrl: string;
-    onSignal?: (msg: SignalMessage) => Promise<void>;
-    onOffer?: (msg: OfferMessage) => Promise<Answer>;
+    signalApiUrl: string
+    onSignal?: (msg: SignalMessage) => Promise<void>
+    onOffer?: (msg: OfferMessage) => Promise<Answer>
   }) => {
     const peerId = PublicKey.random();
     const signalManager = new SignalManagerImpl([signalApiUrl]);
@@ -50,26 +50,26 @@ describe("MessageRouter", () => {
 
     const messenger = new Messenger({ signalManager });
     messenger.listen({
-      payloadType: "dxos.mesh.swarm.SwarmMessage",
-      listener: async (message) => await router.receiveMessage(message),
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      listener: async (message) => await router.receiveMessage(message)
     });
 
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
       sendMessage: async (message) => await messenger.message(message),
       onSignal,
-      onOffer,
+      onOffer
     });
     afterTest(() => router.destroy());
 
     return {
       peerId,
       signalManager,
-      router,
+      router
     };
   };
 
-  test("signaling between 2 clients", async () => {
+  test('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
@@ -77,11 +77,11 @@ describe("MessageRouter", () => {
     const { signalManager: signalManager1, peerId: peer1 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
-        onSignal: signalMock1,
+        onSignal: signalMock1
       });
     const { signalManager: signalManager2, router: router2, peerId: peer2 } =
       await createSignalClientAndMessageRouter({
-        signalApiUrl: broker1.url(),
+        signalApiUrl: broker1.url()
       });
 
     await signalManager1.join({ topic, peerId: peer1 });
@@ -92,7 +92,7 @@ describe("MessageRouter", () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: JSON.stringify({ asd: "asd" }) } },
+      data: { signal: { json: JSON.stringify({ asd: 'asd' }) } }
     };
     await router2.signal(msg);
 
@@ -101,17 +101,17 @@ describe("MessageRouter", () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test("offer/answer", async () => {
-    const { signalManager: signalManager1, router: router1 , peerId: peer1} =
+  test('offer/answer', async () => {
+    const { signalManager: signalManager1, router: router1, peerId: peer1 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
     const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
       onSignal: (async () => {}) as any,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => ({ accept: true })
     });
 
     await signalManager1.join({ topic, peerId: peer1 });
@@ -121,12 +121,12 @@ describe("MessageRouter", () => {
       recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: {} }
     });
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 
-  test("signaling between 3 clients", async () => {
+  test('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received1.push(msg);
@@ -135,7 +135,7 @@ describe("MessageRouter", () => {
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: signalMock1,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
     const received2: SignalMessage[] = [];
     const signalMock2 = async (msg: SignalMessage) => {
@@ -145,7 +145,7 @@ describe("MessageRouter", () => {
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: signalMock2,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
     const received3: SignalMessage[] = [];
     const signalMock3 = async (msg: SignalMessage) => {
@@ -155,7 +155,7 @@ describe("MessageRouter", () => {
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: signalMock3,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
 
     await signalManager1.join({ topic, peerId: peer1 });
@@ -168,7 +168,7 @@ describe("MessageRouter", () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: "1to3" } },
+      data: { signal: { json: '1to3' } }
     };
     await router1.signal(msg1to3);
     await waitForExpect(() => {
@@ -181,7 +181,7 @@ describe("MessageRouter", () => {
       recipient: peer3,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: "2to3" } },
+      data: { signal: { json: '2to3' } }
     };
     await router2.signal(msg2to3);
     await waitForExpect(() => {
@@ -194,7 +194,7 @@ describe("MessageRouter", () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { signal: { json: "3to1" } },
+      data: { signal: { json: '3to1' } }
     };
     await router3.signal(msg3to1);
     await waitForExpect(() => {
@@ -202,18 +202,18 @@ describe("MessageRouter", () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test("two offers", async () => {
+  test('two offers', async () => {
     const { signalManager: signalManager1, router: router1, peerId: peer1 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
     const { signalManager: signalManager2, router: router2, peerId: peer2 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
         onSignal: (async () => {}) as any,
-        onOffer: async () => ({ accept: true }),
+        onOffer: async () => ({ accept: true })
       });
 
     await signalManager1.join({ topic, peerId: peer1 });
@@ -225,7 +225,7 @@ describe("MessageRouter", () => {
       recipient: peer2,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: {} }
     });
     expect(answer1.accept).toEqual(true);
 
@@ -235,33 +235,33 @@ describe("MessageRouter", () => {
       recipient: peer1,
       sessionId: PublicKey.random(),
       topic,
-      data: { offer: {} },
+      data: { offer: {} }
     });
     expect(answer2.accept).toEqual(true);
   }).timeout(5_000);
 
-  describe("Reliability", () => {
+  describe('Reliability', () => {
     interface SendMessageArgs {
-      author: PublicKey;
-      recipient: PublicKey;
-      payload: Any;
+      author: PublicKey
+      recipient: PublicKey
+      payload: Any
     }
 
     const setup = ({
       onSignal1 = async () => {},
       onSignal2 = async () => {},
       // Imitates signal network disruptions (e. g. message doubling, ).
-      messageDisruption = (data) => [data],
+      messageDisruption = (data) => [data]
     }: {
-      onSignal1?: (msg: SignalMessage) => Promise<void>;
-      onSignal2?: (msg: SignalMessage) => Promise<void>;
-      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[];
-    }): { mr1: MessageRouter; mr2: MessageRouter } => {
+      onSignal1?: (msg: SignalMessage) => Promise<void>
+      onSignal2?: (msg: SignalMessage) => Promise<void>
+      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[]
+    }): { mr1: MessageRouter, mr2: MessageRouter } => {
       const mr1: MessageRouter = new MessageRouter({
         sendMessage: async (data) =>
           messageDisruption(data).forEach((data) => mr2.receiveMessage(data)),
         onOffer: async () => ({ accept: true }),
-        onSignal: onSignal1,
+        onSignal: onSignal1
       });
       afterTest(() => mr1.destroy());
 
@@ -269,14 +269,14 @@ describe("MessageRouter", () => {
         sendMessage: async (data) =>
           messageDisruption(data).forEach((data) => mr1.receiveMessage(data)),
         onOffer: async () => ({ accept: true }),
-        onSignal: onSignal2,
+        onSignal: onSignal2
       });
       afterTest(() => mr1.destroy());
 
       return { mr1, mr2 };
     };
 
-    test("signaling with non reliable connection", async () => {
+    test('signaling with non reliable connection', async () => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
@@ -297,7 +297,7 @@ describe("MessageRouter", () => {
 
       const { mr2 } = await setup({
         onSignal1: signalMock1,
-        messageDisruption: unreliableConnection,
+        messageDisruption: unreliableConnection
       });
 
       // Sending 3 messages.
@@ -310,7 +310,7 @@ describe("MessageRouter", () => {
             recipient: PublicKey.random(),
             sessionId: PublicKey.random(),
             topic: PublicKey.random(),
-            data: { signal: { json: JSON.stringify({ asd: "asd" }) } },
+            data: { signal: { json: JSON.stringify({ asd: 'asd' }) } }
           });
         });
       // expect to receive 3 messages.
@@ -319,7 +319,7 @@ describe("MessageRouter", () => {
       }, 4_000);
     }).timeout(5_000);
 
-    test("ignoring doubled messages", async () => {
+    test('ignoring doubled messages', async () => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: SendMessageArgs) => [data, data];
 
@@ -330,7 +330,7 @@ describe("MessageRouter", () => {
 
       const { mr2 } = setup({
         onSignal1: signalMock1,
-        messageDisruption: doublingMessage,
+        messageDisruption: doublingMessage
       });
 
       // sending message.
@@ -339,7 +339,7 @@ describe("MessageRouter", () => {
         recipient: PublicKey.random(),
         sessionId: PublicKey.random(),
         topic: PublicKey.random(),
-        data: { signal: { json: "asd" } },
+        data: { signal: { json: 'asd' } }
       });
       // expect to receive 1 message.
       await waitForExpect(() => {

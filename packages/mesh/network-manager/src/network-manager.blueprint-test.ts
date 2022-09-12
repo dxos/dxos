@@ -12,6 +12,7 @@ import { Event, latch, sleep } from '@dxos/async';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
+import { SignalManagerInMemory, SignalManagerImpl } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -19,7 +20,6 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { InMemorySignalManager, SignalManagerImpl } from 'packages/mesh/signaling/dist/src';
 
 const log = debug('dxos:network-manager:test');
 
@@ -38,7 +38,8 @@ const createPeer = async ({
   signalHosts,
   ice
 }: CreatePeerOptions) => {
-  const signalManager = !!signalHosts || signalHosts!.length !== 0 ? new SignalManagerImpl(signalHosts!) : new InMemorySignalManager();
+  const signalManager = signalHosts ? new SignalManagerImpl(signalHosts!) : new SignalManagerInMemory();
+  await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({ signalManager, ice });
   afterTest(() => networkManager.destroy());
 

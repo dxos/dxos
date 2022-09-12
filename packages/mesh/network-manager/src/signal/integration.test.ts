@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from "earljs";
-import waitForExpect from "wait-for-expect";
+import { expect } from 'earljs';
+import waitForExpect from 'wait-for-expect';
 
-import { PublicKey } from "@dxos/protocols";
-import { createTestBroker, TestBroker } from "@dxos/signal";
-import { SignalManagerImpl } from "@dxos/signaling";
-import { afterTest } from "@dxos/testutils";
+import { PublicKey } from '@dxos/protocols';
+import { createTestBroker, TestBroker } from '@dxos/signal';
+import { SignalManagerImpl } from '@dxos/signaling';
+import { afterTest } from '@dxos/testutils';
 
-import { MessageRouter } from "./message-router";
-import { SignalMessage } from "./signal-messaging";
+import { MessageRouter } from './message-router';
+import { SignalMessage } from './signal-messaging';
 
-describe("Signal Integration Test", () => {
+describe('Signal Integration Test', () => {
   let broker: TestBroker;
 
   before(async () => {
@@ -26,8 +26,8 @@ describe("Signal Integration Test", () => {
 
   const setup = () => {
     const signalManager = new SignalManagerImpl([broker.url()]);
-    signalManager.onMessage.on(({ author, recipient, payload }) =>
-      messageRouter.receiveMessage(author, recipient, payload)
+    signalManager.onMessage.on((message) =>
+      messageRouter.receiveMessage(message)
     );
 
     const receivedSignals: SignalMessage[] = [];
@@ -37,18 +37,18 @@ describe("Signal Integration Test", () => {
     const messageRouter = new MessageRouter({
       sendMessage: signalManager.message.bind(signalManager),
       onSignal: signalMock,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async () => ({ accept: true })
     });
     afterTest(() => messageRouter.destroy());
 
     return {
       signalManager,
       receivedSignals,
-      messageRouter,
+      messageRouter
     };
   };
 
-  it("two peers connecting", async () => {
+  it('two peers connecting', async () => {
     const peerNetworking1 = setup();
     const peerNetworking2 = setup();
 
@@ -57,18 +57,18 @@ describe("Signal Integration Test", () => {
     const topic = PublicKey.random();
 
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({swarmEvent}) =>
+      ({ swarmEvent }) =>
         !!swarmEvent.peerAvailable &&
         peer2.equals(swarmEvent.peerAvailable.peer)
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({swarmEvent}) =>
+      ({ swarmEvent }) =>
         !!swarmEvent.peerAvailable &&
         peer1.equals(swarmEvent.peerAvailable.peer)
     );
 
-    await peerNetworking1.signalManager.join(topic, peer1);
-    await peerNetworking2.signalManager.join(topic, peer2);
+    await peerNetworking1.signalManager.join({ topic, peerId: peer1 });
+    await peerNetworking2.signalManager.join({ topic, peerId: peer2 });
 
     await promise1;
     await promise2;
@@ -80,8 +80,8 @@ describe("Signal Integration Test", () => {
         recipient: peer2,
         sessionId: PublicKey.random(),
         data: {
-          offer: {},
-        },
+          offer: {}
+        }
       })
     ).toBeAnObjectWith({ accept: true });
 
@@ -92,8 +92,8 @@ describe("Signal Integration Test", () => {
         recipient: peer1,
         sessionId: PublicKey.random(),
         data: {
-          offer: {},
-        },
+          offer: {}
+        }
       })
     ).toBeAnObjectWith({ accept: true });
 
@@ -104,8 +104,8 @@ describe("Signal Integration Test", () => {
         recipient: peer2,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({ foo: "bar" }) },
-        },
+          signal: { json: JSON.stringify({ foo: 'bar' }) }
+        }
       };
       await peerNetworking1.messageRouter.signal(message);
 
@@ -121,8 +121,8 @@ describe("Signal Integration Test", () => {
         recipient: peer1,
         sessionId: PublicKey.random(),
         data: {
-          signal: { json: JSON.stringify({ foo: "bar" }) },
-        },
+          signal: { json: JSON.stringify({ foo: 'bar' }) }
+        }
       };
       await peerNetworking2.messageRouter.signal(message);
 
