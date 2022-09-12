@@ -2,6 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
+import { PublicKey } from '@dxos/protocols';
 import streamFrom from 'from2';
 import assert from 'node:assert';
 
@@ -105,7 +106,7 @@ export const createBatchStream = (feed: HypercoreFeed, opts: CreateBatchStreamOp
 
   const buildMessage = (data: object) => {
     const message = {
-      key: feed.key,
+      key: PublicKey.from(feed.key),
       seq: seq++,
       data,
       sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,

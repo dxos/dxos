@@ -8,7 +8,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
@@ -19,7 +19,7 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 
-    const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
 
     // Remote feeds from other peers.
     const numFeeds = 5; const messagesPerFeed = 10;

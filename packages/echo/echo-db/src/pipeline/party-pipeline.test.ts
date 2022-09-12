@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { promiseTimeout, sleep } from '@dxos/async';
 import { Keyring, KeyType } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
-import { checkType } from '@dxos/debug';
+import { checkType, todo } from '@dxos/debug';
 import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
@@ -205,7 +205,7 @@ describe.skip('PartyPipeline', () => {
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
 
     const itemId = createId();
-    await feed.feed.append(checkType<FeedMessage>({
+    await feed.feed.append(checkType<FeedMessage>(todo() /*{
       timeframe: new Timeframe(),
       echo: {
         itemId,
@@ -214,7 +214,7 @@ describe.skip('PartyPipeline', () => {
           modelType: ObjectModel.meta.type
         }
       }
-    }));
+    }*/));
 
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });

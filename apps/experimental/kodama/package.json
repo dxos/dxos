@@ -56,7 +56,7 @@
     "@types/copy-paste": "^1.1.30",
     "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
+    "@types/node": "^16.11.58",
     "@types/node-fetch": "^2.5.10",
     "@types/qrcode-terminal": "^0.12.0",
     "@types/react": "^18.0.9",

@@ -95,12 +95,12 @@ describe('space/control-pipeline', () => {
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
 
     // New data feed.
-    const dataFeed = await createFeed();
+    const dataFeed1 = await createFeed();
     await controlPipeline.writer!.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await createCredential({
         issuer: identityKey,
-        subject: dataFeed.key,
+        subject: dataFeed1.key,
         assertion: {
           '@type': 'dxos.halo.credentials.AdmittedFeed',
           partyKey: spaceKey,
@@ -112,7 +112,7 @@ describe('space/control-pipeline', () => {
       })
     });
     await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
-    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
+    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
