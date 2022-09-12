@@ -5,7 +5,9 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
+import {
+  createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage
+} from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
