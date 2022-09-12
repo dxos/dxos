@@ -20,9 +20,15 @@ export class SignalManagerImpl implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */
-  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(topic => topic.toHex());
+  private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(
+    (topic) => topic.toHex()
+  );
+
   /** host => topic => peerId */
-  private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
+  private readonly _topicsJoinedPerSignal = new Map<
+    string,
+    ComplexMap<PublicKey, PublicKey>
+  >();
 
   private _reconciling?: boolean = false;
   private _reconcileTimeoutId?: NodeJS.Timeout;
@@ -30,41 +36,53 @@ export class SignalManagerImpl implements SignalManager {
 
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
-  readonly swarmEvent = new Event<{topic: PublicKey, swarmEvent: SwarmEvent}>();
-  readonly onMessage = new Event<{author: PublicKey, recipient: PublicKey, payload: Any}>();
+  readonly swarmEvent = new Event<{
+    topic: PublicKey
+    swarmEvent: SwarmEvent
+  }>();
 
-  constructor (
-    private readonly _hosts: string[]
-  ) {
+  readonly onMessage = new Event<{
+    author: PublicKey
+    recipient: PublicKey
+    payload: Any
+  }>();
+
+  constructor (private readonly _hosts: string[]) {
     log(`Created WebsocketSignalManager with signal servers: ${_hosts}`);
-    assert(_hosts.length === 1, 'Only a single signaling server connection is supported');
+    assert(
+      _hosts.length === 1,
+      'Only a single signaling server connection is supported'
+    );
     for (const host of this._hosts) {
       const server = new SignalClient(
         host,
-        async (author, recipient, payload) => this.onMessage.emit({ author, recipient, payload })
+        async (author, recipient, payload) =>
+          this.onMessage.emit({ author, recipient, payload })
       );
       // TODO(mykola): Add subscription group
-      server.swarmEvent.on(data => this.swarmEvent.emit(data));
+      server.swarmEvent.on((data) => this.swarmEvent.emit(data));
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host, server);
-      server.commandTrace.on(trace => this.commandTrace.emit(trace));
-      this._topicsJoinedPerSignal.set(host, new ComplexMap(x => x.toHex()));
+      server.commandTrace.on((trace) => this.commandTrace.emit(trace));
+      this._topicsJoinedPerSignal.set(host, new ComplexMap((x) => x.toHex()));
     }
   }
 
   getStatus (): SignalStatus[] {
-    return Array.from(this._servers.values()).map(server => server.getStatus());
+    return Array.from(this._servers.values()).map((server) =>
+      server.getStatus()
+    );
   }
 
-  async join (topic: PublicKey, peerId: PublicKey) {
+  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     assert(!this._topicsJoined.has(topic), `Topic ${topic} is already joined`);
     log(`Join ${topic} ${peerId}`);
     this._topicsJoined.set(topic, peerId);
     this._scheduleReconcile();
   }
 
-  async leave (topic: PublicKey, peerId: PublicKey) {
+  async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     assert(!!this._topicsJoined.has(topic), `Topic ${topic} was not joined`);
     log(`Leave ${topic} ${peerId}`);
     this._topicsJoined.delete(topic);
@@ -82,7 +100,7 @@ export class SignalManagerImpl implements SignalManager {
         () => {
           this._reconciling = false;
         },
-        err => {
+        (err) => {
           this._reconciling = false;
           log(`Error while reconciling: ${err}`);
           this._reconcileLater();
@@ -99,7 +117,10 @@ export class SignalManagerImpl implements SignalManager {
     }
 
     if (!this._reconcileTimeoutId) {
-      this._reconcileTimeoutId = setTimeout(async () => this._scheduleReconcile(), 3000);
+      this._reconcileTimeoutId = setTimeout(
+        async () => this._scheduleReconcile(),
+        3000
+      );
     }
   }
 
@@ -115,7 +136,7 @@ export class SignalManagerImpl implements SignalManager {
         try {
           const desiredPeerId = this._topicsJoined.get(topic);
           if (!desiredPeerId || !desiredPeerId.equals(actualPeerId)) {
-            await server.leave(topic, actualPeerId);
+            await server.leave({ topic, peerId: actualPeerId });
             actualJoinedTopics.delete(topic);
           }
         } catch (err) {
@@ -129,11 +150,16 @@ export class SignalManagerImpl implements SignalManager {
         try {
           const actualPeerId = actualJoinedTopics.get(topic);
           if (!actualPeerId) {
-            await server.join(topic, desiredPeerId);
+            await server.join({ topic, peerId: desiredPeerId });
             actualJoinedTopics.set(topic, desiredPeerId);
           } else {
             if (!actualPeerId.equals(desiredPeerId)) {
-              throw new Error(`Joined with peerId different from desired: ${JSON.stringify({ actualPeerId, desiredPeerId })}`);
+              throw new Error(
+                `Joined with peerId different from desired: ${JSON.stringify({
+                  actualPeerId,
+                  desiredPeerId
+                })}`
+              );
             }
           }
         } catch (err) {
@@ -146,15 +172,28 @@ export class SignalManagerImpl implements SignalManager {
     this._reconciling = false;
   }
 
-  async message (author: PublicKey, recipient: PublicKey, payload: Any): Promise<void> {
+  async message (
+    author: PublicKey,
+    recipient: PublicKey,
+    payload: Any
+  ): Promise<void> {
     log(`Signal ${recipient}`);
-    await Promise.all([...this._servers.values()].map((server: SignalClient) =>
-      server.message(author, recipient, payload).catch(err => console.log(`Error signaling: ${err}`))));
+    await Promise.all(
+      [...this._servers.values()].map((server: SignalClient) =>
+        server
+          .message(author, recipient, payload)
+          .catch((err) => console.log(`Error signaling: ${err}`))
+      )
+    );
   }
 
   async subscribeMessages (peerId: PublicKey): Promise<void> {
     log(`Subscribed for message stream peerId=${peerId}`);
-    await Promise.all([...this._servers.values()].map((signalClient: SignalClient) => signalClient.subscribeMessages(peerId)));
+    await Promise.all(
+      [...this._servers.values()].map((signalClient: SignalClient) =>
+        signalClient.subscribeMessages(peerId)
+      )
+    );
   }
 
   async destroy () {
@@ -162,6 +201,8 @@ export class SignalManagerImpl implements SignalManager {
     if (this._reconcileTimeoutId) {
       clearTimeout(this._reconcileTimeoutId);
     }
-    await Promise.all(Array.from(this._servers.values()).map(server => server.close()));
+    await Promise.all(
+      Array.from(this._servers.values()).map((server) => server.close())
+    );
   }
 }

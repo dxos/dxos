@@ -35,7 +35,7 @@ export class InMemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join (topic: PublicKey, peerId: PublicKey) {
+  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet((x) => x.toHex()));
     }
@@ -69,7 +69,7 @@ export class InMemorySignalManager implements SignalManager {
     }
   }
 
-  async leave (topic: PublicKey, peerId: PublicKey) {
+  async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!state.swarms.has(topic)) {
       state.swarms.set(topic, new ComplexSet((x) => x.toHex()));
     }

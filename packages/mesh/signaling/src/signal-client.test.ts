@@ -39,8 +39,8 @@ describe('SignalClient', () => {
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any);
     afterTest(() => api2.close());
 
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
+    await api1.join({ topic, peerId: peer1 });
+    await api2.join({ topic, peerId: peer2 });
 
     const payload: Any = {
       type_url: 'something',
@@ -64,8 +64,8 @@ describe('SignalClient', () => {
     const promise1 = api1.swarmEvent.waitFor(({ swarmEvent }) => !!swarmEvent.peerAvailable && peer2.equals(swarmEvent.peerAvailable.peer));
     const promise2 = api2.swarmEvent.waitFor(({ swarmEvent }) => !!swarmEvent.peerAvailable && peer1.equals(swarmEvent.peerAvailable.peer));
 
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
+    await api1.join({ topic, peerId: peer1 });
+    await api2.join({ topic, peerId: peer2 });
 
     await promise1;
     await promise2;
@@ -79,7 +79,7 @@ describe('SignalClient', () => {
     const api1 = new SignalClient(broker1.url(), signalMock);
     afterTest(() => api1.close());
 
-    await api1.join(topic, peer1);
+    await api1.join({ topic, peerId: peer1 });
 
     const payload: Any = {
       type_url: 'something',
@@ -102,8 +102,8 @@ describe('SignalClient', () => {
     const api2 = new SignalClient(broker2.url(), async () => {});
     afterTest(() => api2.close());
 
-    await api1.join(topic, peer1);
-    await api2.join(topic, peer2);
+    await api1.join({ topic, peerId: peer1 });
+    await api2.join({ topic, peerId: peer2 });
 
     // await waitForExpect(async () => {
     //   const peers = await api2.lookup(topic);
@@ -128,9 +128,9 @@ describe('SignalClient', () => {
     const api2 = new SignalClient(broker2.url(), signalMock);
     afterTest(() => api2.close());
 
-    await api1.join(topic, peer1);
+    await api1.join({ topic, peerId: peer1 });
     await sleep(3000);
-    await api2.join(topic, peer2);
+    await api2.join({ topic, peerId: peer2 });
 
     const payload: Any = {
       type_url: 'something',

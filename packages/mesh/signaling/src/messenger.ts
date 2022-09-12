@@ -42,7 +42,7 @@ export class Messenger {
     await this._signalManager.message(author, recipient, payload);
   }
 
-   listen ({
+  listen ({
     payloadType,
     listener
   }: {
