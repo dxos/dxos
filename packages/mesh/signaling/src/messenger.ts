@@ -22,53 +22,36 @@ type Listener = ({
 }) => any;
 
 interface MessengerOptions {
-  ownPeerId: PublicKey
   signalManager: SignalManager
 }
 export class Messenger {
-  private readonly _ownPeerId: PublicKey;
   private readonly _signalManager: SignalManager;
   private readonly _listeners = new Map<string, Map<number, Listener>>();
   private _listenerIndex = 0;
 
-  constructor ({ ownPeerId, signalManager }: MessengerOptions) {
-    this._ownPeerId = ownPeerId;
-
+  constructor ({ signalManager }: MessengerOptions) {
     this._signalManager = signalManager;
-
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this._signalManager.subscribeMessages(this._ownPeerId).then(
-      () => log(`Subscribed for messages peerId=${this._ownPeerId}`),
-      (error) => log(`Error: ${error}`)
-    );
-    this._signalManager.onMessage.on(message => {
+    this._signalManager.onMessage.on(async (message) => {
       log(`Received message from ${message.author}`);
-      this._handleMessage(message);
+      await this._handleMessage(message);
     });
   }
 
-  public get ownPeerId (): PublicKey {
-    return this._ownPeerId;
-  }
-
   // TODO(mykola): make reliable.
-  async message ({
-    recipient,
-    payload
-  }: {
-    recipient: PublicKey
-    payload: Any
-  }): Promise<void> {
-    await this._signalManager.message(this._ownPeerId, recipient, payload);
+  async message ({ author, recipient, payload }: Message): Promise<void> {
+    await this._signalManager.message(author, recipient, payload);
   }
 
-  listen ({
+  async listen ({
+    peerId,
     payloadType,
     listener
   }: {
+    peerId: PublicKey
     payloadType?: string
     listener: Listener
-  }): ListeningHandle {
+  }): Promise<ListeningHandle> {
+    await this._signalManager.subscribeMessages(peerId);
     const firstKey = payloadType ?? '';
     const secondKey = this._listenerIndex++;
     if (this._listeners.has(firstKey)) {
@@ -86,10 +69,14 @@ export class Messenger {
 
   private async _handleMessage (message: Message): Promise<void> {
     if (this._listeners.has('')) {
-      [...this._listeners.get('')!.values()].forEach(listener => listener(message));
+      [...this._listeners.get('')!.values()].forEach((listener) =>
+        listener(message)
+      );
     }
     if (this._listeners.has(message.payload.type_url)) {
-      [...this._listeners.get(message.payload.type_url)!.values()].forEach(listener => listener(message));
+      [...this._listeners.get(message.payload.type_url)!.values()].forEach(
+        (listener) => listener(message)
+      );
     }
   }
 }
