@@ -11,9 +11,11 @@ import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { log } from '@dxos/log';
 
-import { Database, FeedDatabaseBackend } from '../database';
+import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
+import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
+import { failUndefined } from '@dxos/debug';
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -33,6 +35,8 @@ export class Space {
   private readonly _dataWriteFeed: FeedDescriptor;
 
   private _dataPipeline?: Pipeline;
+  private _databaseBackend?: FeedDatabaseBackend;
+  private _database?: Database;
 
   constructor ({
     spaceKey,
@@ -75,7 +79,13 @@ export class Space {
     await this._initializeDataPipeline();
   }
 
-  async close () {}
+  async close () {
+    this._dataPipeline?.stop();
+    this._databaseBackend?.close();
+    this._database?.destroy();
+
+    this._controlPipeline.stop();
+  }
 
   private async _initializeDataPipeline () {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
@@ -87,29 +97,42 @@ export class Space {
     }
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const databaseBackend = new FeedDatabaseBackend(
+    this._databaseBackend = new FeedDatabaseBackend(
       mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
-      {},
+      {}, // TODO(dmaretskyi): Populate snapshot.
       {
         snapshots: true
       }
     );
 
-    const database = new Database(modelFactory, databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
+    this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
 
     // Open pipeline and connect it to the database.
-    await database.initialize();
+    await this._database.initialize();
 
     setImmediate(async () => {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
         try {
           log('Processing message', { msg });
-          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
-            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
-            if (!result) {
-              log.warn('Credential processing failed', { msg });
+          const payload = msg.data.payload as TypedMessage;
+          if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
+            const feedInfo = this._controlPipeline.partyState.feeds.get(msg.key);
+            if(!feedInfo) {
+              log.error(`Could not determine feed owner`, { feedKey: msg.key });
+              continue;
             }
+
+            assert(this._databaseBackend);
+            await this._databaseBackend.echoProcessor({
+              data: payload,
+              meta: {
+                feedKey: msg.key,
+                seq: msg.seq,
+                timeframe: msg.data.timeframe,
+                memberKey: feedInfo.assertion.identityKey,
+              }
+            });
           }
         } catch (err: any) {
           log.catch(err);
