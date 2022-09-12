@@ -61,7 +61,6 @@ export class InMemorySignalManager implements SignalManager {
     }
 
     state.swarms.get(topic)!.delete(peerId);
-
     const swarmEvent: SwarmEvent = {
       peerLeft: {
         peer: peerId.asUint8Array()
@@ -84,6 +83,7 @@ export class InMemorySignalManager implements SignalManager {
 // This is global state for the in-memory signal manager.
 const state = {
   swarmEvent: new Event<[topic: PublicKey, swarmEvent: SwarmEvent]>(),
+
   // Mapping from topic to set of peers.
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(x => x.toHex()),
 

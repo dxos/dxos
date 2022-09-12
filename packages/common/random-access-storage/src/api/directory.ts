@@ -15,14 +15,14 @@ export class Directory {
     private readonly _deleteFilesInPath: (path: string) => Promise<void>
   ) { }
 
-  createOrOpen (filename: string, opts?: any): File {
+  createOrOpenFile (filename: string, opts?: any): File {
     return this._createFile(filename, this.path, opts);
   }
 
   /**
    * Create sub-directory.
    */
-  directory (path: string): Directory {
+  createDirectory (path: string): Directory {
     return new Directory(getFullPath(this.path, path), this._createFile, this._deleteFilesInPath);
   }
 

@@ -118,10 +118,10 @@ export class ECHO {
 
     this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    this._metadataStore = new MetadataStore(storage.directory('metadata'));
+    this._snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    this._metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(storage.directory('feeds'), { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,

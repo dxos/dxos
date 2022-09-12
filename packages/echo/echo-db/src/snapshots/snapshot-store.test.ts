@@ -16,7 +16,7 @@ const createPublicKey = () => PublicKey.from(createKeyPair().publicKey);
 
 describe('SnapshotStore', () => {
   test('in-memory', async () => {
-    const store = new SnapshotStore(createStorage({ type: StorageType.RAM }).directory('snapshots'));
+    const store = new SnapshotStore(createStorage({ type: StorageType.RAM }).createDirectory('snapshots'));
 
     const key1 = createPublicKey();
     const key2 = createPublicKey();

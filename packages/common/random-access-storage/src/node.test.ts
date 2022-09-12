@@ -37,9 +37,9 @@ describe('testing node storage types', () => {
   it('create file', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
-    const storageDir = storage.directory('dir');
+    const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.createOrOpen('file');
+    const file = storageDir.createOrOpenFile('file');
     await write(file);
     // TODO(burdon): Why test undefined?
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
@@ -48,9 +48,9 @@ describe('testing node storage types', () => {
   it('delete directory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
-    const storageDir = storage.directory('dir');
+    const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.createOrOpen('file');
+    const file = storageDir.createOrOpenFile('file');
     await write(file);
 
     // Check dir destroy.
@@ -61,9 +61,9 @@ describe('testing node storage types', () => {
   it('destroy storage', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
-    const storageDir = storage.directory('dir');
+    const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.createOrOpen('file');
+    const file = storageDir.createOrOpenFile('file');
     await write(file);
 
     // Check storage destroy.
@@ -78,9 +78,9 @@ describe('testing node storage types', () => {
   it('file exists and destroyes in subDirectory', async () => {
     const dir = temp();
     const storage = createStorage({ root: dir });
-    const storageDir = storage.directory('dir');
-    const storageSubDirectory = storageDir.directory('sub');
-    const file = storageSubDirectory.createOrOpen('file');
+    const storageDir = storage.createDirectory('dir');
+    const storageSubDirectory = storageDir.createDirectory('sub');
+    const file = storageSubDirectory.createOrOpenFile('file');
     await write(file);
     await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
 

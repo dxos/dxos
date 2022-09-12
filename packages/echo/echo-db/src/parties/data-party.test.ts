@@ -27,9 +27,9 @@ describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
 
     const storage = createStorage({ type: StorageType.RAM });
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const networkManager = new NetworkManager();
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
