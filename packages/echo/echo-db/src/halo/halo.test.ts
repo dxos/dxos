@@ -22,7 +22,7 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
 
-describe('HALO', () => {
+describe.skip('HALO', () => {
   const setup = () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);

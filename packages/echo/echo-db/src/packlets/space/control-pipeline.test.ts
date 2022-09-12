@@ -18,7 +18,7 @@ import { afterTest } from '@dxos/testutils';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
-  test.only('admits feeds', async () => {
+  test('admits feeds', async () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
@@ -66,9 +66,8 @@ describe('space/control-pipeline', () => {
 
       for (const credential of genesisMessages) {
         await controlPipeline.writer?.write({
-          halo: {
-            credential
-          }
+          '@type': 'dxos.echo.feed.CredentialsMessage',
+          credential
         });
       }
       await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
@@ -77,55 +76,50 @@ describe('space/control-pipeline', () => {
 
     // New control feed.
     const controlFeed2 = await createFeed();
-    {
-      await controlPipeline.writer!.write({
-        halo: {
-          credential: await createCredential({
-            issuer: identityKey,
-            subject: controlFeed2.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              partyKey: spaceKey,
-              identityKey,
-              deviceKey,
-              designation: AdmittedFeed.Designation.CONTROL
-            },
-            keyring
-          })
-        }
-      });
-      await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
-    }
+    await controlPipeline.writer!.write({
+      '@type': 'dxos.echo.feed.CredentialsMessage',
+      credential: await createCredential({
+        issuer: identityKey,
+        subject: controlFeed2.key,
+        assertion: {
+          '@type': 'dxos.halo.credentials.AdmittedFeed',
+          partyKey: spaceKey,
+          identityKey,
+          deviceKey,
+          designation: AdmittedFeed.Designation.CONTROL
+        },
+        keyring
+      })
+    });
+    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
 
     // New data feed.
-    const dataFeed1 = await createFeed();
-    {
-      await controlPipeline.writer!.write({
-        halo: {
-          credential: await createCredential({
-            issuer: identityKey,
-            subject: dataFeed1.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              partyKey: spaceKey,
-              identityKey,
-              deviceKey,
-              designation: AdmittedFeed.Designation.DATA
-            },
-            keyring
-          })
-        }
-      });
-      await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
-      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
-    }
+    const dataFeed = await createFeed();
+    await controlPipeline.writer!.write({
+      '@type': 'dxos.echo.feed.CredentialsMessage',
+      credential: await createCredential({
+        issuer: identityKey,
+        subject: dataFeed.key,
+        assertion: {
+          '@type': 'dxos.halo.credentials.AdmittedFeed',
+          partyKey: spaceKey,
+          identityKey,
+          deviceKey,
+          designation: AdmittedFeed.Designation.DATA
+        },
+        keyring
+      })
+    });
+    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
     {
       dataFeed1.append({
-        halo: {
+        payload: {
+          '@type': 'dxos.echo.feed.CredentialsMessage',
           credential: await createCredential({
             issuer: identityKey,
             subject: dataFeed2.key,

@@ -20,5 +20,5 @@ describe('space/space', () => {
 
     // TODO(burdon): Standardize getters.
     expect(space.isOpen).toBeFalsy();
-  })
+  });
 });

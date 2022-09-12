@@ -4,16 +4,15 @@
 
 import assert from 'assert';
 
-import { EchoEnvelope, FeedMessage, mapFeedWriter } from '@dxos/echo-protocol';
-import { failUndefined } from '@dxos/debug';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { log } from '@dxos/log';
 
 import { Database, FeedDatabaseBackend } from '../database';
-import { consumePipeline, Pipeline } from '../pipeline';
+import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 
 export type SpaceParams = {
@@ -89,28 +88,33 @@ export class Space {
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const databaseBackend = new FeedDatabaseBackend(
-      mapFeedWriter<EchoEnvelope, Omit<FeedMessage, 'timeframe'>>
-        (echo => ({ echo }), this._dataPipeline.writer ?? failUndefined()),
+      mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
       {},
       {
         snapshots: true
       }
     );
 
-    const database = new Database(modelFactory, databaseBackend, this._memberKey);
+    const database = new Database(modelFactory, databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
 
     // Open pipeline and connect it to the database.
     await database.initialize();
 
-    // TODO(burdon): Don't import functions.
-    consumePipeline(
-      this._pipeline.consume(),
-      this._partyProcessor,
-      databaseBackend.echoProcessor,
-      async error => {
-        // TODO(dmaretskyi): Better error handling.
-        console.error('Pipeline error:', error);
+    setImmediate(async () => {
+      assert(this._dataPipeline);
+      for await (const msg of this._dataPipeline.consume()) {
+        try {
+          log('Processing message', { msg });
+          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
+            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
+            if (!result) {
+              log.warn('Credential processing failed', { msg });
+            }
+          }
+        } catch (err: any) {
+          log.catch(err);
+        }
       }
-    );
+    });
   }
 }

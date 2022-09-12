@@ -60,8 +60,8 @@ export class ControlPipeline {
       for await (const msg of this._pipeline.consume()) {
         try {
           log('Processing message', { msg });
-          if (msg.data.halo) {
-            const result = await this._partyStateMachine.process(msg.data.halo.credential, PublicKey.from(msg.key));
+          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
+            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
             if (!result) {
               log.warn('Credential processing failed', { msg });
             }

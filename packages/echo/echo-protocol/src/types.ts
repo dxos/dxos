@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { TypedProtoMessage } from '@dxos/codec-protobuf';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { CredentialsMessage, EchoEnvelope, FeedMessage } from './proto';
+import { CredentialsMessage, EchoEnvelope, FeedMessage, TYPES } from './proto';
 
 //
 // Keys.
@@ -94,3 +95,5 @@ export type PartyKey = PublicKey;
 //
 
 export type IdentityKey = PublicKey;
+
+export type TypedMessage = TypedProtoMessage<TYPES>

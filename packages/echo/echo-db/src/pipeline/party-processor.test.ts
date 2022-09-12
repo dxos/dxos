@@ -17,7 +17,7 @@ import { PartyProcessor } from '../pipeline';
 
 const log = debug('dxos:echo:parties:party-processor:test');
 
-describe('party-processor', () => {
+describe.skip('party-processor', () => {
   test('genesis', async () => {
     const keyring = new Keyring();
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
