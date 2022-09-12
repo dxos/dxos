@@ -22,7 +22,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
   describe(testGroupName, () => {
     it('open & close', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
       const fileName = randomText();
       const file = directory.createOrOpenFile(fileName);
       await file.close();
@@ -31,7 +31,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
       const file = directory.createOrOpenFile(fileName);
 
       // eslint-disable-next-line unused-imports/no-unused-vars
@@ -46,7 +46,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('create files', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
 
       const count = 10;
       const files = Array.from(Array(count))
@@ -68,7 +68,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('reads from empty file', async function () {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
 
       // TODO(yivlad): Doesn't work for node.
       if (storage.type === StorageType.NODE) {
@@ -84,7 +84,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('reopen', async () => {
       // Open.
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
       const fileName = randomText();
       const file = directory.createOrOpenFile(fileName);
 
@@ -104,7 +104,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const storage = createStorage();
       const fileName = randomText();
       const data = Buffer.from(randomText());
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
       const file = directory.createOrOpenFile(fileName);
 
       // Write & close.
@@ -123,7 +123,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
 
       const fileName = randomText();
       const file = directory.createOrOpenFile(fileName);
@@ -177,7 +177,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('delete file', async function () {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
 
       // TODO(yivlad): Works only for StorageType.RAM.
       if (storage.type !== StorageType.RAM) {
@@ -200,7 +200,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('delete directory', async () => {
       const storage = createStorage();
-      const directory = storage.createDirectory('');
+      const directory = storage.createDirectory();
       const file = directory.createOrOpenFile('file');
 
       const buffer = Buffer.from(randomText());
@@ -216,7 +216,8 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
         // File.truncate() throws 'Not deletable' error for IDb.
         this.skip();
       }
-      const directory = storage.createDirectory('');
+
+      const directory = storage.createDirectory();
       const file = directory.createOrOpenFile(randomText());
 
       const buffer1 = Buffer.from(randomText());
