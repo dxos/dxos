@@ -1,0 +1,4 @@
+syntax = "proto3";
+
+import "@dxos/protocols/src/proto/dxos/mesh/swarm.proto";
+import "@dxos/protocols/src/proto/dxos/mesh/signal.proto";
