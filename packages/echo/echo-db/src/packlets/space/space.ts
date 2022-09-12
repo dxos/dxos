@@ -4,19 +4,19 @@
 
 import assert from 'assert';
 
+import { synchronized } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
+import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed } from '@dxos/halo-protocol';
+import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { log } from '@dxos/log';
 
-import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
+import { Database, FeedDatabaseBackend } from '../database';
 import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
-import { failUndefined } from '@dxos/debug';
-import { synchronized } from '@dxos/async';
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -77,6 +77,20 @@ export class Space {
     return false;
   }
 
+  get database () {
+    return this._database;
+  }
+
+  // TODO(burdon): Why expose this?
+  get controlMessageWriter () {
+    return this._controlPipeline.writer;
+  }
+
+  // TODO(burdon): Why expose this? Method is called "control" but returns state from data.
+  get controlPipelineState () {
+    return this._dataPipeline?.state;
+  }
+
   @synchronized
   async open () {
     if (this._isOpen) {
@@ -84,7 +98,7 @@ export class Space {
     }
 
     await this._controlPipeline.start();
-    await this._initializeDataPipeline();
+    await this._openDataPipeline();
 
     this._isOpen = true;
   }
@@ -95,28 +109,15 @@ export class Space {
       return;
     }
 
-    this._dataPipeline?.stop();
-    this._databaseBackend?.close();
-    this._database?.destroy();
-
-    this._controlPipeline.stop();
+    // TODO(burdon): Does order matter?
+    await this._controlPipeline.stop();
+    await this._closeDataPipeline();
 
     this._isOpen = false;
   }
 
-  get controlMessageWriter() {
-    return this._controlPipeline.writer;
-  }
-
-  get controlPipelineState() {
-    return this._dataPipeline?.state;
-  }
-
-  get database() {
-    return this._database;
-  }
-
-  private async _initializeDataPipeline () {
+  // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?
+  private async _openDataPipeline () {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
     this._dataPipeline = new Pipeline(new Timeframe());
@@ -127,16 +128,17 @@ export class Space {
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     this._databaseBackend = new FeedDatabaseBackend(
-      mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
+      mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
+        '@type': 'dxos.echo.feed.EchoEnvelope', ...msg
+      }), this._dataPipeline.writer ?? failUndefined()),
       {}, // TODO(dmaretskyi): Populate snapshot.
       {
         snapshots: true
       }
     );
 
-    this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
-
     // Open pipeline and connect it to the database.
+    this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
     await this._database.initialize();
 
     setImmediate(async () => {
@@ -147,8 +149,8 @@ export class Space {
           const payload = msg.data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
             const feedInfo = this._controlPipeline.partyState.feeds.get(msg.key);
-            if(!feedInfo) {
-              log.error(`Could not determine feed owner`, { feedKey: msg.key });
+            if (!feedInfo) {
+              log.error('Could not determine feed owner', { feedKey: msg.key });
               continue;
             }
 
@@ -159,7 +161,7 @@ export class Space {
                 feedKey: msg.key,
                 seq: msg.seq,
                 timeframe: msg.data.timeframe,
-                memberKey: feedInfo.assertion.identityKey,
+                memberKey: feedInfo.assertion.identityKey
               }
             });
           }
@@ -168,5 +170,13 @@ export class Space {
         }
       }
     });
+  }
+
+  private async _closeDataPipeline () {
+    assert(this._dataPipeline, 'Data pipeline not initialized.');
+
+    await this._dataPipeline?.stop();
+    await this._databaseBackend?.close();
+    await this._database?.destroy();
   }
 }

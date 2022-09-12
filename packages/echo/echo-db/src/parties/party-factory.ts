@@ -5,10 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import {
-  KeyType,
-  SecretProvider
-} from '@dxos/credentials';
+import { KeyType, SecretProvider } from '@dxos/credentials';
 import { failUndefined, raise, timed } from '@dxos/debug';
 import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -275,6 +272,7 @@ export class PartyFactory {
           snapshot: item.model
         }
       };
+
       await feedWriter.write(message);
     }
 

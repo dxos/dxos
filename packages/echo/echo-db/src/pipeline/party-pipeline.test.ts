@@ -205,7 +205,7 @@ describe.skip('PartyPipeline', () => {
     const feed = await partyFeedProvider.createOrOpenWritableFeed();
 
     const itemId = createId();
-    await feed.feed.append(checkType<FeedMessage>(todo() /*{
+    await feed.feed.append(checkType<FeedMessage>(todo() /* {
       timeframe: new Timeframe(),
       echo: {
         itemId,
@@ -214,7 +214,7 @@ describe.skip('PartyPipeline', () => {
           modelType: ObjectModel.meta.type
         }
       }
-    }*/));
+    } */));
 
     await promiseTimeout(party.database.waitForItem({ id: itemId }), 1000, new Error('timeout'));
   });

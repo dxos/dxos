@@ -2,22 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+import expect from 'expect';
+import { it as test } from 'mocha';
+
 import { Keyring, KeyType } from '@dxos/credentials';
 import { createKeyPair } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
+import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import expect from 'expect';
-import { it as test } from 'mocha';
-import { ControlPipeline } from './control-pipeline';
-import { log } from '@dxos/log';
+import { afterTest } from '@dxos/testutils';
 
 import { Space } from './space';
-import { afterTest } from '@dxos/testutils';
-import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
-import assert from 'assert';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('space/space', () => {
   // test.only('Genesis', async () => {
@@ -59,7 +58,7 @@ describe('space/space', () => {
       feedProvider: key => feedStore.openReadOnlyFeed(key)
     });
 
-    await space.open()
+    await space.open();
     afterTest(() => space.close());
 
     //
@@ -103,16 +102,16 @@ describe('space/space', () => {
 
     {
       assert(space.database);
-      const item1 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' })
-      const item2 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' })
-  
+      const item1 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
+      const item2 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
+
       item1.model.set('foo', 'one');
       item2.model.set('foo', 'two');
-  
+
       expect(item1.model.get('foo')).toEqual('one');
       expect(item2.model.get('foo')).toEqual('two');
-  
-      expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2)
+
+      expect(space.database.select({ type: 'dxos.example' }).exec().entities).toHaveLength(2);
     }
-  })
+  });
 });

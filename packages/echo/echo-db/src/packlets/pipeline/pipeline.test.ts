@@ -64,4 +64,5 @@ describe('pipeline/Pipeline', () => {
   });
 });
 
+// TODO(burdon): Not used?
 const pump = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream) => a.pipe(b).pipe(a);
