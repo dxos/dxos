@@ -82,10 +82,3 @@ export class ControlPipeline {
     return this._partyStateMachine;
   }
 }
-
-
-const controlPipeline = new ControlPipeline()
-
-controlPipeline.onFeedAdmitted.set(async info => {
-
-})

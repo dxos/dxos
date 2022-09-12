@@ -14,7 +14,7 @@ import { log } from '@dxos/log'
 import waitForExpect from 'wait-for-expect';
 
 describe('space/ControlPipeline', () => {
-  test.only('admits feeds', async () => {
+  test('admits feeds', async () => {
     const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
