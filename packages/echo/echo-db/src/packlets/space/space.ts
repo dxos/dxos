@@ -16,6 +16,7 @@ import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { failUndefined } from '@dxos/debug';
+import { synchronized } from '@dxos/async';
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -33,6 +34,8 @@ export class Space {
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   private readonly _controlPipeline: ControlPipeline;
   private readonly _dataWriteFeed: FeedDescriptor;
+
+  private _isOpen = false;
 
   private _dataPipeline?: Pipeline;
   private _databaseBackend?: FeedDatabaseBackend;
@@ -74,17 +77,43 @@ export class Space {
     return false;
   }
 
+  @synchronized
   async open () {
+    if (this._isOpen) {
+      return;
+    }
+
     await this._controlPipeline.start();
     await this._initializeDataPipeline();
+
+    this._isOpen = true;
   }
 
+  @synchronized
   async close () {
+    if (!this._isOpen) {
+      return;
+    }
+
     this._dataPipeline?.stop();
     this._databaseBackend?.close();
     this._database?.destroy();
 
     this._controlPipeline.stop();
+
+    this._isOpen = false;
+  }
+
+  get controlMessageWriter() {
+    return this._controlPipeline.writer;
+  }
+
+  get controlPipelineState() {
+    return this._dataPipeline?.state;
+  }
+
+  get database() {
+    return this._database;
   }
 
   private async _initializeDataPipeline () {
