@@ -15,7 +15,8 @@ import { FeedBlock } from '../types';
 const log = debug('dxos:echo:feed-store-iterator:log');
 const STALL_TIMEOUT = 1000;
 
-/* TODO(burdon): Redesign FeedStore:
+/**
+ * TODO(burdon): Redesign FeedStore:
  * - Event handlers.
  * - Remove path and metadata.
  * - Construction separate from open.
