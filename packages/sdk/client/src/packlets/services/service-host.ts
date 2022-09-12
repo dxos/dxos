@@ -2,11 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { SignalManagerImpl } from '@dxos/signaling';
-
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { SignalManagerImpl } from '@dxos/signaling';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';

@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { SignalManagerImpl } from '@dxos/signaling';
 import { createContext, useContext } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { SignalManagerImpl } from '@dxos/signaling';
 
 export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
 
