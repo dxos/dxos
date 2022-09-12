@@ -5,7 +5,7 @@
 import assert from 'assert';
 import debug from 'debug';
 
-import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter } from '@dxos/echo-protocol';
+import { createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
@@ -62,7 +62,7 @@ export class Pipeline {
     this._initialTimeframe
   );
 
-  private _writer: FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined = undefined;
+  private _writer: FeedWriter<TypedMessage> | undefined = undefined;
 
   constructor (
     private readonly _initialTimeframe: Timeframe
@@ -118,7 +118,7 @@ export class Pipeline {
   // Writable feed.
   //
 
-  get writer(): FeedWriter<Omit<FeedMessage, 'timeframe'>> | undefined {
+  get writer(): FeedWriter<TypedMessage> | undefined {
     return this._writer;
   }
 
@@ -129,10 +129,10 @@ export class Pipeline {
   }
 }
 
-function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<Omit<FeedMessage, 'timeframe'>> {
+function createFeedWriterWithTimeframe(feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> {
   const writer = createFeedWriter<FeedMessage>(feed.feed);
-  return mapFeedWriter<Omit<FeedMessage, 'timeframe'>, FeedMessage>(msg => ({
-    ...msg,
+  return mapFeedWriter(payload => ({
+    payload,
     timeframe: getTimeframe()
   }), writer);
 }

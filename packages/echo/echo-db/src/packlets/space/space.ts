@@ -1,4 +1,5 @@
-import { EchoEnvelope, FeedMessage, mapFeedWriter } from "@dxos/echo-protocol";
+import { failUndefined, todo } from "@dxos/debug";
+import { EchoEnvelope, FeedMessage, mapFeedWriter, TypedMessage } from "@dxos/echo-protocol";
 import { FeedDescriptor } from "@dxos/feed-store";
 import { AdmittedFeed } from "@dxos/halo-protocol";
 import { ModelFactory } from "@dxos/model-factory";
@@ -45,7 +46,7 @@ export class Space {
   async open() {
     await this._controlPipeline.start();
 
-    this._initializeDataPipeline();
+    // this._initializeDataPipeline();
   }
 
   private async _initializeDataPipeline() {
@@ -56,30 +57,32 @@ export class Space {
     for(const feed of this._controlPipeline.partyState.feeds.values()) {
       this._dataPipeline.addFeed(await this._openFeed(feed.key));
     }
+
+    todo()
     
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const databaseBackend = new FeedDatabaseBackend(
-      mapFeedWriter<EchoEnvelope, Omit<FeedMessage, 'timeframe'>>(echo => ({ echo }), this._dataPipeline.writer ?? failUndefined()),
-      {},
-      { snapshots: true }
-    );
-    const database = new Database(
-      modelFactory,
-      databaseBackend,
-      this._memberKey
-    );
+    // const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    // const databaseBackend = new FeedDatabaseBackend(
+    //   mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
+    //   {},
+    //   { snapshots: true }
+    // );
+    // const database = new Database(
+    //   modelFactory,
+    //   databaseBackend,
+    //   this._memberKey
+    // );
 
-    // Open pipeline and connect it to the database.
-    await this._database.initialize();
+    // // Open pipeline and connect it to the database.
+    // await this._database.initialize();
 
-    consumePipeline(
-      this._pipeline.consume(),
-      this._partyProcessor,
-      databaseBackend.echoProcessor,
-      async error => {
-        // TODO(dmaretskyi): Better error handling.
-        console.error('Pipeline error:', error);
-      }
-    );
+    // consumePipeline(
+    //   this._pipeline.consume(),
+    //   this._partyProcessor,
+    //   databaseBackend.echoProcessor,
+    //   async error => {
+    //     // TODO(dmaretskyi): Better error handling.
+    //     console.error('Pipeline error:', error);
+    //   }
+    // );
   }
 }

@@ -10,3 +10,10 @@ export interface SubstitutionDescriptor<T> {
 }
 
 export type Substitutions = Record<string, SubstitutionDescriptor<any>>
+
+/**
+ * Returns a discriminated union of all protobuf types with the '@type' field included.
+ */
+export type TypedProtoMessage<TYPES extends {}> = {
+  [K in keyof TYPES]: TYPES[K] & { '@type': K }
+}[keyof TYPES]

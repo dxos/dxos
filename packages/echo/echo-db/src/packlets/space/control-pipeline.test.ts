@@ -60,9 +60,8 @@ describe('space/ControlPipeline', () => {
       )
       for (const credential of genesisMessages) {
         await controlPipeline.writer?.write({
-          halo: {
+            '@type': 'dxos.echo.feed.CredentialsMessage',
             credential
-          }
         });
       }
       await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
@@ -72,7 +71,7 @@ describe('space/ControlPipeline', () => {
     // New control feed.
     const controlFeed2 = await createFeed();
     await controlPipeline.writer!.write({
-      halo: {
+        '@type': 'dxos.echo.feed.CredentialsMessage',
         credential: await createCredential({
           issuer: identityKey,
           subject: controlFeed2.key,
@@ -85,7 +84,6 @@ describe('space/ControlPipeline', () => {
           },
           keyring,
         })
-      }
     })
     await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
@@ -93,7 +91,7 @@ describe('space/ControlPipeline', () => {
     // New data feed.
     const dataFeed = await createFeed();
     await controlPipeline.writer!.write({
-      halo: {
+        '@type': 'dxos.echo.feed.CredentialsMessage',
         credential: await createCredential({
           issuer: identityKey,
           subject: dataFeed.key,
@@ -106,7 +104,6 @@ describe('space/ControlPipeline', () => {
           },
           keyring,
         })
-      }
     })
     await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed.key]);
@@ -114,7 +111,8 @@ describe('space/ControlPipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const otherFeed = await createFeed();
     dataFeed.append({
-      halo: {
+      payload: {
+        '@type': 'dxos.echo.feed.CredentialsMessage',
         credential: await createCredential({
           issuer: identityKey,
           subject: otherFeed.key,

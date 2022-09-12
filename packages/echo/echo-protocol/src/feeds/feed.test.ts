@@ -14,7 +14,12 @@ import { createFeedWriter } from './feed-writer';
 
 describe('Feed tests:', () => {
   test('codec', () => {
-    const message1: FeedMessage = { timeframe: new Timeframe() };
+    const message1: FeedMessage = { 
+      timeframe: new Timeframe(),
+      payload: {
+        '@type': 'google.protobuf.Empty',
+      }
+    };
 
     const buffer = codec.encode(message1);
 
@@ -30,7 +35,12 @@ describe('Feed tests:', () => {
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     expect(feed.length).toBe(0);
 
-    const data: FeedMessage = { timeframe: new Timeframe() };
+    const data: FeedMessage = { 
+      timeframe: new Timeframe(),
+      payload: {
+        '@type': 'google.protobuf.Empty',
+      }
+    };
 
     await pify(feed.append.bind(feed))(data);
 
@@ -48,7 +58,8 @@ describe('Feed tests:', () => {
 
     const data: FeedMessage = {
       timeframe: new Timeframe(),
-      echo: {
+      payload: {
+        '@type': 'dxos.echo.feed.EchoEnvelope',
         itemId: 'id',
         genesis: {
           itemType: 'foo',

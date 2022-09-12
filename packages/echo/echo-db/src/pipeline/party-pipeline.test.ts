@@ -25,7 +25,7 @@ import { MetadataStore } from './metadata-store';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyPipeline } from './party-pipeline';
 
-describe('PartyPipeline', () => {
+describe.skip('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage('', StorageType.RAM);
     const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
