@@ -32,6 +32,16 @@
           "packages/mesh/protocol-plugin-replicator/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/mesh/protocol-plugin-replicator/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/mesh/protocol-plugin-replicator/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   },
   "implicitDependencies": [

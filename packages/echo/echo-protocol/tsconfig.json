@@ -20,7 +20,7 @@
       "path": "../../common/protocols"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/util"
@@ -30,6 +30,9 @@
     },
     {
       "path": "../feed-store"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
   ]
 }

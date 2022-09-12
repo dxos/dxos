@@ -13,10 +13,10 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
@@ -31,7 +31,7 @@
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
@@ -43,8 +43,6 @@
     "pify": "~5.0.0"
   },
   "devDependencies": {
-    "@dxos/browser-mocha": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
     "@types/debug": "^4.1.7",
@@ -53,21 +51,13 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.unionwith": "^4.6.6",
     "@types/memdown": "^3.0.0",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "expect": "~27.0.2",
     "faker": "^5.1.0",
-    "memdown": "^5.1.0",
-    "mocha": "^8.4.0",
-    "typescript": "^4.7.2"
+    "memdown": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

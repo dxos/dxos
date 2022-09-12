@@ -4,6 +4,8 @@
 
 // DXOS testing browser.
 
+// TODO(wittjosiah): These tests aren't being run, migrate to Typescript.
+
 import expect from 'expect';
 
 import { randomBytes } from '@dxos/crypto';

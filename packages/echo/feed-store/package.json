@@ -16,8 +16,7 @@
     "benchmark": "pnpm run build && pnpm run benchmark:node && pnpm run benchmark:browser",
     "benchmark:browser": "browser-runner dist/src/benchmark.js --timeout 0",
     "benchmark:node": "rm -rf .benchmark && node dist/src/benchmark.js",
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -37,21 +36,16 @@
     "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/crypto": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/from2": "~2.3.1",
-    "@types/jest": "^28.1.6",
-    "@types/node": "^16.11.27",
     "@types/pify": "^3.0.2",
     "@types/pump": "^1.1.0",
     "@types/through2": "^2.0.36",
     "end-of-stream-promise": "^1.0.0",
     "hypertrie": "5.1.1",
-    "tempy": "~1.0.1",
-    "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "tempy": "~1.0.1"
   },
   "publishConfig": {
     "access": "public"

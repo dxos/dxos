@@ -9,8 +9,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -22,19 +21,12 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/debug": "^4.1.7",
-    "@types/mocha": "^8.2.2",
-    "expect": "~27.0.2",
-    "typescript": "^4.7.2"
+    "@types/debug": "^4.1.7"
   },
   "browserslist": [
     "> 5%"
   ],
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

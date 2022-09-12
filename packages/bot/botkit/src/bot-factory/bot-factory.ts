@@ -151,9 +151,9 @@ export class BotFactory implements BotFactoryService {
       await handle.spawn(request.invitation);
       await this._botSnapshotStorage?.backupBot(handle.bot, handle.localPath);
       return handle.bot;
-    } catch (error: any) {
-      log(`[${id}] Failed to spawn bot: ${error.stack ?? error}`);
-      throw error;
+    } catch (err: any) {
+      log(`[${id}] Failed to spawn bot: ${err.stack ?? err}`);
+      throw err;
     }
   }
 
@@ -165,9 +165,9 @@ export class BotFactory implements BotFactoryService {
       await bot.start();
       await this._botSnapshotStorage?.backupBot(bot.bot, bot.localPath);
       return bot.bot;
-    } catch (error: any) {
-      log(`[${id}] Failed to start bot: ${error.stack ?? error}`);
-      throw error;
+    } catch (err: any) {
+      log(`[${id}] Failed to start bot: ${err.stack ?? err}`);
+      throw err;
     }
   }
 
@@ -179,9 +179,9 @@ export class BotFactory implements BotFactoryService {
       await bot.stop();
       await this._botSnapshotStorage?.backupBot(bot.bot, bot.localPath);
       return bot.bot;
-    } catch (error: any) {
-      log(`[${id}] Failed to stop bot: ${error.stack ?? error}`);
-      throw error;
+    } catch (err: any) {
+      log(`[${id}] Failed to stop bot: ${err.stack ?? err}`);
+      throw err;
     }
   }
 
@@ -193,9 +193,9 @@ export class BotFactory implements BotFactoryService {
       await bot.remove();
       await this._botSnapshotStorage?.deleteBackupedBot(id);
       this._bots.delete(id);
-    } catch (error: any) {
-      log(`[${id}] Failed to remove bot: ${error.stack ?? error}`);
-      throw error;
+    } catch (err: any) {
+      log(`[${id}] Failed to remove bot: ${err.stack ?? err}`);
+      throw err;
     }
   }
 

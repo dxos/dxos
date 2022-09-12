@@ -2,7 +2,13 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "lib": ["DOM"] 
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src",
@@ -28,9 +34,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../gravity/browser-mocha"
-    },
-    {
       "path": "../../halo/credentials"
     },
     {
@@ -42,8 +45,5 @@
     {
       "path": "../signal"
     }
-  ],
-  "types": [
-    "mocha"
   ]
 }

@@ -1,11 +1,12 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "exclude": [
-    "src/**/*.test.js"
-  ],
   "include": [
     "src"
   ],
@@ -20,14 +21,13 @@
       "path": "../../common/protocols"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "./tsconfig.spec.json"
     }
-  ],
-  "types": [
-    "jest",
-    "node"
   ]
 }

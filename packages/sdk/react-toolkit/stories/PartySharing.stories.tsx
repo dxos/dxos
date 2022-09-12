@@ -158,7 +158,7 @@ const AutoInvitationGenerator = ({
       const invitation = await party.createInvitation();
       invitation.finished.on(() => setPin(''));
       invitation.connected.on(() => setPin(invitation.secret.toString()));
-
+      // TODO(burdon): Error handling.
       onInvite(invitation.descriptor.encode());
     });
   }, []);

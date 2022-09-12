@@ -130,12 +130,12 @@ export class SignalClient implements SignalMethods {
     this._connectionStarted = Date.now();
     try {
       this._client = new SignalRPCClient(this._host);
-    } catch (error: any) {
+    } catch (err: any) {
       if (this._state === SignalState.RE_CONNECTING) {
         this._reconnectAfter *= 2;
       }
 
-      this._lastError = error;
+      this._lastError = err;
       this._setState(SignalState.DISCONNECTED);
       this._reconnect();
     }

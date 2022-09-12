@@ -29,8 +29,7 @@
       ],
       "options": {
         "entryPoints": [
-          "packages/sdk/client/src/index.ts",
-          "packages/sdk/client/src/client.ts"
+          "packages/sdk/client/src/index.ts"
         ],
         "outdir": "packages/sdk/client/dist/browser",
         "bundlePackages": [
@@ -54,10 +53,19 @@
           "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
     "esbuild",
+    "mocha",
     "protobuf-compiler"
   ]
 }

@@ -6,8 +6,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",
@@ -18,23 +17,13 @@
   },
   "devDependencies": {
     "@dxos/object-model": "workspace:*",
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/jest": "^28.1.6",
     "@types/lodash.times": "^4.3.6",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "abstract-leveldown": "~7.0.0",
-    "expect": "~27.0.2",
-    "jsondown": "dxos/jsondown#main",
-    "ts-node": "^10.8.2",
-    "typescript": "^4.7.2"
+    "jsondown": "dxos/jsondown#main"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "testingFramework": "mocha"
   }
 }

@@ -99,3 +99,6 @@ storybook-static
 .benchmark
 
 *.cpuprofile
+
+# Debug logging for require hooks
+.trace-compiled

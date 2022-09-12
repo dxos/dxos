@@ -12,6 +12,7 @@
           "build",
           "bundle",
           "check",
+          "e2e",
           "lint",
           "prebuild",
           "proto",
@@ -47,6 +48,13 @@
         "build"
       ]
     },
+    "e2e": {
+      "dependsOn": [
+        "proto",
+        "build",
+        "bundle"
+      ]
+    },
     "prebuild": {
       "dependsOn": [
         "^build"
@@ -65,6 +73,14 @@
       ]
     },
     "test": {
+      "inputs": [
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PROCESSOR"
+        }
+      ],
       "dependsOn": [
         "^build",
         "proto"

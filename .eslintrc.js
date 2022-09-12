@@ -21,6 +21,7 @@ module.exports = {
     '.eslintrc.js',
     '.mocharc.js',
     'jest.config.js',
+    'jest.config.ts',
     'esbuild-server.config.js',
     'webpack.config.js',
     'vite.config.ts',

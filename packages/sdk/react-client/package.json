@@ -9,9 +9,7 @@
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",
-    "check": "true",
-    "test": "toolchain test && npm run test:playwright",
-    "test:playwright": "playwright test --config ./tests/playwright/config.ts"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -32,26 +30,19 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
-    "@playwright/test": "^1.25.1",
-    "@testing-library/react": "^11.0.4",
-    "@testing-library/react-hooks": "5.1.2",
+    "@testing-library/dom": "^8.17.1",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^14.4.3",
     "@types/debug": "^4.1.7",
     "@types/level-js": "~4.0.1",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.5",
-    "@types/testing-library__jest-dom": "~5.9.5",
+    "@types/testing-library__jest-dom": "^5.14.5",
     "@types/use-subscription": "^1.0.0",
-    "expect": "~27.0.2",
     "level-js": "^5.0.2",
-    "playwright": "^1.25.1",
-    "raf": "^3.4.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "react-test-renderer": "^18.1.0",
-    "typescript": "^4.7.2",
-    "wait-for-expect": "^3.0.2"
+    "react-test-renderer": "^18.1.0"
   },
   "peerDependencies": {
     "react": "*",
@@ -59,10 +50,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "toolchain": {
-    "jsdom": true,
-    "forceCloseTests": true,
-    "testingFramework": "mocha"
   }
 }

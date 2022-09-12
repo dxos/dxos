@@ -42,7 +42,7 @@ export class ConfigPlugin {
         if (value === 'envs-map.yml') {
           content = mapFromKeyValues(content, process.env);
         }
-      } catch (error) {
+      } catch (err) {
         // code compiler.hooks.thisCompilation.tap('ConfigPlugin', compilation => {
         // code   const error = new WebpackError(`
         // code   `)

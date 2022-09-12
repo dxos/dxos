@@ -2,15 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { screen, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import expect from 'expect';
-import 'raf/polyfill';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { act } from 'react-dom/test-utils';
-import waitForExpect from 'wait-for-expect';
 
-import { Party } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { Party, Client } from '@dxos/client';
 
 import { useSelection } from './useSelection';
 
@@ -36,38 +33,19 @@ const UseSelectionTestComponent = ({ party }: { party: Party}) => {
   const addItem = async () => await party.database.createItem({ type: TYPE_EXAMPLE });
 
   return (
-    <ul onClick={addItem}>
-      {items?.map(item => <li key={item.id}>{item.id}</li>)}
+    <ul data-testid='add' onClick={addItem}>
+      {items?.map(item => <li key={item.id} data-testid='item'>{item.id}</li>)}
     </ul>
   );
 };
 
-let rootContainer: any;
-
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
-
-afterEach(() => {
-  document.body.removeChild(rootContainer);
-  rootContainer = null;
-});
-
 describe('useSelection', () => {
   it('gets updated items selection', async () => {
     const { party } = await createTestComponents();
-    act(() => {
-      ReactDOM.render(<UseSelectionTestComponent party={party} />, rootContainer);
-    });
+    render(<UseSelectionTestComponent party={party} />);
 
-    const ul = rootContainer.querySelector('ul');
-    await waitForExpect(() => {
-      expect(ul.childNodes.length).toEqual(count);
-    });
-    ul.click();
-    await waitForExpect(() => {
-      expect(ul.childNodes.length).toEqual(count + 1);
-    });
+    expect((await screen.findAllByTestId('item')).length).toEqual(count);
+    await userEvent.click(screen.getByTestId('add'));
+    await waitFor(() => screen.getAllByTestId('item').length === count + 1);
   });
 });

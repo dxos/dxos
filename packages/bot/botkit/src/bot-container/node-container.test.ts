@@ -11,7 +11,7 @@ import { join } from 'path';
 import { createId } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
-import { createRpcClient, ProtoRpcClient, RpcPort } from '@dxos/rpc';
+import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
 import { schema } from '../proto/gen';
@@ -19,7 +19,7 @@ import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 
-const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcClient<BotService>> => {
+const createBotRpcClient = async (port: RpcPort): Promise<ProtoRpcPeer<BotService>> => {
   const rpc = createRpcClient(
     schema.getService('dxos.bot.BotService'),
     {

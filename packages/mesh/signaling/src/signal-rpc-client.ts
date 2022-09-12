@@ -8,7 +8,7 @@ import WebSocket from 'isomorphic-ws';
 import { Trigger, Event } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-import { createBundledRpcClient, ProtoRpcClient } from '@dxos/rpc';
+import { createBundledRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { Message, Signal } from './proto';
 import { schema } from './proto/gen';
@@ -20,7 +20,7 @@ const log = debug('dxos:signaling:signal-rpc-client');
 
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
-  private readonly _rpc: ProtoRpcClient<Services>;
+  private readonly _rpc: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
 
   readonly connected = new Event();

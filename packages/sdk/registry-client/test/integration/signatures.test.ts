@@ -13,8 +13,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
 
-import { KeyType } from '@dxos/client';
-import { Client } from '@dxos/client/client';
+import { KeyType, Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 import { PublicKey } from '@dxos/protocols';
 

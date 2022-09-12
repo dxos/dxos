@@ -52,7 +52,6 @@
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
-    "expect": "~27.0.2",
     "fast-check": "~2.14.0",
     "mocha": "^8.4.0",
     "typescript": "^4.7.2",
