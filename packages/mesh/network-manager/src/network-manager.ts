@@ -14,8 +14,8 @@ import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from "@dxos/mesh-protocol";
 import { PublicKey } from "@dxos/protocols";
 import {
   InMemorySignalManager,
+  Messenger,
   SignalManager,
-  SignalManagerImpl,
 } from "@dxos/signaling";
 import { ComplexMap } from "@dxos/util";
 
@@ -57,6 +57,7 @@ export class NetworkManager {
     key.toHex()
   );
   private readonly _signalManager: SignalManager;
+  private readonly _messenger: Messenger;
   private readonly _messageRouter: MessageRouter;
   private readonly _signalConnection: SignalConnection;
   private readonly _connectionLog?: ConnectionLog;
@@ -66,30 +67,46 @@ export class NetworkManager {
   constructor(options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: OfferMessage) =>
-      (await this._swarms.get(message.topic!)?.onOffer(message)) ?? {
-        accept: false,
+    {
+      this._signalManager =
+        options.signalManager ?? new InMemorySignalManager();
+
+      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
+        this._swarms.get(topic)?.onSwarmEvent(event)
+      );
+
+      this._signalManager.onMessage.on((message) =>
+        this._messageRouter.receiveMessage(message)
+      );
+    }
+
+    {
+      this._messenger = new Messenger({ signalManager: this._signalManager });
+
+      const onOffer = async (message: OfferMessage) =>
+        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? {
+          accept: false,
+        };
+
+      this._messageRouter = new MessageRouter({
+        sendMessage: this._messenger.message.bind(this._signalManager),
+        onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
+        onOffer: (msg) => onOffer(msg),
+      });
+
+      this._messenger.listen({
+        payloadType: "dxos.mesh.swarm.SwarmMessage",
+        listener: this._messageRouter.receiveMessage.bind(this._messageRouter),
+      });
+    }
+
+    {
+      this._signalConnection = {
+        join: (topic: PublicKey, peerId: PublicKey) =>
+          this._signalManager.join(topic, peerId),
+        leave: (topic: PublicKey, peerId: PublicKey) =>
+          this._signalManager.leave(topic, peerId),
       };
-
-    this._signalManager = options.signalManager ?? new InMemorySignalManager();
-
-    this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
-      this._swarms.get(topic)?.onSwarmEvent(event)
-    );
-
-    this._signalManager.onMessage.on(({ author, recipient, payload }) =>
-      this._messageRouter.receiveMessage(author, recipient, payload)
-    );
-
-    this._messageRouter = new MessageRouter({
-      sendMessage: this._signalManager.message.bind(this._signalManager),
-      onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
-      onOffer: (msg) => onOffer(msg),
-    });
-
-    this._signalConnection = {
-      join: (topic: PublicKey, peerId: PublicKey) => this._signalManager.join(topic, peerId),
-      leave: (topic: PublicKey, peerId: PublicKey) => this._signalManager.leave(topic, peerId)
     }
 
     if (options.log) {
