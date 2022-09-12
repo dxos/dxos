@@ -9,6 +9,7 @@ import assert from "assert";
 import { Database, FeedDatabaseBackend } from "../database";
 import { Pipeline } from "../pipeline";
 import { ControlPipeline } from "./control-pipeline";
+import { log } from '@dxos/log'
 
 export type SpaceParams = {
   spaceKey: PublicKey;
@@ -60,29 +61,36 @@ export class Space {
 
     todo()
     
-    // const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    // const databaseBackend = new FeedDatabaseBackend(
-    //   mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
-    //   {},
-    //   { snapshots: true }
-    // );
-    // const database = new Database(
-    //   modelFactory,
-    //   databaseBackend,
-    //   this._memberKey
-    // );
+    const modelFactory = new ModelFactory().registerModel(ObjectModel);
+    const databaseBackend = new FeedDatabaseBackend(
+      mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({ '@type': 'dxos.echo.feed.EchoEnvelope', ...msg }), this._dataPipeline.writer ?? failUndefined()),
+      {},
+      { snapshots: true }
+    );
+    const database = new Database(
+      modelFactory,
+      databaseBackend,
+      new PublicKey(Buffer.alloc(32)), // TODO(dmaretskyi): Fix.
+    );
 
-    // // Open pipeline and connect it to the database.
-    // await this._database.initialize();
+    // Open pipeline and connect it to the database.
+    await database.initialize();
 
-    // consumePipeline(
-    //   this._pipeline.consume(),
-    //   this._partyProcessor,
-    //   databaseBackend.echoProcessor,
-    //   async error => {
-    //     // TODO(dmaretskyi): Better error handling.
-    //     console.error('Pipeline error:', error);
-    //   }
-    // );
+    setImmediate(async () => {
+      assert(this._dataPipeline)
+      for await (const msg of this._dataPipeline.consume()) {
+        try {
+          log('Processing message', { msg })
+          if (msg.data.payload['@type'] === 'dxos.echo.feed.CredentialsMessage') {
+            const result = await this._partyStateMachine.process(msg.data.payload.credential, PublicKey.from(msg.key));
+            if(!result) {
+              log.warn('Credential processing failed', { msg })
+            }
+          }
+        } catch (err: any) {
+          log.catch(err);
+        }
+      }
+    });
   }
 }
