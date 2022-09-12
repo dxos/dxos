@@ -44,11 +44,12 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.close();
     });
 
-    it('multiple files', async () => {
+    it('create files', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory('');
 
-      const files = Array.from(Array(10))
+      const count = 10;
+      const files = Array.from(Array(count))
         .map(() => randomText())
         .map(fileName => directory.createOrOpenFile(fileName));
 
@@ -56,6 +57,9 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
         const buffer = Buffer.from(randomText());
         await writeAndCheck(file, buffer);
       }
+
+      const list = directory.getFiles();
+      expect(list).toHaveLength(count);
 
       for (const file of files) {
         await file.close();
