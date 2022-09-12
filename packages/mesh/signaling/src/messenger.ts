@@ -42,16 +42,13 @@ export class Messenger {
     await this._signalManager.message(author, recipient, payload);
   }
 
-  async listen ({
-    peerId,
+   listen ({
     payloadType,
     listener
   }: {
-    peerId: PublicKey
     payloadType?: string
     listener: Listener
-  }): Promise<ListeningHandle> {
-    await this._signalManager.subscribeMessages(peerId);
+  }): ListeningHandle {
     const firstKey = payloadType ?? '';
     const secondKey = this._listenerIndex++;
     if (this._listeners.has(firstKey)) {

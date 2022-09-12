@@ -31,13 +31,14 @@ describe('Messenger', () => {
     const peerId = PublicKey.random();
 
     const signalManager = new SignalManagerImpl([broker.url()]);
+    await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.destroy());
 
     const messenger = new Messenger({
       signalManager
     });
 
-    await messenger.listen({ peerId, listener });
+    await messenger.listen({ listener });
 
     return {
       messenger,
@@ -134,7 +135,6 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const listener1 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      peerId: peerId2,
       payloadType: '1',
       listener: listener1
     });
@@ -142,7 +142,6 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const listener2 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      peerId: peerId2,
       payloadType: '1',
       listener: listener2
     });
@@ -150,7 +149,6 @@ describe('Messenger', () => {
     // Subscribe third listener for second messenger.
     const listener3 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      peerId: peerId2,
       payloadType: '2',
       listener: listener3
     });
@@ -183,7 +181,6 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
     await messenger2.listen({
-      peerId: peerId2,
       payloadType: '1',
       listener: (message) => {
         messages1.push(message);
@@ -193,7 +190,6 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
     const listenerHandle2 = await messenger2.listen({
-      peerId: peerId2,
       payloadType: '1',
       listener: (message) => {
         messages2.push(message);
