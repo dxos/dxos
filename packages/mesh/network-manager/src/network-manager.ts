@@ -98,7 +98,7 @@ export class NetworkManager {
 
       this._messenger.listen({
         payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        listener: (message) => this._messageRouter.receiveMessage(message)
+        onMessage: (message) => this._messageRouter.receiveMessage(message)
       });
     }
 

@@ -12,7 +12,7 @@ import { Message } from './signal-methods';
 
 const log = debug('dxos:signaling:messenger');
 
-type Listener = ({
+type OnMessage = ({
   author,
   recipient,
   payload
@@ -27,8 +27,8 @@ interface MessengerOptions {
 }
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  private readonly _listeners = new Map<string, Set<Listener>>();
-  private readonly _defaultListeners = new Set<Listener>();
+  private readonly _listeners = new Map<string, Set<OnMessage>>();
+  private readonly _defaultListeners = new Set<OnMessage>();
 
   constructor ({ signalManager }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -45,27 +45,27 @@ export class Messenger {
 
   listen ({
     payloadType,
-    listener
+    onMessage
   }: {
     payloadType?: string
-    listener: Listener
+    onMessage: OnMessage
   }): ListeningHandle {
     if (!payloadType) {
-      this._defaultListeners.add(listener);
+      this._defaultListeners.add(onMessage);
     } else {
       if (this._listeners.has(payloadType)) {
-        this._listeners.get(payloadType)!.add(listener);
+        this._listeners.get(payloadType)!.add(onMessage);
       } else {
-        this._listeners.set(payloadType, new Set([listener]));
+        this._listeners.set(payloadType, new Set([onMessage]));
       }
     }
 
     return {
       unsubscribe: () => {
         if (!payloadType) {
-          this._defaultListeners.delete(listener);
+          this._defaultListeners.delete(onMessage);
         } else {
-          this._listeners.get(payloadType)?.delete(listener);
+          this._listeners.get(payloadType)?.delete(onMessage);
         }
       }
     };

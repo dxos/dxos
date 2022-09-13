@@ -51,7 +51,7 @@ describe('MessageRouter', () => {
     const messenger = new Messenger({ signalManager });
     messenger.listen({
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      listener: async (message) => await router.receiveMessage(message)
+      onMessage: async (message) => await router.receiveMessage(message)
     });
 
     const router: MessageRouter = new MessageRouter({

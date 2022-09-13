@@ -27,7 +27,7 @@ describe('Messenger', () => {
 
   const setup = async () => {
     const received: Message[] = [];
-    const listener = (message: Message) => received.push(message);
+    const onMessage = (message: Message) => received.push(message);
 
     const peerId = PublicKey.random();
 
@@ -39,7 +39,7 @@ describe('Messenger', () => {
       signalManager
     });
 
-    await messenger.listen({ listener });
+    await messenger.listen({ onMessage });
 
     return {
       messenger,
@@ -134,24 +134,24 @@ describe('Messenger', () => {
     } = await setup();
 
     // Subscribe first listener for second messenger.
-    const listener1 = mockFn<(message: Message) => void>().returns();
+    const onMessage1 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
       payloadType: '1',
-      listener: listener1
+      onMessage: onMessage1
     });
 
     // Subscribe first listener for second messenger.
-    const listener2 = mockFn<(message: Message) => void>().returns();
+    const onMessage2 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
       payloadType: '1',
-      listener: listener2
+      onMessage: onMessage2
     });
 
     // Subscribe third listener for second messenger.
-    const listener3 = mockFn<(message: Message) => void>().returns();
+    const onMessage3 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
       payloadType: '2',
-      listener: listener3
+      onMessage: onMessage3
     });
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
@@ -168,9 +168,9 @@ describe('Messenger', () => {
       // 3 listeners (default one that was returned by setup() and 2 that listen for type "1") should receive message.
       await waitForExpect(() => {
         expect(received2.at(-1)!).toBeAnObjectWith(message);
-        expect(listener1).toHaveBeenCalledWith([message]);
-        expect(listener2).toHaveBeenCalledWith([message]);
-        expect(listener3).not.toHaveBeenCalledWith([message]);
+        expect(onMessage1).toHaveBeenCalledWith([message]);
+        expect(onMessage2).toHaveBeenCalledWith([message]);
+        expect(onMessage3).not.toHaveBeenCalledWith([message]);
       }, 3_000);
     }
   });
@@ -183,7 +183,7 @@ describe('Messenger', () => {
     const messages1: Message[] = [];
     await messenger2.listen({
       payloadType: '1',
-      listener: (message) => {
+      onMessage: (message) => {
         messages1.push(message);
       }
     });
@@ -192,7 +192,7 @@ describe('Messenger', () => {
     const messages2: Message[] = [];
     const listenerHandle2 = await messenger2.listen({
       payloadType: '1',
-      listener: (message) => {
+      onMessage: (message) => {
         messages2.push(message);
       }
     });
