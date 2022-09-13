@@ -32,8 +32,8 @@ export type SpaceParams = {
  */
 export class Space {
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
-  private readonly _controlPipeline: ControlPipeline;
   private readonly _dataWriteFeed: FeedDescriptor;
+  private readonly _controlPipeline: ControlPipeline;
 
   private _isOpen = false;
 

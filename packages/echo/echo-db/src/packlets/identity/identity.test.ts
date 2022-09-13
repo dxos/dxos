@@ -4,23 +4,20 @@
 
 import { it } from 'mocha';
 
-import { Keyring, KeyType } from '@dxos/keyring';
-
-import { Identity } from './identity';
+import { Keyring } from '@dxos/keyring';
+import { createStorage } from '@dxos/random-access-storage';
 
 describe('Identity', () => {
   it('Sanity', async () => {
-    const keyring = new Keyring();
+    const rootDir = createStorage().createDirectory();
+    const keyring = new Keyring(rootDir);
+    expect(keyring).toBeDefined();
 
-    const createIdentity = () => {
-      const { publicKey: identityKey } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const identity = new Identity({});
-    };
-
-    const constructIdentity = () => {
-
-    };
-
-    expect(identity).toBeDefined();
+    // const createIdentity = () => {
+    //   const { publicKey: identityKey } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    //   const identity = new Identity({});
+    // };
+    //
+    // const constructIdentity = () => {};
   });
 });
