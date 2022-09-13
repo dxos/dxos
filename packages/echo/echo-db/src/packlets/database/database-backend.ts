@@ -47,8 +47,16 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   constructor (
     private readonly _outboundStream: FeedWriter<EchoEnvelope> | undefined,
     private readonly _snapshot?: DatabaseSnapshot,
-    private readonly _options: ItemDemuxerOptions = {}
+    private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
   ) {}
+
+  get isReadOnly (): boolean {
+    return !!this._outboundStream;
+  }
+
+  get echoProcessor () {
+    return this._echoProcessor;
+  }
 
   async open (itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
@@ -60,15 +68,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
     }
   }
 
-  get echoProcessor () {
-    return this._echoProcessor;
-  }
-
   async close () {
-  }
-
-  get isReadOnly (): boolean {
-    return !!this._outboundStream;
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
@@ -101,6 +101,10 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
     private readonly _partyKey: PartyKey
   ) {}
 
+  get isReadOnly (): boolean {
+    return false;
+  }
+
   async open (itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
 
@@ -111,10 +115,6 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
   async close (): Promise<void> {
     // Do nothing for now.
-  }
-
-  get isReadOnly (): boolean {
-    return false;
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
