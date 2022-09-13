@@ -9,7 +9,7 @@ import { promises as fs, constants } from 'fs';
 import path from 'path';
 
 import { File, StorageType } from '../common';
-import { storageTests } from '../testing/storage.blueprint-test';
+import { storageTests } from '../testing';
 import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
