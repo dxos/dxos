@@ -1,1 +1,0 @@
-# GEM Vector Editor
