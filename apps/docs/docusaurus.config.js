@@ -7,18 +7,23 @@
 
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const lightCodeTheme = require('prism-react-renderer/themes/github');
+const siteUrl = process.env.DXOS_SITE_URL || 'https://dxos.org/';
+const githubDocsDirectory = 'https://github.com/dxos/web/blob/main/packages/docs/';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
-  url: 'https://your-docusaurus-test-site.com',
+  title: 'DXOS',
+  tagline: 'The Decentralized Operating System',
+  url: siteUrl,
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'dxos',
+  projectName: 'DXOS',
+  plugins: [
+    './plugins/webpack-plugin.js'
+  ],
 
   presets: [
     [
@@ -27,14 +32,17 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/facebook/docusaurus/edit/main/website/'
+          editUrl: githubDocsDirectory,
+          sidebarItemsGenerator: async ({ defaultSidebarItemsGenerator, ...args }) => {
+            const sidebarItems = await defaultSidebarItemsGenerator(args);
+            return sidebarItems.filter(item =>
+              process.env.HIDE_WIP && 'label' in item ? !item.label?.startsWith('wip-') : true
+            );
+          }
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          editUrl:
-            'https://github.com/facebook/docusaurus/edit/main/website/blog/'
+          editUrl: `${githubDocsDirectory}blog/`
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css')
@@ -47,21 +55,33 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'My Site',
         logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg'
+          alt: 'DXOS',
+          src: 'img/dxos-horizontal.svg',
+          srcDark: 'img/dxos-horizontal-white.svg',
+          // Use `target: "_blank"` to go back to Gatsby Site.
+          // DO NOT REMOVE because it causes issues with the internal redirects
+          target: '_blank'
         },
         items: [
           {
             type: 'doc',
-            docId: 'intro',
+            docId: 'home',
             position: 'left',
-            label: 'Tutorial'
+            label: 'Docs'
           },
-          { to: '/blog', label: 'Blog', position: 'left' },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            to: '/blog',
+            label: 'Blog',
+            position: 'left'
+          },
+          // {
+          //   to: '/showcase',
+          //   label: 'Showcase',
+          //   position: 'left'
+          // },
+          {
+            href: 'https://github.com/dxos',
             label: 'GitHub',
             position: 'right'
           }
@@ -74,8 +94,12 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
-                to: '/docs/intro'
+                label: 'Home',
+                to: '/docs/home'
+              },
+              {
+                label: 'Reference',
+                to: '/docs/api-reference/client'
               }
             ]
           },
@@ -84,15 +108,15 @@ const config = {
             items: [
               {
                 label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus'
+                href: 'https://stackoverflow.com/questions/tagged/dxos'
               },
               {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus'
+                href: 'https://discord.gg/6kzjEMTd'
               },
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/docusaurus'
+                href: 'https://twitter.com/dxos_org'
               }
             ]
           },
@@ -105,12 +129,12 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus'
+                href: 'https://github.com/dxos'
               }
             ]
           }
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`
+        copyright: `Copyright © ${new Date().getFullYear()} DXOS.org. Built with Docusaurus.`
       },
       prism: {
         theme: lightCodeTheme,

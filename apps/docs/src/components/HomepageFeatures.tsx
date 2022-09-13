@@ -1,70 +1,79 @@
-import React from "react";
-import clsx from "clsx";
-import styles from "./HomepageFeatures.module.css";
+//
+// Copyright 2022 DXOS.org
+//
+
+import clsx from 'clsx';
+import React, { ComponentType, SVGProps } from 'react';
+
+import EchoIcon from '../../static/img/home/icon-echo.svg';
+import HaloIcon from '../../static/img/home/icon-halo.svg';
+import MeshIcon from '../../static/img/home/icon-mesh.svg';
+import styles from './HomepageFeatures.module.css';
 
 type FeatureItem = {
-  title: string;
-  image: string;
-  description: JSX.Element;
+  title: string
+  image: ComponentType<SVGProps<SVGSVGElement>>
+  description: JSX.Element
 };
 
-const FeatureList: FeatureItem[] = [
+console.log({ HaloIcon });
+
+const FeatureList = [
   {
-    title: "Easy to Use",
-    image: "/img/undraw_docusaurus_mountain.svg",
+    title: 'Preserving privacy',
+    image: HaloIcon,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        The HALO protocol manages digital identity, collaboration, and access to applications, databases, and network devices. The HALO keychain works across devices and is seamlessly integrated into all DXOS applications.
       </>
-    ),
+    )
   },
   {
-    title: "Focus on What Matters",
-    image: "/img/undraw_docusaurus_tree.svg",
+    title: 'Unlocking your data',
+    image: EchoIcon,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        The ECHO protocol enables secure and scalable realtime databases that are used by applications and network services. ECHO incorporates unique data replication and consensus technologies that power realtime collaboration applications.
       </>
-    ),
+    )
   },
   {
-    title: "Powered by React",
-    image: "/img/undraw_docusaurus_react.svg",
+    title: 'Resilient P2P networks',
+    image: MeshIcon,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        The MESH protocol extends existing internet protocols to enable secure and resilient peer-to-peer networks. MESH enables the development of privacy-preserving applications that operate without centralized infrastructure.
       </>
-    ),
-  },
+    )
+  }
 ];
 
-function Feature({ title, image, description }: FeatureItem) {
-  return (
-    <div className={clsx("col col--4")}>
-      <div className="text--center">
-        <img className={styles.featureSvg} alt={title} src={image} />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <h3>{title}</h3>
-        <p>{description}</p>
+const Feature = ({ title, image: Image, description }: FeatureItem) => (
+  <div className={clsx('col col--4')}>
+    <div className='text--center'>
+      {/* TODO(wittjosiah): Something wrong with React types here, using v18 for some reason. */}
+      {/* eslint-disable-next-line */}
+      {/* @ts-ignore */}
+      <Image className={styles.featureSvg} />
+    </div>
+    <div className='text--center padding-horiz--md'>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+  </div>
+);
+
+export default (): JSX.Element => (
+  <section className={styles.features}>
+    <div className='container'>
+      <div className='row'>
+        {FeatureList.map((props, idx) => (
+          // TODO(wittjosiah): Something wrong with React types here, using v18 for some reason.
+          // eslint-disable-next-line
+          // @ts-ignore
+          <Feature key={idx} {...props} />
+        ))}
       </div>
     </div>
-  );
-}
-
-export default function HomepageFeatures(): JSX.Element {
-  return (
-    <section className={styles.features}>
-      <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+  </section>
+);

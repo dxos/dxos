@@ -5,8 +5,9 @@
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
+import { Message as HaloMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { FeedWriter, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -128,7 +129,7 @@ export class DataParty {
     return this._invitationManager;
   }
 
-  get credentialsWriter () {
+  get credentialsWriter (): FeedWriter<HaloMessage> {
     return this._partyCore.credentialsWriter;
   }
 

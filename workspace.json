@@ -69,6 +69,7 @@
     "rpc": "packages/common/rpc",
     "rpc-worker-proxy": "packages/common/rpc-worker-proxy",
     "rpc-worker-proxy-e2e": "e2e/rpc-worker-proxy",
+    "showcase": "tools/showcase",
     "signal": "packages/mesh/signal",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
