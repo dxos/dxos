@@ -123,9 +123,10 @@ export abstract class BaseCommand extends Command {
    */
   async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
     try {
-      // TODO: Use config.
-      // const wsEndpoint = this.clientConfig?.runtime?.;
-      const wsEndpoint = 'ws://localhost:9003/.well-known/dx/deploy';
+      assert(this._clientConfig);
+
+      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
+      assert(wsEndpoint);
 
       const rpc = new PublisherRpcPeer(wsEndpoint);
       await rpc.connected.waitForCount(1);

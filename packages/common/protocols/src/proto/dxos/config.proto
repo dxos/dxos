@@ -153,6 +153,28 @@ message Runtime {
     optional string debug = 1;
   }
 
+  message Kube {
+    message Autoupdate {
+      optional bool enabled = 1;
+      /// Seconds
+      optional int64 interval = 2;
+    }
+    message Https {
+      optional bool enabled = 1;
+      optional string port = 2;
+    }
+    message P2P {
+      optional string privatekey = 1;
+      optional string port = 2;
+      repeated string bootstrap = 3;
+    }
+    optional string host = 1;
+    optional string port = 2;
+    optional Autoupdate autoupdate = 3;
+    optional Https https = 4;
+    optional P2P p2p = 5;
+  }
+
   //
   // DXOS Services.
   //
@@ -231,6 +253,10 @@ message Runtime {
       optional int32 retry_interval = 4;
     }
 
+    message Publisher {
+      optional string server = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -239,6 +265,7 @@ message Runtime {
     repeated Ice ice = 6;
     optional Machine machine = 7;
     optional BotFactory bot = 8;
+    optional Publisher publisher = 9;
   }
 
   optional Client client = 1;
@@ -247,4 +274,5 @@ message Runtime {
   optional Props props = 4;
   optional Services services = 5;
   optional System system = 6;
+  optional Kube kube = 7;
 }
