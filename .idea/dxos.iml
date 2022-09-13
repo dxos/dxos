@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.trace-compiled" />
       <excludeFolder url="file://$MODULE_DIR$/packages/common/random-access-storage/out" />
       <excludeFolder url="file://$MODULE_DIR$/packages/common/random-access-storage/src/out" />
+      <excludeFolder url="file://$MODULE_DIR$/tmp" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
