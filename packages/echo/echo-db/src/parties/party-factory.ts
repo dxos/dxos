@@ -255,7 +255,7 @@ export class PartyFactory {
     // }
 
     // Write messages to create ECHO items.
-    const feedWriter = createFeedWriter(writableFeed.feed);
+    const feedWriter = createFeedWriter(writableFeed);
     for (const item of snapshot.database?.items || []) {
       const message: FeedMessage = {
         timeframe: new Timeframe(),

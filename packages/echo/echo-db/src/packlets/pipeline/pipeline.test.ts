@@ -58,7 +58,7 @@ describe('pipeline/Pipeline', () => {
     let msgCount = 0;
     for await (const _ of pipeline.consume()) {
       if (++msgCount === numFeeds * messagesPerFeed) {
-        await pipeline.stop();
+        void pipeline.stop();
       }
     }
   });

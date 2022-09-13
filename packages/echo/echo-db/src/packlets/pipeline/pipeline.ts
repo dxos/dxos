@@ -131,7 +131,7 @@ export class Pipeline {
 }
 
 const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
-  const writer = createFeedWriter<FeedMessage>(feed.feed);
+  const writer = createFeedWriter<FeedMessage>(feed);
   return mapFeedWriter(payload => ({
     payload,
     timeframe: getTimeframe()

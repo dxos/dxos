@@ -5,7 +5,7 @@
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import type { HypercoreFeed } from '@dxos/feed-store';
+import type { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/protocols';
 import { MaybePromise } from '@dxos/util';
 
@@ -24,10 +24,9 @@ export const mapFeedWriter = <T, U>(map: (arg: T) => MaybePromise<U>, writer: Fe
   write: async message => writer.write(await map(message))
 });
 
-// TODO(dmaretskyi): Change to take feed descriptor.
-export const createFeedWriter = <T>(feed: HypercoreFeed): FeedWriter<T> => ({
+export const createFeedWriter = <T>(feed: FeedDescriptor): FeedWriter<T> => ({
   write: async message => {
-    const seq = await pify(feed.append.bind(feed))(message);
+    const seq = await feed.append(message);
     return {
       feedKey: PublicKey.from(feed.key),
       seq

@@ -53,7 +53,7 @@ describe('Feed tests:', () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {
@@ -72,9 +72,9 @@ describe('Feed tests:', () => {
     expect(receipt.feedKey.equals(feed.key)).toBe(true);
     expect(receipt.seq).toEqual(0);
 
-    expect(feed.length).toEqual(1);
+    expect(feed.feed.length).toEqual(1);
 
-    const block = await pify(feed.get.bind(feed))(0);
+    const block = await pify(feed.feed.get.bind(feed))(0);
     expect(block).toEqual(data);
   });
 });
