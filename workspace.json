@@ -69,6 +69,7 @@
     "rpc": "packages/common/rpc",
     "rpc-tunnel": "packages/common/rpc-tunnel",
     "rpc-tunnel-e2e": "e2e/rpc-tunnel",
+    "showcase": "tools/showcase",
     "signal": "packages/mesh/signal",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
