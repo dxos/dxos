@@ -2,9 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Storage, StorageConstructor, StorageType } from './api';
-import { NodeStorage } from './implementations/node-storage';
-import { RamStorage } from './implementations/ram-storage';
+import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
+import { NodeStorage } from './node-storage';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
@@ -13,11 +12,13 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
 
   switch (type) {
     case StorageType.RAM: {
-      return new RamStorage(root);
+      return new MemoryStorage(root);
     }
+
     case StorageType.NODE: {
       return new NodeStorage(root);
     }
+
     default: {
       throw new Error(`Invalid type: ${type}`);
     }
