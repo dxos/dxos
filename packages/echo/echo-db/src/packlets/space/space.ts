@@ -8,11 +8,12 @@ import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
-import { AdmittedFeed } from '@dxos/halo-protocol';
+import { AdmittedFeed, Credential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../database';
 import { Pipeline } from '../pipeline';
@@ -34,6 +35,8 @@ export class Space {
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   private readonly _controlPipeline: ControlPipeline;
   private readonly _dataWriteFeed: FeedDescriptor;
+
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   private _isOpen = false;
 
@@ -61,6 +64,7 @@ export class Space {
     });
 
     this._controlPipeline.setWriteFeed(controlWriteFeed);
+    this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
     this._controlPipeline.onFeedAdmitted.set(async info => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.

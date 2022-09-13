@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-import { Callback, ComplexMap } from '@dxos/util';
+import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 import { AdmittedFeed, Credential } from '../proto';
@@ -31,7 +31,7 @@ export interface FeedInfo {
 export class FeedStateMachine {
   private _feeds = new ComplexMap<PublicKey, FeedInfo>(key => key.toHex());
 
-  readonly onFeedAdmitted = new Callback<(info: FeedInfo) => Promise<void>>();
+  readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
 
   constructor (
     private readonly _partyKey: PublicKey

@@ -12,6 +12,7 @@ import { Credential, PartyMember } from '../proto';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 import { log } from '@dxos/log'
+import { AsyncCallback, Callback } from '@dxos/util';
 
 export interface PartyState {
   readonly genesisCredential: Credential | undefined
@@ -31,6 +32,7 @@ export class PartyStateMachine implements PartyState {
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
 
+  readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>()
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
 
@@ -106,6 +108,7 @@ export class PartyStateMachine implements PartyState {
     }
 
     this._credentials.push(credential);
+    await this.onCredentialProcessed.callIfSet(credential);
 
     return true;
   }

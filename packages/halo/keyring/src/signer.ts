@@ -16,10 +16,4 @@ export interface Signer {
    * Key might not be present in the keyring.
    */
   verify: (key: PublicKey, message: Uint8Array, signature: Uint8Array) => Promise<boolean>
-
-  /**
-   * Export the key in the raw format.
-   * May throw an error if the key is not exportable.
-   */
-  exportKey: (key: PublicKey) => Promise<Uint8Array>
 }

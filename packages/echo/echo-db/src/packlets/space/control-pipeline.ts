@@ -3,10 +3,10 @@
 //
 
 import { FeedDescriptor } from '@dxos/feed-store';
-import { AdmittedFeed, FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
+import { AdmittedFeed, Credential, FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { Callback, SubscriptionGroup } from '@dxos/util';
+import { AsyncCallback, Callback, SubscriptionGroup } from '@dxos/util';
 
 import { Pipeline } from '../pipeline';
 
@@ -25,8 +25,9 @@ export class ControlPipeline {
   private readonly _partyStateMachine: PartyStateMachine;
   private readonly _subscriptions = new SubscriptionGroup();
 
-  public readonly onFeedAdmitted = new Callback<(info: FeedInfo) => Promise<void>>();
-  public readonly onMemberAdmitted: Callback<(info: MemberInfo) => Promise<void>>;
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
+  public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
+  public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
 
   constructor ({
     initialTimeframe,
@@ -38,6 +39,7 @@ export class ControlPipeline {
     this._pipeline.addFeed(genesisFeed);
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
+    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this._partyStateMachine.onFeedAdmitted.set(async info => {
       log('Feed admitted', { info });
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
@@ -50,7 +52,6 @@ export class ControlPipeline {
 
       await this.onFeedAdmitted.callIfSet(info);
     });
-
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
   }
 

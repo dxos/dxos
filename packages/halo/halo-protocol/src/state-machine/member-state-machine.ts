@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-import { Callback, ComplexMap } from '@dxos/util';
+import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 import { Credential, PartyMember } from '../proto';
@@ -27,7 +27,7 @@ export class MemberStateMachine {
    */
   private _members = new ComplexMap<PublicKey, MemberInfo>(key => key.toHex());
 
-  readonly onMemberAdmitted = new Callback<(info: MemberInfo) => Promise<void>>();
+  readonly onMemberAdmitted = new Callback<AsyncCallback<MemberInfo>>();
 
   constructor (
     private readonly _partyKey: PublicKey

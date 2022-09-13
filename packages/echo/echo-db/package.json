@@ -33,6 +33,7 @@
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
