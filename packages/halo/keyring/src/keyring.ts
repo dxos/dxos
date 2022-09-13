@@ -1,10 +1,19 @@
-import { PublicKey } from "@dxos/protocols";
-import { Signer } from "./signer";
-import { Directory } from '@dxos/random-access-storage'
-import { ComplexMap } from "@dxos/util";
-import { todo } from "@dxos/debug";
-import * as crypto from 'node:crypto'
+//
+// Copyright 2022 DXOS.org
+//
 
+import assert from 'node:assert';
+import * as crypto from 'node:crypto';
+
+import { synchronized } from '@dxos/async';
+import { todo } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
+import { Directory } from '@dxos/random-access-storage';
+import { ComplexMap } from '@dxos/util';
+
+import { schema } from './proto/gen';
+import { KeyRecord } from './proto/gen/dxos/halo/keyring';
+import { Signer } from './signer';
 
 export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
@@ -13,31 +22,92 @@ export class Keyring implements Signer {
     private readonly _storage: Directory
   ) {}
 
-  sign (key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
+  async sign (key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
+    const keyPair = await this._getKey(key);
 
+    return new Uint8Array(await crypto.webcrypto.subtle.sign({
+      name: 'ECDSA',
+      hash: 'SHA-256'
+    }, keyPair.privateKey, message));
   }
 
-  verify (key: PublicKey, message: Uint8Array, signature: Uint8Array): Promise<boolean> {
+  async verify (key: PublicKey, message: Uint8Array, signature: Uint8Array): Promise<boolean> {
+    const publicKey = this._keyCache.has(key)
+      ? this._keyCache.get(key)!.publicKey
+      : await crypto.webcrypto.subtle.importKey('raw', key.asUint8Array(), { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']);
 
+    return crypto.webcrypto.subtle.verify({
+      name: 'ECDSA',
+      hash: 'SHA-256'
+    }, publicKey, signature, message);
   }
 
-  exportKey(key: PublicKey): Promise<Uint8Array> {
-
-  }
-
-
-  async createKey(): Promise<PublicKey> {
-    const cryptoKey = await crypto.webcrypto.subtle.generateKey({
+  async createKey (): Promise<PublicKey> {
+    const keyPair = await crypto.webcrypto.subtle.generateKey({
       name: 'ECDSA',
       namedCurve: 'P-256'
-    }, true, ['sign', 'verify'])
+    }, true, ['sign', 'verify']);
+    const publicKey = await keyPairToPublicKey(keyPair);
+
+    await this._setKey(keyPair);
+
+    return publicKey;
   }
 
-  deleteKey(key: PublicKey): Promise<void> {
-    
+  @synchronized
+  private async _getKey (key: PublicKey): Promise<CryptoKeyPair> {
+    if (!this._keyCache.has(key)) {
+      const file = this._storage.createOrOpenFile(key.toHex());
+      const { size } = await file.stat();
+
+      if (size === 0) {
+        throw new Error('Key not found');
+      }
+
+      const recordBytes = await file.read(0, size);
+      await file.close();
+
+      const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
+
+      const publicKey = PublicKey.from(record.publicKey);
+      assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
+      const keyPair: CryptoKeyPair = {
+        publicKey: await crypto.webcrypto.subtle.importKey('raw', record.publicKey, {
+          name: 'ECDSA',
+          namedCurve: 'P-256'
+        }, true, ['verify']),
+        privateKey: await crypto.webcrypto.subtle.importKey('pkcs8', record.privateKey, {
+          name: 'ECDSA',
+          namedCurve: 'P-256'
+        }, true, ['sign'])
+      };
+      this._keyCache.set(publicKey, keyPair);
+    }
+    return this._keyCache.get(key)!;
   }
 
-  list(): Promise<PublicKey[]> {
-    return todo(`We need a method to enumerate files in a directory.`)
+  @synchronized
+  private async _setKey (keyPair: CryptoKeyPair) {
+    const publicKey = await keyPairToPublicKey(keyPair);
+    this._keyCache.set(publicKey, keyPair);
+
+    const record: KeyRecord = {
+      publicKey: publicKey.asUint8Array(),
+      privateKey: new Uint8Array(await crypto.webcrypto.subtle.exportKey('pkcs8', keyPair.privateKey))
+    };
+
+    const file = this._storage.createOrOpenFile(publicKey.toHex());
+    await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
+    await file.close();
+  }
+
+  deleteKey (key: PublicKey): Promise<void> {
+    return todo('We need a method to delete a file.');
+  }
+
+  list (): Promise<PublicKey[]> {
+    return todo('We need a method to enumerate files in a directory.');
   }
 }
+
+const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => PublicKey.from(new Uint8Array(await crypto.webcrypto.subtle.exportKey('raw', keyPair.publicKey)));
