@@ -66,6 +66,8 @@ export class PresencePlugin {
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.protocol.presence.Alive');
   private readonly _neighbors = new Map<string, any>();
+
+  // TODO(dmaretskyi): Delete events that aren't used.
   private readonly _error = new Event<Error>();
   private readonly _peerJoined = new Event<Buffer>();
   private readonly _peerLeft = new Event<Buffer>();
@@ -418,7 +420,7 @@ export class PresencePlugin {
       await this._broadcast.publish(this._codec.encode(message));
       log('ping', message);
     } catch (err: any) {
-      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
+      // TODO(dmaretskyi): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
       // They are not fatal, and probably happend because the connection was closed but the broadcast job was not cleaned up.
       process.nextTick(() => this._error.emit(err));
     }
