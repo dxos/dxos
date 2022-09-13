@@ -13,6 +13,30 @@ import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
+export type MemorySignalManagerContext = {
+  // Swarm messages.
+  swarmEvent: Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>
+
+  // Mapping from topic to set of peers.
+  swarms: ComplexMap<PublicKey, ComplexSet<PublicKey>>
+
+  // Map of connections for each peer for signaling.
+  connections: ComplexMap<PublicKey, MemorySignalManager>
+}
+
+export const createMemorySignalManagerContext = (): MemorySignalManagerContext => ({
+  swarmEvent: new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>(),
+
+  // Mapping from topic to set of peers.
+  swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex()),
+
+  // Map of connections for each peer for signaling.
+  connections: new ComplexMap<PublicKey, MemorySignalManager>(key => key.toHex())
+});
+
+/**
+ * In memory signal manager for testing.
+ */
 export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
@@ -27,8 +51,10 @@ export class MemorySignalManager implements SignalManager {
     payload: Any
   }>();
 
-  constructor () {
-    state.swarmEvent.on((data) => this.swarmEvent.emit(data));
+  constructor (
+    private readonly _context: MemorySignalManagerContext
+  ) {
+    this._context.swarmEvent.on((data) => this.swarmEvent.emit(data));
   }
 
   getStatus (): SignalStatus[] {
@@ -36,14 +62,14 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
-    if (!state.swarms.has(topic)) {
-      state.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+    if (!this._context.swarms.has(topic)) {
+      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
     }
 
-    state.swarms.get(topic)!.add(peerId);
-    state.connections.set(peerId, this);
+    this._context.swarms.get(topic)!.add(peerId);
+    this._context.connections.set(peerId, this);
 
-    state.swarmEvent.emit({
+    this._context.swarmEvent.emit({
       topic,
       swarmEvent: {
         peerAvailable: {
@@ -54,7 +80,7 @@ export class MemorySignalManager implements SignalManager {
     });
 
     // Emitting swarm events for each peer.
-    for (const [topic, peerIds] of state.swarms) {
+    for (const [topic, peerIds] of this._context.swarms) {
       Array.from(peerIds).forEach((peerId) => {
         this.swarmEvent.emit({
           topic,
@@ -70,11 +96,11 @@ export class MemorySignalManager implements SignalManager {
   }
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
-    if (!state.swarms.has(topic)) {
-      state.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+    if (!this._context.swarms.has(topic)) {
+      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
     }
 
-    state.swarms.get(topic)!.delete(peerId);
+    this._context.swarms.get(topic)!.delete(peerId);
 
     const swarmEvent: SwarmEvent = {
       peerLeft: {
@@ -82,13 +108,13 @@ export class MemorySignalManager implements SignalManager {
       }
     };
 
-    state.swarmEvent.emit({ topic, swarmEvent });
+    this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
   async sendMessage ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
     assert(recipient);
-    assert(state.connections.get(recipient), 'Peer not connected');
-    state.connections
+    assert(this._context.connections.get(recipient), 'Peer not connected');
+    this._context.connections
       .get(recipient)!
       .onMessage.emit({ author, recipient, payload });
   }
@@ -97,16 +123,3 @@ export class MemorySignalManager implements SignalManager {
 
   async destroy () {}
 }
-
-// TODO(burdon): Remove global singleton.
-// This is global state for the in-memory signal manager.
-const state = {
-  swarmEvent: new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>(),
-  // Mapping from topic to set of peers.
-  swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>((x) => x.toHex()),
-
-  // Map of connections for each peer for signaling.
-  connections: new ComplexMap<PublicKey, MemorySignalManager>((x) =>
-    x.toHex()
-  )
-};
