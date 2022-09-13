@@ -9,7 +9,6 @@ import "../halo/keys.proto";
 
 package dxos.mesh.reliablePayload;
 
-
 message ReliablePayload {
     PubKey messageId = 1;
     google.protobuf.Any payload = 2;
