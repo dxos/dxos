@@ -36,6 +36,7 @@
     "log-hook": "tools/log-hook",
     "lexical-editor": "apps/experimental/lexical-editor",
     "mesh-protocol": "packages/mesh/mesh-protocol",
+    "messaging": "packages/mesh/messaging",
     "messenger-model": "packages/echo/messenger-model",
     "mocha": "tools/executors/mocha",
     "model-factory": "packages/echo/model-factory",

@@ -3,7 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { CommandTrace } from '@dxos/network-manager';
+import { CommandTrace } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 
 import {

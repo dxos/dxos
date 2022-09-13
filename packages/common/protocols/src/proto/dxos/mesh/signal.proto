@@ -1,9 +1,17 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
+
+// 
+// signal - our signal server network.
+// 
 package dxos.mesh.signal;
 
 option go_package = "github.com/dxos/kube/go/signal/pb";
@@ -14,6 +22,7 @@ message JoinRequest {
 }
 
 message Message {
+  // TODO(egor): Rename to `sender`.
   bytes author = 1;
   bytes recipient = 2;
   google.protobuf.Any payload = 3;
