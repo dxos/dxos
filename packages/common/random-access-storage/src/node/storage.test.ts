@@ -18,9 +18,9 @@ const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('he
 
 const write = async (file: File, data = 'test') => {
   const buffer = Buffer.from(data);
-  const i = 8;
-  await file.write(i, buffer);
-  await expect(file.read(i, buffer.length)).resolves.toEqual(buffer);
+  const offset = 8;
+  await file.write(offset, buffer);
+  await expect(file.read(offset, buffer.length)).resolves.toEqual(buffer);
 };
 
 before(() => del(ROOT_DIRECTORY));
