@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "folke.vscode-monorepo-workspace",
+    "esbenp.prettier-vscode"
+  ]
+}
