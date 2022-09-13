@@ -85,7 +85,7 @@ export class SignalManagerInMemory implements SignalManager {
     state.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async message ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
+  async sendMessage ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
     assert(recipient);
     assert(state.connections.get(recipient), 'Peer not connected');
     state.connections

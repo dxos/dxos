@@ -10,7 +10,8 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Message, SwarmEvent } from './proto';
+import { Message as SignalMessage, SwarmEvent } from './proto';
+import { Message } from './signal-methods'
 import { SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -96,7 +97,7 @@ export class SignalClient implements SignalMethods {
     Stream<SwarmEvent>
   >((key) => key.toHex());
 
-  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<Message>>(
+  private readonly _messageStreams = new ComplexMap<PublicKey, Stream<SignalMessage>>(
     (key) => key.toHex()
   );
 
@@ -261,16 +262,8 @@ export class SignalClient implements SignalMethods {
     this._messageStreams.delete(topic);
   }
 
-  async message ({
-    author,
-    recipient,
-    payload
-  }: {
-    author: PublicKey
-    recipient: PublicKey
-    payload: Any
-  }): Promise<void> {
-    await this._client.sendMessage({ author, recipient, payload });
+  async sendMessage (msg: Message): Promise<void> {
+    await this._client.sendMessage(msg);
   }
 
   @synchronized
@@ -306,7 +299,7 @@ export class SignalClient implements SignalMethods {
 
     // Subscribing to messages.
     const messageStream = await this._client.receiveMessages(peerId);
-    messageStream.subscribe(async (message: Message) => {
+    messageStream.subscribe(async (message: SignalMessage) => {
       await this._onMessage({
         author: PublicKey.from(message.author),
         recipient: PublicKey.from(message.recipient),

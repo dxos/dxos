@@ -26,7 +26,7 @@ export interface SignalMethods {
   /**
    * Send message to peer.
    */
-  message: (opts: Message) => Promise<void>
+  sendMessage: (opts: Message) => Promise<void>
 
   /**
    * Start receiving messages from

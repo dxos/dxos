@@ -59,7 +59,7 @@ describe('Messenger', () => {
 
     const message: Message = { author: peerId1, recipient: peerId2, payload };
 
-    await messenger1.message(message);
+    await messenger1.sendMessage(message);
 
     await waitForExpect(() => {
       expect(received2[0]).toBeAnObjectWith(message);
@@ -88,7 +88,7 @@ describe('Messenger', () => {
           value: Buffer.from('0')
         }
       };
-      await messenger1.message(message);
+      await messenger1.sendMessage(message);
       await waitForExpect(() => {
         expect(received2[0]).toBeAnObjectWith(message);
       }, 3_000);
@@ -103,7 +103,7 @@ describe('Messenger', () => {
           value: Buffer.from('1')
         }
       };
-      await messenger1.message(message);
+      await messenger1.sendMessage(message);
       await waitForExpect(() => {
         expect(received3[0]).toBeAnObjectWith(message);
       }, 3_000);
@@ -118,7 +118,7 @@ describe('Messenger', () => {
           value: Buffer.from('2')
         }
       };
-      await messenger2.message(message);
+      await messenger2.sendMessage(message);
       await waitForExpect(() => {
         expect(received1[0]).toBeAnObjectWith(message);
       }, 3_000);
@@ -164,7 +164,7 @@ describe('Messenger', () => {
           value: Buffer.from('0')
         }
       };
-      await messenger1.message(message);
+      await messenger1.sendMessage(message);
       // 3 listeners (default one that was returned by setup() and 2 that listen for type "1") should receive message.
       await waitForExpect(() => {
         expect(received2.at(-1)!).toBeAnObjectWith(message);
@@ -207,7 +207,7 @@ describe('Messenger', () => {
           value: Buffer.from('0')
         }
       };
-      await messenger1.message(message);
+      await messenger1.sendMessage(message);
       // 2 subscribed listeners should receive message.
       await waitForExpect(() => {
         expect(messages1[0]).toEqual(message);
@@ -228,7 +228,7 @@ describe('Messenger', () => {
           value: Buffer.from('0')
         }
       };
-      await messenger1.message(message);
+      await messenger1.sendMessage(message);
       // 1 listener that was not unsubscribed should receive message.
       await waitForExpect(() => {
         expect(messages1[1]).toEqual(message);

@@ -170,7 +170,7 @@ export class WebsocketSignalManager implements SignalManager {
     this._reconciling = false;
   }
 
-  async message ({
+  async sendMessage ({
     author,
     recipient,
     payload
@@ -183,7 +183,7 @@ export class WebsocketSignalManager implements SignalManager {
     await Promise.all(
       [...this._servers.values()].map((server: SignalClient) =>
         server
-          .message({ author, recipient, payload })
+          .sendMessage({ author, recipient, payload })
           .catch((err) => console.log(`Error signaling: ${err}`))
       )
     );

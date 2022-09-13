@@ -57,7 +57,7 @@ describe('SignalClient', () => {
         value: Buffer.from('0')
       }
     };
-    await api2.message(message);
+    await api2.sendMessage(message);
     await waitForExpect(() => {
       expect(signalMock1).toHaveBeenCalledWith([message]);
     }, 4_000);
@@ -115,7 +115,7 @@ describe('SignalClient', () => {
         value: Buffer.from('0')
       }
     };
-    await api1.message(message);
+    await api1.sendMessage(message);
 
     await waitForExpect(() => {
       expect(signalMock).toHaveBeenCalledWith([message]);
@@ -186,7 +186,7 @@ describe('SignalClient', () => {
             value: Buffer.from('0')
           }
         };
-        await api1.message(message);
+        await api1.sendMessage(message);
 
         await waitForExpect(() => {
           expect(signalMock).toHaveBeenCalledWith([message]);
