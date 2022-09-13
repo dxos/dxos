@@ -17,7 +17,7 @@ import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { Keyring } from '../keys';
 import { codec, codecLoop, KeyType, SignedMessage } from '../proto';
@@ -71,7 +71,7 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
   const append = pify(feed.append.bind(feed));

@@ -9,7 +9,7 @@ import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import type { PublicKey } from '@dxos/protocols';
-import type { Directory } from '@dxos/random-access-multi-storage';
+import type { Directory } from '@dxos/random-access-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
@@ -123,7 +123,7 @@ export class FeedDescriptor {
 
   private _createStorage (dir = ''): (name: string) => HypercoreFile {
     return (name) => {
-      const file = this._directory.createOrOpen(`${dir}/${name}`);
+      const file = this._directory.createOrOpenFile(`${dir}/${name}`);
       // Separation between our internal File API and Hypercore's.
       return {
         read: callbackify(file.read.bind(file)),

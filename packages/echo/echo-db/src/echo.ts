@@ -15,7 +15,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
-import { Storage, createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { Storage, createStorage, StorageType } from '@dxos/random-access-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
@@ -105,7 +105,7 @@ export class ECHO {
   // TODO(burdon): Factor out config an define type.
   constructor ({
     keyStorage = memdown(),
-    storage = createStorage('', StorageType.RAM),
+    storage = createStorage({ type: StorageType.RAM }),
     networkManagerOptions,
     /// TODO(burdon): See options below.
     snapshots = true,
@@ -118,10 +118,10 @@ export class ECHO {
 
     this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);
-    this._snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    this._metadataStore = new MetadataStore(storage.directory('metadata'));
+    this._snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    this._metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this._keyring = new Keyring(new KeyStore(keyStorage));
-    this._feedStore = new FeedStore(storage.directory('feeds'), { valueEncoding: codec });
+    this._feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       this._metadataStore,

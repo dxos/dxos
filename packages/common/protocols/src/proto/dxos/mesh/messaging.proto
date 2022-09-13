@@ -1,0 +1,20 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "../halo/keys.proto";
+
+/// 
+/// messaging -- the protocol that clients use to communicate on top of the signal network. 
+/// Right now includes reliability features, but might expand in the future.
+/// 
+package dxos.mesh.messaging;
+
+/// TODO(mykola): implement reliable messaging on Messenger level.
+message ReliablePayload {
+  PubKey messageId = 1;
+  google.protobuf.Any payload = 2;
+}

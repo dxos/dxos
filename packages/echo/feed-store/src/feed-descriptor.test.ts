@@ -11,7 +11,7 @@ import tempy from 'tempy';
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 
@@ -21,7 +21,7 @@ describe('FeedDescriptor', () => {
   beforeEach(async () => {
     const { publicKey, secretKey } = createKeyPair();
     fd = new FeedDescriptor({
-      directory: createStorage('', StorageType.RAM).directory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: defaultHypercore
@@ -42,7 +42,11 @@ describe('FeedDescriptor', () => {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
-    const fd = new FeedDescriptor({ key, directory: createStorage('', StorageType.NODE).directory('feed'), hypercore: defaultHypercore });
+    const fd = new FeedDescriptor({
+      key,
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed'),
+      hypercore: defaultHypercore
+    });
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
   });
@@ -51,7 +55,7 @@ describe('FeedDescriptor', () => {
     const { publicKey, secretKey } = createKeyPair();
 
     const fd = new FeedDescriptor({
-      directory: createStorage('', StorageType.RAM).directory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       valueEncoding: 'json',
@@ -93,7 +97,7 @@ describe('FeedDescriptor', () => {
     // If we try to close a feed that is opening should wait for the open result.
     const { publicKey, secretKey } = createKeyPair();
     const fd2 = new FeedDescriptor({
-      directory: createStorage('', StorageType.RAM).directory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: defaultHypercore
@@ -109,7 +113,7 @@ describe('FeedDescriptor', () => {
 
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage(root, StorageType.NODE).directory('feed'),
+      directory: createStorage({ type: StorageType.NODE, root }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       valueEncoding: 'utf-8',
@@ -136,7 +140,7 @@ describe('FeedDescriptor', () => {
   test('on open error should unlock the resource', async () => {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage('', StorageType.RAM).directory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: () => {
@@ -150,7 +154,7 @@ describe('FeedDescriptor', () => {
   test('on close error should unlock the resource', async () => {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage('', StorageType.RAM).directory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: () => ({

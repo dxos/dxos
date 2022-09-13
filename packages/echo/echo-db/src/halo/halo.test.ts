@@ -12,7 +12,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
@@ -26,11 +26,11 @@ describe('HALO', () => {
       .registerModel(ObjectModel);
 
     const networkManager = new NetworkManager();
-    const storage = createStorage('', StorageType.RAM);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const storage = createStorage({ type: StorageType.RAM });
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const keyring = new Keyring();
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,

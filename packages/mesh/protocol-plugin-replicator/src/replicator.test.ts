@@ -13,7 +13,7 @@ import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
@@ -72,7 +72,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 };
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage('', StorageType.RAM).directory('feed'), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf8' });
   const { publicKey, secretKey } = createKeyPair();
   const { feed } = await feedStore.openReadWriteFeed(
     PublicKey.from(publicKey),

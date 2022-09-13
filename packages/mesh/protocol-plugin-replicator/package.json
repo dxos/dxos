@@ -33,7 +33,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocol-network-generator": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-multi-storage": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
     "@types/pify": "^3.0.2",

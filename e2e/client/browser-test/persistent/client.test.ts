@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { MetadataStore } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Client - persistent', () => {
   it('reset storage', async () => {
@@ -51,8 +51,8 @@ describe('Client - persistent', () => {
   }).timeout(10_000).retries(10);
 
   it('MetadataStore save/load', async () => {
-    const storage = createStorage('', StorageType.IDB);
-    const directory = storage.directory('metadata');
+    const storage = createStorage({ type: StorageType.IDB });
+    const directory = storage.createDirectory('metadata');
     const partyKey = PublicKey.random();
 
     // Create a new metadata store. And adding party.

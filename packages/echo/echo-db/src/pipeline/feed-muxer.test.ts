@@ -13,7 +13,7 @@ import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream }
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { jsonReplacer } from '@dxos/util';
 
 import { TimeframeClock } from '../packlets/database';
@@ -25,8 +25,8 @@ const log = debug('dxos:echo:pipeline:test');
 // TODO(burdon): Test read-only.
 describe('FeedMuxer', () => {
   test('streams', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const storage = createStorage({ type: StorageType.RAM });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const feedKeys: Uint8Array[] = [];
     const feedSelector: FeedSelector = descriptor => !!feedKeys.find(key => descriptor.key.equals(key));
     const feedReadStream = new FeedStoreIterator(feedSelector, () => 0, new Timeframe());
@@ -88,8 +88,8 @@ describe('FeedMuxer', () => {
   });
 
   test('writing', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const storage = createStorage({ type: StorageType.RAM });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const feedReadStream = new FeedStoreIterator(() => true, () => 0, new Timeframe());
 
     const { publicKey, secretKey } = createKeyPair();

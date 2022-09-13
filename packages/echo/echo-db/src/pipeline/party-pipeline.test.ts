@@ -15,7 +15,7 @@ import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { createReplicatorPlugin } from '../protocol';
@@ -26,16 +26,16 @@ import { PartyPipeline } from './party-pipeline';
 
 describe('PartyPipeline', () => {
   const setup = async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const storage = createStorage({ type: StorageType.RAM });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -134,16 +134,16 @@ describe('PartyPipeline', () => {
   });
 
   test('does not open unrelated feeds', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const storage = createStorage({ type: StorageType.RAM });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -273,14 +273,14 @@ describe('PartyPipeline', () => {
   test('two instances replicating', async () => {
     const peer1 = await setup();
 
-    const storage = createStorage('', StorageType.RAM);
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const storage = createStorage({ type: StorageType.RAM });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 

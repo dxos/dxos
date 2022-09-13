@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "es2019"
+    ],
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "types": [
+      "mocha"
+    ]
+  },
+  "exclude": [
+    "/dist/",
+    "/node_modules/"
+  ],
+  "include": [
+    "src"
+  ]
+}

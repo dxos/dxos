@@ -5,14 +5,14 @@
 import expect from 'expect';
 
 import { PublicKey } from '@dxos/protocols';
-import { createStorage, StorageType } from '@dxos/random-access-multi-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { MetadataStore } from './metadata-store';
 
 describe('MetadataStore in-memory', () => {
   it('Creates party and adds feeds to it', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const store = new MetadataStore(storage.directory('metadata'));
+    const storage = createStorage({ type: StorageType.RAM });
+    const store = new MetadataStore(storage.createDirectory('metadata'));
     await store.load();
     expect(store.parties?.length).toBe(0);
 
@@ -34,8 +34,8 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Creates party when adding feed', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const store = new MetadataStore(storage.directory('metadata'));
+    const storage = createStorage({ type: StorageType.RAM });
+    const store = new MetadataStore(storage.createDirectory('metadata'));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -47,8 +47,8 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('Doesn\'t add same feed twice', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const store = new MetadataStore(storage.directory('metadata'));
+    const storage = createStorage({ type: StorageType.RAM });
+    const store = new MetadataStore(storage.createDirectory('metadata'));
     await store.load();
 
     const partyKey = PublicKey.random();
@@ -63,8 +63,8 @@ describe('MetadataStore in-memory', () => {
 
   // TODO(yivlad): Doesn't work for now.
   it.skip('Resets storage', async () => {
-    const storage = createStorage('snapshots', StorageType.RAM);
-    const store = new MetadataStore(storage.directory(''));
+    const storage = createStorage({ type: StorageType.RAM, root: 'snapshots' });
+    const store = new MetadataStore(storage.createDirectory(''));
 
     const partyKey = PublicKey.random();
     const feedKey = PublicKey.random();
@@ -78,8 +78,8 @@ describe('MetadataStore in-memory', () => {
   });
 
   it('not corrupted', async () => {
-    const storage = createStorage('', StorageType.RAM);
-    const dir = storage.directory('metadata');
+    const storage = createStorage({ type: StorageType.RAM });
+    const dir = storage.createDirectory('metadata');
     const metadataStore = new MetadataStore(dir);
 
     // writing something in metadataStore to save.

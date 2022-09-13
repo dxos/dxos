@@ -21,7 +21,7 @@
       "path": "../../common/protocols"
     },
     {
-      "path": "../../common/random-access-multi-storage"
+      "path": "../../common/random-access-storage"
     },
     {
       "path": "../../common/util"

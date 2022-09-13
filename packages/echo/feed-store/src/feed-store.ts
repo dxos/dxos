@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { PublicKey } from '@dxos/protocols';
-import { Directory } from '@dxos/random-access-multi-storage';
+import { Directory } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';

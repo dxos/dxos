@@ -219,12 +219,12 @@ export class Client {
     } else {
       try {
         await this.initializeRemote(onProgressCallback);
-      } catch (error) {
-        if (error instanceof RemoteServiceConnectionTimeout) {
+      } catch (err) {
+        if (err instanceof RemoteServiceConnectionTimeout) {
           log('Failed to connect to remote services. Starting local services.');
           await this.initializeLocal(onProgressCallback);
         } else {
-          throw error;
+          throw err;
         }
       }
     }
