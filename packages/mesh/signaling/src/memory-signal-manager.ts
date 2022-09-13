@@ -13,7 +13,7 @@ import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
-export class SignalManagerInMemory implements SignalManager {
+export class MemorySignalManager implements SignalManager {
   readonly statusChanged = new Event<SignalStatus[]>();
   readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
@@ -106,7 +106,7 @@ const state = {
   swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>((x) => x.toHex()),
 
   // Map of connections for each peer for signaling.
-  connections: new ComplexMap<PublicKey, SignalManagerInMemory>((x) =>
+  connections: new ComplexMap<PublicKey, MemorySignalManager>((x) =>
     x.toHex()
   )
 };

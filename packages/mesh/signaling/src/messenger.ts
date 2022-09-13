@@ -22,7 +22,7 @@ type OnMessage = ({
   payload: Any
 }) => any;
 
-interface MessengerOptions {
+export interface MessengerOptions {
   signalManager: SignalManager
 }
 export class Messenger {

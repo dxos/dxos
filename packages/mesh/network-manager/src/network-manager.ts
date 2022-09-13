@@ -13,7 +13,7 @@ import {
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import {
-  SignalManagerInMemory,
+  MemorySignalManager,
   Messenger,
   SignalManager
 } from '@dxos/signaling';
@@ -71,7 +71,7 @@ export class NetworkManager {
 
     {
       this._signalManager =
-        options.signalManager ?? new SignalManagerInMemory();
+        options.signalManager ?? new MemorySignalManager();
 
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
@@ -160,7 +160,7 @@ export class NetworkManager {
     // TODO(burdon): Require factory (i.e., don't make InMemorySignalManager by default).
     // TODO(burdon): Bundle common transport related classes.
     const transportFactory =
-      this._signalManager instanceof SignalManagerInMemory
+      this._signalManager instanceof MemorySignalManager
         ? inMemoryTransportFactory
         : createWebRTCTransportFactory({ iceServers: this._ice });
 

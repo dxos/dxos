@@ -12,7 +12,7 @@ import { Event, latch, sleep } from '@dxos/async';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
-import { SignalManagerInMemory, WebsocketSignalManager } from '@dxos/signaling';
+import { MemorySignalManager, WebsocketSignalManager } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -38,7 +38,7 @@ const createPeer = async ({
   signalHosts,
   ice
 }: CreatePeerOptions) => {
-  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new SignalManagerInMemory();
+  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager();
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({ signalManager, ice });
   afterTest(() => networkManager.destroy());
