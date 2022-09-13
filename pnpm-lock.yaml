@@ -186,6 +186,7 @@ importers:
       '@types/fs-extra': ^9.0.4
       '@types/inquirer': ^9.0.1
       '@types/js-yaml': ^4.0.5
+      '@types/lodash.defaultsdeep': ^4.6.6
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
       chai: ^4.3.4
@@ -200,6 +201,7 @@ importers:
       ipfs-http-client: ~56.0.1
       isomorphic-ws: ^4.0.1
       js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       mocha: ^8.4.0
       node-fetch: ^2.6.0
       oclif: ^3.1.2
@@ -231,6 +233,7 @@ importers:
       ipfs-http-client: 56.0.2_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.6
       js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       node-fetch: 2.6.7
       oclif: 3.1.2
       react: 18.2.0
@@ -245,6 +248,7 @@ importers:
       '@types/fs-extra': 9.0.13
       '@types/inquirer': 9.0.1
       '@types/js-yaml': 4.0.5
+      '@types/lodash.defaultsdeep': 4.6.6
       '@types/mocha': 8.2.3
       '@types/node': 16.11.27
       chai: 4.3.4
