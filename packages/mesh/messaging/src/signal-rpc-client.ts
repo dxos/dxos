@@ -10,13 +10,13 @@ import { Any, Stream } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
-import { schema } from '../proto/gen';
-import { Message, Signal } from '../proto/gen/dxos/mesh/signal';
+import { Message, Signal } from './proto';
+import { schema } from './proto/gen';
 interface Services {
   Signal: Signal
 }
 
-const log = debug('dxos:network-manager:signal-rpc-client');
+const log = debug('dxos:signaling:signal-rpc-client');
 
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
@@ -81,7 +81,7 @@ export class SignalRPCClient {
     );
   }
 
-  async join (topic: PublicKey, peerId: PublicKey) {
+  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     log('join', topic, peerId);
     await this._connectTrigger.wait();
     const swarmStream = this._rpc.rpc.Signal.join({
@@ -101,13 +101,13 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage (author: PublicKey, recipient: PublicKey, message: Any) {
-    log('sendMessage', author, recipient, message);
+  async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
+    log('sendMessage', author, recipient, payload);
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
-      payload: message
+      payload
     });
   }
 
