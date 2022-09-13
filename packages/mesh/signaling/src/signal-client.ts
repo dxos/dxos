@@ -11,8 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Message as SignalMessage, SwarmEvent } from './proto';
-import { Message } from './signal-methods'
-import { SignalMethods } from './signal-methods';
+import { Message, SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 
 const log = debug('dxos:signaling:signal-client');

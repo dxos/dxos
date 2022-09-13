@@ -11,8 +11,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { Messenger } from './messenger';
 import { Any } from './proto/gen/google/protobuf';
-import { WebsocketSignalManager } from './websocket-signal-manager';
 import { Message } from './signal-methods';
+import { WebsocketSignalManager } from './websocket-signal-manager';
 
 describe('Messenger', () => {
   let broker: TestBroker;
