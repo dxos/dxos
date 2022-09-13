@@ -1,11 +1,14 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
 syntax = "proto3";
 
-import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
+import "../halo/keys.proto";
 
+// 
+// swarm - peer to peer networking that uses signal and messaging.
+// 
 package dxos.mesh.swarm;
 
 message SwarmMessage {

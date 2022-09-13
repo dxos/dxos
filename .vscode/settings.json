@@ -6,7 +6,11 @@
     }
   ],
   "cSpell.words": [
-    "burdon"
+    "burdon",
+    "dxos",
+    "DXOS",
+    "protobuf",
+    "testutils"
   ],
   "files.associations": {
     "workspace.json": "jsonc",
