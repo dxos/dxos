@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/protocols';
 
 import { Any } from './proto/gen/google/protobuf';
 import { SignalManager } from './signal-manager';
+import { Message } from './signal-methods';
 
 const log = debug('dxos:signaling:messenger');
 
@@ -80,10 +81,4 @@ export class Messenger {
 
 export interface ListeningHandle {
   unsubscribe: () => any
-}
-
-export interface Message {
-  author: PublicKey
-  recipient: PublicKey
-  payload: Any
 }

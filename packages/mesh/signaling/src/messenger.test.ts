@@ -9,9 +9,10 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Messenger, Message } from './messenger';
+import { Messenger } from './messenger';
 import { Any } from './proto/gen/google/protobuf';
 import { SignalManagerImpl } from './signal-manager-impl';
+import { Message } from './signal-methods';
 
 describe('Messenger', () => {
   let broker: TestBroker;

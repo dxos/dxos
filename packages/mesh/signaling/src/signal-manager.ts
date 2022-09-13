@@ -8,13 +8,13 @@ import { PublicKey } from '@dxos/protocols';
 import { SwarmEvent } from './proto';
 import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
-import { SignalMethods } from './signal-methods';
+import { Message, SignalMethods } from './signal-methods';
 
 export interface SignalManager extends SignalMethods {
   statusChanged: Event<SignalStatus[]>
   commandTrace: Event<CommandTrace>
   swarmEvent: Event<{topic: PublicKey, swarmEvent: SwarmEvent}>
-  onMessage: Event<{author: PublicKey, recipient: PublicKey, payload: Any}>
+  onMessage: Event<Message>
 
   getStatus (): SignalStatus[]
   destroy(): Promise<void>
