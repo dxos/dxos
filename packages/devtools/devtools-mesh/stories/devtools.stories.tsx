@@ -29,7 +29,7 @@ import {
   CommandTrace,
   SignalStatus,
   WebsocketSignalManager
-} from '@dxos/signaling';
+} from '@dxos/messaging';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 

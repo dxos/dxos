@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { JsonTreeView } from '@dxos/react-components';
-import { CommandTrace } from '@dxos/signaling';
+import { CommandTrace } from '@dxos/messaging';
 
 export interface SignalTraceProps {
   trace: CommandTrace[]
