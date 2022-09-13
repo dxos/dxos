@@ -16,17 +16,17 @@ export interface SignalMethods {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join: (opts: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
+  join: (params: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave: (opts: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
+  leave: (params: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
 
   /**
    * Send message to peer.
    */
-  sendMessage: (opts: Message) => Promise<void>
+  sendMessage: (message: Message) => Promise<void>
 
   /**
    * Start receiving messages from

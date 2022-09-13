@@ -12,7 +12,7 @@ import { Message } from './signal-methods';
 
 const log = debug('dxos:signaling:messenger');
 
-export type OnMessage = (opts: {
+export type OnMessage = (params: {
   author: PublicKey
   recipient: PublicKey
   payload: Any

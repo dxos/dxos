@@ -29,7 +29,7 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (opts: {
+  sendMessage?: (params: {
     author: PublicKey
     recipient: PublicKey
     payload: Any
