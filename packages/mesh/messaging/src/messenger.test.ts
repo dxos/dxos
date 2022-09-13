@@ -27,7 +27,9 @@ describe('Messenger', () => {
 
   const setup = async () => {
     const received: Message[] = [];
-    const onMessage = (message: Message) => received.push(message);
+    const onMessage = async (message: Message) => {
+      received.push(message);
+    };
 
     const peerId = PublicKey.random();
 
@@ -134,21 +136,21 @@ describe('Messenger', () => {
     } = await setup();
 
     // Subscribe first listener for second messenger.
-    const onMessage1 = mockFn<(message: Message) => void>().returns();
+    const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example1',
       onMessage: onMessage1
     });
 
     // Subscribe first listener for second messenger.
-    const onMessage2 = mockFn<(message: Message) => void>().returns();
+    const onMessage2 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example1',
       onMessage: onMessage2
     });
 
     // Subscribe third listener for second messenger.
-    const onMessage3 = mockFn<(message: Message) => void>().returns();
+    const onMessage3 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example2',
       onMessage: onMessage3
@@ -183,7 +185,7 @@ describe('Messenger', () => {
     const messages1: Message[] = [];
     await messenger2.listen({
       payloadType: 'dxos.Example1',
-      onMessage: (message) => {
+      onMessage: async (message) => {
         messages1.push(message);
       }
     });
@@ -192,7 +194,7 @@ describe('Messenger', () => {
     const messages2: Message[] = [];
     const listenerHandle2 = await messenger2.listen({
       payloadType: 'dxos.Example1',
-      onMessage: (message) => {
+      onMessage: async (message) => {
         messages2.push(message);
       }
     });
@@ -216,7 +218,7 @@ describe('Messenger', () => {
     }
 
     // Unsubscribe second listener.
-    listenerHandle2.unsubscribe();
+    await listenerHandle2.unsubscribe();
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {

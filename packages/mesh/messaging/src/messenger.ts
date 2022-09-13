@@ -20,7 +20,7 @@ type OnMessage = ({
   author: PublicKey
   recipient: PublicKey
   payload: Any
-}) => any;
+}) => Promise<void>;
 
 export interface MessengerOptions {
   signalManager: SignalManager
@@ -65,7 +65,7 @@ export class Messenger {
     }
 
     return {
-      unsubscribe: () => {
+      unsubscribe: async () => {
         if (!payloadType) {
           this._defaultListeners.delete(onMessage);
         } else {
@@ -76,17 +76,17 @@ export class Messenger {
   }
 
   private async _handleMessage (message: Message): Promise<void> {
-    [...this._defaultListeners.values()].forEach((listener) =>
-      listener(message)
+    [...this._defaultListeners.values()].forEach(async (listener) =>
+      await listener(message)
     );
     if (this._listeners.has(message.payload.type_url)) {
       [...this._listeners.get(message.payload.type_url)!.values()].forEach(
-        (listener) => listener(message)
+        async (listener) => await listener(message)
       );
     }
   }
 }
 
 export interface ListeningHandle {
-  unsubscribe: () => any
+  unsubscribe: () => Promise<void>
 }
