@@ -47,4 +47,4 @@ message Signal {
 message Acknowledgement {
   // MessageId of the Message being acknowledged.
   PubKey messageId = 1;
- }
+}
