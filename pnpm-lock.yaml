@@ -2192,7 +2192,6 @@ importers:
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
@@ -2236,7 +2235,6 @@ importers:
       ws: 7.5.6
       xor-distance: 2.0.0
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../common/testutils
       '@swc-node/register': 1.5.1_typescript@4.7.4
@@ -13259,7 +13257,7 @@ packages:
   /axios/0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.14.6
+      follow-redirects: 1.14.6_debug@4.3.4
     transitivePeerDependencies:
       - debug
 
@@ -18681,15 +18679,6 @@ packages:
       from2: 2.3.0
     dev: true
 
-  /follow-redirects/1.14.6:
-    resolution: {integrity: sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
   /follow-redirects/1.14.6_debug@4.3.4:
     resolution: {integrity: sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==}
     engines: {node: '>=4.0'}
@@ -18700,7 +18689,6 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
-    dev: true
 
   /for-in/1.0.2:
     resolution: {integrity: sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ==}

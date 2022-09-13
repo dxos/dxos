@@ -32,9 +32,18 @@
           "packages/mesh/signaling/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/signaling/src/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }
