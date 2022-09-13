@@ -16,7 +16,6 @@
     "/node_modules/"
   ],
   "include": [
-    "src",
-    "src/interfaces/.ts"
+    "src"
   ]
 }

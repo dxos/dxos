@@ -4,10 +4,10 @@
   "description": "Multiple random storage types.",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/src/browser.js",
+    "./dist/src/index.js": "./dist/src/browser/index.js",
     "node:assert": "assert",
     "node:path": "path-browserify"
   },
