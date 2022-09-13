@@ -10,3 +10,10 @@ Factory for creating platform-specific [random-access-storage](https://github.co
 - `node`
   - `StorageType.RAM`: [random-access-memory](https://github.com/random-access-storage/random-access-memory).
   - `StorageType.NODE`: Store files in the real filesystem [random-access-file](https://github.com/random-access-storage/random-access-file). Default.
+
+## Development
+
+Browser extensions to manage and inspect storage:
+
+- https://addons.mozilla.org/en-US/firefox/addon/clear-browsing-data/?src=search
+- https://chrome.google.com/webstore/detail/clear-cache-for-chrome/lcebokhepdpopanpieoopnjiehmoabfp?hl=en-US
