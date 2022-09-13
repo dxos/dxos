@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Keyring } from '@dxos/credentials';
+import { Signer, verifySignature } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
 import { Chain, Credential } from '../proto';
@@ -28,7 +28,7 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
   }
 
   {
-    const result = await verifySignature(credential);
+    const result = await verifyCredentialSignature(credential);
     if (result.kind === 'fail') {
       return result;
     }
@@ -41,13 +41,13 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-const verifySignature = async (credential: Credential): Promise<VerificationResult> => {
+const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
   if (credential.proof.type !== SIGNATURE_TYPE_ED25519) {
     return { kind: 'fail', errors: [`Invalid signature type: ${credential.proof.type}`] };
   }
 
   const signData = getSignaturePayload(credential);
-  if (!Keyring.cryptoVerify(Buffer.from(signData), Buffer.from(credential.proof.value), credential.proof.signer.asBuffer())) {
+  if (!await verifySignature(credential.proof.signer, signData, credential.proof.value)) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 

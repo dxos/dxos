@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Keyring } from '@dxos/credentials';
+import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
 import { AdmittedFeed, Chain, Credential, PartyMember } from '../proto';
@@ -16,7 +16,7 @@ export type CreateCredentialParams = {
   subject: PublicKey
   assertion: MessageType
   issuer: PublicKey
-  keyring: Keyring
+  keyring: Signer
   /**
    * Provided if it is different from issuer.
    */
@@ -66,7 +66,7 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
   return credential;
 };
 
-export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicKey) =>
+export const createPartyGenesisCredential = (keyring: Signer, partyKey: PublicKey) =>
   createCredential({
     subject: partyKey,
     issuer: partyKey,
@@ -78,7 +78,7 @@ export const createPartyGenesisCredential = (keyring: Keyring, partyKey: PublicK
   });
 
 export const createGenesisCredentialSequence = async (
-  keyring: Keyring,
+  keyring: Signer,
   partyKey: PublicKey,
   identityKey: PublicKey,
   deviceKey: PublicKey,

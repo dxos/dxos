@@ -3,8 +3,7 @@
 //
 
 import expect from 'expect';
-
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring } from '@dxos/keyring';
 
 import { createCredential, verifyCredential } from '../credentials';
 import { AdmittedFeed, Chain, PartyMember } from '../proto';
@@ -13,10 +12,10 @@ import { PartyStateMachine } from './party-state-machine';
 describe('PartyStateMachine', () => {
   it('basic party creation', async () => {
     const keyring = new Keyring();
-    const { publicKey: party } = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const { publicKey: feed } = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const party = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const device = await keyring.createKey();
+    const feed = await keyring.createKey();
 
     const partyState = new PartyStateMachine(party);
 
@@ -95,11 +94,11 @@ describe('PartyStateMachine', () => {
 
   it('admitting a member', async () => {
     const keyring = new Keyring();
-    const { publicKey: party } = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const { publicKey: feed } = await keyring.createKeyRecord({ type: KeyType.FEED });
-    const { publicKey: identity2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+    const party = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const device = await keyring.createKey();
+    const feed = await keyring.createKey();
+    const identity2 = await keyring.createKey();
 
     const partyState = new PartyStateMachine(party);
 
@@ -175,11 +174,11 @@ describe('PartyStateMachine', () => {
 
   it('storing device credentials and building a chain', async () => {
     const keyring = new Keyring();
-    const { publicKey: haloParty } = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
-    const { publicKey: feed } = await keyring.createKeyRecord({ type: KeyType.FEED });
+    const haloParty = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const device1 = await keyring.createKey();
+    const device2 = await keyring.createKey();
+    const feed = await keyring.createKey();
 
     const haloState = new PartyStateMachine(haloParty);
 

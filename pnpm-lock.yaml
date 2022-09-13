@@ -1900,23 +1900,29 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/log': workspace:^2.33.4
       '@dxos/protocols': workspace:2.33.8
+      '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
+      '@types/json-stable-stringify': ^1.0.32
       debug: ^4.3.3
+      json-stable-stringify: ^1.0.1
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../credentials
       '@dxos/debug': link:../../common/debug
+      '@dxos/keyring': link:../keyring
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
+      '@types/json-stable-stringify': 1.0.33
       debug: 4.3.4
+      json-stable-stringify: 1.0.1
     devDependencies:
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@types/debug': 4.1.7
 
   packages/halo/keyring:
@@ -6410,6 +6416,7 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
+    dev: false
 
   /@mui/icons-material/5.8.4_3qrniyd4fth4fdw4jngl7l7ure:
     resolution: {integrity: sha512-9Z/vyj2szvEhGWDvb+gG875bOGm8b8rlHBKOD1+nA3PcgC3fV6W1AU6pfOorPeBfH2X4mb9Boe97vHvaSndQvA==}
@@ -6689,6 +6696,7 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
       react-transition-group: 4.4.2_biqbaboplfbrettd7655fr4n2y
+    dev: false
 
   /@mui/material/5.8.7_zxljzmqdrxwnuenbkrz77w74uy:
     resolution: {integrity: sha512-Oo62UhrgEi+BMLr3nUEASJgScE2/hhq14CbBUmrVV3GQlEGtqMZsy26Vb0AqEmphFeN3TXlsbM9aeW5yq8ZFlw==}
@@ -6754,6 +6762,7 @@ packages:
       '@types/react': 18.0.17
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/styled-engine/5.8.7_fdnqutfacy7v3gmlcm66flps3q:
     resolution: {integrity: sha512-tVqtowjbYmiRq+qcqXK731L9eWoL9H8xTRhuTgaDGKdch1zlt4I2UwInUe1w2N9N/u3/jHsFbLcl1Un3uOwpQg==}
@@ -6880,6 +6889,7 @@ packages:
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 18.2.0
+    dev: false
 
   /@mui/system/5.8.7_ug65io7jkbhmo4fihdmbrh3ina:
     resolution: {integrity: sha512-yFoFbfO42FWeSUDrFPixYjpqySQMqVMOSbSlAxiKnwFpvXGGn/bkfQTboCRNO31fvES29FJLQd4mwwMHd5mXng==}
@@ -6928,6 +6938,7 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.0.17
+    dev: false
 
   /@mui/utils/5.8.6_react@18.2.0:
     resolution: {integrity: sha512-QM2Sd1xZo2jOt2Vz5Rmro+pi2FLJyiv4+OjxkUwXR3oUM65KSMAMLl/KNYU55s3W3DLRFP5MVwE4FhAbHseHAg==}
@@ -6988,8 +6999,8 @@ packages:
       '@date-io/dayjs': 2.13.1
       '@date-io/luxon': 2.13.1
       '@date-io/moment': 2.13.1
-      '@mui/material': 5.8.7_mugunlselc52kyz7qt5aa5ixva
-      '@mui/system': 5.8.7_q75tbj2u2psqs4y633sohfsc6i
+      '@mui/material': 5.8.7_bl6qrq6463ovzmqn4cmwv7vydq
+      '@mui/system': 5.8.7_kgoqblbzxlux4bm4vftowiq75m
       '@mui/utils': 5.8.6_react@18.2.0
       clsx: 1.2.1
       prop-types: 15.8.1
@@ -11432,7 +11443,6 @@ packages:
 
   /@types/json-stable-stringify/1.0.33:
     resolution: {integrity: sha512-qEWiQff6q2tA5gcJGWwzplQcXdJtm+0oy6IHGHzlOf3eFAkGE/FIPXZK9ofWgNSHVp8AFFI33PJJshS0ei3Gvw==}
-    dev: true
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}

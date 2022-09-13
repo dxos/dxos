@@ -5,8 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Keyring, KeyType } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
+import { Keyring } from '@dxos/keyring'
 
 import { Chain, PartyMember } from '../proto';
 import { createCredential } from './credential-factory';
@@ -16,7 +16,7 @@ describe('verifier', () => {
   describe('no chain', () => {
     test('pass', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -36,7 +36,7 @@ describe('verifier', () => {
 
     test('fail - invalid signature', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -59,7 +59,7 @@ describe('verifier', () => {
 
     test('fail - invalid issuer', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -82,7 +82,7 @@ describe('verifier', () => {
 
     test('fail - invalid nonce', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -106,7 +106,7 @@ describe('verifier', () => {
 
     test('fail - no nonce provided', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -131,8 +131,8 @@ describe('verifier', () => {
   describe('chain', () => {
     test('pass - delegated authority with 1 device', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -167,8 +167,8 @@ describe('verifier', () => {
 
     test('fail - missing chain', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -205,8 +205,8 @@ describe('verifier', () => {
 
     test('fail - invalid chain signature', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -243,8 +243,8 @@ describe('verifier', () => {
 
     test('fail - invalid chain assertion', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -289,9 +289,9 @@ describe('verifier', () => {
 
     test('fail - chain does not lead to issuer', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: identity2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const identity2 = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
       const chain: Chain = {
@@ -337,9 +337,9 @@ describe('verifier', () => {
 
     test('pass - delegated authority with 2 devices', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device1 = await keyring.createKey();
+      const device2 = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -387,9 +387,9 @@ describe('verifier', () => {
 
     test('fail - cyclic chain', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device1 = await keyring.createKey();
+      const device2 = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
