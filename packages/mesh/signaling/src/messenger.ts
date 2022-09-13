@@ -27,9 +27,8 @@ interface MessengerOptions {
 }
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  private readonly _listeners = new Map<string, Map<number, Listener>>();
-  private readonly _defaultListeners = new Map<number, Listener>();
-  private _listenerIndex = 0;
+  private readonly _listeners = new Map<string, Set<Listener>>();
+  private readonly _defaultListeners = new Set<Listener>();
 
   constructor ({ signalManager }: MessengerOptions) {
     this._signalManager = signalManager;
@@ -51,23 +50,22 @@ export class Messenger {
     payloadType?: string
     listener: Listener
   }): ListeningHandle {
-    const index = this._listenerIndex++;
     if (!payloadType) {
-      this._defaultListeners.set(index, listener);
+      this._defaultListeners.add(listener);
     } else {
       if (this._listeners.has(payloadType)) {
-        this._listeners.get(payloadType)?.set(index, listener);
+        this._listeners.get(payloadType)!.add(listener);
       } else {
-        this._listeners.set(payloadType, new Map([[index, listener]]));
+        this._listeners.set(payloadType, new Set([listener]));
       }
     }
 
     return {
       unsubscribe: () => {
         if (!payloadType) {
-          this._defaultListeners.delete(index);
+          this._defaultListeners.delete(listener);
         } else {
-          this._listeners.get(payloadType)?.delete(index);
+          this._listeners.get(payloadType)?.delete(listener);
         }
       }
     };
