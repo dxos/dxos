@@ -16,6 +16,7 @@ import { SignalManager } from './signal-manager';
 
 const log = debug('dxos:signaling:websocket-signal-manager');
 
+// TODO: Make class re-entrant.
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
@@ -25,10 +26,7 @@ export class WebsocketSignalManager implements SignalManager {
   );
 
   /** host => topic => peerId */
-  private readonly _topicsJoinedPerSignal = new Map<
-    string,
-    ComplexMap<PublicKey, PublicKey>
-  >();
+  private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconciling?: boolean = false;
   private _reconcileTimeoutId?: NodeJS.Timeout;
