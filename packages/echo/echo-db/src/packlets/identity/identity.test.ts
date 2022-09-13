@@ -1,20 +1,25 @@
-import { it as test } from 'mocha'
-import expect from 'expect'
-import { Keyring } from '@dxos/keyring'
-import { Identity } from './identity'
-import { FeedStore } from '@dxos/feed-store'
-import { createStorage, StorageType } from '@dxos/random-access-storage'
-import { codec } from '@dxos/echo-protocol'
-import { createKeyPair } from '@dxos/crypto'
-import { PublicKey, Timeframe } from '@dxos/protocols'
-import { afterTest } from '@dxos/testutils'
-import { AdmittedFeed, createCredential, createGenesisCredentialSequence, verifyCredential } from '@dxos/halo-protocol'
+//
+// Copyright 2022 DXOS.org
+//
+
+import expect from 'expect';
+import { it as test } from 'mocha';
+
+import { codec } from '@dxos/echo-protocol';
+import { FeedStore } from '@dxos/feed-store';
+import { AdmittedFeed, createCredential, createGenesisCredentialSequence, verifyCredential } from '@dxos/halo-protocol';
+import { Keyring } from '@dxos/keyring';
+import { Timeframe } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { afterTest } from '@dxos/testutils';
+
+import { Identity } from './identity';
 
 describe('halo/identity', () => {
   test('create', async () => {
-    const keyring = new Keyring()
-    const identityKey = await keyring.createKey()
-    const deviceKey = await keyring.createKey()
+    const keyring = new Keyring();
+    const identityKey = await keyring.createKey();
+    const deviceKey = await keyring.createKey();
     const spaceKey = await keyring.createKey();
 
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
@@ -22,7 +27,6 @@ describe('halo/identity', () => {
       const feedKey = await keyring.createKey();
       return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
     };
-
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const controlFeed = await createFeed();
@@ -40,10 +44,10 @@ describe('halo/identity', () => {
         initialTimeframe: new Timeframe(),
         feedProvider: key => feedStore.openReadOnlyFeed(key)
       }
-    })
+    });
 
-    await identity.open()
-    afterTest(() => identity.close())
+    await identity.open();
+    afterTest(() => identity.close());
 
     //
     // Identity genesis
@@ -75,12 +79,12 @@ describe('halo/identity', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',
             identityKey,
-            deviceKey,
+            deviceKey
           },
-          keyring,
+          keyring
         })
       });
-      
+
       // Admit data feed
       await identity.controlMessageWriter?.write({
         '@type': 'dxos.echo.feed.CredentialsMessage',
@@ -94,26 +98,26 @@ describe('halo/identity', () => {
             deviceKey,
             designation: AdmittedFeed.Designation.DATA
           },
-          keyring,
+          keyring
         })
       });
 
     }
-    
-    // Wait for identity to be ready.
-    await identity.ready.wait()
 
-    const identitySigner = identity.getIdentityCredentialSigner()
+    // Wait for identity to be ready.
+    await identity.ready.wait();
+
+    const identitySigner = identity.getIdentityCredentialSigner();
     const credential = await identitySigner({
       subject: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',
         profile: {
-          displayName: 'Alice',
-        },
-      },
-    })
-    expect(credential.issuer).toEqual(identityKey)
-    expect(await verifyCredential(credential)).toEqual({ kind: 'pass' })
-  })
-})
+          displayName: 'Alice'
+        }
+      }
+    });
+    expect(credential.issuer).toEqual(identityKey);
+    expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
+  });
+});

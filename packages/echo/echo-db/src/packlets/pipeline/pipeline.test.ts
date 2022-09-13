@@ -56,13 +56,10 @@ describe('pipeline/Pipeline', () => {
     }
 
     let msgCount = 0;
-    for await (const msg of pipeline.consume()) {
+    for await (const _ of pipeline.consume()) {
       if (++msgCount === numFeeds * messagesPerFeed) {
-        pipeline.stop();
+        await pipeline.stop();
       }
     }
   });
 });
-
-// TODO(burdon): Not used?
-const pump = (a: NodeJS.ReadWriteStream, b: NodeJS.ReadWriteStream) => a.pipe(b).pipe(a);

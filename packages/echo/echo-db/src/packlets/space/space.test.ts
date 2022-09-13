@@ -6,13 +6,12 @@ import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Keyring } from '@dxos/keyring';
-import { createKeyPair } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
+import { Keyring } from '@dxos/keyring';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -92,8 +91,8 @@ describe('space/space', () => {
       const item1 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
       const item2 = await space.database.createItem<ObjectModel>({ type: 'dxos.example' });
 
-      item1.model.set('foo', 'one');
-      item2.model.set('foo', 'two');
+      await item1.model.set('foo', 'one');
+      await item2.model.set('foo', 'two');
 
       expect(item1.model.get('foo')).toEqual('one');
       expect(item2.model.get('foo')).toEqual('two');

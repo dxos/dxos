@@ -1,9 +1,12 @@
-import { todo } from "@dxos/debug";
-import { MMSTTopology, NetworkManager, Plugin } from "@dxos/network-manager";
-import { PublicKey } from "@dxos/protocols";
-import { PresencePlugin } from "@dxos/protocol-plugin-presence";
-import { Protocol } from "@dxos/mesh-protocol";
-import { discoveryKey } from "@dxos/crypto";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { discoveryKey } from '@dxos/crypto';
+import { Protocol } from '@dxos/mesh-protocol';
+import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
+import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 
 // TODO(dmaretskyi): Move these two to auth plugin.
 export type CredentialProvider = (nonce: Uint8Array) => Promise<Uint8Array>;
@@ -20,7 +23,7 @@ export interface SwarmIdentity {
 export class SpaceProtocol {
   private readonly _presence: PresencePlugin;
 
-  constructor(
+  constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _topic: PublicKey,
     private readonly _swarmIdentity: SwarmIdentity,
@@ -29,7 +32,7 @@ export class SpaceProtocol {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
   }
 
-  async start() {
+  async start () {
     // TODO(burdon): Move to config (with sensible defaults).
     const topologyConfig = {
       originateConnections: 4,
@@ -44,18 +47,18 @@ export class SpaceProtocol {
       presence: this._presence,
       topology: new MMSTTopology(topologyConfig),
       label: `Protocol swarm: ${this._topic}`
-    })
+    });
   }
 
-  async stop() {
-    this._networkManager.leaveProtocolSwarm(this._topic);
+  async stop () {
+    await this._networkManager.leaveProtocolSwarm(this._topic);
   }
 
   private _createProtocol ({ initiator, channel }: { initiator: boolean, channel: Buffer }) {
     const plugins: Plugin[] = [
       this._presence,
       // TODO: Add auth plugin.
-      ...this._plugins,
+      ...this._plugins
     ];
 
     const protocol = new Protocol({
@@ -86,7 +89,7 @@ export class SpaceProtocol {
         credentials: ''
       },
 
-      initiator,
+      initiator
     });
 
     protocol
@@ -96,10 +99,10 @@ export class SpaceProtocol {
     return protocol;
   }
 
-  get peers() {
+  get peers () {
     return this._presence.peers.map(peer => PublicKey.from(peer));
   }
 }
 
-export const MOCK_CREDENTIAL_PROVIDER: CredentialProvider = async (nonce: Uint8Array) => Buffer.from('mock')
-export const MOCK_CREDENTIAL_AUTHENTICATOR: CredentialAuthenticator = async (nonce: Uint8Array, credential: Uint8Array) => true
+export const MOCK_CREDENTIAL_PROVIDER: CredentialProvider = async (nonce: Uint8Array) => Buffer.from('mock');
+export const MOCK_CREDENTIAL_AUTHENTICATOR: CredentialAuthenticator = async (nonce: Uint8Array, credential: Uint8Array) => true;

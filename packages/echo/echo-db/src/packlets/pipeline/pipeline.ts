@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { TimeframeClock } from '../database';
 import { createMessageSelector } from './message-selector';
+import { TimeframeClock } from './timeframe-clock';
 
 const STALL_TIMEOUT = 1000;
 
@@ -99,6 +99,7 @@ export class Pipeline {
   }
 
   get state (): PipelineState {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       get timeframe () {

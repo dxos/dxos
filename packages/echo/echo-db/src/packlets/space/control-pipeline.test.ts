@@ -5,11 +5,10 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Keyring } from '@dxos/keyring';
-import { createKeyPair } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
+import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -117,7 +116,7 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
     {
-      dataFeed1.append({
+      await dataFeed1.append({
         payload: {
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential: await createCredential({

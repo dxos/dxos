@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { TypedMessage } from '@dxos/echo-protocol';
@@ -9,7 +11,6 @@ import { Chain, createCredential, Credential, isValidAuthorizedDeviceCredential 
 import { Signer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
-import assert from 'assert';
 
 import { Space, SpaceParams } from '../space';
 
@@ -37,7 +38,7 @@ export class Identity {
 
   private readonly _halo: Space;
 
-  public readonly ready = new Trigger()
+  public readonly ready = new Trigger();
 
   private _deviceCredentialChain?: Chain;
 
@@ -52,14 +53,14 @@ export class Identity {
     this._deviceKey = deviceKey;
 
     this._halo = new Space(spaceParams);
-    
+
     // Save device key chain credential when processed by the party state machine.
     this._halo.onCredentialProcessed.set(async credential => {
       log('Credential processed:', credential);
-      if(isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
+      if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
         this._deviceCredentialChain = { credential };
         await this.ready.wake();
-      };
+      }
     });
   }
 
@@ -80,15 +81,15 @@ export class Identity {
       keyring: this._signer,
 
       assertion: params.assertion as any,
-      subject: params.subject,
-    })
+      subject: params.subject
+    });
   }
 
   /**
    * Issues credentials as identity.
    * Requires identity to be ready.
    */
-  getIdentityCredentialSigner(): CredentialSigner {
+  getIdentityCredentialSigner (): CredentialSigner {
     assert(this._deviceCredentialChain, 'Device credential chain is not ready.');
     return params => createCredential({
       issuer: this._identityKey,
@@ -97,15 +98,15 @@ export class Identity {
       chain: this._deviceCredentialChain ?? failUndefined(),
 
       assertion: params.assertion as any,
-      subject: params.subject,
-    })
+      subject: params.subject
+    });
   }
 
-  get controlMessageWriter() {
+  get controlMessageWriter () {
     return this._halo.controlMessageWriter;
   }
 
-  get controlPipelineState() {
+  get controlPipelineState () {
     return this._halo.controlPipelineState;
   }
 }
