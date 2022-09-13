@@ -8,7 +8,7 @@ import * as crypto from 'node:crypto';
 import { synchronized } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/protocols';
-import { Directory } from '@dxos/random-access-storage';
+import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { schema } from './proto/gen';
@@ -19,7 +19,7 @@ export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
 
   constructor (
-    private readonly _storage: Directory
+    private readonly _storage: Directory = createStorage({ type: StorageType.RAM }).createDirectory('keyring')
   ) {}
 
   async sign (key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
@@ -29,17 +29,6 @@ export class Keyring implements Signer {
       name: 'ECDSA',
       hash: 'SHA-256'
     }, keyPair.privateKey, message));
-  }
-
-  async verify (key: PublicKey, message: Uint8Array, signature: Uint8Array): Promise<boolean> {
-    const publicKey = this._keyCache.has(key)
-      ? this._keyCache.get(key)!.publicKey
-      : await crypto.webcrypto.subtle.importKey('raw', key.asUint8Array(), { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']);
-
-    return crypto.webcrypto.subtle.verify({
-      name: 'ECDSA',
-      hash: 'SHA-256'
-    }, publicKey, signature, message);
   }
 
   async createKey (): Promise<PublicKey> {

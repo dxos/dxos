@@ -4,3 +4,4 @@
 
 export * from './keyring'
 export * from './signer'
+export * from './verify'
