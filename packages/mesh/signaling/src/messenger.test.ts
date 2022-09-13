@@ -234,7 +234,6 @@ describe('Messenger', () => {
         expect(messages1[1]).toEqual(message);
         expect(messages1.length).toEqual(2);
         expect(messages2.length).toEqual(1);
-        // expect(listener2)([message]);
       }, 3_000);
     }
   });
