@@ -91,23 +91,21 @@ export class NetworkManager {
         };
 
       this._messageRouter = new MessageRouter({
-        sendMessage: message => this._messenger.message(message),
+        sendMessage: (message) => this._messenger.message(message),
         onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
         onOffer: (msg) => onOffer(msg)
       });
 
       this._messenger.listen({
         payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        listener: message => this._messageRouter.receiveMessage(message)
+        listener: (message) => this._messageRouter.receiveMessage(message)
       });
     }
 
     {
       this._signalConnection = {
-        join: (topic: PublicKey, peerId: PublicKey) =>
-          this._signalManager.join({ topic, peerId }),
-        leave: (topic: PublicKey, peerId: PublicKey) =>
-          this._signalManager.leave({ topic, peerId })
+        join: (opts) => this._signalManager.join(opts),
+        leave: (opts) => this._signalManager.leave(opts)
       };
     }
 

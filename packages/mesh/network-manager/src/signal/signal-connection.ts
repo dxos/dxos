@@ -11,10 +11,10 @@ export interface SignalConnection {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join (topic: PublicKey, peerId: PublicKey): Promise<void>
+  join(opts: { topic: PublicKey, peerId: PublicKey }): Promise<void>
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave (topic: PublicKey, peerId: PublicKey): Promise<void>
+  leave(opts: { topic: PublicKey, peerId: PublicKey }): Promise<void>
 }
