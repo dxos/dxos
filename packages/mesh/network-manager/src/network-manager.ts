@@ -16,7 +16,7 @@ import {
   MemorySignalManager,
   Messenger,
   SignalManager
-} from '@dxos/signaling';
+} from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';

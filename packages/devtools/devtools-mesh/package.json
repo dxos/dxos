@@ -17,7 +17,7 @@
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
-    "@dxos/signaling": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",
     "@emotion/react": "^11.9.0",

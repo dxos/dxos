@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { WebsocketSignalManager } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/messaging';
 
 export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
 

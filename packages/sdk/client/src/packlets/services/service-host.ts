@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
-import { WebsocketSignalManager } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/messaging';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
