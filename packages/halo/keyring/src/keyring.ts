@@ -15,6 +15,9 @@ import { schema } from './proto/gen';
 import { KeyRecord } from './proto/gen/dxos/halo/keyring';
 import { Signer } from './signer';
 
+/**
+ *
+ */
 export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
 
@@ -36,11 +39,10 @@ export class Keyring implements Signer {
       name: 'ECDSA',
       namedCurve: 'P-256'
     }, true, ['sign', 'verify']);
-    const publicKey = await keyPairToPublicKey(keyPair);
 
     await this._setKey(keyPair);
 
-    return publicKey;
+    return keyPairToPublicKey(keyPair);
   }
 
   @synchronized
@@ -48,7 +50,6 @@ export class Keyring implements Signer {
     if (!this._keyCache.has(key)) {
       const file = this._storage.createOrOpenFile(key.toHex());
       const { size } = await file.stat();
-
       if (size === 0) {
         throw new Error('Key not found');
       }
@@ -57,9 +58,9 @@ export class Keyring implements Signer {
       await file.close();
 
       const record = schema.getCodecForType('dxos.halo.keyring.KeyRecord').decode(recordBytes);
-
       const publicKey = PublicKey.from(record.publicKey);
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
+
       const keyPair: CryptoKeyPair = {
         publicKey: await crypto.webcrypto.subtle.importKey('raw', record.publicKey, {
           name: 'ECDSA',
@@ -70,6 +71,7 @@ export class Keyring implements Signer {
           namedCurve: 'P-256'
         }, true, ['sign'])
       };
+
       this._keyCache.set(publicKey, keyPair);
     }
     return this._keyCache.get(key)!;
@@ -99,4 +101,5 @@ export class Keyring implements Signer {
   }
 }
 
-const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => PublicKey.from(new Uint8Array(await crypto.webcrypto.subtle.exportKey('raw', keyPair.publicKey)));
+const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
+  PublicKey.from(new Uint8Array(await crypto.webcrypto.subtle.exportKey('raw', keyPair.publicKey)));
