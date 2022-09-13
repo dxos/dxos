@@ -9,6 +9,12 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import {
+  SignalManager,
+  CommandTrace,
+  SignalStatus,
+  WebsocketSignalManager
+} from '@dxos/messaging';
+import {
   FullyConnectedTopology,
   Swarm,
   MMSTTopology,
@@ -24,12 +30,6 @@ import {
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
-import {
-  SignalManager,
-  CommandTrace,
-  SignalStatus,
-  WebsocketSignalManager
-} from '@dxos/messaging';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
 

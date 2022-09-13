@@ -5,10 +5,10 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
+import { WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
-import { WebsocketSignalManager } from '@dxos/messaging';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';

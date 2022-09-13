@@ -3,8 +3,8 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/protocols';
 import { CommandTrace } from '@dxos/messaging';
+import { PublicKey } from '@dxos/protocols';
 
 import {
   GetNetworkPeersRequest,
