@@ -4,15 +4,16 @@
 
 syntax = "proto3";
 
+// TODO(burdon): Standardize position of "package" (i.e., before/after imports).
 // TODO(burdon): Move Item specific to echo.item?
 package dxos.echo.feed;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 
+import "../halo/credentials.proto";
 import "./snapshot.proto";
 import "./timeframe.proto";
-import "../halo/credentials.proto";
 
 /**
  * Outer message type decoded by Codec.

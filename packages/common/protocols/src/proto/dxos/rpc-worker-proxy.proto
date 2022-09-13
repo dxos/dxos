@@ -1,9 +1,11 @@
+
 //
 // Copyright 2020 DXOS.org
 //
 
 syntax = "proto3";
 
+// TODO(burdon): Rename rpc-proxy.proto
 package dxos.rpc.proxy;
 
 message SingletonMessage {
