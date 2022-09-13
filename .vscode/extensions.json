@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "folke.vscode-monorepo-workspace",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "hediet.vscode-drawio"
   ]
 }

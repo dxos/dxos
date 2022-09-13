@@ -33,25 +33,29 @@ module.exports = {
     {
       files: '**/*.{ts,tsx,js,jsx}',
       extends: [
-        'plugin:@dxos/recommended'
+        'plugin:@dxos/recommended',
+        'prettier'
       ]
     },
     {
       files: '**/*.{ts,tsx}',
       extends: [
-        'plugin:@dxos/typescript'
+        'plugin:@dxos/typescript',
+        'prettier'
       ]
     },
     {
       files: '**/*.{tsx,jsx}',
       extends: [
-        'plugin:@dxos/react'
+        'plugin:@dxos/react',
+        'prettier'
       ]
     },
     {
       files: '**/*.test.{ts,tsx,js,jsx}',
       extends: [
-        'plugin:@dxos/test'
+        'plugin:@dxos/test',
+        'prettier'
       ]
     }
   ]
