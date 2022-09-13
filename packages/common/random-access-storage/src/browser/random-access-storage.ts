@@ -4,8 +4,7 @@
 
 import { join } from 'node:path';
 
-import { File, RandomAccessFileConstructor } from '../api';
-import { AbstractStorage } from './abstract-storage';
+import { AbstractStorage, File, RandomAccessFileConstructor } from '../common';
 
 /**
  * Base class for random access files based on IDB.
