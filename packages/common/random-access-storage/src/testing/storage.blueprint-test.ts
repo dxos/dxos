@@ -5,7 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { File, Storage, StorageType } from './api';
+import { File, Storage, StorageType } from '../common';
 
 // eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => Storage) {

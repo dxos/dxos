@@ -5,13 +5,14 @@
 import { join } from 'node:path';
 import ram from 'random-access-memory';
 
-import { File, StorageType } from '../api';
 import { AbstractStorage } from './abstract-storage';
+import { File } from './file';
+import { StorageType } from './storage';
 
 /**
  * Storage interface implementation for RAM.
  */
-export class RamStorage extends AbstractStorage {
+export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
   protected _createFile (filename: string, path: string): File {
@@ -27,5 +28,5 @@ export class RamStorage extends AbstractStorage {
     return file;
   }
 
-  protected override async _destroy () { }
+  protected override async _destroy () {}
 }

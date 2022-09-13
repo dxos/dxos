@@ -4,8 +4,10 @@
 
 import { log } from '@dxos/log';
 
-import { Directory, File, Storage, StorageType } from '../api';
-import { getFullPath } from '../utils';
+import { Directory } from './directory';
+import { File } from './file';
+import { Storage, StorageType } from './storage';
+import { getFullPath } from './utils';
 
 /**
  * Base class for all storage implementations.
