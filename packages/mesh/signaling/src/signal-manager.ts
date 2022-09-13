@@ -6,7 +6,6 @@ import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmEvent } from './proto';
-import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { Message, SignalMethods } from './signal-methods';
 

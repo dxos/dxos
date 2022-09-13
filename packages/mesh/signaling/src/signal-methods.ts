@@ -2,34 +2,34 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from "@dxos/protocols";
+import { PublicKey } from '@dxos/protocols';
 
-import { Any } from "./proto/gen/google/protobuf";
+import { Any } from './proto/gen/google/protobuf';
 
 export interface Message {
-  author: PublicKey;
-  recipient: PublicKey;
-  payload: Any;
+  author: PublicKey
+  recipient: PublicKey
+  payload: Any
 }
 
 export interface SignalMethods {
   /**
    * Join topic on signal network, to be discoverable by other peers.
    */
-  join: (opts: { topic: PublicKey; peerId: PublicKey }) => Promise<void>;
+  join: (opts: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
-  leave: (opts: { topic: PublicKey; peerId: PublicKey }) => Promise<void>;
+  leave: (opts: { topic: PublicKey, peerId: PublicKey }) => Promise<void>
 
   /**
    * Send message to peer.
    */
-  message: (opts: Message) => Promise<void>;
+  message: (opts: Message) => Promise<void>
 
   /**
    * Start receiving messages from
    */
-  subscribeMessages: (peerId: PublicKey) => Promise<void>;
+  subscribeMessages: (peerId: PublicKey) => Promise<void>
 }
