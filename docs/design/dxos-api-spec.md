@@ -73,15 +73,11 @@ The HALO application exposes these key entities and verbs to users:
 Here is the information hierarchy of the HALO application:
 - HALO Application / Home
   - Identities
-    - applications using each identity
-    - devices with each identity
-  - Devices
-    - Identities on each device
-  - Applications
-    - identities used by each application
-    - devies application is installed on
-  - Contacts
-  - Settings
+    - Identity
+      - Applications
+      - Devices
+      - Contacts
+      - Settings
 
 #### 2.1.2 Browser Profiles
 The HALO app is constrained within a Browser profile which isolates local storage, cookies, history and other personal data between different silos in the browser. This means the HALO application state and list of managed identities will be reset with every new browser profile. 
