@@ -28,7 +28,7 @@ import {
   SignalManager,
   CommandTrace,
   SignalStatus,
-  SignalManagerImpl
+  WebsocketSignalManager
 } from '@dxos/signaling';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
@@ -38,7 +38,7 @@ export default {
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
-  const signalManager = new SignalManagerImpl(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
+  const signalManager = new WebsocketSignalManager(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
     signalManager,
