@@ -1,0 +1,22 @@
+{
+  "name": "@dxos/docs",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@algolia/client-search": "^4.14.2",
+    "@docusaurus/core": "2.1.0",
+    "@docusaurus/preset-classic": "2.1.0",
+    "@docusaurus/theme-classic": "2.1.0",
+    "@mdx-js/react": "^1.6.22",
+    "clsx": "^1.1.0",
+    "prism-react-renderer": "^1.2.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "2.1.0",
+    "@docusaurus/types": "2.1.0",
+    "typescript": "^4.7.2",
+    "webpack": "^5.74.0"
+  }
+}
