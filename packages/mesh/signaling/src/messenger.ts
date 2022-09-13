@@ -43,6 +43,10 @@ export class Messenger {
     await this._signalManager.sendMessage(msg);
   }
 
+  /**
+   * Subscribes onMessage function to messages that contains payload with payloadType.
+   * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
+   */
   listen ({
     payloadType,
     onMessage
