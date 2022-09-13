@@ -12,7 +12,7 @@ import { Message } from './signal-methods';
 
 const log = debug('dxos:signaling:messenger');
 
-type OnMessage = (opts: {
+export type OnMessage = (opts: {
   author: PublicKey
   recipient: PublicKey
   payload: Any
@@ -21,6 +21,7 @@ type OnMessage = (opts: {
 export interface MessengerOptions {
   signalManager: SignalManager
 }
+
 export class Messenger {
   private readonly _signalManager: SignalManager;
   private readonly _listeners = new Map<string, Set<OnMessage>>();
