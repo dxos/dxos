@@ -73,13 +73,13 @@ export class Messenger {
   }
 
   private async _handleMessage (message: Message): Promise<void> {
-    [...this._defaultListeners.values()].forEach(async (listener) =>
-      await listener(message)
-    );
+    for (const listener of this._defaultListeners.values()) {
+      await listener(message);
+    }
     if (this._listeners.has(message.payload.type_url)) {
-      [...this._listeners.get(message.payload.type_url)!.values()].forEach(
-        async (listener) => await listener(message)
-      );
+      for (const listener of this._listeners.get(message.payload.type_url)!) {
+        await listener(message);
+      }
     }
   }
 }
