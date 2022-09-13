@@ -10,6 +10,7 @@ import {
 } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -23,6 +24,9 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
+const singletonContext = createMemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
+
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
 
@@ -31,7 +35,7 @@ describe('DataParty', () => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const networkManager = new NetworkManager();
+    const networkManager = new NetworkManager({ signalManager: createSignalManager() });
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
     const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
@@ -217,7 +221,7 @@ describe('DataParty', () => {
 
     const identityB = await createTestIdentityCredentials(new Keyring());
     const initiator = new GreetingInitiator(
-      new NetworkManager(),
+      new NetworkManager({ signalManager: createSignalManager() }),
       invitation,
       async (partyKey, nonce) => [createDataPartyAdmissionMessages(
         identityB.createCredentialsSigner(),

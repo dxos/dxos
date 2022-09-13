@@ -11,6 +11,7 @@ import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { log } from '@dxos/log';
+import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -33,6 +34,10 @@ export interface PartyFilter {
   open?: boolean
   partyKeys?: PublicKey[]
 }
+
+// TODO(burdon): Remove.
+const singletonContext = createMemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 /**
  * Various options passed to `ECHO.create`.
@@ -115,6 +120,12 @@ export class ECHO {
   }: EchoCreationOptions = {}) {
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
+
+    if (!networkManagerOptions) {
+      networkManagerOptions = {
+        signalManager: createSignalManager()
+      };
+    }
 
     this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);

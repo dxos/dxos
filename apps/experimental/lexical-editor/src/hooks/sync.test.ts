@@ -47,7 +47,7 @@ describe('YJS sync', () => {
       expect(match).toBeTruthy();
     });
 
-    log(count); // TODO(burdon): Why 18?
+    log(count);
   });
 
   test.skip('Replication', async () => {
@@ -62,7 +62,6 @@ describe('YJS sync', () => {
       expect(client.halo.profile).toBeDefined();
 
       client.echo.registerModel(TextModel);
-
       return client;
     };
 

@@ -10,7 +10,9 @@ import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
 import { Protocol } from '@dxos/mesh-protocol';
-import { MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  createMemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager
+} from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
@@ -22,6 +24,10 @@ import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protoco
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
 
 const log = debug('dxos:network-manager:test');
+
+// Share context for tests.
+const singletonContext = createMemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 interface CreatePeerOptions {
   topic: PublicKey
@@ -38,7 +44,7 @@ const createPeer = async ({
   signalHosts,
   ice
 }: CreatePeerOptions) => {
-  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager();
+  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(singletonContext);
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({ signalManager, ice });
   afterTest(() => networkManager.destroy());
@@ -59,8 +65,10 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { plugin: plugin1, networkManager: nm1 } = await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
-    const { plugin: plugin2, networkManager: nm2 } = await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { plugin: plugin1, networkManager: nm1 } =
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { plugin: plugin2, networkManager: nm2 } =
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
 
     const received: any[] = [];
     const mockReceive = (p: Protocol, s: string) => {
@@ -86,8 +94,10 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager1, plugin: plugin1 } =
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager2, plugin: plugin2 } =
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -120,8 +130,10 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager1, plugin: plugin1 } =
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
+    const { networkManager: networkManager2, plugin: plugin2 } =
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -145,7 +157,12 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    networkManager2.joinProtocolSwarm({ topic, peerId: newPeer2Id, protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2), topology: new FullyConnectedTopology() });
+    networkManager2.joinProtocolSwarm({
+      topic,
+      peerId: newPeer2Id,
+      protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
+      topology: new FullyConnectedTopology()
+    });
 
     await disconnectPromises;
 
@@ -173,9 +190,20 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
   sharedTests({ inMemory: false, signalUrl });
 
   it.skip('two peers with different signal & turn servers', async () => {
-    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, signalHosts: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
+    const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
+      topic,
+      peerId: peer1Id,
+      signalHosts: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
+      ice: [{ urls: 'turn:apollo3.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
+    });
     await sleep(3000);
-    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'], ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }] });
+    const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
+      topic,
+      peerId:
+      peer2Id,
+      signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'],
+      ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
+    });
 
     const received: any[] = [];
     const mockReceive = (p: Protocol, s: string) => {
@@ -354,7 +382,7 @@ export function inMemoryTests () {
       async run (model: Model, real: Real) {
         model.peers.add(this.peerId);
 
-        const networkManager = new NetworkManager();
+        const networkManager = new NetworkManager({ signalManager: createSignalManager() });
         afterTest(() => networkManager.destroy());
 
         real.peers.set(this.peerId, {

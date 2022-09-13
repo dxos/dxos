@@ -27,6 +27,7 @@ import {
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
+import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -52,6 +53,9 @@ const log = debug('dxos:echo:parties:party-manager:test');
 // TODO(burdon): Close cleanly.
 // This usually means that there are asynchronous operations that weren't stopped in your tests.
 
+const singletonContext = createMemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
+
 /**
  * @param open - Open the PartyManager
  * @param createIdentity - Create the identity key record.
@@ -64,7 +68,7 @@ const setup = async () => {
   const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
   const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
-  const networkManager = new NetworkManager();
+  const networkManager = new NetworkManager({ signalManager: createSignalManager() });
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
   const identity = await createTestIdentityCredentials(keyring);
@@ -158,7 +162,7 @@ describe('Party manager', () => {
     const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const networkManager = new NetworkManager();
+    const networkManager = new NetworkManager({ signalManager: createSignalManager() });
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
     const identity = await createTestIdentityCredentials(keyring);

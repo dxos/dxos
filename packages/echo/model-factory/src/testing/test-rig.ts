@@ -61,7 +61,6 @@ export class TestRig<M extends Model<any>> {
 
     const peer = new TestPeer(stateManager, key);
     this._peers.set(key, peer);
-
     return peer;
   }
 

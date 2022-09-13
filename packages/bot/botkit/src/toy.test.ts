@@ -9,6 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
+import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
@@ -21,6 +22,9 @@ import { Bot as ClientBot } from './bots/client-bot';
 import { Bot, GetLogsResponse } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
+const singletonContext = createMemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
+
 describe('In-Memory', () => {
   describe('No client', () => {
     it('Spawns a bot', async () => {
@@ -31,8 +35,8 @@ describe('In-Memory', () => {
         }
       }
 
-      const nm1 = new NetworkManager();
-      const nm2 = new NetworkManager();
+      const nm1 = new NetworkManager({ signalManager: createSignalManager() });
+      const nm2 = new NetworkManager({ signalManager: createSignalManager() });
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new TestBot());
@@ -77,8 +81,8 @@ describe('In-Memory', () => {
     it('Spawns a bot with a client', async () => {
       const { party } = clientSetup;
 
-      const nm1 = new NetworkManager();
-      const nm2 = new NetworkManager();
+      const nm1 = new NetworkManager({ signalManager: createSignalManager() });
+      const nm2 = new NetworkManager({ signalManager: createSignalManager() });
       const topic = PublicKey.random();
 
       const botContainer = new InProcessBotContainer(() => new EchoBot(TEST_ECHO_TYPE));
@@ -162,8 +166,8 @@ describe('Node', () => {
       const { party } = clientSetup;
       const { config } = brokerSetup;
 
-      const nm1 = new NetworkManager();
-      const nm2 = new NetworkManager();
+      const nm1 = new NetworkManager({ signalManager: createSignalManager() });
+      const nm2 = new NetworkManager({ signalManager: createSignalManager() });
       const topic = PublicKey.random();
 
       const botContainer = new NodeContainer(['@swc-node/register']);

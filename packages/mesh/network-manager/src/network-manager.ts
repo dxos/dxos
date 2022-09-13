@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
-import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
+import { createMemorySignalManagerContext, MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
@@ -24,7 +24,7 @@ export type ProtocolProvider = (opts: {
 }) => Protocol;
 
 export interface NetworkManagerOptions {
-  signalManager?: SignalManager
+  signalManager: SignalManager
   ice?: any[]
   /**
    * Enable connection logging for devtools.
@@ -33,6 +33,9 @@ export interface NetworkManagerOptions {
 }
 
 const log = debug('dxos:network-manager');
+
+// TODO(burdon): Remove.
+const singletonContext = createMemorySignalManagerContext();
 
 /**
  * Manages connection to the swarm.
@@ -54,12 +57,12 @@ export class NetworkManager {
     signalManager,
     ice,
     log
-  }: NetworkManagerOptions = {}) {
+  }: NetworkManagerOptions) {
     this._ice = ice ?? [];
 
     // Listen for signal manager events.
     {
-      this._signalManager = signalManager ?? new MemorySignalManager();
+      this._signalManager = signalManager ?? new MemorySignalManager(singletonContext);
 
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
