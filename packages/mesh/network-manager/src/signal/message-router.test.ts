@@ -8,9 +8,9 @@ import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
-import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
 import { Answer } from '../proto/gen/dxos/mesh/swarm';

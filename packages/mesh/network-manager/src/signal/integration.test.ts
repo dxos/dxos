@@ -5,9 +5,9 @@
 import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
+import { WebsocketSignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { WebsocketSignalManager } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
 import { MessageRouter } from './message-router';
