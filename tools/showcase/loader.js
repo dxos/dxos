@@ -1,16 +1,20 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 const { promises: fs } = require('fs');
 const path = require('path');
 
 /**
  * @type {import('webpack').loader.Loader}
  */
-module.exports = async function demoLoader() {
+module.exports = async function demoLoader () {
   const files = await fs.readdir(path.dirname(this.resourcePath));
   const codeFiles = files.filter((fileName) => fileName.includes('.js') || fileName.includes('.tsx') || fileName.includes('.tsx'));
-  let rawContent = {
+  const rawContent = {
     js: null,
     ts: null
-  }
+  };
   let component = null;
   await Promise.all(codeFiles.map(async (fileName) => {
     const moduleID = fileName;
@@ -24,7 +28,7 @@ module.exports = async function demoLoader() {
     if (moduleID.includes('.js')) {
       rawContent.js = await fs.readFile(moduleFilepath, { encoding: 'utf-8' });
       component = `() => {
-        return require(${JSON.stringify("./" + moduleID)});
+        return require(${JSON.stringify('./' + moduleID)});
       }`;
     }
     if (moduleID.includes('.ts') || moduleID.includes('.tsx')) {
