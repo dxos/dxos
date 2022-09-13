@@ -14,6 +14,7 @@ message JoinRequest {
 }
 
 message Message {
+    // TODO(egor): Rename to `sender`.
     bytes author = 1;
     bytes recipient = 2;
     google.protobuf.Any payload = 3;
