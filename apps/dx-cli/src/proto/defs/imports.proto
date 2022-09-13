@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package dxos;
+
+import "@dxos/protocols/src/proto/dxos/publisher.proto";
+import "@dxos/protocols/src/proto/dxos/config.proto";

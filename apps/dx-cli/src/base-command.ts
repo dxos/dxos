@@ -13,6 +13,8 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 
+import { PublisherRpcPeer } from './util/publisher-rpc-peer';
+
 const log = debug('dxos:cli:main');
 const error = log.extend('error');
 
@@ -109,6 +111,28 @@ export abstract class BaseCommand extends Command {
 
       // TODO(burdon): Ends with abort signal without sleep (threads still open?)
       await sleep(10_000);
+
+      return value;
+    } catch (err: any) {
+      this.error(err);
+    }
+  }
+
+  /**
+   * Convenience function to wrap command passing in kube publisher.
+   */
+  async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    try {
+      // TODO: Use config.
+      // const wsEndpoint = this.clientConfig?.runtime?.;
+      const wsEndpoint = 'ws://localhost:9003/.well-known/dx/deploy';
+
+      const rpc = new PublisherRpcPeer(wsEndpoint);
+      await rpc.connected.waitForCount(1);
+
+      const value = await callback(rpc);
+
+      await rpc.close();
 
       return value;
     } catch (err: any) {
