@@ -52,6 +52,8 @@ export class Identity {
     this._deviceKey = deviceKey;
 
     this._halo = new Space(spaceParams);
+    
+    // Save device key chain credential when processed by the party state machine.
     this._halo.onCredentialProcessed.set(async credential => {
       log('Credential processed:', credential);
       if(isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
@@ -75,7 +77,7 @@ export class Identity {
   getDeviceCredentialSigner (): CredentialSigner {
     return params => createCredential({
       issuer: this._deviceKey,
-      signer: this._signer as Signer, // TODO(dmaretskyi): Fix.
+      keyring: this._signer,
 
       assertion: params.assertion as any,
       subject: params.subject,
@@ -84,17 +86,26 @@ export class Identity {
 
   /**
    * Issues credentials as identity.
+   * Requires identity to be ready.
    */
   getIdentityCredentialSigner(): CredentialSigner {
     assert(this._deviceCredentialChain, 'Device credential chain is not ready.');
     return params => createCredential({
       issuer: this._identityKey,
-      signer: this._signer as Signer, // TODO(dmaretskyi): Fix.
+      keyring: this._signer,
       signingKey: this._deviceKey,
       chain: this._deviceCredentialChain ?? failUndefined(),
 
       assertion: params.assertion as any,
       subject: params.subject,
     })
+  }
+
+  get controlMessageWriter() {
+    return this._halo.controlMessageWriter;
+  }
+
+  get controlPipelineState() {
+    return this._halo.controlPipelineState;
   }
 }

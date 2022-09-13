@@ -5,7 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring } from '@dxos/keyring';
 import { createKeyPair } from '@dxos/crypto';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
@@ -26,9 +26,9 @@ describe('space/control-pipeline', () => {
     };
 
     const keyring = new Keyring();
-    const { publicKey: spaceKey } = await keyring.createKeyRecord({ type: KeyType.PARTY });
-    const { publicKey: identityKey } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-    const { publicKey: deviceKey } = await keyring.createKeyRecord({ type: KeyType.DEVICE });
+    const spaceKey = await keyring.createKey();
+    const identityKey = await keyring.createKey();
+    const deviceKey = await keyring.createKey();
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
