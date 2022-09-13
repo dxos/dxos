@@ -91,7 +91,7 @@ export class NetworkManager {
         };
 
       this._messageRouter = new MessageRouter({
-        sendMessage: (message) => this._messenger.message(message),
+        sendMessage: (message) => this._messenger.sendMessage(message),
         onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
         onOffer: (msg) => onOffer(msg)
       });
@@ -180,7 +180,7 @@ export class NetworkManager {
 
     this._swarms.set(topic, swarm);
     this._signalConnection
-      .join(topic, peerId)
+      .join({ topic, peerId })
       .catch((error) => log(`Error: ${error}`));
     this._maps.set(topic, new SwarmMapper(swarm, presence));
 
@@ -201,7 +201,7 @@ export class NetworkManager {
     const map = this._maps.get(topic)!;
     const swarm = this._swarms.get(topic)!;
 
-    await this._signalConnection.leave(topic, swarm.ownPeerId);
+    await this._signalConnection.leave({ topic, peerId: swarm.ownPeerId });
 
     map.destroy();
     this._maps.delete(topic);

@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
-import { SignalManagerImpl } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/signaling';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
@@ -34,7 +34,7 @@ export class ClientServiceHost implements ClientServiceProvider {
       keyStorage,
       networkManagerOptions: {
         // TODO(mykola): SignalManager need to be subscribed for message receiving first.
-        signalManager: this._config.get('runtime.services.signal.server') ? new SignalManagerImpl([this._config.get('runtime.services.signal.server')!]) : undefined,
+        signalManager: this._config.get('runtime.services.signal.server') ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]) : undefined,
         ice: this._config.get('runtime.services.ice'),
         log: true
       },

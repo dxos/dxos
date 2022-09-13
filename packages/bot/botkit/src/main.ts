@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
-import { SignalManagerImpl } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/signaling';
 
 import { NodeContainer } from './bot-container';
 import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';
@@ -54,7 +54,7 @@ const main = async () => {
   assert(signal, 'Signal server must be provided');
   const networkManager = new NetworkManager({
     // TODO(mykola): SignalManager need to be subscribed for message receiving first.
-    signalManager: new SignalManagerImpl([signal])
+    signalManager: new WebsocketSignalManager([signal])
   });
   const topicString = config.get('runtime.services.bot.topic');
   assert(topicString, 'Topic must be provided');

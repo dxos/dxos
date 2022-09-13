@@ -2194,6 +2194,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.27
+      assert: ^2.0.0
       debug: ^4.3.3
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
@@ -2207,6 +2208,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
       debug: 4.3.4
       isomorphic-ws: 4.0.1_ws@7.5.6
       ws: 7.5.6

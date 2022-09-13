@@ -35,7 +35,7 @@ describe('Signal Integration Test', () => {
       receivedSignals.push(msg);
     };
     const messageRouter = new MessageRouter({
-      sendMessage: signalManager.message.bind(signalManager),
+      sendMessage: signalManager.sendMessage.bind(signalManager),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true })
     });

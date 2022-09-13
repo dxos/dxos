@@ -56,7 +56,7 @@ describe('MessageRouter', () => {
 
     const router: MessageRouter = new MessageRouter({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: async (message) => await messenger.message(message),
+      sendMessage: async (message) => await messenger.sendMessage(message),
       onSignal,
       onOffer
     });

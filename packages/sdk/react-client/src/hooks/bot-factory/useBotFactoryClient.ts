@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { SignalManagerImpl } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/signaling';
 
 export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
 
@@ -24,7 +24,7 @@ export const createBotFactoryClient = async (config: Config): Promise<BotFactory
   const signal = config.get('runtime.services.signal.server');
   const networkManager = new NetworkManager({
     // TODO(mykola): SignalManager need to be subscribed for message receiving first.
-    signalManager: signal ? new SignalManagerImpl([signal]) : undefined,
+    signalManager: signal ? new WebsocketSignalManager([signal]) : undefined,
     ice: config.get('runtime.services.ice'),
     log: true
   });
