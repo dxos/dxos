@@ -35,14 +35,14 @@ export interface PartyFilter {
   partyKeys?: PublicKey[]
 }
 
-// TODO(burdon): Remove.
+// TODO(burdon): Remove global dependency.
 const singletonContext = createMemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 /**
  * Various options passed to `ECHO.create`.
  */
-export interface EchoCreationOptions {
+export interface EchoParams {
 
   /**
    * Storage to persist data. Defaults to in-memory.
@@ -70,7 +70,7 @@ export interface EchoCreationOptions {
    */
   snapshotInterval?: number
 
-  // TODO(burdon): Comments.
+  // TODO(burdon): Remove.
   readLogger?: (msg: any) => void
   writeLogger?: (msg: any) => void
 }
@@ -117,7 +117,7 @@ export class ECHO {
     snapshotInterval = 100,
     readLogger,
     writeLogger
-  }: EchoCreationOptions = {}) {
+  }: EchoParams = {}) {
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
