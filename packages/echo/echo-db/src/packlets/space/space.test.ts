@@ -19,22 +19,8 @@ import { afterTest } from '@dxos/testutils';
 import { Space } from './space';
 
 describe('space/space', () => {
-  // test.only('Genesis', async () => {
-  //   const space = new Space({
-  //     spaceKey: undefined,
-  //     initialTimeframe: undefined,
-  //     genesisFeed: undefined,
-  //     controlWriteFeed: undefined,
-  //     dataWriteFeed: undefined,
-  //     feedProvider: undefined
-  //   });
-
-  //   // TODO(burdon): Standardize getters.
-  //   expect(space.isOpen).toBeFalsy();
-  // });
-
   test('database', async () => {
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
       return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
@@ -59,6 +45,7 @@ describe('space/space', () => {
     });
 
     await space.open();
+    expect(space.isOpen).toBeTruthy(); // TODO(burdon): Standardize boolean state getters.
     afterTest(() => space.close());
 
     //

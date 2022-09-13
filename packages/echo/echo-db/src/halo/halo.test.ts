@@ -29,10 +29,10 @@ describe.skip('HALO', () => {
 
     const networkManager = new NetworkManager();
     const storage = createStorage({ type: StorageType.RAM });
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const keyring = new Keyring();
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
 
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(
       metadataStore,

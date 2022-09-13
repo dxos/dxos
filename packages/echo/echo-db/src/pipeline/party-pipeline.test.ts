@@ -28,15 +28,15 @@ import { PartyPipeline } from './party-pipeline';
 describe.skip('PartyPipeline', () => {
   const setup = async () => {
     const storage = createStorage({ type: StorageType.RAM });
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
@@ -164,15 +164,15 @@ describe.skip('PartyPipeline', () => {
 
   test('does not open unrelated feeds', async () => {
     const storage = createStorage({ type: StorageType.RAM });
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
     const keyring = new Keyring();
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
@@ -315,13 +315,13 @@ describe.skip('PartyPipeline', () => {
     const peer1 = await setup();
 
     const storage = createStorage({ type: StorageType.RAM });
-    const feedStore = new FeedStore(storage.directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     afterTest(async () => feedStore.close());
 
-    const metadataStore = new MetadataStore(storage.directory('metadata'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
 
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const snapshotStore = new SnapshotStore(storage.directory('snapshots'));
+    const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
 
     const partyFeedProvider = new PartyFeedProvider(metadataStore, peer1.keyring, feedStore, peer1.party.key);
 

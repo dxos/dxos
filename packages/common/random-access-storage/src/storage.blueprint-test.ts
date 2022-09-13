@@ -22,17 +22,17 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
   describe(testGroupName, () => {
     it('open & close', async () => {
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
       const fileName = randomText();
-      const file = directory.createOrOpen(fileName);
+      const file = directory.createOrOpenFile(fileName);
       await file.close();
     });
 
     it('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
-      const directory = storage.directory('');
-      const file = directory.createOrOpen(fileName);
+      const directory = storage.createDirectory();
+      const file = directory.createOrOpenFile(fileName);
 
       // eslint-disable-next-line unused-imports/no-unused-vars
       for (const _ of Array.from(Array(5))) {
@@ -44,18 +44,22 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.close();
     });
 
-    it('multiple files', async () => {
+    it('create files', async () => {
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
 
-      const files = Array.from(Array(10))
+      const count = 10;
+      const files = Array.from(Array(count))
         .map(() => randomText())
-        .map(fileName => directory.createOrOpen(fileName));
+        .map(fileName => directory.createOrOpenFile(fileName));
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
         await writeAndCheck(file, buffer);
       }
+
+      const list = directory.getFiles();
+      expect(list).toHaveLength(count);
 
       for (const file of files) {
         await file.close();
@@ -64,14 +68,14 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('reads from empty file', async function () {
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
 
       // TODO(yivlad): Doesn't work for node.
       if (storage.type === StorageType.NODE) {
         this.skip();
       }
       const fileName = randomText();
-      const file = directory.createOrOpen(fileName);
+      const file = directory.createOrOpenFile(fileName);
 
       const { size } = await file.stat();
       expect(size).toBe(0);
@@ -80,16 +84,16 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('reopen', async () => {
       // Open.
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
       const fileName = randomText();
-      const file = directory.createOrOpen(fileName);
+      const file = directory.createOrOpenFile(fileName);
 
       // Write & close.
       await writeAndCheck(file, Buffer.from(randomText()));
       await file.close();
 
       // Open again.
-      const file2 = directory.createOrOpen('EchoMetadata');
+      const file2 = directory.createOrOpenFile('EchoMetadata');
       // Write & close.
       await writeAndCheck(file2, Buffer.from(randomText()));
       await file2.close();
@@ -100,15 +104,15 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const storage = createStorage();
       const fileName = randomText();
       const data = Buffer.from(randomText());
-      const directory = storage.directory('');
-      const file = directory.createOrOpen(fileName);
+      const directory = storage.createDirectory();
+      const file = directory.createOrOpenFile(fileName);
 
       // Write & close.
       await writeAndCheck(file, data);
       await file.close();
 
       // Open again.
-      const file2 = directory.createOrOpen(fileName);
+      const file2 = directory.createOrOpenFile(fileName);
 
       // Read and check inside.
       const dataFromFile = await file2.read(0, data.length);
@@ -119,10 +123,10 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     // TODO(yivlad): Not implemented.
     it.skip('destroy clears all data', async () => {
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
 
       const fileName = randomText();
-      const file = directory.createOrOpen(fileName);
+      const file = directory.createOrOpenFile(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
@@ -137,19 +141,19 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     it('subdirectories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
-      const dir1 = storage.directory('dir1');
-      const dir2 = storage.directory('dir2');
+      const dir1 = storage.createDirectory('dir1');
+      const dir2 = storage.createDirectory('dir2');
 
       const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
       const buffer2 = Buffer.from(randomText());
 
       // 2. Create a file in first subdirectory and write content
-      const file1 = dir1.createOrOpen(fileName);
+      const file1 = dir1.createOrOpenFile(fileName);
       await file1.write(0, buffer1);
 
       // 3. Create a file with the same name in the second subdir and write different content
-      const file2 = dir2.createOrOpen(fileName);
+      const file2 = dir2.createOrOpenFile(fileName);
       await file2.write(0, buffer2);
 
       // 4. Check that they have corrent content.
@@ -159,10 +163,10 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('write in directory/subDirectory/file', async () => {
       const storage = createStorage();
-      const dir = storage.directory('directory');
-      const subDir = dir.directory('subDirectory');
+      const dir = storage.createDirectory('directory');
+      const subDir = dir.createDirectory('subDirectory');
 
-      const file = subDir.createOrOpen('file');
+      const file = subDir.createOrOpenFile('file');
       const buffer = Buffer.from(randomText());
       await file.write(0, buffer);
 
@@ -173,7 +177,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('delete file', async function () {
       const storage = createStorage();
-      const directory = storage.directory('');
+      const directory = storage.createDirectory();
 
       // TODO(yivlad): Works only for StorageType.RAM.
       if (storage.type !== StorageType.RAM) {
@@ -181,14 +185,14 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       }
 
       const fileName = randomText();
-      const file = directory.createOrOpen(fileName);
+      const file = directory.createOrOpenFile(fileName);
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
       await file.delete();
 
-      const reopened = directory.createOrOpen(fileName);
+      const reopened = directory.createOrOpenFile(fileName);
       const { size } = await reopened.stat();
       expect(size).toBe(0);
       await reopened.close();
@@ -196,8 +200,8 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('delete directory', async () => {
       const storage = createStorage();
-      const directory = storage.directory('');
-      const file = directory.createOrOpen('file');
+      const directory = storage.createDirectory();
+      const file = directory.createOrOpenFile('file');
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
@@ -212,8 +216,9 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
         // File.truncate() throws 'Not deletable' error for IDb.
         this.skip();
       }
-      const directory = storage.directory('');
-      const file = directory.createOrOpen(randomText());
+
+      const directory = storage.createDirectory();
+      const file = directory.createOrOpenFile(randomText());
 
       const buffer1 = Buffer.from(randomText());
       await file.write(0, buffer1);

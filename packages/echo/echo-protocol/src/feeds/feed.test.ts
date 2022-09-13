@@ -29,7 +29,7 @@ describe('Feed tests:', () => {
   });
 
   test('hypercore', async () => {
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
@@ -50,7 +50,7 @@ describe('Feed tests:', () => {
   });
 
   test('feed writer', async () => {
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);

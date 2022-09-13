@@ -19,7 +19,7 @@ describe('pipeline/Pipeline', () => {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
 
     // Remote feeds from other peers.
     const numFeeds = 5; const messagesPerFeed = 10;

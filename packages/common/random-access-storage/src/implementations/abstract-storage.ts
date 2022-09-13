@@ -22,11 +22,12 @@ export abstract class AbstractStorage implements Storage {
     return this._files.size;
   }
 
-  public directory (path = ''): Directory {
+  public createDirectory (path = ''): Directory {
     return new Directory(
       getFullPath(this.path, path),
+      () => [...this._getFilesInPath(path).values()],
       this._createFile.bind(this),
-      this._deleteFilesInPath.bind(this)
+      () => this._deleteFilesInPath(path)
     );
   }
 

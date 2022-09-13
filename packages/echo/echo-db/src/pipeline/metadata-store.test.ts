@@ -12,7 +12,7 @@ import { MetadataStore } from './metadata-store';
 describe('MetadataStore in-memory', () => {
   it('creates party', async () => {
     const storage = createStorage({ type: StorageType.RAM });
-    const store = new MetadataStore(storage.directory('metadata'));
+    const store = new MetadataStore(storage.createDirectory('metadata'));
     await store.load();
     expect(store.parties?.length).toBe(0);
 
@@ -28,7 +28,7 @@ describe('MetadataStore in-memory', () => {
   // TODO(yivlad): Doesn't work for now.
   it.skip('Resets storage', async () => {
     const storage = createStorage({ type: StorageType.RAM, root: 'snapshots' });
-    const store = new MetadataStore(storage.directory(''));
+    const store = new MetadataStore(storage.createDirectory(''));
 
     const partyKey = PublicKey.random();
     const feedKey = PublicKey.random();
@@ -44,7 +44,7 @@ describe('MetadataStore in-memory', () => {
 
   it('not corrupted', async () => {
     const storage = createStorage({ type: StorageType.RAM });
-    const dir = storage.directory('metadata');
+    const dir = storage.createDirectory('metadata');
     const metadataStore = new MetadataStore(dir);
 
     // writing something in metadataStore to save.

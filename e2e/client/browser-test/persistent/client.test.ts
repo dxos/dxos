@@ -52,7 +52,7 @@ describe('Client - persistent', () => {
 
   it('MetadataStore save/load', async () => {
     const storage = createStorage({ type: StorageType.IDB });
-    const directory = storage.directory('metadata');
+    const directory = storage.createDirectory('metadata');
     const partyKey = PublicKey.random();
 
     // Create a new metadata store. And adding party.

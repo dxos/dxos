@@ -19,7 +19,7 @@ import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).directory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const createFeed = () => {
       const { publicKey, secretKey } = createKeyPair();
       return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);

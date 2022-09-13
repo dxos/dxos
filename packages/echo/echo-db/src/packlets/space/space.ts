@@ -74,7 +74,7 @@ export class Space {
   }
 
   get isOpen () {
-    return false;
+    return this._isOpen;
   }
 
   get database () {
