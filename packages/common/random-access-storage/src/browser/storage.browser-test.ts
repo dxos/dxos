@@ -5,9 +5,9 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { StorageType } from './api';
-import { createStorage } from './browser';
-import { storageTests } from './storage.blueprint-test';
+import { StorageType } from '../common';
+import { storageTests } from '../testing/storage.blueprint-test';
+import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = 'testing';
 

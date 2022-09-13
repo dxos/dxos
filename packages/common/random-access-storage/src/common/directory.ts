@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { getFullPath } from '../utils';
 import { File } from './file';
+import { getFullPath } from './utils';
 
 /**
  * Wraps a directory in the storage file system.

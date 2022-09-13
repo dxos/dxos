@@ -4,7 +4,7 @@
 
 import randomAccessIdb from 'random-access-idb';
 
-import { StorageType } from '../api';
+import { StorageType } from '../common';
 import { RandomAccessStorage } from './random-access-storage';
 
 /**

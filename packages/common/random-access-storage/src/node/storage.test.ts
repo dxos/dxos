@@ -8,9 +8,9 @@ import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 
-import { File, StorageType } from './api';
-import { createStorage } from './node';
-import { storageTests } from './storage.blueprint-test';
+import { File, StorageType } from '../common';
+import { storageTests } from '../testing/storage.blueprint-test';
+import { createStorage } from './storage';
 
 // TODO(burdon): Use /tmp?
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));

@@ -20,7 +20,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/common/random-access-storage/**/*.{ts,js}"
+          "packages/common/random-access-storage/**/*.ts"
         ]
       }
     },
@@ -28,7 +28,7 @@
       "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
-          "packages/common/random-access-storage/src/**/*.test.{ts,js}"
+          "packages/common/random-access-storage/src/**/*.test.ts"
         ]
       }
     },

@@ -4,7 +4,7 @@
 
 import randomAccessMutable from 'random-access-web/mutable-file-wrapper';
 
-import { StorageType } from '../api';
+import { StorageType } from '../common';
 import { RandomAccessStorage } from './random-access-storage';
 
 /**
