@@ -174,7 +174,7 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
 
     const pickedCandidate = candidates[selected];
     // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
-    const feed = this._openFeeds.get(PublicKey.stringify(pickedCandidate.key as unknown as Buffer));
+    const feed = this._openFeeds.get(pickedCandidate.key.toHex());
     assert(feed);
 
     return feed.sendQueue.shift();
@@ -193,7 +193,10 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
         feed.iterator.next()
           .then(result => {
             assert(!result.done);
-            feed.sendQueue.push(...result.value);
+            feed.sendQueue.push({
+              ...result.value[0],
+              key: feed.descriptor.key,
+            });
             this._trigger.wake();
           }, (err) => {
             if (err.message.includes('Feed is closed')) {

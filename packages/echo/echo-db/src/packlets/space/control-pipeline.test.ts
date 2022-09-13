@@ -19,16 +19,16 @@ import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
-    const createFeed = () => {
-      const { publicKey, secretKey } = createKeyPair();
-      return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
-    };
-
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
+
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const createFeed = async () => {
+      const feedKey = await keyring.createKey();
+      return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
+    };
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();

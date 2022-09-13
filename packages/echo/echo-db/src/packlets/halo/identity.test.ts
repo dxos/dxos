@@ -18,10 +18,9 @@ describe('halo/identity', () => {
     const spaceKey = await keyring.createKey();
 
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
-    const createFeed = () => {
-      // TODO(dmaretskyi): Use keyring to generate the key pair.
-      const { publicKey, secretKey } = createKeyPair();
-      return feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const createFeed = async () => {
+      const feedKey = await keyring.createKey();
+      return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
     };
 
 
@@ -51,6 +50,7 @@ describe('halo/identity', () => {
     //
     {
       // TODO(burdon): Don't export functions from packages (group into something more accountable).
+      // Space genesis
       const genesisMessages = await createGenesisCredentialSequence(
         keyring,
         spaceKey,
@@ -59,7 +59,6 @@ describe('halo/identity', () => {
         controlFeed.key
       );
 
-      // Space genesis
       for (const credential of genesisMessages) {
         await identity.controlMessageWriter?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',

@@ -12,10 +12,12 @@ import { Directory } from '@dxos/random-access-storage';
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
+import type { Signer } from '@dxos/keyring';
 
 export interface CreateDescriptorOptions {
   key: PublicKey
   secretKey?: Buffer
+  signer?: Signer
 }
 
 export interface CreateReadWriteFeedOptions {
@@ -91,6 +93,7 @@ export class FeedStore {
 
   /**
    * Create a feed to Feedstore
+   * @deprecated Use openReadWriteFeedWithSigner instead.
    */
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
     const descriptor = this._descriptors.get(key.toHex());
@@ -98,6 +101,14 @@ export class FeedStore {
       return descriptor;
     }
     return this._createDescriptor({ key, secretKey });
+  }
+
+  /**
+   * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
+   */
+  async openReadWriteFeedWithSigner(key: PublicKey, signer: Signer) {
+    assert(!this._descriptors.has(key.toHex()), 'Feed already exists.');
+    return this._createDescriptor({ key, signer });
   }
 
   /**
@@ -112,12 +123,13 @@ export class FeedStore {
    * Factory to create a new FeedDescriptor.
    */
   private async _createDescriptor (options: CreateDescriptorOptions) {
-    const { key, secretKey } = options;
+    const { key, secretKey, signer } = options;
 
     const descriptor = new FeedDescriptor({
       directory: this._directory,
       key,
       secretKey,
+      signer,
       valueEncoding: this._valueEncoding,
       hypercore: this._hypercore
     });

@@ -21,6 +21,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
