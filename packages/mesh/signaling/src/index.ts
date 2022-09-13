@@ -5,5 +5,5 @@
 export * from './messenger';
 export * from './signal-client';
 export * from './signal-manager';
-export * from './signal-manager-in-memory';
+export * from './memory-signal-manager';
 export * from './websocket-signal-manager';
