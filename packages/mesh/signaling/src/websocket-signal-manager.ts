@@ -14,9 +14,9 @@ import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
-const log = debug('dxos:signaling:signal-manager-impl');
+const log = debug('dxos:signaling:websocket-signal-manager');
 
-export class SignalManagerImpl implements SignalManager {
+export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
   /** Topics joined: topic => peerId */

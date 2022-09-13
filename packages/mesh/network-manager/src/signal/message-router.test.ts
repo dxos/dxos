@@ -10,7 +10,7 @@ import { Awaited } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker } from '@dxos/signal';
-import { Messenger, SignalManagerImpl } from '@dxos/signaling';
+import { Messenger, WebsocketSignalManager } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 
 import { Answer } from '../proto/gen/dxos/mesh/swarm';
@@ -44,7 +44,7 @@ describe('MessageRouter', () => {
     onOffer?: (msg: OfferMessage) => Promise<Answer>
   }) => {
     const peerId = PublicKey.random();
-    const signalManager = new SignalManagerImpl([signalApiUrl]);
+    const signalManager = new WebsocketSignalManager([signalApiUrl]);
     await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.destroy());
 

@@ -7,7 +7,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
-import { SignalManagerImpl } from '@dxos/signaling';
+import { WebsocketSignalManager } from '@dxos/signaling';
 import { afterTest } from '@dxos/testutils';
 
 import { MessageRouter } from './message-router';
@@ -25,7 +25,7 @@ describe('Signal Integration Test', () => {
   });
 
   const setup = () => {
-    const signalManager = new SignalManagerImpl([broker.url()]);
+    const signalManager = new WebsocketSignalManager([broker.url()]);
     signalManager.onMessage.on((message) =>
       messageRouter.receiveMessage(message)
     );

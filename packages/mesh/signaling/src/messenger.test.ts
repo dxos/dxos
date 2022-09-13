@@ -11,7 +11,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Messenger } from './messenger';
 import { Any } from './proto/gen/google/protobuf';
-import { SignalManagerImpl } from './signal-manager-impl';
+import { WebsocketSignalManager } from './websocket-signal-manager';
 import { Message } from './signal-methods';
 
 describe('Messenger', () => {
@@ -31,7 +31,7 @@ describe('Messenger', () => {
 
     const peerId = PublicKey.random();
 
-    const signalManager = new SignalManagerImpl([broker.url()]);
+    const signalManager = new WebsocketSignalManager([broker.url()]);
     await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.destroy());
 
