@@ -53,7 +53,7 @@ describe('Messenger', () => {
     const { peerId: peerId2, received: received2 } = await setup();
 
     const payload: Any = {
-      type_url: 'a',
+      type_url: 'dxos.ExampleA',
       value: Buffer.from('0')
     };
 
@@ -84,7 +84,7 @@ describe('Messenger', () => {
         author: peerId1,
         recipient: peerId2,
         payload: {
-          type_url: 'a',
+          type_url: 'dxos.ExampleA',
           value: Buffer.from('0')
         }
       };
@@ -99,7 +99,7 @@ describe('Messenger', () => {
         author: peerId1,
         recipient: peerId3,
         payload: {
-          type_url: 'b',
+          type_url: 'dxos.ExampleB',
           value: Buffer.from('1')
         }
       };
@@ -114,7 +114,7 @@ describe('Messenger', () => {
         author: peerId2,
         recipient: peerId1,
         payload: {
-          type_url: 'c',
+          type_url: 'dxos.ExampleC',
           value: Buffer.from('2')
         }
       };
@@ -136,21 +136,21 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const onMessage1 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      payloadType: '1',
+      payloadType: 'dxos.Example1',
       onMessage: onMessage1
     });
 
     // Subscribe first listener for second messenger.
     const onMessage2 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      payloadType: '1',
+      payloadType: 'dxos.Example1',
       onMessage: onMessage2
     });
 
     // Subscribe third listener for second messenger.
     const onMessage3 = mockFn<(message: Message) => void>().returns();
     await messenger2.listen({
-      payloadType: '2',
+      payloadType: 'dxos.Example2',
       onMessage: onMessage3
     });
 
@@ -160,7 +160,7 @@ describe('Messenger', () => {
         author: peerId1,
         recipient: peerId2,
         payload: {
-          type_url: '1',
+          type_url: 'dxos.Example1',
           value: Buffer.from('0')
         }
       };
@@ -182,7 +182,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
     await messenger2.listen({
-      payloadType: '1',
+      payloadType: 'dxos.Example1',
       onMessage: (message) => {
         messages1.push(message);
       }
@@ -191,7 +191,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
     const listenerHandle2 = await messenger2.listen({
-      payloadType: '1',
+      payloadType: 'dxos.Example1',
       onMessage: (message) => {
         messages2.push(message);
       }
@@ -203,7 +203,7 @@ describe('Messenger', () => {
         author: peerId1,
         recipient: peerId2,
         payload: {
-          type_url: '1',
+          type_url: 'dxos.Example1',
           value: Buffer.from('0')
         }
       };
@@ -224,7 +224,7 @@ describe('Messenger', () => {
         author: peerId1,
         recipient: peerId2,
         payload: {
-          type_url: '1',
+          type_url: 'dxos.Example1',
           value: Buffer.from('0')
         }
       };
