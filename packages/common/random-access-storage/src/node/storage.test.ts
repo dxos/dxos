@@ -8,20 +8,19 @@ import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 
-import { File, StorageType } from './api';
-import { createStorage } from './node';
-import { storageTests } from './storage.blueprint-test';
+import { File, StorageType } from '../common';
+import { storageTests } from '../testing';
+import { createStorage } from './storage';
 
-// TODO(burdon): Use /tmp?
-const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '..', 'out', 'index.test'));
+const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 
 const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 
 const write = async (file: File, data = 'test') => {
   const buffer = Buffer.from(data);
-  const i = 8;
-  await file.write(i, buffer);
-  await expect(file.read(i, buffer.length)).resolves.toEqual(buffer);
+  const offset = 8;
+  await file.write(offset, buffer);
+  await expect(file.read(offset, buffer.length)).resolves.toEqual(buffer);
 };
 
 before(() => del(ROOT_DIRECTORY));
