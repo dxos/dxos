@@ -6,22 +6,36 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
+import {
+  GreetingCommandPlugin,
+  ERR_GREET_ALREADY_CONNECTED_TO_SWARM
+} from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import {
+  MemorySignalManager,
+  Messenger,
+  SignalManager
+} from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { InMemorySignalManager, OfferMessage, SignalManager, SignalManagerImpl } from './signal';
+import { OfferMessage, SignalConnection } from './signal';
 import { MessageRouter } from './signal/message-router';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
-import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
+import {
+  createWebRTCTransportFactory,
+  inMemoryTransportFactory
+} from './transport';
 
-export type ProtocolProvider = (opts: { channel: Buffer, initiator: boolean}) => Protocol;
+export type ProtocolProvider = (opts: {
+  channel: Buffer
+  initiator: boolean
+}) => Protocol;
 
 export interface NetworkManagerOptions {
-  signal?: string[]
+  signalManager?: SignalManager
   ice?: any[]
   /**
    * Enable connection logging for devtools.
@@ -36,10 +50,18 @@ const log = debug('dxos:network-manager');
  */
 export class NetworkManager {
   private readonly _ice?: any[];
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>((key) =>
+    key.toHex()
+  );
+
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>((key) =>
+    key.toHex()
+  );
+
   private readonly _signalManager: SignalManager;
+  private readonly _messenger: Messenger;
   private readonly _messageRouter: MessageRouter;
+  private readonly _signalConnection: SignalConnection;
   private readonly _connectionLog?: ConnectionLog;
 
   public readonly topicsUpdated = new Event<void>();
@@ -47,23 +69,45 @@ export class NetworkManager {
   constructor (options: NetworkManagerOptions = {}) {
     this._ice = options.ice ?? [];
 
-    const onOffer = async (message: OfferMessage) =>
-      await this._swarms.get(message.topic!)?.onOffer(message) ?? { accept: false };
+    {
+      this._signalManager =
+        options.signalManager ?? new MemorySignalManager();
 
-    this._signalManager = options.signal
-      ? new SignalManagerImpl(options.signal)
-      : new InMemorySignalManager();
+      this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
+        this._swarms.get(topic)?.onSwarmEvent(event)
+      );
 
-    this._signalManager.swarmEvent
-      .on(([topic, event]) => this._swarms.get(topic)?.onSwarmEvent(event));
+      this._signalManager.onMessage.on((message) =>
+        this._messageRouter.receiveMessage(message)
+      );
+    }
 
-    this._signalManager.onMessage.on(data => this._messageRouter.receiveMessage(...data));
+    {
+      this._messenger = new Messenger({ signalManager: this._signalManager });
 
-    this._messageRouter = new MessageRouter({
-      sendMessage: this._signalManager.message.bind(this._signalManager),
-      onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
-      onOffer: msg => onOffer(msg)
-    });
+      const onOffer = async (message: OfferMessage) =>
+        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? {
+          accept: false
+        };
+
+      this._messageRouter = new MessageRouter({
+        sendMessage: (message) => this._messenger.sendMessage(message),
+        onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
+        onOffer: (msg) => onOffer(msg)
+      });
+
+      this._messenger.listen({
+        payloadType: 'dxos.mesh.swarm.SwarmMessage',
+        onMessage: (message) => this._messageRouter.receiveMessage(message)
+      });
+    }
+
+    {
+      this._signalConnection = {
+        join: (opts) => this._signalManager.join(opts),
+        leave: (opts) => this._signalManager.leave(opts)
+      };
+    }
 
     if (options.log) {
       this._connectionLog = new ConnectionLog();
@@ -100,16 +144,25 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
 
-    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
+    log(
+      `Join ${options.topic} as ${
+        options.peerId
+      } with ${options.topology.toString()} topology.`
+    );
     if (this._swarms.has(topic)) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(
-        GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`);
+        GreetingCommandPlugin.EXTENSION_NAME,
+        ERR_GREET_ALREADY_CONNECTED_TO_SWARM,
+        `Already connected to swarm ${topic}`
+      );
     }
 
     // TODO(burdon): Require factory (i.e., don't make InMemorySignalManager by default).
     // TODO(burdon): Bundle common transport related classes.
-    const transportFactory = this._signalManager instanceof InMemorySignalManager
-      ? inMemoryTransportFactory : createWebRTCTransportFactory({ iceServers: this._ice });
+    const transportFactory =
+      this._signalManager instanceof MemorySignalManager
+        ? inMemoryTransportFactory
+        : createWebRTCTransportFactory({ iceServers: this._ice });
 
     const swarm = new Swarm(
       topic,
@@ -121,12 +174,14 @@ export class NetworkManager {
       options.label
     );
 
-    swarm.errors.handle(error => {
+    swarm.errors.handle((error) => {
       log(`Swarm error: ${error}`);
     });
 
     this._swarms.set(topic, swarm);
-    this._signalManager.join(topic, peerId);
+    this._signalConnection
+      .join({ topic, peerId })
+      .catch((error) => log(`Error: ${error}`));
     this._maps.set(topic, new SwarmMapper(swarm, presence));
 
     this.topicsUpdated.emit();
@@ -146,7 +201,7 @@ export class NetworkManager {
     const map = this._maps.get(topic)!;
     const swarm = this._swarms.get(topic)!;
 
-    this._signalManager.leave(topic, swarm.ownPeerId);
+    await this._signalConnection.leave({ topic, peerId: swarm.ownPeerId });
 
     map.destroy();
     this._maps.delete(topic);
@@ -169,7 +224,7 @@ export class NetworkManager {
 
   async destroy () {
     for (const topic of this._swarms.keys()) {
-      await this.leaveProtocolSwarm(topic).catch(err => {
+      await this.leaveProtocolSwarm(topic).catch((err) => {
         log(`Failed to leave swarm ${topic} on NetworkManager.destroy}`);
         log(err);
       });

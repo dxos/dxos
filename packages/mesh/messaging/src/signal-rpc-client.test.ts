@@ -7,7 +7,7 @@ import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { Message, SwarmEvent } from '../proto/gen/dxos/mesh/signal';
+import { Message, SwarmEvent } from './proto';
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', () => {
@@ -39,7 +39,7 @@ describe('SignalRPCClient', () => {
       value: Uint8Array.from([1, 2, 3])
     };
 
-    await client2.sendMessage(peerId2, peerId1, message);
+    await client2.sendMessage({ author: peerId2, recipient: peerId1, payload: message });
 
     const received: Message = await new Promise(resolve => {
       stream1.subscribe(message => {
@@ -63,7 +63,7 @@ describe('SignalRPCClient', () => {
     const peerId2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const stream1 = await client1.join(topic, peerId1);
+    const stream1 = await client1.join({ topic, peerId: peerId1 });
     const promise = new Promise<SwarmEvent>(resolve => {
       stream1.subscribe((event: SwarmEvent) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
@@ -77,7 +77,7 @@ describe('SignalRPCClient', () => {
         }
       });
     });
-    const stream2 = await client2.join(topic, peerId2);
+    const stream2 = await client2.join({ topic, peerId: peerId2 });
 
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     stream1.close();

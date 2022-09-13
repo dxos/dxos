@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { CommandTrace } from '@dxos/network-manager';
+import { CommandTrace } from '@dxos/messaging';
 import { JsonTreeView } from '@dxos/react-components';
 
 export interface SignalTraceProps {
