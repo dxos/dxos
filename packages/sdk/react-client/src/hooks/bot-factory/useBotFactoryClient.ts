@@ -20,14 +20,13 @@ export const useBotFactoryClient = (required = true): BotFactoryClient | undefin
   return client;
 };
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 export const createBotFactoryClient = async (config: Config): Promise<BotFactoryClient> => {
   const signal = config.get('runtime.services.signal.server');
   const networkManager = new NetworkManager({
     // TODO(mykola): SignalManager need to be subscribed for message receiving first.
-    signalManager: signal ? new WebsocketSignalManager([signal]) : createSignalManager(),
+    signalManager: signal ? new WebsocketSignalManager([signal]) : new MemorySignalManager(signalContext),
     ice: config.get('runtime.services.ice'),
     log: true
   });

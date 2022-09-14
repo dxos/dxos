@@ -36,8 +36,7 @@ export interface PartyFilter {
 }
 
 // TODO(burdon): Remove global dependency.
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 /**
  * Various options passed to `ECHO.create`.
@@ -123,7 +122,7 @@ export class ECHO {
 
     if (!networkManagerOptions) {
       networkManagerOptions = {
-        signalManager: createSignalManager()
+        signalManager: new MemorySignalManager(signalContext)
       };
     }
 
