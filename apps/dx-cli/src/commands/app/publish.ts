@@ -12,7 +12,6 @@ import { publish } from '../../util/publish/publish';
 import { PublisherRpcPeer } from '../../util/publisher-rpc-peer';
 
 export default class Publish extends BaseCommand {
-  static override enableJsonFlag = true;
   static override description = 'Publish apps.';
   static override flags = {
     ...BaseCommand.flags,
