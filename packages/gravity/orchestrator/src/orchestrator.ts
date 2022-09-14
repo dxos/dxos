@@ -14,13 +14,12 @@ import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 export class Orchestrator {
   private _client: Client | undefined;
   private _botFactoryClient = new BotFactoryClient(new NetworkManager({
-    signalManager: createSignalManager()
+    signalManager: new MemorySignalManager(signalContext)
   }));
 
   private _party: Party | undefined;
@@ -63,7 +62,7 @@ export class Orchestrator {
 
     const botFactory = new BotFactory({ config: this._config, botContainer: this._botContainer });
     const botController = new BotController(botFactory, new NetworkManager({
-      signalManager: createSignalManager()
+      signalManager: new MemorySignalManager(signalContext)
     }));
     await botController.start(topic);
     await this._botFactoryClient.start(topic);
