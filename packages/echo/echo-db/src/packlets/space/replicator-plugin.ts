@@ -15,8 +15,8 @@ export class ReplicatorPlugin extends Replicator {
   private readonly _feedAdded = new Event<FeedDescriptor>();
   private readonly _feeds = new Set<FeedDescriptor>();
 
-  addFeed (feed: FeedDescriptor) {
-    log(`Adding feed: ${feed.key.toHex()}`);
+  addFeed(feed: FeedDescriptor) {
+    log(`Adding feed`, {feed: feed.key });
 
     this._feeds.add(feed);
     this._feedAdded.emit(feed);
@@ -26,20 +26,18 @@ export class ReplicatorPlugin extends Replicator {
     super({
       load: async () => {
         const feeds = Array.from(this._feeds);
-        log(`Loading feeds: ${feeds.map(feed => feed.key.toHex())}`);
+        log(`Loading feeds`, { feeds: feeds.map(feed => feed.key) });
         return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
       },
 
       subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._feedAdded.on(async (feed) => {
-        log(`Adding feed: ${feed.key.toHex()}`);
+        log(`Adding feed`, { feed: feed.key });
         addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
       }),
 
       replicate: async (remoteFeeds, info) => {
-        // We can ignore remoteFeeds entirely, since the set of feeds we want to replicate is dictated by the Party.
-        // TODO(telackey): Why are we opening feeds? Necessary or belt/braces thinking, or because open party does it?
         const feeds = Array.from(this._feeds);
-        log(`Replicating: peerId=${info.session}; feeds=${feeds.map(feed => feed.key.toHex())}`);
+        log(`Replicating`, { peerId: info.session, feeds: feeds.map(feed => feed.key) });
         return feeds.map(feed => feed.feed);
       }
     });

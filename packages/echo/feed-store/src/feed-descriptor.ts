@@ -158,7 +158,7 @@ export class FeedDescriptor {
         // TODO(dmaretskyi): Can we just pass undefined. We might need this for hypercore to consider this feed as writable.
         secretKey: Buffer.from('fake key'),
         valueEncoding: this._valueEncoding,
-        crypto: {
+        crypto: MOCK_CRYPTO || {
           sign: (data: any, secretKey: any, cb: any) => {
             assert(this._signer, 'Signer was not provided to the writable feed (writable feeds without injected signer are deprecated).')
             callbackify(this._signer!.sign.bind(this._signer!))(this._key, data, (err, res) => {
@@ -169,7 +169,13 @@ export class FeedDescriptor {
               cb(null, Buffer.from(res));
             })
           },
-          verify: (signature: any, data: any, key: any, cb: any) => {
+          verify: async (signature: any, data: any, key: any, cb: any) => {
+            console.log({
+              signature: signature.toString('hex'),
+              data: data.toString('hex'),
+              key: key.toString('hex'),
+              result: await verifySignature(signature, data, key)
+            })
             callbackify(verifySignature)(this._key, data, signature, cb);
           }
         }
