@@ -4,7 +4,10 @@
   "targets": {
     "prerelease": {
       "executor": "nx:run-script",
-      "outputs": ["packages/common/typedoc/src/api"],
+      "outputs": [
+        "packages/common/typedoc/dist",
+        "packages/common/typedoc/src/api"
+      ],
       "options": {
         "script": "prerelease"
       },
