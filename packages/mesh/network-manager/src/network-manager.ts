@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
-import { createMemorySignalManagerContext, MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
+import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
@@ -33,9 +33,6 @@ export interface NetworkManagerOptions {
 }
 
 const log = debug('dxos:network-manager');
-
-// TODO(burdon): Remove.
-const singletonContext = createMemorySignalManagerContext();
 
 /**
  * Manages connection to the swarm.
@@ -62,7 +59,7 @@ export class NetworkManager {
 
     // Listen for signal manager events.
     {
-      this._signalManager = signalManager ?? new MemorySignalManager(singletonContext);
+      this._signalManager = signalManager;
 
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
@@ -112,6 +109,7 @@ export class NetworkManager {
     return Array.from(this._swarms.keys());
   }
 
+  // TODO(burdon): Factor out devtools.
   get connectionLog () {
     return this._connectionLog;
   }
@@ -140,9 +138,7 @@ export class NetworkManager {
     );
     if (this._swarms.has(topic)) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(
-        GreetingCommandPlugin.EXTENSION_NAME,
-        ERR_GREET_ALREADY_CONNECTED_TO_SWARM,
-        `Already connected to swarm ${topic}`
+        GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`
       );
     }
 
@@ -248,7 +244,7 @@ export interface SwarmOptions {
   /**
    * Presence plugin for network mapping, if exists.
    */
-  presence?: any /* Presence. */
+  presence?: any
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.

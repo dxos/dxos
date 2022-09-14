@@ -8,13 +8,13 @@ import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
 import { Party, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 export class Orchestrator {

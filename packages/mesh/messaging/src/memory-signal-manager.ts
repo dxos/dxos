@@ -13,26 +13,19 @@ import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
-export type MemorySignalManagerContext = {
+/**
+ * Common signaling context that connects multiple MemorySignalManager instances.
+ */
+export class MemorySignalManagerContext {
   // Swarm messages.
-  swarmEvent: Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>
+  readonly swarmEvent = new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>();
 
   // Mapping from topic to set of peers.
-  swarms: ComplexMap<PublicKey, ComplexSet<PublicKey>>
+  readonly swarms = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex());
 
   // Map of connections for each peer for signaling.
-  connections: ComplexMap<PublicKey, MemorySignalManager>
+  readonly connections = new ComplexMap<PublicKey, MemorySignalManager>(key => key.toHex());
 }
-
-export const createMemorySignalManagerContext = (): MemorySignalManagerContext => ({
-  swarmEvent: new Event<{ topic: PublicKey, swarmEvent: SwarmEvent }>(),
-
-  // Mapping from topic to set of peers.
-  swarms: new ComplexMap<PublicKey, ComplexSet<PublicKey>>(key => key.toHex()),
-
-  // Map of connections for each peer for signaling.
-  connections: new ComplexMap<PublicKey, MemorySignalManager>(key => key.toHex())
-});
 
 /**
  * In memory signal manager for testing.

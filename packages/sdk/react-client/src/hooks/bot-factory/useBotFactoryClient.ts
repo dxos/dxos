@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { NetworkManager } from '@dxos/client';
 import { Config } from '@dxos/config';
-import { createMemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 
 export const BotFactoryClientContext = createContext<BotFactoryClient | undefined>(undefined);
 
@@ -20,7 +20,7 @@ export const useBotFactoryClient = (required = true): BotFactoryClient | undefin
   return client;
 };
 
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 export const createBotFactoryClient = async (config: Config): Promise<BotFactoryClient> => {

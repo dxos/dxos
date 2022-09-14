@@ -11,7 +11,7 @@ import waitForExpect from 'wait-for-expect';
 import { Event, latch, sleep } from '@dxos/async';
 import { Protocol } from '@dxos/mesh-protocol';
 import {
-  createMemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager
+  MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager
 } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
@@ -26,7 +26,7 @@ import { FullyConnectedTopology, StarTopology, Topology } from './topology';
 const log = debug('dxos:network-manager:test');
 
 // Share context for tests.
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 interface CreatePeerOptions {

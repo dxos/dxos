@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
-import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
@@ -22,7 +22,7 @@ import { Bot as ClientBot } from './bots/client-bot';
 import { Bot, GetLogsResponse } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 describe('In-Memory', () => {

@@ -27,7 +27,7 @@ import {
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
-import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -53,7 +53,7 @@ const log = debug('dxos:echo:parties:party-manager:test');
 // TODO(burdon): Close cleanly.
 // This usually means that there are asynchronous operations that weren't stopped in your tests.
 
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 /**

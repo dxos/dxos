@@ -10,7 +10,7 @@ import {
 } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -24,7 +24,7 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 describe('DataParty', () => {

@@ -11,7 +11,7 @@ import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { createMemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -36,7 +36,7 @@ export interface PartyFilter {
 }
 
 // TODO(burdon): Remove global dependency.
-const singletonContext = createMemorySignalManagerContext();
+const singletonContext = new MemorySignalManagerContext();
 const createSignalManager = () => new MemorySignalManager(singletonContext);
 
 /**
@@ -47,7 +47,7 @@ export interface EchoParams {
   /**
    * Storage to persist data. Defaults to in-memory.
    */
-   storage?: Storage
+  storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.
@@ -57,12 +57,13 @@ export interface EchoParams {
   /**
    * Networking provider. Defaults to in-memory networking.
    */
+  // TODO(burdon): Should not pass in params for inner objects.
   networkManagerOptions?: NetworkManagerOptions
 
   /**
    * Whether to save and load snapshots. Defaults to `true`.
    */
-  // TODO(burdon): Hierarchical config.
+  // TODO(burdon): Re-organize config (separated object).
   snapshots?: boolean
 
   /**
@@ -112,7 +113,6 @@ export class ECHO {
     keyStorage = memdown(),
     storage = createStorage({ type: StorageType.RAM }),
     networkManagerOptions,
-    /// TODO(burdon): See options below.
     snapshots = true,
     snapshotInterval = 100,
     readLogger,
