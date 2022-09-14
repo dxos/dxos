@@ -8,6 +8,7 @@ import { it as test } from 'mocha';
 import { defaultSecretProvider, Keyring, KeyType, codec as haloCodec } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -21,6 +22,9 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
+const singletonContext = new MemorySignalManagerContext();
+const createSignalManager = () => new MemorySignalManager(singletonContext);
+
 describe.skip('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
 
@@ -29,7 +33,7 @@ describe.skip('DataParty', () => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const networkManager = new NetworkManager();
+    const networkManager = new NetworkManager({ signalManager: createSignalManager() });
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
     const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
@@ -150,7 +154,7 @@ describe.skip('DataParty', () => {
     const identityB = await deriveTestDeviceCredentials(identityA);
     const credentialsProvider = createCredentialsProvider(identityB.createCredentialsSigner(), party.key, feed.key);
 
-    const wrappedCredentials = haloCodec.decode(credentialsProvider.get() as any);
+    const wrappedCredentials = haloCodec.decode(credentialsProvider.get());
     expect(await authenticator.authenticate(wrappedCredentials.payload)).toEqual(true);
 
     await party.close();
@@ -215,7 +219,7 @@ describe.skip('DataParty', () => {
 
     const identityB = await createTestIdentityCredentials(new Keyring());
     const initiator = new GreetingInitiator(
-      new NetworkManager(),
+      new NetworkManager({ signalManager: createSignalManager() }),
       invitation,
       async (partyKey, nonce) => [createDataPartyAdmissionMessages(
         identityB.createCredentialsSigner(),

@@ -27,6 +27,7 @@
     "@dxos/halo-protocol": "workspace:^2.33.8",
     "@dxos/keyring": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",

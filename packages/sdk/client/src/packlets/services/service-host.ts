@@ -32,12 +32,12 @@ export class ClientServiceHost implements ClientServiceProvider {
     this._echo = new ECHO({
       storage,
       keyStorage,
-      networkManagerOptions: {
+      networkManagerOptions: this._config.get('runtime.services.signal.server') ? {
         // TODO(mykola): SignalManager need to be subscribed for message receiving first.
-        signalManager: this._config.get('runtime.services.signal.server') ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]) : undefined,
+        signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
         ice: this._config.get('runtime.services.ice'),
         log: true
-      },
+      } : undefined,
       snapshots: this._config.get('runtime.client.enableSnapshots', false),
       snapshotInterval: this._config.get('runtime.client.snapshotInterval')
     });
