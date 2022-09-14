@@ -12,7 +12,7 @@ import { Keyring } from '@dxos/keyring';
 import waitForExpect from 'wait-for-expect';
 
 describe('space/replicator-plugin', () => {
-  it.only('replicates a feed', async () => {
+  it('replicates a feed', async () => {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();

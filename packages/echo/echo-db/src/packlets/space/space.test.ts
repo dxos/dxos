@@ -110,7 +110,7 @@ describe('space/space', () => {
     }
   });
 
-  test.only('2 spaces replicating', async () => {
+  test.skip('2 spaces replicating', async () => {
     let spaceKey!: PublicKey
     let genesisFeedKey!: PublicKey;
     let agent1Keyring!: Keyring;
