@@ -20,6 +20,3 @@ package:
         outdir: 'out'
         version: 1.2.3
         tag: latest
-      record:
-        web:
-          entryPoint: ./path/to/main.js
