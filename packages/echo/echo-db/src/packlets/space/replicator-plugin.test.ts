@@ -54,17 +54,25 @@ describe('space/replicator-plugin', () => {
     const keyring1 = new Keyring()
     const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
 
+    await feed1.append({
+      timeframe: new Timeframe(),
+    })
+
     const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const feed2 = await feedStore2.openReadOnlyFeed(feed1.key);
 
     await replicator1.addFeed(feed1);
     await replicator2.addFeed(feed2);
 
+    await waitForExpect(() => {
+      expect(feed2.feed.length).toEqual(1);
+    })
+
     await feed1.append({
       timeframe: new Timeframe(),
     })
     await waitForExpect(() => {
-      expect(feed2.feed.length).toEqual(1);
+      expect(feed2.feed.length).toEqual(2);
     })
   });
 })
