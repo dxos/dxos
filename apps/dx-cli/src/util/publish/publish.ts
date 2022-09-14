@@ -60,7 +60,7 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { co
   verbose && bar.update(total);
   verbose && bar.stop();
 
-  verbose && log(`Published ${module.name} with cid ${cid}`);
+  verbose && log(`Published ${module.name} with cid ${cid.toString()}`);
 
   return cid;
 };

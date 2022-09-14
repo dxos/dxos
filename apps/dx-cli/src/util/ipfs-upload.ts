@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 import fs from 'fs';
-import { create, globSource } from 'ipfs-http-client';
+import { CID, create, globSource } from 'ipfs-http-client';
 
 import { ConfigObject } from '@dxos/config';
 
@@ -14,7 +14,7 @@ interface UploadOptions {
   pin?: boolean
 }
 
-export const uploadToIPFS = async (path: string, config?: ConfigObject, options?: UploadOptions): Promise<string> => {
+export const uploadToIPFS = async (path: string, config?: ConfigObject, options?: UploadOptions): Promise<CID> => {
   const { timeout, pin = true, progress } = options || {};
 
   const ipfsServer = config?.runtime?.services?.ipfs?.server;
@@ -33,10 +33,10 @@ export const uploadToIPFS = async (path: string, config?: ConfigObject, options?
     for await (const file of ipfsClient.addAll(globSource(path, '**/*'), { progress, pin, wrapWithDirectory: true })) {
       files.push(file);
     }
-    return files[files.length - 1].cid.toString();
+    return files[files.length - 1].cid;
   } else {
     const content = fs.readFileSync(path);
     const addResult = await ipfsClient.add(content, { pin });
-    return addResult.cid.toString();
+    return addResult.cid;
   }
 };

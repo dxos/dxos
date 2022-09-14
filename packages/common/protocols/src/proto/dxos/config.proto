@@ -52,6 +52,7 @@ message Module {
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
+  optional bytes bundle = 6;
 
   optional Build build = 100;
   repeated Repo repos = 101;
