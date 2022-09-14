@@ -14,6 +14,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Identity } from './identity';
+import { NetworkManager } from '@dxos/network-manager';
+import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space/space-protocol';
 
 describe('halo/identity', () => {
   test('create', async () => {
@@ -28,7 +30,6 @@ describe('halo/identity', () => {
       return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
     };
 
-    // TODO(dmaretskyi): Separate test for cold start after genesis.
     const controlFeed = await createFeed();
     const dataFeed = await createFeed();
 
@@ -42,7 +43,14 @@ describe('halo/identity', () => {
         controlWriteFeed: controlFeed,
         dataWriteFeed: dataFeed,
         initialTimeframe: new Timeframe(),
-        feedProvider: key => feedStore.openReadOnlyFeed(key)
+        feedProvider: key => feedStore.openReadOnlyFeed(key),
+        networkManager: new NetworkManager(),
+        networkPlugins: [],
+        swarmIdentity: {
+          peerKey: identityKey,
+          credentialProvider: MOCK_CREDENTIAL_PROVIDER,
+          credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR,
+        }
       }
     });
 

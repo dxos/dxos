@@ -18,6 +18,9 @@ import { AsyncCallback, Callback } from '@dxos/util';
 import { Database, FeedDatabaseBackend } from '../database';
 import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
+import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { NetworkManager, Plugin } from '@dxos/network-manager';
+import { ReplicatorPlugin } from './replicator-plugin';
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -26,6 +29,9 @@ export type SpaceParams = {
   controlWriteFeed: FeedDescriptor
   dataWriteFeed: FeedDescriptor
   feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  networkManager: NetworkManager,
+  networkPlugins: Plugin[]
+  swarmIdentity: SwarmIdentity,
 }
 
 /**
@@ -35,6 +41,9 @@ export class Space {
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   private readonly _dataWriteFeed: FeedDescriptor;
   private readonly _controlPipeline: ControlPipeline;
+  
+  private readonly _replicator = new ReplicatorPlugin();
+  private readonly _protocol: SpaceProtocol;
 
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
@@ -50,7 +59,10 @@ export class Space {
     genesisFeed,
     controlWriteFeed,
     dataWriteFeed,
-    feedProvider
+    feedProvider,
+    networkManager,
+    swarmIdentity,
+    networkPlugins
   }: SpaceParams) {
     this._openFeed = feedProvider;
     this._dataWriteFeed = dataWriteFeed;
@@ -74,7 +86,23 @@ export class Space {
 
         this._dataPipeline.addFeed(await feedProvider(info.key));
       }
+
+      if(!info.key.equals(genesisFeed.key)) { 
+        this._replicator.addFeed(await feedProvider(info.key));
+      }
     });
+
+    this._replicator.addFeed(genesisFeed);
+
+    this._protocol = new SpaceProtocol(
+      networkManager,
+      spaceKey,
+      swarmIdentity,
+      [
+        this._replicator,
+        ...networkPlugins
+      ]
+    );
   }
 
   get isOpen () {
@@ -104,6 +132,8 @@ export class Space {
     await this._controlPipeline.start();
     await this._openDataPipeline();
 
+    await this._protocol.start();
+
     this._isOpen = true;
   }
 
@@ -112,6 +142,8 @@ export class Space {
     if (!this._isOpen) {
       return;
     }
+
+    await this._protocol.stop();
 
     // TODO(burdon): Does order matter?
     await this._controlPipeline.stop();
