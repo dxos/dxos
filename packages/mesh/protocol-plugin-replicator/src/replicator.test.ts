@@ -18,6 +18,7 @@ import { boolGuard } from '@dxos/util';
 
 import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 import { Replicator, ReplicatorMiddleware } from './replicator';
+import { Keyring } from '@dxos/keyring';
 
 jest.setTimeout(30000);
 
@@ -73,10 +74,10 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf8' });
-  const { publicKey, secretKey } = createKeyPair();
-  const { feed } = await feedStore.openReadWriteFeed(
-    PublicKey.from(publicKey),
-    secretKey
+  const keyring = new Keyring()
+  const { feed } = await feedStore.openReadWriteFeedWithSigner(
+    await keyring.createKey(),
+    keyring
   );
   const append = pify(feed.append.bind(feed));
   let closed = false;

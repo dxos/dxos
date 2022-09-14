@@ -8,8 +8,10 @@ import hypercore from 'hypercore';
 import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
+import { it as test } from 'mocha'
+import expect from 'expect'
 
-import { sleep } from '@dxos/async';
+import { sleep, waitForEvent } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
@@ -17,10 +19,13 @@ import { Storage, StorageType, createStorage } from '@dxos/random-access-storage
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
+import { Keyring, verifySignature } from '@dxos/keyring';
+import waitForExpect from 'wait-for-expect';
+import { randomBytes } from 'node:crypto';
+import { callbackify } from 'node:util';
 
 interface KeyPair {
   key: PublicKey
-  secretKey: Buffer
 }
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
@@ -38,25 +43,32 @@ const createDefault = async () => {
     feedStore: createFeedStore(createStorage({ type: StorageType.NODE, root: directory }), { valueEncoding: 'utf-8' })
   };
 };
+const keyring = new Keyring()
 
 const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>):
   Promise<Record<string, FeedDescriptor>> =>
   Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    [feed, await feedStore.openReadWriteFeed(keyPair.key, keyPair.secretKey)]
+    [feed, await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)]
   )));
 
 const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
 const head = (feed: HypercoreFeed) => pify(feed.head.bind(feed))();
 
-const createKeyPairs = () => Object.fromEntries<KeyPair>(feedNames.map(feed => {
-  const { publicKey, secretKey } = createKeyPair();
-  return [feed, { key: PublicKey.from(publicKey), secretKey }];
-}));
+const createKeyPairs = async () => Object.fromEntries<KeyPair>(await Promise.all(feedNames.map(async feed => {
+  const publicKey = await keyring.createKey()
+  return [feed, { key: publicKey }] as const;
+})));
 
 describe('FeedStore', () => {
-  const keys = createKeyPairs();
 
+  let keys: Record<string, KeyPair>;
+
+  before(async () => {
+    keys = await createKeyPairs();
+  })
+
+  
   test('Config default', async () => {
     const feedStore = await createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
@@ -67,11 +79,12 @@ describe('FeedStore', () => {
 
   test('Create feed', async () => {
     const { feedStore } = await createDefault();
-    const { booksFeed: { feed: booksFeed } } = await defaultFeeds(feedStore, keys);
+    const { booksFeed: descriptor } = await defaultFeeds(feedStore, keys);
+    const { feed: booksFeed } = descriptor;
 
     expect(booksFeed).toBeInstanceOf(hypercore);
 
-    const booksFeedDescriptor = await feedStore.openReadWriteFeed(PublicKey.from(booksFeed.key), booksFeed.secretKey);
+    const booksFeedDescriptor = await feedStore.openReadWriteFeedWithSigner(descriptor.key, keyring);
     expect(booksFeedDescriptor).toHaveProperty('key', PublicKey.from(booksFeed.key));
 
     await append(booksFeed, 'Foundation and Empire');
@@ -84,7 +97,7 @@ describe('FeedStore', () => {
   test('Create duplicate feed', async () => {
     const { feedStore } = await createDefault();
 
-    const { feed: fds } = await feedStore.openReadWriteFeed(keys.usersFeed.key, keys.usersFeed.secretKey);
+    const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
     assert(fds.secretKey);
 
     const [usersFeed, feed2] = await Promise.all([
@@ -184,4 +197,117 @@ describe('FeedStore', () => {
 
     expect(timesCalled).toEqual(1);
   });
+
+  test.only(`Two feeds replicating`, async () => {
+    const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'));
+    const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed2'));
+
+    const keyring = new Keyring();
+    
+    const key = await keyring.createKey()
+    const feed1 = await feedStore1.openReadWriteFeedWithSigner(key, keyring);
+    const feed2 = await feedStore2.openReadOnlyFeed(key);
+
+    const stream1 = feed1.feed.replicate(true)
+    const stream2 = feed2.feed.replicate(false)
+
+    stream1.pipe(stream2).pipe(stream1)
+
+    await feed1.append('test')
+    await waitForExpect(async () => {
+      expect(feed2.feed.length).toBe(1);
+    })
+  })
+
+  test(`Two hypercores replicating`, async () => {
+    const { publicKey, secretKey } = createKeyPair();
+    const hypercore1 = hypercore('/tmp/test-'+Math.random(), publicKey, { secretKey });
+    const hypercore2 = hypercore('/tmp/test-'+Math.random(), publicKey, { });
+
+    const stream1 = hypercore1.replicate(true)
+    const stream2 = hypercore2.replicate(false)
+
+    stream1.pipe(stream2).pipe(stream1)
+
+    hypercore1.append('test');
+    hypercore2.download()
+    await waitForExpect(async () => {
+      expect(hypercore2.length).toBe(1);
+    })
+  })
+
+  test(`Two hypercores replicating with fake crypto`, async () => {
+    const MOCK_CRYPTO = {
+      sign: (data: any, secretKey: any, cb: any) => {
+        cb(null, randomBytes(64));
+      },
+      verify: (signature: any, data: any, key: any, cb: any) => {
+        cb(null, true);
+      }
+    };
+
+    const keyring = new Keyring()
+    const publicKey = (await keyring.createKey()).asBuffer().slice(1)
+    const secretKey = Buffer.from('secret')
+
+    // const { publicKey, secretKey } = { publicKey: randomBytes(64), secretKey: Buffer.from('secret') };
+    // const { publicKey, secretKey } = createKeyPair();
+
+    const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey, crypto: MOCK_CRYPTO });
+    const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { crypto: MOCK_CRYPTO });
+
+    const stream1 = hypercore1.replicate(true)
+    const stream2 = hypercore2.replicate(false)
+
+    stream1.pipe(stream2).pipe(stream1)
+
+    hypercore1.append('test');
+    hypercore2.download()
+    await waitForExpect(async () => {
+      expect(hypercore2.length).toBe(1);
+    })
+  })
+
+  test(`Two hypercores replicating with keyring`, async () => {
+    const keyring = new Keyring();
+    const key = await keyring.createKey();
+    const hypercoreKey = key.asBuffer().slice(1);
+    const crypto = {
+      sign: (data: any, secretKey: any, cb: any) => {
+        callbackify(keyring.sign.bind(keyring))(key, data, (err, res) => {
+          if (err) {
+            cb(err);
+            return;
+          }
+          console.log('sign', Buffer.from(res).toString('hex'));
+          cb(null, Buffer.from(res));
+        })
+      },
+      verify: async (signature: any, data: any, _key: any, cb: any) => {
+        console.log({
+          signature: signature.toString('hex'),
+          data: data.toString('hex'),
+          key: key.toString(),
+          result: await verifySignature(key, data, signature)
+        })
+        callbackify(verifySignature)(key, data, signature, cb);
+      }
+    }
+
+    const secretKey = Buffer.from('secret');
+
+    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { secretKey, crypto });
+    const hypercore2 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto });
+
+    const stream1 = hypercore1.replicate(true)
+    const stream2 = hypercore2.replicate(false)
+
+    stream1.pipe(stream2).pipe(stream1)
+
+    hypercore1.append('test');
+    hypercore2.download()
+    await waitForExpect(async () => {
+      expect(hypercore2.length).toBe(1);
+    })
+  })
 });

@@ -2189,6 +2189,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
@@ -2206,6 +2207,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keyring': link:../../halo/keyring
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/util': link:../../common/util
       assert: 2.0.0

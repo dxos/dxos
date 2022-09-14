@@ -193,10 +193,12 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
         feed.iterator.next()
           .then(result => {
             assert(!result.done);
-            feed.sendQueue.push({
-              ...result.value[0],
-              key: feed.descriptor.key,
-            });
+            for(const block of result.value) {
+              feed.sendQueue.push({
+                ...block,
+                key: feed.descriptor.key,
+              });
+            }
             this._trigger.wake();
           }, (err) => {
             if (err.message.includes('Feed is closed')) {

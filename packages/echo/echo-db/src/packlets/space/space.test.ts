@@ -17,32 +17,25 @@ import {
 } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import {
+  MOCK_CREDENTIAL_AUTHENTICATOR,
+  MOCK_CREDENTIAL_PROVIDER
+} from '../space/space-protocol';
 import { Space } from './space';
-
-type TestAgent = {
-  keyring: Keyring
-  identityKey: PublicKey
-  deviceKey: PublicKey
-}
-
-type TestSpaceContext = {
-  space: Space
-  genesisFeedKey: PublicKey
-  controlFeed: FeedDescriptor
-  dataFeed: FeedDescriptor
-}
 
 describe('space/space', () => {
   test('database', async () => {
-    const agentFactory = new AgentFactory();
+    const agentFactory = new AgentFactory(new MemorySignalManagerContext());
     const agent = await agentFactory.createAgent();
 
-    const spaceContext = await agentFactory.createSpace();
+    const spaceContext = await agentFactory.createSpace(agent.identityKey);
     const { space, controlFeed } = spaceContext;
 
     await space.open();
@@ -94,16 +87,17 @@ describe('space/space', () => {
     }
   });
 
-  // TODO(burdon): Unskip.
-  test.skip('2 spaces replicating', async () => {
+  test('2 spaces replicating', async () => {
+    const signalContext = new MemorySignalManagerContext();
+
     //
     // Agent 1
     //
     const [agent1, spaceContext1] = await (async () => {
-      const agentFactory = new AgentFactory();
+      const agentFactory = new AgentFactory(signalContext);
       const agent = await agentFactory.createAgent();
 
-      const spaceContext = await agentFactory.createSpace();
+      const spaceContext = await agentFactory.createSpace(agent.identityKey);
       const { space, controlFeed } = spaceContext;
 
       await space.open();
@@ -142,11 +136,12 @@ describe('space/space', () => {
     // Agent 2
     //
     const [agent2, spaceContext2] = await (async () => {
-      const agentFactory = new AgentFactory();
+      const agentFactory = new AgentFactory(signalContext);
       const agent = await agentFactory.createAgent();
 
       // NOTE: The genesisKey would be passed as part of the invitation.
-      const spaceContext = await agentFactory.createSpace(spaceContext1.genesisFeedKey);
+      const spaceContext = await agentFactory.createSpace(
+        agent.identityKey, spaceContext1.space.key, spaceContext1.genesisFeedKey);
       const { space } = spaceContext;
 
       await space.open();
@@ -198,9 +193,23 @@ describe('space/space', () => {
   });
 });
 
-/**
- * Test util.
- */
+//
+// Utils
+//
+
+type TestAgent = {
+  keyring: Keyring
+  identityKey: PublicKey
+  deviceKey: PublicKey
+}
+
+type TestSpaceContext = {
+  space: Space
+  genesisFeedKey: PublicKey
+  controlFeed: FeedDescriptor
+  dataFeed: FeedDescriptor
+}
+
 class AgentFactory {
   public readonly keyring = new Keyring();
 
@@ -208,13 +217,30 @@ class AgentFactory {
     createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec }
   );
 
-  public readonly createFeed = async () => {
-    const feedKey = await this.keyring.createKey();
-    return this.feedStore.openReadWriteFeedWithSigner(feedKey, this.keyring);
-  };
+  constructor (
+    private readonly _signalContext: MemorySignalManagerContext
+  ) {}
 
-  async createSpace (genesisKey?: PublicKey): Promise<TestSpaceContext> {
-    const spaceKey = await this.keyring.createKey();
+  async createAgent (): Promise<TestAgent> {
+    const identityKey = await this.keyring.createKey();
+    const deviceKey = await this.keyring.createKey();
+
+    return {
+      keyring: this.keyring,
+      identityKey,
+      deviceKey
+    };
+  }
+
+  async createSpace (
+    identityKey: PublicKey,
+    spaceKey?: PublicKey,
+    genesisKey?: PublicKey
+  ): Promise<TestSpaceContext> {
+    if (!spaceKey) {
+      spaceKey = await this.keyring.createKey();
+    }
+
     const controlWriteFeed = await this.createFeed();
     const dataWriteFeed = await this.createFeed();
 
@@ -226,7 +252,16 @@ class AgentFactory {
       controlWriteFeed, // TODO(burdon): Rename controlFeed?
       dataWriteFeed,
       initialTimeframe: new Timeframe(),
-      feedProvider: key => this.feedStore.openReadOnlyFeed(key)
+      feedProvider: key => this.feedStore.openReadOnlyFeed(key),
+      networkManager: new NetworkManager({
+        signalManager: new MemorySignalManager(this._signalContext)
+      }),
+      networkPlugins: [],
+      swarmIdentity: {
+        peerKey: identityKey,
+        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
+        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+      }
     });
 
     log(`Created space: ${spaceKey.toHex()}`);
@@ -239,15 +274,9 @@ class AgentFactory {
     };
   }
 
-  async createAgent (): Promise<TestAgent> {
-    const identityKey = await this.keyring.createKey();
-    const deviceKey = await this.keyring.createKey();
-
-    return {
-      keyring: this.keyring,
-      identityKey,
-      deviceKey
-    };
+  async createFeed () {
+    const feedKey = await this.keyring.createKey();
+    return this.feedStore.openReadWriteFeedWithSigner(feedKey, this.keyring);
   }
 }
 
@@ -256,10 +285,8 @@ class AgentFactory {
  * Admit identity and control and data feeds.
  */
 const createInvitationCredentialSequence = async (
-  agent1: TestAgent,
-  spaceContext1: TestSpaceContext,
-  agent2: TestAgent,
-  spaceContext2: TestSpaceContext
+  agent1: TestAgent, spaceContext1: TestSpaceContext,
+  agent2: TestAgent, spaceContext2: TestSpaceContext
 ): Promise<Credential[]> => [
   await createCredential({
     issuer: agent1.identityKey,

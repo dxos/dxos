@@ -8,23 +8,26 @@ import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
+import { it as test } from 'mocha'
+import expect from 'expect'
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
+import { Keyring } from '@dxos/keyring';
 
 describe('FeedDescriptor', () => {
   let fd: FeedDescriptor;
 
   beforeEach(async () => {
-    const { publicKey, secretKey } = createKeyPair();
+    const keyring = new Keyring()
     fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
-      key: PublicKey.from(publicKey),
-      secretKey,
-      hypercore: defaultHypercore
+      key: await keyring.createKey(),
+      hypercore: defaultHypercore,
+      signer: keyring,
     });
   });
 

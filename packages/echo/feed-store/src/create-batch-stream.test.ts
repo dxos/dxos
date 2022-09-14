@@ -12,11 +12,14 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { createBatchStream } from './create-batch-stream';
 import { FeedStore } from './feed-store';
 import { HypercoreFeed } from './hypercore-types';
+import { Keyring } from '@dxos/keyring';
+import { it as test } from 'mocha'
+import expect from 'expect'
 
 const createFeed = async () => {
+  const keyring = new Keyring()
   const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
-  const { publicKey, secretKey } = createKeyPair();
-  const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+  const { feed } = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
   return feed;
 };
 
