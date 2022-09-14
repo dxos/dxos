@@ -27,7 +27,7 @@ interface OfferRecord {
   resolve: (answer: Answer) => void
   reject: (error?: Error) => void
 }
-
+//
 interface MessageRouterOptions {
   sendMessage?: (params: {
     author: PublicKey
@@ -294,7 +294,8 @@ export class MessageRouter implements SignalMessaging {
 
   private async _handleAcknowledgement (message: SwarmMessage): Promise<void> {
     assert(message.data?.ack?.messageId);
-    this._onAckCallbacks.get(message.data.ack.messageId)?.();
+    log(`Acknowledgement for ${message.data.ack.messageId}`);
+    this._onAckCallbacks.get(message.data.ack.messageId)!();
   }
 
   private async _sendAcknowledgement ({
@@ -313,8 +314,8 @@ export class MessageRouter implements SignalMessaging {
       data: { ack: { messageId: message.messageId } },
       messageId: PublicKey.random()
     };
-    log(`sent ack: ${JSON.stringify(ackMessage)}`);
-    await this._encodeAndSend({ author, recipient, message: ackMessage });
+    log(`sent ack: ${JSON.stringify(ackMessage)} from ${recipient} to ${author} `);
+    await this._encodeAndSend({ author: recipient, recipient: author, message: ackMessage });
   }
 
   destroy (): void {
