@@ -17,15 +17,14 @@ import { PluginRpc } from './plugin-rpc';
 import { schema } from './proto/gen';
 import { Test } from './proto/gen/dxos/rpc/test';
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 const createPeer = (
   topic: PublicKey,
   peerId: PublicKey,
   onConnect: (port: RpcPort, peerId: string) => void
 ) => {
-  const networkManager = new NetworkManager({ signalManager: createSignalManager() });
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   afterTest(() => networkManager.destroy());
   const plugin = new PluginRpc(onConnect);
   networkManager.joinProtocolSwarm({

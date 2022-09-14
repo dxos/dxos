@@ -24,8 +24,7 @@ import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCre
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 describe('DataParty', () => {
   const createParty = async (identity: IdentityCredentials, partyKey: PublicKey, genesisFeedKey?: PublicKey) => {
@@ -35,7 +34,7 @@ describe('DataParty', () => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const networkManager = new NetworkManager({ signalManager: createSignalManager() });
+    const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
     const partyFeedProvider = new PartyFeedProvider(metadataStore, identity.keyring, feedStore, partyKey);
     const writableFeed = await partyFeedProvider.createOrOpenWritableFeed();
 
@@ -221,7 +220,7 @@ describe('DataParty', () => {
 
     const identityB = await createTestIdentityCredentials(new Keyring());
     const initiator = new GreetingInitiator(
-      new NetworkManager({ signalManager: createSignalManager() }),
+      new NetworkManager({ signalManager: new MemorySignalManager(signalContext) }),
       invitation,
       async (partyKey, nonce) => [createDataPartyAdmissionMessages(
         identityB.createCredentialsSigner(),
