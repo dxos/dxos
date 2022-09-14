@@ -14,7 +14,7 @@ interface UploadOptions {
   pin?: boolean
 }
 
-export const uploadToIPFS = async (config: ConfigObject, path: string, options?: UploadOptions): Promise<string> => {
+export const uploadToIPFS = async (path: string, config?: ConfigObject, options?: UploadOptions): Promise<string> => {
   const { timeout, pin = true, progress } = options || {};
 
   const ipfsServer = config?.runtime?.services?.ipfs?.server;
@@ -30,11 +30,10 @@ export const uploadToIPFS = async (config: ConfigObject, path: string, options?:
   }
   if (fs.lstatSync(path).isDirectory()) {
     const files = [];
-    for await (const file of ipfsClient.addAll(globSource(path, '**/*'), { progress, pin })) {
+    for await (const file of ipfsClient.addAll(globSource(path, '**/*'), { progress, pin, wrapWithDirectory: true })) {
       files.push(file);
     }
-    // TODO(egorgripasov): which CID to return (first/last)?
-    return files[0].cid.toString();
+    return files[files.length - 1].cid.toString();
   } else {
     const content = fs.readFileSync(path);
     const addResult = await ipfsClient.add(content, { pin });

@@ -195,7 +195,7 @@ importers:
       debug: ^4.3.3
       faker: ^5.1.0
       fs-extra: ^8.1.0
-      get-folder-size: ^4.0.0
+      get-folder-size: ^2.0.1
       globby: ^11.1.0
       inquirer: ~9.0.2
       ipfs-http-client: ~56.0.1
@@ -228,7 +228,7 @@ importers:
       debug: 4.3.4
       faker: 5.5.3
       fs-extra: 8.1.0
-      get-folder-size: 4.0.0
+      get-folder-size: 2.0.1
       inquirer: 9.0.2
       ipfs-http-client: 56.0.2_node-fetch@2.6.7
       isomorphic-ws: 4.0.1_ws@7.5.6
@@ -19031,12 +19031,12 @@ packages:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
     engines: {node: 6.* || 8.* || >= 10.*}
 
-  /get-folder-size/4.0.0:
-    resolution: {integrity: sha512-Z6sv92povPRhGTNv1j8pMOzkXCcJOYWFTSrulKzoF9qbIRHXtR2Vfjw964jsWVMrIKnwHzm/0jl8IFONbBbEKw==}
-    engines: {node: '>=14.13.0'}
+  /get-folder-size/2.0.1:
+    resolution: {integrity: sha512-+CEb+GDCM7tkOS2wdMKTn9vU7DgnKUTuDlehkNJKNSovdCOVxs14OfKCk4cvSaR3za4gj+OBdl9opPN9xrJ0zA==}
     hasBin: true
     dependencies:
       gar: 1.0.4
+      tiny-each-async: 2.0.3
     dev: false
 
   /get-func-name/2.0.0:
@@ -29944,6 +29944,10 @@ packages:
 
   /timsort/0.3.0:
     resolution: {integrity: sha512-qsdtZH+vMoCARQtyod4imc2nIJwg9Cc7lPRrw9CzF8ZKR0khdr8+2nX80PBhET3tcyTtJDxAffGh2rXH4tyU8A==}
+
+  /tiny-each-async/2.0.3:
+    resolution: {integrity: sha1-jru/1tYpXxNwAD+7NxYq/loKUdE=}
+    dev: false
 
   /tiny-lru/7.0.6:
     resolution: {integrity: sha512-zNYO0Kvgn5rXzWpL0y3RS09sMK67eGaQj9805jlK9G6pSadfriTczzLHFXa/xcW4mIRfmlB9HyQ/+SgL0V1uow==}

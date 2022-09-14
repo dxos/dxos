@@ -48,7 +48,7 @@
     "fs-extra": "^8.1.0",
     "inquirer": "~9.0.2",
     "isomorphic-ws": "^4.0.1",
-    "get-folder-size": "^4.0.0",
+    "get-folder-size": "^2.0.1",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",

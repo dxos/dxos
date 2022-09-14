@@ -5,8 +5,9 @@
 import assert from 'assert';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
-import getFolderSize from 'get-folder-size';
+import folderSize from 'get-folder-size';
 import { join } from 'path';
+import { promisify } from 'util';
 
 import type { ConfigObject } from '@dxos/config';
 import { log } from '@dxos/debug';
@@ -16,6 +17,8 @@ import { PackageModule } from './common';
 
 const DEFAULT_OUTDIR = 'out';
 
+const getFolderSize = promisify(folderSize);
+
 /**
  * Encodes DXN string to fs path.
  *
@@ -24,7 +27,7 @@ const DEFAULT_OUTDIR = 'out';
 const encodeName = (name: string) => name.replaceAll(':', '/');
 
 export interface PublishParams {
-  config: ConfigObject
+  config?: ConfigObject
   module: PackageModule
 }
 
@@ -43,18 +46,19 @@ export const publish = async ({ verbose, timeout, path, pin }: PublishArgs, { co
   const moduleOut = `out/${encodeName(module.name)}`;
   const outdir = path ?? module.build?.outdir ?? (fs.existsSync(moduleOut) ? moduleOut : DEFAULT_OUTDIR);
   const publishFolder = join(process.cwd(), outdir);
-  const total = await getFolderSize.loose(publishFolder);
-  const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-  bar.start(total, 0);
+  const total = await getFolderSize(publishFolder);
 
-  const cid = await uploadToIPFS(config, publishFolder, {
+  const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+  verbose && bar.start(total, 0);
+
+  const cid = await uploadToIPFS(publishFolder, config, {
     timeout: timeout || '10m',
     pin,
-    progress: (bytes: any) => bar.update(bytes)
+    progress: verbose ? (bytes: any) => bar.update(bytes) : undefined
   });
 
-  bar.update(total);
-  bar.stop();
+  verbose && bar.update(total);
+  verbose && bar.stop();
 
   verbose && log(`Published ${module.name} with cid ${cid}`);
 
