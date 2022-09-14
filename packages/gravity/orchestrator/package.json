@@ -18,6 +18,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
