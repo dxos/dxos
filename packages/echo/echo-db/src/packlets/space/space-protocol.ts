@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
@@ -25,6 +26,8 @@ export class SpaceProtocol {
   private readonly _presence: PresencePlugin;
   private readonly _authenticator: AuthPlugin;
 
+  readonly authenticationFailed: Event;
+
   constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _topic: PublicKey,
@@ -33,6 +36,7 @@ export class SpaceProtocol {
   ) {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
+    this.authenticationFailed = this._authenticator.authenticationFailed;
   }
 
   async start () {

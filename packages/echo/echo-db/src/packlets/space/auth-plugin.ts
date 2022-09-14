@@ -8,6 +8,7 @@ import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-p
 
 import { SwarmIdentity } from './space-protocol';
 import { log } from '@dxos/log'
+import { Event } from '@dxos/async';
 
 
 const EXTENSION_NAME = 'dxos.credentials.auth';
@@ -19,6 +20,8 @@ const EXTENSION_NAME = 'dxos.credentials.auth';
  */
 export class AuthPlugin {
   _requiredForExtensions: Set<string>;
+
+  readonly authenticationFailed = new Event()
 
   constructor (
     private readonly _swarmIdentity: SwarmIdentity,
@@ -79,6 +82,7 @@ export class AuthPlugin {
         }
       }
 
+      this.authenticationFailed.emit()
       protocol.stream.destroy();
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: no credentials.');
     }
@@ -91,6 +95,7 @@ export class AuthPlugin {
 
     // Ask the Authenticator if this checks out.
     if (!isAuthenticated) {
+      this.authenticationFailed.emit()
       protocol.stream.destroy();
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: bad credentials.');
     }
