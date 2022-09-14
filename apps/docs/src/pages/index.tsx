@@ -25,9 +25,9 @@ const HomepageHeader = () => {
         <div className={styles.buttons}>
           <Link
             className='button button--secondary button--lg'
-            to='/docs/intro'
+            to='/docs/tutorial/getting-started'
           >
-            Docusaurus Tutorial - 5min ⏱️
+            DXOS Tutorial - 5min ⏱️
           </Link>
         </div>
       </div>

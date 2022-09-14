@@ -193,6 +193,7 @@ importers:
       react-dom: ^17.0.2
       setimmediate: 1.0.5
       string-hash: ~1.1.3
+      svg-url-loader: ^8.0.0
       typescript: ^4.7.2
       webpack: ^5.74.0
     dependencies:
@@ -218,6 +219,7 @@ importers:
     devDependencies:
       '@docusaurus/module-type-aliases': 2.1.0_sfoxds7t5ydpegc3knd667wn6m
       '@docusaurus/types': 2.1.0_sfoxds7t5ydpegc3knd667wn6m
+      svg-url-loader: 8.0.0_webpack@5.74.0
       typescript: 4.7.4
       webpack: 5.74.0
 
@@ -15748,7 +15750,7 @@ packages:
   /axios/0.25.0:
     resolution: {integrity: sha512-cD8FOb0tRH3uuEe6+evtAbgJtfxr7ly3fQjYcMcuPlgkwVS9xboaVIpcDV+cYQe+yGykgwZCs1pzjntcGa6l5g==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
     transitivePeerDependencies:
       - debug
 
@@ -21727,7 +21729,6 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
-    dev: true
 
   /for-in/1.0.2:
     resolution: {integrity: sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ==}
@@ -33796,6 +33797,16 @@ packages:
 
   /svg-parser/2.0.4:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
+
+  /svg-url-loader/8.0.0_webpack@5.74.0:
+    resolution: {integrity: sha512-5doSXvl18hY1fGsRLdhWAU5jgzgxJ06/gc/26cpuDnN0xOz1HmmfhkpL29SSrdIvhtxQ1UwGzmk7wTT/l48mKw==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      webpack: ^5.0.0
+    dependencies:
+      file-loader: 6.2.0_webpack@5.74.0
+      webpack: 5.74.0
+    dev: true
 
   /svgo/2.8.0:
     resolution: {integrity: sha512-+N/Q9kV1+F+UeWYoSiULYo4xYSDQlTgb+ayMobAXPwMnLvop7oxKMo9OzIrX5x3eS4L4f2UHhc9axXwY8DpChg==}
