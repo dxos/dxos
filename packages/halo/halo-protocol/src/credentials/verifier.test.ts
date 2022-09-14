@@ -5,8 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
-import { Keyring } from '@dxos/keyring'
 
 import { Chain, PartyMember } from '../proto';
 import { createCredential } from './credential-factory';

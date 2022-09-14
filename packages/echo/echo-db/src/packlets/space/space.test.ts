@@ -8,13 +8,7 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
-import {
-  AdmittedFeed,
-  createCredential,
-  createGenesisCredentialSequence,
-  Credential,
-  PartyMember
-} from '@dxos/halo-protocol';
+import { AdmittedFeed, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -24,10 +18,7 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import {
-  MOCK_CREDENTIAL_AUTHENTICATOR,
-  MOCK_CREDENTIAL_PROVIDER
-} from '../space/space-protocol';
+import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space';
 import { Space } from './space';
 
 describe('space/space', () => {
@@ -44,23 +35,17 @@ describe('space/space', () => {
 
     {
       // Genesis
-      const { identityKey, deviceKey } = agent;
-
-      const genesisMessages = [
-        // TODO(burdon): Don't export functions from packages (group into something more accountable).
-        //  Change to params object.
-        ...await createGenesisCredentialSequence(
-          agentFactory.keyring,
-          space.key,
-          identityKey,
-          deviceKey,
-          controlFeed.key
-        ),
-        // TODO(burdon): Factor out.
-        ...await createAdmitDataFeedCredentialSequence(agent, spaceContext)
+      const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+      const credentials = [
+        ...await generator.createGenesis(space.key, controlFeed.key),
+        await generator.createFeedAdmission(
+          spaceContext.space.key,
+          spaceContext.dataFeed.key,
+          AdmittedFeed.Designation.DATA
+        )
       ];
 
-      for (const credential of genesisMessages) {
+      for (const credential of credentials) {
         await space.controlMessageWriter?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
@@ -106,20 +91,17 @@ describe('space/space', () => {
 
       {
         // Genesis
-        const { identityKey, deviceKey } = agent;
-
-        const genesisMessages = [
-          ...await createGenesisCredentialSequence(
-            agentFactory.keyring,
-            space.key,
-            identityKey,
-            deviceKey,
-            controlFeed.key
-          ),
-          ...await createAdmitDataFeedCredentialSequence(agent, spaceContext)
+        const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
+        const credentials = [
+          ...await generator.createGenesis(space.key, controlFeed.key),
+          await generator.createFeedAdmission(
+            spaceContext.space.key,
+            spaceContext.dataFeed.key,
+            AdmittedFeed.Designation.DATA
+          )
         ];
 
-        for (const credential of genesisMessages) {
+        for (const credential of credentials) {
           await space.controlMessageWriter?.write({
             '@type': 'dxos.echo.feed.CredentialsMessage',
             credential
@@ -156,7 +138,15 @@ describe('space/space', () => {
 
     {
       // Write invitation.
-      const credentials = await createInvitationCredentialSequence(agent1, spaceContext1, agent2, spaceContext2);
+      const generator = new CredentialGenerator(agent1.keyring, agent1.identityKey, agent1.deviceKey);
+      const credentials = await generator.createMemberInvitation(
+        spaceContext1.space.key,
+        agent2.identityKey,
+        agent2.deviceKey,
+        spaceContext2.controlFeed.key,
+        spaceContext2.dataFeed.key
+      );
+
       for (const credential of credentials) {
         await spaceContext1.space.controlMessageWriter?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
@@ -279,67 +269,3 @@ class AgentFactory {
     return this.feedStore.openReadWriteFeedWithSigner(feedKey, this.keyring);
   }
 }
-
-/**
- * Create invitation.
- * Admit identity and control and data feeds.
- */
-const createInvitationCredentialSequence = async (
-  agent1: TestAgent, spaceContext1: TestSpaceContext,
-  agent2: TestAgent, spaceContext2: TestSpaceContext
-): Promise<Credential[]> => [
-  await createCredential({
-    issuer: agent1.identityKey,
-    subject: agent2.identityKey,
-    assertion: {
-      '@type': 'dxos.halo.credentials.PartyMember',
-      partyKey: spaceContext2.space.key,
-      role: PartyMember.Role.MEMBER
-    },
-    keyring: agent1.keyring
-  }),
-
-  await createCredential({
-    issuer: agent1.identityKey,
-    subject: spaceContext2.controlFeed.key,
-    assertion: {
-      '@type': 'dxos.halo.credentials.AdmittedFeed',
-      partyKey: spaceContext2.space.key,
-      identityKey: agent2.identityKey,
-      deviceKey: agent2.deviceKey,
-      designation: AdmittedFeed.Designation.CONTROL
-    },
-    keyring: agent1.keyring
-  }),
-
-  await createCredential({
-    issuer: agent1.identityKey,
-    subject: spaceContext2.dataFeed.key,
-    assertion: {
-      '@type': 'dxos.halo.credentials.AdmittedFeed',
-      partyKey: spaceContext2.space.key,
-      identityKey: agent2.identityKey,
-      deviceKey: agent2.deviceKey,
-      designation: AdmittedFeed.Designation.DATA
-    },
-    keyring: agent1.keyring
-  })
-];
-
-const createAdmitDataFeedCredentialSequence = async (
-  agent: TestAgent,
-  spaceContext: TestSpaceContext
-): Promise<Credential[]> => [
-  await createCredential({
-    issuer: agent.identityKey,
-    subject: spaceContext.dataFeed.key,
-    assertion: {
-      '@type': 'dxos.halo.credentials.AdmittedFeed',
-      partyKey: spaceContext.space.key,
-      identityKey: agent.identityKey,
-      deviceKey: agent.deviceKey,
-      designation: AdmittedFeed.Designation.DATA
-    },
-    keyring: agent.keyring
-  })
-];

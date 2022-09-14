@@ -7,7 +7,12 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { AdmittedFeed, createCredential, createGenesisCredentialSequence, verifyCredential } from '@dxos/halo-protocol';
+import {
+  AdmittedFeed,
+  createCredential,
+  CredentialGenerator,
+  verifyCredential
+} from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -64,27 +69,14 @@ describe('halo/identity', () => {
     // Identity genesis
     //
     {
-      // TODO(burdon): Don't export functions from packages (group into something more accountable).
-      // Space genesis
-      const genesisMessages = await createGenesisCredentialSequence(
-        keyring,
-        spaceKey,
-        identityKey,
-        deviceKey,
-        controlFeed.key
-      );
+      const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
+      const credentials = [
+        // Space genesis.
+        ...await generator.createGenesis(spaceKey, controlFeed.key),
 
-      for (const credential of genesisMessages) {
-        await identity.controlMessageWriter?.write({
-          '@type': 'dxos.echo.feed.CredentialsMessage',
-          credential
-        });
-      }
-
-      // Admit device
-      await identity.controlMessageWriter?.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await createCredential({
+        // Admit device.
+        // TODO(burdon): Use CredentialGenerator
+        await createCredential({
           issuer: identityKey,
           subject: deviceKey,
           assertion: {
@@ -93,13 +85,11 @@ describe('halo/identity', () => {
             deviceKey
           },
           keyring
-        })
-      });
+        }),
 
-      // Admit data feed
-      await identity.controlMessageWriter?.write({
-        '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await createCredential({
+        // Admit data feed.
+        // TODO(burdon): Use CredentialGenerator
+        await createCredential({
           issuer: identityKey,
           subject: dataFeed.key,
           assertion: {
@@ -111,8 +101,14 @@ describe('halo/identity', () => {
           },
           keyring
         })
-      });
+      ];
 
+      for (const credential of credentials) {
+        await identity.controlMessageWriter?.write({
+          '@type': 'dxos.echo.feed.CredentialsMessage',
+          credential
+        });
+      }
     }
 
     // Wait for identity to be ready.
@@ -128,6 +124,7 @@ describe('halo/identity', () => {
         }
       }
     });
+
     expect(credential.issuer).toEqual(identityKey);
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });

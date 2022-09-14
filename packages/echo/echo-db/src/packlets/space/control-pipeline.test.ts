@@ -7,7 +7,7 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { AdmittedFeed, createCredential, createGenesisCredentialSequence } from '@dxos/halo-protocol';
+import { createCredential, AdmittedFeed, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
@@ -23,7 +23,8 @@ describe('space/control-pipeline', () => {
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const feedStore = new FeedStore(
+      createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const createFeed = async () => {
       const feedKey = await keyring.createKey();
       return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
@@ -54,21 +55,16 @@ describe('space/control-pipeline', () => {
     // Genesis
     //
     {
-      // TODO(burdon): Don't export functions from packages (group into something more accountable).
-      const genesisMessages = await createGenesisCredentialSequence(
-        keyring,
-        spaceKey,
-        identityKey,
-        deviceKey,
-        genesisFeed.key
-      );
+      const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
+      const credentials = await generator.createGenesis(spaceKey, genesisFeed.key);
 
-      for (const credential of genesisMessages) {
+      for (const credential of credentials) {
         await controlPipeline.writer?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
       }
+
       await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
@@ -90,6 +86,7 @@ describe('space/control-pipeline', () => {
         keyring
       })
     });
+
     await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
 
@@ -110,6 +107,7 @@ describe('space/control-pipeline', () => {
         keyring
       })
     });
+
     await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
 

@@ -13,7 +13,12 @@ import {
   SecretProvider
 } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
-import { AdmittedFeed, createCredential, createPartyGenesisCredential, PartyMember } from '@dxos/halo-protocol';
+import {
+  AdmittedFeed,
+  createCredential,
+  createPartyGenesisCredential,
+  PartyMember
+} from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
