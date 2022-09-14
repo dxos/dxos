@@ -6,10 +6,10 @@ export DX_CONFIG=../../config/config.yml
 
 dx=../../bin/run
 
-# Publish mock app
+# Publish mock app.
 $dx app publish --verbose
 
-# List published apps
+# List published apps.
 $dx app list
 
 popd > /dev/null
