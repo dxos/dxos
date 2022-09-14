@@ -110,7 +110,7 @@ describe('space/space', () => {
     }
   });
 
-  test.skip('2 spaces replicating', async () => {
+  test('2 spaces replicating', async () => {
     let spaceKey!: PublicKey
     let genesisFeedKey!: PublicKey;
     let agent1Keyring!: Keyring;
@@ -298,13 +298,10 @@ describe('space/space', () => {
 
     {
       const item1 = await agent1Space.database!.createItem({ type: 'dxos.example.1' });
-      console.log('created item');
 
       const item2 = await agent2Space.database!.waitForItem({ type: 'dxos.example.1' });
       expect(item1.id).toEqual(item2.id);
     }
-
-    console.log('1 -> 2 works')
     
     {
       const item1 = await agent2Space.database!.createItem({ type: 'dxos.example.2' });
