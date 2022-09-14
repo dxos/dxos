@@ -1,22 +1,31 @@
-import { it as test } from 'mocha'
-import expect from 'expect'
-import { PublicKey, Timeframe } from '@dxos/protocols';
-import { NetworkManager } from '@dxos/network-manager';
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, SpaceProtocol } from './space-protocol';
-import { afterTest } from '@dxos/testutils';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { FeedStore } from '@dxos/feed-store';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { codec } from '@dxos/echo-protocol';
-import { Keyring } from '@dxos/keyring';
+//
+// Copyright 2022 DXOS.org
+//
+
+import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
+
+import { codec } from '@dxos/echo-protocol';
+import { FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey, Timeframe } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { afterTest } from '@dxos/testutils';
+
+import { ReplicatorPlugin } from './replicator-plugin';
+import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, SpaceProtocol } from './space-protocol';
 
 describe('space/replicator-plugin', () => {
   it('replicates a feed', async () => {
+    const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager();
+    const networkManager1 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext)
+    });
     const replicator1 = new ReplicatorPlugin();
     const protocol1 = new SpaceProtocol(
       networkManager1,
@@ -30,7 +39,9 @@ describe('space/replicator-plugin', () => {
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager();
+    const networkManager2 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext)
+    });
     const replicator2 = new ReplicatorPlugin();
     const protocol2 = new SpaceProtocol(
       networkManager2,
@@ -49,14 +60,13 @@ describe('space/replicator-plugin', () => {
     await protocol2.start();
     afterTest(() => protocol2.stop());
 
-
     const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
-    const keyring1 = new Keyring()
+    const keyring1 = new Keyring();
     const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
 
     await feed1.append({
-      timeframe: new Timeframe(),
-    })
+      timeframe: new Timeframe()
+    });
 
     const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const feed2 = await feedStore2.openReadOnlyFeed(feed1.key);
@@ -66,13 +76,13 @@ describe('space/replicator-plugin', () => {
 
     await waitForExpect(() => {
       expect(feed2.feed.length).toEqual(1);
-    })
+    });
 
     await feed1.append({
-      timeframe: new Timeframe(),
-    })
+      timeframe: new Timeframe()
+    });
     await waitForExpect(() => {
       expect(feed2.feed.length).toEqual(2);
-    })
+    });
   });
-})
+});

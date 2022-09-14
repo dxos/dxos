@@ -8,14 +8,20 @@ import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { BotContainer, BotController, BotFactory, BotPackageSpecifier } from '@dxos/botkit';
 import { Party, Client } from '@dxos/client';
 import { Config } from '@dxos/config';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { randomInt } from '@dxos/util';
 
+const signalContext = new MemorySignalManagerContext();
+
 export class Orchestrator {
   private _client: Client | undefined;
-  private _botFactoryClient = new BotFactoryClient(new NetworkManager());
+  private _botFactoryClient = new BotFactoryClient(new NetworkManager({
+    signalManager: new MemorySignalManager(signalContext)
+  }));
+
   private _party: Party | undefined;
   private _config?: Config;
   private _broker?: TestBroker;
@@ -55,7 +61,9 @@ export class Orchestrator {
     const topic = PublicKey.random();
 
     const botFactory = new BotFactory({ config: this._config, botContainer: this._botContainer });
-    const botController = new BotController(botFactory, new NetworkManager());
+    const botController = new BotController(botFactory, new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext)
+    }));
     await botController.start(topic);
     await this._botFactoryClient.start(topic);
   }

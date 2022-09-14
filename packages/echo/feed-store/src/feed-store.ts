@@ -6,13 +6,13 @@ import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
+import type { Signer } from '@dxos/keyring';
 import type { PublicKey } from '@dxos/protocols';
 import { Directory } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
 import type { ValueEncoding } from './types';
-import type { Signer } from '@dxos/keyring';
 
 export interface CreateDescriptorOptions {
   key: PublicKey
@@ -106,7 +106,7 @@ export class FeedStore {
   /**
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
-  async openReadWriteFeedWithSigner(key: PublicKey, signer: Signer) {
+  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer) {
     assert(!this._descriptors.has(key.toHex()), 'Feed already exists.');
     return this._createDescriptor({ key, signer });
   }

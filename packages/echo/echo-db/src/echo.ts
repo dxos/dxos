@@ -11,6 +11,7 @@ import { InvalidStateError, raise } from '@dxos/debug';
 import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { log } from '@dxos/log';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -34,15 +35,18 @@ export interface PartyFilter {
   partyKeys?: PublicKey[]
 }
 
+// TODO(burdon): Remove global dependency.
+const signalContext = new MemorySignalManagerContext();
+
 /**
  * Various options passed to `ECHO.create`.
  */
-export interface EchoCreationOptions {
+export interface EchoParams {
 
   /**
    * Storage to persist data. Defaults to in-memory.
    */
-   storage?: Storage
+  storage?: Storage
 
   /**
    * Storage used for keys. Defaults to in-memory.
@@ -52,12 +56,13 @@ export interface EchoCreationOptions {
   /**
    * Networking provider. Defaults to in-memory networking.
    */
+  // TODO(burdon): Should not pass in params for inner objects.
   networkManagerOptions?: NetworkManagerOptions
 
   /**
    * Whether to save and load snapshots. Defaults to `true`.
    */
-  // TODO(burdon): Hierarchical config.
+  // TODO(burdon): Re-organize config (separated object).
   snapshots?: boolean
 
   /**
@@ -65,7 +70,7 @@ export interface EchoCreationOptions {
    */
   snapshotInterval?: number
 
-  // TODO(burdon): Comments.
+  // TODO(burdon): Remove.
   readLogger?: (msg: any) => void
   writeLogger?: (msg: any) => void
 }
@@ -107,14 +112,19 @@ export class ECHO {
     keyStorage = memdown(),
     storage = createStorage({ type: StorageType.RAM }),
     networkManagerOptions,
-    /// TODO(burdon): See options below.
     snapshots = true,
     snapshotInterval = 100,
     readLogger,
     writeLogger
-  }: EchoCreationOptions = {}) {
+  }: EchoParams = {}) {
     this._modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
+
+    if (!networkManagerOptions) {
+      networkManagerOptions = {
+        signalManager: new MemorySignalManager(signalContext)
+      };
+    }
 
     this._storage = storage;
     this._networkManager = new NetworkManager(networkManagerOptions);

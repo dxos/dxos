@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
@@ -16,12 +17,14 @@ import { PluginRpc } from './plugin-rpc';
 import { schema } from './proto/gen';
 import { Test } from './proto/gen/dxos/rpc/test';
 
+const signalContext = new MemorySignalManagerContext();
+
 const createPeer = (
   topic: PublicKey,
   peerId: PublicKey,
   onConnect: (port: RpcPort, peerId: string) => void
 ) => {
-  const networkManager = new NetworkManager();
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   afterTest(() => networkManager.destroy());
   const plugin = new PluginRpc(onConnect);
   networkManager.joinProtocolSwarm({

@@ -11,22 +11,13 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import {
-  createPartyGenesisMessage,
-  defaultSecretProvider,
-  Keyring, KeyType,
-  SecretProvider,
-  SecretValidator
+  createPartyGenesisMessage, defaultSecretProvider, Keyring, KeyType, SecretProvider, SecretValidator
 } from '@dxos/credentials';
-import {
-  createKeyPair,
-  randomBytes,
-  sign,
-  SIGNATURE_LENGTH,
-  verify
-} from '@dxos/crypto';
+import { SIGNATURE_LENGTH, createKeyPair, randomBytes, sign, verify } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { codec, EchoEnvelope } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
@@ -52,10 +43,8 @@ const log = debug('dxos:echo:parties:party-manager:test');
 // TODO(burdon): Close cleanly.
 // This usually means that there are asynchronous operations that weren't stopped in your tests.
 
-/**
- * @param open - Open the PartyManager
- * @param createIdentity - Create the identity key record.
- */
+const signalContext = new MemorySignalManagerContext();
+
 const setup = async () => {
   const keyring = new Keyring();
 
@@ -64,7 +53,7 @@ const setup = async () => {
   const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
   const feedStore = new FeedStore(storage.createDirectory('feed'), { valueEncoding: codec });
   const modelFactory = new ModelFactory().registerModel(ObjectModel);
-  const networkManager = new NetworkManager();
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
   const identity = await createTestIdentityCredentials(keyring);
@@ -158,7 +147,7 @@ describe.skip('Party manager', () => {
     const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    const networkManager = new NetworkManager();
+    const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
     const feedProviderFactory = (partyKey: PublicKey) => new PartyFeedProvider(metadataStore, keyring, feedStore, partyKey);
 
     const identity = await createTestIdentityCredentials(keyring);

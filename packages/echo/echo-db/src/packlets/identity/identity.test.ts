@@ -9,13 +9,14 @@ import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { AdmittedFeed, createCredential, createGenesisCredentialSequence, verifyCredential } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { Identity } from './identity';
-import { NetworkManager } from '@dxos/network-manager';
 import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space/space-protocol';
+import { Identity } from './identity';
 
 describe('halo/identity', () => {
   test('create', async () => {
@@ -44,12 +45,14 @@ describe('halo/identity', () => {
         dataWriteFeed: dataFeed,
         initialTimeframe: new Timeframe(),
         feedProvider: key => feedStore.openReadOnlyFeed(key),
-        networkManager: new NetworkManager(),
+        networkManager: new NetworkManager({
+          signalManager: new MemorySignalManager(new MemorySignalManagerContext())
+        }),
         networkPlugins: [],
         swarmIdentity: {
           peerKey: identityKey,
           credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-          credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR,
+          credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
         }
       }
     });

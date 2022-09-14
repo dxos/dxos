@@ -9,6 +9,7 @@ import waitForExpect from 'wait-for-expect';
 import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring, KeyType } from '@dxos/credentials';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createCredential } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -22,12 +23,14 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
 
+const signalContext = new MemorySignalManagerContext();
+
 describe.skip('HALO', () => {
   const setup = () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
-    const networkManager = new NetworkManager();
+    const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
     const storage = createStorage({ type: StorageType.RAM });
     const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
