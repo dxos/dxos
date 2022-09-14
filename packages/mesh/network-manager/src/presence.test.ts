@@ -14,13 +14,12 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { FullyConnectedTopology } from './topology';
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 const createPeer = (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
-  const networkManager = new NetworkManager({ signalManager: createSignalManager() });
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   afterTest(() => networkManager.destroy());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());

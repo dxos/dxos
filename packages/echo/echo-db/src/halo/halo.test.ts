@@ -23,15 +23,14 @@ import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
 
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 describe.skip('HALO', () => {
   const setup = () => {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
-    const networkManager = new NetworkManager({ signalManager: createSignalManager() });
+    const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
     const storage = createStorage({ type: StorageType.RAM });
     const snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
