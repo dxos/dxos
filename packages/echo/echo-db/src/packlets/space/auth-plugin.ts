@@ -4,12 +4,11 @@
 
 import assert from 'node:assert';
 
+import { Event } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 
 import { SwarmIdentity } from './space-protocol';
-import { log } from '@dxos/log'
-import { Event } from '@dxos/async';
-
 
 const EXTENSION_NAME = 'dxos.credentials.auth';
 
@@ -21,7 +20,7 @@ const EXTENSION_NAME = 'dxos.credentials.auth';
 export class AuthPlugin {
   _requiredForExtensions: Set<string>;
 
-  readonly authenticationFailed = new Event()
+  readonly authenticationFailed = new Event();
 
   constructor (
     private readonly _swarmIdentity: SwarmIdentity,
@@ -58,7 +57,7 @@ export class AuthPlugin {
     // Note `protocol.session.credentials` is our data.
     const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
 
-    log(`Handshake`, { credentials, sessionPeerId })
+    log('Handshake', { credentials, sessionPeerId });
 
     if (!credentials) {
       // If we only require auth when certain extensions are active, check if those are present.
@@ -82,7 +81,7 @@ export class AuthPlugin {
         }
       }
 
-      this.authenticationFailed.emit()
+      this.authenticationFailed.emit();
       protocol.stream.destroy();
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: no credentials.');
     }
@@ -90,12 +89,12 @@ export class AuthPlugin {
     // Challenges are not currently supported.
     const nonce = Buffer.from('');
 
-    const credentialsBuf = Buffer.from(credentials, 'base64')
-    const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(nonce, credentialsBuf)
+    const credentialsBuf = Buffer.from(credentials, 'base64');
+    const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(nonce, credentialsBuf);
 
     // Ask the Authenticator if this checks out.
     if (!isAuthenticated) {
-      this.authenticationFailed.emit()
+      this.authenticationFailed.emit();
       protocol.stream.destroy();
       throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: bad credentials.');
     }

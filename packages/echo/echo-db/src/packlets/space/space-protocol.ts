@@ -8,6 +8,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
+
 import { AuthPlugin } from './auth-plugin';
 
 // TODO(dmaretskyi): Move these two to auth plugin.

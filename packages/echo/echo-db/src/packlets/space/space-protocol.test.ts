@@ -73,7 +73,7 @@ describe('space/space-protocol', () => {
       []
     );
 
-    const pAuthFailed = protocol1.authenticationFailed.waitForCount(1)
+    const pAuthFailed = protocol1.authenticationFailed.waitForCount(1);
 
     const peerId2 = PublicKey.random();
     const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
