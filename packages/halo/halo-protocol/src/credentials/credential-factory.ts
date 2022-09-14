@@ -66,6 +66,8 @@ export const createCredential = async (opts: CreateCredentialParams): Promise<Cr
   return credential;
 };
 
+// TODO(burdon): Factor out?
+
 export const createPartyGenesisCredential = (keyring: Signer, partyKey: PublicKey) =>
   createCredential({
     subject: partyKey,
@@ -85,6 +87,7 @@ export const createGenesisCredentialSequence = async (
   feedKey: PublicKey
 ) => [
   await createPartyGenesisCredential(keyring, partyKey),
+
   await createCredential({
     issuer: partyKey,
     subject: identityKey,
@@ -95,6 +98,7 @@ export const createGenesisCredentialSequence = async (
     },
     keyring
   }),
+
   await createCredential({
     issuer: identityKey,
     subject: feedKey,
@@ -105,6 +109,6 @@ export const createGenesisCredentialSequence = async (
       deviceKey,
       designation: AdmittedFeed.Designation.CONTROL
     },
-    keyring,
+    keyring
   })
-]
+];

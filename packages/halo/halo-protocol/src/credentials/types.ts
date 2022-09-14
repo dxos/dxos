@@ -3,6 +3,7 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
+
 import { TYPES } from '../proto/gen';
 import { Credential } from '../proto/gen/dxos/halo/credentials';
 

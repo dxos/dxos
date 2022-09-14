@@ -32,6 +32,7 @@ export type SpaceParams = {
  * Spaces are globally addressable databases with access control.
  */
 export class Space {
+  private readonly _key: PublicKey;
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   private readonly _dataWriteFeed: FeedDescriptor;
   private readonly _controlPipeline: ControlPipeline;
@@ -48,10 +49,11 @@ export class Space {
     spaceKey,
     initialTimeframe,
     genesisFeed,
-    controlWriteFeed,
+    controlWriteFeed, // TODO(burdon): ???
     dataWriteFeed,
     feedProvider
   }: SpaceParams) {
+    this._key = spaceKey;
     this._openFeed = feedProvider;
     this._dataWriteFeed = dataWriteFeed;
 
@@ -63,6 +65,7 @@ export class Space {
       feedProvider
     });
 
+    // TODO(burdon): Order?
     this._controlPipeline.setWriteFeed(controlWriteFeed);
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
     this._controlPipeline.onFeedAdmitted.set(async info => {
@@ -79,6 +82,10 @@ export class Space {
 
   get isOpen () {
     return this._isOpen;
+  }
+
+  get key () {
+    return this._key;
   }
 
   get database () {
