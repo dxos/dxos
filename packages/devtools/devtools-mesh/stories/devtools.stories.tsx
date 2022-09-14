@@ -38,12 +38,14 @@ export default {
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
+  // TODO(burdon): Remove hard-coded deps.
   const signalManager = new WebsocketSignalManager(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
     signalManager,
     log: true
   });
+
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   networkManager.joinProtocolSwarm({
     topic: controlTopic,

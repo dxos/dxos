@@ -6,28 +6,17 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import {
-  GreetingCommandPlugin,
-  ERR_GREET_ALREADY_CONNECTED_TO_SWARM
-} from '@dxos/credentials';
+import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
-import {
-  MemorySignalManager,
-  Messenger,
-  SignalManager
-} from '@dxos/messaging';
+import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { OfferMessage, SignalConnection } from './signal';
-import { MessageRouter } from './signal/message-router';
+import { OfferMessage, MessageRouter, SignalConnection } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
-import {
-  createWebRTCTransportFactory,
-  inMemoryTransportFactory
-} from './transport';
+import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
 
 export type ProtocolProvider = (opts: {
   channel: Buffer
@@ -35,7 +24,7 @@ export type ProtocolProvider = (opts: {
 }) => Protocol;
 
 export interface NetworkManagerOptions {
-  signalManager?: SignalManager
+  signalManager: SignalManager
   ice?: any[]
   /**
    * Enable connection logging for devtools.
@@ -46,18 +35,13 @@ export interface NetworkManagerOptions {
 const log = debug('dxos:network-manager');
 
 /**
- * TODO(burdon): Comment.
+ * Manages connection to the swarm.
  */
 export class NetworkManager {
+  private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
+  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
+
   private readonly _ice?: any[];
-  private readonly _swarms = new ComplexMap<PublicKey, Swarm>((key) =>
-    key.toHex()
-  );
-
-  private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>((key) =>
-    key.toHex()
-  );
-
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _messageRouter: MessageRouter;
@@ -66,12 +50,16 @@ export class NetworkManager {
 
   public readonly topicsUpdated = new Event<void>();
 
-  constructor (options: NetworkManagerOptions = {}) {
-    this._ice = options.ice ?? [];
+  constructor ({
+    signalManager,
+    ice,
+    log
+  }: NetworkManagerOptions) {
+    this._ice = ice ?? [];
 
+    // Listen for signal manager events.
     {
-      this._signalManager =
-        options.signalManager ?? new MemorySignalManager();
+      this._signalManager = signalManager;
 
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
@@ -86,9 +74,7 @@ export class NetworkManager {
       this._messenger = new Messenger({ signalManager: this._signalManager });
 
       const onOffer = async (message: OfferMessage) =>
-        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? {
-          accept: false
-        };
+        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? { accept: false };
 
       this._messageRouter = new MessageRouter({
         sendMessage: (message) => this._messenger.sendMessage(message),
@@ -109,7 +95,7 @@ export class NetworkManager {
       };
     }
 
-    if (options.log) {
+    if (log) {
       this._connectionLog = new ConnectionLog();
     }
   }
@@ -123,6 +109,7 @@ export class NetworkManager {
     return Array.from(this._swarms.keys());
   }
 
+  // TODO(burdon): Factor out devtools.
   get connectionLog () {
     return this._connectionLog;
   }
@@ -151,9 +138,7 @@ export class NetworkManager {
     );
     if (this._swarms.has(topic)) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(
-        GreetingCommandPlugin.EXTENSION_NAME,
-        ERR_GREET_ALREADY_CONNECTED_TO_SWARM,
-        `Already connected to swarm ${topic}`
+        GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`
       );
     }
 
@@ -259,7 +244,7 @@ export interface SwarmOptions {
   /**
    * Presence plugin for network mapping, if exists.
    */
-  presence?: any /* Presence. */
+  presence?: any
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.
