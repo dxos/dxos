@@ -15,12 +15,9 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/rpc-tunnel": "workspace:*",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",
     "react": "^18.1.0",

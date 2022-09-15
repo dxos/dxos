@@ -740,13 +740,10 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/esbuild-server': ~2.29.0
       '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
       '@types/react': ^18.0.9
@@ -756,12 +753,9 @@ importers:
     dependencies:
       '@dxos/client': link:../../packages/sdk/client
       '@dxos/config': link:../../packages/sdk/config
-      '@dxos/react-async': link:../../packages/common/react-async
       '@dxos/react-client': link:../../packages/sdk/react-client
       '@dxos/react-components': link:../../packages/sdk/react-components
       '@dxos/react-toolkit': link:../../packages/sdk/react-toolkit
-      '@dxos/rpc': link:../../packages/common/rpc
-      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
       '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
       '@mui/material': 5.8.7_zxljzmqdrxwnuenbkrz77w74uy
       react: 18.2.0
