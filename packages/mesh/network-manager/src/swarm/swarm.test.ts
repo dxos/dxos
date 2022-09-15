@@ -52,14 +52,12 @@ describe('Swarm', () => {
       onSignal: msg => swarm1.onSignal(msg),
       onOffer: msg => swarm1.onOffer(msg)
     });
-    afterTest(() => mr1.destroy());
 
     const mr2: MessageRouter = new MessageRouter({
       sendMessage: (...data) => mr1.receiveMessage(...data),
       onSignal: msg => swarm2.onSignal(msg),
       onOffer: msg => swarm2.onOffer(msg)
     });
-    afterTest(() => mr2.destroy());
 
     const sm1: SignalMessaging = router ? mr1 : new MockSignalConnection(() => swarm2);
 

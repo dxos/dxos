@@ -7,13 +7,7 @@ import debug from 'debug';
 
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-import {
-  ComplexMap,
-  ComplexSet,
-  exponentialBackoffInterval,
-  MakeOptional,
-  SubscriptionGroup
-} from '@dxos/util';
+import { ComplexMap, MakeOptional } from '@dxos/util';
 
 import { schema } from '../proto/gen';
 import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
@@ -36,8 +30,6 @@ interface MessageRouterOptions {
   }) => Promise<void>
   onOffer?: (message: OfferMessage) => Promise<Answer>
   onSignal?: (message: SignalMessage) => Promise<void>
-  retryDelay?: number
-  timeout?: number
 }
 
 const log = debug('dxos:network-manager:message-router');
@@ -61,34 +53,13 @@ export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
     new ComplexMap((key) => key.toHex());
 
-  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(
-    (key) => key.toHex()
-  );
-
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) =>
-    key.toHex()
-  );
-
-  private readonly _retryDelay: number;
-  private readonly _timeout: number;
-
-  private readonly _subscriptions = new SubscriptionGroup();
-
-  constructor ({
-    sendMessage,
-    onSignal,
-    onOffer,
-    retryDelay = 100,
-    timeout = 3000
-  }: MessageRouterOptions = {}) {
+  constructor ({ sendMessage, onSignal, onOffer }: MessageRouterOptions = {}) {
     assert(sendMessage);
     this._sendMessage = sendMessage;
     assert(onSignal);
     this._onSignal = onSignal;
     assert(onOffer);
     this._onOffer = onOffer;
-    this._retryDelay = retryDelay;
-    this._timeout = timeout;
   }
 
   async receiveMessage ({
@@ -113,14 +84,6 @@ export class MessageRouter implements SignalMessaging {
         message
       )} from ${author} to ${recipient}`
     );
-    if (!message.data?.ack) {
-      if (this._receivedMessages.has(message.messageId!)) {
-        return;
-      }
-
-      this._receivedMessages.add(message.messageId!);
-      await this._sendAcknowledgement({ recipient, author, message });
-    }
 
     if (message.data?.offer) {
       await this._handleOffer({ author, recipient, message });
@@ -128,8 +91,6 @@ export class MessageRouter implements SignalMessaging {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
       await this._handleSignal({ author, recipient, message });
-    } else if (message.data?.ack) {
-      await this._handleAcknowledgement(message);
     }
   }
 
@@ -176,35 +137,6 @@ export class MessageRouter implements SignalMessaging {
         networkMessage
       )} from ${author} to ${recipient}`
     );
-
-    // Setting retry interval if signal was not acknowledged.
-    const cancelRetry = exponentialBackoffInterval(async () => {
-      log(`retrying message: ${JSON.stringify(networkMessage)}`);
-      try {
-        await this._encodeAndSend({
-          author,
-          recipient,
-          message: networkMessage
-        });
-      } catch (error) {
-        log(`ERROR failed to send message: ${error}`);
-      }
-    }, this._retryDelay);
-
-    const timeout = setTimeout(() => {
-      log(`Message ${networkMessage.messageId} was not delivered!`);
-      this._onAckCallbacks.delete(networkMessage.messageId!);
-      cancelRetry();
-    }, this._timeout);
-
-    assert(!this._onAckCallbacks.has(networkMessage.messageId!));
-    this._onAckCallbacks.set(networkMessage.messageId, () => {
-      this._onAckCallbacks.delete(networkMessage.messageId!);
-      cancelRetry();
-      clearTimeout(timeout);
-    });
-    this._subscriptions.push(cancelRetry);
-    this._subscriptions.push(() => clearTimeout(timeout));
 
     await this._encodeAndSend({ author, recipient, message: networkMessage });
   }
@@ -290,35 +222,5 @@ export class MessageRouter implements SignalMessaging {
       data: { signal: message.data.signal }
     };
     await this._onSignal(signalMessage);
-  }
-
-  private async _handleAcknowledgement (message: SwarmMessage): Promise<void> {
-    assert(message.data?.ack?.messageId);
-    log(`Acknowledgement for ${message.data.ack.messageId}`);
-    this._onAckCallbacks.get(message.data.ack.messageId)!();
-  }
-
-  private async _sendAcknowledgement ({
-    author,
-    recipient,
-    message
-  }: {
-    author: PublicKey
-    recipient: PublicKey
-    message: SwarmMessage
-  }): Promise<void> {
-    assert(message.messageId);
-    const ackMessage: SwarmMessage = {
-      topic: message.topic,
-      sessionId: message.sessionId,
-      data: { ack: { messageId: message.messageId } },
-      messageId: PublicKey.random()
-    };
-    log(`sent ack: ${JSON.stringify(ackMessage)} from ${recipient} to ${author} `);
-    await this._encodeAndSend({ author: recipient, recipient: author, message: ackMessage });
-  }
-
-  destroy (): void {
-    this._subscriptions.unsubscribe();
   }
 }

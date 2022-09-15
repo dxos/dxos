@@ -39,7 +39,6 @@ describe('Signal Integration Test', () => {
       onSignal: signalMock,
       onOffer: async () => ({ accept: true })
     });
-    afterTest(() => messageRouter.destroy());
 
     return {
       signalManager,
