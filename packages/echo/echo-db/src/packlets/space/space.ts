@@ -3,10 +3,11 @@
 //
 
 import assert from 'assert';
+import { PipelineState } from 'packages/echo/echo-db/src/packlets/pipeline/pipeline';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
+import { EchoEnvelope, FeedWriter, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed, Credential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
@@ -34,6 +35,15 @@ export type SpaceParams = {
   swarmIdentity: SwarmIdentity
 }
 
+type SpaceAspects = {
+  writer: FeedWriter<TypedMessage>
+  state: PipelineState
+}
+
+interface SpacePlugin {
+  start (aspects: SpaceAspects): void
+}
+
 /**
  * Spaces are globally addressable databases with access control.
  */
@@ -41,7 +51,7 @@ export class Space {
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   private readonly _key: PublicKey;
-  private readonly _dataWriteFeed: FeedDescriptor;
+  private readonly _dataFeed: FeedDescriptor;
   private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
 
   private readonly _controlPipeline: ControlPipeline;
@@ -64,19 +74,18 @@ export class Space {
     networkPlugins,
     swarmIdentity
   }: SpaceParams) {
+    assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
-    this._dataWriteFeed = dataFeed; // TODO(burdon): Rename _dataFeed.
+    this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
 
-    // TODO(burdon): Pass in control pipeline or create factory?
     this._controlPipeline = new ControlPipeline({
-      genesisFeed,
       spaceKey,
+      genesisFeed,
       feedProvider,
       initialTimeframe
     });
 
-    // TODO(burdon): Pass into constructor?
     this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async info => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
@@ -93,7 +102,6 @@ export class Space {
       }
     });
 
-    // TODO(burdon): Create wrapper?
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
 
     // Start replicating the genesis feed.
@@ -123,14 +131,13 @@ export class Space {
     return this._database;
   }
 
-  // TODO(burdon): Why expose this?
+  // TODO(burdon): Expose control pipeline sub-interface?
   get controlMessageWriter () {
     return this._controlPipeline.writer;
   }
 
-  // TODO(burdon): Why expose this? Method is called "control" but returns state from data.
   get controlPipelineState () {
-    return this._dataPipeline?.state;
+    return this._controlPipeline.pipelineState;
   }
 
   @synchronized
@@ -139,9 +146,9 @@ export class Space {
       return;
     }
 
+    // Order is important.
     await this._controlPipeline.start();
     await this._openDataPipeline();
-
     await this._protocol.start();
 
     this._isOpen = true;
@@ -169,7 +176,7 @@ export class Space {
     // Create pipeline.
     {
       this._dataPipeline = new Pipeline(new Timeframe());
-      this._dataPipeline.setWriteFeed(this._dataWriteFeed);
+      this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {
         this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
