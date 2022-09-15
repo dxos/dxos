@@ -7,12 +7,13 @@ import assert from 'assert';
 import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { TypedMessage } from '@dxos/echo-protocol';
-import { Chain, createCredential, Credential, isValidAuthorizedDeviceCredential } from '@dxos/halo-protocol';
+import { Chain, createCredential, Credential, DeviceStateMachine, getCredentialAssertion, isValidAuthorizedDeviceCredential } from '@dxos/halo-protocol';
 import { Signer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 
 import { Space } from '../space';
+import { ComplexSet } from '@dxos/util';
 
 export type CredentialSignerParams = {
   subject: PublicKey
@@ -30,14 +31,11 @@ export type IdentityParams = {
 }
 
 export class Identity {
-  public readonly ready = new Trigger();
-
   private readonly _identityKey: PublicKey;
   private readonly _deviceKey: PublicKey;
   private readonly _signer: Signer;
   private readonly _halo: Space;
-
-  private _deviceCredentialChain?: Chain;
+  private readonly _deviceStateMachine: DeviceStateMachine;
 
   constructor ({
     identityKey,
@@ -49,14 +47,10 @@ export class Identity {
     this._deviceKey = deviceKey;
     this._signer = signer;
     this._halo = space;
+    this._deviceStateMachine = new DeviceStateMachine(this._identityKey, this._deviceKey)
 
-    // Save device key chain credential when processed by the party state machine.
     this._halo.onCredentialProcessed.set(async credential => {
-      log('Credential processed:', credential);
-      if (isValidAuthorizedDeviceCredential(credential, this._identityKey, this._deviceKey)) {
-        this._deviceCredentialChain = { credential };
-        await this.ready.wake();
-      }
+      await this._deviceStateMachine.process(credential);
     });
   }
 
@@ -66,6 +60,10 @@ export class Identity {
 
   async close () {
     await this._halo.close();
+  }
+
+  async ready() {
+    await this._deviceStateMachine.deviceChainReady.wait();
   }
 
   /**
@@ -86,12 +84,12 @@ export class Identity {
    * Requires identity to be ready.
    */
   getIdentityCredentialSigner (): CredentialSigner {
-    assert(this._deviceCredentialChain, 'Device credential chain is not ready.');
+    assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
     return params => createCredential({
       issuer: this._identityKey,
       keyring: this._signer,
       signingKey: this._deviceKey,
-      chain: this._deviceCredentialChain ?? failUndefined(),
+      chain: this._deviceStateMachine.deviceCredentialChain ?? failUndefined(),
 
       assertion: params.assertion as any,
       subject: params.subject
@@ -99,7 +97,7 @@ export class Identity {
   }
 
   get controlMessageWriter () {
-    return this._halo.controlMessageWriter;
+    return this._halo.controlMessageWriter;``
   }
 
   get controlPipelineState () {

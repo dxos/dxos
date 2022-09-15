@@ -82,7 +82,7 @@ describe('halo/identity', () => {
     }
 
     // Wait for identity to be ready.
-    await identity.ready.wait();
+    await identity.ready();
 
     const identitySigner = identity.getIdentityCredentialSigner();
     const credential = await identitySigner({
