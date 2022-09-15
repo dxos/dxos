@@ -9,22 +9,14 @@ import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 
-import { AuthPlugin } from './auth-plugin';
-
-// TODO(dmaretskyi): Move these two to auth plugin.
-export type CredentialProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
-
-// TODO(dmaretskyi): This can return information about peer identity.
-export type CredentialAuthenticator = (nonce: Uint8Array, credential: Uint8Array) => Promise<boolean>;
+import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 
 // TODO(burdon): Move/remove?
-export const MOCK_CREDENTIAL_PROVIDER: CredentialProvider = async (nonce: Uint8Array) => Buffer.from('mock');
-export const MOCK_CREDENTIAL_AUTHENTICATOR: CredentialAuthenticator = async (nonce: Uint8Array, credential: Uint8Array) => true;
 
 export interface SwarmIdentity {
   peerKey: PublicKey
-  credentialProvider: CredentialProvider
-  credentialAuthenticator: CredentialAuthenticator
+  credentialProvider: AuthProvider
+  credentialAuthenticator: AuthVerifier
 }
 
 export class SpaceProtocol {
