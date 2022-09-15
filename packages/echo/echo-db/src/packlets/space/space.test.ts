@@ -17,7 +17,7 @@ describe('space/space', () => {
     const agentFactory = new TestAgentFactory();
     const agent = await agentFactory.createAgent();
     const spaceContext = await agent.createSpace(agent.identityKey);
-    const { space, controlFeed } = spaceContext;
+    const { space, controlKey } = spaceContext;
 
     await space.open();
     expect(space.isOpen).toBeTruthy(); // TODO(burdon): Standardize boolean state getters.
@@ -27,10 +27,10 @@ describe('space/space', () => {
       // Genesis
       const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
-        ...await generator.createSpaceGenesis(space.key, controlFeed.key),
+        ...await generator.createSpaceGenesis(space.key, controlKey),
         await generator.createFeedAdmission(
           spaceContext.space.key,
-          spaceContext.dataFeed.key,
+          spaceContext.dataKey,
           AdmittedFeed.Designation.DATA
         )
       ];
@@ -74,7 +74,7 @@ describe('space/space', () => {
     const [agent1, spaceContext1] = await run(async () => {
       const agent = await agentFactory.createAgent();
       const spaceContext = await agent.createSpace(agent.identityKey);
-      const { space, controlFeed } = spaceContext;
+      const { space, controlKey } = spaceContext;
 
       await space.open();
       expect(space.isOpen).toBeTruthy();
@@ -84,10 +84,10 @@ describe('space/space', () => {
         // Genesis
         const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
-          ...await generator.createSpaceGenesis(space.key, controlFeed.key),
+          ...await generator.createSpaceGenesis(space.key, controlKey),
           await generator.createFeedAdmission(
             spaceContext.space.key,
-            spaceContext.dataFeed.key,
+            spaceContext.dataKey,
             AdmittedFeed.Designation.DATA
           )
         ];
@@ -112,7 +112,7 @@ describe('space/space', () => {
       // NOTE: The genesisKey would be passed as part of the invitation.
       const agent = await agentFactory.createAgent();
       const spaceContext = await agent.createSpace(
-        agent.identityKey, spaceContext1.space.key, spaceContext1.genesisFeedKey);
+        agent.identityKey, spaceContext1.space.key, spaceContext1.genesisKey);
       const { space } = spaceContext;
 
       await space.open();
@@ -132,8 +132,8 @@ describe('space/space', () => {
         spaceContext1.space.key,
         agent2.identityKey,
         agent2.deviceKey,
-        spaceContext2.controlFeed.key,
-        spaceContext2.dataFeed.key
+        spaceContext2.controlKey,
+        spaceContext2.dataKey
       );
 
       for (const credential of credentials) {

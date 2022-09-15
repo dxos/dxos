@@ -12,15 +12,7 @@ import { Signer } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 
-import { Space, SpaceParams } from '../space';
-
-export type IdentityParams = {
-  identityKey: PublicKey
-  deviceKey: PublicKey
-  signer: Signer
-
-  spaceParams: SpaceParams
-}
+import { Space } from '../space';
 
 export type CredentialSignerParams = {
   subject: PublicKey
@@ -30,15 +22,20 @@ export type CredentialSignerParams = {
 
 export type CredentialSigner = (params: CredentialSignerParams) => Promise<Credential>
 
+export type IdentityParams = {
+  identityKey: PublicKey
+  deviceKey: PublicKey
+  signer: Signer
+  space: Space
+}
+
 export class Identity {
-  private readonly _signer: Signer;
+  public readonly ready = new Trigger();
 
   private readonly _identityKey: PublicKey;
   private readonly _deviceKey: PublicKey;
-
+  private readonly _signer: Signer;
   private readonly _halo: Space;
-
-  public readonly ready = new Trigger();
 
   private _deviceCredentialChain?: Chain;
 
@@ -46,13 +43,12 @@ export class Identity {
     identityKey,
     deviceKey,
     signer,
-    spaceParams
+    space
   }: IdentityParams) {
-    this._signer = signer;
     this._identityKey = identityKey;
     this._deviceKey = deviceKey;
-
-    this._halo = new Space(spaceParams);
+    this._signer = signer;
+    this._halo = space;
 
     // Save device key chain credential when processed by the party state machine.
     this._halo.onCredentialProcessed.set(async credential => {

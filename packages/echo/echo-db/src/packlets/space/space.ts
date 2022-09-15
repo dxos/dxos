@@ -24,11 +24,11 @@ import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
 export type SpaceParams = {
   spaceKey: PublicKey
-  initialTimeframe: Timeframe
   genesisFeed: FeedDescriptor
-  controlWriteFeed: FeedDescriptor
-  dataWriteFeed: FeedDescriptor
+  controlFeed: FeedDescriptor
+  dataFeed: FeedDescriptor
   feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  initialTimeframe: Timeframe
   networkManager: NetworkManager
   networkPlugins: Plugin[]
   swarmIdentity: SwarmIdentity
@@ -38,18 +38,17 @@ export type SpaceParams = {
  * Spaces are globally addressable databases with access control.
  */
 export class Space {
-  private readonly _key: PublicKey;
-  private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
-  private readonly _dataWriteFeed: FeedDescriptor;
-  private readonly _controlPipeline: ControlPipeline;
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
+  private readonly _key: PublicKey;
+  private readonly _dataWriteFeed: FeedDescriptor;
+  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
+
+  private readonly _controlPipeline: ControlPipeline;
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
-  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
-
   private _isOpen = false;
-
   private _dataPipeline?: Pipeline;
   private _databaseBackend?: FeedDatabaseBackend;
   private _database?: Database;
@@ -57,17 +56,17 @@ export class Space {
   constructor ({
     spaceKey,
     genesisFeed,
-    controlWriteFeed, // TODO(burdon): ???
-    dataWriteFeed,
+    controlFeed,
+    dataFeed,
     feedProvider,
     initialTimeframe,
     networkManager,
-    swarmIdentity,
-    networkPlugins
+    networkPlugins,
+    swarmIdentity
   }: SpaceParams) {
     this._key = spaceKey;
-    this._openFeed = feedProvider;
-    this._dataWriteFeed = dataWriteFeed;
+    this._dataWriteFeed = dataFeed; // TODO(burdon): Rename _dataFeed.
+    this._feedProvider = feedProvider;
 
     // TODO(burdon): Pass in control pipeline or create factory?
     this._controlPipeline = new ControlPipeline({
@@ -77,9 +76,8 @@ export class Space {
       initialTimeframe
     });
 
-    // TODO(burdon): Order?
-    this._controlPipeline.setWriteFeed(controlWriteFeed);
-    this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
+    // TODO(burdon): Pass into constructor?
+    this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async info => {
       if (info.assertion.designation === AdmittedFeed.Designation.DATA) {
         // We will add all existing data feeds when the data pipeline is initialized.
@@ -95,8 +93,13 @@ export class Space {
       }
     });
 
+    // TODO(burdon): Create wrapper?
+    this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
+
+    // Start replicating the genesis feed.
     this._replicator.addFeed(genesisFeed);
 
+    // Create the network protocol.
     this._protocol = new SpaceProtocol(
       networkManager,
       spaceKey,
@@ -163,37 +166,51 @@ export class Space {
   private async _openDataPipeline () {
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
-    this._dataPipeline = new Pipeline(new Timeframe());
-    this._dataPipeline.setWriteFeed(this._dataWriteFeed);
-    for (const feed of this._controlPipeline.partyState.feeds.values()) {
-      this._dataPipeline.addFeed(await this._openFeed(feed.key));
+    // Create pipeline.
+    {
+      this._dataPipeline = new Pipeline(new Timeframe());
+      this._dataPipeline.setWriteFeed(this._dataWriteFeed);
+      for (const feed of this._controlPipeline.partyState.feeds.values()) {
+        this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+      }
     }
 
-    const modelFactory = new ModelFactory().registerModel(ObjectModel);
-    this._databaseBackend = new FeedDatabaseBackend(
-      mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
-        '@type': 'dxos.echo.feed.EchoEnvelope', ...msg
-      }), this._dataPipeline.writer ?? failUndefined()),
-      {}, // TODO(dmaretskyi): Populate snapshot.
-      {
-        snapshots: true
-      }
-    );
+    // Create backend.
+    {
+      const feedWriter = mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
+        '@type': 'dxos.echo.feed.EchoEnvelope',
+        ...msg
+      }), this._dataPipeline.writer ?? failUndefined());
+
+      this._databaseBackend = new FeedDatabaseBackend(
+        feedWriter,
+        {}, // TODO(dmaretskyi): Populate snapshot.
+        {
+          snapshots: true // TODO(burdon): Config.
+        }
+      );
+    }
 
     // Open pipeline and connect it to the database.
-    this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
-    await this._database.initialize();
+    {
+      const modelFactory = new ModelFactory().registerModel(ObjectModel);
+      this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
+      await this._database.initialize();
+    }
 
+    // Start message processing loop.
     setImmediate(async () => {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
+        const { key: feedKey, seq, data } = msg;
+        log('Processing message.', { msg });
+
         try {
-          log('Processing message', { msg });
-          const payload = msg.data.payload as TypedMessage;
+          const payload = data.payload as TypedMessage;
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
-            const feedInfo = this._controlPipeline.partyState.feeds.get(msg.key);
+            const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
             if (!feedInfo) {
-              log.error('Could not determine feed owner', { feedKey: msg.key });
+              log.error('Could not determine feed owner.', { feedKey });
               continue;
             }
 
@@ -201,9 +218,9 @@ export class Space {
             await this._databaseBackend.echoProcessor({
               data: payload,
               meta: {
-                feedKey: msg.key,
-                seq: msg.seq,
-                timeframe: msg.data.timeframe,
+                feedKey,
+                seq,
+                timeframe: data.timeframe,
                 memberKey: feedInfo.assertion.identityKey
               }
             });

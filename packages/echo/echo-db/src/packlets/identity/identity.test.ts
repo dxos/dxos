@@ -15,7 +15,7 @@ import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space';
+import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, Space } from '../space';
 import { Identity } from './identity';
 
 describe('halo/identity', () => {
@@ -34,27 +34,29 @@ describe('halo/identity', () => {
     const controlFeed = await createFeed();
     const dataFeed = await createFeed();
 
+    const space = new Space({
+      spaceKey,
+      genesisFeed: controlFeed,
+      controlFeed,
+      dataFeed,
+      initialTimeframe: new Timeframe(),
+      feedProvider: key => feedStore.openReadOnlyFeed(key),
+      networkManager: new NetworkManager({
+        signalManager: new MemorySignalManager(new MemorySignalManagerContext())
+      }),
+      networkPlugins: [],
+      swarmIdentity: {
+        peerKey: identityKey,
+        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
+        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+      }
+    });
+
     const identity = new Identity({
       signer: keyring,
       identityKey,
       deviceKey,
-      spaceParams: {
-        spaceKey,
-        genesisFeed: controlFeed,
-        controlWriteFeed: controlFeed,
-        dataWriteFeed: dataFeed,
-        initialTimeframe: new Timeframe(),
-        feedProvider: key => feedStore.openReadOnlyFeed(key),
-        networkManager: new NetworkManager({
-          signalManager: new MemorySignalManager(new MemorySignalManagerContext())
-        }),
-        networkPlugins: [],
-        swarmIdentity: {
-          peerKey: identityKey,
-          credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-          credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
-        }
-      }
+      space
     });
 
     await identity.open();

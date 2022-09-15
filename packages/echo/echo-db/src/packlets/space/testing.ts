@@ -3,7 +3,7 @@
 //
 
 import { codec } from '@dxos/echo-protocol';
-import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -13,11 +13,13 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space';
 import { Space } from './space';
 
+// TODO(burdon): Factor out and share across tests?
+
 export type TestSpaceContext = {
   space: Space
-  genesisFeedKey: PublicKey
-  controlFeed: FeedDescriptor
-  dataFeed: FeedDescriptor
+  genesisKey: PublicKey
+  controlKey: PublicKey
+  dataKey: PublicKey
 }
 
 /**
@@ -44,16 +46,16 @@ export class TestAgent {
       spaceKey = await this.keyring.createKey();
     }
 
-    const controlWriteFeed = await this.createFeed();
-    const dataWriteFeed = await this.createFeed();
+    const controlFeed = await this.createFeed();
+    const dataFeed = await this.createFeed();
 
-    const genesisFeed = genesisKey ? await this.feedStore.openReadOnlyFeed(genesisKey) : controlWriteFeed;
+    const genesisFeed = genesisKey ? await this.feedStore.openReadOnlyFeed(genesisKey) : controlFeed;
 
     const space = new Space({
       spaceKey,
       genesisFeed,
-      controlWriteFeed, // TODO(burdon): Rename controlFeed?
-      dataWriteFeed,
+      controlFeed,
+      dataFeed,
       feedProvider: key => this.feedStore.openReadOnlyFeed(key),
       initialTimeframe: new Timeframe(),
       networkManager: new NetworkManager({ signalManager: this._signalManager }),
@@ -67,9 +69,9 @@ export class TestAgent {
 
     return {
       space,
-      genesisFeedKey: genesisFeed.key,
-      controlFeed: controlWriteFeed,
-      dataFeed: dataWriteFeed
+      genesisKey: genesisFeed.key,
+      controlKey: controlFeed.key,
+      dataKey: dataFeed.key
     };
   }
 
@@ -80,9 +82,8 @@ export class TestAgent {
 }
 
 /**
- * Generate agent and space.
+ * Creates test agents with common signaling.
  */
-// TODO(burdon): Factor out and share across tests?
 export class TestAgentFactory {
   constructor (
     private readonly _signalContext: MemorySignalManagerContext = new MemorySignalManagerContext()
