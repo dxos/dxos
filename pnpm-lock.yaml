@@ -680,6 +680,8 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@mui/icons-material': ^5.8.0
@@ -706,6 +708,8 @@ importers:
       '@dxos/react-client': link:../../packages/sdk/react-client
       '@dxos/react-components': link:../../packages/sdk/react-components
       '@dxos/react-toolkit': link:../../packages/sdk/react-toolkit
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
       '@dxos/util': link:../../packages/common/util
       '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
       '@mui/material': 5.8.7_zxljzmqdrxwnuenbkrz77w74uy
@@ -2469,6 +2473,8 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
       '@testing-library/dom': ^8.17.1
@@ -2497,6 +2503,8 @@ importers:
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
