@@ -29,40 +29,45 @@ export type CreateCredentialParams = {
 }
 
 /**
- * Construct signed credential message.
+ * Construct a signed credential message.
  */
 // TODO(burdon): Make private and use CredentialGenerator.
-// TODO(burdon): Destructure params.
-export const createCredential = async (params: CreateCredentialParams): Promise<Credential> => {
-  assert(params.assertion['@type'], 'Invalid assertion.');
-  assert(!!params.signingKey === !!params.chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+export const createCredential = async ({
+  keyring,
+  issuer,
+  subject,
+  assertion,
+  signingKey,
+  chain,
+  nonce
+}: CreateCredentialParams): Promise<Credential> => {
+  assert(assertion['@type'], 'Invalid assertion.');
+  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
 
   // TODO(dmaretskyi): Verify chain.
 
-  const signingKey = params.signingKey ?? params.issuer;
-
-  // Form a temporary credential with signature fields missing. This will act as an input data for the signature.
+  // Create the credential with proof value and chain fields missing (for signature payload).
   const credential: Credential = {
-    subject: {
-      id: params.subject,
-      assertion: params.assertion
-    },
-    issuer: params.issuer,
+    issuer,
     issuanceDate: new Date(),
+    subject: {
+      id: subject,
+      assertion
+    },
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
-      signer: signingKey,
-      nonce: params.nonce,
+      signer: signingKey ?? issuer,
       value: new Uint8Array(),
-      chain: undefined
+      nonce
     }
   };
 
+  // Set proof after creating signature.
   const signedPayload = getSignaturePayload(credential);
-  credential.proof.value = await sign(params.keyring, signingKey, signedPayload);
-  if (params.chain) {
-    credential.proof.chain = params.chain;
+  credential.proof.value = await sign(keyring, signingKey ?? issuer, signedPayload);
+  if (chain) {
+    credential.proof.chain = chain;
   }
 
   return credential;
@@ -71,7 +76,7 @@ export const createCredential = async (params: CreateCredentialParams): Promise<
 /**
  * Utility class for generating credential messages, where the issuer is the current identity or device.
  */
-// TODO(burdon): Normalize partyKey, spaceKey.
+// TODO(burdon): Normalize partyKey, spaceKey (args, proto).
 export class CredentialGenerator {
   constructor (
     private readonly _keyring: Keyring,
@@ -89,8 +94,8 @@ export class CredentialGenerator {
     return [
       await createCredential({
         keyring: this._keyring,
-        subject: partyKey,
         issuer: partyKey,
+        subject: partyKey,
         assertion: {
           '@type': 'dxos.halo.credentials.PartyGenesis',
           partyKey
