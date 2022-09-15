@@ -75,8 +75,7 @@ export class AuthPlugin {
          * require authentication to use are active on this connection.
          */
         if (!authRequired) {
-          log(`Unauthenticated access allowed for ${sessionPeerId};`,
-            'no extensions which require authentication are active on remote Protocol.');
+          log(`Unauthenticated access allowed for ${sessionPeerId}; no extensions which require authentication are active on remote Protocol.`);
           return;
         }
       }
