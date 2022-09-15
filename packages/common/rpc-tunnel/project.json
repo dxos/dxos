@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/common/rpc-tunnel/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/rpc-tunnel/dist",
+        "tsConfig": "packages/common/rpc-tunnel/tsconfig.json",
+        "main": "packages/common/rpc-tunnel/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/rpc-tunnel/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}
