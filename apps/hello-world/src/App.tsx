@@ -7,14 +7,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, List, ListItemButton, ListItemIcon, ListItemText, TextField } from '@mui/material';
 
 import { Item, ObjectModel, Party } from '@dxos/client';
-import { useClient, useSelection } from '@dxos/react-client';
+import { useClient, useProfile, useSelection } from '@dxos/react-client';
 import { FileUploadDialog, useFileDownload } from '@dxos/react-components';
 import { JoinPartyDialog, PartySharingDialog, usePartySerializer } from '@dxos/react-toolkit';
 
-/**
- * @constructor
- */
-export const App = () => {
+const Main = () => {
   const client = useClient();
   const [party, setParty] = useState<Party>();
 
@@ -135,5 +132,17 @@ export const App = () => {
         onUpload={handleImport}
       />
     </Box>
+  );
+};
+
+export const App = () => {
+  const profile = useProfile();
+
+  if (!profile) {
+    return null;
+  }
+
+  return (
+    <Main />
   );
 };
