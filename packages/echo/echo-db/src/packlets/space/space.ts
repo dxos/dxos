@@ -11,6 +11,7 @@ import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed, Credential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
+import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { AsyncCallback, Callback } from '@dxos/util';
@@ -18,9 +19,8 @@ import { AsyncCallback, Callback } from '@dxos/util';
 import { Database, FeedDatabaseBackend } from '../database';
 import { Pipeline } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
-import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { ReplicatorPlugin } from './replicator-plugin';
+import { SpaceProtocol, SwarmIdentity } from './space-protocol';
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -29,9 +29,9 @@ export type SpaceParams = {
   controlWriteFeed: FeedDescriptor
   dataWriteFeed: FeedDescriptor
   feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
-  networkManager: NetworkManager,
+  networkManager: NetworkManager
   networkPlugins: Plugin[]
-  swarmIdentity: SwarmIdentity,
+  swarmIdentity: SwarmIdentity
 }
 
 /**
@@ -42,7 +42,7 @@ export class Space {
   private readonly _openFeed: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   private readonly _dataWriteFeed: FeedDescriptor;
   private readonly _controlPipeline: ControlPipeline;
-  
+
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
 
@@ -56,11 +56,11 @@ export class Space {
 
   constructor ({
     spaceKey,
-    initialTimeframe,
     genesisFeed,
     controlWriteFeed, // TODO(burdon): ???
     dataWriteFeed,
     feedProvider,
+    initialTimeframe,
     networkManager,
     swarmIdentity,
     networkPlugins
@@ -71,10 +71,10 @@ export class Space {
 
     // TODO(burdon): Pass in control pipeline or create factory?
     this._controlPipeline = new ControlPipeline({
-      initialTimeframe,
       genesisFeed,
       spaceKey,
-      feedProvider
+      feedProvider,
+      initialTimeframe
     });
 
     // TODO(burdon): Order?
@@ -90,7 +90,7 @@ export class Space {
         this._dataPipeline.addFeed(await feedProvider(info.key));
       }
 
-      if(!info.key.equals(genesisFeed.key)) { 
+      if (!info.key.equals(genesisFeed.key)) {
         this._replicator.addFeed(await feedProvider(info.key));
       }
     });

@@ -18,7 +18,7 @@ export type CreateCredentialParams = {
   subject: PublicKey
   assertion: MessageType
   /**
-   * Provided if it is different from issuer.
+   * Provided if different from issuer.
    */
   signingKey?: PublicKey
   /**
@@ -31,6 +31,7 @@ export type CreateCredentialParams = {
 /**
  * Construct signed credential message.
  */
+// TODO(burdon): Make private and use CredentialGenerator.
 // TODO(burdon): Destructure params.
 export const createCredential = async (params: CreateCredentialParams): Promise<Credential> => {
   assert(params.assertion['@type'], 'Invalid assertion.');
@@ -59,9 +60,7 @@ export const createCredential = async (params: CreateCredentialParams): Promise<
   };
 
   const signedPayload = getSignaturePayload(credential);
-  const signature = await sign(params.keyring, signingKey, signedPayload);
-
-  credential.proof.value = signature;
+  credential.proof.value = await sign(params.keyring, signingKey, signedPayload);
   if (params.chain) {
     credential.proof.chain = params.chain;
   }
@@ -143,6 +142,24 @@ export class CredentialGenerator {
 
   /**
    * Add device to space.
+   */
+  async createDeviceAuthorization (
+    deviceKey: PublicKey
+  ): Promise<Credential> {
+    return createCredential({
+      keyring: this._keyring,
+      issuer: this._identityKey,
+      subject: deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        identityKey: this._identityKey,
+        deviceKey
+      }
+    });
+  }
+
+  /**
+   * Add feed to space.
    */
   async createFeedAdmission (
     partyKey: PublicKey,

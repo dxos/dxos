@@ -7,12 +7,7 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import {
-  AdmittedFeed,
-  createCredential,
-  CredentialGenerator,
-  verifyCredential
-} from '@dxos/halo-protocol';
+import { AdmittedFeed, CredentialGenerator, verifyCredential } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -20,7 +15,7 @@ import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space/space-protocol';
+import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space';
 import { Identity } from './identity';
 
 describe('halo/identity', () => {
@@ -71,36 +66,9 @@ describe('halo/identity', () => {
     {
       const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
       const credentials = [
-        // Space genesis.
         ...await generator.createGenesis(spaceKey, controlFeed.key),
-
-        // Admit device.
-        // TODO(burdon): Use CredentialGenerator
-        await createCredential({
-          issuer: identityKey,
-          subject: deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey,
-            deviceKey
-          },
-          keyring
-        }),
-
-        // Admit data feed.
-        // TODO(burdon): Use CredentialGenerator
-        await createCredential({
-          issuer: identityKey,
-          subject: dataFeed.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            partyKey: spaceKey,
-            identityKey,
-            deviceKey,
-            designation: AdmittedFeed.Designation.DATA
-          },
-          keyring
-        })
+        await generator.createDeviceAuthorization(deviceKey),
+        await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
       ];
 
       for (const credential of credentials) {

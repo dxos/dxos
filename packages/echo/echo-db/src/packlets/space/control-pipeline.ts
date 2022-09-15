@@ -13,8 +13,8 @@ import { Pipeline } from '../pipeline';
 export type ControlPipelineParams = {
   spaceKey: PublicKey
   genesisFeed: FeedDescriptor
-  initialTimeframe: Timeframe
   feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  initialTimeframe: Timeframe
 }
 
 /**
@@ -30,10 +30,10 @@ export class ControlPipeline {
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
 
   constructor ({
-    initialTimeframe,
-    genesisFeed,
     spaceKey,
-    feedProvider
+    genesisFeed,
+    feedProvider,
+    initialTimeframe
   }: ControlPipelineParams) {
     this._pipeline = new Pipeline(initialTimeframe);
     this._pipeline.addFeed(genesisFeed);
