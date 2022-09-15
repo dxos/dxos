@@ -6,7 +6,7 @@ import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed, Credential, FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { AsyncCallback, Callback, SubscriptionGroup } from '@dxos/util';
+import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline } from '../pipeline';
 
@@ -18,12 +18,11 @@ export type ControlPipelineParams = {
 }
 
 /**
- * The control pipeline processes HALO credentials, which include genesis and invitations.
+ * Processes HALO credentials, which include genesis and invitations.
  */
 export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _partyStateMachine: PartyStateMachine;
-  private readonly _subscriptions = new SubscriptionGroup();
 
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
@@ -39,12 +38,12 @@ export class ControlPipeline {
     this._pipeline.addFeed(genesisFeed);
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
-    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this._partyStateMachine.onFeedAdmitted.set(async info => {
       log('Feed admitted', { info });
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
-          this._pipeline.addFeed(await feedProvider(info.key));
+          const feed = await feedProvider(info.key);
+          this._pipeline.addFeed(feed);
         } catch (err: any) {
           log.catch(err);
         }
@@ -52,7 +51,25 @@ export class ControlPipeline {
 
       await this.onFeedAdmitted.callIfSet(info);
     });
+
+    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
+  }
+
+  get writer () {
+    return this._pipeline.writer;
+  }
+
+  get pipelineState () {
+    return this._pipeline.state;
+  }
+
+  get partyState (): PartyState {
+    return this._partyStateMachine;
+  }
+
+  setWriteFeed (feed: FeedDescriptor) {
+    this._pipeline.setWriteFeed(feed);
   }
 
   start () {
@@ -77,23 +94,7 @@ export class ControlPipeline {
   }
 
   async stop () {
+    log('Stopping control pipeline');
     await this._pipeline.stop();
-    this._subscriptions.unsubscribe();
-  }
-
-  get writer () {
-    return this._pipeline.writer;
-  }
-
-  setWriteFeed (feed: FeedDescriptor) {
-    this._pipeline.setWriteFeed(feed);
-  }
-
-  get pipelineState () {
-    return this._pipeline.state;
-  }
-
-  get partyState (): PartyState {
-    return this._partyStateMachine;
   }
 }

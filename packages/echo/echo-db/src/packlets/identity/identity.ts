@@ -48,8 +48,9 @@ export class Identity {
     this._identityKey = identityKey;
     this._deviceKey = deviceKey;
     this._signer = signer;
-    this._halo = space;
+    this._halo = space; // TODO(burdon): Rename space.
 
+    // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
     this._halo.onCredentialProcessed.set(async credential => {
       log('Credential processed:', credential);

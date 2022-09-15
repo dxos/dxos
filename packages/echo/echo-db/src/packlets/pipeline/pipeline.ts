@@ -18,6 +18,22 @@ import { TimeframeClock } from './timeframe-clock';
 
 const STALL_TIMEOUT = 1000;
 
+const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
+  const writer = createFeedWriter<FeedMessage>(feed);
+  return mapFeedWriter(payload => ({
+    payload,
+    timeframe: getTimeframe()
+  }), writer);
+};
+
+export interface PipelineState {
+  readonly currentTimeframeUpdate: Event<Timeframe>
+  readonly timeframe: Timeframe
+  readonly endTimeframe: Timeframe
+
+  waitUntilReached: (target: Timeframe) => Promise<void>
+}
+
 /**
  * A multi-reader pipeline that operates on feeds.
  * Might have a single writable feed.
@@ -52,17 +68,17 @@ const STALL_TIMEOUT = 1000;
  */
 export class Pipeline {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
-
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
-  private _isBeingConsumed = false;
-
-  private _iterator = new FeedStoreIterator(
+  private readonly _iterator = new FeedStoreIterator(
     () => true,
     createMessageSelector(this._timeframeClock),
     this._initialTimeframe
   );
 
+  private readonly _state: PipelineState;
+
   private _writer: FeedWriter<TypedMessage> | undefined = undefined;
+  private _isBeingConsumed = false;
 
   constructor (
     private readonly _initialTimeframe: Timeframe
@@ -70,38 +86,9 @@ export class Pipeline {
     this._iterator.stalled.on(candidates => {
       log.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
     });
-  }
 
-  /**
-   * Will iterate over the ordered messages from the added feeds.
-   *
-   * Updates the timeframe clock after the message has bee processed.
-   */
-  async * consume (): AsyncIterable<FeedBlock> {
-    assert(!this._isBeingConsumed, 'Pipeline is already being consumed.');
-    this._isBeingConsumed = true;
-
-    for await (const block of this._iterator) {
-      yield block;
-      this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
-    }
-  }
-
-  addFeed (feed: FeedDescriptor) {
-    assert(!this._feeds.has(feed.key), 'Feed already added.');
-    this._feeds.set(feed.key, feed);
-
-    this._iterator.addFeedDescriptor(feed);
-  }
-
-  async stop () {
-    await this._iterator.close();
-  }
-
-  get state (): PipelineState {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    return {
+    this._state = {
       get timeframe () {
         return self._timeframeClock.timeframe;
       },
@@ -115,9 +102,9 @@ export class Pipeline {
     };
   }
 
-  //
-  // Writable feed.
-  //
+  get state (): PipelineState {
+    return this._state;
+  }
 
   get writer (): FeedWriter<TypedMessage> | undefined {
     return this._writer;
@@ -125,25 +112,32 @@ export class Pipeline {
 
   setWriteFeed (feed: FeedDescriptor) {
     assert(!this._writer, 'Writer already set.');
-
     this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
   }
-}
 
-const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
-  const writer = createFeedWriter<FeedMessage>(feed);
-  return mapFeedWriter(payload => ({
-    payload,
-    timeframe: getTimeframe()
-  }), writer);
-};
+  addFeed (feed: FeedDescriptor) {
+    assert(!this._feeds.has(feed.key), 'Feed already added.');
+    this._feeds.set(feed.key, feed);
+    this._iterator.addFeedDescriptor(feed);
+  }
 
-export interface PipelineState {
-  readonly currentTimeframeUpdate: Event<Timeframe>
+  /**
+   * Starts to iterate over the ordered messages from the added feeds.
+   * Updates the timeframe clock after the message has bee processed.
+   */
+  async * consume (): AsyncIterable<FeedBlock> {
+    assert(!this._isBeingConsumed, 'Pipeline is already being consumed.');
+    this._isBeingConsumed = true;
 
-  readonly timeframe: Timeframe
+    for await (const block of this._iterator) {
+      yield block;
+      this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
+    }
 
-  readonly endTimeframe: Timeframe
+    this._isBeingConsumed = false;
+  }
 
-  waitUntilReached: (target: Timeframe) => Promise<void>
+  async stop () {
+    await this._iterator.close();
+  }
 }
