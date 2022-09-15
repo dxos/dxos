@@ -15,7 +15,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { ReplicatorPlugin } from './replicator-plugin';
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, SpaceProtocol } from './space-protocol';
+import { SpaceProtocol } from './space-protocol';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 
 describe('space/replicator-plugin', () => {
   it('replicates a feed', async () => {
@@ -32,8 +33,8 @@ describe('space/replicator-plugin', () => {
       topic,
       {
         peerKey: peerId1,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       [replicator1]
     );
@@ -48,8 +49,8 @@ describe('space/replicator-plugin', () => {
       topic,
       {
         peerKey: peerId2,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       [replicator2]
     );

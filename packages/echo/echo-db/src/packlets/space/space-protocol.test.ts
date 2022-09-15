@@ -10,8 +10,9 @@ import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
+import { SpaceProtocol } from './space-protocol';
 
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, SpaceProtocol } from './space-protocol';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -26,8 +27,8 @@ describe('space/space-protocol', () => {
       topic,
       {
         peerKey: peerId1,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       []
     );
@@ -39,8 +40,8 @@ describe('space/space-protocol', () => {
       topic,
       {
         peerKey: peerId2,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       []
     );
@@ -67,7 +68,7 @@ describe('space/space-protocol', () => {
       topic,
       {
         peerKey: peerId1,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
+        credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: async () => false // Reject everyone.
       },
       []
@@ -82,8 +83,8 @@ describe('space/space-protocol', () => {
       topic,
       {
         peerKey: peerId2,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
       []
     );

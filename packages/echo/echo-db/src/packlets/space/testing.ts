@@ -10,8 +10,8 @@ import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER } from '../space';
 import { Space } from './space';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin'
 
 // TODO(burdon): Factor out and share across tests?
 
@@ -62,8 +62,8 @@ export class TestAgent {
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
       }
     });
 

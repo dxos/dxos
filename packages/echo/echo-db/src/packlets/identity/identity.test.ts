@@ -15,8 +15,10 @@ import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { MOCK_CREDENTIAL_AUTHENTICATOR, MOCK_CREDENTIAL_PROVIDER, Space } from '../space';
+import { Space } from '../space';
 import { Identity } from './identity';
+import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
+import { createKeyCredentialSigner } from './credential-signer';
 
 describe('halo/identity', () => {
   test('create', async () => {
@@ -34,7 +36,7 @@ describe('halo/identity', () => {
     const controlFeed = await createFeed();
     const dataFeed = await createFeed();
 
-    const space = new Space({
+    const space: Space = new Space({
       spaceKey,
       genesisFeed: controlFeed,
       controlFeed,
@@ -47,8 +49,8 @@ describe('halo/identity', () => {
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
-        credentialProvider: createDeviceCredentialProvider(),
-        credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
+        credentialProvider: createHaloAuthProvider(createKeyCredentialSigner(keyring, deviceKey)),
+        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
       }
     });
 
@@ -85,7 +87,7 @@ describe('halo/identity', () => {
     await identity.ready();
 
     const identitySigner = identity.getIdentityCredentialSigner();
-    const credential = await identitySigner({
+    const credential = await identitySigner.createCredential({
       subject: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityProfile',

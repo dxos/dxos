@@ -45,6 +45,10 @@ export class Identity {
     });
   }
 
+  get authorizedDeviceKeys () {
+    return this._deviceStateMachine.authorizedDeviceKeys;
+  }
+
   async open () {
     await this._halo.open();
   }
