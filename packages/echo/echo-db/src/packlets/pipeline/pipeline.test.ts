@@ -4,23 +4,22 @@
 
 import { it as test } from 'mocha';
 
-import { createKeyPair } from '@dxos/crypto';
 import { codec, FeedMessage } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Keyring } from '@dxos/keyring';
+import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
-import { Keyring } from '@dxos/keyring';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 
-    const keyring = new Keyring()
+    const keyring = new Keyring();
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
 
     // Remote feeds from other peers.
