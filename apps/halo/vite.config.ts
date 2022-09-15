@@ -21,6 +21,8 @@ export default defineConfig({
       '@dxos/react-client',
       '@dxos/react-components',
       '@dxos/react-toolkit',
+      '@dxos/rpc',
+      '@dxos/rpc-tunnel',
       '@dxos/util'
     ]
   },
