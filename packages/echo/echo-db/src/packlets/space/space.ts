@@ -175,7 +175,7 @@ export class Space {
       }
     }
 
-    // Create backend.
+    // Create database backend.
     {
       const feedWriter = mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
         '@type': 'dxos.echo.feed.EchoEnvelope',
@@ -191,7 +191,7 @@ export class Space {
       );
     }
 
-    // Open pipeline and connect it to the database.
+    // Connect pipeline to the database.
     {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
@@ -210,12 +210,11 @@ export class Space {
           if (payload['@type'] === 'dxos.echo.feed.EchoEnvelope') {
             const feedInfo = this._controlPipeline.partyState.feeds.get(feedKey);
             if (!feedInfo) {
-              log.error('Could not determine feed owner.', { feedKey });
+              log.error('Could not find feed.', { feedKey });
               continue;
             }
 
-            assert(this._databaseBackend);
-            await this._databaseBackend.echoProcessor({
+            await this._databaseBackend!.echoProcessor({
               data: payload,
               meta: {
                 feedKey,
