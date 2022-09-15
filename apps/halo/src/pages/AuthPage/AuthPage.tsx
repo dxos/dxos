@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import React, { useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -13,8 +12,6 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { DXOS, FullScreen } from '@dxos/react-components';
 import { createIframePort } from '@dxos/rpc-tunnel';
-
-debug.enable('*');
 
 // TODO(wittjosiah): Should this be a separate entry point?
 

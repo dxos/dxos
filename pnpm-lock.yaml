@@ -2479,6 +2479,8 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
       '@testing-library/dom': ^8.17.1
@@ -2507,6 +2509,8 @@ importers:
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
