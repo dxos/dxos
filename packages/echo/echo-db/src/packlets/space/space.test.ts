@@ -27,7 +27,7 @@ describe('space/space', () => {
       // Genesis
       const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
-        ...await generator.createGenesis(space.key, controlFeed.key),
+        ...await generator.createSpaceGenesis(space.key, controlFeed.key),
         await generator.createFeedAdmission(
           spaceContext.space.key,
           spaceContext.dataFeed.key,
@@ -84,7 +84,7 @@ describe('space/space', () => {
         // Genesis
         const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
-          ...await generator.createGenesis(space.key, controlFeed.key),
+          ...await generator.createSpaceGenesis(space.key, controlFeed.key),
           await generator.createFeedAdmission(
             spaceContext.space.key,
             spaceContext.dataFeed.key,

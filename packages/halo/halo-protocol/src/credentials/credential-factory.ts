@@ -80,9 +80,9 @@ export class CredentialGenerator {
   ) {}
 
   /**
-   * Create genesis messages for new party.
+   * Create genesis messages for new Space.
    */
-  async createGenesis (
+  async createSpaceGenesis (
     partyKey: PublicKey,
     controlKey: PublicKey
   ): Promise<Credential[]> {

@@ -66,7 +66,7 @@ describe('halo/identity', () => {
     {
       const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
       const credentials = [
-        ...await generator.createGenesis(spaceKey, controlFeed.key),
+        ...await generator.createSpaceGenesis(spaceKey, controlFeed.key),
         await generator.createDeviceAuthorization(deviceKey),
         await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
       ];

@@ -56,7 +56,7 @@ describe('space/control-pipeline', () => {
     //
     {
       const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
-      const credentials = await generator.createGenesis(spaceKey, genesisFeed.key);
+      const credentials = await generator.createSpaceGenesis(spaceKey, genesisFeed.key);
 
       for (const credential of credentials) {
         await controlPipeline.writer?.write({
