@@ -25,9 +25,7 @@ import { FullyConnectedTopology, StarTopology, Topology } from './topology';
 
 const log = debug('dxos:network-manager:test');
 
-// Share context for tests.
-const singletonContext = new MemorySignalManagerContext();
-const createSignalManager = () => new MemorySignalManager(singletonContext);
+const signalContext = new MemorySignalManagerContext();
 
 interface CreatePeerOptions {
   topic: PublicKey
@@ -44,7 +42,7 @@ const createPeer = async ({
   signalHosts,
   ice
 }: CreatePeerOptions) => {
-  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(singletonContext);
+  const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({ signalManager, ice });
   afterTest(() => networkManager.destroy());
@@ -382,7 +380,7 @@ export function inMemoryTests () {
       async run (model: Model, real: Real) {
         model.peers.add(this.peerId);
 
-        const networkManager = new NetworkManager({ signalManager: createSignalManager() });
+        const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
         afterTest(() => networkManager.destroy());
 
         real.peers.set(this.peerId, {
