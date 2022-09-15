@@ -26,7 +26,7 @@ const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () =>
   }), writer);
 };
 
-export interface PipelineState {
+export type PipelineState = {
   readonly currentTimeframeUpdate: Event<Timeframe>
   readonly timeframe: Timeframe
   readonly endTimeframe: Timeframe
@@ -78,7 +78,7 @@ export class Pipeline {
   private readonly _state: PipelineState;
 
   private _writer: FeedWriter<TypedMessage> | undefined = undefined;
-  private _isBeingConsumed = false;
+  private _isOpen = false;
 
   constructor (
     private readonly _initialTimeframe: Timeframe
@@ -87,6 +87,7 @@ export class Pipeline {
       log.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._state = {
       get timeframe () {
@@ -126,15 +127,16 @@ export class Pipeline {
    * Updates the timeframe clock after the message has bee processed.
    */
   async * consume (): AsyncIterable<FeedBlock> {
-    assert(!this._isBeingConsumed, 'Pipeline is already being consumed.');
-    this._isBeingConsumed = true;
+    assert(!this._isOpen, 'Pipeline is already being consumed.');
+    this._isOpen = true;
 
     for await (const block of this._iterator) {
       yield block;
       this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
     }
 
-    this._isBeingConsumed = false;
+    // TODO(burdon): Test re-entrant?
+    this._isOpen = false;
   }
 
   async stop () {
