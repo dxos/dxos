@@ -47,7 +47,7 @@ describe('halo/identity', () => {
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
-        credentialProvider: MOCK_CREDENTIAL_PROVIDER,
+        credentialProvider: createDeviceCredentialProvider(),
         credentialAuthenticator: MOCK_CREDENTIAL_AUTHENTICATOR
       }
     });
