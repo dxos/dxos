@@ -35,17 +35,13 @@ export const AuthPage = () => {
   }, [origin]);
 
   const handleLogin = useCallback(async () => {
-    console.log({ remoteClient });
     if (!remoteClient) {
       return;
     }
 
     const invitation = await client.halo.createInvitation();
-    console.log({ invitation });
     const acceptedInvitation = await remoteClient.halo.acceptInvitation(invitation.descriptor);
-    console.log({ acceptedInvitation });
     await acceptedInvitation.authenticate(invitation.secret);
-    console.log('accepted');
   }, [remoteClient]);
 
   return (
