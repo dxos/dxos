@@ -21,7 +21,7 @@ interface OfferRecord {
   resolve: (answer: Answer) => void
   reject: (error?: Error) => void
 }
-//
+
 interface MessageRouterOptions {
   sendMessage?: (params: {
     author: PublicKey
