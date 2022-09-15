@@ -29,7 +29,7 @@ export abstract class BaseCommand extends Command {
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
       default: async (context: any) => {
-        return path.join(context.config.configDir, 'config.json');
+        return path.join(context.config.configDir, 'config.yml');
       }
     }),
 
