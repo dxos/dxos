@@ -4,6 +4,7 @@ import { PublicKey } from "@dxos/protocols";
 import { ComplexSet } from "@dxos/util";
 import { AuthProvider, AuthVerifier } from "../space/auth-plugin";
 import { CredentialSigner } from "./credential-signer";
+import { log } from '@dxos/log'
 
 export const createHaloAuthProvider = (signer: CredentialSigner): AuthProvider => async nonce => {
   const credential = await signer.createCredential({
@@ -17,14 +18,25 @@ export const createHaloAuthProvider = (signer: CredentialSigner): AuthProvider =
   return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential)
 }
 
-export const createHaloAuthVerifier = (getDeviceSet: () => ComplexSet<PublicKey>): AuthVerifier => async auth => {
+export const createHaloAuthVerifier = (getDeviceSet: () => ComplexSet<PublicKey>): AuthVerifier => async (nonce, auth) => {
   const credential = schema.getCodecForType('dxos.halo.credentials.Credential').decode(auth)
   const deviceSet = getDeviceSet()
 
   const result = await verifyCredential(credential)
   if (result.kind === 'fail') {
+    log(`Invalid credential`, { result })
     return false;
   }
 
-  return deviceSet.has(credential.issuer)
+  if(!credential.proof.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
+    log(`Invalid nonce`, { nonce, credential })
+    return false;
+  }
+
+  if(!deviceSet.has(credential.issuer)) {
+    log(`Device not in allowed set`)
+    return false;
+  }
+
+  return true;
 }

@@ -23,8 +23,10 @@ export const createKeyCredentialSigner = (signer: Signer, key: PublicKey): Crede
     issuer: key,
     keyring: signer,
 
+    subject: params.subject,
     assertion: params.assertion as any,
-    subject: params.subject
+    
+    nonce: params.nonce,
   }),
 })
 
@@ -39,7 +41,9 @@ export const createChainCredentialSigner = (signer: Signer, chain: Chain, signin
     signingKey,
     chain,
 
+    subject: params.subject,
     assertion: params.assertion as any,
-    subject: params.subject
+
+    nonce: params.nonce,
   })
 })

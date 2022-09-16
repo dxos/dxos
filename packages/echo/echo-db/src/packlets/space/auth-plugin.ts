@@ -57,59 +57,70 @@ export class AuthPlugin {
    */
   // TODO(telackey): Supply further background/detail and correct anything incorrect above.
   private async _onHandshake (protocol: Protocol /* code , context */) { // TODO(burdon): ???
-    assert(protocol);
+    try {
+      assert(protocol);
 
-    // Obtain the credentials from the session.
-    // At this point credentials is protobuf encoded and base64-encoded.
-    // Note `protocol.session.credentials` is our data.
-    const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
+      // Obtain the credentials from the session.
+      // At this point credentials is protobuf encoded and base64-encoded.
+      // Note `protocol.session.credentials` is our data.
+      const { credentials, peerId: sessionPeerId } = protocol?.getSession() ?? {};
 
-    log('Handshake', { credentials, sessionPeerId });
+      log('Handshake', { credentials, sessionPeerId });
 
-    if (!credentials) {
-      // If we only require auth when certain extensions are active, check if those are present.
-      if (this._requiredForExtensions.size) {
-        let authRequired = false;
-        for (const name of protocol.stream.remoteExtensions.names) {
-          if (this._requiredForExtensions.has(name)) {
-            log(`Auth required for extension: ${name}`);
-            authRequired = true;
-            break;
+      if (!credentials) {
+        // If we only require auth when certain extensions are active, check if those are present.
+        if (this._requiredForExtensions.size) {
+          let authRequired = false;
+          for (const name of protocol.stream.remoteExtensions.names) {
+            if (this._requiredForExtensions.has(name)) {
+              log(`Auth required for extension: ${name}`);
+              authRequired = true;
+              break;
+            }
+          }
+
+          /* We can allow the unauthenticated connection, because none of the extensions which
+          * require authentication to use are active on this connection.
+          */
+          if (!authRequired) {
+            log(`Unauthenticated access allowed for ${sessionPeerId}; no extensions which require authentication are active on remote Protocol.`);
+            return;
           }
         }
 
-        /* We can allow the unauthenticated connection, because none of the extensions which
-         * require authentication to use are active on this connection.
-         */
-        if (!authRequired) {
-          log(`Unauthenticated access allowed for ${sessionPeerId}; no extensions which require authentication are active on remote Protocol.`);
-          return;
-        }
+        log(`No credentials provided; dropping connection`, { sessionPeerId });
+        this.authenticationFailed.emit();
+        protocol.stream.destroy();
+        throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: no credentials.');
       }
 
-      this.authenticationFailed.emit();
-      protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: no credentials.');
+      // Challenges are not currently supported.
+      const nonce = Buffer.from('');
+
+      const credentialsBuf = Buffer.from(credentials, 'base64');
+
+      const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(nonce, credentialsBuf);
+
+      // Ask the Authenticator if this checks out.
+      if (!isAuthenticated) {
+        log(`Unauthenticated access denied`, { sessionPeerId });
+
+        this.authenticationFailed.emit();
+        protocol.stream.destroy();
+        throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: bad credentials.');
+      }
+
+      log(`Authenticated access granted`, { sessionPeerId });
+
+      // Success!
+      // log(`Authenticated peer: ${credsPeerId.toHex()}`);
+      /* TODO(dboreham): Should this be a callback rather than an event, or communicated some other way to
+      *   code that needs to know about auth success events?
+      */
+      // this.emit('authenticated', credsPeerId.asBuffer());
+    } catch (err: any) {
+      log.catch(err);
+      throw err;
     }
-
-    // Challenges are not currently supported.
-    const nonce = Buffer.from('');
-
-    const credentialsBuf = Buffer.from(credentials, 'base64');
-    const isAuthenticated = await this._swarmIdentity.credentialAuthenticator(nonce, credentialsBuf);
-
-    // Ask the Authenticator if this checks out.
-    if (!isAuthenticated) {
-      this.authenticationFailed.emit();
-      protocol.stream.destroy();
-      throw new ERR_EXTENSION_RESPONSE_FAILED(EXTENSION_NAME, 'ERR_AUTH_REJECTED', 'Authentication rejected: bad credentials.');
-    }
-
-    // Success!
-    // log(`Authenticated peer: ${credsPeerId.toHex()}`);
-    /* TODO(dboreham): Should this be a callback rather than an event, or communicated some other way to
-     *   code that needs to know about auth success events?
-     */
-    // this.emit('authenticated', credsPeerId.asBuffer());
   }
 }

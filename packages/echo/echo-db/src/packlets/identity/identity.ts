@@ -20,8 +20,8 @@ export type IdentityParams = {
 }
 
 export class Identity {
-  private readonly _identityKey: PublicKey;
-  private readonly _deviceKey: PublicKey;
+  public readonly identityKey: PublicKey;
+  public readonly deviceKey: PublicKey;
   private readonly _signer: Signer;
   private readonly _halo: Space;
   private readonly _deviceStateMachine: DeviceStateMachine;
@@ -32,11 +32,11 @@ export class Identity {
     signer,
     space
   }: IdentityParams) {
-    this._identityKey = identityKey;
-    this._deviceKey = deviceKey;
+    this.identityKey = identityKey;
+    this.deviceKey = deviceKey;
     this._signer = signer;
     this._halo = space; // TODO(burdon): Rename space.
-    this._deviceStateMachine = new DeviceStateMachine(this._identityKey, this._deviceKey)
+    this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey)
 
     // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
@@ -65,7 +65,7 @@ export class Identity {
    * Issues credentials as device.
    */
   getDeviceCredentialSigner (): CredentialSigner {
-    return createKeyCredentialSigner(this._signer, this._deviceKey);
+    return createKeyCredentialSigner(this._signer, this.deviceKey);
   }
 
   /**
@@ -74,7 +74,7 @@ export class Identity {
    */
   getIdentityCredentialSigner (): CredentialSigner {
     assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
-    return createChainCredentialSigner(this._signer, this._deviceStateMachine.deviceCredentialChain, this._deviceKey);
+    return createChainCredentialSigner(this._signer, this._deviceStateMachine.deviceCredentialChain, this.deviceKey);
   }
 
   get controlMessageWriter () {
