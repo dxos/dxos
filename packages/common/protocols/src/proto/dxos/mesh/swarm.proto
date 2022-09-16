@@ -6,9 +6,9 @@ syntax = "proto3";
 
 import "../halo/keys.proto";
 
-// 
-// swarm - peer to peer networking that uses signal and messaging.
-// 
+/// 
+/// swarm - peer to peer networking that uses signal and messaging.
+/// 
 package dxos.mesh.swarm;
 
 message SwarmMessage {
@@ -27,7 +27,6 @@ message MessageData {
     Offer offer = 1;
     Answer answer = 2;
     Signal signal = 3;
-    Acknowledgement ack = 4;
   }
 }
 
@@ -42,9 +41,4 @@ message Answer {
 
 message Signal {
   string json = 1;
-}
-
-message Acknowledgement {
-  // MessageId of the Message being acknowledged.
-  PubKey messageId = 1;
 }

@@ -136,21 +136,24 @@ describe('Messenger', () => {
     } = await setup();
 
     // Subscribe first listener for second messenger.
-    const onMessage1 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage1 =
+      mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example1',
       onMessage: onMessage1
     });
 
     // Subscribe first listener for second messenger.
-    const onMessage2 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage2 =
+      mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example1',
       onMessage: onMessage2
     });
 
     // Subscribe third listener for second messenger.
-    const onMessage3 = mockFn<(message: Message) => Promise<void>>().resolvesTo();
+    const onMessage3 =
+      mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
       payloadType: 'dxos.Example2',
       onMessage: onMessage3
@@ -238,5 +241,114 @@ describe('Messenger', () => {
         expect(messages2.length).toEqual(1);
       }, 3_000);
     }
+  });
+
+  describe('Reliability', () => {
+    interface SendMessageArgs {
+      author: PublicKey
+      recipient: PublicKey
+      payload: Any
+    }
+
+    const setup = async ({
+      // Imitates signal network disruptions (e. g. message doubling, ).
+      messageDisruption = (data) => [data]
+    }: {
+      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[]
+    } = {}) => {
+      const received: Message[] = [];
+      const onMessage = async (message: Message) => {
+        received.push(message);
+      };
+
+      const peerId = PublicKey.random();
+
+      const signalManager = new WebsocketSignalManager([broker.url()]);
+      await signalManager.subscribeMessages(peerId);
+      const trueSend = signalManager.sendMessage.bind(signalManager);
+      signalManager.sendMessage = async (message) => {
+        for (const msg of messageDisruption(message)) {
+          await trueSend(msg);
+        }
+      };
+      afterTest(() => signalManager.destroy());
+
+      const messenger = new Messenger({
+        signalManager
+      });
+
+      await messenger.listen({ onMessage });
+
+      return {
+        messenger,
+        peerId,
+        received
+      };
+    };
+
+    it('message with non reliable connection', async () => {
+      // Simulate unreliable connection.
+      // Only each 3rd message is sent.
+      let i = 0;
+      const unreliableConnection = (
+        data: SendMessageArgs
+      ): SendMessageArgs[] => {
+        i++;
+        if (i % 3 !== 0) {
+          return [data];
+        }
+        return [];
+      };
+
+      const { peerId: peerId1, received: received1 } = await setup();
+
+      const { messenger: messenger2, peerId: peerId2 } = await setup({
+        messageDisruption: unreliableConnection
+      });
+
+      // Sending 3 messages.
+      // Setup sends messages directly to between. So we don`t need to specify any ids.
+      Array(3)
+        .fill(0)
+        .forEach(async () => {
+          await messenger2.sendMessage({
+            author: peerId2,
+            recipient: peerId1,
+            payload: {
+              type_url: 'dxos.Example',
+              value: Buffer.from('0')
+            }
+          });
+        });
+      // expect to receive 3 messages.
+      await waitForExpect(() => {
+        expect(received1.length).toEqual(3);
+      }, 4_000);
+    }).timeout(5_000);
+
+    it('ignoring doubled messages', async () => {
+      // Message got doubled going through signal network.
+      const doublingMessage = (data: SendMessageArgs) => [data, data];
+
+      const { peerId: peerId1, received: received1 } = await setup();
+
+      const { messenger: messenger2, peerId: peerId2 } = await setup({
+        messageDisruption: doublingMessage
+      });
+
+      // sending message.
+      await messenger2.sendMessage({
+        author: peerId2,
+        recipient: peerId1,
+        payload: {
+          type_url: 'dxos.Example',
+          value: Buffer.from('0')
+        }
+      });
+      // expect to receive 1 message.
+      await waitForExpect(() => {
+        expect(received1.length).toEqual(1);
+      }, 4_000);
+    }).timeout(5_000);
   });
 });
