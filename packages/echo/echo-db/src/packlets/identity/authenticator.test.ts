@@ -6,7 +6,7 @@ import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createKeyCredentialSigner } from '@dxos/halo-protocol';
+import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { ComplexSet } from '@dxos/util';
 
@@ -16,7 +16,7 @@ describe('identity/authenticator', () => {
   test('verifies credentials', async () => {
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
-    const signer = createKeyCredentialSigner(keyring, deviceKey);
+    const signer = createCredentialSignerWithKey(keyring, deviceKey);
     const authProvider = createHaloAuthProvider(signer);
     const authVerifier = createHaloAuthVerifier(() => new ComplexSet(x => x.toHex(), [deviceKey]));
 
