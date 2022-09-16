@@ -11,8 +11,6 @@ import { it as test } from 'mocha'
 import expect from 'expect'
 
 describe('identity/identity-manager', () => {
-
-  
   const setup = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM }),
@@ -36,7 +34,7 @@ describe('identity/identity-manager', () => {
     )
   }
 
-  test('creates identity', async () => {
+  test.only('creates identity', async () => {
     const identityManager = await setup()
     await identityManager.open()
     afterTest(() => identityManager.close())
