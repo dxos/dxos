@@ -13,25 +13,25 @@ const log = debug('dxos:rpc-tunnel:worker-port');
 const createPort = (outgoing: string, incoming: string) => (messagePort: MessagePort): RpcPort => ({
   send: async message => {
     // Based on https://stackoverflow.com/a/54646864/2804332.
-    const data = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
+    const payload = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
     messagePort.postMessage(
       {
-        type: outgoing,
-        data
+        source: outgoing,
+        payload
       },
-      [data]
+      [payload]
     );
   },
   subscribe: callback => {
     console.log('subscribe', { outgoing, incoming });
     const handler = (event: MessageEvent<MessageData>) => {
       const message = event.data;
-      if (message.type !== incoming) {
+      if (message.source !== incoming) {
         return;
       }
 
       log(`Recieved message from ${incoming}:`, message);
-      callback(new Uint8Array(message.data));
+      callback(new Uint8Array(message.payload));
     };
 
     messagePort.onmessage = handler;

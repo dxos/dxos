@@ -1,6 +1,6 @@
 # @dxos/rpc-worker-proxy
 
-Note: not yet stable.
+Note: deprecated, migrating to `@dxos/rpc-tunnel`.
 
 Initially concieved to solve the following problem: https://github.com/dxos/protocols/issues/1413.
 

@@ -54,7 +54,7 @@ const App = ({ messagePort }: { messagePort: MessagePort }) => {
   );
 };
 
-if (typeof Worker !== 'undefined') {
+if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
     worker.port.start();
@@ -66,5 +66,5 @@ if (typeof Worker !== 'undefined') {
     );
   })();
 } else {
-  throw new Error('Requires a browser with support for workers.');
+  throw new Error('Requires a browser with support for shared workers.');
 }
