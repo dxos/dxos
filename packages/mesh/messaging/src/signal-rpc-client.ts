@@ -80,7 +80,7 @@ export class SignalRPCClient {
   }
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
-    log('join', topic, peerId);
+    log('join', { topic, peerId });
     await this._connectTrigger.wait();
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
@@ -100,7 +100,7 @@ export class SignalRPCClient {
   }
 
   async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
-    log('sendMessage', author, recipient, payload);
+    log('sendMessage', { author, recipient, payload });
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),

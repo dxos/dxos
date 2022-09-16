@@ -78,7 +78,7 @@ export class Messenger {
     const cancelRetry = exponentialBackoffInterval(async () => {
       log(`Retrying message ${reliablePayload.messageId}`);
       try {
-        await this._sendAndEncode({
+        await this._encodeAndSend({
           author,
           recipient,
           reliablePayload
@@ -106,7 +106,7 @@ export class Messenger {
       clearTimeout(timeout);
     });
 
-    await this._sendAndEncode({ author, recipient, reliablePayload });
+    await this._encodeAndSend({ author, recipient, reliablePayload });
   }
 
   /**
@@ -141,7 +141,7 @@ export class Messenger {
     };
   }
 
-  private async _sendAndEncode ({
+  private async _encodeAndSend ({
     author,
     recipient,
     reliablePayload
