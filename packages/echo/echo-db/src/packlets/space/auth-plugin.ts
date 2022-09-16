@@ -119,7 +119,7 @@ export class AuthPlugin {
       */
       // this.emit('authenticated', credsPeerId.asBuffer());
     } catch (err: any) {
-      log.catch(err);
+      log(err);
       throw err;
     }
   }

@@ -101,7 +101,7 @@ describe('halo/identity', () => {
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
   });
 
-  test.only('two devices', async () => {
+  test('two devices', async () => {
     const signalContext = new MemorySignalManagerContext()
 
     let spaceKey: PublicKey
