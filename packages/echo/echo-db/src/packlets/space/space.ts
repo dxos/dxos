@@ -3,11 +3,11 @@
 //
 
 import assert from 'assert';
-import { PipelineState } from 'packages/echo/echo-db/src/packlets/pipeline/pipeline';
+import { PipelineAccessor } from 'packages/echo/echo-db/src/packlets/pipeline/pipeline';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoEnvelope, FeedWriter, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
+import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { AdmittedFeed, Credential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
@@ -33,15 +33,6 @@ export type SpaceParams = {
   networkManager: NetworkManager
   networkPlugins: Plugin[]
   swarmIdentity: SwarmIdentity
-}
-
-type SpaceAspects = {
-  writer: FeedWriter<TypedMessage>
-  state: PipelineState
-}
-
-interface SpacePlugin {
-  start (aspects: SpaceAspects): void
 }
 
 /**
@@ -131,13 +122,11 @@ export class Space {
     return this._database;
   }
 
-  // TODO(burdon): Expose control pipeline sub-interface?
-  get controlMessageWriter () {
-    return this._controlPipeline.writer;
-  }
-
-  get controlPipelineState () {
-    return this._controlPipeline.pipelineState;
+  /**
+   * @debug-only
+   */
+  get controlPipeline (): PipelineAccessor {
+    return this._controlPipeline.pipeline;
   }
 
   @synchronized

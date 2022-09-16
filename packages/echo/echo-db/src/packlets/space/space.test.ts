@@ -36,14 +36,14 @@ describe('space/space', () => {
       ];
 
       for (const credential of credentials) {
-        await space.controlMessageWriter?.write({
+        await space.controlPipeline.writer?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
       }
 
       // TODO(burdon): Don't expose.
-      await space.controlPipelineState!.waitUntilReached(space.controlPipelineState!.endTimeframe);
+      await space.controlPipeline.state!.waitUntilReached(space.controlPipeline.state!.endTimeframe);
     }
 
     {
@@ -93,13 +93,13 @@ describe('space/space', () => {
         ];
 
         for (const credential of credentials) {
-          await space.controlMessageWriter?.write({
+          await space.controlPipeline.writer?.write({
             '@type': 'dxos.echo.feed.CredentialsMessage',
             credential
           });
         }
 
-        await space.controlPipelineState!.waitUntilReached(space.controlPipelineState!.endTimeframe);
+        await space.controlPipeline.state!.waitUntilReached(space.controlPipeline.state!.endTimeframe);
       }
 
       return [agent, spaceContext];
@@ -137,7 +137,7 @@ describe('space/space', () => {
       );
 
       for (const credential of credentials) {
-        await spaceContext1.space.controlMessageWriter?.write({
+        await spaceContext1.space.controlPipeline.writer?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
@@ -148,12 +148,12 @@ describe('space/space', () => {
       // Initial data exchange.
 
       // Agent 1 reads all feed messages.
-      await spaceContext1.space.controlPipelineState!.waitUntilReached(
-        spaceContext1.space.controlPipelineState!.endTimeframe);
+      await spaceContext1.space.controlPipeline.state!.waitUntilReached(
+        spaceContext1.space.controlPipeline.state!.endTimeframe);
 
       // Agent 2 reads all feed messages.
-      await spaceContext2.space.controlPipelineState!.waitUntilReached(
-        spaceContext1.space.controlPipelineState!.endTimeframe);
+      await spaceContext2.space.controlPipeline.state!.waitUntilReached(
+        spaceContext1.space.controlPipeline.state!.endTimeframe);
     }
 
     // TODO(burdon): Write multiple items.

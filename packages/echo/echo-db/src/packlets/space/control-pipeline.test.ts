@@ -59,19 +59,19 @@ describe('space/control-pipeline', () => {
       const credentials = await generator.createSpaceGenesis(spaceKey, genesisFeed.key);
 
       for (const credential of credentials) {
-        await controlPipeline.writer?.write({
+        await controlPipeline.pipeline.writer?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
       }
 
-      await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
     // New control feed.
     const controlFeed2 = await createFeed();
-    await controlPipeline.writer!.write({
+    await controlPipeline.pipeline.writer!.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await createCredential({
         issuer: identityKey,
@@ -87,12 +87,12 @@ describe('space/control-pipeline', () => {
       })
     });
 
-    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
 
     // New data feed.
     const dataFeed1 = await createFeed();
-    await controlPipeline.writer!.write({
+    await controlPipeline.pipeline.writer!.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await createCredential({
         issuer: identityKey,
@@ -108,7 +108,7 @@ describe('space/control-pipeline', () => {
       })
     });
 
-    await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+    await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
     expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
@@ -134,7 +134,7 @@ describe('space/control-pipeline', () => {
       });
 
       // TODO(dmaretskyi): Count ignored messages.
-      await controlPipeline.pipelineState.waitUntilReached(controlPipeline.pipelineState.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
   });

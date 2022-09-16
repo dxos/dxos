@@ -11,7 +11,6 @@ import { PublicKey } from '@dxos/protocols';
 import { Space } from '../space';
 import { createChainCredentialSigner, createKeyCredentialSigner, CredentialSigner } from './credential-signer';
 
-
 export type IdentityParams = {
   identityKey: PublicKey
   deviceKey: PublicKey
@@ -36,7 +35,7 @@ export class Identity {
     this._deviceKey = deviceKey;
     this._signer = signer;
     this._halo = space; // TODO(burdon): Rename space.
-    this._deviceStateMachine = new DeviceStateMachine(this._identityKey, this._deviceKey)
+    this._deviceStateMachine = new DeviceStateMachine(this._identityKey, this._deviceKey);
 
     // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
@@ -49,6 +48,13 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
+  /**
+   * @debug-only
+   */
+  get controlPipeline () {
+    return this._halo.controlPipeline;
+  }
+
   async open () {
     await this._halo.open();
   }
@@ -57,7 +63,7 @@ export class Identity {
     await this._halo.close();
   }
 
-  async ready() {
+  async ready () {
     await this._deviceStateMachine.deviceChainReady.wait();
   }
 
@@ -75,13 +81,5 @@ export class Identity {
   getIdentityCredentialSigner (): CredentialSigner {
     assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
     return createChainCredentialSigner(this._signer, this._deviceStateMachine.deviceCredentialChain, this._deviceKey);
-  }
-
-  get controlMessageWriter () {
-    return this._halo.controlMessageWriter;``
-  }
-
-  get controlPipelineState () {
-    return this._halo.controlPipelineState;
   }
 }

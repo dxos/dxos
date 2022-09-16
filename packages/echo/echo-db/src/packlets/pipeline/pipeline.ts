@@ -27,11 +27,16 @@ const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () =>
 };
 
 export type PipelineState = {
-  readonly currentTimeframeUpdate: Event<Timeframe>
+  readonly timeframeUpdate: Event<Timeframe>
   readonly timeframe: Timeframe
   readonly endTimeframe: Timeframe
 
   waitUntilReached: (target: Timeframe) => Promise<void>
+}
+
+export interface PipelineAccessor {
+  state: PipelineState
+  writer: FeedWriter<TypedMessage> | undefined
 }
 
 /**
@@ -66,7 +71,7 @@ export type PipelineState = {
  * 4. Generate the writable feed key.
  * 5. Wait for the writable feed to be added.
  */
-export class Pipeline {
+export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
   private readonly _iterator = new FeedStoreIterator(
@@ -77,7 +82,7 @@ export class Pipeline {
 
   private readonly _state: PipelineState;
 
-  private _writer: FeedWriter<TypedMessage> | undefined = undefined;
+  private _writer: FeedWriter<TypedMessage> | undefined;
   private _isOpen = false;
 
   constructor (
@@ -96,18 +101,18 @@ export class Pipeline {
       get endTimeframe () {
         return self._iterator.getEndTimeframe();
       },
-      currentTimeframeUpdate: this._timeframeClock.update,
+      timeframeUpdate: this._timeframeClock.update,
       waitUntilReached: async (target) => {
         await self._timeframeClock.waitUntilReached(target);
       }
     };
   }
 
-  get state (): PipelineState {
+  get state () {
     return this._state;
   }
 
-  get writer (): FeedWriter<TypedMessage> | undefined {
+  get writer () {
     return this._writer;
   }
 

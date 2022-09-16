@@ -16,9 +16,9 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { Space } from '../space';
-import { Identity } from './identity';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { createKeyCredentialSigner } from './credential-signer';
+import { Identity } from './identity';
 
 describe('halo/identity', () => {
   test('create', async () => {
@@ -50,7 +50,7 @@ describe('halo/identity', () => {
       swarmIdentity: {
         peerKey: identityKey,
         credentialProvider: createHaloAuthProvider(createKeyCredentialSigner(keyring, deviceKey)),
-        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
+        credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
       }
     });
 
@@ -76,7 +76,7 @@ describe('halo/identity', () => {
       ];
 
       for (const credential of credentials) {
-        await identity.controlMessageWriter?.write({
+        await identity.controlPipeline.writer?.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });

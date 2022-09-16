@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { Pipeline } from '../pipeline';
+import { Pipeline, PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey
@@ -56,16 +56,12 @@ export class ControlPipeline {
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
   }
 
-  get writer () {
-    return this._pipeline.writer;
-  }
-
-  get pipelineState () {
-    return this._pipeline.state;
-  }
-
   get partyState (): PartyState {
     return this._partyStateMachine;
+  }
+
+  get pipeline (): PipelineAccessor {
+    return this._pipeline;
   }
 
   setWriteFeed (feed: FeedDescriptor) {

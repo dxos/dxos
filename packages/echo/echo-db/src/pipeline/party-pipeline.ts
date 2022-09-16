@@ -109,7 +109,7 @@ export class PartyPipeline {
 
   get timeframeUpdate () {
     assert(this._pipeline, 'Party not open.');
-    return this._pipeline.state.currentTimeframeUpdate;
+    return this._pipeline.state.timeframeUpdate;
   }
 
   async getWriteFeed () {
@@ -204,7 +204,7 @@ export class PartyPipeline {
     if (this._options.snapshots) {
       createAutomaticSnapshots(
         this, // TODO(burdon): Don't pass `this`.
-        this._pipeline.state.currentTimeframeUpdate,
+        this._pipeline.state.timeframeUpdate,
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
       );
