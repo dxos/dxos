@@ -129,7 +129,11 @@ export abstract class BaseCommand extends Command {
       assert(wsEndpoint);
 
       const rpc = new PublisherRpcPeer(wsEndpoint);
-      await rpc.connected.waitForCount(1);
+
+      await Promise.race([
+        rpc.connected.waitForCount(1),
+        rpc.error.waitForCount(1).then(err => Promise.reject(err))
+      ]);
 
       const value = await callback(rpc);
 

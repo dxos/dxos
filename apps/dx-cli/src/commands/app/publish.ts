@@ -42,11 +42,11 @@ export default class Publish extends BaseCommand {
 
       return await this.execWithPublisher(async (rpc: PublisherRpcPeer) => {
         await rpc.rpc.publish({ package: moduleConfig.values.package! });
-        verbose && this.log('Deployed');
+        verbose && this.log('Published to KUBE.');
       });
     } catch (err: any) {
-      // TODO(egorgripasov): Thrown errors are not caught properly.
-      this.error(err);
+      this.log(`Unable to publish: ${err.message}`);
+      this.error(err, { exit: 1 });
     }
   }
 }

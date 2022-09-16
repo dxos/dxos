@@ -14,10 +14,15 @@ export default class List extends BaseCommand {
 
   async run (): Promise<any> {
     const { flags } = await this.parse(List);
-    return await this.execWithPublisher(async (rpc: PublisherRpcPeer) => {
-      const listResponse = await rpc.rpc.list();
-      assert(listResponse.modules!, 'Unable to list deploymemts.');
-      printModules(listResponse.modules!, flags);
-    });
+    try {
+      return await this.execWithPublisher(async (rpc: PublisherRpcPeer) => {
+        const listResponse = await rpc.rpc.list();
+        assert(listResponse.modules!, 'Unable to list deploymemts.');
+        printModules(listResponse.modules!, flags);
+      });
+    } catch (err: any) {
+      this.log(`Unable to list: ${err.message}`);
+      this.error(err, { exit: 1 });
+    }
   }
 }
