@@ -7,7 +7,13 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredentialSignerWithKey, AdmittedFeed, CredentialGenerator, verifyCredential } from '@dxos/halo-protocol';
+import {
+  createCredentialMessage,
+  createCredentialSignerWithKey,
+  verifyCredential,
+  AdmittedFeed,
+  CredentialGenerator
+} from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -167,10 +173,7 @@ describe('halo/identity', () => {
         ];
 
         for (const credential of credentials) {
-          await identity.controlPipeline.writer.write({
-            '@type': 'dxos.echo.feed.CredentialsMessage',
-            credential
-          });
+          await identity.controlPipeline.writer.write(createCredentialMessage(credential));
         }
       }
 
@@ -227,10 +230,10 @@ describe('halo/identity', () => {
     // Second device admission
     //
     {
-      // TODO(burdon): Use credentials factory.
+      const signer = identity1.getIdentityCredentialSigner();
       void identity1.controlPipeline.writer.write({
         '@type': 'dxos.echo.feed.CredentialsMessage',
-        credential: await identity1.getIdentityCredentialSigner().createCredential({
+        credential: await signer.createCredential({
           subject: identity2.deviceKey,
           assertion: {
             '@type': 'dxos.halo.credentials.AuthorizedDevice',

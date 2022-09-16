@@ -77,7 +77,8 @@ export const createCredential = async ({
   return credential;
 };
 
-export const createCredentialMessage = (credential: Credential) => {
+// TODO(burdon): Use consistently.
+export const createCredentialMessage = (credential: Credential): TypedMessage => {
   return {
     '@type': 'dxos.echo.feed.CredentialsMessage',
     credential

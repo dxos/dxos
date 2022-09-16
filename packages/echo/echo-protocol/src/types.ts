@@ -22,7 +22,7 @@ export type SwarmKey = Uint8Array;
 // Feed.
 //
 
-export type FeedKey = PublicKey;
+export type FeedKey = PublicKey
 
 export type FeedMeta = {
   feedKey: FeedKey
@@ -72,7 +72,14 @@ export interface IEchoStream {
 }
 
 //
-// Item.
+// Messages
+//
+
+// TODO(burdon): Conflict with halo-protocol MessageType.
+export type TypedMessage = TypedProtoMessage<TYPES>
+
+//
+// Item
 //
 
 // TODO(burdon): Change to Buffer.
@@ -81,17 +88,16 @@ export type ItemID = string;
 export type ItemType = string;
 
 //
-// Party.
+// Party
 //
 
+// TODO(burdon): Spacekey.
 // TODO(burdon): How does this map into IPLD? And DXN?
 // https://ipld.io
 export type PartyKey = PublicKey;
 
 //
-// Identity.
+// Identity
 //
 
 export type IdentityKey = PublicKey;
-
-export type TypedMessage = TypedProtoMessage<TYPES>
