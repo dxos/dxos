@@ -4,7 +4,7 @@
 
 // Test/mock Protocol implementation used in network-manager tests.
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
@@ -12,8 +12,6 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { protocolFactory } from '../protocol-factory';
-
-const log = debug('dxos:network-manager:test');
 
 const EXTENSION_NAME = 'test';
 

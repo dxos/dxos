@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
@@ -31,8 +31,6 @@ export interface NetworkManagerOptions {
    */
   log?: boolean
 }
-
-const log = debug('dxos:network-manager');
 
 /**
  * Manages connection to the swarm.

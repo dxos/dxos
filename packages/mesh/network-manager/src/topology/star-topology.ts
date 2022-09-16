@@ -2,14 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
-
-const log = debug('dxos:network-manager:topology:star');
 
 export class StarTopology implements Topology {
   private _controller?: SwarmController;

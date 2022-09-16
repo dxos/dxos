@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import expect from 'expect';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
@@ -22,8 +22,6 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-
-const log = debug('dxos:network-manager:test');
 
 const signalContext = new MemorySignalManagerContext();
 

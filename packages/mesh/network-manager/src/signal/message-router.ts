@@ -3,7 +3,7 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
+import { log } from '@dxos/log';
 
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';

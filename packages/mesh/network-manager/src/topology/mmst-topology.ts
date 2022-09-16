@@ -2,15 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import assert from 'node:assert';
 import distance from 'xor-distance';
 
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
-
-const log = debug('dxos:network-manager:topology:mmst-topology');
 
 export interface MMSTTopologyOptions {
   /**

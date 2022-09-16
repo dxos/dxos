@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 
 import { Event } from '@dxos/async';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
@@ -27,8 +27,6 @@ export interface PeerInfo {
 }
 
 type Unsubscribe = () => void;
-
-const log = debug('dxos:network-manager:swarm-mapper');
 
 export class SwarmMapper {
   private readonly _subscriptions = new SubscriptionGroup();

@@ -32,7 +32,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@types/debug": "^4.1.7",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "earljs": "~0.1.10",

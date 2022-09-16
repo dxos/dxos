@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import { expect, mockFn } from 'earljs';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
@@ -17,8 +17,6 @@ import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
-
-const log = debug('dxos:network-manager:swarm:test');
 
 describe('Swarm', () => {
   class MockSignalConnection implements SignalMessaging {

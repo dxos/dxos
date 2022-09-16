@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
+import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
@@ -20,8 +20,6 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
-
-const log = debug('dxos:network-manager:swarm');
 
 /**
  * A single peer's view of the swarm.
