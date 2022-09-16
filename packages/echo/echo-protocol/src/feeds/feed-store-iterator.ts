@@ -99,13 +99,13 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
     return this._generatorInstance;
   }
 
-  getEndTimeframe() {
+  getEndTimeframe () {
     this._reevaluateFeeds();
 
     return new Timeframe(
       Array.from(this._openFeeds.values())
-      .filter(feed => feed.descriptor.feed.length > 0)
-      .map(feed => [feed.descriptor.key, feed.descriptor.feed.length - 1])
+        .filter(feed => feed.descriptor.feed.length > 0)
+        .map(feed => [feed.descriptor.key, feed.descriptor.feed.length - 1])
     );
   }
 
@@ -193,10 +193,10 @@ export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
         feed.iterator.next()
           .then(result => {
             assert(!result.done);
-            for(const block of result.value) {
+            for (const block of result.value) {
               feed.sendQueue.push({
                 ...block,
-                key: feed.descriptor.key,
+                key: feed.descriptor.key
               });
             }
             this._trigger.wake();

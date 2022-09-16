@@ -150,6 +150,7 @@ const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;
   }
+
   return {
     encode: (x: any) => Buffer.from(encoding.encode(x)),
     decode: encoding.decode.bind(encoding)
