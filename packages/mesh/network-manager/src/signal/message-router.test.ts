@@ -67,7 +67,7 @@ describe('MessageRouter', () => {
     };
   };
 
-  test.only('signaling between 2 clients', async () => {
+  test('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
