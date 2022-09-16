@@ -1,18 +1,26 @@
-import { PublicKey } from "@dxos/protocols";
-import { ComplexSet } from "@dxos/util";
-import { Chain, Credential } from "../proto";
-import { log } from '@dxos/log'
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from "../credentials";
-import { Trigger } from "@dxos/async";
+//
+// Copyright 2022 DXOS.org
+//
 
+import { Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexSet } from '@dxos/util';
+
+import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { Chain, Credential } from '../proto';
+
+/**
+ * Processes device invitation credentials.
+ */
 export class DeviceStateMachine {
   public readonly authorizedDeviceKeys = new ComplexSet<PublicKey>(key => key.toHex());
   public readonly deviceChainReady = new Trigger();
   public deviceCredentialChain?: Chain;
 
-  constructor(
+  constructor (
     private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey,
+    private readonly _deviceKey: PublicKey
   ) {}
 
   async process (credential: Credential) {
@@ -25,11 +33,11 @@ export class DeviceStateMachine {
     }
 
     const assertion = getCredentialAssertion(credential);
-    switch(assertion['@type']) {
+    switch (assertion['@type']) {
       case 'dxos.halo.credentials.AuthorizedDevice':
         // TODO(dmaretskyi): Extra validation for the credential?
         this.authorizedDeviceKeys.add(assertion.deviceKey);
-      break;
+        break;
     }
   }
 }

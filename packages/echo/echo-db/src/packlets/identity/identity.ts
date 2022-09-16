@@ -44,15 +44,9 @@ export class Identity {
     });
   }
 
+  // TODO(burdon): Expose state object?
   get authorizedDeviceKeys () {
     return this._deviceStateMachine.authorizedDeviceKeys;
-  }
-
-  /**
-   * @debug-only
-   */
-  get controlPipeline () {
-    return this._halo.controlPipeline;
   }
 
   async open () {
@@ -65,6 +59,13 @@ export class Identity {
 
   async ready () {
     await this._deviceStateMachine.deviceChainReady.wait();
+  }
+
+  /**
+   * @test-only
+   */
+  get controlPipeline () {
+    return this._halo.controlPipeline;
   }
 
   /**

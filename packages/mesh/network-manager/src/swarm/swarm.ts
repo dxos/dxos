@@ -34,8 +34,8 @@ export class Swarm {
    */
   readonly id = PublicKey.random();
 
-  private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
-  private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
+  private readonly _connections = new ComplexMap<PublicKey, Connection>(key => key.toHex());
+  private readonly _discoveredPeers = new ComplexSet<PublicKey>(key => key.toHex());
 
   get connections () {
     return Array.from(this._connections.values());

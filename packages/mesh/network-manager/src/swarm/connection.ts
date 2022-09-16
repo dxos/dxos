@@ -124,7 +124,6 @@ export class Connection {
 
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
-
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);

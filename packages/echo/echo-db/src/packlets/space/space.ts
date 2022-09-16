@@ -123,7 +123,7 @@ export class Space {
   }
 
   /**
-   * @debug-only
+   * @test-only
    */
   get controlPipeline (): PipelineAccessor {
     return this._controlPipeline.pipeline;

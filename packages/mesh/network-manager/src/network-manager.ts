@@ -131,11 +131,7 @@ export class NetworkManager {
     assert(topology);
     assert(typeof protocol === 'function');
 
-    log(
-      `Join ${options.topic} as ${
-        options.peerId
-      } with ${options.topology.toString()} topology.`
-    );
+    log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
     if (this._swarms.has(topic)) {
       throw new ERR_EXTENSION_RESPONSE_FAILED(
         GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`
