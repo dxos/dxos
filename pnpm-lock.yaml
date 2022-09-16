@@ -680,6 +680,8 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@mui/icons-material': ^5.8.0
@@ -706,6 +708,8 @@ importers:
       '@dxos/react-client': link:../../packages/sdk/react-client
       '@dxos/react-components': link:../../packages/sdk/react-components
       '@dxos/react-toolkit': link:../../packages/sdk/react-toolkit
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
       '@dxos/util': link:../../packages/common/util
       '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
       '@mui/material': 5.8.7_zxljzmqdrxwnuenbkrz77w74uy
@@ -795,6 +799,53 @@ importers:
     devDependencies:
       '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
       '@dxos/protobuf-compiler': link:../../tools/executors/protobuf-compiler
+
+  e2e/rpc-tunnel:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/react': ^18.0.9
+      '@types/react-dom': ^18.0.5
+      debug: ^4.3.3
+      react: ^18.1.0
+      react-dom: ^18.1.0
+      vite: 3.0.9
+    dependencies:
+      '@dxos/async': link:../../packages/common/async
+      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
+      '@dxos/protocols': link:../../packages/common/protocols
+      '@dxos/react-async': link:../../packages/common/react-async
+      '@dxos/react-components': link:../../packages/sdk/react-components
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
+      '@emotion/react': 11.9.3_tu23i5xxn6kbev62oblybgbdem
+      '@emotion/styled': 11.9.3_6di7qw6wcoul3l5eay5kyd6bwu
+      '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
+      '@mui/lab': 5.0.0-alpha.89_kyqdtephqbodjkxzjbdhul5xu4
+      '@mui/material': 5.8.7_mugunlselc52kyz7qt5aa5ixva
+      debug: 4.3.4
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/vite-plugin': link:../../tools/vite-plugin
+      '@types/debug': 4.1.7
+      '@types/react': 18.0.17
+      '@types/react-dom': 18.0.6
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   e2e/rpc-worker-proxy:
     specifiers:
@@ -1127,6 +1178,17 @@ importers:
       '@types/debug': 4.1.7
       earljs: 0.1.12_typescript@4.7.4
       typescript: 4.7.4
+
+  packages/common/rpc-tunnel:
+    specifiers:
+      '@dxos/rpc': workspace:*
+      '@types/debug': ^4.1.7
+      debug: ^4.3.3
+    dependencies:
+      '@dxos/rpc': link:../rpc
+      debug: 4.3.4
+    devDependencies:
+      '@types/debug': 4.1.7
 
   packages/common/rpc-worker-proxy:
     specifiers:
@@ -2407,6 +2469,8 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
       '@testing-library/dom': ^8.17.1
@@ -2435,6 +2499,8 @@ importers:
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
