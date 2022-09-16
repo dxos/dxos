@@ -36,7 +36,7 @@ describe('space/space', () => {
       ];
 
       for (const credential of credentials) {
-        await space.controlPipeline.writer?.write({
+        await space.controlPipeline.writer.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
@@ -93,7 +93,7 @@ describe('space/space', () => {
         ];
 
         for (const credential of credentials) {
-          await space.controlPipeline.writer?.write({
+          await space.controlPipeline.writer.write({
             '@type': 'dxos.echo.feed.CredentialsMessage',
             credential
           });
@@ -137,7 +137,7 @@ describe('space/space', () => {
       );
 
       for (const credential of credentials) {
-        await spaceContext1.space.controlPipeline.writer?.write({
+        await spaceContext1.space.controlPipeline.writer.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });

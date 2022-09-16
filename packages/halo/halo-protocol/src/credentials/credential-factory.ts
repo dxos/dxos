@@ -20,12 +20,10 @@ export type CreateCredentialSignerParams = {
 
 export type CreateCredentialParams = {
   keyring: Signer
-
-  //
   issuer: PublicKey
+  signer?: PublicKey
 
-  // Provided if different from issuer.
-  signingKey?: PublicKey
+  // Provided only if signer is different from issuer.
   chain?: Chain
 
   subject: PublicKey
@@ -41,14 +39,14 @@ export const createCredential = async ({
   issuer,
   subject,
   assertion,
-  signingKey,
+  signer,
   chain,
   nonce
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
-  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+  assert(!!signer === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
   if (chain) {
-    const result = await verifyChain(chain, issuer, signingKey!);
+    const result = await verifyChain(chain, issuer, signer!);
     assert(result.kind === 'pass', 'Invalid chain.');
   }
 
@@ -63,7 +61,7 @@ export const createCredential = async ({
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
-      signer: signingKey ?? issuer,
+      signer: signer ?? issuer,
       value: new Uint8Array(),
       nonce
     }
@@ -71,7 +69,7 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getSignaturePayload(credential);
-  credential.proof.value = await sign(keyring, signingKey ?? issuer, signedPayload);
+  credential.proof.value = await sign(keyring, signer ?? issuer, signedPayload);
   if (chain) {
     credential.proof.chain = chain;
   }
@@ -114,7 +112,7 @@ export const createCredentialSignerWithChain = (
     keyring: signer,
     issuer: chain.credential.issuer,
     chain,
-    signingKey,
+    signer: signingKey,
     subject,
     assertion,
     nonce

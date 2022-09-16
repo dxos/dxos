@@ -36,7 +36,7 @@ export type PipelineState = {
 
 export interface PipelineAccessor {
   state: PipelineState
-  writer: FeedWriter<TypedMessage> | undefined
+  writer: FeedWriter<TypedMessage>
 }
 
 /**
@@ -112,7 +112,8 @@ export class Pipeline implements PipelineAccessor {
     return this._state;
   }
 
-  get writer () {
+  get writer (): FeedWriter<TypedMessage> {
+    assert(this._writer, 'Writer not set.');
     return this._writer;
   }
 

@@ -3,6 +3,7 @@
 //
 
 import expect from 'expect';
+
 import { Keyring } from '@dxos/keyring';
 
 import { createCredential, verifyCredential } from '../credentials';
@@ -64,7 +65,7 @@ describe('PartyStateMachine', () => {
         designation: AdmittedFeed.Designation.CONTROL
       },
       keyring,
-      signingKey: device,
+      signer: device,
       chain
     }), feed)).toEqual(true);
 
@@ -147,7 +148,7 @@ describe('PartyStateMachine', () => {
         role: PartyMember.Role.MEMBER
       },
       keyring,
-      signingKey: device,
+      signer: device,
       chain
     }), feed)).toEqual(true);
 
@@ -238,7 +239,7 @@ describe('PartyStateMachine', () => {
       },
       subject: device2,
       issuer: identity,
-      signingKey: device1,
+      signer: device1,
       // Create the keychain for device1 using credentials from the party.
       chain: {
         credential: haloState.credentials.find(c => c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device1))!
@@ -258,7 +259,7 @@ describe('PartyStateMachine', () => {
       issuer: identity,
       keyring,
       subject: feed,
-      signingKey: device2,
+      signer: device2,
       // Create the keychain for device2 using credentials from the party.
       chain: {
         credential: haloState.credentials.find(c => c.subject.assertion['@type'] === 'dxos.halo.credentials.AuthorizedDevice' && c.subject.id.equals(device2))!
