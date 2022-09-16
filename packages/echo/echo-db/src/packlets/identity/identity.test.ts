@@ -7,7 +7,7 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { createKeyCredentialSigner, AdmittedFeed, CredentialGenerator, verifyCredential } from '@dxos/halo-protocol';
+import { createCredentialSignerWithKey, AdmittedFeed, CredentialGenerator, verifyCredential } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -48,7 +48,7 @@ describe('halo/identity', () => {
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
-        credentialProvider: createHaloAuthProvider(createKeyCredentialSigner(keyring, deviceKey)),
+        credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
         credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
       }
     });
@@ -140,7 +140,7 @@ describe('halo/identity', () => {
         networkPlugins: [],
         swarmIdentity: {
           peerKey: deviceKey,
-          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createKeyCredentialSigner(keyring, deviceKey)),
+          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         }
       });
@@ -207,7 +207,7 @@ describe('halo/identity', () => {
         networkPlugins: [],
         swarmIdentity: {
           peerKey: deviceKey,
-          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createKeyCredentialSigner(keyring, deviceKey)),
+          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         }
       });

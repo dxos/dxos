@@ -4,34 +4,38 @@
 
 import assert from 'assert';
 
-import { Keyring, Signer } from '@dxos/keyring';
+import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
-import { AdmittedFeed, Chain, Credential, PartyMember } from '../proto';
+import { Chain, Credential } from '../proto';
 import { getSignaturePayload, sign } from './signing';
 import { MessageType } from './types';
-import { SIGNATURE_TYPE_ED25519 } from './verifier';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
+
+export type CreateCredentialSignerParams = {
+  subject: PublicKey
+  assertion: MessageType
+  nonce?: Uint8Array
+}
 
 export type CreateCredentialParams = {
   keyring: Signer
+
+  //
   issuer: PublicKey
+
+  // Provided if different from issuer.
+  signingKey?: PublicKey
+  chain?: Chain
+
   subject: PublicKey
   assertion: MessageType
-  /**
-   * Provided if different from issuer.
-   */
-  signingKey?: PublicKey
-  /**
-   * Provided if signing key is different from issuer.
-   */
-  chain?: Chain
   nonce?: Uint8Array
 }
 
 /**
  * Construct a signed credential message.
  */
-// TODO(burdon): Make private and use CredentialGenerator.
 export const createCredential = async ({
   keyring,
   issuer,
@@ -43,8 +47,10 @@ export const createCredential = async ({
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
   assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
-
-  // TODO(dmaretskyi): Verify chain.
+  if (chain) {
+    const result = await verifyChain(chain, issuer, signingKey!);
+    assert(result.kind === 'pass', 'Invalid chain.');
+  }
 
   // Create the credential with proof value and chain fields missing (for signature payload).
   const credential: Credential = {
@@ -73,115 +79,44 @@ export const createCredential = async ({
   return credential;
 };
 
-/**
- * Utility class for generating credential messages, where the issuer is the current identity or device.
- */
-// TODO(burdon): Normalize partyKey, spaceKey (args, proto).
-export class CredentialGenerator {
-  constructor (
-    private readonly _keyring: Keyring,
-    private readonly _identityKey: PublicKey,
-    private readonly _deviceKey: PublicKey
-  ) {}
-
-  /**
-   * Create genesis messages for new Space.
-   */
-  async createSpaceGenesis (
-    partyKey: PublicKey,
-    controlKey: PublicKey
-  ): Promise<Credential[]> {
-    return [
-      await createCredential({
-        keyring: this._keyring,
-        issuer: partyKey,
-        subject: partyKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyGenesis',
-          partyKey
-        }
-      }),
-
-      await createCredential({
-        keyring: this._keyring,
-        issuer: partyKey,
-        subject: this._identityKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.ADMIN
-        }
-      }),
-
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL)
-    ];
-  }
-
-  /**
-   * Create invitation.
-   * Admit identity and control and data feeds.
-   */
-  async createMemberInvitation (
-    partyKey: PublicKey,
-    identityKey: PublicKey,
-    deviceKey: PublicKey,
-    controlKey: PublicKey,
-    dataKey: PublicKey
-  ): Promise<Credential[]> {
-    return [
-      await createCredential({
-        keyring: this._keyring,
-        issuer: this._identityKey,
-        subject: identityKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.PartyMember',
-          partyKey,
-          role: PartyMember.Role.MEMBER
-        }
-      }),
-
-      await this.createFeedAdmission(partyKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(partyKey, dataKey, AdmittedFeed.Designation.DATA)
-    ];
-  }
-
-  /**
-   * Add device to space.
-   */
-  async createDeviceAuthorization (
-    deviceKey: PublicKey
-  ): Promise<Credential> {
-    return createCredential({
-      keyring: this._keyring,
-      issuer: this._identityKey,
-      subject: deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey: this._identityKey,
-        deviceKey
-      }
-    });
-  }
-
-  /**
-   * Add feed to space.
-   */
-  async createFeedAdmission (
-    partyKey: PublicKey,
-    feedKey: PublicKey,
-    designation: AdmittedFeed.Designation
-  ): Promise<Credential> {
-    return createCredential({
-      keyring: this._keyring,
-      issuer: this._identityKey,
-      subject: feedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        partyKey,
-        identityKey: this._identityKey,
-        deviceKey: this._deviceKey,
-        designation
-      }
-    });
-  }
+export interface CredentialSigner {
+  getIssuer(): PublicKey
+  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>
 }
+
+/**
+ * Issue credentials directly signed by the issuer.
+ */
+export const createCredentialSignerWithKey = (
+  signer: Signer,
+  issuer: PublicKey
+): CredentialSigner => ({
+  getIssuer: () => issuer,
+  createCredential: ({ subject, assertion, nonce }) => createCredential({
+    keyring: signer,
+    issuer,
+    subject,
+    assertion,
+    nonce
+  })
+});
+
+/**
+ * Issue credentials with transitive proof via a chain.
+ */
+export const createCredentialSignerWithChain = (
+  signer: Signer,
+  chain: Chain,
+  signingKey: PublicKey
+): CredentialSigner => ({
+  getIssuer: () => chain.credential.issuer,
+  createCredential: ({ subject, assertion, nonce }) => createCredential({
+    keyring: signer,
+    issuer: chain.credential.issuer,
+    chain,
+    signingKey,
+    subject,
+    assertion,
+    nonce
+  })
+});

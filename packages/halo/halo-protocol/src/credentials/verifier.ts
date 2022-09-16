@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Signer, verifySignature } from '@dxos/keyring';
+import { verifySignature } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
 import { Chain, Credential } from '../proto';
@@ -27,11 +27,9 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
     }
   }
 
-  {
-    const result = await verifyCredentialSignature(credential);
-    if (result.kind === 'fail') {
-      return result;
-    }
+  const result = await verifyCredentialSignature(credential);
+  if (result.kind === 'fail') {
+    return result;
   }
 
   return { kind: 'pass' };
@@ -41,7 +39,7 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
+export const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
   if (credential.proof.type !== SIGNATURE_TYPE_ED25519) {
     return { kind: 'fail', errors: [`Invalid signature type: ${credential.proof.type}`] };
   }
@@ -57,7 +55,7 @@ const verifyCredentialSignature = async (credential: Credential): Promise<Verifi
 /**
  * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
  */
-const verifyChain = async (chain: Chain, authority: PublicKey, subject: PublicKey): Promise<VerificationResult> => {
+export const verifyChain = async (chain: Chain, authority: PublicKey, subject: PublicKey): Promise<VerificationResult> => {
   const result = await verifyCredential(chain.credential);
   if (result.kind === 'fail') {
     return result;

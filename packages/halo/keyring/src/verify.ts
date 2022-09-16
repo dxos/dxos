@@ -1,5 +1,10 @@
-import { PublicKey } from "@dxos/protocols";
+//
+// Copyright 2022 DXOS.org
+//
+
 import * as crypto from 'node:crypto';
+
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Verify a signature with the given key.
@@ -16,4 +21,4 @@ export const verifySignature = async (key: PublicKey, message: Uint8Array, signa
     name: 'ECDSA',
     hash: 'SHA-256'
   }, publicKey, signature, message);
-}
+};

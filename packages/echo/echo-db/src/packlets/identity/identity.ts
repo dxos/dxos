@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import {
-  CredentialSigner, DeviceStateMachine, createChainCredentialSigner, createKeyCredentialSigner
+  CredentialSigner, DeviceStateMachine, createCredentialSignerWithChain, createCredentialSignerWithKey
 } from '@dxos/halo-protocol';
 import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
@@ -76,13 +76,13 @@ export class Identity {
    */
   getIdentityCredentialSigner (): CredentialSigner {
     assert(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
-    return createChainCredentialSigner(this._signer, this._deviceStateMachine.deviceCredentialChain, this.deviceKey);
+    return createCredentialSignerWithChain(this._signer, this._deviceStateMachine.deviceCredentialChain, this.deviceKey);
   }
 
   /**
    * Issues credentials as device.
    */
   getDeviceCredentialSigner (): CredentialSigner {
-    return createKeyCredentialSigner(this._signer, this.deviceKey);
+    return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 }
