@@ -113,13 +113,17 @@ export class Messenger {
    * Subscribes onMessage function to messages that contains payload with payloadType.
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
-  listen ({
+  async listen ({
+    peerId,
     payloadType,
     onMessage
   }: {
+    peerId: PublicKey
     payloadType?: string
     onMessage: OnMessage
-  }): ListeningHandle {
+  }): Promise<ListeningHandle> {
+    await this._signalManager.subscribeMessages(peerId);
+
     if (!payloadType) {
       this._defaultListeners.add(onMessage);
     } else {

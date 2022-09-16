@@ -34,14 +34,13 @@ describe('Messenger', () => {
     const peerId = PublicKey.random();
 
     const signalManager = new WebsocketSignalManager([broker.url()]);
-    await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.destroy());
 
     const messenger = new Messenger({
       signalManager
     });
 
-    await messenger.listen({ onMessage });
+    await messenger.listen({ peerId, onMessage });
 
     return {
       messenger,
@@ -139,6 +138,7 @@ describe('Messenger', () => {
     const onMessage1 =
       mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
+      peerId: peerId2,
       payloadType: 'dxos.Example1',
       onMessage: onMessage1
     });
@@ -147,6 +147,7 @@ describe('Messenger', () => {
     const onMessage2 =
       mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
+      peerId: peerId2,
       payloadType: 'dxos.Example1',
       onMessage: onMessage2
     });
@@ -155,6 +156,7 @@ describe('Messenger', () => {
     const onMessage3 =
       mockFn<(message: Message) => Promise<void>>().resolvesTo();
     await messenger2.listen({
+      peerId: peerId2,
       payloadType: 'dxos.Example2',
       onMessage: onMessage3
     });
@@ -187,6 +189,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages1: Message[] = [];
     await messenger2.listen({
+      peerId: peerId2,
       payloadType: 'dxos.Example1',
       onMessage: async (message) => {
         messages1.push(message);
@@ -196,6 +199,7 @@ describe('Messenger', () => {
     // Subscribe first listener for second messenger.
     const messages2: Message[] = [];
     const listenerHandle2 = await messenger2.listen({
+      peerId: peerId2,
       payloadType: 'dxos.Example1',
       onMessage: async (message) => {
         messages2.push(message);
@@ -264,7 +268,6 @@ describe('Messenger', () => {
       const peerId = PublicKey.random();
 
       const signalManager = new WebsocketSignalManager([broker.url()]);
-      await signalManager.subscribeMessages(peerId);
       const trueSend = signalManager.sendMessage.bind(signalManager);
       signalManager.sendMessage = async (message) => {
         for (const msg of messageDisruption(message)) {
@@ -277,7 +280,7 @@ describe('Messenger', () => {
         signalManager
       });
 
-      await messenger.listen({ onMessage });
+      await messenger.listen({ peerId, onMessage });
 
       return {
         messenger,
