@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 

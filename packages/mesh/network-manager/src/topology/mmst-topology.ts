@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 import distance from 'xor-distance';
 
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';

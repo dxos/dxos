@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import expect from 'expect';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import {
   MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager

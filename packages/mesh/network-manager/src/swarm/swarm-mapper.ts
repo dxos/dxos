@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
-
 import { Event } from '@dxos/async';
+import { log } from '@dxos/log';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';

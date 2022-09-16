@@ -3,12 +3,12 @@
 //
 
 import wrtc from '@koush/wrtc';
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 
 import { Signal } from '../proto/gen/dxos/mesh/swarm';

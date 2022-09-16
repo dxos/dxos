@@ -3,9 +3,9 @@
 //
 
 import assert from 'assert';
-import { log } from '@dxos/log';
 
 import { Any } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, MakeOptional } from '@dxos/util';
 

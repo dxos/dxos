@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
+import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 

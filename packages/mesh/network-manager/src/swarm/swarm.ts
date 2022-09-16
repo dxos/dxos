@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 

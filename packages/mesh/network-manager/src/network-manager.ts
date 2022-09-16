@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
+import { log } from '@dxos/log';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';

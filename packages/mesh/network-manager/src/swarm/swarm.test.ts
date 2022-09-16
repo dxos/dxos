@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import { expect, mockFn } from 'earljs';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';

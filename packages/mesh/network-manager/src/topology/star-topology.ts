@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { log } from '@dxos/log';
 import assert from 'node:assert';
 
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
