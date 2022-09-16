@@ -75,7 +75,7 @@ describe('halo/identity', () => {
       ];
 
       for (const credential of credentials) {
-        await identity.controlPipeline.writer?.write({
+        await identity.controlPipeline.writer.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });
@@ -167,7 +167,7 @@ describe('halo/identity', () => {
         ];
 
         for (const credential of credentials) {
-          await identity.controlPipeline.writer?.write({
+          await identity.controlPipeline.writer.write({
             '@type': 'dxos.echo.feed.CredentialsMessage',
             credential
           });
@@ -227,8 +227,8 @@ describe('halo/identity', () => {
     // Second device admission
     //
     {
-      // TODO(burdon): Credentials factory.
-      void identity1.controlPipeline.writer!.write({
+      // TODO(burdon): Use credentials factory.
+      void identity1.controlPipeline.writer.write({
         '@type': 'dxos.echo.feed.CredentialsMessage',
         credential: await identity1.getIdentityCredentialSigner().createCredential({
           subject: identity2.deviceKey,

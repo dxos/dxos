@@ -1,49 +1,55 @@
-import { MetadataStore } from "../metadata";
-import { Identity } from "./identity";
-import { Keyring } from '@dxos/keyring'
-import { FeedStore } from "@dxos/feed-store";
-import { AdmittedFeed, CredentialGenerator, IdentityRecord, SpaceRecord } from "@dxos/halo-protocol";
-import assert from "assert";
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from "../space";
-import { Timeframe } from "@dxos/protocols";
-import { NetworkManager, Plugin } from "@dxos/network-manager";
+//
+// Copyright 2022 DXOS.org
+//
+
+import assert from 'assert';
+
+import { FeedStore } from '@dxos/feed-store';
+import { AdmittedFeed, CredentialGenerator, IdentityRecord, SpaceRecord } from '@dxos/halo-protocol';
+import { Keyring } from '@dxos/keyring';
+import { NetworkManager, Plugin } from '@dxos/network-manager';
+import { Timeframe } from '@dxos/protocols';
+
+import { MetadataStore } from '../metadata';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
+import { Identity } from './identity';
 
 interface ConstructSpaceParams {
-  spaceRecord: SpaceRecord;
-  swarmIdentity: SwarmIdentity;
-  networkPlugins: Plugin[];
+  spaceRecord: SpaceRecord
+  swarmIdentity: SwarmIdentity
+  networkPlugins: Plugin[]
 }
 
 export class IdentityManager {
   private _identity?: Identity;
 
-  constructor(
+  constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStore,
-    private readonly _networkManager: NetworkManager,
+    private readonly _networkManager: NetworkManager
   ) {}
 
-  get identity() {
+  get identity () {
     return this._identity;
   }
 
-  async open() {
+  async open () {
     await this._metadataStore.load();
-    
+
     const identityRecord = this._metadataStore.getIdentityRecord();
     if (identityRecord) {
       this._identity = await this._constructIdentity(identityRecord);
-      await this._identity.open()
+      await this._identity.open();
       await this._identity.ready();
     }
   }
 
-  async close() {
+  async close () {
     await this._identity?.close();
   }
 
-  private async _constructIdentity(identityRecord: IdentityRecord) {
+  private async _constructIdentity (identityRecord: IdentityRecord) {
     assert(!this._identity);
 
     const space = await this._constructSpace({
@@ -64,11 +70,11 @@ export class IdentityManager {
     });
   }
 
-  private async _constructSpace({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
+  private async _constructSpace ({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
     const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeControlFeedKey, this._keyring);
     const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeDataFeedKey, this._keyring);
 
-    // Might be the same feed as the control feed on the top. 
+    // Might be the same feed as the control feed on the top.
     // It's important to initialize it after writable feeds so that the feed is in the writable state.
     const genesisFeed = await this._feedStore.openReadOnlyFeed(spaceRecord.genesisFeedKey);
 
@@ -86,7 +92,7 @@ export class IdentityManager {
     });
   }
 
-  async createIdentity() {
+  async createIdentity () {
     assert(!this._identity, 'Identity already exists.');
 
     const controlFeedKey = await this._keyring.createKey();
@@ -98,9 +104,9 @@ export class IdentityManager {
         spaceKey: await this._keyring.createKey(),
         genesisFeedKey: controlFeedKey,
         writeControlFeedKey: controlFeedKey,
-        writeDataFeedKey: await this._keyring.createKey(),
+        writeDataFeedKey: await this._keyring.createKey()
       }
-    }
+    };
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
 
@@ -111,11 +117,11 @@ export class IdentityManager {
         await generator.createFeedAdmission(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
 
         // Write device chain
-        await generator.createDeviceAuthorization(identityRecord.deviceKey),
+        await generator.createDeviceAuthorization(identityRecord.deviceKey)
       ];
 
       for (const credential of credentials) {
-        await identity.controlMessageWriter?.write({
+        await identity.controlPipeline.writer.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         });

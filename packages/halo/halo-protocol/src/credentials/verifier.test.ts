@@ -158,7 +158,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device,
+        signer: device,
         chain
       });
 
@@ -194,7 +194,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device,
+        signer: device,
         chain
       });
 
@@ -232,7 +232,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device,
+        signer: device,
         chain
       });
 
@@ -269,7 +269,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device,
+        signer: device,
         chain
       });
 
@@ -317,7 +317,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device,
+        signer: device,
         chain
       });
 
@@ -353,7 +353,7 @@ describe('verifier', () => {
           subject: device2,
           issuer: identity,
           keyring,
-          signingKey: device1,
+          signer: device1,
           chain: {
             credential: await createCredential({
               assertion: {
@@ -378,7 +378,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device2,
+        signer: device2,
         chain
       });
 
@@ -403,7 +403,7 @@ describe('verifier', () => {
           subject: device2,
           issuer: identity,
           keyring,
-          signingKey: device1,
+          signer: device1,
           chain: {
             credential: await createCredential({
               assertion: {
@@ -428,7 +428,7 @@ describe('verifier', () => {
         issuer: identity,
         keyring,
         subject,
-        signingKey: device2,
+        signer: device2,
         chain
       });
 
