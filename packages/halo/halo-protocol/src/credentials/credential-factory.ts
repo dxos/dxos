@@ -77,8 +77,8 @@ export const createCredential = async ({
   return credential;
 };
 
-// TODO(burdon): Use consistently.
-export const createCredentialMessage = (credential: Credential): TypedMessage => {
+// TODO(burdon): Use consistently (merge halo/echo protocol packages).
+export const createCredentialMessage = (credential: Credential) => {
   return {
     '@type': 'dxos.echo.feed.CredentialsMessage',
     credential

@@ -8,7 +8,6 @@ import { it as test } from 'mocha';
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import {
-  createCredentialMessage,
   createCredentialSignerWithKey,
   verifyCredential,
   AdmittedFeed,
@@ -173,7 +172,10 @@ describe('halo/identity', () => {
         ];
 
         for (const credential of credentials) {
-          await identity.controlPipeline.writer.write(createCredentialMessage(credential));
+          await identity.controlPipeline.writer.write({
+            '@type': 'dxos.echo.feed.CredentialsMessage',
+            credential
+          });
         }
       }
 
