@@ -44,11 +44,11 @@ describe('MessageRouter', () => {
   }) => {
     const peerId = PublicKey.random();
     const signalManager = new WebsocketSignalManager([signalApiUrl]);
-    await signalManager.subscribeMessages(peerId);
     afterTest(() => signalManager.destroy());
 
     const messenger = new Messenger({ signalManager });
-    messenger.listen({
+    await messenger.listen({
+      peerId,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => await router.receiveMessage(message)
     });
@@ -67,7 +67,7 @@ describe('MessageRouter', () => {
     };
   };
 
-  test('signaling between 2 clients', async () => {
+  test.only('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);

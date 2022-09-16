@@ -47,7 +47,7 @@ const createPeer = async ({
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -153,7 +153,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    networkManager2.joinProtocolSwarm({
+    await networkManager2.joinProtocolSwarm({
       topic,
       peerId: newPeer2Id,
       protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
@@ -424,7 +424,7 @@ export function inMemoryTests () {
         afterTest(() => presence.stop());
         const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-        peer.networkManager.joinProtocolSwarm({
+        await peer.networkManager.joinProtocolSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
           protocol,

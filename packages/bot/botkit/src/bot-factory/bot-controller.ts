@@ -26,7 +26,7 @@ export class BotController {
 
   async start (topic: PublicKey): Promise<void> {
     const plugin = new PluginRpc(this._onPeerConnect.bind(this));
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       topic,
       peerId: topic,
       protocol: createProtocolFactory(

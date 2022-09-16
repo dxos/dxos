@@ -79,11 +79,6 @@ export class NetworkManager {
         onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
         onOffer: (msg) => onOffer(msg)
       });
-
-      this._messenger.listen({
-        payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: (message) => this._messageRouter.receiveMessage(message)
-      });
     }
 
     {
@@ -120,7 +115,7 @@ export class NetworkManager {
     return this._swarms.get(topic);
   }
 
-  joinProtocolSwarm (options: SwarmOptions) {
+  async joinProtocolSwarm (options: SwarmOptions) {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
@@ -146,6 +141,12 @@ export class NetworkManager {
       this._signalManager instanceof MemorySignalManager
         ? inMemoryTransportFactory
         : createWebRTCTransportFactory({ iceServers: this._ice });
+
+    await this._messenger.listen({
+      peerId,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: (message) => this._messageRouter.receiveMessage(message)
+    });
 
     const swarm = new Swarm(
       topic,

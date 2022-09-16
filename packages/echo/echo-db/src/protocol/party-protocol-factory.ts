@@ -44,7 +44,7 @@ export class PartyProtocolFactory {
     };
 
     log(`Joining swarm: ${this._partyKey.toHex()}`);
-    return this._networkManager.joinProtocolSwarm({
+    return await this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(channel, { initiator }, plugins),
       peerId: this._peerId,
       topic: this._partyKey,
