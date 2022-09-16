@@ -3,18 +3,16 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
 import { Event, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { Message as SignalMessage, SwarmEvent } from './proto';
 import { Message, SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
-
-const log = debug('dxos:signaling:signal-client');
 
 const DEFAULT_RECONNECT_TIMEOUT = 1000;
 

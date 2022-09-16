@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { createBundledRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
@@ -15,8 +15,6 @@ import { schema } from './proto/gen';
 interface Services {
   Signal: Signal
 }
-
-const log = debug('dxos:signaling:signal-rpc-client');
 
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
@@ -53,7 +51,7 @@ export class SignalRPCClient {
     };
 
     this._socket.onerror = (e: WebSocket.ErrorEvent) => {
-      log(`Signal socket error ${this._url} ${e.message}`);
+      log.error(`Signal socket error ${this._url} ${e.message}`);
       this.error.emit(e.error ?? new Error(e.message));
     };
 
@@ -82,7 +80,7 @@ export class SignalRPCClient {
   }
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
-    log('join', topic, peerId);
+    log('join', { topic, peerId });
     await this._connectTrigger.wait();
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
@@ -102,7 +100,7 @@ export class SignalRPCClient {
   }
 
   async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
-    log('sendMessage', author, recipient, payload);
+    log('sendMessage', { author, recipient, payload });
     await this._connectTrigger.wait();
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),

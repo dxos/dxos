@@ -20,11 +20,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
-    "debug": "^4.3.3",
     "isomorphic-ws": "^4.0.1",
     "ws": "^7.4.4"
   },
@@ -32,7 +32,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@types/debug": "^4.1.7",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.27",
     "earljs": "~0.1.10",
