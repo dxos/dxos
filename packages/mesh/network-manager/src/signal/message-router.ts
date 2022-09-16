@@ -32,7 +32,6 @@ interface MessageRouterOptions {
   onSignal?: (message: SignalMessage) => Promise<void>
 }
 
-const log = debug('dxos:network-manager:message-router');
 /**
  * Adds offer/answer RPC and reliable messaging.
  */
