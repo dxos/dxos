@@ -27,7 +27,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -47,7 +47,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -70,7 +70,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -93,7 +93,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject,
         nonce: PublicKey.random().asUint8Array()
       });
@@ -117,7 +117,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -145,7 +145,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -156,9 +156,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device,
+        signingKey: device,
         chain
       });
 
@@ -181,7 +181,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -192,9 +192,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device,
+        signingKey: device,
         chain
       });
 
@@ -219,7 +219,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -230,9 +230,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device,
+        signingKey: device,
         chain
       });
 
@@ -257,7 +257,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
       const credential = await createCredential({
@@ -267,9 +267,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device,
+        signingKey: device,
         chain
       });
 
@@ -280,7 +280,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -304,7 +304,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -315,9 +315,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device,
+        signingKey: device,
         chain
       });
 
@@ -329,7 +329,7 @@ describe('verifier', () => {
         },
         subject: device,
         issuer: identity2,
-        keyring
+        signer: keyring
       });
 
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
@@ -352,8 +352,8 @@ describe('verifier', () => {
           },
           subject: device2,
           issuer: identity,
-          keyring,
-          signer: device1,
+          signer: keyring,
+          signingKey: device1,
           chain: {
             credential: await createCredential({
               assertion: {
@@ -363,7 +363,7 @@ describe('verifier', () => {
               },
               subject: device1,
               issuer: identity,
-              keyring
+              signer: keyring
             })
           }
         })
@@ -376,9 +376,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device2,
+        signingKey: device2,
         chain
       });
 
@@ -402,8 +402,8 @@ describe('verifier', () => {
           },
           subject: device2,
           issuer: identity,
-          keyring,
-          signer: device1,
+          signer: keyring,
+          signingKey: device1,
           chain: {
             credential: await createCredential({
               assertion: {
@@ -413,7 +413,7 @@ describe('verifier', () => {
               },
               subject: device1,
               issuer: identity,
-              keyring
+              signer: keyring
             })
           }
         })
@@ -426,9 +426,9 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
-        signer: device2,
+        signingKey: device2,
         chain
       });
 
@@ -440,7 +440,7 @@ describe('verifier', () => {
         },
         subject: device1,
         issuer: device2,
-        keyring
+        signer: keyring
       });
 
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });

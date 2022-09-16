@@ -29,7 +29,7 @@ export class CredentialGenerator {
   ): Promise<Credential[]> {
     return [
       await createCredential({
-        keyring: this._keyring,
+        signer: this._keyring,
         issuer: partyKey,
         subject: partyKey,
         assertion: {
@@ -39,7 +39,7 @@ export class CredentialGenerator {
       }),
 
       await createCredential({
-        keyring: this._keyring,
+        signer: this._keyring,
         issuer: partyKey,
         subject: this._identityKey,
         assertion: {
@@ -66,7 +66,7 @@ export class CredentialGenerator {
   ): Promise<Credential[]> {
     return [
       await createCredential({
-        keyring: this._keyring,
+        signer: this._keyring,
         issuer: this._identityKey,
         subject: identityKey,
         assertion: {
@@ -88,7 +88,7 @@ export class CredentialGenerator {
     deviceKey: PublicKey
   ): Promise<Credential> {
     return createCredential({
-      keyring: this._keyring,
+      signer: this._keyring,
       issuer: this._identityKey,
       subject: deviceKey,
       assertion: {
@@ -108,7 +108,7 @@ export class CredentialGenerator {
     designation: AdmittedFeed.Designation
   ): Promise<Credential> {
     return createCredential({
-      keyring: this._keyring,
+      signer: this._keyring,
       issuer: this._identityKey,
       subject: feedKey,
       assertion: {
