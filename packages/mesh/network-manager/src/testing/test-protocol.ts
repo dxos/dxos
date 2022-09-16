@@ -100,7 +100,7 @@ export class TestProtocolPlugin extends EventEmitter {
     // TODO(dboreham): Throw fatal error if peer not found.
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
-    log('Sent to %s: %s', peerIdStr, payload);
+    log('Sent', { peerIdStr, payload });
     return await extension.send(encoded, { oneway: true });
   }
 
@@ -114,7 +114,7 @@ export class TestProtocolPlugin extends EventEmitter {
     if (this._uppercase) {
       payload = payload.toUpperCase();
     }
-    log('Received from %s: %s', peerIdStr, payload);
+    log('Received', { peerIdStr, payload });
     this.emit('receive', protocol, payload);
   }
 
