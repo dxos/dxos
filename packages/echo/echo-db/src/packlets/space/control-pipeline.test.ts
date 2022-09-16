@@ -74,6 +74,7 @@ describe('space/control-pipeline', () => {
     await controlPipeline.pipeline.writer!.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await createCredential({
+        signer: keyring,
         issuer: identityKey,
         subject: controlFeed2.key,
         assertion: {
@@ -82,8 +83,7 @@ describe('space/control-pipeline', () => {
           identityKey,
           deviceKey,
           designation: AdmittedFeed.Designation.CONTROL
-        },
-        keyring
+        }
       })
     });
 
@@ -95,6 +95,7 @@ describe('space/control-pipeline', () => {
     await controlPipeline.pipeline.writer!.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await createCredential({
+        signer: keyring,
         issuer: identityKey,
         subject: dataFeed1.key,
         assertion: {
@@ -103,8 +104,7 @@ describe('space/control-pipeline', () => {
           identityKey,
           deviceKey,
           designation: AdmittedFeed.Designation.DATA
-        },
-        keyring
+        }
       })
     });
 
@@ -118,6 +118,7 @@ describe('space/control-pipeline', () => {
         payload: {
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential: await createCredential({
+            signer: keyring,
             issuer: identityKey,
             subject: dataFeed2.key,
             assertion: {
@@ -126,8 +127,7 @@ describe('space/control-pipeline', () => {
               identityKey,
               deviceKey,
               designation: AdmittedFeed.Designation.DATA
-            },
-            keyring
+            }
           })
         },
         timeframe: new Timeframe()

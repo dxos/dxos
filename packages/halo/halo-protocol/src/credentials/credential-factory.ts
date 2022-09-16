@@ -8,7 +8,7 @@ import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
 import { Chain, Credential } from '../proto';
-import { getSignaturePayload, sign } from './signing';
+import { getSignaturePayload } from './signing';
 import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
@@ -19,9 +19,9 @@ export type CreateCredentialSignerParams = {
 }
 
 export type CreateCredentialParams = {
-  keyring: Signer
+  signer: Signer
   issuer: PublicKey
-  signer?: PublicKey
+  signingKey?: PublicKey
 
   // Provided only if signer is different from issuer.
   chain?: Chain
@@ -35,18 +35,18 @@ export type CreateCredentialParams = {
  * Construct a signed credential message.
  */
 export const createCredential = async ({
-  keyring,
+  signer,
   issuer,
   subject,
   assertion,
-  signer,
+  signingKey,
   chain,
   nonce
 }: CreateCredentialParams): Promise<Credential> => {
   assert(assertion['@type'], 'Invalid assertion.');
-  assert(!!signer === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
   if (chain) {
-    const result = await verifyChain(chain, issuer, signer!);
+    const result = await verifyChain(chain, issuer, signingKey!);
     assert(result.kind === 'pass', 'Invalid chain.');
   }
 
@@ -61,7 +61,7 @@ export const createCredential = async ({
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
-      signer: signer ?? issuer,
+      signer: signingKey ?? issuer,
       value: new Uint8Array(),
       nonce
     }
@@ -69,12 +69,19 @@ export const createCredential = async ({
 
   // Set proof after creating signature.
   const signedPayload = getSignaturePayload(credential);
-  credential.proof.value = await sign(keyring, signer ?? issuer, signedPayload);
+  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
     credential.proof.chain = chain;
   }
 
   return credential;
+};
+
+export const createCredentialMessage = (credential: Credential) => {
+  return {
+    '@type': 'dxos.echo.feed.CredentialsMessage',
+    credential
+  };
 };
 
 export interface CredentialSigner {
@@ -91,7 +98,7 @@ export const createCredentialSignerWithKey = (
 ): CredentialSigner => ({
   getIssuer: () => issuer,
   createCredential: ({ subject, assertion, nonce }) => createCredential({
-    keyring: signer,
+    signer,
     issuer,
     subject,
     assertion,
@@ -109,10 +116,10 @@ export const createCredentialSignerWithChain = (
 ): CredentialSigner => ({
   getIssuer: () => chain.credential.issuer,
   createCredential: ({ subject, assertion, nonce }) => createCredential({
-    keyring: signer,
+    signer,
     issuer: chain.credential.issuer,
+    signingKey,
     chain,
-    signer: signingKey,
     subject,
     assertion,
     nonce

@@ -4,7 +4,6 @@
 
 import stableStringify from 'json-stable-stringify';
 
-import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
 
 import { Credential } from '../proto';
@@ -25,25 +24,22 @@ export const getSignaturePayload = (credential: Credential): Uint8Array => {
   return Buffer.from(canonicalStringify(copy));
 };
 
-export const sign = async (keyring: Signer, key: PublicKey, data: Uint8Array): Promise<Uint8Array> => {
-  return keyring.sign(key, data);
-};
-
 /**
  * Utility method to produce stable output for signing/verifying.
  */
 export const canonicalStringify = (obj: any) => stableStringify(obj, {
   /* The point of signing and verifying is not that the internal, private state of the objects be
-     * identical, but that the public contents can be verified not to have been altered. For that reason,
-     * really private fields (indicated by '__') are not included in the signature.
-     * This gives a mechanism for attaching other attributes to an object without breaking the signature.
-     * We also skip @type.
-     */
-    // TODO(dmaretskyi): Should we actually skip the @type field?
+   * identical, but that the public contents can be verified not to have been altered. For that reason,
+   * really private fields (indicated by '__') are not included in the signature.
+   * This gives a mechanism for attaching other attributes to an object without breaking the signature.
+   * We also skip @type.
+   */
+  // TODO(dmaretskyi): Should we actually skip the @type field?
   replacer: (key: any, value: any) => {
     if (key.toString().startsWith('__') || key.toString() === '@type') {
       return undefined;
     }
+
     if (value) {
       if (PublicKey.isPublicKey(value)) {
         return value.toHex();
@@ -55,6 +51,7 @@ export const canonicalStringify = (obj: any) => stableStringify(obj, {
         return Buffer.from(value).toString('hex');
       }
     }
+
     return value;
   }
 });

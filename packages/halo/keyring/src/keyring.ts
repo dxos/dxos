@@ -16,7 +16,7 @@ import { KeyRecord } from './proto/gen/dxos/halo/keyring';
 import { Signer } from './signer';
 
 /**
- *
+ * Manages keys.
  */
 export class Keyring implements Signer {
   private readonly _keyCache = new ComplexMap<PublicKey, CryptoKeyPair>(key => key.toHex());
@@ -92,10 +92,12 @@ export class Keyring implements Signer {
     await file.close();
   }
 
+  // TODO(burdon): ???
   deleteKey (key: PublicKey): Promise<void> {
     return todo('We need a method to delete a file.');
   }
 
+  // TODO(burdon): ???
   list (): Promise<PublicKey[]> {
     return todo('We need a method to enumerate files in a directory.');
   }
