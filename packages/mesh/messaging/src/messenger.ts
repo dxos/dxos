@@ -163,12 +163,15 @@ export class Messenger {
   }
 
   private async _handleMessage (message: Message): Promise<void> {
-    if (message.payload.type_url === 'dxos.mesh.messaging.ReliablePayload') {
-      await this._handleReliablePayload(message);
-    } else if (
-      message.payload.type_url === 'dxos.mesh.messaging.Acknowledgement'
-    ) {
-      await this._handleAcknowledgement({ payload: message.payload });
+    switch (message.payload.type_url) {
+      case 'dxos.mesh.messaging.ReliablePayload': {
+        await this._handleReliablePayload(message);
+        break;
+      }
+      case 'dxos.mesh.messaging.Acknowledgement': {
+        await this._handleAcknowledgement({ payload: message.payload });
+        break;
+      }
     }
   }
 
