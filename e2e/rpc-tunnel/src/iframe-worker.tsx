@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIframeParentPort, createIframeWorkerRelay } from '@dxos/rpc-tunnel';
+import { createIFramePort, createIFrameWorkerRelay } from '@dxos/rpc-tunnel';
 
 import { schema } from './proto';
 // eslint-disable-next-line
@@ -17,25 +17,25 @@ import SharedWorker from './test-worker?sharedworker';
 
 const IN_IFRAME = window.parent !== window;
 
-const App = ({ messagePort }: { messagePort?: MessagePort }) => {
+const App = ({ port }: { port?: MessagePort }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [closed, setClosed] = useState(true);
   const [error, setError] = useState<string>();
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    if (messagePort) {
-      const relay = createIframeWorkerRelay('http://127.0.0.1:5173', messagePort);
+    if (port) {
+      const relay = createIFrameWorkerRelay({ origin: 'http://127.0.0.1:5173', port });
       await relay.start();
     } else {
-      const port = await createIframeParentPort(iframeRef.current!, 'http://localhost:5173');
+      const rpcPort = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
       const client = createProtoRpcPeer({
         requested: {
           TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},
-        port
+        port: rpcPort
       });
       await client.open();
 
@@ -92,7 +92,7 @@ if (typeof SharedWorker !== 'undefined') {
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <App messagePort={worker?.port} />
+        <App port={worker?.port} />
       </StrictMode>
     );
   })();

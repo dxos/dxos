@@ -5,30 +5,29 @@
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
-import { createProtoRpcPeer } from '@dxos/rpc';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
 
+import { schema } from './proto';
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
 
-const App = ({ port }: { port: MessagePort }) => {
+const App = ({ id, port }: { id: string, port: RpcPort }) => {
   const [closed, setClosed] = useState(true);
   const [error, setError] = useState<string>();
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
+        TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
       },
       exposed: {},
       handlers: {},
-      port: rpcPort
+      port
     });
     await client.open();
 
@@ -46,21 +45,55 @@ const App = ({ port }: { port: MessagePort }) => {
   }, []);
 
   return (
-    <JsonTreeView data={{
-      closed,
-      error,
-      value
-    }} />
+    <div
+      data-testid={id}
+      style={{
+        flexGrow: 1
+      }}
+    >
+      <JsonTreeView data={{
+        closed,
+        error,
+        value
+      }} />
+    </div>
   );
 };
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
+    let ports: { id: string, port: RpcPort }[];
     const worker = new SharedWorker();
+    const channel = new MessageChannel(async (channel, port) => {
+      ports = await Promise.all([
+        {
+          channel,
+          port,
+          source: 'parent',
+          destination: 'child'
+        },
+        {
+          channel,
+          port,
+          source: 'proxy',
+          destination: 'router'
+        }
+      ].map(options => ({
+        id: options.source,
+        port: createWorkerPort(options)
+      })));
+    });
+    await channel.addPort(worker.port);
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <App port={worker.port} />
+        <div style={{
+          display: 'flex'
+        }}>
+          {ports!.map(port => (
+            <App key={port.id} {...port} />
+          ))}
+        </div>
       </StrictMode>
     );
   })();

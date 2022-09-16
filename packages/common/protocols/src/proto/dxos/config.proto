@@ -105,7 +105,7 @@ message Runtime {
 
     optional Mode mode = 6;
 
-    optional string singleton_source = 7;
+    optional string remote_source = 7;
   }
 
   message App {

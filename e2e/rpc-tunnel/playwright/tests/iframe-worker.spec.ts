@@ -1,3 +1,4 @@
+
 //
 // Copyright 2022 DXOS.org
 //
@@ -15,13 +16,15 @@ test.describe('worker', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext();
     page = await context.newPage();
-    await page.goto(`${config.baseUrl}/worker.html`);
+    await page.goto(`${config.baseUrl}/iframe-worker.html`);
   });
 
   test('loads and connects.', async () => {
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("value")');
       expect(isVisible).toBeTruthy();
+      const isClosed = await page.frameLocator('#test-iframe').locator('p:right-of(:text("closed"), 10)').textContent();
+      expect(isClosed).toEqual('false');
     });
   });
 });
