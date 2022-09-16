@@ -21,6 +21,6 @@ message ReliablePayload {
 }
 
 message Acknowledgement {
-  // MessageId of the Message that is being acknowledged.
+  /// MessageId of the Message that is being acknowledged.
   PubKey messageId = 1;
 }
