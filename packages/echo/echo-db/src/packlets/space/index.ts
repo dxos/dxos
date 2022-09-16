@@ -6,7 +6,7 @@ export * from './space';
 
 // TODO(burdon): Why not * (if not then move other definitions).
 export {
-  SwarmIdentity,
+  SwarmIdentity
 } from './space-protocol';
 
 export {
@@ -14,4 +14,4 @@ export {
   AuthVerifier,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER
-} from './auth-plugin'
+} from './auth-plugin';

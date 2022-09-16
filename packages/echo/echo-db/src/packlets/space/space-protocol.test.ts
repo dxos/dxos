@@ -10,9 +10,9 @@ import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
+
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { SpaceProtocol } from './space-protocol';
-
 
 const signalContext = new MemorySignalManagerContext();
 

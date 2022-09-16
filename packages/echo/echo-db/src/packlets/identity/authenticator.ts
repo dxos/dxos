@@ -1,30 +1,46 @@
-import { schema } from "@dxos/echo-protocol";
-import { verifyCredential } from "@dxos/halo-protocol";
-import { PublicKey } from "@dxos/protocols";
-import { ComplexSet } from "@dxos/util";
-import { AuthProvider, AuthVerifier } from "../space/auth-plugin";
-import { CredentialSigner } from "./credential-signer";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { schema } from '@dxos/echo-protocol';
+import { CredentialSigner, verifyCredential } from '@dxos/halo-protocol';
+import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/protocols';
+import { ComplexSet } from '@dxos/util';
+
+import { AuthProvider, AuthVerifier } from '../space';
 
 export const createHaloAuthProvider = (signer: CredentialSigner): AuthProvider => async nonce => {
   const credential = await signer.createCredential({
     assertion: {
-      "@type": "dxos.halo.credentials.Auth",
+      '@type': 'dxos.halo.credentials.Auth'
     },
     subject: signer.getIssuer(),
-    nonce,
-  })
+    nonce
+  });
 
-  return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential)
-}
+  return schema.getCodecForType('dxos.halo.credentials.Credential').encode(credential);
+};
 
-export const createHaloAuthVerifier = (getDeviceSet: () => ComplexSet<PublicKey>): AuthVerifier => async auth => {
-  const credential = schema.getCodecForType('dxos.halo.credentials.Credential').decode(auth)
-  const deviceSet = getDeviceSet()
+export const createHaloAuthVerifier = (getDeviceSet: () => ComplexSet<PublicKey>): AuthVerifier => async (nonce, auth) => {
+  const credential = schema.getCodecForType('dxos.halo.credentials.Credential').decode(auth);
+  const deviceSet = getDeviceSet();
 
-  const result = await verifyCredential(credential)
+  const result = await verifyCredential(credential);
   if (result.kind === 'fail') {
+    log('Invalid credential', { result });
     return false;
   }
 
-  return deviceSet.has(credential.issuer)
-}
+  if (!credential.proof.nonce || !Buffer.from(nonce).equals(credential.proof.nonce)) {
+    log('Invalid nonce', { nonce, credential });
+    return false;
+  }
+
+  if (!deviceSet.has(credential.issuer)) {
+    log('Device not in allowed set');
+    return false;
+  }
+
+  return true;
+};

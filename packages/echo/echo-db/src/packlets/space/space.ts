@@ -3,7 +3,6 @@
 //
 
 import assert from 'assert';
-import { PipelineAccessor } from 'packages/echo/echo-db/src/packlets/pipeline/pipeline';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
@@ -18,7 +17,7 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../database';
-import { Pipeline } from '../pipeline';
+import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';

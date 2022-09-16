@@ -69,7 +69,7 @@ export class Connection {
 
   constructor (
     public readonly topic: PublicKey,
-    public readonly ownId: PublicKey,
+    public readonly ownId: PublicKey, // TODO(burdon): peerID?
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,

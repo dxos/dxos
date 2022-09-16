@@ -92,7 +92,7 @@ export class SpaceProtocol {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
         peerId: this._swarmIdentity.peerKey.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
-        credentials: credentials ? Buffer.from(credentials).toString('hex') : undefined
+        credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
       },
 
       initiator

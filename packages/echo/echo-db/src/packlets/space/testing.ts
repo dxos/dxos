@@ -10,8 +10,8 @@ import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin'
 
 // TODO(burdon): Factor out and share across tests?
 

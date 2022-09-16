@@ -4,6 +4,7 @@
 
 export * from './assertions';
 export * from './credential-factory';
+export * from './credential-signer';
 export * from './signing';
 export * from './types';
 export * from './verifier';
