@@ -3,8 +3,8 @@
 //
 
 import assert from 'assert';
-import debug from 'debug';
 
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import {
   ComplexMap,
@@ -17,8 +17,6 @@ import { ReliablePayload, schema } from './proto';
 import { Any } from './proto/gen/google/protobuf';
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
-
-const log = debug('dxos:signaling:messenger');
 
 export type OnMessage = (params: {
   author: PublicKey
@@ -86,7 +84,7 @@ export class Messenger {
           reliablePayload
         });
       } catch (error) {
-        log(`ERROR failed to send message: ${error}`);
+        log.error(`ERROR failed to send message: ${error}`);
       }
     }, this._retryDelay);
 
