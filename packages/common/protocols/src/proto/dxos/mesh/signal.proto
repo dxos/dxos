@@ -9,9 +9,9 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 
-// 
-// signal - our signal server network.
-// 
+/// 
+/// signal - our signal server network.
+/// 
 package dxos.mesh.signal;
 
 option go_package = "github.com/dxos/kube/go/signal/pb";
@@ -22,7 +22,7 @@ message JoinRequest {
 }
 
 message Message {
-  // TODO(egor): Rename to `sender`.
+  /// TODO(egor): Rename to `sender`.
   bytes author = 1;
   bytes recipient = 2;
   google.protobuf.Any payload = 3;
@@ -32,16 +32,16 @@ message ReceptionRequest {
   bytes peer = 1;
 }
 
-// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
+/// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
 message SwarmEvent {
   message PeerAvailable {
     bytes peer = 1;
     google.protobuf.Timestamp since = 2;
-    // When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
-    // periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
+    /// When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
+    /// periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
     optional google.protobuf.Timestamp until = 3;
 
-    // Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
+    /// Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
     optional bytes announceBackToHost = 4;
   }
 
@@ -50,21 +50,21 @@ message SwarmEvent {
   }
 
   oneof event {
-    // The peer was announced as available on the swarm.
+    /// The peer was announced as available on the swarm.
     PeerAvailable peerAvailable = 1;
-    // The peer left, or their announcement timed out.
+    /// The peer left, or their announcement timed out.
     PeerLeft peerLeft = 2;
   }
 }
 
-// Goes on a Pub/Sub host topic.
+/// Goes on a Pub/Sub host topic.
 message HostEvent {
   oneof event {
     SwarmEvent.PeerAvailable peerAvailable = 1;
   }
 }
 
-// Goes on Pub/Sub peer topic.
+/// Goes on Pub/Sub peer topic.
 message PeerEvent {
   oneof event {
     Message message = 1;

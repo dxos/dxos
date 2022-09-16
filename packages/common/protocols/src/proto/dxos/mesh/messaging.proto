@@ -13,8 +13,14 @@ import "../halo/keys.proto";
 /// 
 package dxos.mesh.messaging;
 
-/// TODO(mykola): implement reliable messaging on Messenger level.
 message ReliablePayload {
+  /// Unique message identifier. Used for Acknolegment.
   PubKey messageId = 1;
+  /// Payload for signal server netwrok.
   google.protobuf.Any payload = 2;
+}
+
+message Acknowledgement {
+  /// MessageId of the Message that is being acknowledged.
+  PubKey messageId = 1;
 }

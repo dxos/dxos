@@ -2,19 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 import { Transform } from 'stream';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { Transport, TransportFactory } from './transport';
-
-const log = debug('dxos:network-manager:swarm:transport:in-memory-transport');
 
 type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey]
 
