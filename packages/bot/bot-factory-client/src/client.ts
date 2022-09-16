@@ -66,7 +66,7 @@ export class BotFactoryClient {
           log('Connected.');
           resolve(port);
         })])
-      });
+      }).catch(err => log(err));
     });
 
     // TODO(burdon): Retry.
