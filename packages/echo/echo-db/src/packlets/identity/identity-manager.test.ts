@@ -21,21 +21,27 @@ describe('identity/identity-manager', () => {
     const metadata = new MetadataStore(storage.createDirectory('metadata'))
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
+    afterTest(() => feedStore.close());
 
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(signalContext)
     })
 
-    return new IdentityManager(
+    const identityManager = new IdentityManager(
       metadata,
       keyring,
       feedStore,
       networkManager
     )
+
+    return {
+      identityManager,
+      feedStore
+    }
   }
 
-  test.only('creates identity', async () => {
-    const identityManager = await setup()
+  test('creates identity', async () => {
+    const {identityManager} = await setup()
     await identityManager.open()
     afterTest(() => identityManager.close())
 
@@ -46,16 +52,17 @@ describe('identity/identity-manager', () => {
   test('reload from storage', async () => {
     const storage = createStorage({ type: StorageType.RAM });
 
-    const identityManager1 = await setup({ storage })
-    await identityManager1.open()
-    const identity1 = await identityManager1.createIdentity();
-    await identityManager1.close()
+    const peer1 = await setup({ storage })
+    await peer1.identityManager.open()
+    const identity1 = await peer1.identityManager.createIdentity();
+    await peer1.identityManager.close()
+    await peer1.feedStore.close()
 
-    const identityManager2 = await setup({ storage })
-    await identityManager2.open()
-    expect(identityManager2.identity).toBeDefined()
-    expect(identityManager2.identity!.identityKey).toEqual(identity1.identityKey)
-    expect(identityManager2.identity!.deviceKey).toEqual(identity1.deviceKey)
+    const peer2 = await setup({ storage })
+    await peer2.identityManager.open()
+    expect(peer2.identityManager.identity).toBeDefined()
+    expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey)
+    expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey)
 
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   })
