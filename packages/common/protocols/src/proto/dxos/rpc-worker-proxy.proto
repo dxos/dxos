@@ -6,6 +6,8 @@ syntax = "proto3";
 
 package dxos.rpc.proxy;
 
+// TODO(burdon): Why all sub messages?
+
 message SingletonMessage {
   enum Type {
     WINDOW_MESSAGE = 0;

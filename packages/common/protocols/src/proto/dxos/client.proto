@@ -19,7 +19,7 @@ package dxos.client;
 //
 
 service SystemService {
-  rpc GetConfig(google.protobuf.Empty) returns (config.Config);
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -36,7 +36,7 @@ enum InvitationState {
 
 /// Invitation process created by sender.
 message InvitationRequest {
-  optional echo.invitation.InvitationDescriptor descriptor = 1;
+  optional dxos.echo.invitation.InvitationDescriptor descriptor = 1;
 
   InvitationState state = 2;
 
@@ -106,14 +106,14 @@ service ProfileService {
 }
 
 message AddKeyRecordRequest {
-  halo.keys.KeyRecord keyRecord = 1;
+  dxos.halo.keys.KeyRecord keyRecord = 1;
 }
 
 message SignRequest {
   /**
    * - The public key of the key that is supposed to be used for signing.
    */
-  halo.keys.PubKey publicKey = 1;
+  dxos.halo.keys.PubKey publicKey = 1;
 
   bytes payload = 2;
 }

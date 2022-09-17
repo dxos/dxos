@@ -28,19 +28,19 @@ message EchoMetadata {
 // TODO(dmaretskyi): Cleanup numbering.
 message PartyMetadata {
   /// Party key.
-  halo.keys.PubKey key = 1;
+  dxos.halo.keys.PubKey key = 1;
 
-  optional halo.keys.PubKey genesis_feed_key = 6;
+  optional dxos.halo.keys.PubKey genesis_feed_key = 6;
 
   /// Key of the wriatable control feed.
-  optional halo.keys.PubKey control_feed_key = 4;
+  optional dxos.halo.keys.PubKey control_feed_key = 4;
 
   /// Key of the wriatable data feed.
-  optional halo.keys.PubKey data_feed_key = 3;
+  optional dxos.halo.keys.PubKey data_feed_key = 3;
 
   // Latest timeframe reached while processing party messages.
   optional timeframe.TimeframeVector latest_timeframe = 5;
 
   /// List of all feed associated with the party.
-  repeated halo.keys.PubKey feed_keys = 2;
+  repeated dxos.halo.keys.PubKey feed_keys = 2;
 }

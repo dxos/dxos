@@ -12,7 +12,7 @@ package dxos.mesh.messaging;
 
 message ReliablePayload {
   /// Unique message identifier. Used for Acknolegment.
-  halo.keys.PubKey messageId = 1;
+  dxos.halo.keys.PubKey messageId = 1;
 
   /// Payload for signal server netwrok.
   google.protobuf.Any payload = 2;
@@ -20,5 +20,5 @@ message ReliablePayload {
 
 message Acknowledgement {
   /// MessageId of the Message that is being acknowledged.
-  halo.keys.PubKey messageId = 1;
+  dxos.halo.keys.PubKey messageId = 1;
 }
