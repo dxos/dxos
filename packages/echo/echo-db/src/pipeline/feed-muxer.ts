@@ -6,12 +6,11 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { Message as HaloMessage } from '@dxos/credentials';
 import { checkType } from '@dxos/debug';
-import {
-  createFeedMeta, EchoEnvelope, FeedMessage, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter
-} from '@dxos/echo-protocol';
+import { createFeedMeta, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { jsonReplacer } from '@dxos/util';
 
 import { EchoProcessor, TimeframeClock } from '../packlets/database';
@@ -69,6 +68,7 @@ export class FeedMuxer {
         timeframe: this._timeframeClock.timeframe,
         echo: message
       }), loggingWriter);
+
       this._outboundHaloStream = mapFeedWriter<HaloMessage, FeedMessage>(async message => ({
         timeframe: this._timeframeClock.timeframe,
         halo: message

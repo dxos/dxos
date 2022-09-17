@@ -9,6 +9,8 @@ import moment from 'moment';
 
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { Filter, Keyring } from '../keys';
 import {
@@ -19,7 +21,7 @@ import {
   createPartyGenesisMessage,
   PartyState
 } from '../party';
-import { codecLoop, KeyType, Message, SignedMessage } from '../proto';
+import { codecLoop } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { PartyAuthenticator } from './authenticator';
 
@@ -68,7 +70,6 @@ const getIdentityKeyChainForDevice = (keyring: Keyring, devicePublicKey: PublicK
   keyring.findKeys(Filter.matches({ type: KeyType.FEED })).map(key => key.publicKey));
 
 describe('PartyAuthenticator', () => {
-
   it('Chain of Keys', async () => {
     const haloKeyring = new Keyring();
     const identityKey = await haloKeyring.createKeyRecord({ type: KeyType.PARTY });
@@ -137,12 +138,7 @@ describe('PartyAuthenticator', () => {
     await party.processMessages(messages);
 
     const wrappedCredentials = codecLoop(
-      createAuthMessage(
-        keyring,
-        partyKey,
-      identityKeyRecord!,
-      identityKeyRecord!
-      )
+      createAuthMessage(keyring, partyKey, identityKeyRecord!, identityKeyRecord!)
     );
 
     const ok = await auth.authenticate(wrappedCredentials.payload);

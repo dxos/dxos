@@ -1,13 +1,17 @@
-syntax = "proto3";
+//
+// Copyright 2020 DXOS.org
+//
 
-package dxos.test;
+syntax = "proto3";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
-import "any.proto";
 import "@dxos/protobuf-test";
+import "any.proto";
 import "extensions.proto";
+
+package dxos.test;
 
 message Key {
   required bytes data = 1;
@@ -64,8 +68,8 @@ message ComplexFields {
   }
 
   enum InnerEnum {
-    FOO = 1;
-    BAR = 2;
+    FOO = 0;
+    BAR = 1;
   }
 
   Inner inner = 19;
@@ -74,7 +78,7 @@ message ComplexFields {
   google.protobuf.Any googleAny = 21;
   dxos.test.any.Any importedAny = 22;
 
-  optional TestFoo fooTest = 23;
+  optional test.example.Test test = 23;
 }
 
 message WithTimestamp {
@@ -90,8 +94,8 @@ message Outer {
 }
 
 enum TaskType {
-  IN_PROGRESS = 1;
-  COMPLETED = 2;
+  IN_PROGRESS = 0;
+  COMPLETED = 1;
 }
 
 /**
@@ -118,7 +122,6 @@ message Task {
   // multiple lines
   optional google.protobuf.Any googleAny = 5;
 }
-
 
 message TaskList {
   repeated Task tasks = 1;

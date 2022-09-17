@@ -7,9 +7,10 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import type {
-  FeedWriter, ItemID, ModelSnapshot, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
+  FeedWriter, ItemID, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
 } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Model } from './model';
 import { getInsertionIndex } from './ordering';

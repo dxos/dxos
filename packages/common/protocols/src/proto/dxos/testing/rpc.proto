@@ -9,9 +9,7 @@ package dxos.testing.rpc;
 import "google/protobuf/empty.proto";
 
 service TestService {
-  // TODO(dmaretskyi): Rename to "Test".
   rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
-
   rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 

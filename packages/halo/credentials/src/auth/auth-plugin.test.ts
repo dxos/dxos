@@ -17,10 +17,12 @@ import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { PublicKey } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { Keyring } from '../keys';
-import { codec, codecLoop, KeyType, SignedMessage } from '../proto';
+import { codec, codecLoop } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';

@@ -208,7 +208,7 @@ message SubscribeToFeedBlocksResponse {
 // GetPartySnapshot
 
 message GetPartySnapshotRequest {
-  required PubKey partyKey = 1;
+  PubKey partyKey = 1;
 }
 
 message GetPartySnapshotResponse {
@@ -218,7 +218,7 @@ message GetPartySnapshotResponse {
 // SavePartySnapshot
 
 message SavePartySnapshotRequest {
-  required PubKey partyKey = 1;
+  PubKey partyKey = 1;
 }
 
 message SavePartySnapshotResponse {

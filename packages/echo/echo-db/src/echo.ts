@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { codec, DataService, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
@@ -16,13 +16,15 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Storage, createStorage, StorageType } from '@dxos/random-access-storage';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { ResultSet } from './api';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
-import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
+import { InvitationDescriptorWrapper, OfflineInvitationClaimer } from './invitations';
 import { DataServiceRouter } from './packlets/database';
 import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
@@ -374,7 +376,7 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
+  async joinParty (invitationDescriptor: InvitationDescriptorWrapper, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =

@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { EchoEnvelope, FeedMessage } from './proto';
+// TODO(burdon): Move defs to @dxos/protocols.
 
 //
 // Keys.

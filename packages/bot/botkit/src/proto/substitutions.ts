@@ -6,8 +6,8 @@ import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 import { publicKeySubstitutions, timeframeSubstitutions } from '@dxos/protocols';
 
 export default {
-  ...timeframeSubstitutions,
-  ...timestampSubstitutions,
+  ...anySubstitutions,
   ...publicKeySubstitutions,
-  ...anySubstitutions
+  ...timeframeSubstitutions,
+  ...timestampSubstitutions
 };

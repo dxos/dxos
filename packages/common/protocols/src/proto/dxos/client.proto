@@ -67,7 +67,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  required dxos.halo.keys.PubKey publicKey = 1;
+  dxos.halo.keys.PubKey publicKey = 1;
   optional string username = 2;
 }
 
@@ -154,29 +154,29 @@ service HaloService {
 
 message Party {
   message Member {
-    required dxos.halo.keys.PubKey publicKey = 1;
+    dxos.halo.keys.PubKey publicKey = 1;
     optional string displayName = 2;
   }
 
-  required dxos.halo.keys.PubKey publicKey = 1;
-  required bool isOpen = 2;
-  required bool isActive = 3;
+  dxos.halo.keys.PubKey publicKey = 1;
+  bool isOpen = 2;
+  bool isActive = 3;
 
   repeated Member members = 4;
 }
 
 message SubscribePartyRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 message GetPartyDetailsRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 
 message PartyDetails {
   /// The timeframe of mutations processed by the client.
-  required dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
+  dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
 message SubscribePartyResponse {
@@ -189,7 +189,7 @@ message SubscribePartiesResponse {
 }
 
 message CreateInvitationRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
   optional dxos.halo.keys.PubKey inviteeKey = 2;
@@ -201,7 +201,7 @@ message PartyActivationOptions {
 }
 
 message SetPartyStateRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 
   optional bool open = 2;
   optional bool activeGlobal = 3;
@@ -209,12 +209,12 @@ message SetPartyStateRequest {
 }
 
 message SubscribeMembersRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 message SubscribeMembersResponse {
   message PartyMember {
-    required dxos.halo.keys.PubKey publicKey = 1;
+    dxos.halo.keys.PubKey publicKey = 1;
     optional string displayName = 2;
   }
 

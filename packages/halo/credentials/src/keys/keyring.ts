@@ -6,16 +6,15 @@ import memdown from 'memdown';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import {
-  KeyPair, randomBytes, sign as cryptoSign, verify as cryptoVerify
-} from '@dxos/crypto';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { KeyPair, randomBytes, sign as cryptoSign, verify as cryptoVerify } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { KeyChain, KeyRecord, KeyRecordList, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { arraysEqual } from '@dxos/util';
 
 import { isSignedMessage, unwrapMessage } from '../party';
-import {
-  KeyChain, KeyRecord, KeyRecordList, KeyType, Message, SignedMessage, WithTypeUrl, createDateTimeString
-} from '../proto';
+import { createDateTimeString } from '../proto';
 import { RawSignature } from '../typedefs';
 import { Filter, FilterFunction } from './filter';
 import {
@@ -200,7 +199,7 @@ export class Keyring implements Signer {
    * @param validate Whether or not to validate the signatures.
    */
   @meter
-  static signingKeys (message: Message | SignedMessage, { deep = true, validate = true } = {}): PublicKey[] {
+  static signingKeys (message: SignedMessage | SignedMessage, { deep = true, validate = true } = {}): PublicKey[] {
     const all = new Set<string>();
 
     if (isSignedMessage(message)) {

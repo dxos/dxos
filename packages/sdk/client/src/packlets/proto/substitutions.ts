@@ -8,10 +8,10 @@ import type { ConnectionEvent } from '@dxos/network-manager';
 import { publicKeySubstitutions, timeframeSubstitutions } from '@dxos/protocols';
 
 export default {
-  ...timestampSubstitutions,
+  ...anySubstitutions,
   ...publicKeySubstitutions,
   ...timeframeSubstitutions,
-  ...anySubstitutions,
+  ...timestampSubstitutions,
 
   // TODO(dmaretskyi): Remove this and include halo messages directly.
   'dxos.echo.feed.CredentialsMessage': {

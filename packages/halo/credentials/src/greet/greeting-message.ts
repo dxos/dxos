@@ -4,7 +4,9 @@
 
 import assert from 'node:assert';
 
-import { ClaimResponse, Command, SignedMessage, Message, WithTypeUrl } from '../proto';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { ClaimResponse, Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 const TYPE_URL_GREETING_COMMAND = 'dxos.halo.credentials.greet.Command';
 

@@ -1,0 +1,12 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package test.example;
+
+message Test {
+  uint32 foo = 1;
+  string bar = 2;
+}

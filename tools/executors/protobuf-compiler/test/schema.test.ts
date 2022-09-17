@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { MyKey } from './my-key';
 import { schema } from './proto/gen';
 import { ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test';
-import { TestFoo } from './proto/gen/dxos/test/testfoo';
+import { Test } from './proto/gen/test/example';
 
 describe('Schema', () => {
 
@@ -46,25 +46,21 @@ describe('Schema', () => {
   });
 
   test('encode and decode external package message', async () => {
-    const codec = schema.getCodecForType('dxos.test.testfoo.TestFoo');
+    const codec = schema.getCodecForType('test.example.Test');
 
-    const initial: TestFoo = { fizz: 3, bazz: '5' };
+    const initial: Test = { foo: 3, bar: '5' };
 
     const encoded = codec.encode(initial);
-
     expect(encoded).toBeInstanceOf(Uint8Array);
 
     const decoded = codec.decode(encoded);
-
     expect(decoded).toEqual(initial);
 
     expect(() => {
       const encoded = codec.encode({ badname: 'badvalue' } as any);
-
       expect(encoded).toBeInstanceOf(Uint8Array);
 
       const decoded = codec.decode(encoded);
-
       expect(decoded).toEqual(initial);
     }).toThrow();
   });

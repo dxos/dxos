@@ -7,10 +7,10 @@ import type { ConnectionEvent } from '@dxos/network-manager';
 import { publicKeySubstitutions, timeframeSubstitutions } from '@dxos/protocols';
 
 export default {
-  ...timestampSubstitutions,
+  ...anySubstitutions,
   ...publicKeySubstitutions,
   ...timeframeSubstitutions,
-  ...anySubstitutions,
+  ...timestampSubstitutions,
 
   // TODO(dmaretskyi): Use protobuf's built-in type and remove this.
   'dxos.devtools.SubscribeToSwarmInfoResponse.SwarmInfo.ConnectionInfo.Json': {

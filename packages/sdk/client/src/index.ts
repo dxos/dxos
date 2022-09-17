@@ -15,7 +15,7 @@ export {
   SelectionResult,
   ItemFilterDeleted,
   InvitationDescriptor,
-  InvitationDescriptorType,
+  InvitationDescriptor.Type,
   OpenProgress,
   PartyMember,
   ResultSet,

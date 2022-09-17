@@ -46,7 +46,7 @@ message Bot {
 
   optional BotPackageSpecifier package_specifier = 3;
   optional Timestamp last_start = 4;
-  optional dxos.halo.keys.PubKey party_key = 5;
+  optional PubKey party_key = 5;
 
   message Runtime {
     optional int32 exit_code = 1;
@@ -67,10 +67,10 @@ message SpawnBotRequest {
   optional BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.InvitationDescriptor invitation = 2;
+  optional InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
-  optional dxos.halo.keys.PubKey party_key = 3;
+  optional PubKey party_key = 3;
 }
 
 message SendCommandRequest {
@@ -118,10 +118,10 @@ service BotFactoryService {
 
 message InitializeRequest {
   /// Bot runtime configuration.
-  optional dxos.config.Config config = 1;
+  optional Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.InvitationDescriptor invitation = 2;
+  optional InvitationDescriptor invitation = 2;
 
   /// ID of the bot.
   optional string id = 3;
@@ -129,7 +129,7 @@ message InitializeRequest {
 
 message StartRequest {
   /// Bot runtime configuration.
-  dxos.config.Config config = 1;
+  Config config = 1;
 }
 
 /// Service that is used by bots communicating with bot factory.

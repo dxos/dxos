@@ -9,11 +9,12 @@ import assert from 'node:assert';
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed } from '@dxos/debug';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, boolGuard, Provider } from '@dxos/util';
 
-import { InvitationDescriptor } from '../invitations';
+import { InvitationDescriptorWrapper } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
@@ -186,7 +187,7 @@ export class PartyManager {
   }
 
   @synchronized
-  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+  async joinParty (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.

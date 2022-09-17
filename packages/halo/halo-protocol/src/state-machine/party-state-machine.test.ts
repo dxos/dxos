@@ -4,7 +4,8 @@
 
 import expect from 'expect';
 
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring } from '@dxos/credentials';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { createCredential, verifyCredential } from '../credentials';
 import { AdmittedFeed, Chain, PartyMember } from '../proto';

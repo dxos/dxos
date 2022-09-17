@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptorType } from '@dxos/echo-db';
+import { InvitationDescriptor, InvitationDescriptor.Type } from '@dxos/echo-db';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';
@@ -110,7 +110,7 @@ export class InvitationProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+      if (invitationDescriptor.type === InvitationDescriptor.Type.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
 
@@ -122,7 +122,7 @@ export class InvitationProxy {
       });
     };
 
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptor.Type.INTERACTIVE) {
       // Authenticate straight away, if secret is already provided.
       void authenticate(invitationDescriptor.secret);
     }

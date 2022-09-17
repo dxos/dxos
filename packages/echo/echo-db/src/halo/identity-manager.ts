@@ -6,10 +6,11 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
-import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { Filter, Keyring, SecretProvider } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { InvitationDescriptor } from '../invitations';
+import { InvitationDescriptorWrapper } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { HaloCreationOptions, HaloFactory } from './halo-factory';
 import { HaloParty } from './halo-party';
@@ -117,7 +118,7 @@ export class IdentityManager {
     * Joins an existing Identity HALO.
     */
    @synchronized
-   async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
+   async joinHalo (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
      assert(!this._identity, 'Identity already initialized.');
 
      const halo = await this._haloFactory.joinHalo(invitationDescriptor, secretProvider);

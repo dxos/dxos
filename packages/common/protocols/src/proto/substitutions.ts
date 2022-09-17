@@ -9,7 +9,7 @@ import { timeframeSubstitutions } from '../timeframe';
 
 export default {
   ...anySubstitutions,
+  ...publicKeySubstitutions,
   ...timeframeSubstitutions,
-  ...timestampSubstitutions,
-  ...publicKeySubstitutions
+  ...timestampSubstitutions
 };

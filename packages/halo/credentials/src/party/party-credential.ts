@@ -4,11 +4,16 @@
 
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
+import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { assertValidPublicKey, Signer } from '../keys';
-import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
 // TODO(burdon): Remove dependencies on ANY?
 export const TYPE_URL_MESSAGE = 'dxos.halo.signed.Message';

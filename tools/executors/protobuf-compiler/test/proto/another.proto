@@ -1,5 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 package dxos.test.another;
 
-message AnotherMessage {
-  
-}
+message AnotherMessage {}

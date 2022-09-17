@@ -9,7 +9,7 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, InvitationDescriptor.Type, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 
 import {
   AuthenticateInvitationRequest,
@@ -175,7 +175,7 @@ class PartyService implements IPartyService {
               }
             });
 
-            assert(invitation.type === InvitationDescriptorType.INTERACTIVE);
+            assert(invitation.type === InvitationDescriptor.Type.INTERACTIVE);
             invitation.secret = Buffer.from(secret);
           } else {
             invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
@@ -183,7 +183,7 @@ class PartyService implements IPartyService {
 
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-          if (invitation.type === InvitationDescriptorType.OFFLINE) {
+          if (invitation.type === InvitationDescriptor.Type.OFFLINE) {
             close();
           }
         } catch (err: any) {
@@ -214,7 +214,7 @@ class PartyService implements IPartyService {
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
         InvitationDescriptor.fromProto(request),
-        request.type === InvitationDescriptorType.INTERACTIVE ? secretProvider : undefined
+        request.type === InvitationDescriptor.Type.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });

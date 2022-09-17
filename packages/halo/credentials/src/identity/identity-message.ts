@@ -4,9 +4,13 @@
 
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { DeviceInfo, IdentityInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
+
 import { Keyring } from '../keys';
 import { unwrapEnvelopes, extractContents, unwrapMessage, wrapMessage } from '../party';
-import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage, WithTypeUrl } from '../proto';
 
 /**
  * Return the @type, if present.

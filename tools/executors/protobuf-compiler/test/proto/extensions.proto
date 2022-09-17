@@ -1,8 +1,12 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 syntax = "proto3";
 
-package dxos.test.extensions;
-
 import "google/protobuf/descriptor.proto";
+
+package dxos.test.extensions;
 
 extend google.protobuf.FieldOptions {
   string defaultValue = 5001;
@@ -12,7 +16,6 @@ extend google.protobuf.FieldOptions {
 message OptionsObject {
   int32 field = 1;
 }
-
 
 message WithDefaultField {
   /// Tag

@@ -15,7 +15,6 @@ describe('extending protobuf', () => {
 
     const schema = new Schema(anyProto, anySubstitutions);
     const codec = schema.tryGetCodecForType('dxos.test.any.Wrapper');
-
     codec.addJson(anotherProto.toJSON());
 
     const data = {

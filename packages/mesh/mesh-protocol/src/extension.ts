@@ -7,7 +7,7 @@ import { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 import assert from 'node:assert';
 
-import { Codec, patchBufferCodec, WithTypeUrl } from '@dxos/codec-protobuf';
+import { patchBufferCodec, Codec, WithTypeUrl } from '@dxos/codec-protobuf';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,

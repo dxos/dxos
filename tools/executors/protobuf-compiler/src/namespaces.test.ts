@@ -22,7 +22,7 @@ test('split namespaces', async () => {
     'dxos.test',
     'dxos.test.any',
     'dxos.test.extensions',
-    'dxos.test.testfoo',
+    'test.example.Test',
     'google.protobuf'
   ].sort());
 });

@@ -8,8 +8,8 @@ import { MyInterfaceSubstitution } from '../my-interface';
 import { MyKey } from '../my-key';
 
 export default {
-  ...timestampSubstitutions,
   ...anySubstitutions,
+  ...timestampSubstitutions,
   'dxos.test.Key': {
     encode: (value: MyKey) => ({ data: value.keyData }),
     decode: (value: any) => new MyKey(value.data)

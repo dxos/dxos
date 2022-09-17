@@ -7,28 +7,29 @@ import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
 import {
-  ClaimResponse,
-  Keyring,
-  KeyType,
-  GreetingCommandPlugin,
-  PartyInvitationClaimHandler,
+  codec,
   createAuthMessage,
   createGreetingClaimMessage,
+  Keyring,
+  GreetingCommandPlugin,
+  PartyInvitationClaimHandler,
   SecretInfo,
   SecretProvider,
-  SecretValidator,
-  SignedMessage,
-  codec
+  SecretValidator
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
+import { InvitationDescriptorWrapper } from '../invitations';
 import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
-import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 import { InvitationFactory } from './invitation-factory';
 
 const log = debug('dxos:party-manager:party-invitation-claimer');
@@ -45,9 +46,9 @@ export class OfflineInvitationClaimer {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _invitationDescriptor: InvitationDescriptor
+    private readonly _invitationDescriptor: InvitationDescriptorWrapper
   ) {
-    assert(InvitationDescriptorType.OFFLINE === _invitationDescriptor.type);
+    assert(InvitationDescriptor.Type.OFFLINE === _invitationDescriptor.type);
   }
 
   get state () {
@@ -91,7 +92,7 @@ export class OfflineInvitationClaimer {
    * Executes a 'CLAIM' command for an offline invitation.  If successful, the Party member's device will begin
    * interactive Greeting, with a new invitation and swarm key which will be provided to the claimant.
    * Those will be returned in the form of an InvitationDescriptor.
-   * @return {InvitationDescriptor}
+   * @return {InvitationDescriptorWrapper}
    */
   async claim () {
     assert(this._state === GreetingState.CONNECTED);
@@ -113,7 +114,7 @@ export class OfflineInvitationClaimer {
     await this.disconnect();
     this._state = GreetingState.SUCCEEDED;
 
-    return new InvitationDescriptor(InvitationDescriptorType.INTERACTIVE, Buffer.from(rendezvousKey), Buffer.from(id));
+    return new InvitationDescriptorWrapper(InvitationDescriptor.Type.INTERACTIVE, Buffer.from(rendezvousKey), Buffer.from(id));
   }
 
   async disconnect () {

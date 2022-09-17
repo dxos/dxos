@@ -5,14 +5,14 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-
-import "./signed.proto";
+import "dxos/halo/signed.proto";
 
 package dxos.halo.keys;
 
 //
 // The type/use of a public key.
 //
+// TODO(burdon): Prefix KEY_TYPE_UNKNOWN.
 enum KeyType {
   UNKNOWN = 0;
   IDENTITY = 1;
@@ -34,12 +34,12 @@ message KeyRecord {
   /**
    * The `KeyType` type of the key. This is often unknown for keys from other sources.
    */
-  required KeyType type = 1;
+  KeyType type = 1;
 
   /**
    * The public key as a Buffer (required).
    */
-  required PubKey publicKey = 2;
+  PubKey public_key = 2;
 
   /**
    * The secret key as a Buffer (this will never be visible outside the Keyring).
@@ -83,7 +83,7 @@ message KeyRecordList {
 // would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
 //
 message KeyChain {
-  required PubKey publicKey = 1;
-  required SignedMessage message = 2;
-  repeated KeyChain parents = 3;
+  PubKey publicKey = 1;
+  dxos.halo.signed.SignedMessage message = 2;
+  KeyChain parents = 3;
 }

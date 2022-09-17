@@ -14,9 +14,10 @@ import assert from 'node:assert';
 import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 
 import { wrapMessage } from '../party';
-import { codec, Command } from '../proto';
+import { codec } from '../proto';
 import { PeerId } from '../typedefs';
 import { ERR_GREET_GENERAL } from './error-codes';
 

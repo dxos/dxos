@@ -2,14 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
-import { schemaJson as Schema, schema } from './gen';
+import { schema } from '@dxos/protocols';
 
 export const codec = schema.getCodecForType('dxos.halo.signed.Message');
 
-/**
- * Loop the message through the codec. Useful for checking that the object properly conforms to protobuf.
- * @param message
- */
+// TODO(burdon): Testing.
 export const codecLoop = (message: any) => codec.decode(codec.encode(message));
-
-export { Schema, schema };

@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.echo.testing;
+package dxos.testing.data;
 
 message TestItemMutation {
   string key = 1;
