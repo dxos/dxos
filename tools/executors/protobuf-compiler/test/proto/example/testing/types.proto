@@ -130,7 +130,7 @@ message TaskList {
 }
 
 message SubstitutedByInterface {
-  string foo = 1;
+  string data = 1;
 }
 
 message TaskCount {
