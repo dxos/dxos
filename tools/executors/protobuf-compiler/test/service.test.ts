@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { Stream } from '@dxos/codec-protobuf';
 
 import { MyKey } from './my-key';
-import { schema } from './proto/gen';
+import { schema } from './proto';
 import { TaskType } from './proto/gen/example/testing/types';
 
 test('services', async () => {

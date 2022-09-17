@@ -6,11 +6,11 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { MyKey } from './my-key';
-import { schema } from './proto/gen';
+import { schema } from './proto';
 import {
   ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp
 } from './proto/gen/example/testing/types';
-import { Test } from './proto/gen/example/testing/util';
+import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 
 describe('Schema', () => {
 
