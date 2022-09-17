@@ -6,14 +6,13 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized, Trigger } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
+import { schema } from '@dxos/protocols';
+import { Request, Response, Error as ErrorResponse, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
-import { schema } from './proto/gen';
-import { Request, Response, Error as ErrorResponse, RpcMessage } from './proto/gen/dxos/rpc';
-import { Any } from './proto/gen/google/protobuf';
 
 const DEFAULT_TIMEOUT = 3000;
 

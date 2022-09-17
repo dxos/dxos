@@ -5,10 +5,10 @@
 import debug from 'debug';
 
 import { sleep } from '@dxos/async';
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc-worker-proxy';
 import { RpcPeer, RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
-import { SingletonMessage } from './proto';
 import { ProxyPort } from './proxy-port';
 
 const log = debug('dxos:rpc-worker-proxy');

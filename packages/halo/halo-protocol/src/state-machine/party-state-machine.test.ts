@@ -5,10 +5,10 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/credentials';
+import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { createCredential, verifyCredential } from '../credentials';
-import { AdmittedFeed, Chain, PartyMember } from '../proto';
 import { PartyStateMachine } from './party-state-machine';
 
 describe('PartyStateMachine', () => {
@@ -25,7 +25,7 @@ describe('PartyStateMachine', () => {
       issuer: party,
       subject: party,
       assertion: {
-        '@type': 'dxos.halo.credentials.PartyGenesis',
+        '@type': 'dxos.halo.credentials.party.PartyGenesis',
         partyKey: party
       },
       keyring
@@ -109,7 +109,7 @@ describe('PartyStateMachine', () => {
       issuer: party,
       subject: party,
       assertion: {
-        '@type': 'dxos.halo.credentials.PartyGenesis',
+        '@type': 'dxos.halo.credentials.party.PartyGenesis',
         partyKey: party
       },
       keyring
@@ -189,7 +189,7 @@ describe('PartyStateMachine', () => {
       issuer: haloParty,
       subject: haloParty,
       assertion: {
-        '@type': 'dxos.halo.credentials.PartyGenesis',
+        '@type': 'dxos.halo.credentials.party.PartyGenesis',
         partyKey: haloParty
       },
       keyring

@@ -7,10 +7,10 @@ import { it as test } from 'mocha';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { schema } from '@dxos/protocols';
+import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/dxos/testing/rpc';
 
 import { SerializedRpcError } from './errors';
-import { schema } from './proto/gen';
-import { TestStreamService, TestRpcResponse } from './proto/gen/dxos/testing/rpc';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testutil';
 

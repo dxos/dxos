@@ -4,10 +4,9 @@
 
 import debug from 'debug';
 
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc-worker-proxy';
 import { RpcPort } from '@dxos/rpc';
 import { isNode } from '@dxos/util';
-
-import { SingletonMessage } from './proto';
 
 const log = debug('dxos:rpc-worker-proxy:singleton-port');
 

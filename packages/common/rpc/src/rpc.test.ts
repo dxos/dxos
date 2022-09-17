@@ -6,10 +6,9 @@ import { expect } from 'earljs';
 import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Any, Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
-import { Any } from './proto/gen/google/protobuf';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
 
