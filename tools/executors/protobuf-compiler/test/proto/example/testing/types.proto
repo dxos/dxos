@@ -14,6 +14,8 @@ import "./another.proto";
 
 package example.testing.types;
 
+// TODO(burdon): Remove foo, bar, etc.
+
 /// NOTE: Clashes with any.proto (requires FQ name below).
 message Any {
   string foo = 1;

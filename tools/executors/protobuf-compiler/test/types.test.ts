@@ -12,38 +12,37 @@ import {
 } from './proto/gen/example/testing/types';
 import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
 
-describe('Schema', () => {
+// TODO(burdon): Remove foo, bar, etc.
 
+describe('Schema', () => {
   test('encode and decode', async () => {
     const codec = schema.getCodecForType('example.testing.types.TaskList');
 
     const initial: TaskList = {
       tasks: [
         {
-          id: 'foo',
-          title: 'Bar',
-          key: new MyKey(Buffer.from('foo')),
+          id: 'task-1',
+          title: 'Task 1',
+          key: new MyKey(Buffer.from('task-1')),
           type: TaskType.COMPLETED,
           googleAny: {
             '@type': 'example.testing.types.SubstitutedByInterface',
-            foo: 'foo'
+            data: 'test'
           }
         },
         {
-          id: 'baz',
-          title: 'Baz',
-          key: new MyKey(Buffer.from('foo')),
+          id: 'task-2',
+          title: 'Task Two',
+          key: new MyKey(Buffer.from('task-1')),
           type: TaskType.IN_PROGRESS
         }
       ]
     };
 
     const encoded = codec.encode(initial);
-
     expect(encoded).toBeInstanceOf(Uint8Array);
 
     const decoded = codec.decode(encoded);
-
     expect(decoded).toEqual(initial);
   });
 
@@ -159,6 +158,7 @@ describe('Schema', () => {
 
       const encoded = codec.encode(initial);
       expect(encoded).toBeInstanceOf(Uint8Array);
+
       const decoded = codec.decode(encoded);
       expect(decoded).toEqual(initial);
     });
@@ -247,8 +247,10 @@ describe('Schema', () => {
       const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
       const initial: OptionalScalars = {};
+
       const encoded = codec.encode(initial);
       expect(encoded).toBeInstanceOf(Uint8Array);
+
       const decoded = codec.decode(encoded);
       expect(decoded).toEqual(initial);
     });
@@ -257,6 +259,7 @@ describe('Schema', () => {
       const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
       const expected: OptionalScalars = {};
+
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
     });
@@ -270,6 +273,7 @@ describe('Schema', () => {
         num: 0
       }
     };
+
     const decoded = codec.decode(Buffer.from(''));
     expect(decoded).toEqual(expected);
   });
