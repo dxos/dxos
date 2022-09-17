@@ -10,6 +10,7 @@ import "google/protobuf/empty.proto";
 import "@dxos/protobuf-test";
 import "any.proto";
 import "extensions.proto";
+import "./another.proto";
 
 package dxos.test;
 
