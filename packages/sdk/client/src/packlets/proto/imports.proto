@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "@dxos/protocols/src/proto/dxos/client.proto";
-import "@dxos/protocols/src/proto/dxos/devtools.proto";
 import "@dxos/protocols/src/proto/dxos/config.proto";
+import "@dxos/protocols/src/proto/dxos/devtools.proto";
 import "@dxos/protocols/src/proto/dxos/echo/service.proto";
 import "@dxos/protocols/src/proto/dxos/rpc-worker-proxy.proto";

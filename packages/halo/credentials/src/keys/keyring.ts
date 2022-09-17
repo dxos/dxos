@@ -141,7 +141,7 @@ export class Keyring implements Signer {
     });
 
     return {
-      '@type': 'dxos.credentials.SignedMessage',
+      '@type': 'dxos.halo.signed.SignedMessage',
       signed,
       signatures
     };
@@ -565,7 +565,7 @@ export class Keyring implements Signer {
     });
 
     return canonicalStringify({
-      '@type': 'dxos.credentials.keys.KeyRecordList',
+      '@type': 'dxos.halo.credentials.keys.KeyRecordList',
       keys
     });
   }

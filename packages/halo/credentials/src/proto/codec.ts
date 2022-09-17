@@ -4,7 +4,7 @@
 
 import { schemaJson as Schema, schema } from './gen';
 
-export const codec = schema.getCodecForType('dxos.credentials.Message');
+export const codec = schema.getCodecForType('dxos.halo.signed.Message');
 
 /**
  * Loop the message through the codec. Useful for checking that the object properly conforms to protobuf.

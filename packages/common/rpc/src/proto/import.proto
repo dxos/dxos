@@ -7,4 +7,4 @@ syntax = "proto3";
 package dxos.rpc;
 
 import "@dxos/protocols/src/proto/dxos/rpc.proto";
-import "@dxos/protocols/src/proto/dxos/test/rpc.proto";
+import "@dxos/protocols/src/proto/dxos/testing/rpc.proto";

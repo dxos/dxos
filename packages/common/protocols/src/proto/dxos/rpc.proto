@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-package dxos.rpc;
-
 import "google/protobuf/any.proto";
+
+package dxos.rpc;
 
 option go_package = "github.com/dxos/kube/go/dxrpc/pb";
 

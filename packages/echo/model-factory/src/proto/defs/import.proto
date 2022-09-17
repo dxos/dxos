@@ -8,4 +8,4 @@ import "@dxos/protocols/src/proto/dxos/echo/metadata.proto";
 import "@dxos/protocols/src/proto/dxos/echo/service.proto";
 import "@dxos/protocols/src/proto/dxos/echo/snapshot.proto";
 
-import "@dxos/protocols/src/proto/dxos/test/echo.proto";
+import "@dxos/protocols/src/proto/dxos/testing/echo.proto";

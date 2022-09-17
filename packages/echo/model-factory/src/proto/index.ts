@@ -9,4 +9,4 @@ export * from './gen/dxos/echo/metadata';
 export * from './gen/dxos/echo/service';
 export * from './gen/dxos/echo/snapshot';
 
-export * from './gen/dxos/test/echo';
+export * from './gen/dxos/testing/echo';

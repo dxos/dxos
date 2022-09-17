@@ -357,10 +357,10 @@ describe('PartyAuthenticator', () => {
     await party.processMessages(messages);
 
     const wrappedCredentials = {
-      '@type': 'dxos.credentials.Message',
+      '@type': 'dxos.halo.signed.Message',
       payload:
       keyring.sign({
-        '@type': 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.halo.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord!.publicKey
       }, [identityKeyRecord!])
@@ -456,10 +456,10 @@ describe('PartyAuthenticator', () => {
     await party.processMessages(messages);
 
     const wrappedCredentials = {
-      '@type': 'dxos.credentials.Message',
+      '@type': 'dxos.halo.signed.Message',
       payload:
       keyring.sign({
-        '@type': 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.halo.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord!.publicKey,
         deviceKey: deviceKeyRecord!.publicKey
@@ -492,10 +492,10 @@ describe('PartyAuthenticator', () => {
     await party.processMessages(messages);
 
     const wrappedCredentials = {
-      '@type': 'dxos.credentials.Message',
+      '@type': 'dxos.halo.signed.Message',
       payload:
       keyring.sign({
-        '@type': 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.halo.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord!.publicKey,
         deviceKey: deviceKeyRecord!.publicKey
@@ -528,10 +528,10 @@ describe('PartyAuthenticator', () => {
     await party.processMessages(messages);
 
     const wrappedCredentials = {
-      '@type': 'dxos.credentials.Message',
+      '@type': 'dxos.halo.signed.Message',
       payload:
       keyring.sign({
-        '@type': 'dxos.credentials.auth.Auth',
+        '@type': 'dxos.halo.credentials.auth.Auth',
         partyKey,
         identityKey: identityKeyRecord!.publicKey,
         deviceKey: deviceKeyRecord!.publicKey

@@ -6,9 +6,6 @@ syntax = "proto3";
 
 import "../halo/keys.proto";
 
-/// 
-/// swarm - peer to peer networking that uses signal and messaging.
-/// 
 package dxos.mesh.swarm;
 
 message SwarmMessage {

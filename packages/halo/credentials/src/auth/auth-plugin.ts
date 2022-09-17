@@ -14,7 +14,7 @@ import { ERR_AUTH_GENERAL, ERR_AUTH_REJECTED } from './error-codes';
 
 const log = debug('dxos:halo:auth');
 
-const EXTENSION_NAME = 'dxos.credentials.auth';
+const EXTENSION_NAME = 'dxos.halo.credentials.auth';
 
 /**
  * A Protocol extension to require nodes to be authenticated during handshake before being allowed to replicate.

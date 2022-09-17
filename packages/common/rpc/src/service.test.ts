@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf';
 
 import { SerializedRpcError } from './errors';
 import { schema } from './proto/gen';
-import { TestStreamService, TestRpcResponse } from './proto/gen/dxos/test/rpc';
+import { TestStreamService, TestRpcResponse } from './proto/gen/dxos/testing/rpc';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testutil';
 
@@ -21,7 +21,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -37,7 +37,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -60,7 +60,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -80,7 +80,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -111,7 +111,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -127,7 +127,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.test.rpc.TestService')
+        TestService: schema.getService('dxos.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -152,7 +152,7 @@ describe('Protobuf service', () => {
       server = createProtoRpcPeer({
         requested: {},
         exposed: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
         },
         handlers: {
           TestStreamService: {
@@ -176,7 +176,7 @@ describe('Protobuf service', () => {
 
       client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},
@@ -219,8 +219,8 @@ describe('Protobuf service', () => {
     it('call different services', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('dxos.test.rpc.TestService');
-      const PingService = schema.getService('dxos.test.rpc.PingService');
+      const TestService = schema.getService('dxos.testing.rpc.TestService');
+      const PingService = schema.getService('dxos.testing.rpc.PingService');
 
       const services = createServiceBundle({
         TestService,
@@ -269,10 +269,10 @@ describe('Protobuf service', () => {
 
       const alice = createProtoRpcPeer({
         requested: {
-          TestService: schema.getService('dxos.test.rpc.TestService')
+          TestService: schema.getService('dxos.testing.rpc.TestService')
         },
         exposed: {
-          PingService: schema.getService('dxos.test.rpc.PingService')
+          PingService: schema.getService('dxos.testing.rpc.PingService')
         },
         handlers: {
           PingService: {
@@ -284,10 +284,10 @@ describe('Protobuf service', () => {
 
       const bob = createProtoRpcPeer({
         requested: {
-          PingService: schema.getService('dxos.test.rpc.PingService')
+          PingService: schema.getService('dxos.testing.rpc.PingService')
         },
         exposed: {
-          TestService: schema.getService('dxos.test.rpc.TestService')
+          TestService: schema.getService('dxos.testing.rpc.TestService')
         },
         handlers: {
           TestService: {

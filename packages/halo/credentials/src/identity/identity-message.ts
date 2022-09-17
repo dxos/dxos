@@ -23,7 +23,7 @@ export const createDeviceInfoMessage = (keyring: Keyring, displayName: string, d
   assert(deviceKey);
 
   const message: WithTypeUrl<DeviceInfo> = {
-    '@type': 'dxos.credentials.identity.DeviceInfo',
+    '@type': 'dxos.halo.credentials.identity.DeviceInfo',
     publicKey: deviceKey.publicKey,
     displayName
   };
@@ -40,7 +40,7 @@ export const createIdentityInfoMessage = (keyring: Keyring, displayName: string,
   assert(identityKey);
 
   const message: WithTypeUrl<IdentityInfo> = {
-    '@type': 'dxos.credentials.identity.IdentityInfo',
+    '@type': 'dxos.halo.credentials.identity.IdentityInfo',
     publicKey: identityKey.publicKey,
     displayName
   };
@@ -58,7 +58,7 @@ export const isIdentityMessage = (message: Message | SignedMessage) => {
   const type = getTypeUrl(message);
 
   // Since `message.payload` may not exist, make safe and return false.
-  return type && type.startsWith('dxos.credentials.identity.');
+  return type && type.startsWith('dxos.halo.credentials.identity.');
 };
 
 /**
@@ -70,7 +70,7 @@ export const isDeviceInfoMessage = (message: Message | SignedMessage) => {
   message = extractContents(unwrapEnvelopes(unwrapMessage(message)));
   const type = getTypeUrl(message);
 
-  return type === 'dxos.credentials.identity.DeviceInfo';
+  return type === 'dxos.halo.credentials.identity.DeviceInfo';
 };
 
 /**
@@ -82,5 +82,5 @@ export const isIdentityInfoMessage = (message: Message | SignedMessage) => {
   message = extractContents(unwrapEnvelopes(unwrapMessage(message)));
   const type = getTypeUrl(message);
 
-  return type === 'dxos.credentials.identity.IdentityInfo';
+  return type === 'dxos.halo.credentials.identity.IdentityInfo';
 };

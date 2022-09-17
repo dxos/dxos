@@ -115,7 +115,7 @@ describe('feed store iterator', () => {
 
   test('skipping initial messages', async () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), {
-      valueEncoding: schema.getCodecForType('dxos.test.echo.TestItemMutation')
+      valueEncoding: schema.getCodecForType('dxos.testing.echo.TestItemMutation')
     });
 
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];

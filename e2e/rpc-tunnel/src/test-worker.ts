@@ -14,7 +14,7 @@ onconnect = async (event: MessageEvent<any>) => {
   const server = createProtoRpcPeer({
     requested: {},
     exposed: {
-      TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+      TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
     },
     handlers: client.handlers,
     port

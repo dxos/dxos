@@ -47,7 +47,7 @@ const getPeerId = (protocol: Protocol) => {
  */
 // TODO(burdon): Rename GreetingPlugin.
 export class GreetingCommandPlugin extends EventEmitter {
-  public static EXTENSION_NAME = 'dxos.credentials.greeting';
+  public static EXTENSION_NAME = 'dxos.halo.credentials.greeting';
 
   _peerId: Buffer;
   _peerMessageHandler: GreetingCommandMessageHandler;

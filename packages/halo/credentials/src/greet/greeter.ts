@@ -192,7 +192,7 @@ export class Greeter {
     await invitation.begin();
 
     return {
-      '@type': 'dxos.credentials.greet.BeginResponse',
+      '@type': 'dxos.halo.credentials.greet.BeginResponse',
       info: {
         id: {
           '@type': 'google.protobuf.BytesValue',
@@ -213,7 +213,7 @@ export class Greeter {
 
     await invitation.handshake();
     return {
-      '@type': 'dxos.credentials.greet.HandshakeResponse',
+      '@type': 'dxos.halo.credentials.greet.HandshakeResponse',
       partyKey: invitation.partyKey,
       nonce: invitation.nonce
     };
@@ -256,7 +256,7 @@ export class Greeter {
     await invitation.notarize();
     assert(this._genesisFeedKey);
     return {
-      '@type': 'dxos.credentials.greet.NotarizeResponse',
+      '@type': 'dxos.halo.credentials.greet.NotarizeResponse',
       copies,
       genesisFeed: this._genesisFeedKey
     };

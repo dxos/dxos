@@ -6,9 +6,10 @@ export * from './any';
 export * from './codec';
 export * from './datetime';
 
-export * from './gen/dxos/credentials';
-export * from './gen/dxos/credentials/auth';
-export * from './gen/dxos/credentials/greet';
-export * from './gen/dxos/credentials/identity';
-export * from './gen/dxos/credentials/party';
+export * from './gen/dxos/halo/credentials';
 export * from './gen/dxos/halo/keys';
+export * from './gen/dxos/halo/signed';
+export * from './gen/dxos/halo/credentials/auth';
+export * from './gen/dxos/halo/credentials/greet';
+export * from './gen/dxos/halo/credentials/identity';
+export * from './gen/dxos/halo/credentials/party';

@@ -4,8 +4,6 @@
 
 syntax = "proto3";
 
-package dxos.devtools;
-
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -14,6 +12,8 @@ import "./echo/snapshot.proto";
 import "./halo/keys.proto";
 import "./halo/signed.proto";
 import "./rpc.proto";
+
+package dxos.devtools;
 
 //
 // DevtoolsHost

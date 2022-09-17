@@ -4,10 +4,10 @@
 
 syntax = "proto3";
 
-package dxos.echo.snapshot;
-
 import "../halo/keys.proto";
 import "./feed.proto";
+
+package dxos.echo.snapshot;
 
 //
 // Snapshots define full party state at a given point in time.

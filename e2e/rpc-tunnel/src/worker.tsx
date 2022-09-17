@@ -24,7 +24,7 @@ const App = ({ messagePort }: { messagePort: MessagePort }) => {
     const port = await createWorkerParentPort(messagePort);
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+        TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
       },
       exposed: {},
       handlers: {},

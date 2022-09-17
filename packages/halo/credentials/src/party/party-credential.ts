@@ -11,10 +11,10 @@ import { assertValidPublicKey, Signer } from '../keys';
 import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
 // TODO(burdon): Remove dependencies on ANY?
-export const TYPE_URL_MESSAGE = 'dxos.credentials.Message';
-export const TYPE_URL_SIGNED_MESSAGE = 'dxos.credentials.SignedMessage';
-export const TYPE_URL_PARTY_CREDENTIAL = 'dxos.credentials.party.PartyCredential';
-export const TYPE_URL_PARTY_INVITATION = 'dxos.credentials.party.PartyInvitation';
+export const TYPE_URL_MESSAGE = 'dxos.halo.signed.Message';
+export const TYPE_URL_SIGNED_MESSAGE = 'dxos.halo.signed.SignedMessage';
+export const TYPE_URL_PARTY_CREDENTIAL = 'dxos.halo.credentials.party.PartyCredential';
+export const TYPE_URL_PARTY_INVITATION = 'dxos.halo.credentials.party.PartyInvitation';
 
 /**
  * The start-of-authority record for the Party, admitting a single key (usually a identity) and a single feed.

@@ -4,11 +4,11 @@
 
 syntax = "proto3";
 
-package dxos.echo.metadata;
-
 import "google/protobuf/timestamp.proto";
 
 import "../halo/keys.proto";
+
+package dxos.echo.metadata;
 
 message EchoMetadata {
   /**

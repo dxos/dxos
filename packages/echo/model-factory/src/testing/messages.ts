@@ -13,7 +13,7 @@ export const createSetPropertyMutation = (
   timeframe,
   echo: {
     itemId,
-    mutation: schema.getCodecForType('dxos.test.echo.TestItemMutation').encode({
+    mutation: schema.getCodecForType('dxos.testing.echo.TestItemMutation').encode({
       key,
       value
     })

@@ -3,4 +3,4 @@
 //
 
 // Generated file: do not edit.
-export * from '../../../dist/src/proto/gen/dxos/test/echo';
+export * from '../../../dist/src/proto/gen/dxos/testing/echo';
