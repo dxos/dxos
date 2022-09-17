@@ -87,5 +87,5 @@ message KeyRecordList {
 message KeyChain {
   PubKey publicKey = 1;
   dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
-  KeyChain parents = 3;
+  repeated KeyChain parents = 3;
 }
