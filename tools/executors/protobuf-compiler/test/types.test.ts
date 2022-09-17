@@ -7,13 +7,15 @@ import { it as test } from 'mocha';
 
 import { MyKey } from './my-key';
 import { schema } from './proto/gen';
-import { ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp } from './proto/gen/dxos/test';
-import { Test } from './proto/gen/test/example';
+import {
+  ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp
+} from './proto/gen/example/testing/types';
+import { Test } from './proto/gen/example/testing/util';
 
 describe('Schema', () => {
 
   test('encode and decode', async () => {
-    const codec = schema.getCodecForType('dxos.test.TaskList');
+    const codec = schema.getCodecForType('example.testing.types.TaskList');
 
     const initial: TaskList = {
       tasks: [
@@ -46,7 +48,7 @@ describe('Schema', () => {
   });
 
   test('encode and decode external package message', async () => {
-    const codec = schema.getCodecForType('test.example.Test');
+    const codec = schema.getCodecForType('example.testing.util.Test');
 
     const initial: Test = { foo: 3, bar: '5' };
 
@@ -66,7 +68,7 @@ describe('Schema', () => {
   });
 
   test('complex fields round trip', () => {
-    const codec = schema.getCodecForType('dxos.test.ComplexFields');
+    const codec = schema.getCodecForType('example.testing.types.ComplexFields');
 
     const initial: ComplexFields = {
       repeatedField: [new MyKey(Buffer.from('foo')), new MyKey(Buffer.from('bar'))],
@@ -102,7 +104,7 @@ describe('Schema', () => {
   });
 
   test('encodes empty repeated fields as empty arrays', () => {
-    const codec = schema.getCodecForType('dxos.test.ComplexFields');
+    const codec = schema.getCodecForType('example.testing.types.ComplexFields');
 
     const initial: ComplexFields = {
       repeatedField: [],
@@ -135,7 +137,7 @@ describe('Schema', () => {
 
   describe('Scalars', () => {
     test('required', () => {
-      const codec = schema.getCodecForType('dxos.test.Scalars');
+      const codec = schema.getCodecForType('example.testing.types.Scalars');
 
       const initial: Scalars = {
         doubleField: 0.52,
@@ -162,7 +164,7 @@ describe('Schema', () => {
     });
 
     test('default values on required', () => {
-      const codec = schema.getCodecForType('dxos.test.Scalars');
+      const codec = schema.getCodecForType('example.testing.types.Scalars');
 
       const initial: Scalars = {
         doubleField: 0.0,
@@ -184,12 +186,13 @@ describe('Schema', () => {
 
       const encoded = codec.encode(initial);
       expect(encoded).toBeInstanceOf(Uint8Array);
+
       const decoded = codec.decode(encoded);
       expect(decoded).toEqual(initial);
     });
 
     test('required fields are assigned their default values when missing on the wire', () => {
-      const codec = schema.getCodecForType('dxos.test.Scalars');
+      const codec = schema.getCodecForType('example.testing.types.Scalars');
 
       const expected: Scalars = {
         doubleField: 0.0,
@@ -213,7 +216,7 @@ describe('Schema', () => {
     });
 
     test('optional', () => {
-      const codec = schema.getCodecForType('dxos.test.OptionalScalars');
+      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
       const initial: OptionalScalars = {
         doubleField: 0.52,
@@ -241,7 +244,7 @@ describe('Schema', () => {
     });
 
     test('empty optional', () => {
-      const codec = schema.getCodecForType('dxos.test.OptionalScalars');
+      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
       const initial: OptionalScalars = {};
       const encoded = codec.encode(initial);
@@ -251,17 +254,16 @@ describe('Schema', () => {
     });
 
     describe('optional fields are assigned undefined when missing on the wire', () => {
-      const codec = schema.getCodecForType('dxos.test.OptionalScalars');
+      const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
-      const expected: OptionalScalars = {
-      };
+      const expected: OptionalScalars = {};
       const decoded = codec.decode(Buffer.from(''));
       expect(decoded).toEqual(expected);
     });
   });
 
   test('default values for missing message-typed fields', () => {
-    const codec = schema.getCodecForType('dxos.test.Outer');
+    const codec = schema.getCodecForType('example.testing.types.Outer');
 
     const expected: Outer = {
       inner: {
@@ -273,19 +275,16 @@ describe('Schema', () => {
   });
 
   test('timestamp', () => {
-    const codec = schema.getCodecForType('dxos.test.WithTimestamp');
+    const codec = schema.getCodecForType('example.testing.types.WithTimestamp');
 
     const initial: WithTimestamp = {
       timestamp: new Date('2021-09-17T09:46:04Z')
     };
 
     const encoded = codec.encode(initial);
-
     expect(encoded).toBeInstanceOf(Uint8Array);
 
     const decoded = codec.decode(encoded);
-
     expect(decoded).toEqual(initial);
   });
-
 });

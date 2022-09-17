@@ -4,7 +4,9 @@
 
 syntax = "proto3";
 
-package test.example;
+// Note: Imported by protobuf-compiler tests.
+
+package example.testing.util;
 
 message Test {
   uint32 foo = 1;

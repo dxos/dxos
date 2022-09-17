@@ -12,12 +12,13 @@ import "any.proto";
 import "extensions.proto";
 import "./another.proto";
 
-package dxos.test;
+package example.testing.types;
 
 message Key {
   required bytes data = 1;
 }
 
+// TODO(burdon): Clashes with any.proto
 message Any {
   string foo = 1;
 }
@@ -77,9 +78,9 @@ message ComplexFields {
 
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
-  dxos.test.any.Any importedAny = 22;
+  example.testing.any.Any importedAny = 22;
 
-  optional test.example.Test test = 23;
+  optional example.testing.Test test = 23;
 }
 
 message WithTimestamp {
@@ -134,22 +135,4 @@ message SubstitutedByInterface {
 
 message TaskCount {
   int32 count = 1;
-}
-
-/// Test service definition.
-service TestService {
-  /// Count the tasks in the task list.
-  rpc CountTasks(TaskList) returns (TaskCount);
-
-  /// Subscribe to task list updates.
-  rpc SubscribeTasks(Key) returns (stream Task);
-}
-
-message WithEmptyField {
-  google.protobuf.Empty emptyField = 1;
-}
-
-service ServiceWithEmpty {
-  rpc EmptyRpc(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc EmptyStreamRpc(google.protobuf.Empty) returns (stream google.protobuf.Empty);
 }

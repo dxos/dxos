@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-package dxos.test.another;
+syntax = "proto3";
+
+package example.testing.another;
 
 /// Defined to test multiple file references in tool.
 message AnotherMessage {}

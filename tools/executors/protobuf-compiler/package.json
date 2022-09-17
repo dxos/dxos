@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "check": "true",
-    "prebuild": "ts-node src/main.ts test/proto/schema.proto test/proto/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
+    "prebuild": "ts-node src/main.ts test/proto/example/testing/service.proto test/proto/example/testing/types.proto test/proto/example/testing/another.proto -s test/proto/substitutions.ts -o test/proto/gen",
     "test": "mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {

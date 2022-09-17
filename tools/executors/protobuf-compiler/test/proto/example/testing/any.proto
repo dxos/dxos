@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.test.any;
+package example.testing.any;
 
 message Any {
   int32 bar = 1;
