@@ -27,11 +27,8 @@ export interface DatabaseBackend {
   close(): Promise<void>
 
   isReadOnly: boolean
-
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined
-
   createSnapshot(): DatabaseSnapshot
-
   createDataServiceHost(): DataServiceHost
 }
 

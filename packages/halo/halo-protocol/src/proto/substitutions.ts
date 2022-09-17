@@ -7,6 +7,6 @@ import { publicKeySubstitutions } from '@dxos/protocols';
 
 export default {
   ...anySubstitutions,
-  ...timestampSubstitutions,
-  ...publicKeySubstitutions
+  ...publicKeySubstitutions,
+  ...timestampSubstitutions
 };
