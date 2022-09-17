@@ -6,10 +6,11 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-import "./keys.proto";
+import "dxos/halo/keys.proto";
 
 package dxos.halo.signed;
 
+// TODO(burdon): Rename (too generic).
 // TODO(burdon): Use default from codec-protobuf.
 message Message {
   google.protobuf.Any payload = 1;
@@ -35,11 +36,11 @@ message SignedMessage {
   //
   message Signature {
     /// The publicKey of the keypair that made this signature.
-    PubKey key = 1;
+    keys.PubKey key = 1;
     /// The bytes of the signature.
     bytes signature = 2;
     /// The certification chain of SignedMessages for this key.
-    optional KeyChain keyChain = 3;
+    optional keys.KeyChain keyChain = 3;
   }
 
   /// The signed message contents.

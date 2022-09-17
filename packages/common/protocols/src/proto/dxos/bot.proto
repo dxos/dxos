@@ -5,11 +5,12 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
-import "./client.proto";
-import "./config.proto";
-import "./echo/feed.proto";
-import "./echo/invitation.proto";
+import "dxos/client.proto";
+import "dxos/config.proto";
+import "dxos/echo/invitation.proto";
+import "dxos/halo/keys.proto";
 
 package dxos.bot;
 
@@ -45,8 +46,8 @@ message Bot {
   optional int32 attempts_to_achieve_desired_state = 56;
 
   optional BotPackageSpecifier package_specifier = 3;
-  optional Timestamp last_start = 4;
-  optional PubKey party_key = 5;
+  optional google.protobuf.Timestamp last_start = 4;
+  optional halo.keys.PubKey party_key = 5;
 
   message Runtime {
     optional int32 exit_code = 1;
@@ -55,7 +56,6 @@ message Bot {
   }
 
   optional Runtime runtime = 6;
-
   optional BotReport report = 7;
 }
 
@@ -67,10 +67,10 @@ message SpawnBotRequest {
   optional BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  optional InvitationDescriptor invitation = 2;
+  optional echo.invitation.InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
-  optional PubKey party_key = 3;
+  optional halo.keys.PubKey party_key = 3;
 }
 
 message SendCommandRequest {
@@ -118,10 +118,10 @@ service BotFactoryService {
 
 message InitializeRequest {
   /// Bot runtime configuration.
-  optional Config config = 1;
+  optional config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  optional InvitationDescriptor invitation = 2;
+  optional echo.invitation.InvitationDescriptor invitation = 2;
 
   /// ID of the bot.
   optional string id = 3;
@@ -129,7 +129,7 @@ message InitializeRequest {
 
 message StartRequest {
   /// Bot runtime configuration.
-  Config config = 1;
+  config.Config config = 1;
 }
 
 /// Service that is used by bots communicating with bot factory.

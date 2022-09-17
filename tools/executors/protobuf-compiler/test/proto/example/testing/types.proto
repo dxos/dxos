@@ -5,12 +5,12 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "@dxos/protobuf-test";
-import "any.proto";
-import "extensions.proto";
-import "./another.proto";
+import "example/testing/another.proto";
+import "example/testing/any.proto";
+import "example/testing/extensions.proto";
 
 package example.testing.types;
 

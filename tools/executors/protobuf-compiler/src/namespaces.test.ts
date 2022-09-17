@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { join } from 'path';
+import { resolve, join } from 'path';
 import * as pb from 'protobufjs';
 
 import { preconfigureProtobufjs } from './configure';
@@ -12,7 +12,8 @@ import { splitSchemaIntoNamespaces } from './namespaces';
 import { registerResolver } from './parser';
 
 test('split namespaces', async () => {
-  registerResolver();
+  const baseDir = resolve(process.cwd(), './test/proto');
+  registerResolver(baseDir);
   preconfigureProtobufjs();
 
   const root = await pb.load(join(__dirname, '../test/proto/example/testing/types.proto'));

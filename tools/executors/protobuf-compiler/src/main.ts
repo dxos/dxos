@@ -8,19 +8,21 @@ import { ArgumentParser } from 'argparse';
 import { resolve } from 'path';
 import readPkg from 'read-pkg';
 
+import { preconfigureProtobufjs } from './configure';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
+import { registerResolver } from './parser';
 import { parseAndGenerateSchema } from './type-generator';
 
-void (async () => {
+const main = async () => {
   const { version } = await readPkg();
 
   const parser = new ArgumentParser({
-    description: 'Argparse example'
+    description: 'Protobuf compiler'
   });
 
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
-  parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' });
+  parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', { help: 'Base path to resolve fully qualified packages' });
   parser.add_argument('-o', '--outDir', { help: 'Output directory path', required: true });
@@ -32,6 +34,12 @@ void (async () => {
   const baseDirPath = baseDir ? resolve(process.cwd(), baseDir) : undefined;
   const outDirPath = resolve(process.cwd(), outDir);
 
+  // Initialize.
+  registerResolver(baseDirPath);
+  preconfigureProtobufjs();
+
   logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
   await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath);
-})();
+};
+
+void main();

@@ -4,15 +4,16 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
 import "dxos/halo/signed.proto";
 
 package dxos.halo.keys;
 
+// TODO(burdon): Prefix enums (e.g., KEY_TYPE_UNKNOWN).
+// TODO(burdon): CamelCase variables (e.g., public_key).
+
 //
 // The type/use of a public key.
 //
-// TODO(burdon): Prefix KEY_TYPE_UNKNOWN.
 enum KeyType {
   UNKNOWN = 0;
   IDENTITY = 1;
@@ -26,6 +27,7 @@ message PubKey {
   bytes data = 1;
 }
 
+// TODO(burdon): Rename PrivateKey.
 message PrivKey {
   bytes data = 1;
 }
@@ -84,6 +86,6 @@ message KeyRecordList {
 //
 message KeyChain {
   PubKey publicKey = 1;
-  dxos.halo.signed.SignedMessage message = 2;
+  dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
   KeyChain parents = 3;
 }

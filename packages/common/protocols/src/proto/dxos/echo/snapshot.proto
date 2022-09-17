@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-import "../halo/keys.proto";
-import "../halo/signed.proto";
-import "./feed.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
+import "dxos/echo/feed.proto";
 
 package dxos.echo.snapshot;
 
@@ -21,7 +21,7 @@ package dxos.echo.snapshot;
 
 message PartySnapshot {
   bytes partyKey = 1;
-  optional TimeframeVector timeframe = 2;
+  optional timeframe.TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.
   // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
@@ -35,7 +35,7 @@ message PartySnapshot {
 // TODO(dmaretskyi): Rename to HaloSnapshot.
 // For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
 message HaloStateSnapshot {
-  repeated CredentialsMessage messages = 1;
+  repeated feed.CredentialsMessage messages = 1;
 }
 
 //

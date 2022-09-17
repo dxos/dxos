@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-import "./types.proto";
+import "example/testing/types.proto";
 
 package example.testing.service;
 

@@ -7,16 +7,11 @@ import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { preconfigureProtobufjs } from './configure';
-import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator/file-generator';
+import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
-import { parseSubstitutionsFile, registerResolver, SubstitutionsMap } from './parser';
-
-// TODO(burdon): Move to main and configure.
-registerResolver();
-preconfigureProtobufjs();
+import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
 export const parseAndGenerateSchema = async (
   substitutionsModule: ModuleSpecifier | undefined,
@@ -38,6 +33,7 @@ export const parseAndGenerateSchema = async (
   await generateSchema({
     schema: root,
     substitutions: substitutions ? { map: substitutions, module: substitutionsModule! } : undefined,
+    baseDir: baseDirPath,
     outDir: outDirPath
   });
 };
@@ -48,6 +44,7 @@ export interface GenerateSchemaOptions {
     map: SubstitutionsMap
     module: ModuleSpecifier
   }
+  baseDir: string | undefined
   outDir: string
 }
 

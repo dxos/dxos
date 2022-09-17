@@ -4,10 +4,8 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
-import "./snapshot.proto";
-import "./timeframe.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
 
 package dxos.echo.feed;
 
@@ -16,7 +14,7 @@ package dxos.echo.feed;
  * This is what is written to the feeds.
  */
 message FeedMessage {
-  TimeframeVector timeframe = 1;
+  timeframe.TimeframeVector timeframe = 1;
 
   oneof payload {
     CredentialsMessage halo = 10;
@@ -48,7 +46,7 @@ message EchoEnvelope {
   optional bytes mutation = 12;
 
   /// Set the model to the provided snapshot.
-  optional ModelSnapshot snapshot = 13;
+  optional snapshot.ModelSnapshot snapshot = 13;
 }
 
 // TODO(burdon): Document (different from parent/child).?

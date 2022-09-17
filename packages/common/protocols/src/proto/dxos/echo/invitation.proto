@@ -12,9 +12,9 @@ message InvitationDescriptor {
    */
   enum Type {
     /// Interactive invitation is when both peers are online at the same time.
-    INTERACTIVE = 1;
+    INTERACTIVE = 0;
     /// Offline is when only a single peer needs to be online at the time.
-    OFFLINE = 2;
+    OFFLINE = 1;
   }
 
   Type type = 1;

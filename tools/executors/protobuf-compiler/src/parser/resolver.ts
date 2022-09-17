@@ -3,7 +3,7 @@
 //
 
 import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import pb from 'protobufjs';
 
 export type ProtoResolver = (origin: string, target: string) => string | null;
@@ -13,36 +13,39 @@ export type ProtoResolver = (origin: string, target: string) => string | null;
  */
 export function createProtoResolver (original: ProtoResolver, baseDir?: string): ProtoResolver {
   return function (this: any, origin, target) {
-    // console.log(target);
-    // TODO(burdon): Resolve FQ names (from current root).
-
     const classicResolved = original.call(this, origin, target);
     if (classicResolved && existsSync(classicResolved)) {
       return classicResolved;
     }
 
-    let config: any;
     try {
       // Test if referenced package.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      config = require(join(target, 'package.json'));
-    } catch {
-      config = undefined;
-    }
-
-    if (config) {
+      const config = require(join(target, 'package.json'));
       if (typeof config.protobuf !== 'string') {
         throw new Error(`Package "${target}" does not expose "protobuf" file.`);
       }
 
-      return require.resolve(join(target, config.protobuf), { paths: [dirname(origin)] });
-    } else {
-      return require.resolve(target, { paths: [dirname(origin)] });
+      return require.resolve(join(target, config.protobuf));
+    } catch {
+      // https://nodejs.org/api/modules.html#requireresolverequest-options
+      if (target.startsWith('./')) {
+        return require.resolve(target, { paths: [dirname(origin)] });
+      } else {
+        // TODO(burdon): google/protobuf/descriptor.proto
+
+        // Convert to relative.
+        if (!baseDir) {
+          throw new Error('Base dir must be set for non-relative imports.');
+        }
+
+        const dir = join(baseDir, dirname(target));
+        return require.resolve(`./${basename(target)}`, { paths: [dir] });
+      }
     }
   };
 }
 
-const resovler = createProtoResolver(pb.Root.prototype.resolvePath);
-export const registerResolver = () => {
-  pb.Root.prototype.resolvePath = resovler;
+export const registerResolver = (baseDir?: string) => {
+  pb.Root.prototype.resolvePath = createProtoResolver(pb.Root.prototype.resolvePath, baseDir);
 };

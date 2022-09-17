@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ProtobufSettings">
-    <option name="autoDecompile" value="true" />
     <roots>
       <entry path="file://$PROJECT_DIR$/packages/common/protocols/src/proto" />
+      <entry path="file://$PROJECT_DIR$/tools/protobuf-test/src/proto" />
+      <entry common="false" path="file://$PROJECT_DIR$/tools/executors/protobuf-compiler/test/proto" />
     </roots>
   </component>
 </project>
