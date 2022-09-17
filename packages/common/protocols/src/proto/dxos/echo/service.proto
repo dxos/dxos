@@ -57,8 +57,6 @@ message MutationReceipt {
 
 service DataService {
   rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
-
   rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
-
   rpc Write(WriteRequest) returns (MutationReceipt);
 }
