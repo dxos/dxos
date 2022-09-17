@@ -14,13 +14,14 @@ import "./another.proto";
 
 package example.testing.types;
 
-message Key {
-  required bytes data = 1;
-}
-
-// TODO(burdon): Clashes with any.proto
+/// NOTE: Clashes with any.proto (requires FQ name below).
 message Any {
   string foo = 1;
+}
+
+/// NOTE: Substitution.
+message Key {
+  required bytes data = 1;
 }
 
 message Scalars {
@@ -79,8 +80,7 @@ message ComplexFields {
   Any myAny = 20;
   google.protobuf.Any googleAny = 21;
   example.testing.any.Any importedAny = 22;
-
-  optional example.testing.Test test = 23;
+  optional example.testing.util.Test test = 23;
 }
 
 message WithTimestamp {

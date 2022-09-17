@@ -14,16 +14,14 @@ import { TaskType } from './proto/gen/example/testing/types';
 test('services', async () => {
   const service = schema.getService('example.testing.service.TestService');
   const server = service.createServer({
-    countTasks: async (tasks) => ({
-      count: tasks.tasks?.length ?? 0
-    }),
+    countTasks: async (tasks) => ({ count: tasks.tasks?.length ?? 0 }),
     subscribeTasks: () => new Stream(() => {})
   });
 
   const client = service.createClient(server);
   const response = await client.countTasks({
     tasks: [{
-      id: 'foo',
+      id: 'task-1',
       key: new MyKey(new Uint8Array([1, 2, 3])),
       type: TaskType.COMPLETED
     }]

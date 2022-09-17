@@ -11,18 +11,19 @@ import { preconfigureProtobufjs } from './configure';
 import { splitSchemaIntoNamespaces } from './namespaces';
 import { registerResolver } from './parser';
 
-registerResolver();
-preconfigureProtobufjs();
-
 test('split namespaces', async () => {
-  const root = await pb.load(join(__dirname, '../test/proto/schema.proto'));
+  registerResolver();
+  preconfigureProtobufjs();
+
+  const root = await pb.load(join(__dirname, '../test/proto/example/testing/types.proto'));
   const namespaces = splitSchemaIntoNamespaces(root);
 
   expect(Array.from(namespaces.keys()).sort()).toEqual([
-    'dxos.test',
-    'dxos.test.any',
-    'dxos.test.extensions',
-    'test.example.Test',
+    'example.testing.another',
+    'example.testing.any',
+    'example.testing.extensions',
+    'example.testing.types',
+    'example.testing.util',
     'google.protobuf'
   ].sort());
 });

@@ -8,7 +8,12 @@ import { ModuleSpecifier } from './module-specifier';
 import { SubstitutionsMap } from './parser';
 
 export class Logger {
-  logCompilationOptions (substitutionsModule: ModuleSpecifier | undefined, protoFilePaths: string[], outDirPath: string) {
+  logCompilationOptions (
+    substitutionsModule: ModuleSpecifier | undefined,
+    protoFilePaths: string[],
+    baseDirPath: string | undefined,
+    outDirPath: string
+  ) {
     console.log('Compiling protobuf definitions');
     console.log('');
     console.log(chalk`       Proto file(s): {bold ${protoFilePaths[0]}}`);

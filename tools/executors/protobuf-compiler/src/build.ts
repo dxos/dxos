@@ -9,19 +9,18 @@ import { ModuleSpecifier } from './module-specifier';
 import { parseAndGenerateSchema } from './type-generator';
 
 export const build = async ({
-  outdir,
   proto,
-  substitutions
+  substitutions,
+  outdir
 }: {
-  outdir: string
   proto: string[]
   substitutions?: string
+  outdir: string
 }) => {
   const substitutionsModule = substitutions ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd()) : undefined;
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
   const outdirPath = resolve(process.cwd(), outdir);
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, outdirPath);
-
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, outdirPath);
+  logger.logCompilationOptions(substitutionsModule, protoFilePaths, undefined, outdirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, undefined, outdirPath);
 };

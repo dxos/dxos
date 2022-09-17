@@ -8,8 +8,14 @@ import pb from 'protobufjs';
 
 export type ProtoResolver = (origin: string, target: string) => string | null;
 
-export function createProtoResolver (original: ProtoResolver): ProtoResolver {
+/**
+ * Custom proto file resolver.
+ */
+export function createProtoResolver (original: ProtoResolver, baseDir?: string): ProtoResolver {
   return function (this: any, origin, target) {
+    // console.log(target);
+    // TODO(burdon): Resolve FQ names (from current root).
+
     const classicResolved = original.call(this, origin, target);
     if (classicResolved && existsSync(classicResolved)) {
       return classicResolved;
@@ -17,6 +23,7 @@ export function createProtoResolver (original: ProtoResolver): ProtoResolver {
 
     let config: any;
     try {
+      // Test if referenced package.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       config = require(join(target, 'package.json'));
     } catch {

@@ -10,11 +10,11 @@ import { MyKey } from '../my-key';
 export default {
   ...anySubstitutions,
   ...timestampSubstitutions,
-  'example.testing.Key': {
+  'example.testing.types.Key': {
     encode: (value: MyKey) => ({ data: value.data }),
     decode: (value: any) => new MyKey(value.data)
   },
-  'example.testing.SubstitutedByInterface': {
+  'example.testing.types.SubstitutedByInterface': {
     encode: (value: MyInterfaceSubstitution) => value,
     decode: (value: any): MyInterfaceSubstitution => value
   }

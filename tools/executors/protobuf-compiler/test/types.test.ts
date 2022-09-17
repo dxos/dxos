@@ -25,7 +25,7 @@ describe('Schema', () => {
           key: new MyKey(Buffer.from('foo')),
           type: TaskType.COMPLETED,
           googleAny: {
-            '@type': 'dxos.test.SubstitutedByInterface',
+            '@type': 'example.testing.types.SubstitutedByInterface',
             foo: 'foo'
           }
         },
@@ -85,7 +85,7 @@ describe('Schema', () => {
         foo: 'foo'
       },
       googleAny: {
-        '@type': 'dxos.test.Task',
+        '@type': 'example.testing.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
@@ -117,7 +117,7 @@ describe('Schema', () => {
         foo: 'foo'
       },
       googleAny: {
-        '@type': 'dxos.test.Task',
+        '@type': 'example.testing.Task',
         id: 'baz',
         title: 'Baz',
         key: new MyKey(Buffer.from('foo')),
