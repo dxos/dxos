@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "check": "true",
-    "gen-proto-defs": "ts-node ./scripts/gen-proto-defs.ts"
+    "gen-proto-defs": "ts-node ./scripts/gen-proto-defs.ts",
+    "prebuild": "npm run gen-proto-defs"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",

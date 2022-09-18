@@ -5,7 +5,7 @@
 import debug from 'debug';
 
 import { sleep } from '@dxos/async';
-import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc-worker-proxy';
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc/proxy';
 import { RpcPeer, RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 

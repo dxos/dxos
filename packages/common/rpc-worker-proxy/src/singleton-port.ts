@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 
-import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc-worker-proxy';
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc/proxy';
 import { RpcPort } from '@dxos/rpc';
 import { isNode } from '@dxos/util';
 
