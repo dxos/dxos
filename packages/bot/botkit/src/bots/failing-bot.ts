@@ -3,9 +3,9 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { BotReport, BotService, InitializeRequest, SendCommandRequest, StartRequest } from '@dxos/protocols/proto/dxos/bot';
 
 import { createIpcPort } from '../bot-container';
-import { BotReport, BotService, InitializeRequest, SendCommandRequest, StartRequest } from '../proto/gen/dxos/bot';
 import { startBot } from './start-bot';
 
 /**

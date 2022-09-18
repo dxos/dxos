@@ -67,6 +67,8 @@ message PeerEvent {
   }
 }
 
+// TOOD(burdon): Rename.
+// TODO(burdon): Reconcile with `@dxos/kube`.
 service Signal {
   rpc Join(JoinRequest) returns (stream SwarmEvent);
   rpc ReceiveMessages(ReceptionRequest) returns (stream Message);

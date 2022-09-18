@@ -10,9 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Event, latch, sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import {
-  MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager
-} from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';

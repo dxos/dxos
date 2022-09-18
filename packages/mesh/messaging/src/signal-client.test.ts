@@ -7,11 +7,11 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Any } from './proto/gen/google/protobuf';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {

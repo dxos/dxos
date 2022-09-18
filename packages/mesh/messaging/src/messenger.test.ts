@@ -5,12 +5,12 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
 import { Messenger } from './messenger';
-import { Any } from './proto/gen/google/protobuf';
 import { Message } from './signal-methods';
 import { WebsocketSignalManager } from './websocket-signal-manager';
 

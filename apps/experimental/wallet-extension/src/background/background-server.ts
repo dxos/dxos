@@ -7,11 +7,11 @@ import assert from 'assert';
 import { Event } from '@dxos/async';
 import { Client, ClientServices, clientServiceBundle } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
+import { schema } from '@dxos/protocols';
+import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { schema } from '../proto/gen';
-import { RpcMessage } from '../proto/gen/dxos/rpc';
 import { config } from './config';
 
 export class BackgroundServer {

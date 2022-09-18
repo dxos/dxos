@@ -3,10 +3,10 @@
 //
 
 import { Event } from '@dxos/async';
+import { schema } from '@dxos/protocols';
+import { BotService } from '@dxos/protocols/proto/dxos/bot';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
 
-import { schema } from '../proto/gen';
-import { BotService } from '../proto/gen/dxos/bot';
 import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container';
 
 export class InProcessBotContainer implements BotContainer {

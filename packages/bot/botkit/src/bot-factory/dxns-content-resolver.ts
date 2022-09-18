@@ -4,10 +4,9 @@
 
 import assert from 'node:assert';
 
+import { BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
+import { Bot } from '@dxos/protocols/proto/dxos/type';
 import { CID, DXN, RegistryClient } from '@dxos/registry-client';
-
-import { BotPackageSpecifier } from '../proto/gen/dxos/bot';
-import { Bot } from '../proto/gen/dxos/type';
 
 export type ContentResolverResult = Omit<BotPackageSpecifier, 'dxn' | 'name'>;
 

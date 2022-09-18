@@ -9,10 +9,10 @@ import waitForExpect from 'wait-for-expect';
 import { Awaited } from '@dxos/async';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
+import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messaging';
 

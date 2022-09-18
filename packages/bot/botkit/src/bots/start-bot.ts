@@ -2,10 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import { schema } from '@dxos/protocols';
+import { BotService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcServer, RpcPort } from '@dxos/rpc';
-
-import { schema } from '../proto/gen';
-import { BotService } from '../proto/gen/dxos/bot';
 
 export const startBot = async (bot: BotService, port: RpcPort) => {
   const rpc = createRpcServer({
