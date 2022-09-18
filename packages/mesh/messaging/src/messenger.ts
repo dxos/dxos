@@ -4,8 +4,10 @@
 
 import assert from 'assert';
 
+import { Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
+import { schema, PublicKey } from '@dxos/protocols';
+import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import {
   ComplexMap,
   ComplexSet,
@@ -13,8 +15,6 @@ import {
   SubscriptionGroup
 } from '@dxos/util';
 
-import { ReliablePayload, schema } from './proto';
-import { Any } from './proto/gen/google/protobuf';
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
 

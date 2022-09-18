@@ -49,14 +49,19 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
 }
 
 /**
- * Create type-safe RPC peer from a service bundle. Can both handle and issue requests.
+ * Create type-safe RPC peer from a service bundle.
+ * Can both handle and issue requests.
  */
-export const createProtoRpcPeer = <Client = {}, Server = {}>({ requested, exposed, handlers, ...rest }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
+export const createProtoRpcPeer = <Client = {}, Server = {}> ({
+  requested,
+  exposed,
+  handlers,
+  ...rest
+}: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   const exposedRpcs: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-
     exposedRpcs[serviceFqn] = exposed[serviceName].createServer(handlers[serviceName] as any);
   }
 
@@ -142,7 +147,10 @@ export const createRpcServer = <S>({ service, handlers, ...rest }: RpcServerOpti
  * Create type-safe RPC client from a service bundle.
  * @deprecated Use createProtoRpcPeer instead.
  */
-export const createBundledRpcClient = <S>(descriptors: ServiceBundle<S>, options: Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'>): ProtoRpcPeer<S> => {
+export const createBundledRpcClient = <S>(
+  descriptors: ServiceBundle<S>,
+  options: Omit<RpcPeerOptions, 'messageHandler' | 'streamHandler'>
+): ProtoRpcPeer<S> => {
   return createProtoRpcPeer({
     requested: descriptors,
     exposed: {},

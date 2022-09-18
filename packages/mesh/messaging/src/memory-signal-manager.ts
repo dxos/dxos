@@ -5,11 +5,11 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-import { SwarmEvent } from '@dxos/protocols/proto/';
+import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
 
