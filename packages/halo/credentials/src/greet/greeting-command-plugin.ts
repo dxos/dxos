@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Rename CommandPlugin.
-/* TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
+/**
+ * TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
  *   and moved somewhere more abstract (RpcProtocolPlugin?).
  */
 

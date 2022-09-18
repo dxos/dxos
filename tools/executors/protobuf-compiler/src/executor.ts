@@ -10,7 +10,6 @@ import { resolve } from 'path';
 
 import { build } from './build';
 
-// TODO(burdon): Normalize with build params.
 export interface GenerateExecutorOptions {
   basePath: string
   srcPath: string

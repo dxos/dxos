@@ -6,7 +6,7 @@ import fs from 'fs';
 import glob from 'glob';
 import path from 'path';
 
-const HEADER = `//\n// Copyright ${new Date().getFullYear()} DXOS.org\n//\n\n// Generated file: do not edit.`;
+const HEADER = '// Generated file: do not edit.';
 
 /**
  * Generate protocol buffer definition files.
@@ -42,13 +42,32 @@ const main = (
 
       // Output file.
       const filename = path.basename(sub, '.proto');
-      const outfile = path.join(dir, `${filename}.d.ts`);
+      const jsOutFile = path.join(dir, `${filename}.js`);
+      const tsOutFile = path.join(dir, `${filename}.d.ts`);
+      const mapOutFile = path.join(dir, `${filename}.d.ts.map`);
 
       // Relative path.
       const exportFile = path.join(path.dirname(sub), filename);
       const relative = path.join(path.relative(exportFile, '.'), dist, exportFile);
 
-      fs.writeFileSync(outfile, `${HEADER}\nexport * from '${relative}';\n`);
+      // JS compiled output (required for tests).
+      fs.writeFileSync(jsOutFile, `${HEADER}\nmodule.exports = require('${relative}');\n`);
+
+      // TS definitions.
+      fs.writeFileSync(tsOutFile, `${HEADER}\nexport * from '${relative}';\n`);
+
+      // Source map definitions (enables IDE navigation in VSCode).
+      // https://github.com/source-map/source-map-spec
+      fs.writeFileSync(mapOutFile, JSON.stringify({
+        'version': 3,
+        'file': `${filename}.d.ts`,
+        'sourceRoot': '',
+        'sources': [
+          path.join(path.relative(exportFile, '.'), prefix, sub)
+        ],
+        'names': [],
+        'mappings': 'AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC'
+      }, undefined, 2) + '\n');
     }
   }
 };

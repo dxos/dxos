@@ -458,6 +458,7 @@ export class PartyState extends EventEmitter {
         checkParty(partyKey);
 
         if (!admitKey || !feedKey) {
+          console.log(message);
           throw new Error(`Invalid message: ${message}`);
         }
 

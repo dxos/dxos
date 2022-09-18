@@ -23,8 +23,8 @@ export const TYPE_URL_PARTY_INVITATION = 'dxos.halo.credentials.party.PartyInvit
 
 /**
  * The start-of-authority record for the Party, admitting a single key (usually a identity) and a single feed.
- * It must be signed by all three keys (party, key, feed). The Party private key should be destroyed after
- * signing this message.
+ * It must be signed by all three keys (party, key, feed).
+ * The Party private key should be destroyed after signing this message.
  * @param signer
  * @param partyKeyPair
  * @param feedKey
@@ -43,11 +43,10 @@ export const createPartyGenesisMessage = (
     '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
-      partyKey: partyKeyPair.publicKey
-      // TODO(burdon): Credentials clash.
-      // feedKey,
-      // admitKey: admitKeyPair.publicKey,
-      // admitKeyType: admitKeyPair.type
+      partyKey: partyKeyPair.publicKey,
+      feedKey,
+      admitKey: admitKeyPair.publicKey,
+      admitKeyType: admitKeyPair.type
     }
   };
 

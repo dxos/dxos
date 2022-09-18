@@ -264,7 +264,6 @@ export class Extension extends Nanomessage {
 
     try {
       const response = await this.request(builtMessage);
-
       if (response && response.code && response.message) {
         throw new ERR_EXTENSION_RESPONSE_FAILED(this._name, response.code, response.message);
       }

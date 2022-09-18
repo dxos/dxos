@@ -6,8 +6,7 @@ import { TYPES } from '@dxos/protocols';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
- * Union of all protobuf types with the '@type' field included.
- *
+ * Discriminated union of all protobuf types with the '@type' field included.
  * Useful for typing 'google.protobuf.Any' messages.
  */
 // TODO(burdon): Remove.
