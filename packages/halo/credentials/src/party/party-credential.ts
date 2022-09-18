@@ -43,10 +43,11 @@ export const createPartyGenesisMessage = (
     '@type': TYPE_URL_PARTY_CREDENTIAL,
     type: PartyCredential.Type.PARTY_GENESIS,
     partyGenesis: {
-      partyKey: partyKeyPair.publicKey,
-      feedKey,
-      admitKey: admitKeyPair.publicKey,
-      admitKeyType: admitKeyPair.type
+      partyKey: partyKeyPair.publicKey
+      // TODO(burdon): Credentials clash.
+      // feedKey,
+      // admitKey: admitKeyPair.publicKey,
+      // admitKeyType: admitKeyPair.type
     }
   };
 
@@ -54,7 +55,8 @@ export const createPartyGenesisMessage = (
 };
 
 /**
- * Admit a single key to the Party. This message must be signed by the key to be admitted, and unless the contents
+ * Admit a single key to the Party.
+ * This message must be signed by the key to be admitted, and unless the contents
  * of an Envelope, also by a key which has already been admitted.
  */
 export const createKeyAdmitMessage = (
