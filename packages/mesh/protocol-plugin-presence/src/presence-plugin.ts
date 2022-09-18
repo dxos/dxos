@@ -14,7 +14,7 @@ import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey, schema } from '@dxos/protocols';
-import { Alive } from '@dxos/protocols/proto/dxos/protocol/presence';
+import { Alive } from '@dxos/protocols/proto/dxos/mesh/presence';
 
 const log = debug('dxos:mesh:presence');
 

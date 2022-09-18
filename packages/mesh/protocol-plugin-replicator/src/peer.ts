@@ -7,7 +7,7 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { Feed as FeedData } from '@dxos/protocols/proto/dxos/protocol/replicator';
+import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 const log = debug('dxos.replicator.peer');
 
