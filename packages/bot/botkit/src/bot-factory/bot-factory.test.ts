@@ -6,9 +6,9 @@ import expect from 'expect';
 
 import { sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
 import { NodeContainer } from '../bot-container';
-import { Bot } from '../proto/gen/dxos/bot';
 import { BotFactory } from './bot-factory';
 
 describe('BotFactory', () => {

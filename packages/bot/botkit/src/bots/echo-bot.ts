@@ -6,8 +6,8 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { ObjectModel } from '@dxos/object-model';
+import { SendCommandRequest } from '@dxos/protocols/proto/dxos/bot';
 
-import { SendCommandRequest } from '../proto/gen/dxos/bot';
 import { Bot } from './client-bot';
 
 const log = debug('dxos:bot:echo-bot');

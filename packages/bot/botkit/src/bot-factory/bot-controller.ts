@@ -7,11 +7,9 @@ import debug from 'debug';
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
-
-import { schema } from '../proto/gen';
-import { BotFactoryService } from '../proto/gen/dxos/bot';
 
 const log = debug('dxos:botkit:bot-controller');
 

@@ -6,11 +6,10 @@ import assert from 'assert';
 
 import { Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, MakeOptional } from '@dxos/util';
 
-import { schema } from '../proto/gen';
-import { Answer, SwarmMessage } from '../proto/gen/dxos/mesh/swarm';
 import {
   OfferMessage,
   SignalMessage,
