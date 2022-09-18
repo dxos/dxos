@@ -151,7 +151,7 @@ export class Messenger {
         type_url: 'dxos.mesh.messaging.ReliablePayload',
         value: schema
           .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-          .encode(reliablePayload)
+          .encode(reliablePayload, { preserveAny: true })
       }
     });
   }
@@ -177,7 +177,7 @@ export class Messenger {
     assert(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = schema
       .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-      .decode(payload.value);
+      .decode(payload.value, { preserveAny: true });
 
     log(`Handling message with ${reliablePayload.messageId}`);
 

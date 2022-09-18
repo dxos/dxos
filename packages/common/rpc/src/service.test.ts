@@ -313,4 +313,113 @@ describe('Protobuf service', () => {
       expect(ping.nonce).toEqual(5);
     });
   });
+
+  describe('google.protobuf.Any encoding', () => {
+    test('recursively encodes google.protobuf.Any by default', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const server = createProtoRpcPeer({
+        requested: {},
+        exposed: {
+          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+        },
+        handlers: {
+          TestAnyService: {
+            testCall: async (req) => {
+              expect(req.payload['@type']).toEqual('dxos.testing.rpc.PingRequest');
+              expect(req.payload.nonce).toEqual(5);
+              return {
+                payload: {
+                  '@type': 'dxos.testing.rpc.PingReponse',
+                  nonce: 10
+                }
+              };
+            },
+          }
+        },
+        port: alicePort
+      });
+
+      const client = createProtoRpcPeer({
+        requested: {
+          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+        },
+        exposed: {},
+        handlers: {},
+        port: bobPort
+      });
+
+      await Promise.all([
+        server.open(),
+        client.open()
+      ]);
+
+      const response = await client.rpc.TestAnyService.testCall({
+        payload: {
+          '@type': 'dxos.testing.rpc.PingRequest',
+          nonce: 5,
+        }
+      });
+
+      expect(response.payload['@type']).toEqual('dxos.testing.rpc.PingReponse');
+      expect(response.payload.nonce).toEqual(10);
+    })
+
+    test('any encoding can be disabled', async () => {
+      const [alicePort, bobPort] = createLinkedPorts();
+
+      const server = createProtoRpcPeer({
+        requested: {},
+        exposed: {
+          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+        },
+        handlers: {
+          TestAnyService: {
+            testCall: async (req) => {
+              expect(req.payload['@type']).toEqual('google.protobuf.Any');
+              expect(req.payload.type_url).toEqual('dxos.testing.Example');
+              expect(req.payload.value).toEqual(Buffer.from('hello'));
+              return {
+                payload: {
+                  type_url: 'dxos.testing.Example',
+                  value: Buffer.from('world')
+                }
+              };
+            },
+          }
+        },
+        port: alicePort,
+        encodingOptions: {
+          preserveAny: true,
+        }
+      });
+
+      const client = createProtoRpcPeer({
+        requested: {
+          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+        },
+        exposed: {},
+        handlers: {},
+        port: bobPort,
+        encodingOptions: {
+          preserveAny: true,
+        }
+      });
+
+      await Promise.all([
+        server.open(),
+        client.open()
+      ]);
+
+      const response = await client.rpc.TestAnyService.testCall({
+        payload: {
+          type_url: 'dxos.testing.Example',
+          value: Buffer.from('hello'),
+        }
+      });
+
+      expect(response.payload.type_url).toEqual('dxos.testing.Example');
+      expect(response.payload.value).toEqual(Buffer.from('world'));
+    })
+  })
 });

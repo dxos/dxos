@@ -30,7 +30,8 @@ export const anySubstitutions = {
       if(options.preserveAny) {
         return {
           '@type': 'google.protobuf.Any',
-          ...value
+          type_url: value.type_url ?? '',
+          value: value.value ?? new Uint8Array(),
         };
       }
 

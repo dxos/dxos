@@ -68,7 +68,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}> ({
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.
     const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
-    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(handlers[serviceName] as any);
+    exposedRpcs[serviceFqn] = exposed[serviceName].createServer(handlers[serviceName] as any, encodingOptions);
   }
 
   const peer = new RpcPeer({
@@ -99,7 +99,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}> ({
     requestedRpcs[serviceName] = requested[serviceName].createClient({
       call: (method, req) => peer.call(`${serviceFqn}.${method}`, req),
       callStream: (method, req) => peer.callStream(`${serviceFqn}.${method}`, req)
-    });
+    }, encodingOptions);
   }
 
   return new ProtoRpcPeer(requestedRpcs, peer);

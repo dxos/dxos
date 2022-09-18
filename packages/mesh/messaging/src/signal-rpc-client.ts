@@ -74,6 +74,9 @@ export class SignalRPCClient {
             }
           };
         }
+      },
+      encodingOptions: {
+        preserveAny: true,
       }
     });
   }
