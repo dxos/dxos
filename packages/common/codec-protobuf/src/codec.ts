@@ -3,6 +3,7 @@
 //
 
 import protobufjs, { IConversionOptions } from 'protobufjs';
+import { EncodingOptions } from './common';
 
 import { Codec } from './interface';
 import { BidirectionalMapingDescriptors } from './mapping';
@@ -48,14 +49,14 @@ export class ProtoCodec<T = any> implements Codec<T> {
     return this._schema;
   }
 
-  encode (value: T): Uint8Array {
-    const sub = this._encodeMapper(value, [this._schema]);
+  encode (value: T, options: EncodingOptions = {}): Uint8Array {
+    const sub = this._encodeMapper(value, [this._schema, options]);
     return this._type.encode(sub).finish();
   }
 
-  decode (data: Uint8Array): T {
+  decode (data: Uint8Array, options: EncodingOptions = {}): T {
     const obj = this._type.toObject(this._type.decode(data), OBJECT_CONVERSION_OPTIONS);
-    return this._decodeMapper(obj, [this._schema]);
+    return this._decodeMapper(obj, [this._schema, options]);
   }
 
   /**

@@ -2,14 +2,19 @@
 // Copyright 2021 DXOS.org
 //
 
+import { EncodingOptions, WithTypeUrl } from '../common';
 import type { Schema } from '../schema';
-
-// eslint-disable-next-line camelcase
-export type WithTypeUrl<T extends {}> = T & { '@type': string };
 
 export const anySubstitutions = {
   'google.protobuf.Any': {
-    encode: (value: WithTypeUrl<{}>, schema: Schema<any>): any => {
+    encode: (value: WithTypeUrl<{}>, schema: Schema<any>, options: EncodingOptions): any => {
+      if(options.preserveAny) {
+        if(value['@type'] && value['@type'] !== 'google.protobuf.Any') {
+          throw new Error('Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.');
+        }
+        return value;
+      }
+
       if (typeof value['@type'] !== 'string') {
         throw new Error('Cannot encode google.protobuf.Any without @type string field');
       }
@@ -21,7 +26,14 @@ export const anySubstitutions = {
         value: data
       };
     },
-    decode: (value: any, schema: Schema<any>): WithTypeUrl<any> => {
+    decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
+      if(options.preserveAny) {
+        return {
+          '@type': 'google.protobuf.Any',
+          ...value
+        };
+      }
+
       const codec = schema.tryGetCodecForType(value.type_url);
       const data = codec.decode(value.value);
       return {
