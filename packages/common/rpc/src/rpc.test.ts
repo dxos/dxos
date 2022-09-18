@@ -11,7 +11,7 @@ import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
 import { SerializedRpcError } from './errors';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
-import { TYPES } from './proto/gen';
+import { TYPES } from '@dxos/protocols';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
