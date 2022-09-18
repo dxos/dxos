@@ -6,9 +6,9 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
+import { SwarmEvent } from '@dxos/protocols/proto/';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { SwarmEvent } from './proto';
 import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';

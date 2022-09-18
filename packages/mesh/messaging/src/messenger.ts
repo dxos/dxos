@@ -37,14 +37,8 @@ export class Messenger {
 
   private readonly _retryDelay: number;
   private readonly _timeout: number;
-  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(
-    (key) => key.toHex()
-  );
-
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) =>
-    key.toHex()
-  );
-
+  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
+  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
 
   constructor ({
@@ -223,7 +217,7 @@ export class Messenger {
     recipient: PublicKey
     messageId: PublicKey
   }): Promise<void> {
-    log(`Sent ack: ${messageId} from ${recipient} to ${author} `);
+    log(`Sent ack: ${messageId} from ${recipient} to ${author}`);
     await this._signalManager.sendMessage({
       author: recipient,
       recipient: author,
