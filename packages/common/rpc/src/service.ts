@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
+import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
 
 import { RpcPeer, RpcPeerOptions } from './rpc';
 
@@ -46,12 +46,17 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
    * Handlers for the exposed services
    * */
   handlers: Server
+
+  /**
+   * Encoding options passed to the underlying proto codec.
+   */
+  encodingOptions?: EncodingOptions
 }
 
 /**
  * Create type-safe RPC peer from a service bundle. Can both handle and issue requests.
  */
-export const createProtoRpcPeer = <Client = {}, Server = {}>({ requested, exposed, handlers, ...rest }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
+export const createProtoRpcPeer = <Client = {}, Server = {}>({ requested, exposed, handlers, encodingOptions, ...rest }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   const exposedRpcs: Record<string, ServiceHandler<any>> = {};
   for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
     // Get full service name with the package name without '.' at the beginning.

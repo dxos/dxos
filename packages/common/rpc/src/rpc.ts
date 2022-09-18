@@ -137,7 +137,7 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive (msg: Uint8Array): Promise<void> {
-    const decoded = codec.decode(msg);
+    const decoded = codec.decode(msg, { preserveAny: true });
 
     if (decoded.request) {
       if (!this._open) {
@@ -147,7 +147,7 @@ export class RpcPeer {
             id: decoded.request.id,
             error: encodeError(new RpcClosedError())
           }
-        });
+      });
         return;
       }
 
@@ -340,7 +340,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage (message: RpcMessage) {
-    await this._options.port.send(codec.encode(message));
+    await this._options.port.send(codec.encode(message, { preserveAny: true }));
   }
 
   private async _callHandler (req: Request): Promise<Response> {
