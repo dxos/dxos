@@ -13,10 +13,8 @@ import queueMicrotask from 'queue-microtask';
 import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
-
-import { schema } from './proto/gen';
-import { Alive } from './proto/gen/dxos/protocol/presence';
+import { PublicKey, schema } from '@dxos/protocols';
+import { Alive } from '@dxos/protocols/proto/dxos/protocol/presence';
 
 const log = debug('dxos:mesh:presence');
 
@@ -59,12 +57,12 @@ interface GraphUpdatedEventDetails {
  * Presence protocol plugin.
  */
 export class PresencePlugin {
-  static EXTENSION_NAME = 'dxos.protocol.presence';
+  static EXTENSION_NAME = 'dxos.mesh.protocol.presence';
 
   private extensionsCreated = 0;
   private readonly _peerTimeout: number;
   private readonly _limit = pLimit(1);
-  private readonly _codec = schema.getCodecForType('dxos.protocol.presence.Alive');
+  private readonly _codec = schema.getCodecForType('dxos.mesh.protocol.presence.Alive');
   private readonly _neighbors = new Map<string, any>();
   private readonly _error = new Event<Error>();
   private readonly _peerJoined = new Event<Buffer>();

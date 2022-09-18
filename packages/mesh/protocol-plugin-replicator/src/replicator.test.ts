@@ -13,10 +13,10 @@ import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { PublicKey } from '@dxos/protocols';
+import { Feed as FeedData } from '@dxos/protocols/proto/dxos/protocol/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
-import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 import { Replicator, ReplicatorMiddleware } from './replicator';
 
 jest.setTimeout(30000);

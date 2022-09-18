@@ -6,8 +6,9 @@ import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
+
 import { mapFromKeyValues } from '../config';
-import { ConfigObject } from '../proto';
 import { FILE_DEFAULTS, FILE_ENVS } from '../types';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
@@ -27,17 +28,17 @@ const maybeLoadFile = (file: string): any => {
 /**
  * File storage.
  */
-export const LocalStorage = <T = ConfigObject>(): T => ({} as T);
+export const LocalStorage = <T = ConfigType>(): T => ({} as T);
 
 /**
  * Provided dynamically by server.
  */
-export const Dynamics = <T = ConfigObject>(): T => ({} as T);
+export const Dynamics = <T = ConfigType>(): T => ({} as T);
 
 /**
  * ENV variable (key/value) map
  */
-export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
+export const Envs = <T = ConfigType>(basePath = DEFAULT_BASE_PATH): T => {
   const content = maybeLoadFile(path.resolve(basePath, FILE_ENVS));
   return content ? mapFromKeyValues(content, process.env) as T : {} as T;
 };
@@ -45,4 +46,4 @@ export const Envs = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => {
 /**
  * JSON config.
  */
-export const Defaults = <T = ConfigObject>(basePath = DEFAULT_BASE_PATH): T => maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;
+export const Defaults = <T = ConfigType>(basePath = DEFAULT_BASE_PATH): T => maybeLoadFile(path.resolve(basePath, FILE_DEFAULTS)) ?? {} as T;

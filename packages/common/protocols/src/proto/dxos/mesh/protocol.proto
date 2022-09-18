@@ -4,10 +4,11 @@
 
 syntax = "proto3";
 
-package dxos.protocol;
-
 import "google/protobuf/any.proto";
 
+package dxos.mesh.protocol;
+
+// TODO(burdon): Rename ProtoMessage.
 message Message {
   string nmId = 1;
   bool nmResponse = 2;
@@ -15,11 +16,13 @@ message Message {
   google.protobuf.Any nmData = 4;
 }
 
+// TODO(burdon): Rename ProtoError.
 message Error {
   string code = 1;
   string message = 2;
 }
 
+// TODO(burdon): Rename ProtoBuffer.
 message Buffer {
   bytes data = 1;
 }

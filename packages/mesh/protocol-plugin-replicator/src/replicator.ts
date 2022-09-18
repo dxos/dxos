@@ -8,10 +8,10 @@ import assert from 'node:assert';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import type { PublicKeyLike } from '@dxos/protocols';
+import { Feed as FeedData } from '@dxos/protocols/proto/dxos/protocol/replicator';
 
 import { Peer } from './peer';
 import { schemaJson } from './proto/gen';
-import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
 
 const log = debug('dxos:protocol-plugin-replicator');
 
@@ -57,7 +57,7 @@ export interface ReplicatorMiddleware {
  */
 // TODO(burdon): Rename ReplicatorPlugin.
 export class Replicator {
-  static extension = 'dxos.protocol.replicator';
+  static extension = 'dxos.mesh.protocol.replicator';
   private readonly _peers = new Map<Protocol, Peer>();
   private _options: {timeout: number};
   private _load: LoadFunction;

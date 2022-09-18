@@ -4,8 +4,9 @@
 
 syntax = "proto3";
 
-import "registry.proto";
+import "dxos/registry.proto";
 
+// TODO(burdon): Rename dxos.type.
 package dxos.type;
 
 // TODO(wittjosiah): Shared with config. Factor out?
@@ -48,7 +49,7 @@ message App {
     Web web = 100;
   }
 
-  optional Record.Extension extension = 200;
+  optional dxos.registry.Record.Extension extension = 200;
 }
 
 //
@@ -72,7 +73,7 @@ message Bot {
   /// This would be the path to the bot executable in bot-factory's file-system.
   string local_path = 5;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -99,7 +100,7 @@ message File {
   /// File content Id in the CID v0 format (https://docs.ipfs.io/concepts/content-addressing/#identifier-formats).
   bytes bundle = 3;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -108,7 +109,7 @@ message File {
 message KUBE {
   string url = 1;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -123,7 +124,7 @@ message Service {
 
   // Extension field's payload depends on service type and has extra data specific to that service.
   // Within this schema extension might be `type.service.ipfs` or `type.service.bot-factory`.
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -133,7 +134,7 @@ message IPFS {
   string protocol = 1;
   repeated string addresses = 2;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -142,7 +143,7 @@ message IPFS {
 message BotFactory {
   string topic = 1;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -152,7 +153,7 @@ message Signal {
   string bootstrap = 1;
   string url = 2;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }
 
 //
@@ -161,5 +162,5 @@ message Signal {
 message AppServer {
   string url = 1;
 
-  Record.Extension extension = 100;
+  dxos.registry.Record.Extension extension = 100;
 }

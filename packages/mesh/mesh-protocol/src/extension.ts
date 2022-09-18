@@ -8,6 +8,7 @@ import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 import assert from 'node:assert';
 
 import { patchBufferCodec, Codec, WithTypeUrl } from '@dxos/codec-protobuf';
+import { schema } from '@dxos/protocols';
 
 import {
   ERR_PROTOCOL_STREAM_CLOSED,
@@ -18,7 +19,6 @@ import {
   ERR_EXTENSION_RESPONSE_FAILED,
   ERR_EXTENSION_RESPONSE_TIMEOUT
 } from './errors';
-import { schema } from './proto/gen';
 import { Protocol } from './protocol';
 import { keyToHuman } from './utils';
 
@@ -100,7 +100,7 @@ export class Extension extends Nanomessage {
 
     this._name = name;
 
-    const codec = schema.getCodecForType('dxos.protocol.Message');
+    const codec = schema.getCodecForType('dxos.mesh.protocol.Message');
     if (userSchema) {
       codec.addJson(userSchema);
     }
@@ -338,7 +338,7 @@ export class Extension extends Nanomessage {
       this.emit('error', err);
       const responseError = new ERR_EXTENSION_RESPONSE_FAILED(this._name, err.code || 'Error', err.message);
       return {
-        '@type': 'dxos.protocol.Error',
+        '@type': 'dxos.mesh.protocol.Error',
         code: responseError.responseCode,
         message: responseError.responseMessage
       };
@@ -352,11 +352,11 @@ export class Extension extends Nanomessage {
     if (typeof message === 'string') { // Backwards compatibility.
       return this._buildMessage(Buffer.from(message));
     } else if (Buffer.isBuffer(message)) {
-      return { '@type': 'dxos.protocol.Buffer', data: message };
+      return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
     } else if (message instanceof Uint8Array) {
-      return { '@type': 'dxos.protocol.Buffer', data: Buffer.from(message) };
+      return { '@type': 'dxos.mesh.protocol.Buffer', data: Buffer.from(message) };
     } else if (message == null) { // Apparently this is a use-case.
-      return { '@type': 'dxos.protocol.Buffer', data: message };
+      return { '@type': 'dxos.mesh.protocol.Buffer', data: message };
     } else {
       assert(message['@type'], 'Message does not have a type URL.');
 

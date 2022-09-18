@@ -7,9 +7,8 @@ import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate
 
 import { ItemID } from '@dxos/echo-protocol';
 import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
-
-import { schema } from './proto/gen';
-import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
+import { schema } from '@dxos/protocols';
+import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/text';
 
 class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
   private _doc = new Doc();

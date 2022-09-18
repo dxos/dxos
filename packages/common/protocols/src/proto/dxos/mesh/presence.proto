@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.protocol.presence;
+package dxos.mesh.presence;
  
 // Even though those defintions don't use Any the schema can be added dynamically later.
 // Import Any so that the protobuf compiler is happy that there's a substitution.

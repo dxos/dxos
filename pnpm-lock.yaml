@@ -1983,6 +1983,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/network-generator': workspace:*
+      '@dxos/protocols': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
@@ -1991,6 +1992,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
       debug: 4.3.4
       tiny-lru: 7.0.6

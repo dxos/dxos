@@ -7,8 +7,7 @@ import debug from 'debug';
 import { Event } from '@dxos/async';
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-
-import { Feed as FeedData } from './proto/gen/dxos/protocol/replicator';
+import { Feed as FeedData } from '@dxos/protocols/proto/dxos/protocol/replicator';
 
 const log = debug('dxos.replicator.peer');
 
@@ -36,9 +35,9 @@ export class Peer {
     }
 
     const message = {
-      '@type': 'dxos.protocol.replicator.Container',
+      '@type': 'dxos.mesh.protocol.replicator.Container',
       type: 'share-feeds',
-      data: feeds.map(({ key, discoveryKey }) => ({ '@type': 'dxos.protocol.replicator.Feed', key, discoveryKey }))
+      data: feeds.map(({ key, discoveryKey }) => ({ '@type': 'dxos.mesh.protocol.replicator.Feed', key, discoveryKey }))
     };
 
     await this._extension.send(message, { oneway: true });

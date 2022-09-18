@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+// TODO(burdon): Rename `exmple.testing`.
 package dxos.test.another;
 
 message AnotherMessage {

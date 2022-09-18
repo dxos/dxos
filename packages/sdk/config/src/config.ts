@@ -7,7 +7,8 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
 
-import { ConfigObject } from './proto';
+import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
+
 import { sanitizeConfig } from './sanitizer';
 import { ConfigKey, DeepIndex, ParseKey } from './types';
 
@@ -96,14 +97,14 @@ export class Config {
    * @constructor
    * @param objects
    */
-  constructor (...objects: [ConfigObject, ...ConfigObject[]]) {
+  constructor (...objects: [ConfigType, ...ConfigType[]]) {
     this._config = sanitizeConfig(defaultsDeep(...objects, { version: 1 }));
   }
 
   /**
    * Returns an immutable config JSON object.
    */
-  get values (): ConfigObject {
+  get values (): ConfigType {
     return this._config;
   }
 
@@ -114,7 +115,7 @@ export class Config {
    * @param defaultValue Default value to return if option is not present in the config.
    * @returns The config value or undefined if the option is not present.
    */
-  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigObject, ParseKey<K>>): DeepIndex<ConfigObject, ParseKey<K>> {
+  get <K extends ConfigKey> (key: K, defaultValue?: DeepIndex<ConfigType, ParseKey<K>>): DeepIndex<ConfigType, ParseKey<K>> {
     return get(this._config, key, defaultValue);
   }
 
@@ -132,7 +133,7 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigObject, ParseKey<K>>, undefined> {
+  getOrThrow <K extends ConfigKey> (key: K): Exclude<DeepIndex<ConfigType, ParseKey<K>>, undefined> {
     const value = get(this._config, key);
     if (!value) {
       throw new Error(`Config option not present: ${key}`);
