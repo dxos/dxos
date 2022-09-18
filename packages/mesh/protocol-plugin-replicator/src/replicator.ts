@@ -7,11 +7,10 @@ import assert from 'node:assert';
 
 import type { HypercoreFeed } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import type { PublicKeyLike } from '@dxos/protocols';
-import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
+import { schemaJson, PublicKeyLike } from '@dxos/protocols';
+import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 import { Peer } from './peer';
-import { schemaJson } from './proto/gen';
 
 const log = debug('dxos:protocol-plugin-replicator');
 

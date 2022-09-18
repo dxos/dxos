@@ -25,7 +25,7 @@ describe('PartyStateMachine', () => {
       issuer: party,
       subject: party,
       assertion: {
-        '@type': 'dxos.halo.credentials.party.PartyGenesis',
+        '@type': 'dxos.halo.credentials.PartyGenesis',
         partyKey: party
       },
       keyring
@@ -109,7 +109,7 @@ describe('PartyStateMachine', () => {
       issuer: party,
       subject: party,
       assertion: {
-        '@type': 'dxos.halo.credentials.party.PartyGenesis',
+        '@type': 'dxos.halo.credentials.PartyGenesis',
         partyKey: party
       },
       keyring
@@ -189,7 +189,7 @@ describe('PartyStateMachine', () => {
       issuer: haloParty,
       subject: haloParty,
       assertion: {
-        '@type': 'dxos.halo.credentials.party.PartyGenesis',
+        '@type': 'dxos.halo.credentials.PartyGenesis',
         partyKey: haloParty
       },
       keyring

@@ -8,8 +8,8 @@ import { Keyring } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { MessageType } from '../../../../common/protocols/src/types';
 import { getSignaturePayload, sign } from './signing';
-import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519 } from './verifier';
 
 export type CreateCredentialParams = {
