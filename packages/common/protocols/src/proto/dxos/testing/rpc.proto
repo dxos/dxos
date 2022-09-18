@@ -36,3 +36,11 @@ message PingReponse {
 service PingService {
   rpc Ping (PingRequest) returns (PingReponse);
 }
+
+message MessageWithAny {
+  google.protobuf.Any payload = 1;
+}
+
+service TestAnyService {
+  rpc TestCall (MessageWithAny) returns (MessageWithAny);
+}
