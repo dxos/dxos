@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { defs } from '@dxos/config';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
 import { AppBar } from '../components';
@@ -16,7 +16,7 @@ export const Root = () => {
 
   return (
     <ClientProvider
-      config={{ runtime: { client: { mode: defs.Runtime.Client.Mode.REMOTE } } }}
+      config={{ runtime: { client: { mode: Runtime.Client.Mode.REMOTE } } }}
       options={{ rpcPort }}
     >
       <WithSnackbarContext>

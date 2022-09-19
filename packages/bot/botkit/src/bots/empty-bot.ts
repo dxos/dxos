@@ -3,8 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-
-import { createIpcPort } from '../bot-container';
 import {
   BotReport,
   BotService,
@@ -12,7 +10,9 @@ import {
   SendCommandRequest,
   SendCommandResponse,
   StartRequest
-} from '../proto/gen/dxos/bot';
+} from '@dxos/protocols/proto/dxos/bot';
+
+import { createIpcPort } from '../bot-container';
 import { startBot } from './start-bot';
 
 export class EmptyBot implements BotService {

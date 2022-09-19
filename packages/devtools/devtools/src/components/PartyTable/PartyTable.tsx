@@ -8,9 +8,9 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
 import { Timeframe } from '@dxos/protocols';
+import { SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools';
 import { CopyText, HashIcon } from '@dxos/react-components';
 
-import { SubscribeToPartiesResponse } from '../../proto';
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
 

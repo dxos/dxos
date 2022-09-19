@@ -4,16 +4,18 @@
 
 import assert from 'node:assert';
 
-import { createPartyInvitationMessage, Message as HaloMessage } from '@dxos/credentials';
+import { createPartyInvitationMessage } from '@dxos/credentials';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
+import { InvitationDescriptor } from '../invitations';
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
 import { GreetingResponder } from './greeting-responder';
-import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 
 /**
  * Groups together all invitation-related functionality for a single party.
@@ -46,7 +48,7 @@ export class InvitationFactory {
     await this._credentialsWriter.write(invitationMessage);
 
     return new InvitationDescriptor(
-      InvitationDescriptorType.OFFLINE,
+      InvitationDescriptorProto.Type.OFFLINE,
       this._partyProcessor.partyKey.asBuffer(),
       invitationMessage.payload.signed.payload.id
     );
@@ -73,7 +75,7 @@ export class InvitationFactory {
     const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
 
     return new InvitationDescriptor(
-      InvitationDescriptorType.INTERACTIVE,
+      InvitationDescriptorProto.Type.INTERACTIVE,
       swarmKey,
       invitation,
       this.isHalo ? this._partyProcessor.partyKey : undefined

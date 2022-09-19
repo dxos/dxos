@@ -4,10 +4,10 @@
 
 import debug from 'debug';
 
+import { schema } from '@dxos/protocols';
 import { createRpcServer } from '@dxos/rpc';
 import { openPort } from '@dxos/rpc-worker-proxy';
 
-import { schema } from './proto';
 import { TestClient } from './test-client';
 // eslint-disable-next-line
 // @ts-ignore
@@ -20,7 +20,7 @@ let client: TestClient;
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
-    const service = schema.getService('dxos.test.rpc.TestStreamService');
+    const service = schema.getService('example.testing.rpc.TestStreamService');
 
     await openPort({
       worker,

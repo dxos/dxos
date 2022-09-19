@@ -7,9 +7,9 @@ import expect from 'expect';
 
 import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Keyring } from '../keys';
-import { KeyType } from '../proto';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from './seedphrase';
 
 it('Basic bip39 operations work', async () => {

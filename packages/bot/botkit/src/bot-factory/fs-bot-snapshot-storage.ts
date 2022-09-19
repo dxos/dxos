@@ -5,7 +5,7 @@
 import fs from 'fs';
 import { join } from 'path';
 
-import { Bot } from '../proto/gen/dxos/bot';
+import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
 export type BotToRestore = {
   bot: Bot

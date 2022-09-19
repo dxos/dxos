@@ -5,7 +5,6 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { CommandTrace } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
-
 import {
   GetNetworkPeersRequest,
   GetNetworkPeersResponse,
@@ -13,7 +12,8 @@ import {
   SubscribeToSignalStatusResponse,
   SubscribeToSignalTraceResponse,
   SubscribeToSwarmInfoResponse
-} from '../proto';
+} from '@dxos/protocols/proto/dxos/devtools';
+
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {

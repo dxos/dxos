@@ -3,10 +3,11 @@
 //
 
 import { OpenProgress } from '@dxos/echo-db';
-import { DataService, schema as schemaProtocol } from '@dxos/echo-protocol';
+import { schema } from '@dxos/protocols';
+import { PartyService, ProfileService, SystemService, HaloService } from '@dxos/protocols/proto/dxos/client';
+import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools';
+import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { createServiceBundle } from '@dxos/rpc';
-
-import { PartyService, ProfileService, SystemService, HaloService, DevtoolsHost, TracingService, schema } from '../proto';
 
 // TODO(burdon): Change to lowercase?
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
@@ -28,7 +29,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   HaloService: schema.getService('dxos.client.HaloService'),
   // TODO(burdon): Rename ECHOService?
   // DataService is provided and implemented internally in ECHO so we import it from there.
-  DataService: schemaProtocol.getService('dxos.echo.service.DataService'),
+  DataService: schema.getService('dxos.echo.service.DataService'),
   DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.TracingService')
 });

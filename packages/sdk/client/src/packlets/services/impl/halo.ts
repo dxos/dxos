@@ -7,25 +7,25 @@ import assert from 'node:assert';
 import { Stream } from '@dxos/codec-protobuf';
 import { ECHO, resultSetToStream } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
-import { SubscriptionGroup } from '@dxos/util';
-
-import { HaloSigner } from '../../api';
 import {
   AddKeyRecordRequest,
   Contacts,
-  HaloService as IHaloService,
+  HaloService as HaloServiceRpc,
   SignRequest,
   SignResponse,
   SetPreferenceRequest,
   GetPreferenceRequest,
   GetPreferenceResponse
-} from '../../proto';
+} from '@dxos/protocols/proto/dxos/client';
+import { SubscriptionGroup } from '@dxos/util';
+
+import { HaloSigner } from '../../api';
 import { CreateServicesOpts } from './types';
 
 /**
  * HALO service implementation.
  */
-export class HaloService implements IHaloService {
+export class HaloService implements HaloServiceRpc {
   constructor (
     private readonly echo: ECHO,
     private readonly signer?: HaloSigner

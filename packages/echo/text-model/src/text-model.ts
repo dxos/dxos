@@ -7,9 +7,8 @@ import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate
 
 import { ItemID } from '@dxos/echo-protocol';
 import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
-
-import { schema } from './proto/gen';
-import { Mutation, Snapshot } from './proto/gen/dxos/echo/text';
+import { schema } from '@dxos/protocols';
+import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {
   private _doc = new Doc();
@@ -44,8 +43,8 @@ export class TextModel extends Model<Doc, Mutation> {
   static meta: ModelMeta = {
     type: 'dxos:model/text',
     stateMachine: () => new TextModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.text.Mutation'),
-    snapshotCodec: schema.getCodecForType('dxos.echo.text.Snapshot')
+    mutationCodec: schema.getCodecForType('dxos.echo.model.text.Mutation'),
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.text.Snapshot')
   };
 
   constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {

@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Rename CommandPlugin.
-/* TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
+/**
+ * TODO(dboreham): This class is not specific to Greeting (apart from the codec chosen) and so should be renamed
  *   and moved somewhere more abstract (RpcProtocolPlugin?).
  */
 
@@ -14,9 +14,10 @@ import assert from 'node:assert';
 import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 
 import { wrapMessage } from '../party';
-import { codec, Command } from '../proto';
+import { codec } from '../proto';
 import { PeerId } from '../typedefs';
 import { ERR_GREET_GENERAL } from './error-codes';
 
@@ -47,7 +48,7 @@ const getPeerId = (protocol: Protocol) => {
  */
 // TODO(burdon): Rename GreetingPlugin.
 export class GreetingCommandPlugin extends EventEmitter {
-  public static EXTENSION_NAME = 'dxos.credentials.greeting';
+  public static EXTENSION_NAME = 'dxos.halo.credentials.greeting';
 
   _peerId: Buffer;
   _peerMessageHandler: GreetingCommandMessageHandler;

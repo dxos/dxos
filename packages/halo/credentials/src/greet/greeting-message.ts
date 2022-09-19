@@ -4,9 +4,11 @@
 
 import assert from 'node:assert';
 
-import { ClaimResponse, Command, SignedMessage, Message, WithTypeUrl } from '../proto';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { ClaimResponse, Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-const TYPE_URL_GREETING_COMMAND = 'dxos.credentials.greet.Command';
+const TYPE_URL_GREETING_COMMAND = 'dxos.halo.credentials.greet.Command';
 
 /**
  * Create a Greeting 'BEGIN' command message.
@@ -91,7 +93,7 @@ export const createGreetingClaimResponse = (id: Buffer, rendezvousKey: Buffer): 
   assert(Buffer.isBuffer(rendezvousKey), 'rendezvousKey is not a buffer.');
 
   return {
-    '@type': 'dxos.credentials.greet.ClaimResponse',
+    '@type': 'dxos.halo.credentials.greet.ClaimResponse',
     id,
     rendezvousKey
   };

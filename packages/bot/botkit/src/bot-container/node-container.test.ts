@@ -10,12 +10,11 @@ import { join } from 'path';
 
 import { createId } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { BotService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { TEST_ECHO_TYPE } from '../bots';
-import { schema } from '../proto/gen';
-import { BotService } from '../proto/gen/dxos/bot';
 import { setupClient, setupBroker, BrokerSetup } from '../testutils';
 import { createIpcPort, NodeContainer } from './node-container';
 

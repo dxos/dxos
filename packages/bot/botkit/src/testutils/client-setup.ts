@@ -4,8 +4,7 @@
 
 import { Client, Party } from '@dxos/client';
 import { Config } from '@dxos/config';
-
-import * as proto from '../proto/gen/dxos/echo/invitation';
+import * as proto from '@dxos/protocols/proto/dxos/echo/invitation';
 
 export interface ClientSetup {
   client: Client
