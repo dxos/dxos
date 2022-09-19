@@ -8,7 +8,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { AdmittedFeed, CredentialGenerator, IdentityRecord, SpaceRecord } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { log } from '@dxos/log';
 
 import { MetadataStore } from '../metadata';
@@ -19,6 +19,12 @@ interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
   swarmIdentity: SwarmIdentity
   networkPlugins: Plugin[]
+}
+
+export type JoinIdentityParams = {
+  identityKey: PublicKey
+  haloSpaceKey: PublicKey
+  haloGenesisFeedKey: PublicKey
 }
 
 export class IdentityManager {
@@ -139,5 +145,24 @@ export class IdentityManager {
     this._identity = identity;
     await this._identity.ready();
     return identity;
+  }
+
+  async joinIdentity(params: JoinIdentityParams) {
+    assert(!this._identity, 'Identity already exists.');
+
+    const controlFeedKey = await this._keyring.createKey();
+
+    const identityRecord: IdentityRecord = {
+      identityKey: await this._keyring.createKey(),
+      deviceKey: await this._keyring.createKey(),
+      haloSpace: {
+        spaceKey: await this._keyring.createKey(),
+        genesisFeedKey: controlFeedKey,
+        writeControlFeedKey: controlFeedKey,
+        writeDataFeedKey: await this._keyring.createKey()
+      }
+    };
+    const identity = await this._constructIdentity(identityRecord);
+    await identity.open();
   }
 }
