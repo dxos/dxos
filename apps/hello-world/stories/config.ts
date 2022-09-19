@@ -2,10 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ConfigType } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 
 // TODO(burdon): Read from YML file.
-export const ONLINE_CONFIG: ConfigType = {
+export const ONLINE_CONFIG: ConfigProto = {
   version: 1,
   runtime: {
     services: {

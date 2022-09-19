@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ConfigType } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/protocols';
 import { ClientProvider, useClient, useParties, BotFactoryClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -77,7 +77,7 @@ const Sender = () => {
  * https://github.com/dxos/protocols/tree/main/packages/bot
  */
 export const Primary = () => {
-  const config: ConfigType = {
+  const config: ConfigProto = {
     runtime: {
       client: {
         debug: 'dxos:bot*'

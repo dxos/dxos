@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config as ConfigType, Runtime } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 
-export const config: ConfigType = {
+export const config: ConfigProto = {
   runtime: {
     client: {
       storage: {

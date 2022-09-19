@@ -6,7 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { promiseTimeout, synchronized } from '@dxos/async';
-import { Config, ConfigType } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
@@ -31,9 +31,9 @@ const log = debug('dxos:client-proxy');
 const DEFAULT_SINGLETON_HOST = 'http://localhost:3967';
 const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultConfig: ConfigType = { version: 1 };
+export const defaultConfig: ConfigProto = { version: 1 };
 
-export const defaultTestingConfig: ConfigType = {
+export const defaultTestingConfig: ConfigProto = {
   version: 1,
   runtime: {
     services: {
@@ -85,7 +85,7 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   // TODO(burdon): What are the defaults if `{}` is passed?
-  constructor (config: ConfigType | Config = defaultConfig, options: ClientOptions = {}) {
+  constructor (config: ConfigProto | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }

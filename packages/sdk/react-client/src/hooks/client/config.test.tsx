@@ -7,7 +7,7 @@ import expect from 'expect';
 import React from 'react';
 
 import { Client } from '@dxos/client';
-import { ConfigType } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 
 import { ClientProvider } from '../../containers';
 import { useConfig } from './useConfig';
@@ -27,7 +27,7 @@ describe('Config hook', () => {
   });
 
   it('should return custom client config when used properly in a context', () => {
-    const config: ConfigType = {
+    const config: ConfigProto = {
       version: 1,
       runtime: {
         client: {

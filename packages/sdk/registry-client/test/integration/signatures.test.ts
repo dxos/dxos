@@ -14,7 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 import assert from 'node:assert';
 
 import { KeyType, Client } from '@dxos/client';
-import { ConfigType } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 import { PublicKey } from '@dxos/protocols';
 
 import {
@@ -67,7 +67,7 @@ describe('Signatures', () => {
     const uri = '//Alice';
     keypair = keyring.addFromUri(uri);
 
-    const config: ConfigType = {
+    const config: ConfigProto = {
       version: 1,
       runtime: {
         services: {

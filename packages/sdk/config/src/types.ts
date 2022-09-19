@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { MaybeFunction, MaybePromise } from '@dxos/util';
 
 import { Config } from './config';
 
-export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigType>>
+export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigProto>>
 
 export const FILE_DEFAULTS = 'defaults.yml';
 export const FILE_ENVS = 'envs-map.yml';
@@ -53,4 +53,4 @@ export type DeepIndex<T, KS extends Keys, Fail = undefined> =
  * Any nested dot separated key that can be in config.
  */
 // TODO(egorgripasov): Clean once old config deprecated.
-export type ConfigKey = DotNestedKeys<ConfigType>
+export type ConfigKey = DotNestedKeys<ConfigProto>

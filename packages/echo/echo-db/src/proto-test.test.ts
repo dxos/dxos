@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 describe('Protos', () => {
   it('test protos', () => {
-    const config: ConfigType = {
+    const config: ConfigProto = {
       version: 1
     };
 

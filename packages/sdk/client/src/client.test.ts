@@ -14,7 +14,7 @@ import { InvitationDescriptorWrapper } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
-import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -316,7 +316,7 @@ describe('Client', () => {
   // TODO(burdon): Factor out tests.
 
   test('late-register models after refresh', async () => {
-    const config: ConfigType = {
+    const config: ConfigProto = {
       version: 1,
       runtime: {
         client: {
