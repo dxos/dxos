@@ -17,10 +17,12 @@ import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
 import { PublicKey } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { Keyring } from '../keys';
-import { codec, codecLoop, KeyType, SignedMessage } from '../proto';
+import { codec, codecLoop } from '../proto';
 import { createAuthMessage } from './auth-message';
 import { AuthPlugin } from './auth-plugin';
 import { Authenticator } from './authenticator';
@@ -62,12 +64,18 @@ class ExpectedKeyAuthenticator implements Authenticator {
 
 /**
  * Create and configure a Protocol object with all the necessary plugins for Auth and Replication.
- * There are a lot of steps to this. We need an Auth plugin, the credentials, and and an Authenticator to check them,
+ * There are a lot of steps to this.
+ * We need an Auth plugin, the credentials, and and an Authenticator to check them,
  * we need a Replicator and a Feed to replicate, and we need a Protocol to attach the plugins too.
  * Basically, we need all of data-client but in one fairly small function.
  * @listens AuthPlugin#authenticated
  */
-const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator, keyring: Keyring, protocolOptions?: ProtocolOptions) => {
+const createProtocol = async (
+  partyKey: PublicKey,
+  authenticator: Authenticator,
+  keyring: Keyring,
+  protocolOptions?: ProtocolOptions
+) => {
   const identityKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.IDENTITY }));
   const deviceKey = keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }));
   const peerId = deviceKey!.publicKey.asBuffer();
@@ -98,7 +106,6 @@ const createProtocol = async (partyKey: PublicKey, authenticator: Authenticator,
 
     replicate: async (feeds) => {
       const replicatedFeeds: HypercoreFeed[] = [];
-
       for (const feed of feeds) {
         assert(feed.key);
         const descriptor = await feedStore.openReadOnlyFeed(PublicKey.from(feed.key));
@@ -148,52 +155,54 @@ const getMessages = async (sender: Node, receiver: Node): Promise<any[]> => {
   });
 };
 
-it('Auth Plugin (GOOD)', async () => {
-  const keyring = await createTestKeyring();
-  const partyKey = PublicKey.from(randomBytes(32));
-  const node1 = await createProtocol(partyKey,
-    new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
-  const node2 = await createProtocol(partyKey,
-    new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
+describe('Auth plugins', () => {
+  it('Auth Plugin (GOOD)', async () => {
+    const keyring = await createTestKeyring();
+    const partyKey = PublicKey.from(randomBytes(32));
+    const node1 = await createProtocol(partyKey,
+      new ExpectedKeyAuthenticator(keyring,
+        keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
+    const node2 = await createProtocol(partyKey,
+      new ExpectedKeyAuthenticator(keyring,
+        keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
-  const connection = connect(node1.proto, node2.proto);
-  await node1.authPromise;
-  await node2.authPromise;
+    const connection = connect(node1.proto, node2.proto);
+    await node1.authPromise;
+    await node2.authPromise;
 
-  connection.destroy();
-});
-
-it('Auth & Repl (GOOD)', async () => {
-  const keyring = await createTestKeyring();
-  const partyKey = PublicKey.from(randomBytes(32));
-  const node2 = await createProtocol(partyKey,
-    new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
-  const node1 = await createProtocol(partyKey,
-    new ExpectedKeyAuthenticator(keyring,
-      keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
-
-  const connection = connect(node1.proto, node2.proto);
-  await node1.authPromise;
-  await node2.authPromise;
-
-  const message1 = randomBytes(32).toString('hex');
-  await node1.append(message1);
-  await waitForExpect(async () => {
-    const msgs = await getMessages(node1, node2);
-    expect(msgs).toContain(message1);
-    log(`${message1} on ${PublicKey.stringify(node2.id)}.`);
+    connection.destroy();
   });
 
-  const message2 = randomBytes(32).toString('hex');
-  await node2.append(message2);
-  await waitForExpect(async () => {
-    const msgs = await getMessages(node2, node1);
-    expect(msgs).toContain(message2);
-    log(`${message2} on ${PublicKey.stringify(node1.id)}.`);
-  });
+  it('Auth & Replicate (GOOD)', async () => {
+    const keyring = await createTestKeyring();
+    const partyKey = PublicKey.from(randomBytes(32));
+    const node2 = await createProtocol(partyKey,
+      new ExpectedKeyAuthenticator(keyring,
+        keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: true });
+    const node1 = await createProtocol(partyKey,
+      new ExpectedKeyAuthenticator(keyring,
+        keyring.findKey(Keyring.signingFilter({ type: KeyType.DEVICE }))!.publicKey), keyring, { initiator: false });
 
-  connection.destroy();
+    const connection = connect(node1.proto, node2.proto);
+    await node1.authPromise;
+    await node2.authPromise;
+
+    const message1 = randomBytes(32).toString('hex');
+    await node1.append(message1);
+    await waitForExpect(async () => {
+      const msgs = await getMessages(node1, node2);
+      expect(msgs).toContain(message1);
+      log(`${message1} on ${PublicKey.stringify(node2.id)}.`);
+    });
+
+    const message2 = randomBytes(32).toString('hex');
+    await node2.append(message2);
+    await waitForExpect(async () => {
+      const msgs = await getMessages(node2, node1);
+      expect(msgs).toContain(message2);
+      log(`${message2} on ${PublicKey.stringify(node1.id)}.`);
+    });
+
+    connection.destroy();
+  });
 });

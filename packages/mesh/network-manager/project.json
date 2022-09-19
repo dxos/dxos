@@ -2,15 +2,6 @@
   "sourceRoot": "packages/mesh/network-manager/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/mesh/network-manager/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -56,7 +47,6 @@
     }
   },
   "implicitDependencies": [
-    "mocha",
-    "protobuf-compiler"
+    "mocha"
   ]
 }

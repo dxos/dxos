@@ -3,8 +3,8 @@
 //
 
 import { Event } from '@dxos/async';
+import { MessageTrace } from '@dxos/protocols/proto/dxos/rpc';
 
-import { MessageTrace } from './proto/gen/dxos/rpc';
 import { RpcPort } from './rpc';
 
 export class PortTracer {

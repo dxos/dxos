@@ -4,22 +4,19 @@
 
 syntax = "proto3";
 
-import "../halo/keys.proto";
+import "dxos/halo/keys.proto";
 
-/// 
-/// swarm - peer to peer networking that uses signal and messaging.
-/// 
 package dxos.mesh.swarm;
 
 message SwarmMessage {
   /// Swarm identefier.
-  PubKey topic = 3;
+  dxos.halo.keys.PubKey topic = 3;
   /// Unique connection identifier.
-  PubKey sessionId = 4;
+  dxos.halo.keys.PubKey sessionId = 4;
   /// Message payload.
   MessageData data = 5;
   /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
-  PubKey messageId = 6;
+  dxos.halo.keys.PubKey messageId = 6;
 }
 
 message MessageData {
@@ -36,7 +33,7 @@ message Offer {
 message Answer {
   bool accept = 1;
   /// MessageId of the Offer being answered.
-  optional PubKey offerMessageId = 2;
+  optional dxos.halo.keys.PubKey offerMessageId = 2;
 }
 
 message Signal {

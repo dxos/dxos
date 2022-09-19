@@ -6,7 +6,8 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createTestInstance } from '@dxos/echo-db';
-import { Matcher, Predicate } from '@dxos/object-model';
+import { Matcher } from '@dxos/object-model';
+import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { Generator, OBJECT_PERSON } from './generator';
 

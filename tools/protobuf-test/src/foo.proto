@@ -1,9 +1,0 @@
-
-syntax = "proto3";
-
-package dxos.test.testfoo;
-
-message TestFoo {
-  uint32 fizz = 1;
-  string bazz = 2;
-}

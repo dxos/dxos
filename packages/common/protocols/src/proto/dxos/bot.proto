@@ -5,11 +5,12 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
-import "./client.proto";
-import "./config.proto";
-import "./echo/feed.proto";
-import "./echo/invitation.proto";
+import "dxos/client.proto";
+import "dxos/config.proto";
+import "dxos/echo/invitation.proto";
+import "dxos/halo/keys.proto";
 
 package dxos.bot;
 
@@ -24,7 +25,7 @@ message BotPackageSpecifier {
 }
 
 message Bot {
-  enum Status { // TODO: Rename to state.
+  enum Status { // TODO(burdon): Rename to state.
     /// Bot is stopped.
     STOPPED = 0;
     /// Starting bot process.
@@ -45,7 +46,7 @@ message Bot {
   optional int32 attempts_to_achieve_desired_state = 56;
 
   optional BotPackageSpecifier package_specifier = 3;
-  optional Timestamp last_start = 4;
+  optional google.protobuf.Timestamp last_start = 4;
   optional dxos.halo.keys.PubKey party_key = 5;
 
   message Runtime {
@@ -55,7 +56,6 @@ message Bot {
   }
 
   optional Runtime runtime = 6;
-
   optional BotReport report = 7;
 }
 
@@ -67,7 +67,7 @@ message SpawnBotRequest {
   optional BotPackageSpecifier package = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.InvitationDescriptor invitation = 2;
+  optional dxos.echo.invitation.InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
   optional dxos.halo.keys.PubKey party_key = 3;
@@ -121,7 +121,7 @@ message InitializeRequest {
   optional dxos.config.Config config = 1;
 
   /// Invitation for the bot to join the target party.
-  optional dxos.echo.InvitationDescriptor invitation = 2;
+  optional dxos.echo.invitation.InvitationDescriptor invitation = 2;
 
   /// ID of the bot.
   optional string id = 3;

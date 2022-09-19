@@ -8,9 +8,8 @@ import LRU, { Lru } from 'tiny-lru';
 
 import { Event } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
-
-import { schema } from './proto/gen';
-import { Packet } from './proto/gen/dxos/broadcast';
+import { schema } from '@dxos/protocols';
+import { Packet } from '@dxos/protocols/proto/dxos/mesh/broadcast';
 
 debug.formatters.h = v => v.toString('hex').slice(0, 6);
 const log = debug('broadcast');
@@ -72,7 +71,7 @@ type FixedLru = Lru<any> & { ttl: number, max: number, items: any[]} // The orig
  */
 export class Broadcast<P extends Peer = Peer> {
   private readonly _id: Buffer;
-  private readonly _codec = schema.getCodecForType('dxos.broadcast.Packet');
+  private readonly _codec = schema.getCodecForType('dxos.mesh.broadcast.Packet');
 
   private readonly _send: SendFn<P>;
   private readonly _subscribe: SubscribeFn<P>;

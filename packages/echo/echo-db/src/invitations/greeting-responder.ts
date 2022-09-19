@@ -12,13 +12,13 @@ import {
   GreetingCommandPlugin,
   Keyring,
   SecretProvider,
-  SecretValidator,
-  Message as HaloMessage
+  SecretValidator
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
 import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';

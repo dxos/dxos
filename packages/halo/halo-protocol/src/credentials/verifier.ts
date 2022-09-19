@@ -4,8 +4,8 @@
 
 import { Keyring } from '@dxos/credentials';
 import { PublicKey } from '@dxos/protocols';
+import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Chain, Credential } from '../proto';
 import { isValidAuthorizedDeviceCredential } from './assertions';
 import { getSignaturePayload } from './signing';
 

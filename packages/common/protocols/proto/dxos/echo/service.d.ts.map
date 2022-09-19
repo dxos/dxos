@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "service.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../../src/proto/dxos/echo/service.proto"
+  ],
+  "names": [],
+  "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"
+}

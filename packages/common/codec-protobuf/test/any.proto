@@ -1,8 +1,13 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 syntax = "proto3";
 
-package dxos.test.any;
-
 import "google/protobuf/any.proto";
+
+// TODO(burdon): Rename `exmple.testing`.
+package dxos.test.any;
 
 message Wrapper {
   google.protobuf.Any payload = 1;

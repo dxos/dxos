@@ -9,20 +9,17 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptorType, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
-
+import { ECHO, InvitationDescriptor, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
   CreateSnaspotRequest,
   GetPartyDetailsRequest,
-  InvitationDescriptor as InvitationDescriptorProto,
   InvitationRequest,
   InvitationState,
   Party,
   PartyDetails,
-  PartyService as IPartyService,
-  PartySnapshot,
+  PartyService as PartyServiceRpc,
   RedeemedInvitation,
   SetPartyStateRequest,
   SubscribeMembersRequest,
@@ -30,13 +27,16 @@ import {
   SubscribePartiesResponse,
   SubscribePartyRequest,
   SubscribePartyResponse
-} from '../../proto';
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**
  * Party service implementation.
  */
-class PartyService implements IPartyService {
+class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
@@ -175,7 +175,7 @@ class PartyService implements IPartyService {
               }
             });
 
-            assert(invitation.type === InvitationDescriptorType.INTERACTIVE);
+            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
             invitation.secret = Buffer.from(secret);
           } else {
             invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
@@ -183,7 +183,7 @@ class PartyService implements IPartyService {
 
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-          if (invitation.type === InvitationDescriptorType.OFFLINE) {
+          if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
             close();
           }
         } catch (err: any) {
@@ -214,7 +214,7 @@ class PartyService implements IPartyService {
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
         InvitationDescriptor.fromProto(request),
-        request.type === InvitationDescriptorType.INTERACTIVE ? secretProvider : undefined
+        request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });

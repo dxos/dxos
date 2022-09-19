@@ -7,16 +7,15 @@ import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { failUndefined, raise } from '@dxos/debug';
+import { FeedWriter, ItemID } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
-  EchoEnvelope,
-  FeedWriter,
-  ItemID,
   MutationReceipt,
   SubscribeEntitySetResponse,
   SubscribeEntityStreamRequest,
   SubscribeEntityStreamResponse
-} from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+} from '@dxos/protocols/proto/dxos/echo/service';
 
 import { EntityNotFoundError } from '../errors';
 import { Item } from './item';

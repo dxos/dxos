@@ -2,15 +2,6 @@
   "sourceRoot": "packages/bot/bot-factory-client/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/bot/bot-factory-client/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -59,7 +50,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha",
-    "protobuf-compiler"
+    "mocha"
   ]
 }

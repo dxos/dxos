@@ -4,8 +4,10 @@
 
 import assert from 'assert';
 
+import { Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
+import { schema, PublicKey } from '@dxos/protocols';
+import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import {
   ComplexMap,
   ComplexSet,
@@ -13,8 +15,6 @@ import {
   SubscriptionGroup
 } from '@dxos/util';
 
-import { ReliablePayload, schema } from './proto';
-import { Any } from './proto/gen/google/protobuf';
 import { SignalManager } from './signal-manager';
 import { Message } from './signal-methods';
 
@@ -37,14 +37,8 @@ export class Messenger {
 
   private readonly _retryDelay: number;
   private readonly _timeout: number;
-  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(
-    (key) => key.toHex()
-  );
-
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) =>
-    key.toHex()
-  );
-
+  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
+  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
 
   constructor ({
@@ -157,7 +151,7 @@ export class Messenger {
         type_url: 'dxos.mesh.messaging.ReliablePayload',
         value: schema
           .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-          .encode(reliablePayload)
+          .encode(reliablePayload, { preserveAny: true })
       }
     });
   }
@@ -183,7 +177,7 @@ export class Messenger {
     assert(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = schema
       .getCodecForType('dxos.mesh.messaging.ReliablePayload')
-      .decode(payload.value);
+      .decode(payload.value, { preserveAny: true });
 
     log(`Handling message with ${reliablePayload.messageId}`);
 
@@ -223,7 +217,7 @@ export class Messenger {
     recipient: PublicKey
     messageId: PublicKey
   }): Promise<void> {
-    log(`Sent ack: ${messageId} from ${recipient} to ${author} `);
+    log(`Sent ack: ${messageId} from ${recipient} to ${author}`);
     await this._signalManager.sendMessage({
       author: recipient,
       recipient: author,

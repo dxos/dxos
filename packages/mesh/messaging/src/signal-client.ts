@@ -8,9 +8,9 @@ import { Event, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
+import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Message as SignalMessage, SwarmEvent } from './proto';
 import { Message, SignalMethods } from './signal-methods';
 import { SignalRPCClient } from './signal-rpc-client';
 

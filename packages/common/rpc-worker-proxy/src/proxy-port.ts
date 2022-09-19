@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc/proxy';
 import { MaybePromise } from '@dxos/util';
-
-import { SingletonMessage } from './proto';
 
 /**
  * Wrapper around a MessagePort for sending/receiving SingletonMessages.

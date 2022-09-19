@@ -6,15 +6,16 @@ import { expect } from 'earljs';
 import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
+import { TYPES } from '@dxos/protocols';
 
 import { SerializedRpcError } from './errors';
-import { Any } from './proto/gen/google/protobuf';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts } from './testutil';
 
-const createPayload = (value = ''): Any => ({
-  type_url: '',
+const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+  '@type': 'google.protobuf.Any',
+  type_url: 'dxos.test',
   value: Buffer.from(value)
 });
 

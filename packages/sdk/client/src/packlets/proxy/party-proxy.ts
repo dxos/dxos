@@ -16,9 +16,9 @@ import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 
 import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
-import { Party as PartyProto, PartyDetails } from '../proto';
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
 
