@@ -5,12 +5,12 @@
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort, createIFrameWorkerRelay } from '@dxos/rpc-tunnel';
 
-import { schema } from './proto';
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
@@ -31,7 +31,7 @@ const App = ({ port }: { port?: MessagePort }) => {
       const rpcPort = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
       const client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},
