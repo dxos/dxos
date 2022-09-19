@@ -21,6 +21,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/network-manager": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@emotion/react": "^11.9.0",

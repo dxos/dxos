@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
+import { Stream } from '@dxos/codec-protobuf';
+import { BotFactoryService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
 import { ProtoRpcPeer } from '@dxos/rpc';
 
 export class BotHandle {
@@ -41,7 +42,7 @@ export class BotHandle {
     return response;
   }
 
-  logsStream () {
+  logsStream (): Stream<GetLogsResponse> {
     return this._rpc.rpc.getLogs({
       botId: this._id
     });

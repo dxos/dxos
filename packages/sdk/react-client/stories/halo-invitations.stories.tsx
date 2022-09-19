@@ -6,18 +6,11 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { Invitation, InvitationDescriptor } from '@dxos/client';
+import { Invitation, InvitationDescriptorWrapper } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import {
-  ClientProvider,
-  useClient,
-  useParties,
-  useProfile
-} from '../src';
-import {
-  ClientPanel, Container, PartyJoinPanel
-} from './helpers';
+import { ClientProvider, useClient, useParties, useProfile } from '../src';
+import { ClientPanel, Container, PartyJoinPanel } from './helpers';
 
 export default {
   title: 'react-client/HALO Invitations'
@@ -104,7 +97,7 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
+      const invitationDescriptor = InvitationDescriptorWrapper.decode(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
     } catch (err: any) {

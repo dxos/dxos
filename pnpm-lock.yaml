@@ -1355,6 +1355,7 @@ importers:
       '@dxos/devtools': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@emotion/react': ^11.9.0
@@ -1395,6 +1396,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y

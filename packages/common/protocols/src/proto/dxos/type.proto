@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/registry.proto";
 
-// TODO(burdon): Rename dxos.type.
+// TODO(burdon): Rename dxos.registry.type (or "ns").
 package dxos.type;
 
 // TODO(wittjosiah): Shared with config. Factor out?

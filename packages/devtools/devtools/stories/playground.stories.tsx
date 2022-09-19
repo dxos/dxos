@@ -27,7 +27,7 @@ const DevTools = ({ port }: { port: RpcPort }) => (
         config={{
           runtime: {
             client: {
-              mode: defs.Runtime.Client.Mode.REMOTE
+              mode: Runtime.Client.Mode.REMOTE
             }
           }
         }}

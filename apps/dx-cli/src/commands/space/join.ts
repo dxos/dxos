@@ -5,7 +5,7 @@
 import { CliUx, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { Client, InvitationDescriptor } from '@dxos/client';
+import { Client, InvitationDescriptorWrapper } from '@dxos/client';
 
 import { BaseCommand } from '../../base-command';
 import { mapMembers, printMembers } from '../../util';
@@ -34,7 +34,7 @@ export default class Join extends BaseCommand {
     }
 
     return await this.execWithClient(async (client: Client) => {
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encoded!));
+      const invitation = client.echo.acceptInvitation(InvitationDescriptorWrapper.decode(encoded!));
       await invitation.authenticate(Buffer.from(secret!));
 
       // TODO(burdon): Change blocking call in API.
