@@ -2,25 +2,25 @@
 // Copyright 2021 DXOS.org
 //
 
-import React, { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import React, { useCallback, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, FormControlLabel, Switch, Typography } from '@mui/material';
 
 import { Client, Party } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 import { useClient, useProfile } from '@dxos/react-client';
 import { FullScreen, QRCode } from '@dxos/react-components';
 import { JoinHaloDialog } from '@dxos/react-toolkit';
+import { humanize } from '@dxos/util';
 
-import { LOCK_KEY } from '../../constants';
 import { ExistingIdentityDialog } from './ExistingIdentityDialog';
 import { NewIdentityDialog } from './NewIdentityDialog';
 
-const createPath = (partyKey?: PublicKey, itemId?: string) => {
+const createPath = (spaceKey?: PublicKey, itemId?: string) => {
   const parts = [];
-  if (partyKey) {
-    parts.push(partyKey.toHex());
+  if (spaceKey) {
+    parts.push(spaceKey.toHex());
     if (itemId) {
       parts.push(itemId);
     }
@@ -34,9 +34,9 @@ export interface RegistrationPageProps {
 }
 
 /**
- * Allows user to create an identity or join an existing identity.
+ * Allows user to create an identity, join an existing identity or unlock their current identity.
  */
-export const RegistrationPage = ({ onRegister }: RegistrationPageProps) => {
+export const LockPage = () => {
   const client = useClient();
   const profile = useProfile(true);
 
@@ -48,12 +48,9 @@ export const RegistrationPage = ({ onRegister }: RegistrationPageProps) => {
   const [existingIdentityOpen, setExistingIdentityOpen] = useState(false);
   const [deviceInviteOpen, setDeviceInviteOpen] = useState(false);
 
-  // TODO(wittjosiah): Implement locking in HALO identity.
-  if (profile && localStorage.getItem(LOCK_KEY) !== 'locked') {
-    return (
-      <Navigate to='/' />
-    );
-  }
+  const handleUnlock = useCallback(() => {
+    navigate('/spaces');
+  }, []);
 
   return (
     <FullScreen>
@@ -67,10 +64,36 @@ export const RegistrationPage = ({ onRegister }: RegistrationPageProps) => {
       }}>
         {/* TODO(wittjosiah): Update with device invite. */}
         <QRCode value='https://dxos.org' />
-        <Typography>HALO</Typography>
-        <Typography>There are no identities on this device yet</Typography>
-        <Button onClick={() => setNewIdentityOpen(true)}>new identity</Button>
-        <Button onClick={() => setExistingIdentityOpen(true)}>existing identity</Button>
+
+        {!profile && (
+          <>
+            <Typography>HALO</Typography>
+            <Typography>There are no identities on this device yet</Typography>
+            <Button onClick={() => setNewIdentityOpen(true)}>new identity</Button>
+            <Button onClick={() => setExistingIdentityOpen(true)}>existing identity</Button>
+          </>
+        )}
+
+        {profile && (
+          <>
+            <Typography>
+              Using HALO as
+              {' '}
+              <Typography
+                component='span'
+                sx={{ fontWeight: 700 }}
+              >
+                {profile.username ?? humanize(profile.publicKey)}
+              </Typography>
+            </Typography>
+            <FormControlLabel
+              control={<Switch />}
+              label='🔒️'
+              onChange={handleUnlock}
+            />
+          </>
+        )}
+
         <Button onClick={() => window.open('https://github.com/dxos/dxos', '_blank')}>help</Button>
       </Box>
 
@@ -81,9 +104,8 @@ export const RegistrationPage = ({ onRegister }: RegistrationPageProps) => {
           // Create profile.
           // TODO(burdon): Error handling.
           await client.halo.createProfile({ username });
-          const party = await onRegister?.(client);
 
-          const path = redirect ? `/${redirect}${search}` : createPath(party?.key);
+          const path = redirect ? `/${redirect}${search}` : '/spaces';
           navigate(path);
         }}
       />

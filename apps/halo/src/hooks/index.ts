@@ -3,4 +3,4 @@
 //
 
 export * from './useActions';
-export * from './useSafePartyKey';
+export * from './useSafeSpaceKey';

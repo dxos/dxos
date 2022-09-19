@@ -10,7 +10,7 @@ import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { Toolbar } from '@dxos/react-components';
 
-import { PartyList } from './PartyList';
+import { SpaceList } from './SpaceList';
 
 export default {
   title: 'react-appkit/PartyList'
@@ -18,15 +18,15 @@ export default {
 
 const Story = () => {
   const client = useClient();
-  const parties = useParties();
+  const spaces = useParties();
 
   return (
     <Box>
       <Toolbar>
-        <Button onClick={() => client.echo.createParty()}>Add Party</Button>
+        <Button onClick={() => client.echo.createParty()}>Add Space</Button>
       </Toolbar>
 
-      <PartyList parties={parties} />
+      <SpaceList spaces={spaces} />
     </Box>
   );
 };

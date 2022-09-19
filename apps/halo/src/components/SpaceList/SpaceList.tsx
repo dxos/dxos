@@ -37,48 +37,48 @@ const List = styled(MuiList)({
   }
 });
 
-export interface PartyListProps {
-  parties?: Array<Party>
+export interface SpaceListProps {
+  spaces?: Array<Party>
   selected?: PublicKey
   actionIcon?: FunctionComponent<any>
-  onSelect?: (party: PublicKey) => void
-  onAction?: (party: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
+  onSelect?: (space: PublicKey) => void
+  onAction?: (space: PublicKey, event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }
 
-export const PartyList = ({
-  parties = [],
+export const SpaceList = ({
+  spaces = [],
   selected,
   actionIcon: ActionIcon = SettingsIcon,
   onSelect,
   onAction
-}: PartyListProps) => {
+}: SpaceListProps) => {
   const theme = useTheme();
 
   return (
     <List>
-      {parties.map((party) => {
-        const title = party.properties.get('title') ?? humanize(party.key.toHex());
+      {spaces.map(space => {
+        const title = space.properties.get('title') ?? humanize(space.key.toHex());
 
         return (
           <ListItem
-            key={party.key.toString()}
-            selected={selected && selected.equals(party.key)}
+            key={space.key.toString()}
+            selected={selected && selected.equals(space.key)}
             secondaryAction={onAction && (
               <IconButton
                 edge='end'
                 size='small'
                 title='Settings'
-                onClick={event => onAction(party.key, event)}
+                onClick={event => onAction(space.key, event)}
               >
                 <ActionIcon />
               </IconButton>
             )}
             disablePadding
           >
-            <ListItemButton onClick={() => onSelect?.(party.key)}>
+            <ListItemButton onClick={() => onSelect?.(space.key)}>
               <ListItemIcon sx={{ color: theme.palette.primary.dark }}>
-                {/* TODO(wittjosiah): Custom party icons */}
-                <HashIcon value={party.key.toHex()} />
+                {/* TODO(wittjosiah): Custom space icons */}
+                <HashIcon value={space.key.toHex()} />
               </ListItemIcon>
               <ListItemText
                 primary={title}

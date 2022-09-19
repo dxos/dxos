@@ -3,36 +3,43 @@
 //
 
 import React, { useCallback, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { Add as CreateIcon, Share as ShareIcon } from '@mui/icons-material';
+import {
+  Add as CreateIcon,
+  ArrowBack as BackIcon,
+  Share as ShareIcon
+} from '@mui/icons-material';
 import { Box, Fab, IconButton, TextField } from '@mui/material';
 
-import { Party } from '@dxos/client';
-import { useSelection } from '@dxos/react-client';
-import { CustomTextField } from '@dxos/react-components';
+import { useParty, useSelection } from '@dxos/react-client';
+import { CustomTextField, HashIcon } from '@dxos/react-components';
+import { humanize } from '@dxos/util';
 
-import { ActionType, useActions } from '../../hooks';
+import { ActionType, useActions, useSafeSpaceKey } from '../../hooks';
 
 // TODO(wittjosiah): Copied from Kodama, make customizable.
 const LABEL_PROPERTY = 'name';
 const TYPE_ITEM = 'dxos:type/item';
 
-export const PartyPage = () => {
-  const { party } = useOutletContext<{ party?: Party }>();
-  const items = useSelection(party?.select().filter({ type: TYPE_ITEM })) ?? [];
+export const SpacePage = () => {
+  const navigate = useNavigate();
+  const { space: spaceHex } = useParams();
+  const spaceKey = useSafeSpaceKey(spaceHex);
+  const space = useParty(spaceKey);
+  const items = useSelection(space?.select().filter({ type: TYPE_ITEM })) ?? [];
   const [name, setName] = useState('');
   const [, dispatch] = useActions();
 
   const handleCreateItem = useCallback(async () => {
-    await party?.database.createItem({
+    await space?.database.createItem({
       type: TYPE_ITEM,
       props: { [LABEL_PROPERTY]: name }
     });
     setName('');
-  }, [party, name]);
+  }, [space, name]);
 
-  if (!party) {
+  if (!space) {
     return null;
   }
 
@@ -42,6 +49,23 @@ export const PartyPage = () => {
       maxWidth: '30rem',
       margin: '0 auto'
     }}>
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: 2
+      }}>
+        <IconButton onClick={() => navigate('/spaces')}>
+          <BackIcon />
+        </IconButton>
+        <IconButton>
+          <HashIcon value={space.key.toHex()} />
+        </IconButton>
+        <CustomTextField
+          value={space.properties.get('title') ?? humanize(space.key)}
+          onUpdate={title => space.properties.set('title', title)}
+          clickToEdit
+        />
+      </Box>
       <Box sx={{
         overflowY: 'auto'
       }}>
@@ -87,7 +111,7 @@ export const PartyPage = () => {
       </Box>
 
       <Fab
-        onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey: party.key } })}
+        onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey: space.key } })}
         sx={{
           position: 'absolute',
           bottom: 16,

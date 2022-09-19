@@ -20,12 +20,12 @@ import {
   ListItemText,
   Popover,
   Toolbar,
-  Tooltip
+  Typography
 } from '@mui/material';
 
 export interface AppBarMenuOption {
   icon: FunctionComponent
-  text: string;
+  text: string
   onClick: () => Promise<void>
 }
 
@@ -81,17 +81,20 @@ export const AppToolbar = ({
         {children}
       </Box>
       {profile?.username && (
-        <Tooltip title={profile.username}>
-          {/* TODO(wittjosiah): Fix alignment with IconButton. */}
-          <Link
-            component={RouterLink}
-            to='/profile'
-            color='inherit'
-            aria-label='account-icon'
-          >
+        <Link
+          component={RouterLink}
+          to='/identity'
+          color='inherit'
+          sx={{ textDecoration: 'none' }}
+        >
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <Typography>{profile.username}</Typography>
             <AccountIcon className='account-icon' />
-          </Link>
-        </Tooltip>
+          </Box>
+        </Link>
       )}
       {!profile?.username && (
         <IconButton

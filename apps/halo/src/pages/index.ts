@@ -3,9 +3,10 @@
 //
 
 export * from './AuthPage';
+export * from './DevicesPage';
+export * from './IdentityPage';
 export * from './InvitationPage';
-export * from './MainPage';
-export * from './PartyPage';
-export * from './ProfilePage';
-export * from './RegistrationPage';
+export * from './LockPage';
 export * from './RequireProfile';
+export * from './SpacePage';
+export * from './SpacesPage';

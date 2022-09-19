@@ -8,25 +8,25 @@ import { useNavigate } from 'react-router-dom';
 import { PublicKey } from '@dxos/protocols';
 
 /**
- * Validate string keys from url params as party keys.
+ * Validate string keys from url params as space keys.
  *
  * Redirect to the home page if the key is invalid.
  */
-export const useSafePartyKey = (hex?: string): PublicKey | undefined => {
+export const useSafeSpaceKey = (hex?: string): PublicKey | undefined => {
   const navigate = useNavigate();
-  const [partyKey, setPartyKey] = useState<PublicKey>();
+  const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
   useEffect(() => {
     if (hex) {
       try {
-        setPartyKey(PublicKey.fromHex(hex));
+        setSpaceKey(PublicKey.fromHex(hex));
       } catch {
         navigate('/');
       }
     } else {
-      setPartyKey(undefined);
+      setSpaceKey(undefined);
     }
   }, [hex]);
 
-  return partyKey;
+  return spaceKey;
 };

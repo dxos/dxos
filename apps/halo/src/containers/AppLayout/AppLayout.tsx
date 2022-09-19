@@ -2,99 +2,67 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
-import { Link as RouterLink, Navigate, Outlet, useParams } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-import {
-  Dangerous as ResetIcon,
-  Devices as DevicesIcon,
-  Redeem as JoinIcon
-} from '@mui/icons-material';
-import { AppBar, Box, Link, Toolbar } from '@mui/material';
+import { FormControlLabel, Switch, Tab, Tabs } from '@mui/material';
 
-import { useParties, useProfile } from '@dxos/react-client';
-import { CustomTextField, DXOS, FullScreen } from '@dxos/react-components';
-import { humanize } from '@dxos/util';
+import { useProfile } from '@dxos/react-client';
+import { FullScreen } from '@dxos/react-components';
 
-import { ActionType, useActions, useSafePartyKey } from '../../hooks';
 import { ActionDialog } from '../ActionDialog';
-import { AppBarMenuOption, AppToolbar } from './AppToolbar';
+import { AppToolbar } from './AppToolbar';
 
-const useOptions = (): AppBarMenuOption[] => {
-  const [, dispatch] = useActions();
-
-  const options = [
-    {
-      icon: DevicesIcon,
-      text: 'Invite Device',
-      onClick: async () => {
-        dispatch({ type: ActionType.HALO_SHARING });
-      }
-    },
-    {
-      icon: JoinIcon,
-      text: 'Join Party',
-      onClick: async () => {
-        dispatch({ type: ActionType.PARTY_JOIN });
-      }
-    },
-    // TODO(wittjosiah): Move to settings to make less prominent?
-    {
-      icon: ResetIcon,
-      text: 'Reset Storage',
-      onClick: async () => {
-        dispatch({ type: ActionType.DANGEROUSLY_RESET_STORAGE });
-      }
-    }
-  ];
-
-  return options;
-};
+const tabs = [
+  {
+    label: 'Spaces',
+    url: '/spaces'
+  },
+  {
+    label: 'Devices',
+    url: '/devices'
+  },
+  {
+    label: 'Identity',
+    url: '/identity'
+  }
+];
 
 export const AppLayout = () => {
   // DXOS
-  const profile = useProfile();
-  const parties = useParties();
+  const profile = useProfile(true);
+  const location = useLocation();
+  const tab = useMemo(() => tabs.findIndex(tab => location.pathname.startsWith(tab.url)), [location]);
 
   // React Router
-  const { party: partyHex } = useParams();
-  const partyKey = useSafePartyKey(partyHex);
-  const party = partyKey && parties.find(({ key }) => key.equals(partyKey));
+  const navigate = useNavigate();
 
-  // App State
-  const options = useOptions();
-
-  if (partyKey && !party) {
-    return (
-      <Navigate to='/' />
-    );
-  }
+  const handleLock = useCallback(() => {
+    navigate('/');
+  }, []);
 
   return (
     <FullScreen>
-      <AppBar>
-        <AppToolbar
-          dense
-          profile={profile}
-          options={options}
-        >
-          <Link component={RouterLink} to='/' color='inherit'>
-            <DXOS />
-          </Link>
-          {party && (
-            <Box sx={{ marginLeft: 1 }}>
-              <CustomTextField
-                value={party.properties.get('title') ?? humanize(party.key)}
-                onUpdate={title => party.properties.set('title', title)}
-                clickToEdit
-              />
-            </Box>
-          )}
-        </AppToolbar>
-      </AppBar>
+      <AppToolbar
+        dense
+        profile={profile}
+      >
+        <FormControlLabel
+          control={<Switch defaultChecked />}
+          label='🔓️'
+          onChange={handleLock}
+        />
+      </AppToolbar>
 
-      <Toolbar variant='dense' />
-      <Outlet context={{ party }} />
+      <Tabs
+        value={tab}
+        onChange={(event, newValue) => navigate(tabs[newValue].url)}
+      >
+        {tabs.map(({ label }) => (
+          <Tab key={label} label={label} />
+        ))}
+      </Tabs>
+      <Outlet />
 
       <ActionDialog />
     </FullScreen>

@@ -3,4 +3,5 @@
 //
 
 export * from './AlertDialog';
-export * from './PartyList';
+export * from './DeviceList';
+export * from './SpaceList';
