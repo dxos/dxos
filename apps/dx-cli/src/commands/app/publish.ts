@@ -6,10 +6,7 @@ import { Flags } from '@oclif/core';
 import assert from 'assert';
 
 import { BaseCommand } from '../../base-command';
-import { build } from '../../util/publish/build';
-import { loadConfig } from '../../util/publish/config';
-import { publish } from '../../util/publish/publish';
-import { PublisherRpcPeer } from '../../util/publisher-rpc-peer';
+import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
 
 export default class Publish extends BaseCommand {
   static override description = 'Publish apps.';
@@ -40,8 +37,8 @@ export default class Publish extends BaseCommand {
         module.bundle = cid.bytes;
       }
 
-      return await this.execWithPublisher(async (rpc: PublisherRpcPeer) => {
-        await rpc.rpc.publish({ package: moduleConfig.values.package! });
+      return await this.execWithPublisher(async (publisher: PublisherRpcPeer) => {
+        await publisher.rpc.publish({ package: moduleConfig.values.package! });
         verbose && this.log('Published to KUBE.');
       });
     } catch (err: any) {

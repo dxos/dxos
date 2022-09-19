@@ -8,8 +8,8 @@ import WebSocket from 'isomorphic-ws';
 import { Trigger, Event } from '@dxos/async';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
-import { schema } from '../proto/gen';
-import { Publisher } from '../proto/gen/dxos/service/publisher';
+import { schema } from '../../proto/gen';
+import { Publisher } from '../../proto/gen/dxos/service/publisher';
 
 const log = debug('dxos:network-manager:publisher-rpc-peer');
 
@@ -47,9 +47,9 @@ export class PublisherRpcPeer {
       }
     };
 
-    this._socket.onerror = (e: WebSocket.ErrorEvent) => {
-      log(`Publisher socket error ${this._url} ${e.message}`);
-      this.error.emit(e.error ?? new Error(e.message));
+    this._socket.onerror = (event: WebSocket.ErrorEvent) => {
+      log(`Publisher socket error ${this._url} ${event.message}`);
+      this.error.emit(event.error ?? new Error(event.message));
     };
 
     this._rpc = createProtoRpcPeer({

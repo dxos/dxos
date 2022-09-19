@@ -12,8 +12,8 @@ import { promisify } from 'util';
 import type { ConfigObject } from '@dxos/config';
 import { log } from '@dxos/debug';
 
-import { uploadToIPFS } from '../ipfs-upload';
 import { PackageModule } from './common';
+import { uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';
 

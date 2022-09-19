@@ -13,7 +13,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigObject } from '@dxos/config';
 
-import { PublisherRpcPeer } from './util/publisher-rpc-peer';
+import { PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
 const error = log.extend('error');
