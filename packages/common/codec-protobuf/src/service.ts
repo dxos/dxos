@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 import pb from 'protobufjs';
-import { Any, EncodingOptions } from './common';
 
+import { Any, EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
 

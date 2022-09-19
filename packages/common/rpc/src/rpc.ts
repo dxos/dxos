@@ -147,7 +147,7 @@ export class RpcPeer {
             id: decoded.request.id,
             error: encodeError(new RpcClosedError())
           }
-      });
+        });
         return;
       }
 

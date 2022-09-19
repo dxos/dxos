@@ -3,8 +3,8 @@
 //
 
 import protobufjs, { IConversionOptions } from 'protobufjs';
-import { EncodingOptions } from './common';
 
+import { EncodingOptions } from './common';
 import { Codec } from './interface';
 import { BidirectionalMapingDescriptors } from './mapping';
 import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';

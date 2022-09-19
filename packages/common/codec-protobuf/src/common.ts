@@ -9,7 +9,7 @@ export interface EncodingOptions {
    * If enabled, google.protobuf.Any will not be recursively decoded.
    * The field type will be `{ '@type': 'google.protobuf.Any' } & Any`.
    */
-  preserveAny?: boolean;
+  preserveAny?: boolean
 }
 
 export interface SubstitutionDescriptor<T> {

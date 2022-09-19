@@ -8,8 +8,8 @@ import type { Schema } from '../schema';
 export const anySubstitutions = {
   'google.protobuf.Any': {
     encode: (value: WithTypeUrl<{}>, schema: Schema<any>, options: EncodingOptions): any => {
-      if(options.preserveAny) {
-        if(value['@type'] && value['@type'] !== 'google.protobuf.Any') {
+      if (options.preserveAny) {
+        if (value['@type'] && value['@type'] !== 'google.protobuf.Any') {
           throw new Error('Can only encode google.protobuf.Any with @type set to google.protobuf.Any in preserveAny mode.');
         }
         return value;
@@ -27,11 +27,11 @@ export const anySubstitutions = {
       };
     },
     decode: (value: any, schema: Schema<any>, options: EncodingOptions): WithTypeUrl<any> => {
-      if(options.preserveAny) {
+      if (options.preserveAny) {
         return {
           '@type': 'google.protobuf.Any',
           type_url: value.type_url ?? '',
-          value: value.value ?? new Uint8Array(),
+          value: value.value ?? new Uint8Array()
         };
       }
 

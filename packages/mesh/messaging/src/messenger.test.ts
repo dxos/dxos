@@ -5,7 +5,7 @@
 import { expect, mockFn } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
-import { Any, TaggedType, WithTypeUrl } from '@dxos/codec-protobuf';
+import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey, TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
@@ -205,7 +205,7 @@ describe('Messenger', () => {
       const message: Message = {
         author: peerId1,
         recipient: peerId2,
-        payload: PAYLOAD_1,
+        payload: PAYLOAD_1
       };
       await messenger1.sendMessage(message);
       // 2 subscribed listeners should receive message.
