@@ -19,7 +19,7 @@ import {
 import { randomBytes, verify } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
@@ -121,7 +121,7 @@ export class HaloRecoveryInitiator {
     this._state = GreetingState.SUCCEEDED;
 
     return new InvitationDescriptorWrapper(
-      InvitationDescriptor.Type.INTERACTIVE,
+      InvitationDescriptorProto.Type.INTERACTIVE,
       Buffer.from(rendezvousKey),
       Buffer.from(id),
       this._credentialsSigner.getIdentityKey().publicKey

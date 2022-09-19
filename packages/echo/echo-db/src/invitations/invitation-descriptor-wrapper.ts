@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { ripemd160 } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { InvalidInvitationError } from '../packlets/errors';
 
@@ -49,7 +49,7 @@ export class InvitationDescriptorWrapper {
     return descriptor;
   }
 
-  static fromProto (invitationProto: InvitationDescriptor): InvitationDescriptorWrapper {
+  static fromProto (invitationProto: InvitationDescriptorProto): InvitationDescriptorWrapper {
     assert(invitationProto.type, 'Invitation type not provided.');
     assert(invitationProto.swarmKey, 'Invitation swarm key not provided.');
     assert(invitationProto.invitation, 'Invitation not provided.');
@@ -70,7 +70,7 @@ export class InvitationDescriptorWrapper {
 
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
   constructor (
-    public readonly type: InvitationDescriptor.Type,
+    public readonly type: InvitationDescriptorProto.Type,
     public readonly swarmKey: SwarmKey,
     public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
@@ -111,7 +111,7 @@ export class InvitationDescriptorWrapper {
     return query as InvitationQueryParameters;
   }
 
-  toProto (): InvitationDescriptor {
+  toProto (): InvitationDescriptorProto {
     return {
       type: this.type,
       swarmKey: this.swarmKey,
@@ -127,10 +127,10 @@ export class InvitationDescriptorWrapper {
   }
 }
 
-const parseInvitationType = (str: string): InvitationDescriptor.Type => {
+const parseInvitationType = (str: string): InvitationDescriptorProto.Type => {
   const type = parseInt(str);
   assert(type === 1 || type === 2, 'Invalid invitation type');
   return type;
 };
 
-const stringifyInvitationType = (type: InvitationDescriptor.Type): string => type.toString();
+const stringifyInvitationType = (type: InvitationDescriptorProto.Type): string => type.toString();

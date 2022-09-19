@@ -22,7 +22,7 @@ import {
 } from '@dxos/credentials';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
@@ -61,7 +61,7 @@ export class GreetingInitiator {
     private readonly _invitationDescriptor: InvitationDescriptorWrapper,
     private readonly _getMessagesToNotarize: (partyKey: PublicKey, nonce: Uint8Array) => Promise<Message[]>
   ) {
-    assert(InvitationDescriptor.Type.INTERACTIVE === this._invitationDescriptor.type);
+    assert(InvitationDescriptorProto.Type.INTERACTIVE === this._invitationDescriptor.type);
   }
 
   get state () {

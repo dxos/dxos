@@ -19,7 +19,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize, Provider } from '@dxos/util';
@@ -152,7 +152,7 @@ export class PartyFactory {
 
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     // Claim the offline invitation and convert it into an interactive invitation.
-    if (InvitationDescriptor.Type.OFFLINE === invitationDescriptor.type) {
+    if (InvitationDescriptorProto.Type.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();

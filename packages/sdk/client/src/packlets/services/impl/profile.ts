@@ -15,19 +15,19 @@ import {
   InvitationRequest,
   InvitationState,
   Profile,
-  ProfileService as IProfileService,
+  ProfileService as ProfileServiceRpc,
   RecoverProfileRequest,
   RedeemedInvitation,
   SubscribeProfileResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**
  * Profile service implementation.
  */
-export class ProfileService implements IProfileService {
+export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   // TODO(burdon): Pass in HALO.
@@ -85,7 +85,7 @@ export class ProfileService implements IProfileService {
     });
   }
 
-  acceptInvitation (request: InvitationDescriptor): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();

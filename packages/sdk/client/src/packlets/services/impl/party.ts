@@ -28,7 +28,7 @@ import {
   SubscribePartyRequest,
   SubscribePartyResponse
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
@@ -175,7 +175,7 @@ class PartyService implements PartyServiceRpc {
               }
             });
 
-            assert(invitation.type === InvitationDescriptor.Type.INTERACTIVE);
+            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
             invitation.secret = Buffer.from(secret);
           } else {
             invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
@@ -183,7 +183,7 @@ class PartyService implements PartyServiceRpc {
 
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-          if (invitation.type === InvitationDescriptor.Type.OFFLINE) {
+          if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
             close();
           }
         } catch (err: any) {
@@ -194,7 +194,7 @@ class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation (request: InvitationDescriptor): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
@@ -214,7 +214,7 @@ class PartyService implements PartyServiceRpc {
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
         InvitationDescriptorWrapper.fromProto(request),
-        request.type === InvitationDescriptor.Type.INTERACTIVE ? secretProvider : undefined
+        request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });

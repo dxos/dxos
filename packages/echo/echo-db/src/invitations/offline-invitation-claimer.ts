@@ -20,7 +20,7 @@ import {
 import { randomBytes } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
@@ -48,7 +48,7 @@ export class OfflineInvitationClaimer {
     private readonly _networkManager: NetworkManager,
     private readonly _invitationDescriptor: InvitationDescriptorWrapper
   ) {
-    assert(InvitationDescriptor.Type.OFFLINE === _invitationDescriptor.type);
+    assert(InvitationDescriptorProto.Type.OFFLINE === _invitationDescriptor.type);
   }
 
   get state () {
@@ -114,7 +114,8 @@ export class OfflineInvitationClaimer {
     await this.disconnect();
     this._state = GreetingState.SUCCEEDED;
 
-    return new InvitationDescriptorWrapper(InvitationDescriptor.Type.INTERACTIVE, Buffer.from(rendezvousKey), Buffer.from(id));
+    return new InvitationDescriptorWrapper(
+      InvitationDescriptorProto.Type.INTERACTIVE, Buffer.from(rendezvousKey), Buffer.from(id));
   }
 
   async disconnect () {

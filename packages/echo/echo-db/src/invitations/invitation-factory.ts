@@ -8,7 +8,7 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { InvitationDescriptorWrapper } from '../invitations';
@@ -48,7 +48,7 @@ export class InvitationFactory {
     await this._credentialsWriter.write(invitationMessage);
 
     return new InvitationDescriptorWrapper(
-      InvitationDescriptor.Type.OFFLINE,
+      InvitationDescriptorProto.Type.OFFLINE,
       this._partyProcessor.partyKey.asBuffer(),
       invitationMessage.payload.signed.payload.id
     );
@@ -75,7 +75,7 @@ export class InvitationFactory {
     const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
 
     return new InvitationDescriptorWrapper(
-      InvitationDescriptor.Type.INTERACTIVE,
+      InvitationDescriptorProto.Type.INTERACTIVE,
       swarmKey,
       invitation,
       this.isHalo ? this._partyProcessor.partyKey : undefined

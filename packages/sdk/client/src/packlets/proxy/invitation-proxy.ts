@@ -9,9 +9,12 @@ import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptorWrapper } from '@dxos/echo-db';
 import {
-  AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto
+  AuthenticateInvitationRequest,
+  InvitationRequest as InvitationRequestProto,
+  InvitationState,
+  RedeemedInvitation as RedeemedInvitationProto
 } from '@dxos/protocols/proto/dxos/client';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';
@@ -115,7 +118,7 @@ export class InvitationProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptor.Type.OFFLINE) {
+      if (invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
 
@@ -127,7 +130,7 @@ export class InvitationProxy {
       });
     };
 
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptor.Type.INTERACTIVE) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorProto.Type.INTERACTIVE) {
       // Authenticate straight away, if secret is already provided.
       void authenticate(invitationDescriptor.secret);
     }

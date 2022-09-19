@@ -19,7 +19,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
-import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import {
@@ -180,7 +180,7 @@ export class HaloFactory {
 
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     // Claim the offline invitation and convert it into an interactive invitation.
-    if (invitationDescriptor.type === InvitationDescriptor.Type.OFFLINE) {
+    if (invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();
