@@ -431,7 +431,7 @@ GLOBAL FLAGS
 DESCRIPTION
   List apps.
 
-## `dx app list`
+## `dx app publish`
 
 Publish apps.
 
