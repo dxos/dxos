@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-// TODO(burdon): Rename.
+// TODO(burdon): Rename `dxos.registry.record`.
 package dxos.registry;
 
 message Record {

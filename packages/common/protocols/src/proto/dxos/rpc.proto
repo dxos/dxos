@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-// TODO(burdon): Move to mesh.rpc
+// TODO(burdon): Move to `dxos.mesh.rpc` (reconcile with @dxos/kube repo).
 package dxos.rpc;
 
 option go_package = "github.com/dxos/kube/go/dxrpc/pb";
@@ -42,7 +42,6 @@ message Response {
 
     /**
      * Sent when the server has processed a request with a streaming response.
-     *
      * Can be skipped by the server.
      * In this case the first payload should be treated as the server being ready.
      */
@@ -50,6 +49,7 @@ message Response {
   }
 }
 
+// TODO(burdon): Generalize to event?
 // Sent by client to end the streaming response.
 message StreamClose {
   int32 id = 1;
@@ -61,6 +61,7 @@ message Error {
   optional string stack = 3;
 }
 
+// TODO(burdon): Rename Trace.
 message MessageTrace {
   enum Direction {
     INCOMING = 0;
