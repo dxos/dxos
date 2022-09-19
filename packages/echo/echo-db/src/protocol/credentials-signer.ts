@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, Signer } from '@dxos/credentials';
+import { Filter, Keyring, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 /**
  * Contains a signer (keyring), provides signing keys to create signed credential messages.

@@ -7,9 +7,8 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-
-import { schema } from '../../proto/gen';
-import { Publisher } from '../../proto/gen/dxos/service/publisher';
+import { schema } from '@dxos/protocols';
+import { Publisher } from '@dxos/protocols/proto/dxos/service/publisher';
 
 const log = debug('dxos:network-manager:publisher-rpc-peer');
 

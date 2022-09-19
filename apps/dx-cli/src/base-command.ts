@@ -11,7 +11,7 @@ import * as path from 'path';
 
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { ConfigObject } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 
 import { PublisherRpcPeer } from './util';
 
@@ -21,7 +21,7 @@ const error = log.extend('error');
 const ENV_DX_CONFIG = 'DX_CONFIG';
 
 export abstract class BaseCommand extends Command {
-  private _clientConfig?: ConfigObject;
+  private _clientConfig?: ConfigProto;
   private _client?: Client;
 
   static override flags = {
@@ -60,7 +60,7 @@ export abstract class BaseCommand extends Command {
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       try {
-        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
+        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
       } catch (err) {
         console.error(`Invalid config file: ${configFile}`);
       }

@@ -9,20 +9,23 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
 import {
+  SignalManager,
+  CommandTrace,
+  SignalStatus,
+  WebsocketSignalManager
+} from '@dxos/messaging';
+import {
   FullyConnectedTopology,
   Swarm,
   MMSTTopology,
   StarTopology,
   NetworkManager,
-  SignalManager,
   SwarmMapper,
   transportProtocolProvider,
   PeerInfo,
   Topology,
   SwarmInfo,
-  ConnectionLog,
-  CommandTrace,
-  SignalStatus
+  ConnectionLog
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
@@ -35,10 +38,14 @@ export default {
 };
 
 const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFactory: () => Topology) => {
+  // TODO(burdon): Remove hard-coded deps.
+  const signalManager = new WebsocketSignalManager(['wss://apollo3.kube.moon.dxos.network/dxos/signal']);
+  await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
-    signal: ['wss://apollo3.kube.moon.dxos.network/dxos/signal'],
+    signalManager,
     log: true
   });
+
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   networkManager.joinProtocolSwarm({
     topic: controlTopic,

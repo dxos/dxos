@@ -10,12 +10,13 @@ import expect from 'expect';
 
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { arraysEqual } from '@dxos/util';
 
 import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';
 import { createKeyAdmitMessage, createPartyInvitationMessage } from '../party';
-import { codecLoop, KeyType } from '../proto';
-import { Command } from './constants';
+import { codecLoop } from '../proto';
 import { Greeter } from './greeter';
 
 const createKeyring = async () => {
@@ -50,7 +51,7 @@ it('Good invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -66,7 +67,7 @@ it('Good invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: await secretProvider()
       }
@@ -86,7 +87,7 @@ it('Good invitation', async () => {
   {
     const message = {
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.NOTARIZE,
         secret: await secretProvider(),
         params: [
@@ -106,7 +107,7 @@ it('Good invitation', async () => {
     {
       const message = codecLoop({
         payload: {
-          '@type': 'dxos.credentials.greet.Command',
+          '@type': 'dxos.halo.credentials.greet.Command',
           command: Command.Type.FINISH,
           secret: await secretProvider()
         }
@@ -131,7 +132,7 @@ it('Bad invitation secret', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -143,7 +144,7 @@ it('Bad invitation secret', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: Buffer.from('wrong')
       }
@@ -166,7 +167,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.BEGIN
       }
     });
@@ -178,7 +179,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = codecLoop({
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.HANDSHAKE,
         secret: await secretProvider()
       }
@@ -193,7 +194,7 @@ it('Attempt to re-use invitation', async () => {
   {
     const message = {
       payload: {
-        '@type': 'dxos.credentials.greet.Command',
+        '@type': 'dxos.halo.credentials.greet.Command',
         command: Command.Type.NOTARIZE,
         secret: await secretProvider(),
         params: [
@@ -241,9 +242,9 @@ it('WellKnownType params - BytesValue', async () => {
   const value = randomBytes();
 
   const command = codecLoop({
-    '@type': 'dxos.credentials.Message',
+    '@type': 'dxos.halo.signed.Message',
     payload: {
-      '@type': 'dxos.credentials.greet.Command',
+      '@type': 'dxos.halo.credentials.greet.Command',
       command: Command.Type.CLAIM,
       secret: Buffer.from('123'),
       params: [

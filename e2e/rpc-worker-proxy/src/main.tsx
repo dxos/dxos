@@ -1,13 +1,16 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import debug from 'debug';
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createRpcClient } from '@dxos/rpc';
 import { createSingletonPort } from '@dxos/rpc-worker-proxy';
-
-import { schema } from './proto';
 
 debug.enable('*');
 
@@ -17,7 +20,7 @@ const App = () => {
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const service = schema.getService('dxos.test.rpc.TestStreamService');
+    const service = schema.getService('example.testing.rpc.TestStreamService');
     const port = await createSingletonPort('/iframe.html');
     const client = createRpcClient(service, { port });
     await client.open();
@@ -29,7 +32,7 @@ const App = () => {
         setError(error.message);
       }
       setClosed(true);
-    })
+    });
   }, []);
 
   return (

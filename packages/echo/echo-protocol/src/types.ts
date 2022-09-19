@@ -2,10 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Message as HaloMessage } from '@dxos/credentials';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { EchoEnvelope, FeedMessage } from './proto';
+// TODO(burdon): Move defs to @dxos/protocols.
 
 //
 // Keys.
@@ -62,12 +63,14 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
 
 export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
+// TODO(burdon): HaloMessageWrapper.
+// TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {
   meta: FeedMeta
-  // TODO(telackey): Rename `dxos.halo.IHaloEnvelope`.
   data: HaloMessage
 }
 
+// TODO(burdon): EchoMessageWrapper.
 export interface IEchoStream {
   meta: MutationMetaWithTimeframe
   data: EchoEnvelope

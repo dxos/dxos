@@ -4,61 +4,60 @@
 
 syntax = "proto3";
 
-import "../halo/keys.proto";
-import "./feed.proto";
-import "./snapshot.proto";
+import "dxos/echo/feed.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
 
 package dxos.echo.service;
 
 message SubscribeEntitySetRequest {
-  PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 message SubscribeEntitySetResponse {
   // TODO(dmaretskyi): This is wrong, the first one should use item snapshot, and deleted should be just list of ids.
-  repeated EchoEnvelope added = 1;
-  repeated EchoEnvelope deleted = 2;
+  repeated feed.EchoEnvelope added = 1;
+  repeated feed.EchoEnvelope deleted = 2;
 }
 
 message SubscribeEntityStreamRequest {
-  PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
   string itemId = 2;
 }
 
 message SubscribeEntityStreamResponse {
   message Mutation {
     message Metadata {
-      PubKey feedKey = 1;
-      PubKey memberKey = 2;
+     dxos.halo.keys.PubKey feedKey = 1;
+     dxos.halo.keys.PubKey memberKey = 2;
       int32 seq = 3;
-      TimeframeVector timeframe = 4;
+      timeframe.TimeframeVector timeframe = 4;
     }
 
-    EchoEnvelope data = 1;
+    feed.EchoEnvelope data = 1;
     Metadata meta = 2;
   }
 
   oneof kind {
     // TODO(dmaretskyi): Move spanshot into EchoEnvelope?
-    ItemSnapshot snapshot = 1;
+    snapshot.ItemSnapshot snapshot = 1;
     Mutation mutation = 2;
   }
 }
 
 message WriteRequest {
-  PubKey partyKey = 1;
-  EchoEnvelope mutation = 2;
+  dxos.halo.keys.PubKey partyKey = 1;
+  feed.EchoEnvelope mutation = 2;
 }
 
 message MutationReceipt {
-  PubKey feedKey = 1;
+  dxos.halo.keys.PubKey feedKey = 1;
   int32 seq = 2;
 }
 
 service DataService {
   rpc SubscribeEntitySet(SubscribeEntitySetRequest) returns (stream SubscribeEntitySetResponse);
-
   rpc SubscribeEntityStream(SubscribeEntityStreamRequest) returns (stream SubscribeEntityStreamResponse);
-
   rpc Write(WriteRequest) returns (MutationReceipt);
 }

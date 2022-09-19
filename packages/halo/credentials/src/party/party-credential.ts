@@ -4,22 +4,27 @@
 
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
+import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { assertValidPublicKey, Signer } from '../keys';
-import { KeyChain, KeyRecord, Message, SignedMessage, PartyCredential, Command, Auth, WithTypeUrl } from '../proto';
 
 // TODO(burdon): Remove dependencies on ANY?
-export const TYPE_URL_MESSAGE = 'dxos.credentials.Message';
-export const TYPE_URL_SIGNED_MESSAGE = 'dxos.credentials.SignedMessage';
-export const TYPE_URL_PARTY_CREDENTIAL = 'dxos.credentials.party.PartyCredential';
-export const TYPE_URL_PARTY_INVITATION = 'dxos.credentials.party.PartyInvitation';
+export const TYPE_URL_MESSAGE = 'dxos.halo.signed.Message';
+export const TYPE_URL_SIGNED_MESSAGE = 'dxos.halo.signed.SignedMessage';
+export const TYPE_URL_PARTY_CREDENTIAL = 'dxos.halo.credentials.party.PartyCredential';
+export const TYPE_URL_PARTY_INVITATION = 'dxos.halo.credentials.party.PartyInvitation';
 
 /**
  * The start-of-authority record for the Party, admitting a single key (usually a identity) and a single feed.
- * It must be signed by all three keys (party, key, feed). The Party private key should be destroyed after
- * signing this message.
+ * It must be signed by all three keys (party, key, feed).
+ * The Party private key should be destroyed after signing this message.
  * @param signer
  * @param partyKeyPair
  * @param feedKey
@@ -49,7 +54,8 @@ export const createPartyGenesisMessage = (
 };
 
 /**
- * Admit a single key to the Party. This message must be signed by the key to be admitted, and unless the contents
+ * Admit a single key to the Party.
+ * This message must be signed by the key to be admitted, and unless the contents
  * of an Envelope, also by a key which has already been admitted.
  */
 export const createKeyAdmitMessage = (

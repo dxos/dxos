@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
+
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-import { Runtime } from './proto/gen/dxos/config';
 import defaults from './testing/defaults.json';
 import envmap from './testing/envs-map.json';
 

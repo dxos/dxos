@@ -11,8 +11,7 @@ import assert from 'node:assert';
 
 import { streamToArray } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
-
-import { KeyRecord } from '../proto';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
 const log = debug('dxos:halo:keys:keystore'); // eslint-disable-line unused-imports/no-unused-vars
 

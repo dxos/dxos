@@ -1,0 +1,39 @@
+{
+  "sourceRoot": "packages/mesh/messaging/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/mesh/messaging/dist",
+        "tsConfig": "packages/mesh/messaging/tsconfig.json",
+        "main": "packages/mesh/messaging/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/mesh/messaging/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/mesh/messaging/src/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

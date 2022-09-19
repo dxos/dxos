@@ -9,25 +9,25 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
-
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
-  InvitationDescriptor as InvitationDescriptorProto,
   InvitationRequest,
   InvitationState,
   Profile,
-  ProfileService as IProfileService,
+  ProfileService as ProfileServiceRpc,
   RecoverProfileRequest,
   RedeemedInvitation,
   SubscribeProfileResponse
-} from '../../proto';
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**
  * Profile service implementation.
  */
-export class ProfileService implements IProfileService {
+export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   // TODO(burdon): Pass in HALO.

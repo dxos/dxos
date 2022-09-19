@@ -7,7 +7,8 @@
 import expect from 'expect';
 import memdown from 'memdown';
 
-import { KeyType } from '../proto';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+
 import { Keyring } from './keyring';
 import { createKeyRecord, stripSecrets } from './keyring-helpers';
 import { KeyStore } from './keystore';

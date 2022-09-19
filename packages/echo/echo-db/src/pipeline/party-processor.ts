@@ -6,17 +6,13 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import {
-  KeyHint,
-  KeyRecord,
-  PartyState,
-  Message as HaloMessage,
-  IdentityEventType,
-  PartyEventType,
-  SignedMessage
-} from '@dxos/credentials';
-import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { IdentityEventType, PartyState, PartyEventType } from '@dxos/credentials';
+import { FeedKey, IHaloStream, PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { HaloStateSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { KeyHint } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message as HaloMessage, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
@@ -27,7 +23,6 @@ export interface CredentialProcessor {
 
 export interface PartyStateProvider {
   partyKey: PublicKey
-
   /**
    * Whether PartyGenesis was already processed.
    */
@@ -35,9 +30,8 @@ export interface PartyStateProvider {
   memberKeys: PublicKey[]
   feedKeys: PublicKey[]
   getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined
-  isFeedAdmitted (feedKey: FeedKey): boolean
-
   getOfflineInvitation (invitationID: Buffer): SignedMessage | undefined
+  isFeedAdmitted (feedKey: FeedKey): boolean
 }
 
 /**
@@ -128,7 +122,8 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   async takeHints (hints: KeyHint[]) {
     log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
-    /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
+    /**
+     * TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
      * what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
      * credential messages for ourselves.
      */
@@ -149,7 +144,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   }
 
   async restoreFromSnapshot (snapshot: HaloStateSnapshot) {
-    assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized');
+    assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized.');
     assert(snapshot.messages);
     this._haloMessages = snapshot.messages;
     await this._state.processMessages(snapshot.messages);

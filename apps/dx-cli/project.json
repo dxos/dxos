@@ -2,15 +2,6 @@
   "sourceRoot": "apps/dx-cli/src",
   "projectType": "application",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "apps/dx-cli/src/proto"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

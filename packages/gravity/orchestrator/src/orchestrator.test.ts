@@ -30,7 +30,6 @@ describe('Orchestrator', () => {
   });
   it('should spawn a functional bot', async () => {
     await orchestrator.spawnBot({});
-
     expect(counter).toBe(1);
   });
   it('should stop', async () => {

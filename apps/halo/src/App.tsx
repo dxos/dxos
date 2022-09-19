@@ -12,12 +12,16 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 
 import { ActionProvider, AppLayout } from './containers';
 import {
-  InvitationPage, MainPage, PartyPage, ProfilePage, RegistrationPage, RequireProfile
+  AuthPage, InvitationPage, MainPage, PartyPage, ProfilePage, RegistrationPage, RequireProfile
 } from './pages';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => useRoutes([
+  {
+    path: '/auth/:origin',
+    element: <AuthPage />
+  },
   {
     path: '/register/*',
     element: <RegistrationPage />

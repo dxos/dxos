@@ -7,6 +7,7 @@ import protobuf from 'protobufjs';
 
 import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
+import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import {
@@ -15,7 +16,6 @@ import {
   encodeExtensionPayload,
   sanitizeExtensionData
 } from '../encoding';
-import { Record as RawRecord } from '../proto';
 import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';

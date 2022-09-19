@@ -10,13 +10,15 @@ import pify from 'pify';
 import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe, schema } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { codec, createTestItemMutation, schema } from '../proto';
+import { createTestItemMutation } from '../testing';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
+
+const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
 const log = debug('dxos:echo:feed-store-iterator:test');
 
@@ -29,7 +31,8 @@ describe('feed store iterator', () => {
       numMessages: 10
     };
 
-    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM })
+      .createDirectory('feed'), { valueEncoding: codec });
 
     //
     // Create the ordered feed stream.
@@ -115,7 +118,7 @@ describe('feed store iterator', () => {
 
   test('skipping initial messages', async () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), {
-      valueEncoding: schema.getCodecForType('dxos.test.echo.TestItemMutation')
+      valueEncoding: schema.getCodecForType('example.testing.data.TestItemMutation')
     });
 
     const [keyPair1, keyPair2] = [createKeyPair(), createKeyPair()];

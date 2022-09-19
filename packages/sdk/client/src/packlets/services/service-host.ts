@@ -5,10 +5,11 @@
 import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
+import { WebsocketSignalManager } from '@dxos/messaging';
+import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import { DevtoolsHost } from '../proto';
 import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 
@@ -31,12 +32,12 @@ export class ClientServiceHost implements ClientServiceProvider {
     this._echo = new ECHO({
       storage,
       keyStorage,
-      networkManagerOptions: {
-        signal: this._config.get('runtime.services.signal.server')
-          ? [this._config.get('runtime.services.signal.server')!] : undefined,
+      networkManagerOptions: this._config.get('runtime.services.signal.server') ? {
+        // TODO(mykola): SignalManager need to be subscribed for message receiving first.
+        signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
         ice: this._config.get('runtime.services.ice'),
         log: true
-      },
+      } : undefined,
       snapshots: this._config.get('runtime.client.enableSnapshots', false),
       snapshotInterval: this._config.get('runtime.client.snapshotInterval')
     });

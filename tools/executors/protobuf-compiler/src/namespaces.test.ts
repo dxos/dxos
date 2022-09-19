@@ -4,25 +4,27 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { join } from 'path';
+import { resolve, join } from 'path';
 import * as pb from 'protobufjs';
 
 import { preconfigureProtobufjs } from './configure';
 import { splitSchemaIntoNamespaces } from './namespaces';
 import { registerResolver } from './parser';
 
-registerResolver();
-preconfigureProtobufjs();
-
 test('split namespaces', async () => {
-  const root = await pb.load(join(__dirname, '../test/proto/schema.proto'));
+  const baseDir = resolve(process.cwd(), './test/proto');
+  registerResolver(baseDir);
+  preconfigureProtobufjs();
+
+  const root = await pb.load(join(__dirname, '../test/proto/example/testing/types.proto'));
   const namespaces = splitSchemaIntoNamespaces(root);
 
   expect(Array.from(namespaces.keys()).sort()).toEqual([
-    'dxos.test',
-    'dxos.test.any',
-    'dxos.test.extensions',
-    'dxos.test.testfoo',
+    'example.testing.another',
+    'example.testing.any',
+    'example.testing.extensions',
+    'example.testing.types',
+    'example.testing.util',
     'google.protobuf'
   ].sort());
 });

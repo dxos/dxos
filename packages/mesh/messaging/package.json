@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/messaging",
+  "version": "2.33.8",
+  "description": "Messaging",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "assert": "^2.0.0",
+    "isomorphic-ws": "^4.0.1",
+    "ws": "^7.4.4"
+  },
+  "devDependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/signal": "workspace:*",
+    "@dxos/testutils": "workspace:*",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "^16.11.27",
+    "earljs": "~0.1.10",
+    "mocha": "^8.4.0",
+    "typescript": "^4.7.2",
+    "wait-for-expect": "^3.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

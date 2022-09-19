@@ -9,12 +9,11 @@ import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { BotHandle } from './handle';
-import { schema } from './proto/gen';
-import { BotFactoryService, BotPackageSpecifier } from './proto/gen/dxos/bot';
 
 const log = debug('dxos:bot-factory-client');
 

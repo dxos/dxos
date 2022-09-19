@@ -702,6 +702,8 @@ importers:
       '@dxos/react-client-testing': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@mui/icons-material': ^5.8.0
@@ -728,6 +730,8 @@ importers:
       '@dxos/react-client': link:../../packages/sdk/react-client
       '@dxos/react-components': link:../../packages/sdk/react-components
       '@dxos/react-toolkit': link:../../packages/sdk/react-toolkit
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
       '@dxos/util': link:../../packages/common/util
       '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
       '@mui/material': 5.8.7_zxljzmqdrxwnuenbkrz77w74uy
@@ -818,6 +822,53 @@ importers:
       '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
       '@dxos/protobuf-compiler': link:../../tools/executors/protobuf-compiler
 
+  e2e/rpc-tunnel:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/react': ^18.0.9
+      '@types/react-dom': ^18.0.5
+      debug: ^4.3.3
+      react: ^18.1.0
+      react-dom: ^18.1.0
+      vite: 3.0.9
+    dependencies:
+      '@dxos/async': link:../../packages/common/async
+      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
+      '@dxos/protocols': link:../../packages/common/protocols
+      '@dxos/react-async': link:../../packages/common/react-async
+      '@dxos/react-components': link:../../packages/sdk/react-components
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
+      '@emotion/react': 11.9.3_tu23i5xxn6kbev62oblybgbdem
+      '@emotion/styled': 11.9.3_6di7qw6wcoul3l5eay5kyd6bwu
+      '@mui/icons-material': 5.8.4_wip2cf6yrkxu2zuyrl3lmpbdaa
+      '@mui/lab': 5.0.0-alpha.89_kyqdtephqbodjkxzjbdhul5xu4
+      '@mui/material': 5.8.7_mugunlselc52kyz7qt5aa5ixva
+      debug: 4.3.4
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/vite-plugin': link:../../tools/vite-plugin
+      '@types/debug': 4.1.7
+      '@types/react': 18.0.17
+      '@types/react-dom': 18.0.6
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
   e2e/rpc-worker-proxy:
     specifiers:
       '@babel/core': ^7.18.13
@@ -870,6 +921,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
@@ -889,6 +941,7 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
@@ -904,6 +957,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -930,6 +984,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
@@ -1063,6 +1118,7 @@ importers:
       '@types/randombytes': ^2.0.0
       assert: ^2.0.0
       debug: ^4.3.3
+      glob: ~7.1.6
       randombytes: ^2.1.0
       util: ^0.12.4
     dependencies:
@@ -1074,6 +1130,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/randombytes': 2.0.0
       debug: 4.3.4
+      glob: 7.1.7
 
   packages/common/random-access-storage:
     specifiers:
@@ -1146,6 +1203,17 @@ importers:
       earljs: 0.1.12_typescript@4.7.4
       typescript: 4.7.4
 
+  packages/common/rpc-tunnel:
+    specifiers:
+      '@dxos/rpc': workspace:*
+      '@types/debug': ^4.1.7
+      debug: ^4.3.3
+    dependencies:
+      '@dxos/rpc': link:../rpc
+      debug: 4.3.4
+    devDependencies:
+      '@types/debug': 4.1.7
+
   packages/common/rpc-worker-proxy:
     specifiers:
       '@dxos/async': workspace:*
@@ -1216,6 +1284,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/messaging': workspace:*
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -1256,6 +1325,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools-mesh': link:../devtools-mesh
       '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
@@ -1307,6 +1377,7 @@ importers:
       '@dxos/devtools': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-toolkit': workspace:*
       '@dxos/rpc': workspace:*
       '@emotion/react': ^11.9.0
@@ -1347,6 +1418,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
       '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
@@ -1388,6 +1460,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols': workspace:*
@@ -1411,6 +1484,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
@@ -1445,6 +1519,7 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1484,6 +1559,7 @@ importers:
       '@dxos/feed-store': link:../feed-store
       '@dxos/log': link:../../common/log
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../object-model
@@ -1565,6 +1641,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@types/faker': ^5.5.1
       '@types/lodash.times': ^4.3.6
@@ -1576,6 +1653,7 @@ importers:
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/object-model': link:../object-model
+      '@dxos/protocols': link:../../common/protocols
       faker: 5.5.3
       lodash.times: 4.3.2
     devDependencies:
@@ -1645,10 +1723,12 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../common/protocols
 
   packages/echo/model-factory:
     specifiers:
@@ -1679,6 +1759,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
@@ -1697,6 +1778,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -1789,6 +1871,7 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -1811,6 +1894,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
@@ -1929,6 +2013,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/network-generator': workspace:*
+      '@dxos/protocols': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
@@ -1937,6 +2022,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
       debug: 4.3.4
       tiny-lru: 7.0.6
@@ -1981,6 +2067,45 @@ importers:
       '@types/pump': 1.1.1
       pump: 3.0.0
 
+  packages/mesh/messaging:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
+      assert: ^2.0.0
+      earljs: ~0.1.10
+      isomorphic-ws: ^4.0.1
+      mocha: ^8.4.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+      ws: ^7.4.4
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      isomorphic-ws: 4.0.1_ws@7.5.6
+      ws: 7.5.6
+    devDependencies:
+      '@dxos/signal': link:../signal
+      '@dxos/testutils': link:../../common/testutils
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
+      earljs: 0.1.12_typescript@4.7.4
+      mocha: 8.4.0
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
+
   packages/mesh/network-generator:
     specifiers:
       '@dxos/async': workspace:*
@@ -2009,7 +2134,9 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2018,11 +2145,9 @@ importers:
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@swc-node/register': ~1.5.1
-      '@types/debug': ^4.1.7
       '@types/simple-peer': 9.11.3
       '@types/ws': ^7.4.0
       assert: ^2.0.0
-      debug: ^4.3.3
       earljs: ~0.1.10
       fast-check: ~2.14.0
       isomorphic-ws: ^4.0.1
@@ -2037,14 +2162,15 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/log': link:../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/messaging': link:../messaging
       '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       '@koush/wrtc': 0.5.3
       assert: 2.0.0
-      debug: 4.3.4
       isomorphic-ws: 4.0.1_ws@7.5.6
       nanomessage-rpc: 3.2.0
       simple-peer: 9.11.0
@@ -2054,7 +2180,6 @@ importers:
       '@dxos/signal': link:../signal
       '@dxos/testutils': link:../../common/testutils
       '@swc-node/register': 1.5.1_typescript@4.7.4
-      '@types/debug': 4.1.7
       '@types/simple-peer': 9.11.3
       '@types/ws': 7.4.7
       earljs: 0.1.12_typescript@4.7.4
@@ -2155,6 +2280,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2164,6 +2290,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/messaging': link:../messaging
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -2208,6 +2335,7 @@ importers:
       '@dxos/echo-protocol': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/feed-store': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -2242,6 +2370,8 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
+      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
@@ -2260,7 +2390,6 @@ importers:
     devDependencies:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/feed-store': link:../../echo/feed-store
@@ -2370,9 +2499,12 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/util': workspace:*
       '@mui/material': ^5.8.1
       '@testing-library/dom': ^8.17.1
@@ -2398,8 +2530,11 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
+      '@dxos/messaging': link:../../mesh/messaging
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -4806,7 +4941,7 @@ packages:
     hasBin: true
     dependencies:
       exec-sh: 0.3.6
-      minimist: 1.2.5
+      minimist: 1.2.6
     dev: true
 
   /@colors/colors/1.5.0:
@@ -21993,7 +22128,7 @@ packages:
     resolution: {integrity: sha512-OLhxz05EzUtsAmOMzuupt1lHYXCNib0ECyuZ/PZOx9TrZcC8vL0x+DUG3TL+GLX3yHG45e6YGjIm0XwDc3q3og==}
     engines: {node: '>= 10.14.2'}
     dependencies:
-      '@babel/types': 7.18.7
+      '@babel/types': 7.18.13
       '@jest/types': 26.6.2
       '@types/babel__traverse': 7.14.2
       '@types/prettier': 2.4.2
@@ -28193,7 +28328,7 @@ packages:
       execa: 1.0.0
       fb-watchman: 2.0.1
       micromatch: 3.1.10
-      minimist: 1.2.5
+      minimist: 1.2.6
       walker: 1.0.8
     transitivePeerDependencies:
       - supports-color
