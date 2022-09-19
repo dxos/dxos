@@ -49,17 +49,17 @@ export class InvitationDescriptor {
     return descriptor;
   }
 
-  static fromProto (invitationProto: InvitationDescriptorProto): InvitationDescriptor {
-    assert(invitationProto.type, 'Invitation type not provided.');
-    assert(invitationProto.swarmKey, 'Invitation swarm key not provided.');
-    assert(invitationProto.invitation, 'Invitation not provided.');
+  static fromProto (invitation: InvitationDescriptorProto): InvitationDescriptor {
+    assert(invitation.type !== undefined, 'Invitation type not provided.');
+    assert(invitation.swarmKey, 'Invitation swarm key not provided.');
+    assert(invitation.invitation, 'Invitation not provided.');
 
     return new InvitationDescriptor(
-      invitationProto.type,
-      invitationProto.swarmKey,
-      Buffer.from(invitationProto.invitation),
-      invitationProto.identityKey ? PublicKey.from(invitationProto.identityKey) : undefined,
-      invitationProto.secret ? Buffer.from(invitationProto.secret) : undefined
+      invitation.type,
+      invitation.swarmKey,
+      Buffer.from(invitation.invitation),
+      invitation.identityKey ? PublicKey.from(invitation.identityKey) : undefined,
+      invitation.secret ? Buffer.from(invitation.secret) : undefined
     );
   }
 
@@ -76,7 +76,7 @@ export class InvitationDescriptor {
     public readonly identityKey?: PublicKey,
     public secret?: Uint8Array
   ) {
-    assert(type);
+    assert(type !== undefined);
     assert(swarmKey instanceof Uint8Array);
     assert(invitation instanceof Uint8Array);
     if (identityKey) {
@@ -129,7 +129,7 @@ export class InvitationDescriptor {
 
 const parseInvitationType = (str: string): InvitationDescriptorProto.Type => {
   const type = parseInt(str);
-  assert(type === 1 || type === 2, 'Invalid invitation type');
+  assert(type === InvitationDescriptorProto.Type.INTERACTIVE || type === InvitationDescriptorProto.Type.OFFLINE, 'Invalid invitation type');
   return type;
 };
 

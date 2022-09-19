@@ -24,7 +24,6 @@ export type CreateCredentialParams = {
    * Provided if signing key is different from issuer.
    */
   chain?: Chain
-
   nonce?: Uint8Array
 }
 

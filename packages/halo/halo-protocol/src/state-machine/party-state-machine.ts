@@ -55,7 +55,7 @@ export class PartyStateMachine {
     }
 
     switch (getCredentialAssertion(credential)['@type']) {
-      case 'dxos.halo.credentials.party.PartyGenesis':
+      case 'dxos.halo.credentials.PartyGenesis':
         if (this._genesisCredential) {
           log('Party already has a genesis credential.');
           return false;
