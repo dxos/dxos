@@ -18,13 +18,17 @@ const IFRAME_ID = '__DXOS_AUTH__';
  * Hook returning DXOS user profile object, renders HALO auth screen if no profile exists yet.
  * Requires ClientContext to be set via ClientProvider.
  */
-export const useProfile = () => {
+export const useProfile = (disableHaloLogin = false) => {
   const client = useClient();
   const [profile, setProfile] = useState(() => client.halo.profile);
 
   useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
 
   useAsyncEffect(async () => {
+    if (disableHaloLogin) {
+      return;
+    }
+
     const iframe = document.getElementById(IFRAME_ID);
     if (!profile && !iframe) {
       const iframe = document.createElement('iframe') as HTMLIFrameElement;
@@ -45,7 +49,7 @@ export const useProfile = () => {
     } else if (profile && iframe) {
       iframe.remove();
     }
-  }, [profile]);
+  }, [profile, disableHaloLogin]);
 
   return profile;
 };
