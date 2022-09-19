@@ -7,13 +7,12 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
-import { Any } from '@dxos/codec-protobuf';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { PublicKey } from '@dxos/protocols';
+import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messaging';
 
@@ -60,7 +59,6 @@ describe('MessageRouter', () => {
       onSignal,
       onOffer
     });
-    afterTest(() => router.destroy());
 
     return {
       peerId,
@@ -239,112 +237,4 @@ describe('MessageRouter', () => {
     });
     expect(answer2.accept).toEqual(true);
   }).timeout(5_000);
-
-  describe('Reliability', () => {
-    interface SendMessageArgs {
-      author: PublicKey
-      recipient: PublicKey
-      payload: Any
-    }
-
-    const setup = ({
-      onSignal1 = async () => {},
-      onSignal2 = async () => {},
-      // Imitates signal network disruptions (e. g. message doubling, ).
-      messageDisruption = (data) => [data]
-    }: {
-      onSignal1?: (msg: SignalMessage) => Promise<void>
-      onSignal2?: (msg: SignalMessage) => Promise<void>
-      messageDisruption?: (data: SendMessageArgs) => SendMessageArgs[]
-    }): { mr1: MessageRouter, mr2: MessageRouter } => {
-      const mr1: MessageRouter = new MessageRouter({
-        sendMessage: async (data) =>
-          messageDisruption(data).forEach((data) => mr2.receiveMessage(data)),
-        onOffer: async () => ({ accept: true }),
-        onSignal: onSignal1
-      });
-      afterTest(() => mr1.destroy());
-
-      const mr2: MessageRouter = new MessageRouter({
-        sendMessage: async (data) =>
-          messageDisruption(data).forEach((data) => mr1.receiveMessage(data)),
-        onOffer: async () => ({ accept: true }),
-        onSignal: onSignal2
-      });
-      afterTest(() => mr1.destroy());
-
-      return { mr1, mr2 };
-    };
-
-    test('signaling with non reliable connection', async () => {
-      // Simulate unreliable connection.
-      // Only each 3rd message is sent.
-      let i = 0;
-      const unreliableConnection = (
-        data: SendMessageArgs
-      ): SendMessageArgs[] => {
-        i++;
-        if (i % 3 !== 0) {
-          return [data];
-        }
-        return [];
-      };
-
-      const received: SignalMessage[] = [];
-      const signalMock1 = async (msg: SignalMessage) => {
-        received.push(msg);
-      };
-
-      const { mr2 } = await setup({
-        onSignal1: signalMock1,
-        messageDisruption: unreliableConnection
-      });
-
-      // Sending 3 messages.
-      // Setup sends messages directly to between. So we don`t need to specify any ids.
-      Array(3)
-        .fill(0)
-        .forEach(async () => {
-          await mr2.signal({
-            author: PublicKey.random(),
-            recipient: PublicKey.random(),
-            sessionId: PublicKey.random(),
-            topic: PublicKey.random(),
-            data: { signal: { json: JSON.stringify({ asd: 'asd' }) } }
-          });
-        });
-      // expect to receive 3 messages.
-      await waitForExpect(() => {
-        expect(received.length).toEqual(3);
-      }, 4_000);
-    }).timeout(5_000);
-
-    test('ignoring doubled messages', async () => {
-      // Message got doubled going through signal network.
-      const doublingMessage = (data: SendMessageArgs) => [data, data];
-
-      const received: SignalMessage[] = [];
-      const signalMock1 = async (msg: SignalMessage) => {
-        received.push(msg);
-      };
-
-      const { mr2 } = setup({
-        onSignal1: signalMock1,
-        messageDisruption: doublingMessage
-      });
-
-      // sending message.
-      await mr2.signal({
-        author: PublicKey.random(),
-        recipient: PublicKey.random(),
-        sessionId: PublicKey.random(),
-        topic: PublicKey.random(),
-        data: { signal: { json: 'asd' } }
-      });
-      // expect to receive 1 message.
-      await waitForExpect(() => {
-        expect(received.length).toEqual(1);
-      }, 4_000);
-    }).timeout(5_000);
-  });
 });

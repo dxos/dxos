@@ -4,7 +4,8 @@
 
 import debug from 'debug';
 
-import { SingletonMessage } from './proto';
+import { SingletonMessage } from '@dxos/protocols/proto/dxos/rpc/proxy';
+
 import { ProxyPort } from './proxy-port';
 
 const log = debug('dxos:rpc-worker-proxy:shared-worker');

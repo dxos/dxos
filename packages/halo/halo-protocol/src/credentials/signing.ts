@@ -5,8 +5,7 @@
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/protocols';
-
-import { Credential } from '../proto';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**
  * @returns The input message to be signed for a given credential.

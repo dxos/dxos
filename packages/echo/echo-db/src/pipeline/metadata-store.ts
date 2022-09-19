@@ -7,14 +7,13 @@ import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
 import { IdentityRecord } from '@dxos/halo-protocol';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { schema, PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
- *
  * Should be incremented every time there's a breaking change to the stored data.
  */
 export const STORAGE_VERSION = 1;

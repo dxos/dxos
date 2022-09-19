@@ -5,11 +5,10 @@
 import assert from 'assert';
 
 import { Signer } from '@dxos/keyring';
-import { PublicKey } from '@dxos/protocols';
+import { MessageType, PublicKey } from '@dxos/protocols';
+import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Chain, Credential } from '../proto';
 import { getSignaturePayload } from './signing';
-import { MessageType } from './types';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {

@@ -2,26 +2,24 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
+import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { SwarmEvent } from '../proto/gen/dxos/mesh/signal';
-import { Answer } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessaging } from '../signal';
 import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
-
-const log = debug('dxos:network-manager:swarm');
 
 /**
  * A single peer's view of the swarm.

@@ -5,9 +5,9 @@ import { expect } from 'earljs';
 
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
+import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { Message, SwarmEvent } from './proto';
 import { SignalRPCClient } from './signal-rpc-client';
 
 describe('SignalRPCClient', () => {
@@ -41,7 +41,7 @@ describe('SignalRPCClient', () => {
 
     await client2.sendMessage({ author: peerId2, recipient: peerId1, payload: message });
 
-    const received: Message = await new Promise(resolve => {
+    const received: SignalMessage = await new Promise(resolve => {
       stream1.subscribe(message => {
         resolve(message);
       }, (error) => {
@@ -70,7 +70,7 @@ describe('SignalRPCClient', () => {
         if (peerId2.equals(event.peerAvailable?.peer!)) {
           resolve(event);
         }
-      }, (error) => {
+      }, (error: any) => {
         if (error) {
           console.log(error);
           throw error;

@@ -3,10 +3,12 @@
 //
 
 import {
-  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, KeyRecord, Keyring, KeyType, SignedMessage
+  createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring
 } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { Chain } from '@dxos/halo-protocol';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { humanize } from '@dxos/util';
 
 import { ContactManager, Preferences } from '../halo';

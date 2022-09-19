@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Bot } from './proto/gen/dxos/bot';
+import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
 export { Bot };
 

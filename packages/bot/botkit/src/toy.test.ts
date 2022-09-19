@@ -13,13 +13,13 @@ import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { Bot, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
 import { RegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer, NodeContainer } from './bot-container';
 import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
 import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { Bot as ClientBot } from './bots/client-bot';
-import { Bot, GetLogsResponse } from './proto/gen/dxos/bot';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
 const signalContext = new MemorySignalManagerContext();

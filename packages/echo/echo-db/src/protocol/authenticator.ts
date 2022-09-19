@@ -6,8 +6,8 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Keyring } from '@dxos/credentials';
-import { FeedKey, FeedWriter, PartyKey, schema } from '@dxos/echo-protocol';
-import { AdmittedFeed, Auth, createCredential, Credential, isValidAuthorizedDeviceCredential, verifyCredential } from '@dxos/halo-protocol';
+import { FeedKey, FeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { createCredential, isValidAuthorizedDeviceCredential, verifyCredential, AdmittedFeed, Auth, Credential } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { PartyProcessor, PartyStateProvider } from '../pipeline';

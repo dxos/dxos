@@ -7,7 +7,6 @@ import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
 import { Stream } from '@dxos/codec-protobuf';
-
 import {
   BotReport,
   BotService,
@@ -15,7 +14,7 @@ import {
   SendCommandRequest,
   SendCommandResponse,
   StartRequest
-} from '../proto/gen/dxos/bot';
+} from '@dxos/protocols/proto/dxos/bot';
 
 const log = debug('dxos:bot:client-bot');
 

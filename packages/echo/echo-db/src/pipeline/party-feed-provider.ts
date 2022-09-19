@@ -6,10 +6,11 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring } from '@dxos/credentials';
 import { FeedSelector, FeedStoreIterator, MessageSelector } from '@dxos/echo-protocol';
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { MetadataStore } from './metadata-store';

@@ -5,9 +5,9 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
+import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, verifyCredential } from '../credentials';
-import { AdmittedFeed, Chain, PartyMember } from '../proto';
 import { PartyStateMachine } from './party-state-machine';
 
 describe('PartyStateMachine', () => {

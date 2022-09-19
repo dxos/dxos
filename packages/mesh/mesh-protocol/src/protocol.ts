@@ -21,7 +21,7 @@ import { keyToHuman } from './utils';
 
 const log = debug('dxos:protocol');
 
-const kProtocol = Symbol('dxos.protocol');
+const kProtocol = Symbol('dxos.mesh.protocol');
 
 export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
   /**

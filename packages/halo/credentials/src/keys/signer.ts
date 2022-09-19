@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-
-import { KeyChain, KeyRecord, SignedMessage, WithTypeUrl } from '../proto';
+import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 export type SigningKey = KeyRecord | KeyChain | PublicKey
 

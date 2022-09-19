@@ -8,7 +8,6 @@ import assert from 'node:assert';
 import {
   keyPairFromSeedPhrase,
   Keyring,
-  KeyType,
   Filter,
   SecretProvider
 } from '@dxos/credentials';
@@ -23,15 +22,22 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { createHaloPartyAdmissionMessage, GreetingInitiator, HaloRecoveryInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer } from '../invitations';
+import {
+  createHaloPartyAdmissionMessage,
+  GreetingInitiator,
+  HaloRecoveryInitiator,
+  InvitationDescriptor,
+  OfflineInvitationClaimer
+} from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PipelineOptions } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { SnapshotStore } from '../snapshots';
 import {
-  HaloParty,
-  HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
+  HaloParty, HALO_PARTY_CONTACT_LIST_TYPE, HALO_PARTY_DEVICE_PREFERENCES_TYPE, HALO_PARTY_PREFERENCES_TYPE
 } from './halo-party';
 
 /**
@@ -218,7 +224,7 @@ export class HaloFactory {
 
     const credentialsSigner = CredentialsSigner.createDirectDeviceSigner(this._keyring);
     // Claim the offline invitation and convert it into an interactive invitation.
-    if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+    if (invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();

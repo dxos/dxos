@@ -3,8 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-
-import { TestStreamService } from './proto';
+import { TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
 
 const STORAGE_KEY = 'testclient';
 

@@ -4,23 +4,22 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
+
 // TODO(burdon): Standardize position of "package" (i.e., before/after imports).
 // TODO(burdon): Move Item specific to echo.item?
 package dxos.echo.feed;
-
-import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
-
-import "../halo/credentials.proto";
-import "./snapshot.proto";
-import "./timeframe.proto";
 
 /**
  * Outer message type decoded by Codec.
  * This is what is written to the feeds.
  */
 message FeedMessage {
-  TimeframeVector timeframe = 1;
+  dxos.echo.timeframe.TimeframeVector timeframe = 1;
 
   google.protobuf.Any payload = 2;
 }
@@ -29,12 +28,13 @@ message FeedMessage {
  * A container for dxos.credentials.Message
  */
 message CredentialsMessage {
-  Credential credential = 1;
+  dxos.halo.credentials.Credential credential = 1;
 }
 
 /**
  * Wrapper for all ECHO messages.
  */
+// TODO(burdon): Reconcile with HaloMessage (and other "Message" types).
 message EchoEnvelope {
   string itemId = 1;
 
@@ -48,7 +48,7 @@ message EchoEnvelope {
   optional bytes mutation = 12;
 
   /// Set the model to the provided snapshot.
-  optional ModelSnapshot snapshot = 13;
+  optional snapshot.ModelSnapshot snapshot = 13;
 }
 
 // TODO(burdon): Document (different from parent/child).?

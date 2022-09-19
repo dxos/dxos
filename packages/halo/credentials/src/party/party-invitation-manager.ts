@@ -6,8 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/protocols';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { KeyRecord, SignedMessage } from '../proto';
 import { PartyEventType } from './events';
 import { PartyState } from './party-state';
 

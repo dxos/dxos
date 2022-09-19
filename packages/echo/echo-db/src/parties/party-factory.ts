@@ -5,22 +5,25 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { KeyType, SecretProvider } from '@dxos/credentials';
+import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, raise, timed } from '@dxos/debug';
-import { createFeedWriter, FeedMessage, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { createFeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize, Provider } from '@dxos/util';
 
 import {
-  createDataPartyAdmissionMessages,
-  GreetingInitiator, InvitationDescriptor, InvitationDescriptorType, OfflineInvitationClaimer
+  createDataPartyAdmissionMessages, GreetingInitiator, InvitationDescriptor, OfflineInvitationClaimer
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
 import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
-import { IdentityCredentials } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
@@ -143,7 +146,7 @@ export class PartyFactory {
 
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
     // Claim the offline invitation and convert it into an interactive invitation.
-    if (InvitationDescriptorType.OFFLINE === invitationDescriptor.type) {
+    if (InvitationDescriptorProto.Type.OFFLINE === invitationDescriptor.type) {
       const invitationClaimer = new OfflineInvitationClaimer(this._networkManager, invitationDescriptor);
       await invitationClaimer.connect();
       invitationDescriptor = await invitationClaimer.claim();

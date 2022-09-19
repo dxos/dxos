@@ -6,16 +6,18 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout, sleep } from '@dxos/async';
-import { Keyring, KeyType } from '@dxos/credentials';
+import { Keyring } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
 import { checkType, todo } from '@dxos/debug';
-import { codec, FeedMessage } from '@dxos/echo-protocol';
+import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 

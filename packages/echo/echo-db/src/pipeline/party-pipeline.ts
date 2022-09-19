@@ -7,10 +7,10 @@ import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined, timed } from '@dxos/debug';
-import { DatabaseSnapshot, EchoEnvelope, FeedMessage, FeedWriter, mapFeedWriter, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
 import { Credential } from '@dxos/halo-protocol/src/proto';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { DatabaseSnapshot, PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../packlets/database';

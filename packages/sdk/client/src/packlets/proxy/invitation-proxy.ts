@@ -7,11 +7,17 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptorType } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/echo-db';
+import {
+  AuthenticateInvitationRequest,
+  InvitationRequest as InvitationRequestProto,
+  InvitationState,
+  RedeemedInvitation as RedeemedInvitationProto
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';
-import { AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto } from '../proto';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>
@@ -85,9 +91,11 @@ export class InvitationProxy {
     this.invitationsUpdate.emit();
   }
 
-  static handleInvitationRedemption (
-    { stream, invitationDescriptor, onAuthenticate }: HandleInvitationRedemptionOpts
-  ): HandleInvitationRedemptionResult {
+  static handleInvitationRedemption ({
+    stream,
+    invitationDescriptor,
+    onAuthenticate
+  }: HandleInvitationRedemptionOpts): HandleInvitationRedemptionResult {
     const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitationProto>();
     const [waitForFinish, resolveFinish] = trigger<RedeemedInvitationProto>();
 
@@ -110,7 +118,7 @@ export class InvitationProxy {
     });
 
     const authenticate = async (secret: Uint8Array) => {
-      if (invitationDescriptor.type === InvitationDescriptorType.OFFLINE) {
+      if (invitationDescriptor.type === InvitationDescriptorProto.Type.OFFLINE) {
         throw new Error('Cannot authenticate offline invitation.');
       }
 
@@ -122,7 +130,7 @@ export class InvitationProxy {
       });
     };
 
-    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorType.INTERACTIVE) {
+    if (invitationDescriptor.secret && invitationDescriptor.type === InvitationDescriptorProto.Type.INTERACTIVE) {
       // Authenticate straight away, if secret is already provided.
       void authenticate(invitationDescriptor.secret);
     }

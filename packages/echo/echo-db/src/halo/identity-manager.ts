@@ -6,9 +6,10 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { Filter, Keyring, SecretProvider } from '@dxos/credentials';
 import { failUndefined, todo } from '@dxos/debug';
 import { getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';

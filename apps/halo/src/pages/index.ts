@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './AuthPage';
 export * from './InvitationPage';
 export * from './MainPage';
 export * from './PartyPage';

@@ -6,14 +6,13 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized, Trigger } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf';
+import { Stream, Any } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
+import { schema } from '@dxos/protocols';
+import { Request, Response, Error as ErrorResponse, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { RpcClosedError, RpcNotOpenError, SerializedRpcError } from './errors';
-import { schema } from './proto/gen';
-import { Request, Response, Error as ErrorResponse, RpcMessage } from './proto/gen/dxos/rpc';
-import { Any } from './proto/gen/google/protobuf';
 
 const DEFAULT_TIMEOUT = 3000;
 
@@ -138,7 +137,7 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive (msg: Uint8Array): Promise<void> {
-    const decoded = codec.decode(msg);
+    const decoded = codec.decode(msg, { preserveAny: true });
 
     if (decoded.request) {
       if (!this._open) {
@@ -341,7 +340,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage (message: RpcMessage) {
-    await this._options.port.send(codec.encode(message));
+    await this._options.port.send(codec.encode(message, { preserveAny: true }));
   }
 
   private async _callHandler (req: Request): Promise<Response> {

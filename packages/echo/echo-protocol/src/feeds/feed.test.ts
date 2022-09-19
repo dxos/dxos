@@ -6,11 +6,13 @@ import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe, schema } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { codec, FeedMessage } from '../proto';
 import { createFeedWriter } from './feed-writer';
+
+const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
 describe('Feed tests:', () => {
   test('codec', () => {

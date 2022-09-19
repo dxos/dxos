@@ -2,9 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-export * as defs from './proto/gen/dxos/config'; // TODO(burdon): Rename config/schema?
+// TODO(burdon): Why is this exported? (Rename).
+export * as defs from '@dxos/protocols/proto/dxos/config';
+
+export { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 export * from './config';
 export * from './loaders';
-export * from './proto';
 export * from './types';

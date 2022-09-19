@@ -7,10 +7,8 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
-import {
-  Keyring,
-  KeyType
-} from '@dxos/credentials';
+import { Keyring } from '@dxos/credentials';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 
 import { PartyProcessor } from '../pipeline';

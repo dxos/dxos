@@ -5,8 +5,8 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/descriptor.proto";
+
+package dxos.config;
 
 package dxos.config;
 
@@ -89,10 +89,10 @@ message Runtime {
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1; // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3; // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2; // TODO(burdon): Rename data_store.
-      optional string path = 4; // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;             // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3;   // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2;  // TODO(burdon): Rename data_store.
+      optional string path = 4;                 // TODO(burdon): Rename data_path.
     }
 
     optional string debug = 1 [(env) = "DEBUG"];

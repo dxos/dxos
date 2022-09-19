@@ -4,10 +4,11 @@
 
 syntax = "proto3";
 
-package dxos.echo.snapshot;
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
+import "dxos/halo/signed.proto";
 
-import "../halo/keys.proto";
-import "./feed.proto";
+package dxos.echo.snapshot;
 
 //
 // Snapshots define full party state at a given point in time.
@@ -20,7 +21,7 @@ import "./feed.proto";
 
 message PartySnapshot {
   bytes partyKey = 1;
-  optional TimeframeVector timeframe = 2;
+  optional timeframe.TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.
   // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
@@ -34,12 +35,7 @@ message PartySnapshot {
 // TODO(dmaretskyi): Rename to HaloSnapshot.
 // For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
 message HaloStateSnapshot {
-  message Message {
-    dxos.CredentialsMessage message = 1;
-    PubKey feedKey = 2;
-  }
-
-  repeated Message messages = 1;
+  repeated dxos.halo.signed.Message messages = 1;
 }
 
 //
@@ -65,8 +61,8 @@ message LinkSnapshot {
   optional string linkType = 2;
   string modelType = 3;
   optional string modelVersion = 4;
-  required string source = 5;
-  required string target = 6;
+  string source = 5;
+  string target = 6;
   optional ModelSnapshot model = 7;
 }
 
@@ -92,13 +88,13 @@ message ModelSnapshot {
 message ModelMutation {
   // TODO(burdon): Remove required.
   // Encoded model mutation, format is defined by model's codec.
-  required bytes mutation = 1;
-  required ModelMutationMeta meta = 2;
+  bytes mutation = 1;
+  ModelMutationMeta meta = 2;
 }
 
 message ModelMutationMeta {
   // TODO(burdon): Remove required.
-  required dxos.halo.keys.PubKey feedKey = 1;
-  required int32 seq = 2;
-  required dxos.halo.keys.PubKey memberKey = 3;
+  dxos.halo.keys.PubKey feedKey = 1;
+  int32 seq = 2;
+  dxos.halo.keys.PubKey memberKey = 3;
 }

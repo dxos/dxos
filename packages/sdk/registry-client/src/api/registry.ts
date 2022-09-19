@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Record as RawRecord } from '../proto';
+import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
+
 import { AccountKey } from './account-key';
 import { CID } from './cid';
 import { DomainKey } from './domain-key';

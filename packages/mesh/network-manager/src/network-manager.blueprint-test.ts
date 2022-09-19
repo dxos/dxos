@@ -2,17 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import expect from 'expect';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
 import waitForExpect from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import {
-  MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager
-} from '@dxos/messaging';
+import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
@@ -22,8 +20,6 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-
-const log = debug('dxos:network-manager:test');
 
 const signalContext = new MemorySignalManagerContext();
 

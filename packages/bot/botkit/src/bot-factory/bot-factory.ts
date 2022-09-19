@@ -9,10 +9,10 @@ import { join } from 'path';
 import { Config } from '@dxos/config';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/protocols';
+import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '@dxos/protocols/proto/dxos/bot';
 
 import { BotContainer } from '../bot-container';
 import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config';
-import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '../proto/gen/dxos/bot';
 import { BotHandle } from './bot-handle';
 import type { ContentResolver } from './dxns-content-resolver';
 import type { BotSnapshotStorage } from './fs-bot-snapshot-storage';

@@ -3,9 +3,11 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { TYPES, PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { CredentialsMessage } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { CredentialsMessage, EchoEnvelope, FeedMessage, TYPES } from './proto';
+// TODO(burdon): Move defs to @dxos/protocols.
 
 //
 // Keys.
@@ -61,11 +63,14 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
 // TODO(dmaretskyi): Rename to Message.
 export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
+// TODO(burdon): HaloMessageWrapper.
+// TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {
   meta: FeedMeta
   data: CredentialsMessage
 }
 
+// TODO(burdon): EchoMessageWrapper.
 export interface IEchoStream {
   meta: MutationMetaWithTimeframe
   data: EchoEnvelope

@@ -7,8 +7,8 @@ import { it as test } from 'mocha';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/protocols';
+import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Chain, PartyMember } from '../proto';
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
 

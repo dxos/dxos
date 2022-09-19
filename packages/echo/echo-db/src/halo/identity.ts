@@ -4,13 +4,12 @@
 
 import debug from 'debug';
 
-import { Filter, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
-import { failUndefined, raise } from '@dxos/debug';
-import { Chain, getCredentialAssertion, IdentityRecord } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { Filter, Keyring, Signer } from '@dxos/credentials';
+import { failUndefined } from '@dxos/debug';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { CredentialsSigner } from '../protocol/credentials-signer';
-import { IdentityCredentials } from '../protocol/identity-credentials';
+import { CredentialsSigner, IdentityCredentials } from '../protocol';
 import { ContactManager } from './contact-manager';
 import { HaloParty } from './halo-party';
 import { Preferences } from './preferences';

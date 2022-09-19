@@ -6,13 +6,14 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { Keyring, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
 import { IdentityRecord } from '@dxos/halo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize } from '@dxos/util';
 
 import { ResultSet } from '../api';

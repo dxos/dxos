@@ -3,19 +3,17 @@
 //
 
 import wrtc from '@koush/wrtc';
-import debug from 'debug';
 import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-
-const log = debug('dxos:network-manager:swarm:transport:webrtc');
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.

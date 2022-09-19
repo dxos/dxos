@@ -11,17 +11,19 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import {
-  createPartyGenesisMessage, defaultSecretProvider, Keyring, KeyType, SecretProvider, SecretValidator
+  createPartyGenesisMessage, defaultSecretProvider, Keyring, SecretProvider, SecretValidator
 } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, createKeyPair, randomBytes, sign, verify } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec, EchoEnvelope } from '@dxos/echo-protocol';
+import { codec } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 import { humanize } from '@dxos/util';

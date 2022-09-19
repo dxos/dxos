@@ -13,14 +13,15 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { FeedBlock } from '../types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
+
 const STALL_TIMEOUT = 1000;
 
-/**
- * TODO(burdon): Redesign FeedStore:
- * - Event handlers.
- * - Remove path and metadata.
- * - Construction separate from open.
- */
+//
+// TODO(burdon): Redesign FeedStore:
+// - Event handlers.
+// - Remove path and metadata.
+// - Construction separate from open.
+//
 
 export type MessageSelector = (candidates: FeedBlock[]) => number | undefined
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean

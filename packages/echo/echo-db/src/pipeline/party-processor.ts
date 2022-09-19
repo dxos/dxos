@@ -6,12 +6,11 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import {
-  SignedMessage
-} from '@dxos/credentials';
-import { FeedKey, IHaloStream, PartyKey, HaloStateSnapshot } from '@dxos/echo-protocol';
+import { FeedKey, IHaloStream, PartyKey } from '@dxos/echo-protocol';
 import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { HaloStateSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { jsonReplacer } from '@dxos/util';
 
 const log = debug('dxos:echo-db:party-processor');
@@ -22,7 +21,6 @@ export interface CredentialProcessor {
 
 export interface PartyStateProvider {
   partyKey: PublicKey
-
   /**
    * Whether PartyGenesis was already processed.
    */
@@ -30,9 +28,8 @@ export interface PartyStateProvider {
   memberKeys: PublicKey[]
   feedKeys: PublicKey[]
   getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined
-  isFeedAdmitted (feedKey: FeedKey): boolean
-
   getOfflineInvitation (invitationID: Buffer): SignedMessage | undefined
+  isFeedAdmitted (feedKey: FeedKey): boolean
 }
 
 /**

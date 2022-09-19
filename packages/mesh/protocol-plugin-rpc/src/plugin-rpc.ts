@@ -42,7 +42,7 @@ export const createPort = async (peer: Protocol, receive: Event<SerializedObject
 });
 
 export class PluginRpc {
-  static extensionName = 'dxos.protocol.rpc';
+  static extensionName = 'dxos.mesh.protocol.rpc';
 
   private _peers: Map<string, Connection> = new Map();
 

@@ -9,8 +9,9 @@ import assert from 'node:assert';
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed, todo } from '@dxos/debug';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, Provider } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';
