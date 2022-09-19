@@ -8,8 +8,6 @@ import "google/protobuf/any.proto";
 
 package dxos.config;
 
-package dxos.config;
-
 message Config {
   optional int32 version = 1;
 

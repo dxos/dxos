@@ -11,8 +11,6 @@ package dxos.rpc;
 
 option go_package = "github.com/dxos/kube/go/dxrpc/pb";
 
-package dxos.rpc;
-
 message RpcMessage {
   oneof content {
     Request request = 1;

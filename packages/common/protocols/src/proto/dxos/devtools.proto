@@ -15,8 +15,6 @@ import "dxos/rpc.proto";
 
 package dxos.devtools;
 
-package dxos.devtools;
-
 //
 // DevtoolsHost
 //
