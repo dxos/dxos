@@ -32,18 +32,14 @@ export interface MessengerOptions {
 
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  private readonly _listeners = new Map<string, Set<OnMessage>>();
-  private readonly _defaultListeners = new Set<OnMessage>();
+  private readonly _listeners = new ComplexMap<PublicKey, Map<string, Set<OnMessage>>>(key => key.toHex());
+  private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
 
   private readonly _retryDelay: number;
   private readonly _timeout: number;
-  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(
-    (key) => key.toHex()
-  );
+  private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>((key) => key.toHex());
 
-  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) =>
-    key.toHex()
-  );
+  private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
 
   private readonly _subscriptions = new SubscriptionGroup();
 
@@ -125,21 +121,30 @@ export class Messenger {
     await this._signalManager.subscribeMessages(peerId);
 
     if (!payloadType) {
-      this._defaultListeners.add(onMessage);
-    } else {
-      if (this._listeners.has(payloadType)) {
-        this._listeners.get(payloadType)!.add(onMessage);
+      if (this._defaultListeners.has(peerId)) {
+        this._defaultListeners.get(peerId)!.add(onMessage);
       } else {
-        this._listeners.set(payloadType, new Set([onMessage]));
+        this._defaultListeners.set(peerId, new Set([onMessage]));
+      }
+
+    } else {
+      if (!this._listeners.has(peerId)) {
+        this._listeners.set(peerId, new Map());
+      }
+
+      if (this._listeners.get(peerId)!.has(payloadType)) {
+        this._listeners.get(peerId)!.get(payloadType)!.add(onMessage);
+      } else {
+        this._listeners.get(peerId)!.set(payloadType, new Set([onMessage]));
       }
     }
 
     return {
       unsubscribe: async () => {
         if (!payloadType) {
-          this._defaultListeners.delete(onMessage);
+          this._defaultListeners.get(peerId)?.delete(onMessage);
         } else {
-          this._listeners.get(payloadType)?.delete(onMessage);
+          this._listeners.get(peerId)?.get(payloadType)?.delete(onMessage);
         }
       }
     };
@@ -241,12 +246,15 @@ export class Messenger {
   }
 
   private async _callListeners (message: Message): Promise<void> {
-    for (const listener of this._defaultListeners.values()) {
-      await listener(message);
+
+    if (this._defaultListeners.has(message.recipient)) {
+      for (const listener of this._defaultListeners.get(message.recipient)!.values()) {
+        await listener(message);
+      }
     }
 
-    if (this._listeners.has(message.payload.type_url)) {
-      for (const listener of this._listeners.get(message.payload.type_url)!) {
+    if (this._listeners.get(message.recipient)?.has(message.payload.type_url)) {
+      for (const listener of this._listeners.get(message.recipient)!.get(message.payload.type_url)!) {
         await listener(message);
       }
     }
