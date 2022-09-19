@@ -11,7 +11,7 @@ import { Client } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { DXOS, FullScreen } from '@dxos/react-components';
-import { createIframePort } from '@dxos/rpc-tunnel';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
 // TODO(wittjosiah): Should this be a separate entry point?
 
@@ -28,7 +28,7 @@ export const AuthPage = () => {
       return;
     }
 
-    const rpcPort = createIframePort(origin);
+    const rpcPort = createIFramePort({ origin });
     const remoteClient = new Client(client.config, { rpcPort });
     await remoteClient.initialize();
     setRemoteClient(remoteClient);

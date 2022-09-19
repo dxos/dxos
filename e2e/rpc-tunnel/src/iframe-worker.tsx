@@ -9,44 +9,33 @@ import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIFramePort } from '@dxos/rpc-tunnel';
+import { createIFramePort, createIFrameWorkerRelay } from '@dxos/rpc-tunnel';
 
-import { TestClient } from './test-client';
+// eslint-disable-next-line
+// @ts-ignore
+import SharedWorker from './test-worker?sharedworker';
 
 const IN_IFRAME = window.parent !== window;
 
-const App = () => {
+const App = ({ port }: { port?: MessagePort }) => {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [closed, setClosed] = useState(true);
   const [error, setError] = useState<string>();
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    if (IN_IFRAME) {
-      const port = createIFramePort({ origin: 'http://127.0.0.1:5173' });
-      const client = new TestClient();
-      const server = createProtoRpcPeer({
-        requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
-        },
-        exposed: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
-        },
-        handlers: client.handlers,
-        port
-      });
-      await server.open();
-
-      client.subscribe(value => setValue(String(value)));
+    if (port) {
+      const relay = createIFrameWorkerRelay({ origin: 'http://127.0.0.1:5173', port });
+      await relay.start();
     } else {
-      const port = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
+      const rpcPort = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
       const client = createProtoRpcPeer({
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},
-        port
+        port: rpcPort
       });
       await client.open();
 
@@ -83,7 +72,7 @@ const App = () => {
           id='test-iframe'
           // If main app is loaded from 127.0.0.1, localhost is cross-origin.
           //   https://stackoverflow.com/a/5268240/2804332
-          src='http://localhost:5173/iframe.html'
+          src='http://localhost:5173/iframe-worker.html'
           style={{
             flexGrow: 1
           }}
@@ -93,8 +82,20 @@ const App = () => {
   );
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+if (typeof SharedWorker !== 'undefined') {
+  void (async () => {
+    let worker: SharedWorker | undefined;
+    if (IN_IFRAME) {
+      worker = new SharedWorker();
+      worker.port.start();
+    }
+
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App port={worker?.port} />
+      </StrictMode>
+    );
+  })();
+} else {
+  throw new Error('Requires a browser with support for shared workers.');
+}

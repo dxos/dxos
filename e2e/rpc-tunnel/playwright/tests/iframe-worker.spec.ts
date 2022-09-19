@@ -1,3 +1,4 @@
+
 //
 // Copyright 2022 DXOS.org
 //
@@ -6,7 +7,7 @@ import { expect, Page, test } from '@playwright/test';
 import waitForExpect from 'wait-for-expect';
 
 const config = {
-  baseUrl: 'http://127.0.0.1:5173/'
+  baseUrl: 'http://127.0.0.1:5173'
 };
 
 test.describe('worker', () => {
@@ -15,13 +16,15 @@ test.describe('worker', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext();
     page = await context.newPage();
-    await page.goto(`${config.baseUrl}/worker.html`);
+    await page.goto(`${config.baseUrl}/iframe-worker.html`);
   });
 
   test('loads and connects.', async () => {
     await waitForExpect(async () => {
       const isVisible = await page.isVisible(':has-text("value")');
       expect(isVisible).toBeTruthy();
+      const isClosed = await page.frameLocator('#test-iframe').locator('p:right-of(:text("closed"), 10)').textContent();
+      expect(isClosed).toEqual('false');
     });
   });
 });
