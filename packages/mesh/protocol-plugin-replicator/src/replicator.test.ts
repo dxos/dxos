@@ -8,8 +8,9 @@ import multi from 'multi-read-stream';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
-import { createKeyPair, discoveryKey } from '@dxos/crypto';
+import { discoveryKey } from '@dxos/crypto';
 import { createBatchStream, FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { PublicKey } from '@dxos/protocols';
@@ -18,7 +19,6 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
 import { Replicator, ReplicatorMiddleware } from './replicator';
-import { Keyring } from '@dxos/keyring';
 
 jest.setTimeout(30000);
 
@@ -74,7 +74,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf8' });
-  const keyring = new Keyring()
+  const keyring = new Keyring();
   const { feed } = await feedStore.openReadWriteFeedWithSigner(
     await keyring.createKey(),
     keyring

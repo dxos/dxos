@@ -19,12 +19,13 @@ export const anySubstitutions = {
         throw new Error('Cannot encode google.protobuf.Any without @type string field');
       }
 
-      if(value['@type'] === 'google.protobuf.Any') {
+      if (value['@type'] === 'google.protobuf.Any') {
+        // eslint-disable-next-line camelcase
         const { type_url, value: payload } = value as any as Any;
         return {
-          type_url,
+          type_url, // // eslint-disable-line camelcase
           value: payload
-        }
+        };
       }
 
       const codec = schema.tryGetCodecForType(value['@type']);
@@ -43,11 +44,11 @@ export const anySubstitutions = {
         };
       }
 
-      if(!schema.hasType(value.type_url)) {
+      if (!schema.hasType(value.type_url)) {
         return {
           '@type': 'google.protobuf.Any',
           ...value
-        }
+        };
       }
       const codec = schema.tryGetCodecForType(value.type_url);
       const data = codec.decode(value.value);

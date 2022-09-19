@@ -16,13 +16,13 @@ import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../space';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 describe('halo/identity', () => {
   test('create', async () => {

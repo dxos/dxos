@@ -196,7 +196,7 @@ describe('FeedStore', () => {
     expect(timesCalled).toEqual(1);
   });
 
-  test.only('Two feeds replicating', async () => {
+  test('Two feeds replicating', async () => {
     const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'));
     const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed2'));
 

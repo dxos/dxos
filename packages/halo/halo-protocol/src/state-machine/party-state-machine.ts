@@ -2,17 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
-import { ReadOnlyEvent } from '@dxos/async';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AsyncCallback, Callback } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
-import { log } from '@dxos/log'
-import { AsyncCallback, Callback } from '@dxos/util';
 
 export interface PartyState {
   readonly genesisCredential: Credential | undefined
@@ -32,7 +29,7 @@ export class PartyStateMachine implements PartyState {
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
 
-  readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>()
+  readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
 

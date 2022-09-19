@@ -16,10 +16,10 @@ const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
 describe('Feed tests:', () => {
   test('codec', () => {
-    const message1: FeedMessage = { 
+    const message1: FeedMessage = {
       timeframe: new Timeframe(),
       payload: {
-        '@type': 'google.protobuf.Empty',
+        '@type': 'google.protobuf.Empty'
       }
     };
 
@@ -37,10 +37,10 @@ describe('Feed tests:', () => {
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     expect(feed.length).toBe(0);
 
-    const data: FeedMessage = { 
+    const data: FeedMessage = {
       timeframe: new Timeframe(),
       payload: {
-        '@type': 'google.protobuf.Empty',
+        '@type': 'google.protobuf.Empty'
       }
     };
 

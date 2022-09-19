@@ -2,9 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
 import streamFrom from 'from2';
 import assert from 'node:assert';
+
+import { PublicKey } from '@dxos/protocols';
 
 import { HypercoreFeed } from './hypercore-types';
 

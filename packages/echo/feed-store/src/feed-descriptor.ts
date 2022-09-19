@@ -193,16 +193,6 @@ export class FeedDescriptor {
 
 export default FeedDescriptor;
 
-// TODO(burdon): Remove.
-const MOCK_CRYPTO = {
-  sign: (data: any, secretKey: any, cb: any) => {
-    cb(null, randomBytes(64));
-  },
-  verify: (data: any, signature: any, key: any, cb: any) => {
-    cb(null, true);
-  }
-};
-
 /**
  * File API that hypercore uses to read/write from storage.
  */

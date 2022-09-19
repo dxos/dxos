@@ -13,6 +13,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../database';
@@ -20,8 +22,6 @@ import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
-import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 export type SpaceParams = {
   spaceKey: PublicKey

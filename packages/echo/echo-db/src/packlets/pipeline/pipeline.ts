@@ -11,11 +11,11 @@ import {
 import { FeedDescriptor } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const STALL_TIMEOUT = 1000;
 

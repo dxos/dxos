@@ -5,11 +5,11 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { PublicKey } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { Keyring } from './keyring';
 import { verifySignature } from './verify';
-import { PublicKey } from '@dxos/protocols';
 
 describe('Keyring', () => {
   test('sign & verify', async () => {
@@ -27,10 +27,10 @@ describe('Keyring', () => {
 
     const key = await keyring.createKey();
     const message = Buffer.from('hello');
-    const signature = await keyring.sign(key, message);
+    const _signature = await keyring.sign(key, message);
 
     expect(await verifySignature(key, message, Buffer.from([1, 2, 3]))).toBeFalsy();
-  })
+  });
 
   test('signature verification fails on invalid input data', async () => {
     const keyring = new Keyring(createStorage({ type: StorageType.RAM }).createDirectory('keyring'));

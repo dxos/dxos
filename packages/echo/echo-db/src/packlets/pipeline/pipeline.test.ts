@@ -8,12 +8,12 @@ import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {

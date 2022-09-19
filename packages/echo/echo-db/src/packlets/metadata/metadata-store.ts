@@ -7,8 +7,8 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { log } from '@dxos/log';
 import { PublicKey, schema } from '@dxos/protocols';
-import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Directory } from '@dxos/random-access-storage';
 
 /**

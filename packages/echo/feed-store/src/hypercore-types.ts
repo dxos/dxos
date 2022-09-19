@@ -50,8 +50,8 @@ export interface HypercoreFeed {
   downloaded: (start: number, batchEnd: number) => boolean
   undownload: (args: any) => void
 
-  replicate(isInitiator: boolean): NodeJS.ReadWriteStream;
-  close: (arg: any) => any;
+  replicate(isInitiator: boolean): NodeJS.ReadWriteStream
+  close: (arg: any) => any
 }
 
 export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;

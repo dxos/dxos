@@ -38,7 +38,7 @@ export class Schema<T, S = {}> {
   }
 
   hasType (typeName: string): boolean {
-    if(typeName === '') {
+    if (typeName === '') {
       return false;
     }
     try {
@@ -50,7 +50,7 @@ export class Schema<T, S = {}> {
   }
 
   tryGetCodecForType (typeName: string): ProtoCodec {
-    if(typeName === '') {
+    if (typeName === '') {
       throw new Error(`Type not found: "${typeName}"`);
     }
 

@@ -6,8 +6,8 @@ import { FeedDescriptor } from '@dxos/feed-store';
 import { FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
-import { AsyncCallback, Callback } from '@dxos/util';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';
 
