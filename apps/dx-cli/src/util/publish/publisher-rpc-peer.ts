@@ -6,9 +6,9 @@ import debug from 'debug';
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
-import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/protocols';
 import { Publisher } from '@dxos/protocols/proto/dxos/service/publisher';
+import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 
 const log = debug('dxos:network-manager:publisher-rpc-peer');
 

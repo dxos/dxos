@@ -9,7 +9,7 @@ import folderSize from 'get-folder-size';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import type { ConfigObject } from '@dxos/config';
+import type { ConfigProto } from '@dxos/config';
 import { log } from '@dxos/debug';
 
 import { PackageModule } from './common';
@@ -27,7 +27,7 @@ const getFolderSize = promisify(folderSize);
 const encodeName = (name: string) => name.replaceAll(':', '/');
 
 export interface PublishParams {
-  config?: ConfigObject
+  config?: ConfigProto
   module: PackageModule
 }
 

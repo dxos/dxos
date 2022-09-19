@@ -9,7 +9,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import path from 'path';
 
 import { Config } from '@dxos/config';
-import type { ConfigObject } from '@dxos/config';
+import type { ConfigProto } from '@dxos/config';
 
 import { PackageModule } from './common';
 
@@ -22,7 +22,7 @@ export const loadConfig = async (configPath: string = EXTENSION_CONFIG_FILENAME)
 
   assert(fs.existsSync(configPath), `"${configPath}" not found.`);
 
-  const dxConfig = yaml.load(String(fs.readFileSync(configPath))) as ConfigObject;
+  const dxConfig = yaml.load(String(fs.readFileSync(configPath))) as ConfigProto;
 
   assert(dxConfig.package?.modules?.length, `No modules found in ${configPath}`);
 
