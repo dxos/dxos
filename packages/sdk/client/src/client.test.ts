@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { sleep, waitForCondition } from '@dxos/async';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptorWrapper } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
@@ -134,7 +134,7 @@ describe('Client', () => {
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
-        const reencodedDescriptor = InvitationDescriptorWrapper.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
         const acceptedInvitation = invitee.echo.acceptInvitation(reencodedDescriptor);
         await connectedFired;
 

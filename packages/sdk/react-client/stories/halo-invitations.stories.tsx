@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Paper, TextField, Toolbar } from '@mui/material';
 
-import { Invitation, InvitationDescriptorWrapper } from '@dxos/client';
+import { Invitation, InvitationDescriptor } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import { ClientProvider, useClient, useParties, useProfile } from '../src';
@@ -97,7 +97,7 @@ const HaloAuthenticationContainer = () => {
 
   const handleSubmit = async (invitationCode: string) => {
     try {
-      const invitationDescriptor = InvitationDescriptorWrapper.decode(invitationCode);
+      const invitationDescriptor = InvitationDescriptor.decode(invitationCode);
       const invitation = await client.halo.acceptInvitation(invitationDescriptor);
       setStatus({ identity: invitationDescriptor.identityKey?.toString(), invitation });
     } catch (err: any) {

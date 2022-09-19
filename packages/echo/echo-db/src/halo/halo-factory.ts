@@ -26,7 +26,7 @@ import {
   createHaloPartyAdmissionMessage,
   GreetingInitiator,
   HaloRecoveryInitiator,
-  InvitationDescriptorWrapper,
+  InvitationDescriptor,
   OfflineInvitationClaimer
 } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
@@ -149,13 +149,13 @@ export class HaloFactory {
     return this._joinHalo(invitationDescriptor, recoverer.createSecretProvider());
   }
 
-  async joinHalo (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
+  async joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(!this._keyring.findKey(Filter.matches({ type: KeyType.IDENTITY })), 'Identity key must not exist.');
 
     return this._joinHalo(invitationDescriptor, secretProvider);
   }
 
-  private async _joinHalo (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
+  private async _joinHalo (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     log(`Admitting device with invitation: ${PublicKey.stringify(invitationDescriptor.invitation)}`);
     assert(invitationDescriptor.identityKey);
 

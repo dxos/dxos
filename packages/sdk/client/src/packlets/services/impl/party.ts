@@ -9,7 +9,7 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptorWrapper, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
@@ -158,7 +158,7 @@ class PartyService implements PartyServiceRpc {
       const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
       setImmediate(async () => {
         try {
-          let invitation: InvitationDescriptorWrapper;
+          let invitation: InvitationDescriptor;
           if (!request.inviteeKey) {
             const secret = Buffer.from(generatePasscode());
             const secretProvider = async () => {
@@ -213,7 +213,7 @@ class PartyService implements PartyServiceRpc {
 
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
-        InvitationDescriptorWrapper.fromProto(request),
+        InvitationDescriptor.fromProto(request),
         request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);

@@ -25,7 +25,7 @@ import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize, Provider } from '@dxos/util';
 
 import {
-  createDataPartyAdmissionMessages, GreetingInitiator, InvitationDescriptorWrapper, OfflineInvitationClaimer
+  createDataPartyAdmissionMessages, GreetingInitiator, InvitationDescriptor, OfflineInvitationClaimer
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
 import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
@@ -147,7 +147,7 @@ export class PartyFactory {
     return party;
   }
 
-  async joinParty (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider): Promise<DataParty> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider): Promise<DataParty> {
     const originalInvitation = invitationDescriptor;
 
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());

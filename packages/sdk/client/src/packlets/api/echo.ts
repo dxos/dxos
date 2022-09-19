@@ -5,7 +5,7 @@
 import {
   ActivationOptions,
   Database,
-  InvitationDescriptorWrapper,
+  InvitationDescriptor,
   PartyMember,
   ResultSet
 } from '@dxos/echo-db';
@@ -85,5 +85,5 @@ export interface Echo {
   cloneParty (snapshot: PartySnapshot): Promise<Party>
   getParty (partyKey: PartyKey): Party | undefined
   queryParties (): ResultSet<Party>
-  acceptInvitation (invitationDescriptor: InvitationDescriptorWrapper): PartyInvitation
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation
 }

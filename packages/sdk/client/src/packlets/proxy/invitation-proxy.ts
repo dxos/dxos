@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptorWrapper } from '@dxos/echo-db';
+import { InvitationDescriptor } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   InvitationRequest as InvitationRequestProto,
@@ -25,7 +25,7 @@ export interface CreateInvitationRequestOpts {
 
 export interface HandleInvitationRedemptionOpts {
   stream: Stream<RedeemedInvitationProto>
-  invitationDescriptor: InvitationDescriptorWrapper
+  invitationDescriptor: InvitationDescriptor
   onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>
 }
 
@@ -50,7 +50,7 @@ export class InvitationProxy {
       stream.subscribe(invitationMsg => {
         if (!invitation) {
           assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
-          const descriptor = InvitationDescriptorWrapper.fromProto(invitationMsg.descriptor);
+          const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
           invitation = new InvitationRequest(descriptor, connected, finished, error);
           invitation.canceled.on(() => this._removeInvitation(invitation));
 

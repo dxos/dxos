@@ -25,7 +25,7 @@ import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { InvitationDescriptorWrapper } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
@@ -46,7 +46,7 @@ export class OfflineInvitationClaimer {
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _invitationDescriptor: InvitationDescriptorWrapper
+    private readonly _invitationDescriptor: InvitationDescriptor
   ) {
     assert(InvitationDescriptorProto.Type.OFFLINE === _invitationDescriptor.type);
   }
@@ -92,7 +92,7 @@ export class OfflineInvitationClaimer {
    * Executes a 'CLAIM' command for an offline invitation.  If successful, the Party member's device will begin
    * interactive Greeting, with a new invitation and swarm key which will be provided to the claimant.
    * Those will be returned in the form of an InvitationDescriptor.
-   * @return {InvitationDescriptorWrapper}
+   * @return {InvitationDescriptor}
    */
   async claim () {
     assert(this._state === GreetingState.CONNECTED);
@@ -114,7 +114,7 @@ export class OfflineInvitationClaimer {
     await this.disconnect();
     this._state = GreetingState.SUCCEEDED;
 
-    return new InvitationDescriptorWrapper(
+    return new InvitationDescriptor(
       InvitationDescriptorProto.Type.INTERACTIVE, Buffer.from(rendezvousKey), Buffer.from(id));
   }
 

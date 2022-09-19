@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { ECHO, InvitationDescriptorWrapper } from '@dxos/echo-db';
+import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
@@ -65,7 +65,7 @@ export class ProfileService implements ProfileServiceRpc {
     return new Stream(({ next, close }) => {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
-        let invitation: InvitationDescriptorWrapper; // eslint-disable-line prefer-const
+        let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
         const secretProvider = async () => {
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
@@ -103,7 +103,7 @@ export class ProfileService implements ProfileServiceRpc {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.echo.halo.join(InvitationDescriptorWrapper.fromProto(request), secretProvider);
+      const haloPartyPromise = this.echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

@@ -14,7 +14,7 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
-  InvitationDescriptorWrapper,
+  InvitationDescriptor,
   OpenProgress,
   PartyMember,
   ResultSet,
@@ -29,10 +29,7 @@ export {
   PartyKey
 } from '@dxos/echo-protocol';
 
-export {
-  InvitationDescriptor
-} from '@dxos/protocols/proto/dxos/echo/invitation';
-
+// TODO(burdon): Remove exported protos?
 export {
   KeyRecord,
   KeyType

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
-import { Contact, CreateProfileOptions, InvitationDescriptorWrapper, PartyMember, ResultSet } from '@dxos/echo-db';
+import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
 import { Profile, SignRequest } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
@@ -123,7 +123,7 @@ export class HaloProxy implements Halo {
    *
    * To be used with `client.halo.createHaloInvitation` on the inviter side.
   */
-  acceptInvitation (invitationDescriptor: InvitationDescriptorWrapper): Invitation {
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation {
     const invitationProcessStream = this._serviceProvider.services.ProfileService.acceptInvitation(invitationDescriptor.toProto());
     const { authenticate, waitForFinish } = InvitationProxy.handleInvitationRedemption({
       stream: invitationProcessStream,

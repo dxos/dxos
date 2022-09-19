@@ -16,7 +16,7 @@ import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize } from '@dxos/util';
 
 import { ResultSet } from '../api';
-import { InvitationAuthenticator, InvitationDescriptorWrapper, InvitationOptions } from '../invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationOptions } from '../invitations';
 import { OpenProgress } from '../parties';
 import { MetadataStore, PipelineOptions, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
@@ -216,7 +216,7 @@ export class HALO {
    * Joins an existing identity HALO by invitation.
    */
   // TODO(dmaretskyi): Do not return HALO party here.
-  async join (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
+  async join (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(!this.identity?.halo, 'HALO already exists.');
 
     return this._identityManager.joinHalo(invitationDescriptor, secretProvider);

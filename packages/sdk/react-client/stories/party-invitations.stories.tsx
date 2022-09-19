@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { InvitationDescriptorWrapper, PartyInvitation } from '@dxos/client';
+import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 
@@ -144,7 +144,7 @@ const PartyJoinContainer = () => {
     setStatus({});
 
     try {
-      const invitation = await client.echo.acceptInvitation(InvitationDescriptorWrapper.decode(invitationCode));
+      const invitation = await client.echo.acceptInvitation(InvitationDescriptor.decode(invitationCode));
       setStatus({ invitation });
 
       const party = await invitation.getParty();

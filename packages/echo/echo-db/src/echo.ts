@@ -24,7 +24,7 @@ import { SubscriptionGroup } from '@dxos/util';
 import { ResultSet } from './api';
 import { HALO } from './halo';
 import { autoPartyOpener } from './halo/party-opener';
-import { InvitationDescriptorWrapper, OfflineInvitationClaimer } from './invitations';
+import { InvitationDescriptor, OfflineInvitationClaimer } from './invitations';
 import { DataServiceRouter } from './packlets/database';
 import { IdentityNotInitializedError, InvalidStorageVersionError } from './packlets/errors';
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
@@ -376,7 +376,7 @@ export class ECHO {
    * @param invitationDescriptor Invitation descriptor passed from another peer.
    * @param secretProvider Shared secret provider, the other peer creating the invitation must have the same secret.
    */
-  async joinParty (invitationDescriptor: InvitationDescriptorWrapper, secretProvider?: SecretProvider): Promise<DataParty> {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider?: SecretProvider): Promise<DataParty> {
     assert(this._partyManager.isOpen, new InvalidStateError());
 
     const actualSecretProvider =

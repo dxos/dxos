@@ -6,7 +6,7 @@ import { css } from '@emotion/css';
 import debug from 'debug';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
-import { Item, InvitationDescriptorWrapper, Party } from '@dxos/client';
+import { Item, InvitationDescriptor, Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useClient, ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
@@ -62,7 +62,7 @@ const Container: FC<{
 );
 
 type InvitationInfo = {
-  descriptor: InvitationDescriptorWrapper
+  descriptor: InvitationDescriptor
   secret: string
 }
 

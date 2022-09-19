@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { InvitationDescriptorWrapper } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { defaultInvitationAuthenticator, InvitationAuthenticator, InvitationOptions } from './common';
@@ -47,7 +47,7 @@ export class InvitationFactory {
 
     await this._credentialsWriter.write(invitationMessage);
 
-    return new InvitationDescriptorWrapper(
+    return new InvitationDescriptor(
       InvitationDescriptorProto.Type.OFFLINE,
       this._partyProcessor.partyKey.asBuffer(),
       invitationMessage.payload.signed.payload.id
@@ -74,7 +74,7 @@ export class InvitationFactory {
     const swarmKey = await responder.start();
     const invitation = await responder.invite(secretValidator, secretProvider, onFinish, expiration);
 
-    return new InvitationDescriptorWrapper(
+    return new InvitationDescriptor(
       InvitationDescriptorProto.Type.INTERACTIVE,
       swarmKey,
       invitation,

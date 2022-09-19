@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, boolGuard, Provider } from '@dxos/util';
 
-import { InvitationDescriptorWrapper } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
 import { IdentityCredentials } from '../protocol/identity-credentials';
 import { SnapshotStore } from '../snapshots';
@@ -187,7 +187,7 @@ export class PartyManager {
   }
 
   @synchronized
-  async joinParty (invitationDescriptor: InvitationDescriptorWrapper, secretProvider: SecretProvider) {
+  async joinParty (invitationDescriptor: InvitationDescriptor, secretProvider: SecretProvider) {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.

@@ -35,11 +35,11 @@ export interface InvitationQueryParameters {
  *
  * This descriptor might also have a bundled secret for authentication in interactive mode.
  */
-export class InvitationDescriptorWrapper {
-  static fromQueryParameters (queryParameters: InvitationQueryParameters): InvitationDescriptorWrapper {
+export class InvitationDescriptor {
+  static fromQueryParameters (queryParameters: InvitationQueryParameters): InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
-    const descriptor = new InvitationDescriptorWrapper(parseInvitationType(type), PublicKey.bufferize(swarmKey),
+    const descriptor = new InvitationDescriptor(parseInvitationType(type), PublicKey.bufferize(swarmKey),
       PublicKey.bufferize(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
@@ -49,12 +49,12 @@ export class InvitationDescriptorWrapper {
     return descriptor;
   }
 
-  static fromProto (invitationProto: InvitationDescriptorProto): InvitationDescriptorWrapper {
+  static fromProto (invitationProto: InvitationDescriptorProto): InvitationDescriptor {
     assert(invitationProto.type, 'Invitation type not provided.');
     assert(invitationProto.swarmKey, 'Invitation swarm key not provided.');
     assert(invitationProto.invitation, 'Invitation not provided.');
 
-    return new InvitationDescriptorWrapper(
+    return new InvitationDescriptor(
       invitationProto.type,
       invitationProto.swarmKey,
       Buffer.from(invitationProto.invitation),
@@ -63,9 +63,9 @@ export class InvitationDescriptorWrapper {
     );
   }
 
-  static decode (code: string): InvitationDescriptorWrapper {
+  static decode (code: string): InvitationDescriptor {
     const json = base62.decode(code).toString();
-    return InvitationDescriptorWrapper.fromQueryParameters(JSON.parse(json));
+    return InvitationDescriptor.fromQueryParameters(JSON.parse(json));
   }
 
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.

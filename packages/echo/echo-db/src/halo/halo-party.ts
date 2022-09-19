@@ -10,7 +10,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 
-import { InvitationAuthenticator, InvitationDescriptorWrapper, InvitationFactory, InvitationOptions } from '../invitations';
+import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
 import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
@@ -215,7 +215,7 @@ export class HaloParty {
     return this;
   }
 
-  async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptorWrapper> {
+  async createInvitation (authenticationDetails: InvitationAuthenticator, options?: InvitationOptions): Promise<InvitationDescriptor> {
     assert(this._invitationManager, 'HALO party not open.');
     return this._invitationManager.createInvitation(authenticationDetails, options);
   }

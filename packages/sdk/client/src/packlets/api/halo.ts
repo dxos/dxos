@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Contact, CreateProfileOptions, InvitationDescriptorWrapper, ResultSet } from '@dxos/echo-db';
+import { Contact, CreateProfileOptions, InvitationDescriptor, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/protocols';
 import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
@@ -38,7 +38,7 @@ export interface Halo {
 
   queryContacts (): ResultSet<Contact>
   createInvitation (): Promise<InvitationRequest>
-  acceptInvitation (invitationDescriptor: InvitationDescriptorWrapper): Invitation
+  acceptInvitation (invitationDescriptor: InvitationDescriptor): Invitation
 
   queryDevices (): Promise<DeviceInfo[]>
   setDevicePreference (key: string, value: string): Promise<void>

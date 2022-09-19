@@ -26,7 +26,7 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
-import { InvitationDescriptorWrapper } from '../invitations';
+import { InvitationDescriptor } from '../invitations';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
@@ -58,7 +58,7 @@ export class GreetingInitiator {
    */
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _invitationDescriptor: InvitationDescriptorWrapper,
+    private readonly _invitationDescriptor: InvitationDescriptor,
     private readonly _getMessagesToNotarize: (partyKey: PublicKey, nonce: Uint8Array) => Promise<Message[]>
   ) {
     assert(InvitationDescriptorProto.Type.INTERACTIVE === this._invitationDescriptor.type);
