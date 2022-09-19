@@ -7,12 +7,12 @@ import { useState, useEffect } from 'react';
 import { clientServiceBundle } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIframeParentPort } from '@dxos/rpc-tunnel';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { useClient } from './useClient';
 
-const DEFAULT_HALO_ORIGIN = 'http://localhost:5173';
-const IFRAME_ID = 'dxos-halo-auth';
+const DEFAULT_HALO_ORIGIN = 'http://localhost:3967';
+const IFRAME_ID = '__DXOS_AUTH__';
 
 /**
  * Hook returning DXOS user profile object, renders HALO auth screen if no profile exists yet.
@@ -28,13 +28,13 @@ export const useProfile = () => {
     const iframe = document.getElementById(IFRAME_ID);
     if (!profile && !iframe) {
       const iframe = document.createElement('iframe') as HTMLIFrameElement;
-      const haloOrigin = client.config.get('runtime.client.singletonSource') ?? DEFAULT_HALO_ORIGIN;
-      iframe.src = `${haloOrigin}#/auth/${encodeURIComponent(window.origin)}`;
+      const source = new URL(client.config.get('runtime.client.remoteSource') ?? DEFAULT_HALO_ORIGIN);
+      iframe.src = `${source.origin}#/auth/${encodeURIComponent(window.origin)}`;
       iframe.id = IFRAME_ID;
       iframe.setAttribute('style', 'border: 0; position: fixed; top: 0; right: 0; bottom: 0; left: 0; height: 100vh; width: 100vw;');
       document.body.appendChild(iframe);
 
-      const port = createIframeParentPort(iframe, haloOrigin);
+      const port = createIFramePort({ iframe, origin: source.origin });
       const peer = createProtoRpcPeer({
         requested: {},
         exposed: clientServiceBundle,
