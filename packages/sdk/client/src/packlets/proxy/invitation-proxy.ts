@@ -7,11 +7,14 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor, InvitationDescriptor.Type } from '@dxos/echo-db';
+import { InvitationDescriptorWrapper } from '@dxos/echo-db';
+import {
+  AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { RpcClosedError } from '@dxos/rpc';
 
 import { InvitationRequest } from '../api';
-import { AuthenticateInvitationRequest, InvitationRequest as InvitationRequestProto, InvitationState, RedeemedInvitation as RedeemedInvitationProto } from '../proto';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>
@@ -19,7 +22,7 @@ export interface CreateInvitationRequestOpts {
 
 export interface HandleInvitationRedemptionOpts {
   stream: Stream<RedeemedInvitationProto>
-  invitationDescriptor: InvitationDescriptor
+  invitationDescriptor: InvitationDescriptorWrapper
   onAuthenticate: (request: AuthenticateInvitationRequest) => Promise<void>
 }
 
@@ -44,7 +47,7 @@ export class InvitationProxy {
       stream.subscribe(invitationMsg => {
         if (!invitation) {
           assert(invitationMsg.descriptor, 'Missing invitation descriptor.');
-          const descriptor = InvitationDescriptor.fromProto(invitationMsg.descriptor);
+          const descriptor = InvitationDescriptorWrapper.fromProto(invitationMsg.descriptor);
           invitation = new InvitationRequest(descriptor, connected, finished, error);
           invitation.canceled.on(() => this._removeInvitation(invitation));
 
@@ -85,9 +88,11 @@ export class InvitationProxy {
     this.invitationsUpdate.emit();
   }
 
-  static handleInvitationRedemption (
-    { stream, invitationDescriptor, onAuthenticate }: HandleInvitationRedemptionOpts
-  ): HandleInvitationRedemptionResult {
+  static handleInvitationRedemption ({
+    stream,
+    invitationDescriptor,
+    onAuthenticate
+  }: HandleInvitationRedemptionOpts): HandleInvitationRedemptionResult {
     const [getInvitationProcess, resolveInvitationProcess] = trigger<RedeemedInvitationProto>();
     const [waitForFinish, resolveFinish] = trigger<RedeemedInvitationProto>();
 

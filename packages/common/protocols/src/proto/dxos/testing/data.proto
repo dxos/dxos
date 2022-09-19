@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+// TOOD(burdon): Move to `example.testing`.
 package dxos.testing.data;
 
 message TestItemMutation {

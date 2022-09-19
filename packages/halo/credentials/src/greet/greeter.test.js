@@ -10,12 +10,13 @@ import expect from 'expect';
 
 import { randomBytes } from '@dxos/crypto';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { arraysEqual } from '@dxos/util';
 
 import { createKeyRecord, stripSecrets, Filter, Keyring } from '../keys';
 import { createKeyAdmitMessage, createPartyInvitationMessage } from '../party';
-import { codecLoop, KeyType } from '../proto';
-import { Command } from './constants';
+import { codecLoop } from '../proto';
 import { Greeter } from './greeter';
 
 const createKeyring = async () => {

@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Box, CssBaseline, ThemeProvider } from '@mui/material';
 
-import { ConfigObject, defs } from '@dxos/config';
+import { Config as ConfigType, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
@@ -63,12 +63,12 @@ export const Controls = () => (
 
 export const Primary = () => {
   const [controlsPort, devtoolsPort] = useMemo(() => createLinkedPorts(), []);
-  const config: ConfigObject = {
+  const config: ConfigType = {
     runtime: {
       client: {
         // Automatic mode doesn't work because it doesn't start up fast enough.
         // The devtools remote client fails to connect when controls use the automatic mode.
-        mode: defs.Runtime.Client.Mode.LOCAL
+        mode: Runtime.Client.Mode.LOCAL
       },
       services: {
         signal: {

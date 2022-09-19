@@ -174,7 +174,6 @@ message GetPartyDetailsRequest {
   dxos.halo.keys.PubKey partyKey = 1;
 }
 
-
 message PartyDetails {
   /// The timeframe of mutations processed by the client.
   dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;

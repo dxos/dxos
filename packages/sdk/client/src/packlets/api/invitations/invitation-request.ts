@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event, until } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { InvitationDescriptorWrapper } from '@dxos/echo-db';
 
 /**
  * Invitation created by sender.
@@ -37,7 +37,7 @@ export class InvitationRequest {
   readonly canceled = new Event();
 
   constructor (
-    private readonly _descriptor: InvitationDescriptor,
+    private readonly _descriptor: InvitationDescriptorWrapper,
     connected: Event,
     finished: Event,
     error: Event<Error>
@@ -51,12 +51,12 @@ export class InvitationRequest {
     });
   }
 
-  get descriptor (): InvitationDescriptor {
+  get descriptor (): InvitationDescriptorWrapper {
     return this._descriptor;
   }
 
   get secret (): Uint8Array {
-    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set'));
+    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set.'));
   }
 
   /**

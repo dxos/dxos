@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/halo/signed.proto";
 
 package dxos.echo.feed;
 
@@ -17,22 +18,15 @@ message FeedMessage {
   timeframe.TimeframeVector timeframe = 1;
 
   oneof payload {
-    CredentialsMessage halo = 10;
+    dxos.halo.signed.Message halo = 10;
     EchoEnvelope echo = 11;
   }
 }
 
 /**
- * A container for dxos.credentials.Message
- */
-message CredentialsMessage {
-  // TODO(marik-d): Use a protobuf type from credentials.
-  bytes data = 1;
-}
-
-/**
  * Wrapper for all ECHO messages.
  */
+// TODO(burdon): Reconcile with HaloMessage (and other "Message" types).
 message EchoEnvelope {
   string itemId = 1;
 

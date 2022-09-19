@@ -6,7 +6,7 @@
 
 syntax = "proto3";
 
-package dxos.echo.object;
+package dxos.echo.model.object;
 
 //
 // Object mutation messages.

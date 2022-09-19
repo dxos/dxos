@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/echo/timeframe.proto";
 import "dxos/halo/keys.proto";
-import "dxos/echo/feed.proto";
+import "dxos/halo/signed.proto";
 
 package dxos.echo.snapshot;
 
@@ -35,7 +35,7 @@ message PartySnapshot {
 // TODO(dmaretskyi): Rename to HaloSnapshot.
 // For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
 message HaloStateSnapshot {
-  repeated feed.CredentialsMessage messages = 1;
+  repeated dxos.halo.signed.Message messages = 1;
 }
 
 //

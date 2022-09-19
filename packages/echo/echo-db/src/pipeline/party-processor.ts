@@ -122,7 +122,8 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   async takeHints (hints: KeyHint[]) {
     log(`addHints ${hints.length}`);
     // Gives state machine hints on initial feed set from where to read party genesis message.
-    /* TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
+    /**
+     * TODO(telackey): Hints were not intended to provide a feed set for PartyGenesis messages. They are about
      * what feeds and keys to trust immediately after Greeting, before we have had the opportunity to replicate the
      * credential messages for ourselves.
      */
@@ -143,7 +144,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   }
 
   async restoreFromSnapshot (snapshot: HaloStateSnapshot) {
-    assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized');
+    assert(this._haloMessages.length === 0, 'PartyProcessor is already initialized.');
     assert(snapshot.messages);
     this._haloMessages = snapshot.messages;
     await this._state.processMessages(snapshot.messages);

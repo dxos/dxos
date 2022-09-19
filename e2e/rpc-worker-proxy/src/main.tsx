@@ -6,12 +6,11 @@ import debug from 'debug';
 import React, { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createRpcClient } from '@dxos/rpc';
 import { createSingletonPort } from '@dxos/rpc-worker-proxy';
-
-import { schema } from './proto';
 
 debug.enable('*');
 

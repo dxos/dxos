@@ -9,20 +9,17 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, InvitationDescriptor.Type, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
-
+import { ECHO, InvitationDescriptorWrapper, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
   CreateSnaspotRequest,
   GetPartyDetailsRequest,
-  InvitationDescriptor as InvitationDescriptorProto,
   InvitationRequest,
   InvitationState,
   Party,
   PartyDetails,
-  PartyService as IPartyService,
-  PartySnapshot,
+  PartyService as PartyServiceRpc,
   RedeemedInvitation,
   SetPartyStateRequest,
   SubscribeMembersRequest,
@@ -30,13 +27,16 @@ import {
   SubscribePartiesResponse,
   SubscribePartyRequest,
   SubscribePartyResponse
-} from '../../proto';
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**
  * Party service implementation.
  */
-class PartyService implements IPartyService {
+class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
@@ -158,7 +158,7 @@ class PartyService implements IPartyService {
       const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
       setImmediate(async () => {
         try {
-          let invitation: InvitationDescriptor;
+          let invitation: InvitationDescriptorWrapper;
           if (!request.inviteeKey) {
             const secret = Buffer.from(generatePasscode());
             const secretProvider = async () => {
@@ -194,7 +194,7 @@ class PartyService implements IPartyService {
     });
   }
 
-  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptor): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
@@ -213,7 +213,7 @@ class PartyService implements IPartyService {
 
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.echo.joinParty(
-        InvitationDescriptor.fromProto(request),
+        InvitationDescriptorWrapper.fromProto(request),
         request.type === InvitationDescriptor.Type.INTERACTIVE ? secretProvider : undefined
       );
       this.inviteeInvitations.set(id, inviteeInvitation);

@@ -1617,6 +1617,7 @@ importers:
       '@dxos/echo-db': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@types/faker': ^5.5.1
       '@types/lodash.times': ^4.3.6
@@ -1628,6 +1629,7 @@ importers:
       '@dxos/echo-db': link:../echo-db
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/object-model': link:../object-model
+      '@dxos/protocols': link:../../common/protocols
       faker: 5.5.3
       lodash.times: 4.3.2
     devDependencies:
@@ -1697,10 +1699,12 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../common/protocols
 
   packages/echo/model-factory:
     specifiers:
@@ -1731,6 +1735,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-protocol': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.1
@@ -1749,6 +1754,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-protocol': link:../echo-protocol
       '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -2339,6 +2345,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/messaging': link:../../mesh/messaging
@@ -2358,7 +2365,6 @@ importers:
       readable-stream: 3.6.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
-      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0

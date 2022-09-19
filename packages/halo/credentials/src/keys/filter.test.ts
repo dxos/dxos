@@ -15,17 +15,17 @@ const values = [
 ];
 
 it('Basic filter', () => {
-  expect(Filter.filter(values, Filter.matches({ z: true }))).toHaveLength(3);
-  expect(Filter.filter(values, Filter.hasProperty('x'))).toHaveLength(2);
-  expect(Filter.filter(values, Filter.propertyIn('x', [100, 200]))).toHaveLength(2);
-  expect(Filter.filter(values, Filter.and(
+  expect(Filter.filter(values.values(), Filter.matches({ z: true }))).toHaveLength(3);
+  expect(Filter.filter(values.values(), Filter.hasProperty('x'))).toHaveLength(2);
+  expect(Filter.filter(values.values(), Filter.propertyIn('x', [100, 200]))).toHaveLength(2);
+  expect(Filter.filter(values.values(), Filter.and(
     Filter.hasProperty('x'),
     Filter.not(Filter.propertyIn('x', [100]))
   ))).toHaveLength(1);
 });
 
 it('Basic AND filter', () => {
-  expect(Filter.filter(values, Filter.and(
+  expect(Filter.filter(values.values(), Filter.and(
     Filter.matches({ z: true }),
     Filter.hasProperty('y'))
   ))

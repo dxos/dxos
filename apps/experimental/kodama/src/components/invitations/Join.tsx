@@ -5,7 +5,7 @@
 import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
+import { InvitationDescriptorWrapper, PartyInvitation, PartyKey } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 import { useClient, useParty } from '@dxos/react-client';
 
@@ -35,13 +35,13 @@ export const Join: FC<{
       // Decode JSON with both token and secret.
       const { encodedInvitation, secret } = JSON.parse(descriptor!);
       // TODO(burdon): Errors not caught
-      const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(encodedInvitation));
+      const invitation = client.echo.acceptInvitation(InvitationDescriptorWrapper.decode(encodedInvitation));
       void handleSubmit(invitation, secret);
     } catch (err) {
       try {
         // Decode regular token.
         const stripped = descriptor!.replace(/[\W]/g, '');
-        const invitation = client.echo.acceptInvitation(InvitationDescriptor.decode(stripped));
+        const invitation = client.echo.acceptInvitation(InvitationDescriptorWrapper.decode(stripped));
         setInvitation(invitation);
       } catch (err) {
         setStatus({ error: err as Error });

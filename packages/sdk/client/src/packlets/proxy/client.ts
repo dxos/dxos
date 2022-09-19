@@ -6,16 +6,18 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { promiseTimeout, synchronized } from '@dxos/async';
-import { Config, ConfigObject } from '@dxos/config';
+import { Config, ConfigType } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 import { createSingletonPort } from '@dxos/rpc-worker-proxy';
 import { isNode } from '@dxos/util';
 
-import { InvalidConfigurationError, ClientServiceProvider, ClientServices, Echo, Halo, HaloSigner, RemoteServiceConnectionTimeout } from '../api';
-import { Runtime } from '../proto';
+import {
+  InvalidConfigurationError, ClientServiceProvider, ClientServices, HaloSigner, RemoteServiceConnectionTimeout
+} from '../api';
 import { ClientServiceHost } from '../services';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
@@ -29,9 +31,9 @@ const log = debug('dxos:client-proxy');
 const DEFAULT_SINGLETON_HOST = 'http://localhost:3967';
 const EXPECTED_CONFIG_VERSION = 1;
 
-export const defaultConfig: ConfigObject = { version: 1 };
+export const defaultConfig: ConfigType = { version: 1 };
 
-export const defaultTestingConfig: ConfigObject = {
+export const defaultTestingConfig: ConfigType = {
   version: 1,
   runtime: {
     services: {
@@ -83,7 +85,7 @@ export class Client {
    * Requires initialization after creating by calling `.initialize()`.
    */
   // TODO(burdon): What are the defaults if `{}` is passed?
-  constructor (config: ConfigObject | Config = defaultConfig, options: ClientOptions = {}) {
+  constructor (config: ConfigType | Config = defaultConfig, options: ClientOptions = {}) {
     if (typeof config !== 'object' || config == null) {
       throw new InvalidParameterError('Invalid config.');
     }
@@ -130,7 +132,7 @@ export class Client {
   /**
    * ECHO database.
    */
-  get echo (): Echo {
+  get echo (): EchoProxy {
     assert(this._echo, 'Client not initialized.');
     return this._echo;
   }
@@ -138,7 +140,7 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo (): Halo {
+  get halo (): HaloProxy {
     assert(this._halo, 'Client not initialized.');
     return this._halo;
   }

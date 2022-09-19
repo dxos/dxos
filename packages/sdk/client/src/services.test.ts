@@ -7,10 +7,10 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
+import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxos/client';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { InvitationRequest, RedeemedInvitation } from './packlets/proto';
 import { Client } from './packlets/proxy';
 
 const setup = async () => {

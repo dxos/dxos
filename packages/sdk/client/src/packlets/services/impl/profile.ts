@@ -8,12 +8,10 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
-
+import { ECHO, InvitationDescriptorWrapper } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
-  InvitationDescriptor as InvitationDescriptorProto,
   InvitationRequest,
   InvitationState,
   Profile,
@@ -21,7 +19,9 @@ import {
   RecoverProfileRequest,
   RedeemedInvitation,
   SubscribeProfileResponse
-} from '../../proto';
+} from '@dxos/protocols/proto/dxos/client';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
+
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
 
 /**
@@ -65,7 +65,7 @@ export class ProfileService implements IProfileService {
     return new Stream(({ next, close }) => {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
-        let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+        let invitation: InvitationDescriptorWrapper; // eslint-disable-line prefer-const
         const secretProvider = async () => {
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
@@ -85,7 +85,7 @@ export class ProfileService implements IProfileService {
     });
   }
 
-  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptor): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [secretLatch, secretTrigger] = latch();
@@ -103,7 +103,7 @@ export class ProfileService implements IProfileService {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
+      const haloPartyPromise = this.echo.halo.join(InvitationDescriptorWrapper.fromProto(request), secretProvider);
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

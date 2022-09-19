@@ -4,14 +4,11 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 
+// TOOD(burdon): Move to `example.testing`.
 package dxos.testing.rpc;
-
-service TestService {
-  rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
-  rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
-}
 
 message TestRpcRequest {
   string data = 1;
@@ -19,6 +16,11 @@ message TestRpcRequest {
 
 message TestRpcResponse {
   string data = 1;
+}
+
+service TestService {
+  rpc TestCall (TestRpcRequest) returns (TestRpcResponse);
+  rpc VoidCall (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 service TestStreamService {

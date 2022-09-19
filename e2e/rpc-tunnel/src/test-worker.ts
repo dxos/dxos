@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { schema } from './proto';
 import { TestClient } from './test-client';
 
 onconnect = async (event: MessageEvent<any>) => {

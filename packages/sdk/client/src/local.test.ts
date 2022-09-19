@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
-import { ConfigObject } from '@dxos/config';
+import { ConfigType } from '@dxos/config';
 
 import { Client } from './packlets/proxy';
 
@@ -15,7 +15,7 @@ describe('Client', () => {
 
   describe('With persistent storage', () => {
     test('persistent storage', async () => {
-      const config: ConfigObject = {
+      const config: ConfigType = {
         version: 1,
         runtime: {
           client: {

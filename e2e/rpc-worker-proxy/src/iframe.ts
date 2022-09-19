@@ -4,10 +4,10 @@
 
 import debug from 'debug';
 
+import { schema } from '@dxos/protocols';
 import { createRpcServer } from '@dxos/rpc';
 import { openPort } from '@dxos/rpc-worker-proxy';
 
-import { schema } from './proto';
 import { TestClient } from './test-client';
 // eslint-disable-next-line
 // @ts-ignore

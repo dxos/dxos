@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+
 import { Matcher } from './matcher';
-import { Predicate, Query } from './proto';
 
 // TODO(burdon): Adapt for ObjectModel.
 // TODO(burdon): Nested properties?

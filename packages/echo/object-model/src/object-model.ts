@@ -7,9 +7,10 @@ import get from 'lodash.get';
 import assert from 'node:assert';
 
 import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model-factory';
+import { schema } from '@dxos/protocols';
+import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { MutationUtil, ValueUtil } from './mutation';
-import { ObjectMutation, ObjectMutationSet, ObjectSnapshot, schema } from './proto';
 import { validateKey } from './util';
 
 export type ObjectModelState = Record<string, any>
@@ -78,7 +79,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
   static meta: ModelMeta = {
     type: 'dxos:model/object',
     stateMachine: () => new ObjectModelStateMachine(),
-    mutationCodec: schema.getCodecForType('dxos.echo.object.ObjectMutationSet'),
+    mutationCodec: schema.getCodecForType('dxos.echo.model.object.ObjectMutationSet'),
 
     // TODO(burdon): Remove.
     async getInitMutation (obj: any): Promise<ObjectMutationSet> {
@@ -87,7 +88,7 @@ export class ObjectModel extends Model<ObjectModelState, ObjectMutationSet> impl
       };
     },
 
-    snapshotCodec: schema.getCodecForType('dxos.echo.object.ObjectSnapshot')
+    snapshotCodec: schema.getCodecForType('dxos.echo.model.object.ObjectSnapshot')
   };
 
   /**

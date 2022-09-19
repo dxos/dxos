@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.trace-compiled" />
       <excludeFolder url="file://$MODULE_DIR$/tools/executors/protobuf-compiler/test/__snapshots__" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/common/protocols/proto" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
       <excludePattern pattern="tmp" />

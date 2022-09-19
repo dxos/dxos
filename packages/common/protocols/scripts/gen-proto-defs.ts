@@ -8,6 +8,9 @@ import path from 'path';
 
 const HEADER = '// Generated file: do not edit.';
 
+// NOTE: Proto package names must match the generated folder tree.
+// TODO(burdon): Warn if do not match.
+
 /**
  * Generate protocol buffer definition files.
  */

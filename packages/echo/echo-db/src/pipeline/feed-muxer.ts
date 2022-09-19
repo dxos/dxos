@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { checkType } from '@dxos/debug';
-import { createFeedMeta, FeedStoreIterator, FeedWriter, IEchoStream, mapFeedWriter } from '@dxos/echo-protocol';
+import { createFeedMeta, mapFeedWriter, FeedStoreIterator, FeedWriter, IEchoStream } from '@dxos/echo-protocol';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';

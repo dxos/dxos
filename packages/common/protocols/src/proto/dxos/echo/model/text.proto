@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-package dxos.echo.text;
+package dxos.echo.model.text;
 
 message Mutation {
   bytes update = 1;

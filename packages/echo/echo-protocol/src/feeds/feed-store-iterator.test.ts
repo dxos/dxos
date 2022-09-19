@@ -14,7 +14,7 @@ import { PublicKey, Timeframe, schema } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { createTestItemMutation } from '../proto';
+import { createTestItemMutation } from '../testing';
 import { FeedBlock, FeedKey } from '../types';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 

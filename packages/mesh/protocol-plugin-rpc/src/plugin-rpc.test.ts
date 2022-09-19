@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PublicKey, schema } from '@dxos/protocols';
-import { Test } from '@dxos/protocols/proto/dxos/rpc/test';
+import { TestService } from '@dxos/protocols/proto/dxos/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -78,12 +78,13 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('Works with protobuf service', async () => {
-    const service = schema.getService('dxos.rpc.test.Test');
+    const service = schema.getService('dxos.testing.rpc.TestService');
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     const connected = new Event();
+
     let server: RpcPeer | undefined;
-    let client: ProtoRpcPeer<Test> | undefined;
+    let client: ProtoRpcPeer<TestService> | undefined;
     const serverConnected = connected.waitFor(() => !!server);
     const clientConnected = connected.waitFor(() => !!client);
 
@@ -123,13 +124,14 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('One server two clients', async () => {
-    const service = schema.getService('dxos.rpc.test.Test');
+    const service = schema.getService('dxos.testing.rpc.TestService');
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();
     const connected = new Event();
-    let client1: ProtoRpcPeer<Test> | undefined;
-    let client2: ProtoRpcPeer<Test> | undefined;
+
+    let client1: ProtoRpcPeer<TestService> | undefined;
+    let client2: ProtoRpcPeer<TestService> | undefined;
     const client1Connected = connected.waitFor(() => !!client1);
     const client2Connected = connected.waitFor(() => !!client2);
 

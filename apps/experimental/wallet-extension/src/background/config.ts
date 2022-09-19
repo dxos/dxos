@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { ConfigObject, defs } from '@dxos/config';
+import { Config as ConfigType, Runtime } from '@dxos/protocols/proto/dxos/config';
 
-export const config: ConfigObject = {
+export const config: ConfigType = {
   runtime: {
     client: {
       storage: {
         persistent: true,
-        storageType: defs.Runtime.Client.Storage.StorageDriver.IDB,
+        storageType: Runtime.Client.Storage.StorageDriver.IDB,
         path: '/tmp/dxos'
       }
     },

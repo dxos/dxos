@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { InvitationDescriptorWrapper } from '@dxos/echo-db';
 
 /**
  * Invitation that is being redeemed.
@@ -10,7 +10,7 @@ import { InvitationDescriptor } from '@dxos/echo-db';
  */
 export class Invitation<T = void> {
   constructor (
-    protected readonly _descriptor: InvitationDescriptor,
+    protected readonly _descriptor: InvitationDescriptorWrapper,
     protected readonly _invitationPromise: Promise<T>,
     protected readonly _onAuthenticate: (secret: Uint8Array) => void
   ) {}

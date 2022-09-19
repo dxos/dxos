@@ -8,13 +8,13 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { ConfigObject } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { InvitationDescriptor } from '@dxos/echo-db';
+import { InvitationDescriptorWrapper } from '@dxos/echo-db';
 import { TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
+import { Config as ConfigType } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -134,7 +134,7 @@ describe('Client', () => {
 
         const connectedFired = invitation.connected.waitForCount(1);
         // Simulate invitation being serialized. This effectively removes the pin from the invitation.
-        const reencodedDescriptor = InvitationDescriptor.fromQueryParameters(invitation.descriptor.toQueryParameters());
+        const reencodedDescriptor = InvitationDescriptorWrapper.fromQueryParameters(invitation.descriptor.toQueryParameters());
         const acceptedInvitation = invitee.echo.acceptInvitation(reencodedDescriptor);
         await connectedFired;
 
@@ -316,7 +316,7 @@ describe('Client', () => {
   // TODO(burdon): Factor out tests.
 
   test('late-register models after refresh', async () => {
-    const config: ConfigObject = {
+    const config: ConfigType = {
       version: 1,
       runtime: {
         client: {

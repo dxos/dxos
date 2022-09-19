@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+
 import { ValueUtil } from './mutation';
-import { Predicate, Query } from './proto';
 import { TextIndex } from './text-index';
 
 export type Getter = (item: any, path: string) => any;

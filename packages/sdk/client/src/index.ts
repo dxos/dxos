@@ -14,8 +14,6 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
-  InvitationDescriptor,
-  InvitationDescriptor.Type,
   OpenProgress,
   PartyMember,
   ResultSet,
@@ -31,6 +29,21 @@ export {
 } from '@dxos/echo-protocol';
 
 export {
+  InvitationDescriptor
+} from '@dxos/protocols/proto/dxos/echo/invitation';
+
+export {
+  KeyRecord,
+  KeyType
+} from '@dxos/protocols/proto/dxos/halo/keys';
+
+export {
+  Profile,
+  SignRequest,
+  SignResponse
+} from '@dxos/protocols/proto/dxos/client';
+
+export {
   ObjectModel,
   OrderedList
 } from '@dxos/object-model';
@@ -39,15 +52,6 @@ export {
 export {
   NetworkManager
 } from '@dxos/network-manager';
-
-export {
-  proto,
-  KeyRecord,
-  KeyType,
-  Profile,
-  SignRequest,
-  SignResponse
-} from './packlets/proto';
 
 export * from './packlets/api';
 export * from './packlets/devtools';
