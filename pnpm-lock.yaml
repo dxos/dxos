@@ -2347,7 +2347,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
-      '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/messaging': link:../../mesh/messaging
@@ -2367,6 +2366,7 @@ importers:
       readable-stream: 3.6.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0
