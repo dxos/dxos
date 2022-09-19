@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { schema } from '@dxos/echo-protocol';
+import { schema } from '@dxos/protocols';
 import { CredentialSigner, verifyCredential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';

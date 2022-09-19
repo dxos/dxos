@@ -6,9 +6,9 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexSet } from '@dxos/util';
+import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
-import { Chain, Credential } from '../proto';
 
 /**
  * Processes device invitation credentials.

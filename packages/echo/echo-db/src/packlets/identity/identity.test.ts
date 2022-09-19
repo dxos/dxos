@@ -10,7 +10,6 @@ import { FeedStore } from '@dxos/feed-store';
 import {
   createCredentialSignerWithKey,
   verifyCredential,
-  AdmittedFeed,
   CredentialGenerator
 } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -23,6 +22,7 @@ import { afterTest } from '@dxos/testutils';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../space';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 describe('halo/identity', () => {
   test('create', async () => {

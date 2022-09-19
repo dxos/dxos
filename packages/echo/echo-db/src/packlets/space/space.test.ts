@@ -6,11 +6,12 @@ import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { AdmittedFeed, CredentialGenerator } from '@dxos/halo-protocol';
+import { CredentialGenerator } from '@dxos/halo-protocol';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
 import { TestAgentFactory } from './testing';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 describe('space/space', () => {
   test('database', async () => {

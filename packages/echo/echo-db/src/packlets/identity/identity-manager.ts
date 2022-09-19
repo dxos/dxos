@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { FeedStore } from '@dxos/feed-store';
-import { AdmittedFeed, CredentialGenerator, IdentityRecord, SpaceRecord } from '@dxos/halo-protocol';
+import {CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
 import { Identity } from './identity';
+import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord

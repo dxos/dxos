@@ -4,7 +4,7 @@
 
 import { it as test } from 'mocha';
 
-import { codec, FeedMessage } from '@dxos/echo-protocol';
+import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
@@ -13,6 +13,7 @@ import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {

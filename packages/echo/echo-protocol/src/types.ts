@@ -5,7 +5,7 @@
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
 import { TYPES, PublicKey, Timeframe } from '@dxos/protocols';
 import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { CredentialsMessage } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { CredentialsMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 // TODO(burdon): Move defs to @dxos/protocols.
 

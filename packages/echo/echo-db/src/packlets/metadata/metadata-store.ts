@@ -2,16 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
-import { EchoMetadata, PartyMetadata, schema } from '@dxos/echo-protocol';
-import { IdentityRecord } from '@dxos/halo-protocol';
-import { PublicKey, Timeframe } from '@dxos/protocols';
-import { Directory } from '@dxos/random-access-storage';
 import { log } from '@dxos/log';
+import { PublicKey, schema } from '@dxos/protocols';
+import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { Directory } from '@dxos/random-access-storage';
 
 /**
  * Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.

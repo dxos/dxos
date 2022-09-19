@@ -7,7 +7,7 @@ import { it as test } from 'mocha';
 
 import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredential, AdmittedFeed, CredentialGenerator } from '@dxos/halo-protocol';
+import { createCredential, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { PublicKey, Timeframe } from '@dxos/protocols';
@@ -15,6 +15,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { ControlPipeline } from './control-pipeline';
+import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {

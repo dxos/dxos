@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import {
-  createFeedWriter, FeedBlock, FeedMessage, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage
+  createFeedWriter, FeedBlock, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage
 } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { log } from '@dxos/log';
@@ -15,6 +15,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 const STALL_TIMEOUT = 1000;
 

@@ -6,9 +6,8 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { EchoEnvelope, mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
+import { mapFeedWriter, TypedMessage } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
-import { AdmittedFeed, Credential } from '@dxos/halo-protocol';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
@@ -21,6 +20,8 @@ import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 export type SpaceParams = {
   spaceKey: PublicKey
