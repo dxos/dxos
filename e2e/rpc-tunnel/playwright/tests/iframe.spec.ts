@@ -6,7 +6,7 @@ import { expect, Page, test } from '@playwright/test';
 import waitForExpect from 'wait-for-expect';
 
 const config = {
-  baseUrl: 'http://127.0.0.1:5173/'
+  baseUrl: 'http://127.0.0.1:5173'
 };
 
 test.describe('iframe', () => {
