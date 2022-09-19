@@ -27,10 +27,10 @@ const App = () => {
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {
-          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         handlers: client.handlers,
         port
@@ -42,7 +42,7 @@ const App = () => {
       const port = await createIframeParentPort(iframeRef.current!, 'http://localhost:5173');
       const client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},

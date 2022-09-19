@@ -21,7 +21,7 @@ export const createTestItemMutation = (
   timeframe,
   echo: {
     itemId,
-    mutation: schema.getCodecForType('dxos.testing.data.TestItemMutation').encode({
+    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
       key,
       value
     })

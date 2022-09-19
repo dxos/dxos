@@ -20,7 +20,7 @@ let client: TestClient;
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
-    const service = schema.getService('dxos.testing.rpc.TestStreamService');
+    const service = schema.getService('example.testing.rpc.TestStreamService');
 
     await openPort({
       worker,

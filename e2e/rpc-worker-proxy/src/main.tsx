@@ -20,7 +20,7 @@ const App = () => {
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const service = schema.getService('dxos.testing.rpc.TestStreamService');
+    const service = schema.getService('example.testing.rpc.TestStreamService');
     const port = await createSingletonPort('/iframe.html');
     const client = createRpcClient(service, { port });
     await client.open();

@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
-import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/dxos/testing/rpc';
+import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/example/testing/rpc';
 
 import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
@@ -21,7 +21,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -37,7 +37,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -60,7 +60,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -80,7 +80,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -111,7 +111,7 @@ describe('Protobuf service', () => {
     const server = createProtoRpcPeer({
       requested: {},
       exposed: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       handlers: {
         TestService: {
@@ -127,7 +127,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('dxos.testing.rpc.TestService')
+        TestService: schema.getService('example.testing.rpc.TestService')
       },
       exposed: {},
       handlers: {},
@@ -152,7 +152,7 @@ describe('Protobuf service', () => {
       server = createProtoRpcPeer({
         requested: {},
         exposed: {
-          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         handlers: {
           TestStreamService: {
@@ -176,7 +176,7 @@ describe('Protobuf service', () => {
 
       client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.testing.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},
@@ -219,8 +219,8 @@ describe('Protobuf service', () => {
     it('call different services', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('dxos.testing.rpc.TestService');
-      const PingService = schema.getService('dxos.testing.rpc.PingService');
+      const TestService = schema.getService('example.testing.rpc.TestService');
+      const PingService = schema.getService('example.testing.rpc.PingService');
 
       const services = createServiceBundle({
         TestService,
@@ -269,10 +269,10 @@ describe('Protobuf service', () => {
 
       const alice = createProtoRpcPeer({
         requested: {
-          TestService: schema.getService('dxos.testing.rpc.TestService')
+          TestService: schema.getService('example.testing.rpc.TestService')
         },
         exposed: {
-          PingService: schema.getService('dxos.testing.rpc.PingService')
+          PingService: schema.getService('example.testing.rpc.PingService')
         },
         handlers: {
           PingService: {
@@ -284,10 +284,10 @@ describe('Protobuf service', () => {
 
       const bob = createProtoRpcPeer({
         requested: {
-          PingService: schema.getService('dxos.testing.rpc.PingService')
+          PingService: schema.getService('example.testing.rpc.PingService')
         },
         exposed: {
-          TestService: schema.getService('dxos.testing.rpc.TestService')
+          TestService: schema.getService('example.testing.rpc.TestService')
         },
         handlers: {
           TestService: {
@@ -321,20 +321,20 @@ describe('Protobuf service', () => {
       const server = createProtoRpcPeer({
         requested: {},
         exposed: {
-          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+          TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
         handlers: {
           TestAnyService: {
             testCall: async (req) => {
-              expect(req.payload['@type']).toEqual('dxos.testing.rpc.PingRequest');
+              expect(req.payload['@type']).toEqual('example.testing.rpc.PingRequest');
               expect(req.payload.nonce).toEqual(5);
               return {
                 payload: {
-                  '@type': 'dxos.testing.rpc.PingReponse',
+                  '@type': 'example.testing.rpc.PingReponse',
                   nonce: 10
                 }
               };
-            },
+            }
           }
         },
         port: alicePort
@@ -342,7 +342,7 @@ describe('Protobuf service', () => {
 
       const client = createProtoRpcPeer({
         requested: {
-          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+          TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
         exposed: {},
         handlers: {},
@@ -356,14 +356,14 @@ describe('Protobuf service', () => {
 
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
-          '@type': 'dxos.testing.rpc.PingRequest',
-          nonce: 5,
+          '@type': 'example.testing.rpc.PingRequest',
+          nonce: 5
         }
       });
 
-      expect(response.payload['@type']).toEqual('dxos.testing.rpc.PingReponse');
+      expect(response.payload['@type']).toEqual('example.testing.rpc.PingReponse');
       expect(response.payload.nonce).toEqual(10);
-    })
+    });
 
     test('any encoding can be disabled', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
@@ -371,38 +371,38 @@ describe('Protobuf service', () => {
       const server = createProtoRpcPeer({
         requested: {},
         exposed: {
-          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+          TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
         handlers: {
           TestAnyService: {
             testCall: async (req) => {
               expect(req.payload['@type']).toEqual('google.protobuf.Any');
-              expect(req.payload.type_url).toEqual('dxos.testing.Example');
+              expect(req.payload.type_url).toEqual('example.testing.Example');
               expect(req.payload.value).toEqual(Buffer.from('hello'));
               return {
                 payload: {
-                  type_url: 'dxos.testing.Example',
+                  type_url: 'example.testing.Example',
                   value: Buffer.from('world')
                 }
               };
-            },
+            }
           }
         },
         port: alicePort,
         encodingOptions: {
-          preserveAny: true,
+          preserveAny: true
         }
       });
 
       const client = createProtoRpcPeer({
         requested: {
-          TestAnyService: schema.getService('dxos.testing.rpc.TestAnyService')
+          TestAnyService: schema.getService('example.testing.rpc.TestAnyService')
         },
         exposed: {},
         handlers: {},
         port: bobPort,
         encodingOptions: {
-          preserveAny: true,
+          preserveAny: true
         }
       });
 
@@ -413,13 +413,13 @@ describe('Protobuf service', () => {
 
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
-          type_url: 'dxos.testing.Example',
-          value: Buffer.from('hello'),
+          type_url: 'example.testing.Example',
+          value: Buffer.from('hello')
         }
       });
 
-      expect(response.payload.type_url).toEqual('dxos.testing.Example');
+      expect(response.payload.type_url).toEqual('example.testing.Example');
       expect(response.payload.value).toEqual(Buffer.from('world'));
-    })
-  })
+    });
+  });
 });

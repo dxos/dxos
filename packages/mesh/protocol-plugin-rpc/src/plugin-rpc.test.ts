@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PublicKey, schema } from '@dxos/protocols';
-import { TestService } from '@dxos/protocols/proto/dxos/testing/rpc';
+import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -78,7 +78,7 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('Works with protobuf service', async () => {
-    const service = schema.getService('dxos.testing.rpc.TestService');
+    const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     const connected = new Event();
@@ -124,7 +124,7 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('One server two clients', async () => {
-    const service = schema.getService('dxos.testing.rpc.TestService');
+    const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();

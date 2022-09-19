@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { TestStreamService } from '@dxos/protocols/proto/dxos/testing/rpc';
+import { TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
 
 const log = debug('dxos:rpc-tunnel-e2e:test-client');
 
