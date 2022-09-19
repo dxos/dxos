@@ -9,7 +9,7 @@ import path from 'path';
 const HEADER = '// Generated file: do not edit.';
 
 // NOTE: Proto package names must match the generated folder tree.
-// TODO(burdon): Warn if do not match.
+// TODO(burdon): Warn if does not match.
 
 /**
  * Generate protocol buffer definition files.
@@ -40,7 +40,7 @@ const main = (
       const sub = file.substr(prefix.length + 1);
       const dir = path.join(outdir, path.dirname(sub));
       if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
+        fs.mkdirSync(dir, { recursive: true });
       }
 
       // Output file.
