@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
+
 import { Matcher } from './matcher';
-import { Predicate } from './proto';
 import { TextIndex } from './text-index';
 
 // https://en.wikipedia.org/wiki/Shakespeare%27s_plays#Canonical_plays

@@ -1,0 +1,140 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "@dxos/protobuf-test";
+import "example/testing/another.proto";
+import "example/testing/any.proto";
+import "example/testing/extensions.proto";
+
+package example.testing.types;
+
+// TODO(burdon): Remove foo, bar, etc.
+
+/// NOTE: Clashes with any.proto (requires FQ name below).
+message Any {
+  string foo = 1;
+}
+
+/// NOTE: Substitution.
+message Key {
+  required bytes data = 1;
+}
+
+message Scalars {
+  double doubleField = 1;
+  float floatField = 2;
+  int32 int32Field = 3;
+  int64 int64Field = 4;
+  uint32 uint32Field = 5;
+  uint64 uint64Field = 6;
+  sint32 sint32Field = 7;
+  sint64 sint64Field = 8;
+  fixed32 fixed32Field = 9;
+  fixed64 fixed64Field = 10;
+  sfixed32 sfixed32Field = 11;
+  sfixed64 sfixed64Field = 12;
+  bool boolField = 13;
+  string stringField = 14;
+  bytes bytesField = 15;
+}
+
+message OptionalScalars {
+  optional double doubleField = 1;
+  optional float floatField = 2;
+  optional int32 int32Field = 3;
+  optional int64 int64Field = 4;
+  optional uint32 uint32Field = 5;
+  optional uint64 uint64Field = 6;
+  optional sint32 sint32Field = 7;
+  optional sint64 sint64Field = 8;
+  optional fixed32 fixed32Field = 9;
+  optional fixed64 fixed64Field = 10;
+  optional sfixed32 sfixed32Field = 11;
+  optional sfixed64 sfixed64Field = 12;
+  optional bool boolField = 13;
+  optional string stringField = 14;
+  optional bytes bytesField = 15;
+}
+
+message ComplexFields {
+  repeated Key repeatedField = 16;
+  required Key requiredField = 17;
+  map<string, Key> mappedField = 18;
+
+  message Inner {
+    string foo = 1;
+    InnerEnum bar = 2;
+  }
+
+  enum InnerEnum {
+    FOO = 0;
+    BAR = 1;
+  }
+
+  Inner inner = 19;
+
+  Any myAny = 20;
+  google.protobuf.Any googleAny = 21;
+  example.testing.any.Any importedAny = 22;
+  optional example.testing.util.Test test = 23;
+}
+
+message WithTimestamp {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message Outer {
+  Inner inner = 1;
+  
+  message Inner {
+    int32 num = 1;
+  }
+}
+
+enum TaskType {
+  IN_PROGRESS = 0;
+  COMPLETED = 1;
+}
+
+/**
+ * Task.
+ * Comments can be multiline.
+ */
+message Task {
+  /// Task id
+  string id = 1;
+
+  /// Task title
+  optional string title = 2;
+
+  /**
+   * Task key.
+   * Multiline field comment.
+   */
+  required Key key = 3;
+
+  // I'm a comment
+  required TaskType type = 4;
+
+  // And I'm a comment with
+  // multiple lines
+  optional google.protobuf.Any googleAny = 5;
+}
+
+message TaskList {
+  repeated Task tasks = 1;
+}
+
+message SubstitutedByInterface {
+  string data = 1;
+}
+
+message TaskCount {
+  int32 count = 1;
+}

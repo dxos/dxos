@@ -2,15 +2,6 @@
   "sourceRoot": "packages/mesh/broadcast/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/mesh/broadcast/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -43,8 +34,5 @@
         "passWithNoTests": true
       }
     }
-  },
-  "implicitDependencies": [
-    "protobuf-compiler"
-  ]
+  }
 }

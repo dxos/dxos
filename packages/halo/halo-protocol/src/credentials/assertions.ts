@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
+import { MessageType, PublicKey } from '@dxos/protocols';
+import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Credential } from '../proto/gen/dxos/halo/credentials';
-import { getCredentialAssertion } from './types';
+export const getCredentialAssertion = (credential: Credential): MessageType => credential.subject.assertion;
 
-export const isValidAuthorizedDeviceCredential = (credential: Credential, identityKey: PublicKey, deviceKey: PublicKey): boolean => {
+export const isValidAuthorizedDeviceCredential = (
+  credential: Credential,
+  identityKey: PublicKey,
+  deviceKey: PublicKey
+): boolean => {
   const assertion = getCredentialAssertion(credential);
   return credential.subject.id.equals(deviceKey) &&
     credential.issuer.equals(identityKey) &&

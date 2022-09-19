@@ -10,11 +10,13 @@ import { trigger } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message } from '@dxos/protocols/proto/dxos/halo/signed';
 import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { createKeyAdmitMessage } from '../party';
-import { Command, KeyType, Message } from '../proto';
 import { Greeter } from './greeter';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { SecretProvider, SecretValidator } from './invitation';
@@ -116,7 +118,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   // Present the invitation (by showing up).
   {
     const command = {
-      '@type': 'dxos.credentials.greet.Command',
+      '@type': 'dxos.halo.credentials.greet.Command',
       command: Command.Type.BEGIN
     };
 
@@ -126,7 +128,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
   // Obtain the nonce and partyKey from the HANDSHAKE response.
   const { nonce, partyKey } = await (async () => {
     const command = {
-      '@type': 'dxos.credentials.greet.Command',
+      '@type': 'dxos.halo.credentials.greet.Command',
       command: Command.Type.HANDSHAKE,
       secret: await secretProvider(),
       params: []
@@ -142,7 +144,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
     const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
 
     const command = {
-      '@type': 'dxos.credentials.greet.Command',
+      '@type': 'dxos.halo.credentials.greet.Command',
       command: Command.Type.NOTARIZE,
       secret: await secretProvider(),
       params: [
@@ -166,7 +168,7 @@ it('Greeting Flow using GreetingCommandPlugin', async () => {
 
   const oneway = true;
   await plugin.send(rendezvousKey, {
-    '@type': 'dxos.credentials.greet.Command',
+    '@type': 'dxos.halo.credentials.greet.Command',
     command: Command.Type.FINISH,
     secret: await secretProvider(),
     params: []

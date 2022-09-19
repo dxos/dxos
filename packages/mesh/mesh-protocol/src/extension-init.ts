@@ -6,10 +6,10 @@ import assert from 'node:assert';
 import Signal from 'signal-promise';
 
 import { Trigger } from '@dxos/async';
+import { Buffer as ProtoBuffer } from '@dxos/protocols/proto/dxos/mesh/protocol';
 
 import { ERR_PROTOCOL_INIT_INVALID } from './errors';
 import { Extension } from './extension';
-import { Buffer as ProtoBuffer } from './proto/gen/dxos/protocol';
 
 type Command = 'continue' | 'break' | 'session'
 
@@ -32,7 +32,7 @@ export class ExtensionInit extends Extension {
   private readonly _sessionTrigger = new Trigger();
 
   constructor (options: ExtensionInitOptions = {}) {
-    super('dxos.protocol.init', options);
+    super('dxos.mesh.protocol.init', options);
 
     this._timeout = options.timeout;
     this._remoteInit = null;

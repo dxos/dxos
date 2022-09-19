@@ -5,8 +5,10 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { Filter, KeyChain, KeyRecord, Keyring, KeyType, SignedMessage, Signer } from '@dxos/credentials';
+import { Filter, Keyring, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { IdentityCredentials } from '../protocol/identity-credentials';

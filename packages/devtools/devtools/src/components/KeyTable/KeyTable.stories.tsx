@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { PublicKey } from '@dxos/protocols';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { FullScreen } from '@dxos/react-components';
 
-import { KeyRecord, KeyType } from '../../proto/gen/dxos/halo/keys';
 import { KeyTable } from './KeyTable';
 
 export default {

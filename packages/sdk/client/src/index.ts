@@ -15,7 +15,6 @@ export {
   SelectionResult,
   ItemFilterDeleted,
   InvitationDescriptor,
-  InvitationDescriptorType,
   OpenProgress,
   PartyMember,
   ResultSet,
@@ -30,6 +29,18 @@ export {
   PartyKey
 } from '@dxos/echo-protocol';
 
+// TODO(burdon): Remove exported protos?
+export {
+  KeyRecord,
+  KeyType
+} from '@dxos/protocols/proto/dxos/halo/keys';
+
+export {
+  Profile,
+  SignRequest,
+  SignResponse
+} from '@dxos/protocols/proto/dxos/client';
+
 export {
   ObjectModel,
   OrderedList
@@ -39,15 +50,6 @@ export {
 export {
   NetworkManager
 } from '@dxos/network-manager';
-
-export {
-  proto,
-  KeyRecord,
-  KeyType,
-  Profile,
-  SignRequest,
-  SignResponse
-} from './packlets/proto';
 
 export * from './packlets/api';
 export * from './packlets/devtools';

@@ -7,7 +7,10 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
-import { AccountKey, App, CID, createCID, DomainKey, DXN, PolkadotRegistry, RegistryClient, schemaJson } from '../../src';
+import { schemaJson } from '@dxos/protocols';
+import { App } from '@dxos/protocols/proto/dxos/type';
+
+import { createCID, AccountKey, CID, DomainKey, DXN, PolkadotRegistry, RegistryClient } from '../../src';
 import { setup } from './utils';
 
 chai.use(chaiAsPromised);

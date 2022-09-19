@@ -6,10 +6,10 @@ import { Config } from '@dxos/config';
 import * as debug from '@dxos/debug'; // Export to devtools.
 import { ECHO, OpenProgress } from '@dxos/echo-db';
 import { WebsocketSignalManager } from '@dxos/messaging';
+import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
 import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
-import { DevtoolsHost } from '../proto';
 import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 

@@ -6,17 +6,17 @@ import jsondown from 'jsondown';
 import leveljs from 'level-js';
 import memdown from 'memdown';
 
-import { defs } from '@dxos/config';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';
 
-import StorageDriver = defs.Runtime.Client.Storage.StorageDriver;
+import StorageDriver = Runtime.Client.Storage.StorageDriver;
 import { InvalidConfigurationError } from '../api';
 
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: defs.Runtime.Client.Storage) => {
+export const createStorageObjects = (config: Runtime.Client.Storage) => {
   const {
     path = 'dxos/storage', // TODO(burdon): Factor out const.
     storageType,

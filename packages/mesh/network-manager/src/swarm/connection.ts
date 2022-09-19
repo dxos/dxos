@@ -9,8 +9,8 @@ import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
 

@@ -8,7 +8,7 @@ import {
   Box, Button, Divider, Paper, TextField, Toolbar
 } from '@mui/material';
 
-import { PartyInvitation, InvitationDescriptor } from '@dxos/client';
+import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 

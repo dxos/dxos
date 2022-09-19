@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { KeyType } from '../proto/gen/dxos/halo/keys';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 export type SecretKey = Buffer;
 

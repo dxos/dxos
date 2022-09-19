@@ -1,0 +1,29 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "example/testing/types.proto";
+
+package example.testing.service;
+
+/// Test service definition.
+service TestService {
+  /// Count the tasks in the task list.
+  rpc CountTasks(example.testing.types.TaskList) returns (example.testing.types.TaskCount);
+
+  /// Subscribe to task list updates.
+  rpc SubscribeTasks(example.testing.types.Key) returns (stream example.testing.types.Task);
+}
+
+message WithEmptyField {
+  google.protobuf.Empty emptyField = 1;
+}
+
+service ServiceWithEmpty {
+  rpc EmptyRpc(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc EmptyStreamRpc(google.protobuf.Empty) returns (stream google.protobuf.Empty);
+}

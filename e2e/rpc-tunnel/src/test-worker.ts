@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { schema } from './proto';
 import { TestClient } from './test-client';
 
 onconnect = async (event: MessageEvent<any>) => {
@@ -14,7 +14,7 @@ onconnect = async (event: MessageEvent<any>) => {
   const server = createProtoRpcPeer({
     requested: {},
     exposed: {
-      TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+      TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
     },
     handlers: client.handlers,
     port

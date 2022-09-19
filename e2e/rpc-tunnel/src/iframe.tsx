@@ -5,12 +5,12 @@
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIframeParentPort, createIframePort } from '@dxos/rpc-tunnel';
 
-import { schema } from './proto';
 import { TestClient } from './test-client';
 
 const IN_IFRAME = window.parent !== window;
@@ -27,10 +27,10 @@ const App = () => {
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         handlers: client.handlers,
         port
@@ -42,7 +42,7 @@ const App = () => {
       const port = await createIframeParentPort(iframeRef.current!, 'http://localhost:5173');
       const client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('dxos.test.rpc.TestStreamService')
+          TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
         },
         exposed: {},
         handlers: {},

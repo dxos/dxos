@@ -7,27 +7,28 @@ import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
 import {
-  ClaimResponse,
-  Keyring,
-  KeyType,
-  GreetingCommandPlugin,
-  PartyInvitationClaimHandler,
+  codec,
   createAuthMessage,
   createGreetingClaimMessage,
+  Keyring,
+  GreetingCommandPlugin,
+  PartyInvitationClaimHandler,
   SecretProvider,
-  SecretValidator,
-  SignedMessage,
-  codec
+  SecretValidator
 } from '@dxos/credentials';
 import { randomBytes, verify } from '@dxos/crypto';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
+import { InvitationDescriptor } from '../invitations';
 import { InvalidInvitationError } from '../packlets/errors';
 import { CredentialsSigner } from '../protocol';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
-import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 import { InvitationFactory } from './invitation-factory';
 
 const log = debug('dxos:echo-db:halo-recovery-initiator');
@@ -120,7 +121,7 @@ export class HaloRecoveryInitiator {
     this._state = GreetingState.SUCCEEDED;
 
     return new InvitationDescriptor(
-      InvitationDescriptorType.INTERACTIVE,
+      InvitationDescriptorProto.Type.INTERACTIVE,
       Buffer.from(rendezvousKey),
       Buffer.from(id),
       this._credentialsSigner.getIdentityKey().publicKey

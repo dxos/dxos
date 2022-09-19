@@ -4,6 +4,6 @@
 
 export class MyKey {
   constructor (
-    public keyData: Uint8Array
+    public data: Uint8Array
   ) {}
 }
