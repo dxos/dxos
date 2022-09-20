@@ -18,7 +18,7 @@ import { IdentityManager } from './identity-manager';
 import { StateManager } from '@dxos/model-factory';
 import { PubKey } from 'packages/common/protocols/proto/dxos/halo/keys';
 
-describe('identity/identity-manager', () => {
+describe('fubar/identity-manager', () => {
   const setup = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })

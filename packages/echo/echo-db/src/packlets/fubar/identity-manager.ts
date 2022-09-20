@@ -173,6 +173,7 @@ export class IdentityManager {
     };
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
+    this._identity = identity;
     this.stateUpdate.emit();
     return identity;
   }
