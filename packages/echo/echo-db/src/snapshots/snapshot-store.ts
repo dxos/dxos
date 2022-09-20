@@ -5,7 +5,8 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { schema, PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { schema } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 

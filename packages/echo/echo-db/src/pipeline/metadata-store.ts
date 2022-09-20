@@ -8,7 +8,8 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { IdentityRecord } from '@dxos/halo-protocol';
-import { schema, PublicKey, Timeframe } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { schema, Timeframe } from '@dxos/protocols';
 import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 
