@@ -122,7 +122,7 @@ export abstract class BaseCommand extends Command {
    * Convenience function to wrap command passing in kube publisher.
    */
   async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
-    let rpc: PublisherRpcPeer | undefined = undefined;
+    let rpc: PublisherRpcPeer | undefined;
     try {
       assert(this._clientConfig);
 
