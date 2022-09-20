@@ -6,6 +6,7 @@
   "include": [
     "src/packlets",
     "src/api",
+    "src/invitations/invitation-descriptor.ts",
     "src/index.ts"
   ],
   "exclude": [

@@ -16,6 +16,7 @@ import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
 import { Identity } from './identity';
 import { defaultSecretValidator } from '@dxos/credentials';
+import { Event } from '@dxos/async';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
@@ -32,6 +33,8 @@ export type JoinIdentityParams = {
 // TODO(dmaretskyi): This represents the Peer S/M. Lets find a better name for it.
 export class IdentityManager {
   private _identity?: Identity;
+
+  readonly stateUpdate = new Event();
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor (
@@ -53,6 +56,7 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();
       await this._identity.ready();
+      this.stateUpdate.emit();
     }
   }
 
@@ -148,6 +152,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    this.stateUpdate.emit();
     return identity;
   }
 
@@ -169,6 +174,7 @@ export class IdentityManager {
     };
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
+    this.stateUpdate.emit();
     return identity;
   }
 }

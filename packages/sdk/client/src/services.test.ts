@@ -24,7 +24,7 @@ const setup = async () => {
   };
 };
 
-describe('Client Services', () => {
+describe.skip('Client Services', () => {
   describe('device invitations', () => {
     test('creates and joins a HALO invitation', async () => {
       const inviter = await setup();
