@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
 import { Contact, CreateProfileOptions, InvitationDescriptor, PartyMember, ResultSet } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/protocols';
 import { Profile, SignRequest } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
@@ -12,6 +13,10 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { ClientServiceProvider, Halo, Invitation, InvitationRequest } from '../api';
 import { InvitationProxy } from './invitation-proxy';
+
+export interface HaloInfo {
+  key?: PublicKey
+}
 
 /**
  * Client proxy to local/remote HALO service.
@@ -34,7 +39,7 @@ export class HaloProxy implements Halo {
     return `HaloProxy(${JSON.stringify(this.info)})`;
   }
 
-  get info () {
+  get info (): HaloInfo {
     return {
       key: this._profile?.publicKey
     };

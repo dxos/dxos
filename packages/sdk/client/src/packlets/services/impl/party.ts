@@ -105,7 +105,7 @@ class PartyService implements PartyServiceRpc {
     };
   }
 
-  async createParty () {
+  async createParty (): Promise<Party> {
     const party = await this.echo.createParty();
     return {
       publicKey: party.key,
@@ -123,7 +123,7 @@ class PartyService implements PartyServiceRpc {
     };
   }
 
-  async setPartyState (request: SetPartyStateRequest) {
+  async setPartyState (request: SetPartyStateRequest): Promise<Party> {
     const party = this.echo.getParty(request.partyKey);
     if (!party) {
       throw new Error('Party not found');

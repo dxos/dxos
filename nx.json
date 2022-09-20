@@ -15,6 +15,7 @@
           "e2e",
           "lint",
           "prebuild",
+          "prerelease",
           "proto",
           "test"
         ],
