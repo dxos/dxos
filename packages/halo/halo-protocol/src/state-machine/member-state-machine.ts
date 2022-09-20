@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 

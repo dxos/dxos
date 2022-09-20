@@ -13,24 +13,17 @@ import { Timeframe } from './timeframe';
  * Discriminated union of all protobuf types with the '@type' field included.
  * Useful for typing 'google.protobuf.Any' messages.
  */
+// TODO(burdon): Rename.
 export type MessageType = {
   [K in keyof TYPES]: TYPES[K] & { '@type': K }
 }[keyof TYPES]
 
+// TODO(burdon): Conflict with halo-protocol MessageType.
+export type TypedMessage = TypedProtoMessage<TYPES>
+
 //
 // Keys.
 //
-
-// TODO(burdon): Move defs to @dxos/crypto. Define KeyPair.
-// TODO(telackey): Removing the specific PartyKey/FeedKey/IdentityKey types is advisable.
-//  They are not different types of things, only distinct uses, and the same key may be used in more than one way.
-//  (eg, as both the IdentityKey for the user and as the PartyKey for their HALO).
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export type SwarmKey = Uint8Array;
 
 /**
  * @deprecated
@@ -38,19 +31,8 @@ export type SwarmKey = Uint8Array;
 // TODO(burdon): Remove.
 export type PartyKey = PublicKey;
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export type IdentityKey = PublicKey;
-
-/**
- * @deprecated
- */
-export type FeedKey = PublicKey
-
 export type FeedMeta = {
-  feedKey: FeedKey
+  feedKey: PublicKey
   seq: number
 }
 
@@ -60,7 +42,7 @@ export type FeedMeta = {
  */
 // TODO(burdon): Rename (No I-prefix).
 export interface IFeedGenericBlock<T> {
-  key: FeedKey
+  key: PublicKey
   seq: number
   sync: boolean
   path: string
@@ -99,9 +81,6 @@ export interface IEchoStream {
   meta: MutationMetaWithTimeframe
   data: EchoEnvelope
 }
-
-// TODO(burdon): Conflict with halo-protocol MessageType.
-export type TypedMessage = TypedProtoMessage<TYPES>
 
 // TODO(burdon): Change to Buffer.
 export type ItemID = string;

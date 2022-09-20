@@ -6,10 +6,10 @@ import debug from 'debug';
 
 import { discoveryKey } from '@dxos/crypto';
 import { PartyKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { PublicKey } from '@dxos/protocols';
 
 import { CredentialsProvider } from './authenticator';
 

@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { Stream } from '@dxos/codec-protobuf';
 import { failUndefined, raise } from '@dxos/debug';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   MutationReceipt,

@@ -7,8 +7,8 @@ import faker from 'faker';
 import { it as test } from 'mocha';
 
 import { MockFeedWriter } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
-import { PublicKey } from '@dxos/protocols';
 
 import { TextModel } from './text-model';
 

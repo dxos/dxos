@@ -5,7 +5,7 @@
 import pump from 'pump';
 
 import { createPromiseFromCallback } from '@dxos/async';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { Extension } from '../extension';
 import { Protocol } from '../protocol';

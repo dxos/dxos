@@ -6,8 +6,8 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 

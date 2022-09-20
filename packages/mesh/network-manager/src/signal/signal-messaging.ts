@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Answer, Offer, Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export interface OfferMessage {

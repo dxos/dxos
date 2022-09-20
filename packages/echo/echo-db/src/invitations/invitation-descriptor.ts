@@ -7,8 +7,7 @@ import stableStringify from 'json-stable-stringify';
 import assert from 'node:assert';
 
 import { ripemd160 } from '@dxos/crypto';
-import { SwarmKey } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { InvalidInvitationError } from '../packlets/errors';
@@ -71,7 +70,7 @@ export class InvitationDescriptor {
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
   constructor (
     public readonly type: InvitationDescriptorProto.Type,
-    public readonly swarmKey: SwarmKey,
+    public readonly swarmKey: PublicKey,
     public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
     public secret?: Uint8Array

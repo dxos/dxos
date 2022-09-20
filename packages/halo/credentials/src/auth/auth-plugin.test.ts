@@ -14,9 +14,9 @@ import waitForExpect from 'wait-for-expect';
 
 import { randomBytes, createKeyPair } from '@dxos/crypto';
 import { FeedStore, createBatchStream, HypercoreFeed } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { Protocol, ProtocolOptions } from '@dxos/mesh-protocol';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
-import { PublicKey } from '@dxos/protocols';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';

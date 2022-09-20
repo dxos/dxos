@@ -4,10 +4,8 @@
 
 import { PublicKey } from '@dxos/keys';
 
-export type FeedKey = PublicKey
-
 export type FeedMeta = {
-  feedKey: FeedKey
+  feedKey: PublicKey
   seq: number
 }
 
@@ -17,7 +15,7 @@ export type FeedMeta = {
  */
 // TODO(burdon): Rename (No I-prefix).
 export interface IFeedGenericBlock<T> {
-  key: FeedKey
+  key: PublicKey
   seq: number
   sync: boolean
   path: string

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { FeedWriter, ItemID } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Model } from './model';

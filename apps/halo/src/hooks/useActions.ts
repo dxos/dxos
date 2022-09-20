@@ -4,7 +4,7 @@
 
 import { Context, createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 // TODO(wittjosiah): Just use strings?
 export enum ActionType {

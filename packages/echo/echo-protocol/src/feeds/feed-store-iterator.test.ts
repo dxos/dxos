@@ -10,8 +10,9 @@ import pify from 'pify';
 import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
-import { PublicKey, Timeframe, schema } from '@dxos/protocols';
-import { FeedBlock, FeedKey } from '@dxos/protocols/dist/src/types';
+import { PublicKey } from '@dxos/keys';
+import { Timeframe, schema } from '@dxos/protocols';
+import { FeedBlock } from '@dxos/protocols/dist/src/types';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
@@ -77,7 +78,7 @@ describe('feed store iterator', () => {
     // Create feeds.
     //
 
-    const feeds = new ComplexMap<FeedKey, HypercoreFeed>(key => key.toHex());
+    const feeds = new ComplexMap<PublicKey, HypercoreFeed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const { publicKey, secretKey } = createKeyPair();
       const descriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);

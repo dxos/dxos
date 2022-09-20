@@ -21,8 +21,8 @@ import {
   SecretProvider
 } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';

@@ -5,7 +5,7 @@
 import { Filter, Keyring, Signer } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { Chain } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 /**

@@ -10,9 +10,9 @@ import {
   ResultSet
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 

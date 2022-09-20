@@ -18,10 +18,10 @@ import {
   createPartyGenesisCredential,
   PartyMember
 } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 

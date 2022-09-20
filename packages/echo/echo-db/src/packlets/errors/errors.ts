@@ -4,7 +4,7 @@
 
 import { DXOSError } from '@dxos/debug';
 import { ItemID } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 export class PartyNotFoundError extends DXOSError {
   constructor (partyKey: PublicKey) {

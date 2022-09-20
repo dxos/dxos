@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { FeedKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';
 
@@ -22,7 +22,7 @@ export class TimeframeClock {
     return this._timeframe;
   }
 
-  updateTimeframe (key: FeedKey, seq: number) {
+  updateTimeframe (key: PublicKey, seq: number) {
     this._timeframe = Timeframe.merge(this._timeframe, new Timeframe([[key, seq]]));
     this.update.emit(this._timeframe);
   }

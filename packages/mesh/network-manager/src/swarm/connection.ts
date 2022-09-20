@@ -6,9 +6,9 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessaging } from '../signal';

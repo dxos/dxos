@@ -8,8 +8,8 @@ import { createPartyInvitationMessage } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { Credential } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { InvitationDescriptor } from '../invitations';

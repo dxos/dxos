@@ -6,7 +6,7 @@ import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
 import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { useClient, useParty } from '@dxos/react-client';
 
 import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';

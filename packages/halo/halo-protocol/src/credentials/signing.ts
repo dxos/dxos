@@ -4,7 +4,7 @@
 
 import stableStringify from 'json-stable-stringify';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 /**

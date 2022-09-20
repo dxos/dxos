@@ -6,7 +6,7 @@ import React, { FC } from 'react';
 
 import { PartyKey } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { useParties } from '@dxos/react-client';
 
 import { List } from '../util';

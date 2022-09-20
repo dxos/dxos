@@ -7,11 +7,11 @@ import { it as test } from 'mocha';
 
 import { defaultSecretProvider, Keyring, codec as haloCodec } from '@dxos/credentials'; // TODO(burdon): Remove haloCodec.
 import { FeedStore } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 

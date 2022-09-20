@@ -8,7 +8,7 @@ import {
   CredentialSigner, DeviceStateMachine, createCredentialSignerWithChain, createCredentialSignerWithKey
 } from '@dxos/halo-protocol';
 import { Signer } from '@dxos/keyring';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { Space } from '../space';
 

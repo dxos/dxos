@@ -13,9 +13,9 @@ import {
   streamToResultSet
 } from '@dxos/echo-db';
 import { PartyKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 
 import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
