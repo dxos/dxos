@@ -9,7 +9,7 @@ Install the ECHO client with your package manager of choice
 > npm install --save @dxos/echo
 ```
 or include via CDN:
-```
+```html
 <script src="https://jsdelivr..."/>
 ```
 
@@ -29,19 +29,38 @@ const items = await space.getItems();
 Read more in the [ECHO overview](/docs/echo/overview) and [how ECHO works](/docs/echo/how-echo-works).
 
 ## Creating apps
+The `dx` cli offers a production-ready application template for building **local-first applications** with ECHO. The template is made of `vite`, `typescript`, `react`, `echo`, `pwa`, and other opinions. Read more about the [hello world template](https://) and the [bare template](https://).
+
 Using your favorite package manager of choice like `npm`, `yarn`, or `pnpm`:
 ```bash
 > npm i -g @dxos/cli 
 ```
 Now you can use the `dx` command line tool:
 ```bash
-> dx apps create hello
+> dx apps create hello # or with --template=bare
+> cd hello
+> npm run dev
 ```
+This will start the development server in the new application.
 
-## Running your app
+## Building your app for production
+```bash
+> npm build
+```
+This will produce a `dist` folder with an entry point and a `dist/README.md`
 
 ## Starting a KUBE node
+Runnig a [KUBE](https://) gives you superpowers. Installation:
+```bash
+> sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
+```
+Then:
+```bash
+> kube start # start the service in the background
+> open localhost:9000 # open the browser to the console
+```
 
-## Deploying your app
+## Deploying your app to a KUBE
+
 
 ## Sharing your app
