@@ -2,15 +2,6 @@
   "sourceRoot": "packages/halo/keyring/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/halo/keyring/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [

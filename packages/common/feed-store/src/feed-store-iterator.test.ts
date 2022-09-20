@@ -16,7 +16,7 @@ import { FeedBlock } from '@dxos/protocols/dist/src/types';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { createTestItemMutation } from '../../../../common/protocols/src/testing';
+import { createTestItemMutation } from '../../protocols/src/testing';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');

@@ -21,7 +21,6 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@dxos/echo-protocol": "workspace:*",
     "@types/debug": "^4.1.7"
   },
   "publishConfig": {

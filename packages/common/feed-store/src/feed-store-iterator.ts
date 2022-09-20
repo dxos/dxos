@@ -8,8 +8,8 @@ import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
 import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
-import { PublicKey, Timeframe } from '@dxos/protocols';
-import { FeedBlock } from '@dxos/protocols/dist/src/types';
+import { PublicKey } from '@dxos/keys';
+import { IFeedGenericBlock, Timeframe } from '@dxos/protocols';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 
@@ -22,7 +22,8 @@ const STALL_TIMEOUT = 1000;
 // - Construction separate from open.
 //
 
-export type MessageSelector = (candidates: FeedBlock[]) => number | undefined
+export type MessageSelector<T> = (candidates: IFeedGenericBlock<T>[]) => number | undefined
+
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
 /**
@@ -31,15 +32,15 @@ export type FeedSelector = (descriptor: FeedDescriptor) => boolean
  * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
  */
 // TODO(marik-d): Add stop method.
-export class FeedStoreIterator implements AsyncIterable<FeedBlock> {
+export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>> {
   /** Curent set of active feeds. */
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
 
   /** Feed key as hex => feed state */
   private readonly _openFeeds = new Map<string, {
     descriptor: FeedDescriptor
-    iterator: AsyncIterator<FeedBlock[]>
-    sendQueue: FeedBlock[] // TODO(burdon): Why "send"?
+    iterator: AsyncIterator<IFeedGenericBlock<T>[]>
+    sendQueue: IFeedGenericBlock<T>[] // TODO(burdon): Why "send"?
     frozen: boolean
   }>();
 

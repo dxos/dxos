@@ -6,12 +6,14 @@ import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
 import { FeedStore } from '@dxos/feed-store';
-import { PublicKey, Timeframe, schema } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { schema, Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createFeedWriter } from './feed-writer';
 
+// TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
 describe('Feed tests:', () => {
@@ -24,9 +26,7 @@ describe('Feed tests:', () => {
     };
 
     const buffer = codec.encode(message1);
-
     const message2 = codec.decode(buffer);
-
     expect(message1).toEqual(message2);
   });
 

@@ -20,7 +20,6 @@
     "devtools-mesh": "packages/devtools/devtools-mesh",
     "dx-cli": "apps/dx-cli",
     "echo-db": "packages/echo/echo-db",
-    "echo-protocol": "packages/echo/echo-protocol",
     "echo-testing": "packages/echo/echo-testing",
     "esbuild": "tools/executors/esbuild",
     "eslint-plugin": "tools/eslint-plugin",

@@ -22,7 +22,6 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
     "@types/node": "^16.11.58",
     "assert": "^2.0.0",
