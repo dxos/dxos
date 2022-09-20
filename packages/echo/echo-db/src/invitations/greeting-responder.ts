@@ -16,7 +16,7 @@ import {
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
-import { FeedWriter } from '@dxos/echo-protocol';
+import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';

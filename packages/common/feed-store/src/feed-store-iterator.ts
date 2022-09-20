@@ -7,9 +7,11 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { createBatchStream, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { IFeedGenericBlock, Timeframe } from '@dxos/protocols';
+
+import { createBatchStream } from './create-batch-stream';
+import { FeedDescriptor } from './feed-descriptor';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 
@@ -57,7 +59,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>>
 
   private _closed = false;
 
-  public readonly stalled = new Event<FeedBlock[]>();
+  public readonly stalled = new Event<IFeedGenericBlock<T>[]>();
 
   /**
    * @param _feedSelector
@@ -66,7 +68,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>>
    */
   constructor (
     private readonly _feedSelector: FeedSelector,
-    private readonly _messageSelector: MessageSelector,
+    private readonly _messageSelector: MessageSelector<T>,
     private readonly _skipTimeframe: Timeframe
   ) {
     assert(_feedSelector);

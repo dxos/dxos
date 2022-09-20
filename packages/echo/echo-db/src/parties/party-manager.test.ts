@@ -16,11 +16,12 @@ import {
 import { SIGNATURE_LENGTH, createKeyPair, randomBytes, sign, verify } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';

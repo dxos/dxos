@@ -5,7 +5,8 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { FeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -101,7 +102,7 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
   constructor (
     private readonly _service: DataService,
-    private readonly _partyKey: PartyKey
+    private readonly _partyKey: PublicKey
   ) {}
 
   get isReadOnly (): boolean {

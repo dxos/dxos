@@ -6,10 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import type {
-  FeedWriter, ItemID, MutationMeta, MutationMetaWithTimeframe, WriteReceipt
-} from '@dxos/echo-protocol';
+import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Model } from './model';

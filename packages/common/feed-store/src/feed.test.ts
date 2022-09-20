@@ -5,12 +5,12 @@
 import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
-import { FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { schema, Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
+import { FeedStore } from './feed-store';
 import { createFeedWriter } from './feed-writer';
 
 // TODO(burdon): Replace with existing def.

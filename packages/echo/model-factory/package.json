@@ -15,6 +15,8 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",

@@ -9,15 +9,15 @@ import pify from 'pify';
 
 import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
-import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { Timeframe, schema } from '@dxos/protocols';
+import { Timeframe, schema, createTestItemMutation } from '@dxos/protocols';
 import { FeedBlock } from '@dxos/protocols/dist/src/types';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { createTestItemMutation } from '../../protocols/src/testing';
+import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
+import { HypercoreFeed } from './hypercore-types';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 

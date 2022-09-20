@@ -3,7 +3,7 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { PublicKey, PublicKeyLike } from '@dxos/keys';
 
 import { createDateTimeString } from '../proto';
 

@@ -3,8 +3,9 @@
 //
 
 import { CredentialSigner, verifyCredential } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema, PublicKey } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { ComplexSet } from '@dxos/util';
 
 import { AuthProvider, AuthVerifier } from '../space';

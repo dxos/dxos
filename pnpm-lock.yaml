@@ -897,6 +897,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -910,6 +911,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keys': link:../../common/keys
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
@@ -933,6 +935,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -960,6 +963,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
@@ -1059,10 +1063,9 @@ importers:
       debug: ^4.3.3
       events: ^3.3.0
     dependencies:
+      '@dxos/keys': link:../keys
       debug: 4.3.4
       events: 3.3.0
-    devDependencies:
-      '@dxos/keys': link:../keys
 
   packages/common/feed-store:
     specifiers:
@@ -1077,20 +1080,24 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/end-of-stream': ^1.4.0
+      '@types/faker': ^5.5.1
       '@types/from2': ~2.3.1
       '@types/pify': ^3.0.2
       '@types/pump': ^1.1.0
+      '@types/readable-stream': ^2.3.9
       '@types/through2': ^2.0.36
       assert: ^2.0.0
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
       end-of-stream-promise: ^1.0.0
+      faker: ^5.1.0
       from2: ^2.3.0
       hypercore: ^9.10.0
       hypertrie: 5.1.1
       pify: ~5.0.0
       pump: ^3.0.0
+      readable-stream: ^3.6.0
       tempy: ~1.0.1
       through2: ^3.0.1
     dependencies:
@@ -1106,6 +1113,7 @@ importers:
       hypercore: 9.12.0
       pify: 5.0.0
       pump: 3.0.0
+      readable-stream: 3.6.0
       through2: 3.0.2
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
@@ -1115,11 +1123,14 @@ importers:
       '@dxos/random-access-storage': link:../random-access-storage
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1
+      '@types/faker': 5.5.9
       '@types/from2': 2.3.1
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
+      '@types/readable-stream': 2.3.9
       '@types/through2': 2.0.36
       end-of-stream-promise: 1.0.0
+      faker: 5.5.3
       hypertrie: 5.1.1
       tempy: 1.0.1
 
@@ -1510,6 +1521,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocol-plugin-presence': workspace:*
@@ -1534,6 +1546,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
@@ -1568,6 +1581,7 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/halo-protocol': workspace:^2.33.8
       '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
@@ -1612,6 +1626,7 @@ importers:
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/messaging': link:../../mesh/messaging
@@ -1689,6 +1704,8 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -1698,6 +1715,8 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
+      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/keys': link:../../common/keys
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -1748,6 +1767,8 @@ importers:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
@@ -1759,11 +1780,13 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/echo-db': link:../echo-db
+      '@dxos/keys': link:../../common/keys
       '@dxos/model-factory': link:../model-factory
       '@types/node': 16.11.58
       assert: 2.0.0
       yjs: 13.5.41
     devDependencies:
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/object-model': link:../object-model
       '@dxos/protocols': link:../../common/protocols
       '@types/faker': 5.5.9
@@ -1818,6 +1841,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
@@ -1840,6 +1864,7 @@ importers:
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
@@ -1864,6 +1889,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/protocols': workspace:*
@@ -1900,6 +1926,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/keys': link:../../common/keys
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
@@ -1938,6 +1965,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:^2.33.4
       '@dxos/protocols': workspace:2.33.8
       '@dxos/util': workspace:*
@@ -1950,6 +1978,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
       '@dxos/keyring': link:../keyring
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
@@ -1989,6 +2018,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/network-generator': workspace:*
       '@dxos/protocols': workspace:*
       '@types/debug': ^4.1.7
@@ -1999,6 +2029,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
+      '@dxos/keys': link:../../common/keys
       '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
       debug: 4.3.4
@@ -2011,6 +2042,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -2028,6 +2060,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keys': link:../../common/keys
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
@@ -2048,6 +2081,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
@@ -2066,6 +2100,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
@@ -2111,6 +2146,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
@@ -2139,6 +2175,7 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/messaging': link:../messaging
@@ -2183,6 +2220,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/broadcast': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
@@ -2197,6 +2235,7 @@ importers:
     dependencies:
       '@dxos/broadcast': link:../broadcast
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keys': link:../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/protocols': link:../../common/protocols
       assert: 2.0.0
@@ -2218,6 +2257,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
@@ -2236,6 +2276,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -11750,7 +11791,7 @@ packages:
   /@types/readable-stream/2.3.9:
     resolution: {integrity: sha512-sqsgQqFT7HmQz/V5jH1O0fvQQnXAJO46Gg9LRO/JPfjmVmGUlcx831TZZO3Y3HtWhIkzf3kTsNT0Z0kzIhIvZw==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
       safe-buffer: 5.2.1
     dev: true
 

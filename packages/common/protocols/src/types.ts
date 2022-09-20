@@ -25,12 +25,6 @@ export type TypedMessage = TypedProtoMessage<TYPES>
 // Keys.
 //
 
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export type PartyKey = PublicKey;
-
 export type FeedMeta = {
   feedKey: PublicKey
   seq: number

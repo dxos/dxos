@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { codec, PartyKey } from '@dxos/echo-protocol';
+import { codec } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -328,9 +328,9 @@ export class ECHO {
 
   /**
    * Returns an individual party by it's key.
-   * @param {PartyKey} partyKey
+   * @param {PublicKey} partyKey
    */
-  getParty (partyKey: PartyKey): DataParty | undefined {
+  getParty (partyKey: PublicKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }

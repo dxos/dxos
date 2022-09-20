@@ -11,7 +11,7 @@ import { ItemID } from './types';
 // Testing.
 //
 
-// TODO(burdon): Move to protocols.
+// TODO(burdon): Move to testing package (with other fakers, etc.)
 export const createTestItemMutation = (
   itemId: ItemID,
   key: string,

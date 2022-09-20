@@ -12,7 +12,6 @@ import {
   RemoteDatabaseBackend,
   streamToResultSet
 } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -30,7 +29,7 @@ export class PartyProxy implements Party {
   private readonly _database?: Database;
   private readonly _invitationProxy = new InvitationProxy();
 
-  private _key: PartyKey;
+  private _key: PublicKey;
   private _isOpen: boolean;
   private _isActive: boolean;
   private _item?: Item<ObjectModel>;

@@ -5,7 +5,6 @@
 import debug from 'debug';
 
 import { discoveryKey } from '@dxos/crypto';
-import { PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
@@ -24,7 +23,7 @@ export class PartyProtocolFactory {
   private _started = false;
 
   constructor (
-    private readonly _partyKey: PartyKey,
+    private readonly _partyKey: PublicKey,
     private readonly _networkManager: NetworkManager,
     private readonly _peerId: PublicKey,
     private readonly _credentials: CredentialsProvider

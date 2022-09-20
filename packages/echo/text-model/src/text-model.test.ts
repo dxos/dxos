@@ -6,7 +6,7 @@ import expect from 'expect';
 import faker from 'faker';
 import { it as test } from 'mocha';
 
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 

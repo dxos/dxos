@@ -5,10 +5,10 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { ItemID, ItemType } from '@dxos/protocols';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';

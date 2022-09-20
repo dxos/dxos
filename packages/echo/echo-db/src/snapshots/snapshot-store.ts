@@ -5,7 +5,6 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { PartyKey } from '@dxos/echo-protocol';
 import { schema, PublicKey } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
@@ -21,7 +20,7 @@ export class SnapshotStore {
     private readonly _directory: Directory
   ) {}
 
-  async load (partyKey: PartyKey): Promise<PartySnapshot | undefined> {
+  async load (partyKey: PublicKey): Promise<PartySnapshot | undefined> {
     const file = this._directory.createOrOpenFile(partyKey.toHex());
 
     try {

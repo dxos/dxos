@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React from 'react';
 
-import { IFeedGenericBlock } from '@dxos/echo-protocol';
+import { IFeedGenericBlock } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { FullScreen } from '@dxos/react-components';
 

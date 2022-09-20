@@ -6,7 +6,7 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
-import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { isDeviceInfoMessage, isIdentityInfoMessage } from '../identity';

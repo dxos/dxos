@@ -8,8 +8,9 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { failUndefined, timed } from '@dxos/debug';
 import { Credential } from '@dxos/halo-protocol/src/proto';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { DatabaseSnapshot, PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SubscriptionGroup } from '@dxos/util';
 
@@ -71,7 +72,7 @@ export class PartyPipeline {
   private _pipeline?: Pipeline;
 
   constructor (
-    private readonly _partyKey: PartyKey,
+    private readonly _partyKey: PublicKey,
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
@@ -79,7 +80,7 @@ export class PartyPipeline {
     private readonly _options: PipelineOptions = {}
   ) { }
 
-  get key (): PartyKey {
+  get key (): PublicKey {
     return this._partyKey;
   }
 

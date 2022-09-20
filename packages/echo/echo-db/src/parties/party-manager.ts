@@ -9,7 +9,6 @@ import assert from 'node:assert';
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, timed, todo } from '@dxos/debug';
-import { PartyKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, Provider } from '@dxos/util';
@@ -161,7 +160,7 @@ export class PartyManager {
    * Construct a party object and start replicating with the remote peer that created that party.
    */
   @synchronized
-  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey) {
+  async addParty (partyKey: PublicKey, genesisFeedKey: PublicKey) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -191,7 +190,7 @@ export class PartyManager {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.
-    // TODO(telackey): We can check the PartyKey during the greeting flow.
+    // TODO(telackey): We can check the party key during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
@@ -213,7 +212,7 @@ export class PartyManager {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.
-    // TODO(telackey): We can check the PartyKey during the greeting flow.
+    // TODO(telackey): We can check the PublicKey during the greeting flow.
     const party = await this._partyFactory.cloneParty(snapshot);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 

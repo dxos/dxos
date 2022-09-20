@@ -6,8 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import type { HypercoreFeed } from '@dxos/feed-store';
+import { PublicKeyLike } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { schemaJson, PublicKeyLike } from '@dxos/protocols';
+import { schemaJson } from '@dxos/protocols';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 import { Peer } from './peer';

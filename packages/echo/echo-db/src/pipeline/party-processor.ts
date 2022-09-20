@@ -6,9 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { IHaloStream, PartyKey } from '@dxos/echo-protocol';
 import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/keys';
+import { IHaloStream } from '@dxos/protocols';
 import { HaloStateSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { jsonReplacer } from '@dxos/util';
@@ -50,7 +50,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private _snapshot: HaloStateSnapshot = { messages: [] };
 
   constructor (
-    private readonly _partyKey: PartyKey
+    private readonly _partyKey: PublicKey
   ) {
     this._state.memberAdmitted.on(info => this.keyOrInfoAdded.emit(info.key));
     this._state.feedAdmitted.on(info => this.feedAdded.emit(info.key));

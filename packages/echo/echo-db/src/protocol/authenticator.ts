@@ -6,9 +6,10 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Keyring } from '@dxos/credentials';
-import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
-import { createCredential, isValidAuthorizedDeviceCredential, verifyCredential, AdmittedFeed, Auth, Credential } from '@dxos/halo-protocol';
+import { FeedWriter } from '@dxos/feed-store';
+import { createCredential, isValidAuthorizedDeviceCredential, verifyCredential } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/keys';
+import { AdmittedFeed, Auth, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { PartyProcessor, PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from './credentials-signer';
@@ -45,7 +46,7 @@ export interface CredentialsProvider {
 
 export const createCredentialsProvider = (
   credentialsSigner: CredentialsSigner,
-  partyKey: PartyKey,
+  partyKey: PublicKey,
   feedKey: PublicKey
 ): CredentialsProvider => ({
   get: async () => {

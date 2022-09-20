@@ -6,11 +6,11 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import {
-  createFeedWriter, FeedBlock, FeedStoreIterator, FeedWriter, mapFeedWriter, TypedMessage
-} from '@dxos/echo-protocol';
-import { FeedDescriptor } from '@dxos/feed-store';
+  createFeedWriter, FeedStoreIterator, FeedWriter, mapFeedWriter, FeedDescriptor
+} from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { FeedBlock, Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 

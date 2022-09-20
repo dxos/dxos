@@ -5,7 +5,7 @@
 import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
+import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useParty } from '@dxos/react-client';
 
@@ -13,7 +13,7 @@ import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../component
 import { Panel } from '../util';
 
 export const Join: FC<{
-  onJoin?: (partyKey: PartyKey) => void
+  onJoin?: (partyKey: PublicKey) => void
 }> = ({
   onJoin
 }) => {

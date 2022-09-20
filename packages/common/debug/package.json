@@ -17,6 +17,7 @@
     "check": "true"
   },
   "dependencies": {
+    "@dxos/keys": "workspace:*",
     "debug": "^4.3.3",
     "events": "^3.3.0"
   },

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export { codec } from '@dxos/echo-protocol';
+export { codec } from '@dxos/echo-db';
 
 export * from './packlets/database';
 export * from './packlets/errors';

@@ -5,9 +5,10 @@
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
-import type { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/keys';
 import { MaybePromise } from '@dxos/util';
+
+import { FeedDescriptor } from './feed-descriptor';
 
 export interface WriteReceipt {
   feedKey: PublicKey
