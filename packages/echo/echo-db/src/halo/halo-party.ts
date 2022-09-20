@@ -5,12 +5,12 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { Message as HaloMessage, SignedMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Message as HaloMessage, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';

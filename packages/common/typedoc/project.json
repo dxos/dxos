@@ -69,7 +69,7 @@
     "react-toolkit",
     "registry-client",
     "rpc",
-    "rpc-worker-proxy",
+    "rpc-tunnel",
     "signal",
     "testutils",
     "text-model",
