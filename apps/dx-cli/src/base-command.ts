@@ -142,7 +142,9 @@ export abstract class BaseCommand extends Command {
     } catch (err: any) {
       this.error(err);
     } finally {
-      await rpc?.close();
+      if (rpc) {
+        await rpc.close();
+      }
     }
   }
 }
