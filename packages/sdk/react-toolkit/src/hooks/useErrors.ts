@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createContext, useContext } from 'react';
+import { Context, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -12,7 +12,8 @@ export interface ErrorContextState {
   resetErrors: () => void
 }
 
-export const ErrorContext = createContext<ErrorContextState | undefined>(undefined);
+export const ErrorContext: Context<ErrorContextState | undefined> =
+  createContext<ErrorContextState | undefined>(undefined);
 
 export const useErrors = (): [Error[], () => void] => {
   const { errors, resetErrors } = useContext(ErrorContext) ?? raise(new Error('Missing ErrorContext.'));
