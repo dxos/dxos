@@ -67,6 +67,12 @@ export interface ClientOptions {
   timeout?: number
 }
 
+export interface ClientInfo {
+  initialized: boolean
+  echo: EchoProxy['info']
+  halo: HaloProxy['info']
+}
+
 export class Client {
   public readonly version = DXOS_VERSION;
 
@@ -110,7 +116,7 @@ export class Client {
     return `Client(${JSON.stringify(this.info)})`;
   }
 
-  get info () {
+  get info (): ClientInfo {
     return {
       initialized: this.initialized,
       echo: this.echo.info,

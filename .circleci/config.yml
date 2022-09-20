@@ -40,6 +40,11 @@ jobs:
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
+      - when:
+          condition:
+            equal: [ main, <<pipeline.git.branch>> ]
+          steps:
+            - run: pnpm nx run-many --target=prerelease
 
   deploy:
     docker:
@@ -95,7 +100,7 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "4 0 * * *"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:

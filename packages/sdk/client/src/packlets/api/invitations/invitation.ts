@@ -3,6 +3,7 @@
 //
 
 import { InvitationDescriptor } from '@dxos/echo-db';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 /**
  * Invitation that is being redeemed.
@@ -31,7 +32,7 @@ export class Invitation<T = void> {
     return this._invitationPromise;
   }
 
-  toJSON () {
+  toJSON (): InvitationDescriptorProto {
     return this.descriptor.toProto();
   }
 }
