@@ -34,6 +34,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/plate": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@oclif/core": "^1.14.1",
@@ -54,6 +55,7 @@
     "node-fetch": "^2.6.0",
     "oclif": "^3.1.2",
     "react": "^17.0.2",
+    "strip-json-comments": "^5.0.0",
     "ws": "^7.4.4"
   },
   "devDependencies": {
