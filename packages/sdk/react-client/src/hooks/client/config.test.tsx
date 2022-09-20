@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook } from '@testing-library/react';
+import { renderHook } from '@testing-library/react-hooks';
 import expect from 'expect';
 import React from 'react';
 
@@ -15,8 +15,9 @@ import { useConfig } from './useConfig';
 describe('Config hook', () => {
   const render = () => useConfig();
 
-  it.skip('should throw when used outside a context', () => {
-    expect(renderHook(render)).toThrow();
+  it('should throw when used outside a context', () => {
+    const { result } = renderHook(render);
+    expect(result.error?.message).toBeDefined();
   });
 
   it('should return default client config when no config is passed in a context', () => {
