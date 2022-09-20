@@ -3,7 +3,7 @@
 //
 
 import React, { StrictMode, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'react-dom';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -90,10 +90,11 @@ if (typeof SharedWorker !== 'undefined') {
       worker.port.start();
     }
 
-    createRoot(document.getElementById('root')!).render(
+    render(
       <StrictMode>
         <App port={worker?.port} />
-      </StrictMode>
+      </StrictMode>,
+      document.getElementById('root')
     );
   })();
 } else {
