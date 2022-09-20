@@ -1,4 +1,4 @@
-# @dxos/hello-world
+# @dxos/hello
 
 Hello World.
 ## Dependency Graph
