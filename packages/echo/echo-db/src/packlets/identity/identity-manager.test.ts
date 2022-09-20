@@ -15,6 +15,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
 import { IdentityManager } from './identity-manager';
+import { StateManager } from '@dxos/model-factory';
+import { PubKey } from 'packages/common/protocols/proto/dxos/halo/keys';
 
 describe('identity/identity-manager', () => {
   const setup = async ({
@@ -72,4 +74,37 @@ describe('identity/identity-manager', () => {
 
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   });
+
+  test('admit another device', async () => {
+    const signalContext = new MemorySignalManagerContext()
+
+    const peer1 = await setup({ signalContext })
+    const identity1 = await peer1.identityManager.createIdentity()
+
+    const peer2 = await setup({ signalContext })
+
+    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
+    const identity2 = await peer2.identityManager.acceptIdentity({
+      identityKey: identity1.identityKey,
+      haloSpaceKey: identity1.haloSpaceKey,
+      haloGenesisFeedKey: identity1.haloGenesisFeedKey
+    })
+
+    await identity1.controlPipeline.writer.write({
+      '@type': 'dxos.echo.feed.CredentialsMessage',
+      credential: await identity1.getIdentityCredentialSigner().createCredential({
+        subject: identity2.deviceKey,
+        assertion: {
+          "@type": 'dxos.halo.credentials.AuthorizedDevice',
+          identityKey: identity2.identityKey,
+          deviceKey: identity2.deviceKey,
+        }
+      })
+    });
+    // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
+
+    // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
+    await identity2.ready()
+  })
 });
+

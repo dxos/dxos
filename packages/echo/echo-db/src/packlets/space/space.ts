@@ -44,6 +44,8 @@ export class Space {
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedDescriptor;
   private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
+  // TODO(dmaretskyi): This is only recorded here for invitations.
+  private readonly _genesisFeedKey: PublicKey;
 
   private readonly _controlPipeline: ControlPipeline;
   private readonly _replicator = new ReplicatorPlugin();
@@ -69,6 +71,7 @@ export class Space {
     this._key = spaceKey;
     this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
+    this._genesisFeedKey = genesisFeed.key;
 
     this._controlPipeline = new ControlPipeline({
       spaceKey,
@@ -127,6 +130,10 @@ export class Space {
    */
   get controlPipeline (): PipelineAccessor {
     return this._controlPipeline.pipeline;
+  }
+
+  get genesisFeedKey (): PublicKey {
+    return this._genesisFeedKey;
   }
 
   @synchronized
