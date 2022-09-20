@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import {  Identity, IdentityManager, InvitationDescriptor } from '@dxos/echo-db';
+import {  Fubar, Identity, InvitationDescriptor } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
@@ -32,25 +32,24 @@ import { PublicKey } from '@dxos/protocols';
 export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  // TODO(burdon): Pass in HALO.
   constructor (
-    private readonly identityManager: IdentityManager
+    private readonly fubar: Fubar
   ) {}
 
   subscribeProfile (): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
       const emitNext = () => next({
-        profile: this.identityManager.identity ? { publicKey: this.identityManager.identity.identityKey } : undefined,
+        profile: this.fubar.identityManager.identity ? { publicKey: this.fubar.identityManager.identity.identityKey } : undefined,
       });
 
       emitNext();
-      return this.identityManager.stateUpdate.on(emitNext);
+      return this.fubar.identityManager.stateUpdate.on(emitNext);
     });
   }
 
   async createProfile (request: CreateProfileRequest) {
-    await this.identityManager.createIdentity();
-    return { publicKey: this.identityManager.identity!.identityKey }
+    await this.fubar.identityManager.createIdentity();
+    return { publicKey: this.fubar.identityManager.identity!.identityKey }
   }
 
   async recoverProfile (request: RecoverProfileRequest): Promise<Profile> {
@@ -133,4 +132,4 @@ export class ProfileService implements ProfileServiceRpc {
   }
 }
 
-export const createProfileService = ({ identityManager }: CreateServicesOpts): ProfileService => new ProfileService(identityManager);
+export const createProfileService = ({ fubar }: CreateServicesOpts): ProfileService => new ProfileService(fubar);

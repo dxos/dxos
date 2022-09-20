@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { Keyring } from '@dxos/keyring';
 import * as debug from '@dxos/debug'; // Export to devtools.
-import { codec, IdentityManager, MetadataStore } from '@dxos/echo-db';
+import { codec, Fubar, MetadataStore } from '@dxos/echo-db';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
@@ -24,7 +24,7 @@ const SIGNAL_CONTEXT = new MemorySignalManagerContext()
  */
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
-  private readonly _identityManager: IdentityManager;
+  private readonly _fubar: Fubar;
   private readonly _services: ClientServices;
 
   constructor (
@@ -36,9 +36,6 @@ export class ClientServiceHost implements ClientServiceProvider {
       this._config.get('runtime.client.storage', {})!
     );
 
-    const keyring = new Keyring(storage.createDirectory('keyring'))
-    const metadataStore = new MetadataStore(storage.createDirectory('metadata'))
-    const feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec })
     const networkManager = new NetworkManager(this._config.get('runtime.services.signal.server') ? {
       // TODO(mykola): SignalManager need to be subscribed for message receiving first.
       signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
@@ -48,15 +45,13 @@ export class ClientServiceHost implements ClientServiceProvider {
       signalManager: new MemorySignalManager(SIGNAL_CONTEXT)
     })
 
-    this._identityManager = new IdentityManager(
-      metadataStore,
-      keyring,
-      feedStore,
+    this._fubar = new Fubar(
+      storage,
       networkManager
     );
 
     this._services = {
-      ...createServices({ config: this._config, echo: null, identityManager: this._identityManager, signer: this._signer }),
+      ...createServices({ config: this._config, echo: null, fubar: this._fubar, signer: this._signer }),
       DevtoolsHost: this._createDevtoolsService()
     };
   }
@@ -67,12 +62,12 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   // TODO(dmaretskyi): progress.
   async open (onProgressCallback?: ((progress: any) => void) | undefined) {
-    await this._identityManager.open();
+    await this._fubar.open();
     this._devtoolsEvents.ready.emit();
   }
 
   async close () {
-    await this._identityManager.close()
+    await this._fubar.close()
   }
 
   get echo () {

@@ -3,7 +3,7 @@
 //
 
 import { Config } from '@dxos/config';
-import { IdentityManager } from '@dxos/echo-db';
+import { Fubar } from '@dxos/echo-db';
 // import { ECHO } from '@dxos/echo-db';
 
 import { HaloSigner } from '../../api';
@@ -14,7 +14,7 @@ export type CreateServicesOpts = {
    * @deprecated
    */
   echo: any,
-  identityManager: IdentityManager,
+  fubar: Fubar,
   signer?: HaloSigner
 }
 
