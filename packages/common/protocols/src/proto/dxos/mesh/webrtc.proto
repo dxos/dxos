@@ -1,0 +1,71 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package dxos.mesh;
+
+//
+// Broker connections between processes and WebRTC peers.
+//
+service WebRTCService {
+
+  ///
+  rpc Open(ConnectionRequest) returns (stream Event);
+
+  ///
+  rpc SendSignal(SignalRequest) returns (google.protobuf.Empty);
+
+  ///
+  rpc SendData(DataRequest) returns (google.protobuf.Empty);
+}
+
+enum ConnectionState {
+  INVALID = 0;
+  CONNECTING = 1;
+  CONNECTED = 2;
+  CLOSED = 3;
+}
+
+message ConnectionRequest {
+  int32 connection_id = 1;
+  bool initiator = 2;
+}
+
+message Event {
+  message ConnectionEvent {
+    ConnectionState state = 1;
+    optional string error = 2; // TODO(burdon): Error type.
+  }
+
+  message SignalEvent {
+    Signal payload = 1;
+  }
+
+  message DataEvent {
+    bytes payload = 1;
+  }
+
+  oneof type {
+    ConnectionEvent connection = 1;
+    SignalEvent signal = 2;
+    DataEvent data = 3;
+  }
+}
+
+message SignalRequest {
+  int32 connection_id = 1;
+  Signal signal = 2;
+}
+
+message Signal {
+  // TODO(burdon): Struct (see swarm.proto).
+}
+
+message DataRequest {
+  int32 connection_id = 1;
+  bytes payload = 2;
+}
