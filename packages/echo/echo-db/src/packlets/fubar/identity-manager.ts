@@ -14,8 +14,7 @@ import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto
 
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
-import { Identity } from './identity';
-import { defaultSecretValidator } from '@dxos/credentials';
+import { Identity } from '../identity';
 import { Event } from '@dxos/async';
 
 interface ConstructSpaceParams {
