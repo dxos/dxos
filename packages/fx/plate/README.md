@@ -1,4 +1,4 @@
-# TS-Template
+# Templates in TypeScript
 
 ```ts
 import { executeDirectoryTemplate } from "@nice/plate";

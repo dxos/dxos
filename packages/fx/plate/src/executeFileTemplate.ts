@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File, MaybePromise, promise } from '@nice/file';
+import { File, MaybePromise, promise } from '@dxos/file';
 import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';

@@ -2,24 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File } from '@nice/file';
-import flatten from 'lodash.flatten';
-import * as path from 'path';
-import readDir from 'recursive-readdir';
+import { File } from "@dxos/file";
+import flatten from "lodash.flatten";
+import * as path from "path";
+import readDir from "recursive-readdir";
 
 import {
   executeFileTemplate,
   TemplatingResult,
-  isTemplateFile
-} from './executeFileTemplate';
+  isTemplateFile,
+} from "./executeFileTemplate";
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
-  templateDirectory: string
-  outputDirectory: string
-  input?: Partial<TInput>
+  templateDirectory: string;
+  outputDirectory: string;
+  input?: Partial<TInput>;
 };
 
-export const executeDirectoryTemplate = async <TInput>(options: ExecuteDirectoryTemplateOptions<TInput>): Promise<TemplatingResult> => {
+export const executeDirectoryTemplate = async <TInput>(
+  options: ExecuteDirectoryTemplateOptions<TInput>
+): Promise<TemplatingResult> => {
   const { templateDirectory, outputDirectory, input } = options;
   const allFiles = await readDir(templateDirectory);
   const templateFiles = allFiles.filter(isTemplateFile);
@@ -30,18 +32,27 @@ export const executeDirectoryTemplate = async <TInput>(options: ExecuteDirectory
         templateFile: path.relative(templateDirectory, t),
         templateRelativeTo: templateDirectory,
         outputDirectory,
-        input
+        input,
       })
     )
   );
+  const stringPath = (p: string | string[]) =>
+    typeof p == "string" ? p : path.join(...p);
+  const isOverwrittenByTemplateOutput = (f: string): boolean => {
+    return templateOutputs.some((files) =>
+      files.some((file) => stringPath(file.path) == f)
+    );
+  };
   return [
-    ...regularFiles?.map(
-      (r) =>
-        new File({
-          path: path.join(outputDirectory, r.slice(templateDirectory.length)),
-          copyFrom: r
-        })
-    ),
-    ...flatten(templateOutputs)
+    ...regularFiles
+      ?.filter((f) => !isOverwrittenByTemplateOutput(f))
+      .map(
+        (r) =>
+          new File({
+            path: path.join(outputDirectory, r.slice(templateDirectory.length)),
+            copyFrom: r,
+          })
+      ),
+    ...flatten(templateOutputs),
   ];
 };
