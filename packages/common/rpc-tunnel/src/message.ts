@@ -3,6 +3,6 @@
 //
 
 export type MessageData = {
-  type: string
-  data: ArrayBufferLike
+  source: string
+  payload: ArrayBufferLike
 }

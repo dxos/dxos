@@ -68,8 +68,6 @@
     "rpc": "packages/common/rpc",
     "rpc-tunnel-e2e": "e2e/rpc-tunnel",
     "rpc-tunnel": "packages/common/rpc-tunnel",
-    "rpc-worker-proxy-e2e": "e2e/rpc-worker-proxy",
-    "rpc-worker-proxy": "packages/common/rpc-worker-proxy",
     "signal": "packages/mesh/signal",
     "testutils": "packages/common/testutils",
     "text-model": "packages/echo/text-model",
