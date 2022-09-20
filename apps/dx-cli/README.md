@@ -414,4 +414,35 @@ GLOBAL FLAGS
 DESCRIPTION
   Create spaces.
 ```
+
+## `dx app list`
+
+List apps.
+
+USAGE
+  $ dx app list [--config <value>]
+
+FLAGS
+  --config=<value>   Specify config file
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List apps.
+
+## `dx app publish`
+
+Publish apps.
+
+USAGE
+  $ dx app publish [--config <value>] [--configPath <value>] [--verbose]
+
+FLAGS
+  --config=<value>      Specify config file
+  --configPath=<value>  Path to dx.yml
+  --verbose             Verbose output
+
+DESCRIPTION
+  Publish apps.
 <!-- commandsstop -->
