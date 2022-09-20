@@ -48,7 +48,7 @@ export class Fubar {
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation(): Promise<InvitationDescriptor> {
+  async createInvitation({onFinish}: { onFinish?: () => void} = {}): Promise<InvitationDescriptor> {
     log(`Create invitation`)
     const identity = this.identityManager.identity ?? failUndefined()
 
@@ -97,6 +97,8 @@ export class Fubar {
           haloSpaceKey: identity.haloSpaceKey,
           genesisFeedKey: identity.haloGenesisFeedKey
         })
+
+        onFinish?.()
       })])
     })
 

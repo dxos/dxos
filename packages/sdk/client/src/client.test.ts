@@ -176,7 +176,7 @@ describe('Client', () => {
       }).timeout(5000);
     });
 
-    describe.skip('HALO invitations', () => {
+    describe('HALO invitations', () => {
       const prepareInvitations = async () => {
         const inviter = await createClient();
         await inviter.initialize();
@@ -203,7 +203,7 @@ describe('Client', () => {
         expect(invitee.halo.profile).not.toBeUndefined();
       }).timeout(5000);
 
-      test('DXNS Account is synced between devices', async () => {
+      test.skip('DXNS Account is synced between devices', async () => {
         const { inviter, invitee } = await prepareInvitations();
 
         const DXNSAccount = 'd3abd23e3f36a61a9e5d58e4b6286f89649594eedbd096b3a6e256ca1fe4c147';
