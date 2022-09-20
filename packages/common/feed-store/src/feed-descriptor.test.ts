@@ -13,7 +13,7 @@ import tempy from 'tempy';
 
 import { createKeyPair } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';

@@ -11,11 +11,11 @@ import { latch } from '@dxos/async';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { FeedStore, HypercoreFeed } from '@dxos/feed-store';
 import { PublicKey, Timeframe, schema } from '@dxos/protocols';
+import { FeedBlock, FeedKey } from '@dxos/protocols/dist/src/types';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { createTestItemMutation } from '../testing';
-import { FeedBlock, FeedKey } from '../types';
+import { createTestItemMutation } from '../../../../common/protocols/src/testing';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');

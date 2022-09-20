@@ -211,11 +211,3 @@ Emitted when a feed is loaded.
 
 - `feed: Hypercore`
 - `descriptor: FeedDescriptor`
-
-## Contributing
-
-PRs accepted.
-
-## License
-
-GPL-3.0 © dxos

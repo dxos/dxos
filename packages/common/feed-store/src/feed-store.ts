@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/keyring';
-import type { PublicKey } from '@dxos/protocols';
+import type { PublicKey } from '@dxos/keys';
 import { Directory } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';

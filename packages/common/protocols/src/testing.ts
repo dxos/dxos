@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Timeframe, schema } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-
+import { schema } from './proto';
+import { FeedMessage } from './proto/gen/dxos/echo/feed';
+import { Timeframe } from './timeframe';
 import { ItemID } from './types';
 
 //
@@ -22,9 +22,6 @@ export const createTestItemMutation = (
   payload: {
     '@type': 'dxos.echo.feed.EchoEnvelope',
     itemId,
-    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({
-      key,
-      value
-    })
+    mutation: schema.getCodecForType('example.testing.data.TestItemMutation').encode({ key, value })
   }
 });

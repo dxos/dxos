@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/echo/feed-store/src",
+  "sourceRoot": "packages/common/feed-store/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/echo/feed-store/dist",
-        "tsConfig": "packages/echo/feed-store/tsconfig.json",
-        "main": "packages/echo/feed-store/src/index.ts"
+        "outputPath": "packages/common/feed-store/dist",
+        "tsConfig": "packages/common/feed-store/tsconfig.json",
+        "main": "packages/common/feed-store/src/index.ts"
       }
     },
     "lint": {
@@ -20,7 +20,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/echo/feed-store/**/*.{ts,js}"
+          "packages/common/feed-store/**/*.{ts,js}"
         ]
       }
     },
@@ -28,7 +28,7 @@
       "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
-          "packages/echo/feed-store/src/**/*.test.{ts,js}"
+          "packages/common/feed-store/src/**/*.test.{ts,js}"
         ]
       }
     }

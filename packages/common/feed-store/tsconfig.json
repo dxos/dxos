@@ -12,19 +12,19 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../async"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../crypto"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../keys"
     },
     {
-      "path": "../../common/random-access-storage"
+      "path": "../random-access-storage"
     },
     {
-      "path": "../../common/util"
+      "path": "../util"
     },
     {
       "path": "./tsconfig.spec.json"

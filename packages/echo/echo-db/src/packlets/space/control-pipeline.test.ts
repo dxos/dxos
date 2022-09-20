@@ -5,7 +5,6 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createCredential, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -15,6 +14,7 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { codec } from '../testing';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {

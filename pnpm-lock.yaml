@@ -1015,13 +1015,13 @@ importers:
 
   packages/common/crypto:
     specifiers:
-      '@dxos/protocols': workspace:*
+      '@dxos/keys': workspace:*
       '@types/crypto-js': ~4.0.2
       assert: ^2.0.0
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
     dependencies:
-      '@dxos/protocols': link:../protocols
+      '@dxos/keys': link:../keys
       assert: 2.0.0
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
@@ -1057,14 +1057,88 @@ importers:
 
   packages/common/debug:
     specifiers:
-      '@dxos/protocols': workspace:*
+      '@dxos/keys': workspace:*
       debug: ^4.3.3
       events: ^3.3.0
     dependencies:
       debug: 4.3.4
       events: 3.3.0
     devDependencies:
-      '@dxos/protocols': link:../protocols
+      '@dxos/keys': link:../keys
+
+  packages/common/feed-store:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/benchmark-suite': ^1.0.0-beta.1
+      '@dxos/browser-runner': ^1.0.0-beta.13
+      '@dxos/crypto': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/end-of-stream': ^1.4.0
+      '@types/from2': ~2.3.1
+      '@types/pify': ^3.0.2
+      '@types/pump': ^1.1.0
+      '@types/through2': ^2.0.36
+      assert: ^2.0.0
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      end-of-stream: ^1.4.1
+      end-of-stream-promise: ^1.0.0
+      from2: ^2.3.0
+      hypercore: ^9.10.0
+      hypertrie: 5.1.1
+      pify: ~5.0.0
+      pump: ^3.0.0
+      tempy: ~1.0.1
+      through2: ^3.0.1
+    dependencies:
+      '@dxos/async': link:../async
+      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../keys
+      '@dxos/util': link:../util
+      assert: 2.0.0
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      end-of-stream: 1.4.4
+      from2: 2.3.0
+      hypercore: 9.12.0
+      pify: 5.0.0
+      pump: 3.0.0
+      through2: 3.0.2
+    devDependencies:
+      '@dxos/benchmark-suite': 1.0.0-beta.3
+      '@dxos/browser-runner': 1.0.0-beta.13
+      '@dxos/crypto': link:../crypto
+      '@dxos/random-access-storage': link:../random-access-storage
+      '@types/debug': 4.1.7
+      '@types/end-of-stream': 1.4.1
+      '@types/from2': 2.3.1
+      '@types/pify': 3.0.2
+      '@types/pump': 1.1.1
+      '@types/through2': 2.0.36
+      end-of-stream-promise: 1.0.0
+      hypertrie: 5.1.1
+      tempy: 1.0.1
+
+  packages/common/keys:
+    specifiers:
+      '@types/debug': ^4.1.7
+      '@types/randombytes': ^2.0.0
+      assert: ^2.0.0
+      debug: ^4.3.3
+      randombytes: ^2.1.0
+      util: ^0.12.4
+    dependencies:
+      assert: 2.0.0
+      randombytes: 2.1.0
+      util: 0.12.4
+    devDependencies:
+      '@types/debug': 4.1.7
+      '@types/randombytes': 2.0.0
+      debug: 4.3.4
 
   packages/common/log:
     specifiers:
@@ -1092,8 +1166,8 @@ importers:
   packages/common/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
       '@types/debug': ^4.1.7
-      '@types/randombytes': ^2.0.0
       assert: ^2.0.0
       debug: ^4.3.3
       glob: ~7.1.6
@@ -1101,12 +1175,12 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../codec-protobuf
+      '@dxos/keys': link:../keys
       assert: 2.0.0
       randombytes: 2.1.0
       util: 0.12.4
     devDependencies:
       '@types/debug': 4.1.7
-      '@types/randombytes': 2.0.0
       debug: 4.3.4
       glob: 7.1.7
 
@@ -1238,12 +1312,12 @@ importers:
     specifiers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
-      '@dxos/protocols': workspace:*
+      '@dxos/keys': workspace:*
       assert: ^2.0.0
       util: ^0.12.4
     dependencies:
       '@dxos/debug': link:../debug
-      '@dxos/protocols': link:../protocols
+      '@dxos/keys': link:../keys
       assert: 2.0.0
       util: 0.12.4
     devDependencies:
@@ -1539,7 +1613,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-protocol': link:../echo-protocol
-      '@dxos/feed-store': link:../feed-store
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/log': link:../../common/log
@@ -1606,7 +1680,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/feed-store': link:../feed-store
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
@@ -1650,63 +1724,6 @@ importers:
       '@types/lodash.times': 4.3.6
       abstract-leveldown: 7.0.0
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
-
-  packages/echo/feed-store:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/benchmark-suite': ^1.0.0-beta.1
-      '@dxos/browser-runner': ^1.0.0-beta.13
-      '@dxos/crypto': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/end-of-stream': ^1.4.0
-      '@types/from2': ~2.3.1
-      '@types/pify': ^3.0.2
-      '@types/pump': ^1.1.0
-      '@types/through2': ^2.0.36
-      assert: ^2.0.0
-      buffer-json-encoding: ^1.0.2
-      debug: ^4.3.3
-      end-of-stream: ^1.4.1
-      end-of-stream-promise: ^1.0.0
-      from2: ^2.3.0
-      hypercore: ^9.10.0
-      hypertrie: 5.1.1
-      pify: ~5.0.0
-      pump: ^3.0.0
-      tempy: ~1.0.1
-      through2: ^3.0.1
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/keyring': link:../../halo/keyring
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      buffer-json-encoding: 1.0.2
-      debug: 4.3.4
-      end-of-stream: 1.4.4
-      from2: 2.3.0
-      hypercore: 9.12.0
-      pify: 5.0.0
-      pump: 3.0.0
-      through2: 3.0.2
-    devDependencies:
-      '@dxos/benchmark-suite': 1.0.0-beta.3
-      '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@types/debug': 4.1.7
-      '@types/end-of-stream': 1.4.1
-      '@types/from2': 2.3.1
-      '@types/pify': 3.0.2
-      '@types/pump': 1.1.1
-      '@types/through2': 2.0.36
-      end-of-stream-promise: 1.0.0
-      hypertrie: 5.1.1
-      tempy: 1.0.1
 
   packages/echo/messenger-model:
     specifiers:
@@ -1943,7 +1960,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/feed-store': link:../../echo/feed-store
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
@@ -2008,6 +2025,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/log': workspace:^2.33.4
       '@dxos/protocols': workspace:2.33.8
       '@dxos/random-access-storage': workspace:*
@@ -2018,6 +2036,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
@@ -2285,7 +2304,7 @@ importers:
       debug: 4.3.4
     devDependencies:
       '@dxos/crypto': link:../../common/crypto
-      '@dxos/feed-store': link:../../echo/feed-store
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/protocol-network-generator': link:../protocol-network-generator
       '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
@@ -2413,7 +2432,7 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/echo-protocol': link:../../echo/echo-protocol
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/feed-store': link:../../echo/feed-store
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
@@ -5226,8 +5245,8 @@ packages:
     resolution: {integrity: sha512-9m1Ftf+1RsQvf9JIDOZTJouHyT3X4kdqn1/tDSL9NrvOgLFjp/cA/vzyMcPAZTJCBkcF+xIkR/Peu2/jhwy0gQ==}
     hasBin: true
     dependencies:
-      '@babel/core': 7.18.6
-      babel-loader: 8.2.3_nbxniqxwfqqzy7vnvvtl4e3264
+      '@babel/core': 7.18.13
+      babel-loader: 8.2.5_tj2nspi7375ypuycezpmgwarq4
       debug: 4.3.4
       dotenv-webpack: 1.8.0_webpack@4.44.2
       get-port: 5.1.1
@@ -5372,7 +5391,7 @@ packages:
     dependencies:
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@emotion/css': 11.7.1_@babel+core@7.18.13
-      '@emotion/react': 11.9.3_tu23i5xxn6kbev62oblybgbdem
+      '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
       clsx: 1.1.1
       csstype: 3.1.0
       d3: 7.3.0
@@ -11367,7 +11386,7 @@ packages:
   /@types/end-of-stream/1.4.1:
     resolution: {integrity: sha512-dYCSlUtCGXuP2axeKD5l1vj/04iNXW8TLXryDa0uA8u8EsNE68jn27ZLg7jAPV+qJAlk1wC4WtRdIoZXvuUl0A==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/eslint-scope/3.7.4:
@@ -11422,7 +11441,7 @@ packages:
   /@types/from2/2.3.1:
     resolution: {integrity: sha512-l7kKtohAc5h0CKh6vFMv5WcWvQx40KE6dQneUg22i8c1mwxhVPbN781bYts/mYXxSBrQMhNxkhwg18QY0MfeOg==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/fs-extra/9.0.13:
@@ -11711,7 +11730,7 @@ packages:
   /@types/pump/1.1.1:
     resolution: {integrity: sha512-wpRerjHDxFBQ4r8XNv3xHJZeuqrBBoeQ/fhgkooV2F7KsPIYRROb/+f9ODgZfOEyO5/w2ej4YQdpPPXipT8DAA==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/pumpify/1.4.1:
@@ -11732,7 +11751,7 @@ packages:
   /@types/randombytes/2.0.0:
     resolution: {integrity: sha512-bz8PhAVlwN72vqefzxa14DKNT8jK/mV66CSjwdVQM/k3Th3EPKfUtdMniwZgMedQTFuywAsfjnZsg+pEnltaMA==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/react-copy-to-clipboard/5.0.2:
@@ -11865,7 +11884,7 @@ packages:
   /@types/through2/2.0.36:
     resolution: {integrity: sha512-vuifQksQHJXhV9McpVsXKuhnf3lsoX70PnhcqIAbs9dqLH2NgrGz0DzZPDY3+Yh6eaRqcE1gnCQ6QhBn1/PT5A==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/trusted-types/2.0.2:
@@ -11915,7 +11934,7 @@ packages:
   /@types/webpack-sources/3.2.0:
     resolution: {integrity: sha512-Ft7YH3lEVRQ6ls8k4Ff1oB4jN6oy/XmU6tQISKdhfh+1mR+viZFphS6WL0IrtDOzvefmJg5a0s7ZQoRXwqTEFg==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
       '@types/source-list-map': 0.1.2
       source-map: 0.7.3
     dev: true
@@ -11923,7 +11942,7 @@ packages:
   /@types/webpack/4.41.32:
     resolution: {integrity: sha512-cb+0ioil/7oz5//7tZUSwbrSAN/NWHrQylz5cW8G0dWTcF/g+/dSdMlKVZspBYuMAN1+WnwHrkxiRrLcwd0Heg==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
       '@types/tapable': 1.0.8
       '@types/uglify-js': 3.13.1
       '@types/webpack-sources': 3.2.0
@@ -11960,7 +11979,7 @@ packages:
   /@types/yauzl/2.9.2:
     resolution: {integrity: sha512-8uALY5LTvSuHgloDVUvWP3pIauILm+8/0pDMokuDYIoNsOkSwd5AiHBTSEJjKTDcZr5z8UpgOWZkxBF4iJftoA==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 16.11.58
     dev: true
 
   /@types/yoga-layout/1.9.2:
@@ -13387,21 +13406,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /babel-loader/8.2.3_nbxniqxwfqqzy7vnvvtl4e3264:
-    resolution: {integrity: sha512-n4Zeta8NC3QAsuyiizu0GkmRcQ6clkV9WFUnUf1iXP//IeSKbWjofW3UHyZVwlOB4y039YQKefawyTn64Zwbuw==}
-    engines: {node: '>= 8.9'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-      webpack: '>=2'
-    dependencies:
-      '@babel/core': 7.18.6
-      find-cache-dir: 3.3.2
-      loader-utils: 1.4.0
-      make-dir: 3.1.0
-      schema-utils: 2.7.1
-      webpack: 4.44.2
-    dev: true
-
   /babel-loader/8.2.5_tb6moc662p5idmcg3l5ipbhpta:
     resolution: {integrity: sha512-OSiFfH89LrEMiWd4pLNqGz4CwJDtbs2ZVc+iGu2HrkRfPxId9F2anQj38IxWpmRfsUY0aBZYi1EFcd3mhtRMLQ==}
     engines: {node: '>= 8.9'}
@@ -14288,7 +14292,7 @@ packages:
     resolution: {integrity: sha512-gxGWBrTT1JuMx6R+o5PTXMmUnhnVzLQ9SNutD4YqKtI6ap897t3tKECYla6gCWEkplXnlNybEkZg9GEGxKFCgw==}
     dependencies:
       pascal-case: 3.1.2
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /camelcase-css/2.0.1:
@@ -16641,7 +16645,7 @@ packages:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
     dependencies:
       no-case: 3.0.4
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /dot-prop/5.3.0:
@@ -16795,7 +16799,7 @@ packages:
     dependencies:
       he: 1.2.0
       mime: 1.6.0
-      minimist: 1.2.5
+      minimist: 1.2.6
       url-join: 2.0.5
     dev: true
 
@@ -20219,7 +20223,7 @@ packages:
       corser: 2.0.1
       ecstatic: 3.3.2
       http-proxy: 1.18.1_debug@4.3.4
-      minimist: 1.2.5
+      minimist: 1.2.6
       opener: 1.5.2
       portfinder: 1.0.28
       secure-compare: 3.0.1
@@ -23200,7 +23204,7 @@ packages:
   /lower-case/2.0.2:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
     dependencies:
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /lowercase-keys/1.0.0:
@@ -24281,7 +24285,7 @@ packages:
       brace-expansion: 2.0.1
 
   /minimist/0.0.8:
-    resolution: {integrity: sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=}
+    resolution: {integrity: sha512-miQKw5Hv4NS1Psg2517mV4e4dYNaO3++hjAvLOAzKqZ61rH8NS1SK+vbfBWZ5PY/Me/bEWhUwqMghEW5Fb9T7Q==}
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
@@ -24397,7 +24401,7 @@ packages:
     dev: false
 
   /mkdirp/0.5.1:
-    resolution: {integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=}
+    resolution: {integrity: sha512-SknJC52obPfGQPnjIkXbmA6+5H15E+fR+E4iR2oQ3zzCLbd7/ONua69R/Gw7AgkTLsRG+r5fzksYwWe1AgTyWA==}
     deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
     hasBin: true
     dependencies:
@@ -24984,7 +24988,7 @@ packages:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
     dependencies:
       lower-case: 2.0.2
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /nock/13.2.9:
@@ -26095,7 +26099,7 @@ packages:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /parent-module/1.0.1:
@@ -26213,7 +26217,7 @@ packages:
     resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
     dependencies:
       no-case: 3.0.4
-      tslib: 2.3.1
+      tslib: 2.4.0
     dev: true
 
   /pascalcase/0.1.1:

@@ -5,7 +5,6 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import {
   createCredentialSignerWithKey,
@@ -21,6 +20,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../space';
+import { codec } from '../testing';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
 

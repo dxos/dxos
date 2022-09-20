@@ -4,14 +4,13 @@
 
 import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
-import { randomBytes } from 'node:crypto';
 import pify from 'pify';
 import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import { sha256 } from '@dxos/crypto';
 import { Signer, verifySignature } from '@dxos/keyring';
-import type { PublicKey } from '@dxos/protocols';
+import type { PublicKey } from '@dxos/keys';
 import type { Directory } from '@dxos/random-access-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';

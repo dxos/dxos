@@ -7,9 +7,8 @@ import pify from 'pify';
 import { Event } from '@dxos/async';
 import type { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/protocols';
+import { FeedKey } from '@dxos/protocols/dist/src/types';
 import { MaybePromise } from '@dxos/util';
-
-import { FeedKey } from '../types';
 
 export interface WriteReceipt {
   feedKey: FeedKey

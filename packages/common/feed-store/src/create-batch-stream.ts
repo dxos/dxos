@@ -5,7 +5,7 @@
 import streamFrom from 'from2';
 import assert from 'node:assert';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { HypercoreFeed } from './hypercore-types';
 

@@ -5,7 +5,6 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -14,6 +13,7 @@ import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { codec } from '../testing';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';

@@ -8,7 +8,7 @@ import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { Keyring } from '@dxos/keyring';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createBatchStream } from './create-batch-stream';

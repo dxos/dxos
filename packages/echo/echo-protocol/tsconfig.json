@@ -29,7 +29,7 @@
       "path": "../../halo/credentials"
     },
     {
-      "path": "../feed-store"
+      "path": "../../common/feed-store"
     },
     {
       "path": "./tsconfig.spec.json"

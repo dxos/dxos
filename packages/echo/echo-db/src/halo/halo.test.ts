@@ -6,19 +6,20 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
-import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring, KeyType } from '@dxos/credentials';
-import { codec } from '@dxos/echo-protocol';
+import { defaultSecretProvider, generateSeedPhrase, keyPairFromSeedPhrase, Keyring } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
-import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createCredential } from '@dxos/halo-protocol';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
+import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';

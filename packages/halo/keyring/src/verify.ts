@@ -4,7 +4,7 @@
 
 import * as crypto from 'node:crypto';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 /**
  * Verify a signature with the given key.

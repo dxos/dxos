@@ -10,6 +10,11 @@ export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
 
 /**
+ * All representations that can be converted to a PublicKey.
+ */
+export type PublicKeyLike = PublicKey | Buffer | Uint8Array | string
+
+/**
  * The purpose of this class is to assure consistent use of keys throughout the project.
  * Keys should be maintained as buffers in objects and proto definitions, and converted to hex
  * strings as late as possible (eg, to log/display).
@@ -156,6 +161,7 @@ export class PublicKey {
   /**
    * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
    */
+  // TODO(burdon): Factor out for testing.
   [inspect.custom] (depth: number, options: InspectOptionsStylized) {
     if (!options.colors || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
@@ -204,26 +210,3 @@ export class PublicKey {
     return equal;
   }
 }
-
-/**
- * All representations that can be converted to a PublicKey.
- */
-// TODO(burdon): Remove this.
-export type PublicKeyLike =
-  | PublicKey
-  | Buffer
-  | Uint8Array
-  | string
-
-export const publicKeySubstitutions = {
-  // TODO(dmaretskyi): Rename to dxos.crypto.PublicKey.
-  'dxos.halo.keys.PubKey': {
-    encode: (value: PublicKey) => ({ data: value.asUint8Array() }),
-    decode: (value: any) => PublicKey.from(new Uint8Array(value.data))
-  },
-  // TODO(dmaretskyi): Shouldn't be substitutted to PublicKey.
-  'dxos.halo.keys.PrivKey': {
-    encode: (value: Buffer) => ({ data: new Uint8Array(value) }),
-    decode: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer()
-  }
-};

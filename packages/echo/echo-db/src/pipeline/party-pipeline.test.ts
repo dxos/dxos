@@ -9,7 +9,6 @@ import { promiseTimeout, sleep } from '@dxos/async';
 import { Keyring } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
 import { checkType, todo } from '@dxos/debug';
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
@@ -21,6 +20,7 @@ import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { codec } from '../../codec';
 import { createReplicatorPlugin } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { MetadataStore } from './metadata-store';

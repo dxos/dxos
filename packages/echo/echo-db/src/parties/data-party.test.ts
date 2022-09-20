@@ -5,8 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { defaultSecretProvider, Keyring, codec as haloCodec } from '@dxos/credentials';
-import { codec } from '@dxos/echo-protocol';
+import { defaultSecretProvider, Keyring, codec as haloCodec } from '@dxos/credentials'; // TODO(burdon): Remove haloCodec.
 import { FeedStore } from '@dxos/feed-store';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
@@ -17,9 +16,9 @@ import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createDataPartyAdmissionMessages, defaultInvitationAuthenticator, GreetingInitiator } from '../invitations';
+import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
-import { createAuthenticator, createCredentialsProvider } from '../protocol';
-import { createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCredentials } from '../protocol/identity-credentials';
+import { createAuthenticator, createCredentialsProvider, createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
 

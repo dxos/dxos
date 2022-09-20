@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// TODO(burdon): Create TS defs?
+
 export interface Message {
   seq: number
   data: Buffer

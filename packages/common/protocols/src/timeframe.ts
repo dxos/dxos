@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { PublicKey } from './public-key';
+import { PublicKey } from '@dxos/keys';
 
 /**
  * A mapping of feed key to a sequence number on that feed.

@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "assert": "^2.0.0",
     "randombytes": "^2.1.0",
     "util": "^0.12.4"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/randombytes": "^2.0.0",
     "debug": "^4.3.3",
     "glob": "~7.1.6"
   },

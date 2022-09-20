@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
@@ -10,6 +9,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { PublicKey, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
+import { codec } from '../testing';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
 

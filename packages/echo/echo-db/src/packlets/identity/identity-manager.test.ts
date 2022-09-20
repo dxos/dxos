@@ -5,7 +5,6 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -14,6 +13,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { afterTest } from '@dxos/testutils';
 
 import { MetadataStore } from '../metadata';
+import { codec } from '../testing';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {

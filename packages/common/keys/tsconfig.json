@@ -8,7 +8,7 @@
   ],
   "references": [
     {
-      "path": "../keys"
+      "path": "../codec-protobuf"
     },
     {
       "path": "./tsconfig.spec.json"
