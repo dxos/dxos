@@ -62,10 +62,6 @@ export class NetworkManager {
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
       );
-
-      this._signalManager.onMessage.on((message) =>
-        this._messageRouter.receiveMessage(message)
-      );
     }
 
     {
