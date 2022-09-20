@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package dxos.test.any;
-
-message Any {
-  int32 bar = 1;
-}

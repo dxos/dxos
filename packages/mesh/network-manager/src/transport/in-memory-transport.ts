@@ -9,9 +9,9 @@ import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { Transport, TransportFactory } from './transport';
 
 type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey]

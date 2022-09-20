@@ -11,13 +11,12 @@ import { Tail } from 'tail';
 import { Event, promiseTimeout, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
+import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
 import { BotContainer, BotExitStatus } from '../bot-container';
-import { schema } from '../proto/gen';
-import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from '../proto/gen/dxos/bot';
-import { InvitationDescriptor } from '../proto/gen/dxos/echo/invitation';
 
 const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;

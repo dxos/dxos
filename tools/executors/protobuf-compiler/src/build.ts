@@ -4,24 +4,31 @@
 
 import { resolve } from 'path';
 
+import { preconfigureProtobufjs } from './configure';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
+import { registerResolver } from './parser';
 import { parseAndGenerateSchema } from './type-generator';
 
 export const build = async ({
-  outdir,
   proto,
-  substitutions
+  substitutions,
+  baseDir,
+  outDir
 }: {
-  outdir: string
   proto: string[]
   substitutions?: string
+  baseDir: string | undefined
+  outDir: string
 }) => {
   const substitutionsModule = substitutions ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd()) : undefined;
   const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
-  const outdirPath = resolve(process.cwd(), outdir);
+  const outdirPath = resolve(process.cwd(), outDir);
 
-  logger.logCompilationOptions(substitutionsModule, protoFilePaths, outdirPath);
+  // Initialize.
+  registerResolver(baseDir);
+  preconfigureProtobufjs();
 
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, outdirPath);
+  logger.logCompilationOptions(substitutionsModule, protoFilePaths, baseDir, outdirPath);
+  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDir, outdirPath);
 };

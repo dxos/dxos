@@ -6,8 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 
-import { Command } from '../proto';
 import { ERR_GREET_GENERAL, ERR_GREET_INVALID_COMMAND, ERR_GREET_INVALID_INVITATION } from './error-codes';
 import { GreetingCommandPlugin } from './greeting-command-plugin';
 import { createGreetingClaimResponse } from './greeting-message';

@@ -3,3 +3,4 @@
 //
 
 export * from './util';
+export * from './publish';

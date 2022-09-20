@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'react-dom';
 
 import { App } from './components';
 
@@ -20,10 +20,9 @@ if ('serviceWorker' in navigator) {
   console.error('Service workers are not supported.');
 }
 
-const root = createRoot(document.getElementById('root') as HTMLElement);
-
 (() => {
-  root.render(
-    <App />
+  render(
+    <App />,
+    document.getElementById('root')
   );
 })();

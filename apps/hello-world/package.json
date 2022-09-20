@@ -20,8 +20,8 @@
     "@dxos/react-toolkit": "workspace:*",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -29,7 +29,7 @@
     "@dxos/esbuild-server": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",
-    "@types/react": "^18.0.9",
-    "@types/react-dom": "^18.0.5"
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9"
   }
 }

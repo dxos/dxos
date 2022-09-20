@@ -15,6 +15,7 @@ module.exports = {
     'dist',
     'out',
     '**/proto/gen/*',
+    'packages/common/protocols/proto/**/*',
     'packages/sdk/client/src/packlets/proxy/version.ts',
 
     // Config

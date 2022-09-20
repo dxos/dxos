@@ -3,8 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/protocols';
-
-import { Answer, Offer, Signal } from '../proto/gen/dxos/mesh/swarm';
+import { Answer, Offer, Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export interface OfferMessage {
   author: PublicKey

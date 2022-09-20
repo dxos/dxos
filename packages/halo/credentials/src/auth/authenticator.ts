@@ -6,9 +6,10 @@ import debug from 'debug';
 import moment from 'moment';
 
 import { PublicKey } from '@dxos/protocols';
+import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { isSignedMessage, PartyState } from '../party';
-import { Auth, SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:auth');
 

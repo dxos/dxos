@@ -2,15 +2,6 @@
   "sourceRoot": "packages/sdk/client/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/sdk/client/src/packlets/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -65,7 +56,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha",
-    "protobuf-compiler"
+    "mocha"
   ]
 }

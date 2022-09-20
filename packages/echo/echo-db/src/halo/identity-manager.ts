@@ -6,8 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized, waitForCondition } from '@dxos/async';
-import { Filter, KeyRecord, Keyring, KeyType, SecretProvider } from '@dxos/credentials';
+import { Filter, Keyring, SecretProvider } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
+import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';

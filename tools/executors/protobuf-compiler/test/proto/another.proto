@@ -1,5 +1,0 @@
-package dxos.test.another;
-
-message AnotherMessage {
-  
-}

@@ -2,15 +2,6 @@
   "sourceRoot": "e2e/rpc-tunnel/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "e2e/rpc-tunnel/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -44,7 +35,7 @@
       "executor": "@dxos/playwright:playwright",
       "options": {
         "testPatterns": [
-          "e2e/rpc-tunnel/playwright/tests/*.test.ts"
+          "e2e/rpc-tunnel/playwright/tests/*.spec.ts"
         ],
         "config": "e2e/rpc-tunnel/playwright/config.ts"
       }

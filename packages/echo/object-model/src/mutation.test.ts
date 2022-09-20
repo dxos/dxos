@@ -5,8 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/object';
+
 import { MutationUtil, ValueUtil } from './mutation';
-import { ObjectMutation } from './proto';
 
 describe('Mutations', () => {
   test('ValueUtil', () => {

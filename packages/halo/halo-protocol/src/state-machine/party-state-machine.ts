@@ -5,9 +5,9 @@
 import debug from 'debug';
 
 import { PublicKey } from '@dxos/protocols';
+import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { Credential, PartyMember } from '../proto';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 

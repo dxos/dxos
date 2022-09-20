@@ -8,7 +8,10 @@ import get from 'lodash.get';
 import set from 'lodash.set';
 import assert from 'node:assert';
 
-import { KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value } from './proto';
+import {
+  KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value
+} from '@dxos/protocols/proto/dxos/echo/model/object';
+
 import { removeKey } from './util';
 
 /**

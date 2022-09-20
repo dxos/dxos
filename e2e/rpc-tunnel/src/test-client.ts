@@ -6,33 +6,45 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-
-import { TestStreamService } from './proto';
+import { TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
 
 const log = debug('dxos:rpc-tunnel-e2e:test-client');
 
 const STORAGE_KEY = 'testclient';
 
 export class TestClient {
+  private _persistant: boolean;
   private _value: number;
   private _update = new Event();
 
-  constructor (private _persistant = false) {
+  constructor ({ persistant, value }: { persistant?: boolean, value?: number} = {}) {
+    this._persistant = Boolean(persistant);
+
+    if (value) {
+      this.persist(value);
+      this._value = value;
+      return;
+    }
+
+    const str = this._persistant && localStorage.getItem(STORAGE_KEY);
     try {
-      const str = this._persistant && localStorage.getItem(STORAGE_KEY);
       this._value = str ? parseInt(str) : 0;
     } catch {
       this._value = 0;
     }
   }
 
+  persist (value: number) {
+    this._persistant && localStorage.setItem('testclient', String(value));
+  }
+
   get value () {
     return this._value;
   }
 
-  set value (val: number) {
-    this._persistant && localStorage.setItem('testclient', String(val));
-    this._value = val;
+  set value (value: number) {
+    this.persist(value);
+    this._value = value;
   }
 
   get handlers () {

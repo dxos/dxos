@@ -7,12 +7,13 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition, latch } from '@dxos/async';
-import { createPartyGenesisMessage, Keyring, KeyType } from '@dxos/credentials';
+import { createPartyGenesisMessage, Keyring } from '@dxos/credentials';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { codec, createFeedWriter, FeedSelector, FeedStoreIterator, IEchoStream } from '@dxos/echo-protocol';
 import { FeedStore, createWritableFeedStream } from '@dxos/feed-store';
 import { createSetPropertyMutation } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { jsonReplacer } from '@dxos/util';
 

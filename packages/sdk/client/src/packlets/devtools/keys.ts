@@ -3,13 +3,13 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { SubscriptionGroup } from '@dxos/util';
-
 import {
   SubscribeToCredentialMessagesRequest,
   SubscribeToCredentialMessagesResponse,
   SubscribeToKeyringKeysResponse
-} from '../proto';
+} from '@dxos/protocols/proto/dxos/devtools';
+import { SubscriptionGroup } from '@dxos/util';
+
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToKeyringKeys = ({ keyring }: DevtoolsServiceDependencies) => new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {

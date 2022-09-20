@@ -4,9 +4,13 @@
 
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
+import { DeviceInfo, IdentityInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
+
 import { Keyring } from '../keys';
 import { unwrapEnvelopes, extractContents, unwrapMessage, wrapMessage } from '../party';
-import { DeviceInfo, IdentityInfo, KeyRecord, Message, SignedMessage, WithTypeUrl } from '../proto';
 
 /**
  * Return the @type, if present.
@@ -23,7 +27,7 @@ export const createDeviceInfoMessage = (keyring: Keyring, displayName: string, d
   assert(deviceKey);
 
   const message: WithTypeUrl<DeviceInfo> = {
-    '@type': 'dxos.credentials.identity.DeviceInfo',
+    '@type': 'dxos.halo.credentials.identity.DeviceInfo',
     publicKey: deviceKey.publicKey,
     displayName
   };
@@ -40,7 +44,7 @@ export const createIdentityInfoMessage = (keyring: Keyring, displayName: string,
   assert(identityKey);
 
   const message: WithTypeUrl<IdentityInfo> = {
-    '@type': 'dxos.credentials.identity.IdentityInfo',
+    '@type': 'dxos.halo.credentials.identity.IdentityInfo',
     publicKey: identityKey.publicKey,
     displayName
   };
@@ -58,7 +62,7 @@ export const isIdentityMessage = (message: Message | SignedMessage) => {
   const type = getTypeUrl(message);
 
   // Since `message.payload` may not exist, make safe and return false.
-  return type && type.startsWith('dxos.credentials.identity.');
+  return type && type.startsWith('dxos.halo.credentials.identity.');
 };
 
 /**
@@ -70,7 +74,7 @@ export const isDeviceInfoMessage = (message: Message | SignedMessage) => {
   message = extractContents(unwrapEnvelopes(unwrapMessage(message)));
   const type = getTypeUrl(message);
 
-  return type === 'dxos.credentials.identity.DeviceInfo';
+  return type === 'dxos.halo.credentials.identity.DeviceInfo';
 };
 
 /**
@@ -82,5 +86,5 @@ export const isIdentityInfoMessage = (message: Message | SignedMessage) => {
   message = extractContents(unwrapEnvelopes(unwrapMessage(message)));
   const type = getTypeUrl(message);
 
-  return type === 'dxos.credentials.identity.IdentityInfo';
+  return type === 'dxos.halo.credentials.identity.IdentityInfo';
 };
