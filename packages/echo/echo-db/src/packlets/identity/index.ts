@@ -3,3 +3,4 @@
 //
 
 export * from './identity';
+export * from './identity-manager';

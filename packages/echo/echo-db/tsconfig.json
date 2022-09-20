@@ -4,7 +4,9 @@
     "outDir": "dist"
   },
   "include": [
-    "src/packlets"
+    "src/packlets",
+    "src/api",
+    "src/index.ts"
   ],
   "exclude": [
   ],
