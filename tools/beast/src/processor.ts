@@ -91,7 +91,7 @@ export class Processor {
 
         log.info('Done', {
           name: project.package.name,
-          descendents: project.descendents
+          descendents: [...project.descendents!.values()].sort()
         });
 
         process.exit();
