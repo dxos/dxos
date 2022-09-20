@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-package dxos.mesh;
+package dxos.mesh.webrtc;
 
 //
 // Broker connections between processes and WebRTC peers.
