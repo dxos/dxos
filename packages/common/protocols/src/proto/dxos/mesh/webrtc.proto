@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "dxos/mesh/swarm.proto";
 
 package dxos.mesh.webrtc;
 
@@ -21,6 +22,9 @@ service WebRTCService {
 
   ///
   rpc SendData(DataRequest) returns (google.protobuf.Empty);
+
+  ///
+  rpc Close(CloseRequest) returns (google.protobuf.Empty);
 }
 
 enum ConnectionState {
@@ -61,11 +65,11 @@ message SignalRequest {
   Signal signal = 2;
 }
 
-message Signal {
-  // TODO(burdon): Struct (see swarm.proto).
-}
-
 message DataRequest {
   int32 connection_id = 1;
   bytes payload = 2;
+}
+
+message CloseRequest{
+
 }
