@@ -110,5 +110,6 @@ export class WebRTCTransportProxy implements Transport {
     this._serviceStream.close();
     await this._rpc.rpc.WebRTCService.close({});
     this._rpc.close();
+    this.closed.emit();
   }
 }

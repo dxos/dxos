@@ -17,6 +17,7 @@ import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
+import { WebRTCService } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 
 describe.only('WebRTCTransportProxy', () => {
   const setup = async ({
@@ -38,21 +39,23 @@ describe.only('WebRTCTransportProxy', () => {
   } = {}) => {
     const [port1, port2] = createLinkedPorts();
 
+    const webRTCTransportService: WebRTCService = new WebRTCTransportService();
+
     // Starting WebRTCService
-    const webRTCTransportService = createProtoRpcPeer({
+    const webRTCService = createProtoRpcPeer({
       requested: {},
       exposed: {
         WebRTCService: schema.getService('dxos.mesh.webrtc.WebRTCService')
       },
-      handlers: { WebRTCService: new WebRTCTransportService() },
+      handlers: { WebRTCService: webRTCTransportService },
       port: port1,
       noHandshake: true,
       encodingOptions: {
         preserveAny: true
       }
     });
-    await webRTCTransportService.open();
-    afterTest(() => webRTCTransportService.close());
+    await webRTCService.open();
+    afterTest(() => webRTCService.close());
 
     const webRTCTransportProxy = new WebRTCTransportProxy({
       initiator,
@@ -67,7 +70,7 @@ describe.only('WebRTCTransportProxy', () => {
     await webRTCTransportProxy.init();
     afterTest(async () => await webRTCTransportProxy.close());
 
-    return { webRTCService: webRTCTransportService, webRTCTransportProxy };
+    return { webRTCService: webRTCService, webRTCTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
