@@ -12,8 +12,8 @@ import { NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { codec } from '../../codec'
 import { MetadataStore } from '../metadata';
-import { codec } from '../testing';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {

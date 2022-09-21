@@ -2,15 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-export { codec } from '@dxos/echo-db';
-
 export * from './packlets/database';
 export * from './packlets/errors';
 export * from './packlets/identity';
-export * from './packlets/testing';
 
+export * from './codec';
 export * from './api';
-export * from './halo';
+// export * from './halo';
 export * from './invitations';
 export * from './protocol';
 export * from './parties';
