@@ -10,6 +10,7 @@ import { failUndefined } from "@dxos/debug";
 import { Timeframe } from "@dxos/protocols";
 import { CredentialGenerator, CredentialSigner } from "@dxos/halo-protocol";
 import { AdmittedFeed } from "@dxos/protocols/proto/dxos/halo/credentials";
+import { Event } from "@dxos/async";
 
 export interface IdentityForBrane {
   identityKey: PublicKey;
@@ -19,6 +20,8 @@ export interface IdentityForBrane {
 
 export class Brane {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash)
+
+  public readonly update = new Event()
 
   constructor(
     private readonly _metadataStore: MetadataStore,
@@ -95,12 +98,11 @@ export class Brane {
           credential
         })
       }
-
-
     }
 
+    await this._metadataStore.addSpace(metadata)
     this.spaces.set(spaceKey, space)
-
+    this.update.emit()
     return space
   }
 }

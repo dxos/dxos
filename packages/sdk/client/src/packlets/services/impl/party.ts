@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { InvalidStateError, raise } from '@dxos/debug';
+import { InvalidStateError, raise, todo } from '@dxos/debug';
 import { Fubar, InvitationDescriptor, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
@@ -44,190 +44,211 @@ class PartyService implements PartyServiceRpc {
   ) {}
 
   subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
-    const update = (next: (message: SubscribePartyResponse) => void) => {
-      try {
-        const party = this.echo.getParty(request.partyKey);
-        next({
-          party: party && {
-            publicKey: party.key,
-            isOpen: party.isOpen,
-            isActive: party.isActive,
-            members: party.queryMembers().value
-          }
-        });
-      } catch (err) {
-        if (err instanceof InvalidStateError) {
-          // Do nothing.
-        } else {
-          throw err;
-        }
-      }
-    };
+    return todo()
+    // const update = (next: (message: SubscribePartyResponse) => void) => {
+    //   try {
+    //     const party = this.echo.getParty(request.partyKey);
+    //     next({
+    //       party: party && {
+    //         publicKey: party.key,
+    //         isOpen: party.isOpen,
+    //         isActive: party.isActive,
+    //         members: party.queryMembers().value
+    //       }
+    //     });
+    //   } catch (err) {
+    //     if (err instanceof InvalidStateError) {
+    //       // Do nothing.
+    //     } else {
+    //       throw err;
+    //     }
+    //   }
+    // };
 
-    const party = this.echo.getParty(request.partyKey);
-    if (party) {
-      return new Stream(({ next }) => party.update.on(() => update(next)));
-    } else {
-      return new Stream(({ next }) => {
-        let unsubscribeParty: () => void;
-        const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-          const party = parties.find((party) => party.key.equals(request.partyKey));
-          if (party && !unsubscribeParty) {
-            unsubscribeParty = party.update.on(() => update(next));
-          }
-        });
+    // const party = this.fubar.brane.getParty(request.partyKey);
+    // if (party) {
+    //   return new Stream(({ next }) => party.update.on(() => update(next)));
+    // } else {
+    //   return new Stream(({ next }) => {
+    //     let unsubscribeParty: () => void;
+    //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
+    //       const party = parties.find((party) => party.key.equals(request.partyKey));
+    //       if (party && !unsubscribeParty) {
+    //         unsubscribeParty = party.update.on(() => update(next));
+    //       }
+    //     });
 
-        update(next);
+    //     update(next);
 
-        return () => {
-          unsubscribeParties();
-          unsubscribeParty?.();
-        };
-      });
-    }
+    //     return () => {
+    //       unsubscribeParties();
+    //       unsubscribeParty?.();
+    //     };
+    //   });
+    // }
   }
 
   subscribeParties () {
-    return resultSetToStream(this.echo.queryParties(), (parties): SubscribePartiesResponse => ({
-      parties: parties.map(party => ({
-        publicKey: party.key,
-        isOpen: party.isOpen,
-        isActive: party.isActive,
-        members: party.queryMembers().value
-      }))
-    }));
+    return new Stream<SubscribePartiesResponse>(({ next }) => {
+      const update = () => {
+        next({
+          parties: Array.from(this.fubar.brane!.spaces.values()).map((space) => ({
+            publicKey: space.key,
+            isOpen: true,
+            isActive: true
+          }))
+        });
+      }
+
+      setImmediate(async () => {
+        if(!this.fubar.brane) {
+          next({ parties: [] })
+        }
+
+        await this.fubar.braneReady.wait();
+        
+        update();
+        return this.fubar.brane!.update.on(update);
+      })
+    })
   }
 
   async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
-    const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
-    return {
-      processedTimeframe: party.timeframe
-    };
+    return todo()
+    // const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    // return {
+    //   processedTimeframe: party.timeframe
+    // };
   }
 
   async createParty () {
-    const party = await this.echo.createParty();
+    await this.fubar.braneReady.wait()
+    const space = await this.fubar.brane!.createSpace();
     return {
-      publicKey: party.key,
-      isOpen: party.isOpen,
-      isActive: party.isActive
+      publicKey: space.key,
+      isOpen: true,
+      isActive: true
     };
   }
 
   async cloneParty (snapshot: PartySnapshot): Promise<Party> {
-    const party = await this.echo.cloneParty(snapshot);
-    return {
-      publicKey: party.key,
-      isOpen: party.isOpen,
-      isActive: party.isActive
-    };
+    return todo()
+    // const party = await this.echo.cloneParty(snapshot);
+    // return {
+    //   publicKey: party.key,
+    //   isOpen: party.isOpen,
+    //   isActive: party.isActive
+    // };
   }
 
   async setPartyState (request: SetPartyStateRequest) {
-    const party = this.echo.getParty(request.partyKey);
-    if (!party) {
-      throw new Error('Party not found');
-    }
+    return todo()
+    // const party = this.echo.getParty(request.partyKey);
+    // if (!party) {
+    //   throw new Error('Party not found');
+    // }
 
-    if (request.open === true) {
-      await party.open();
-    } else if (request.open === false) {
-      await party.close();
-    } // Undefined preserves previous state.
+    // if (request.open === true) {
+    //   await party.open();
+    // } else if (request.open === false) {
+    //   await party.close();
+    // } // Undefined preserves previous state.
 
-    if (request.activeGlobal === true) {
-      await party.activate({ global: true });
-    } else if (request.activeGlobal === false) {
-      await party.deactivate({ global: true });
-    } // Undefined preserves previous state.
+    // if (request.activeGlobal === true) {
+    //   await party.activate({ global: true });
+    // } else if (request.activeGlobal === false) {
+    //   await party.deactivate({ global: true });
+    // } // Undefined preserves previous state.
 
-    if (request.activeDevice === true) {
-      await party.activate({ device: true });
-    } else if (request.activeDevice === false) {
-      await party.deactivate({ device: true });
-    } // Undefined preserves previous state.
-    return {
-      publicKey: party.key,
-      isOpen: party.isOpen,
-      isActive: party.isActive
-    };
+    // if (request.activeDevice === true) {
+    //   await party.activate({ device: true });
+    // } else if (request.activeDevice === false) {
+    //   await party.deactivate({ device: true });
+    // } // Undefined preserves previous state.
+    // return {
+    //   publicKey: party.key,
+    //   isOpen: party.isOpen,
+    //   isActive: party.isActive
+    // };
   }
 
   createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
-    return new Stream(({ next, close }) => {
-      const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
-      setImmediate(async () => {
-        try {
-          let invitation: InvitationDescriptor;
-          if (!request.inviteeKey) {
-            const secret = Buffer.from(generatePasscode());
-            const secretProvider = async () => {
-              next({ state: InvitationState.CONNECTED });
-              return Buffer.from(secret);
-            };
-            invitation = await party.invitationManager.createInvitation({
-              secretProvider,
-              secretValidator: defaultSecretValidator
-            }, {
-              onFinish: () => {
-                next({ state: InvitationState.SUCCESS });
-                close();
-              }
-            });
+    return todo()
+    // return new Stream(({ next, close }) => {
+    //   const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    //   setImmediate(async () => {
+    //     try {
+    //       let invitation: InvitationDescriptor;
+    //       if (!request.inviteeKey) {
+    //         const secret = Buffer.from(generatePasscode());
+    //         const secretProvider = async () => {
+    //           next({ state: InvitationState.CONNECTED });
+    //           return Buffer.from(secret);
+    //         };
+    //         invitation = await party.invitationManager.createInvitation({
+    //           secretProvider,
+    //           secretValidator: defaultSecretValidator
+    //         }, {
+    //           onFinish: () => {
+    //             next({ state: InvitationState.SUCCESS });
+    //             close();
+    //           }
+    //         });
 
-            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
-            invitation.secret = Buffer.from(secret);
-          } else {
-            invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
-          }
+    //         assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
+    //         invitation.secret = Buffer.from(secret);
+    //       } else {
+    //         invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
+    //       }
 
-          next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
+    //       next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-          if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
-            close();
-          }
-        } catch (err: any) {
-          next({ state: InvitationState.ERROR, error: err.message });
-          close();
-        }
-      });
-    });
+    //       if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
+    //         close();
+    //       }
+    //     } catch (err: any) {
+    //       next({ state: InvitationState.ERROR, error: err.message });
+    //       close();
+    //     }
+    //   });
+    // });
   }
 
   acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
-    return new Stream(({ next, close }) => {
-      const id = v4();
-      const [secretLatch, secretTrigger] = latch();
-      const inviteeInvitation: InviteeInvitation = { secretTrigger };
+    return todo()
+    // return new Stream(({ next, close }) => {
+    //   const id = v4();
+    //   const [secretLatch, secretTrigger] = latch();
+    //   const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
-      // Secret will be provided separately (in AuthenticateInvitation).
-      // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
-      const secretProvider: SecretProvider = async () => {
-        await secretLatch;
-        const secret = inviteeInvitation.secret;
-        if (!secret) {
-          throw new Error('Secret not provided.');
-        }
-        return Buffer.from(secret);
-      };
+    //   // Secret will be provided separately (in AuthenticateInvitation).
+    //   // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
+    //   const secretProvider: SecretProvider = async () => {
+    //     await secretLatch;
+    //     const secret = inviteeInvitation.secret;
+    //     if (!secret) {
+    //       throw new Error('Secret not provided.');
+    //     }
+    //     return Buffer.from(secret);
+    //   };
 
-      // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.echo.joinParty(
-        InvitationDescriptor.fromProto(request),
-        request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
-      );
-      this.inviteeInvitations.set(id, inviteeInvitation);
-      next({ id, state: InvitationState.CONNECTED });
+    //   // Joining process is kicked off, and will await authentication with a secret.
+    //   const partyPromise = this.echo.joinParty(
+    //     InvitationDescriptor.fromProto(request),
+    //     request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
+    //   );
+    //   this.inviteeInvitations.set(id, inviteeInvitation);
+    //   next({ id, state: InvitationState.CONNECTED });
 
-      partyPromise.then(party => {
-        next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
-      }).catch(err => {
-        console.error(err);
-        next({ id, state: InvitationState.ERROR, error: String(err) });
-      }).finally(() => {
-        close();
-      });
-    });
+    //   partyPromise.then(party => {
+    //     next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+    //   }).catch(err => {
+    //     console.error(err);
+    //     next({ id, state: InvitationState.ERROR, error: String(err) });
+    //   }).finally(() => {
+    //     close();
+    //   });
+    // });
   }
 
   async authenticateInvitation (request: AuthenticateInvitationRequest) {
@@ -242,34 +263,36 @@ class PartyService implements PartyServiceRpc {
   }
 
   subscribeMembers (request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
-    const party = this.echo.getParty(request.partyKey);
-    if (party) {
-      return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
-    } else {
-      return new Stream(({ next }) => {
-        let unsubscribeMembers: () => void;
-        const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-          const party = parties.find((party) => party.key.equals(request.partyKey));
-          if (!unsubscribeMembers && party) {
-            const resultSet = party.queryMembers();
-            next({ members: resultSet.value });
-            unsubscribeMembers = resultSet.update.on(() => next({ members: resultSet.value }));
-          }
-        });
+    return todo()
+    // const party = this.echo.getParty(request.partyKey);
+    // if (party) {
+    //   return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
+    // } else {
+    //   return new Stream(({ next }) => {
+    //     let unsubscribeMembers: () => void;
+    //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
+    //       const party = parties.find((party) => party.key.equals(request.partyKey));
+    //       if (!unsubscribeMembers && party) {
+    //         const resultSet = party.queryMembers();
+    //         next({ members: resultSet.value });
+    //         unsubscribeMembers = resultSet.update.on(() => next({ members: resultSet.value }));
+    //       }
+    //     });
 
-        return () => {
-          unsubscribeParties();
-          unsubscribeMembers();
-        };
-      });
-    }
+    //     return () => {
+    //       unsubscribeParties();
+    //       unsubscribeMembers();
+    //     };
+    //   });
+    // }
   }
 
   async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
-    assert(request.partyKey);
-    const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
-    return party.createSnapshot();
+    return todo()
+    // assert(request.partyKey);
+    // const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    // return party.createSnapshot();
   }
 }
 
-export const createPartyService = ({ echo }: CreateServicesOpts): PartyService => new PartyService(echo);
+export const createPartyService = ({ fubar }: CreateServicesOpts): PartyService => new PartyService(fubar);

@@ -187,8 +187,7 @@ export class Client {
     this._echo = new EchoProxy(this._serviceProvider, this._halo);
 
     await this._halo._open();
-    // TODO(dmaretskyi): .
-    // await this._echo._open();
+    await this._echo._open();
 
     this._initialized = true; // TODO(burdon): Initialized === halo.initialized?
     clearInterval(timeout);

@@ -31,6 +31,8 @@ export class Fubar {
   // Initialized after identity is intitialized.
   public brane?: Brane
 
+  public braneReady = new Trigger()
+
   constructor(
     public storage: Storage,
     public networkManager: NetworkManager,
@@ -69,6 +71,7 @@ export class Fubar {
     )
     await brane.open()
     this.brane = brane
+    this.braneReady.wake()
   }
 
   async createIdentity() {

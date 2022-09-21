@@ -126,6 +126,13 @@ export class MetadataStore {
     this._metadata.identity = record;
     await this._save();
   }
+
+  async addSpace(record: PartyMetadata) {
+    assert(!(this._metadata.parties ?? []).find(party => party.key === record.key), 'Cannot overwrite existing party in metadata');
+
+    (this._metadata.parties ??= []).push(record);
+    await this._save();
+  }
 }
 
 const toBytesInt32 = (num: number) => {
