@@ -7,10 +7,9 @@ import assert from 'node:assert';
 import { Event, latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
@@ -180,7 +179,7 @@ export class EchoProxy implements Echo {
   /**
    * Returns an individual party by its key.
    */
-  getParty (partyKey: PartyKey): Party | undefined {
+  getParty (partyKey: PublicKey): Party | undefined {
     return this._parties.get(partyKey);
   }
 

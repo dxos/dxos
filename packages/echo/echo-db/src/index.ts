@@ -2,14 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-export { codec } from '@dxos/echo-protocol';
-
 export * from './packlets/database';
 export * from './packlets/errors';
 export * from './packlets/identity';
 export * from './packlets/metadata';
 export * from './packlets/fubar';
 
+export * from './codec';
 export * from './api';
 export { InvitationDescriptor } from './invitations/invitation-descriptor';
 // export * from './echo';

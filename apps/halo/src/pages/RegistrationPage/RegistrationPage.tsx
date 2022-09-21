@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Client, Party } from '@dxos/client';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { useClient, useProfile } from '@dxos/react-client';
 import { JoinHaloDialog, RegistrationDialog } from '@dxos/react-toolkit';
 

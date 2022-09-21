@@ -15,13 +15,13 @@ import {
 } from '@dxos/credentials';
 import { SIGNATURE_LENGTH, createKeyPair, randomBytes, sign, verify } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { codec } from '@dxos/echo-protocol';
 import { createWritableFeedStream, FeedStore } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -30,8 +30,9 @@ import { humanize } from '@dxos/util';
 
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../packlets/database';
+import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
-import { createTestIdentityCredentials } from '../protocol/identity-credentials';
+import { createTestIdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { messageLogger } from '../testing';
 import { PARTY_ITEM_TYPE } from './data-party';

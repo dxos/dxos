@@ -12,8 +12,9 @@ import queueMicrotask from 'queue-microtask';
 
 import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
+import { PublicKey } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { Alive } from '@dxos/protocols/proto/dxos/mesh/presence';
 
 const log = debug('dxos:mesh:presence');

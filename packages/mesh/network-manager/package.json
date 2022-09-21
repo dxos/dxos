@@ -23,6 +23,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",

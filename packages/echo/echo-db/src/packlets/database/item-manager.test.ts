@@ -6,10 +6,10 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createId } from '@dxos/crypto';
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 
 import { ItemManager } from './item-manager';
 

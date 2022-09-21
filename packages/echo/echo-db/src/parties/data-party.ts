@@ -6,12 +6,12 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import { timed, todo } from '@dxos/debug';
-import { PartyKey } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ResultSet } from '../api';
@@ -51,7 +51,7 @@ export class DataParty {
   private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
-    partyKey: PartyKey,
+    partyKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
@@ -89,7 +89,7 @@ export class DataParty {
     };
   }
 
-  get key (): PartyKey {
+  get key (): PublicKey {
     return this._partyCore.key;
   }
 

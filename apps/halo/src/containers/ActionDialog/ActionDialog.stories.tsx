@@ -7,7 +7,7 @@ import { HashRouter } from 'react-router-dom';
 
 import { Box, Button } from '@mui/material';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';

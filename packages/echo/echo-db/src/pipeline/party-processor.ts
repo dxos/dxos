@@ -6,9 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { FeedKey, IHaloStream, PartyKey } from '@dxos/echo-protocol';
 import { Credential, MemberInfo, PartyStateMachine } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { IHaloStream } from '@dxos/protocols';
 import { HaloStateSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { jsonReplacer } from '@dxos/util';
@@ -27,9 +27,9 @@ export interface PartyStateProvider {
   genesisRequired: boolean
   memberKeys: PublicKey[]
   feedKeys: PublicKey[]
-  getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined
+  getFeedOwningMember (feedKey: PublicKey): PublicKey | undefined
   getOfflineInvitation (invitationID: Buffer): SignedMessage | undefined
-  isFeedAdmitted (feedKey: FeedKey): boolean
+  isFeedAdmitted (feedKey: PublicKey): boolean
 }
 
 /**
@@ -40,7 +40,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
 
   readonly credentialProcessed = new Event<Credential>();
 
-  readonly feedAdded = new Event<FeedKey>();
+  readonly feedAdded = new Event<PublicKey>();
 
   public readonly keyOrInfoAdded = new Event<PublicKey>();
 
@@ -50,7 +50,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   private _snapshot: HaloStateSnapshot = { messages: [] };
 
   constructor (
-    private readonly _partyKey: PartyKey
+    private readonly _partyKey: PublicKey
   ) {
     this._state.memberAdmitted.on(info => this.keyOrInfoAdded.emit(info.key));
     this._state.feedAdmitted.on(info => this.feedAdded.emit(info.key));
@@ -85,7 +85,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
     return this._state;
   }
 
-  isFeedAdmitted (feedKey: FeedKey) {
+  isFeedAdmitted (feedKey: PublicKey) {
     return this._state.feeds.has(feedKey);
   }
 
@@ -100,7 +100,7 @@ export class PartyProcessor implements CredentialProcessor, PartyStateProvider {
   /**
    * Returns public key of the member that admitted the specified feed.
    */
-  getFeedOwningMember (feedKey: FeedKey): PublicKey | undefined {
+  getFeedOwningMember (feedKey: PublicKey): PublicKey | undefined {
     return this._state.feeds.get(feedKey)?.assertion.identityKey;
   }
 

@@ -3,7 +3,7 @@
 //
 
 import { Contact, CreateProfileOptions, InvitationDescriptor, ResultSet } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';

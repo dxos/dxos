@@ -25,9 +25,12 @@ export {
 } from '@dxos/echo-db';
 
 export {
-  ItemID,
-  PartyKey
-} from '@dxos/echo-protocol';
+  PublicKey
+} from '@dxos/keys';
+
+export {
+  ItemID
+} from '@dxos/protocols';
 
 // TODO(burdon): Remove exported protos?
 export {

@@ -4,8 +4,9 @@
 
 import { FeedDescriptor } from '@dxos/feed-store';
 import { FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 

@@ -7,10 +7,11 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
-import { ItemID, MockFeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { MockFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ValueUtil } from '@dxos/object-model';
-import { schema, PublicKey } from '@dxos/protocols';
+import { ItemID, schema } from '@dxos/protocols';
 
 import { ItemDemuxer, ItemManager } from '../packlets/database';
 import { createTestInstance } from '../testing';
@@ -22,7 +23,7 @@ describe.skip('snapshot', () => {
   test.skip('loading large party', async () => {
     const echo = await createTestInstance({ initialize: true });
 
-    let partyKey: PartyKey;
+    let partyKey: PublicKey;
     let itemId: ItemID;
     {
       const party = await echo.createParty();

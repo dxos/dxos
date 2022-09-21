@@ -7,12 +7,12 @@ import * as crypto from 'node:crypto';
 
 import { synchronized } from '@dxos/async';
 import { todo } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { schema } from '@dxos/protocols';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { schema } from './proto/gen';
-import { KeyRecord } from './proto/gen/dxos/halo/keyring';
 import { Signer } from './signer';
 
 /**

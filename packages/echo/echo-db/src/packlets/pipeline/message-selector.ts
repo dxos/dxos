@@ -5,7 +5,8 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { MessageSelector } from '@dxos/echo-protocol';
+import { MessageSelector } from '@dxos/feed-store';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { TimeframeClock } from './timeframe-clock';
 
@@ -20,7 +21,7 @@ const log = debug('dxos:echo-db:message-selector');
  * @param partyProcessor
  * @param timeframeClock
  */
-export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSelector => candidates => {
+export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSelector<FeedMessage> => candidates => {
   // Pick the first candidate with a valid timeframe that has no gaps.
   for (let i = 0; i < candidates.length; i++) {
     const { data: { timeframe } } = candidates[i];

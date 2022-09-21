@@ -46,7 +46,6 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/feed-store": "workspace:*",
     "@dxos/network-manager": "workspace:*",

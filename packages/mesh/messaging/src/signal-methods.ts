@@ -3,7 +3,7 @@
 //
 
 import { Any } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 export interface Message {
   author: PublicKey

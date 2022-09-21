@@ -8,6 +8,7 @@
     "src/api",
     "src/invitations/invitation-descriptor.ts",
     "src/invitations/common.ts",
+    "src/codec.ts",
     "src/index.ts"
   ],
   "exclude": [
@@ -59,7 +60,7 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../feed-store"
+      "path": "../../common/feed-store"
     },
     {
       "path": "../model-factory"

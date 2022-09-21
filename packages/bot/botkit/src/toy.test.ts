@@ -9,10 +9,10 @@ import waitForExpect from 'wait-for-expect';
 import { sleep } from '@dxos/async';
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { Config } from '@dxos/config';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { Bot, GetLogsResponse } from '@dxos/protocols/proto/dxos/bot';
 import { RegistryClient } from '@dxos/registry-client';
 

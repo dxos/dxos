@@ -4,7 +4,6 @@
 
 import { it as test } from 'mocha';
 
-import { codec } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
@@ -13,6 +12,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
+import { codec } from '../testing';
 import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', () => {

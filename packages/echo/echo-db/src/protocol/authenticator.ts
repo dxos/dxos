@@ -6,9 +6,10 @@ import assert from 'assert';
 import debug from 'debug';
 
 import { Keyring } from '@dxos/credentials';
-import { FeedKey, FeedWriter, PartyKey } from '@dxos/echo-protocol';
-import { createCredential, isValidAuthorizedDeviceCredential, verifyCredential, AdmittedFeed, Auth, Credential } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { FeedWriter } from '@dxos/feed-store';
+import { createCredential, isValidAuthorizedDeviceCredential, verifyCredential } from '@dxos/halo-protocol';
+import { PublicKey } from '@dxos/keys';
+import { AdmittedFeed, Auth, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { PartyProcessor, PartyStateProvider } from '../pipeline';
 import { CredentialsSigner } from './credentials-signer';
@@ -43,7 +44,11 @@ export interface CredentialsProvider {
   get (): Promise<Buffer>
 }
 
-export const createCredentialsProvider = (credentialsSigner: CredentialsSigner, partyKey: PartyKey, feedKey: FeedKey): CredentialsProvider => ({
+export const createCredentialsProvider = (
+  credentialsSigner: CredentialsSigner,
+  partyKey: PublicKey,
+  feedKey: PublicKey
+): CredentialsProvider => ({
   get: async () => {
     const chain = credentialsSigner.getDeviceSigningKeys();
     assert(!(chain instanceof PublicKey) && !!chain.credential, 'Invalid device signing keys');

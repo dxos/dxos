@@ -4,10 +4,10 @@
 
 import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { PublicKey } from '@dxos/protocols';
 
 import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
 

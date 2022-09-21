@@ -8,14 +8,13 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { codec, PartyKey } from '@dxos/echo-protocol';
 import { FeedStore } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, NetworkManagerOptions } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Storage, createStorage, StorageType } from '@dxos/random-access-storage';
@@ -30,6 +29,7 @@ import { IdentityNotInitializedError, InvalidStorageVersionError } from './packl
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { STORAGE_VERSION, MetadataStore, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
+import { codec } from './codec';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {
@@ -328,9 +328,9 @@ export class ECHO {
 
   /**
    * Returns an individual party by it's key.
-   * @param {PartyKey} partyKey
+   * @param {PublicKey} partyKey
    */
-  getParty (partyKey: PartyKey): DataParty | undefined {
+  getParty (partyKey: PublicKey): DataParty | undefined {
     if (!this._partyManager.isOpen) {
       throw new InvalidStateError();
     }

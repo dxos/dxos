@@ -15,10 +15,7 @@
       "path": "../debug"
     },
     {
-      "path": "../protocols"
-    },
-    {
-      "path": "../protocols"
+      "path": "../keys"
     },
     {
       "path": "./tsconfig.spec.json"

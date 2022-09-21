@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { createId, createKeyPair } from '@dxos/crypto';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 

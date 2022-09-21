@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 export interface Signer {
   /**

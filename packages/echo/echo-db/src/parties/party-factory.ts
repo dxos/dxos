@@ -7,11 +7,12 @@ import assert from 'node:assert';
 
 import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, raise, timed } from '@dxos/debug';
-import { createFeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { createFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -110,7 +111,7 @@ export class PartyFactory {
   /**
    * Constructs a party object from an existing set of feeds.
    */
-  async constructParty (partyKey: PartyKey, initialTimeframe?: Timeframe) {
+  async constructParty (partyKey: PublicKey, initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     //

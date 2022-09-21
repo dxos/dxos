@@ -5,8 +5,9 @@
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { IdentityRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Directory } from '@dxos/random-access-storage';

@@ -7,9 +7,10 @@ import assert from 'assert';
 import { FeedStore } from '@dxos/feed-store';
 import { CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { MetadataStore } from '../metadata';

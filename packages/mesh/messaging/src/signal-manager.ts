@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { CommandTrace, SignalStatus } from './signal-client';

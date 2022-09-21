@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
 import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 

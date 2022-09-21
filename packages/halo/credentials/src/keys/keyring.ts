@@ -7,8 +7,8 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { KeyPair, randomBytes, sign as cryptoSign, verify as cryptoVerify } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { randomBytes, sign as cryptoSign, verify as cryptoVerify } from '@dxos/crypto';
+import { KeyPair, PublicKey, PublicKeyLike } from '@dxos/keys';
 import { KeyChain, KeyRecord, KeyRecordList, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { arraysEqual } from '@dxos/util';

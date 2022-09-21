@@ -6,7 +6,7 @@ import { CliUx } from '@oclif/core';
 
 import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 const maybeTruncateKey = (key: PublicKey, truncate = false) => truncate ? truncateKey(key.toHex(), 8) : key.toHex();
 

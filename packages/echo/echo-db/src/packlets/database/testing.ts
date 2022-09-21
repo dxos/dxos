@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { DataServiceHost } from './data-service-host';
