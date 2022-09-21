@@ -11,7 +11,7 @@ import { NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
-import { DevtoolsHostEvents } from '../devtools';
+// import { DevtoolsHostEvents } from '../devtools';
 import { createServices } from './impl';
 import { createStorageObjects } from './storage';
 
@@ -21,7 +21,7 @@ const SIGNAL_CONTEXT = new MemorySignalManagerContext();
  * Remote service implementation.
  */
 export class ClientServiceHost implements ClientServiceProvider {
-  private readonly _devtoolsEvents = new DevtoolsHostEvents();
+  // private readonly _devtoolsEvents = new DevtoolsHostEvents();
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
@@ -61,7 +61,7 @@ export class ClientServiceHost implements ClientServiceProvider {
   // TODO(dmaretskyi): progress.
   async open (onProgressCallback?: ((progress: any) => void) | undefined) {
     await this._context.open();
-    this._devtoolsEvents.ready.emit();
+    // this._devtoolsEvents.ready.emit();
   }
 
   async close () {

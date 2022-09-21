@@ -5,7 +5,7 @@
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
-  PARTY_ITEM_TYPE, // TODO(burdon): Remove?
+  // PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   TYPE_SCHEMA,
   Entity,
   Item,
@@ -55,6 +55,6 @@ export {
 } from '@dxos/network-manager';
 
 export * from './packlets/api';
-export * from './packlets/devtools';
+// export * from './packlets/devtools';
 export * from './packlets/proxy';
 export * from './packlets/services';

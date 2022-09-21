@@ -12,7 +12,11 @@
     ]
   },
   "include": [
-    "src"
+    "src/experimental",
+    "src/packlets/api",
+    "src/packlets/proxy",
+    "src/packlets/services",
+    "src/*.ts"
   ],
   "references": [
     {

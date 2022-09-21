@@ -21,3 +21,9 @@ export { InvitationDescriptor } from './invitations/invitation-descriptor';
 // export * from './pipeline';
 // export * from './snapshots';
 // export * from './testing';
+
+export interface PartyMember {}
+export type CreateProfileOptions = any
+export interface Contact {}
+export interface OpenProgress {}
+export interface ActivationOptions {}
