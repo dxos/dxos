@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, raise } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
 import { CredentialGenerator, CredentialSigner } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -13,10 +13,12 @@ import { Timeframe } from '@dxos/protocols';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
+import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
 
-import { DataService } from '../database';
-import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../space';
+import { DataService } from '../../database';
+import { MetadataStore } from '../../metadata';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../../space';
+import { DataInvitations } from './invitations';
 
 export interface IdentityForBrane {
   identityKey: PublicKey
@@ -24,10 +26,17 @@ export interface IdentityForBrane {
   credentialSigner: CredentialSigner
 }
 
+export interface AcceptSpaceOptions {
+  spaceKey: PublicKey
+  genesisFeedKey: PublicKey
+}
+
 export class SpaceManager {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
 
   public readonly update = new Event();
+
+  private readonly _invitations: DataInvitations;
 
   constructor (
     private readonly _metadataStore: MetadataStore,
@@ -36,7 +45,13 @@ export class SpaceManager {
     private readonly _networkManager: NetworkManager,
     private readonly _identity: IdentityForBrane,
     private readonly _dataService: DataService
-  ) { }
+  ) { 
+    this._invitations = new DataInvitations(
+      this._networkManager,
+      this._identity,
+      this
+    )
+  }
 
   async open () {
     await this._metadataStore.load();
@@ -114,4 +129,31 @@ export class SpaceManager {
     this.update.emit();
     return space;
   }
+
+  async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
+    const space = await this._constructSpace({
+      key: opts.spaceKey,
+      genesisFeedKey: opts.genesisFeedKey,
+      controlFeedKey: await this._keyring.createKey(),
+      dataFeedKey: await this._keyring.createKey()
+    })
+
+    await space.open();
+    this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
+    this.spaces.set(space.key, space);
+    this.update.emit();
+
+    return space;
+  }
+
+  async joinSpace(invitationDescriptor: InvitationDescriptor) {
+    return this._invitations.acceptInvitation(invitationDescriptor);
+  }
+
+  async createInvitation(spaceKey: PublicKey) {
+    const space = this.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
+
+    return this._invitations.createInvitation(space);
+  }
 }
+

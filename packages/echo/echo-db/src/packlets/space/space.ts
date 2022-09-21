@@ -43,6 +43,7 @@ export class Space {
 
   private readonly _key: PublicKey;
   private readonly _dataFeed: FeedDescriptor;
+  private readonly _controlFeed: FeedDescriptor;
   private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
@@ -69,6 +70,7 @@ export class Space {
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
+    this._controlFeed = controlFeed;
     this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
@@ -134,6 +136,14 @@ export class Space {
 
   get genesisFeedKey (): PublicKey {
     return this._genesisFeedKey;
+  }
+
+  get controlFeedKey () {
+    return this._controlFeed.key;
+  }
+
+  get dataFeedKey () {
+    return this._dataFeed.key;
   }
 
   @synchronized

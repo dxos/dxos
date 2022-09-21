@@ -11,9 +11,10 @@ package dxos.echo.invitation_protocol;
 // Mock invitation process for data spaces
 
 message AdmitRequest {
-  dxos.halo.keys.PubKey memberKey = 1;
-  dxos.halo.keys.PubKey controlFeedKey = 2;
-  dxos.halo.keys.PubKey dataFeedKey = 3;
+  dxos.halo.keys.PubKey identityKey = 1;
+  dxos.halo.keys.PubKey deviceKey = 2;
+  dxos.halo.keys.PubKey controlFeedKey = 3;
+  dxos.halo.keys.PubKey dataFeedKey = 4;
 }
 
 // Inviter verbs

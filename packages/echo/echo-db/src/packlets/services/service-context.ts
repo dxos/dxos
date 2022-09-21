@@ -21,7 +21,7 @@ import { DataService } from '../database';
 import { Identity } from '../identity';
 import { MetadataStore } from '../metadata';
 import { IdentityManager } from './identity-manager';
-import { SpaceManager } from './space-manager';
+import { SpaceManager } from './data/space-manager';
 
 export type SecretProvider = () => Promise<Buffer>
 
@@ -69,6 +69,7 @@ export class ServiceContext {
     await this.identityManager.close();
   }
 
+  // TODO(dmaretskyi): Rename to createIdentity.
   async create () {
     const identity = await this.identityManager.createIdentity();
     this.dataServiceRouter.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
