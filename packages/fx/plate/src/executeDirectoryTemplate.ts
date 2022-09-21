@@ -2,21 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File } from "@dxos/file";
-import flatten from "lodash.flatten";
-import * as path from "path";
-import readDir from "recursive-readdir";
+import flatten from 'lodash.flatten';
+import * as path from 'path';
+import readDir from 'recursive-readdir';
+
+import { File } from '@dxos/file';
 
 import {
   executeFileTemplate,
   TemplatingResult,
-  isTemplateFile,
-} from "./executeFileTemplate";
+  isTemplateFile
+} from './executeFileTemplate';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
-  templateDirectory: string;
-  outputDirectory: string;
-  input?: Partial<TInput>;
+  templateDirectory: string
+  outputDirectory: string
+  input?: Partial<TInput>
 };
 
 export const executeDirectoryTemplate = async <TInput>(
@@ -32,15 +33,15 @@ export const executeDirectoryTemplate = async <TInput>(
         templateFile: path.relative(templateDirectory, t),
         templateRelativeTo: templateDirectory,
         outputDirectory,
-        input,
+        input
       })
     )
   );
   const stringPath = (p: string | string[]) =>
-    typeof p == "string" ? p : path.join(...p);
+    typeof p === 'string' ? p : path.join(...p);
   const isOverwrittenByTemplateOutput = (f: string): boolean => {
     return templateOutputs.some((files) =>
-      files.some((file) => stringPath(file.path) == f)
+      files.some((file) => stringPath(file.path) === f)
     );
   };
   return [
@@ -50,9 +51,9 @@ export const executeDirectoryTemplate = async <TInput>(
         (r) =>
           new File({
             path: path.join(outputDirectory, r.slice(templateDirectory.length)),
-            copyFrom: r,
+            copyFrom: r
           })
       ),
-    ...flatten(templateOutputs),
+    ...flatten(templateOutputs)
   ];
 };

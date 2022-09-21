@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File, MaybePromise, promise } from '@dxos/file';
 import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';
+
+import { File, MaybePromise, promise } from '@dxos/file';
 
 export const TEMPLATE_REGEX = /(.*)\.t\.ts$/;
 

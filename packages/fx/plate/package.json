@@ -13,7 +13,7 @@
     "typescript": "^4.7.2"
   },
   "dependencies": {
-    "@nice/file": "workspace:*",
+    "@dxos/file": "workspace:*",
     "esbuild": "~0.14.1",
     "lodash.flatten": "^4.4.0",
     "lodash.zip": "^4.2.0",
