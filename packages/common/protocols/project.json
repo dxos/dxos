@@ -11,6 +11,15 @@
         "basePath": "packages/common/protocols/src/proto"
       }
     },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/protocols/proto"
+      ],
+      "options": {
+        "script": "gen-proto-defs"
+      }
+    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
