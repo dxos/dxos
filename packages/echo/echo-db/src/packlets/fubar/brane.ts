@@ -1,0 +1,99 @@
+import { Keyring } from "@dxos/keyring";
+import { FeedStore } from "@dxos/feed-store";
+import { PublicKey } from "@dxos/keys";
+import { NetworkManager } from "@dxos/network-manager";
+import { ComplexMap } from "@dxos/util";
+import { PartyMetadata } from "@dxos/protocols/proto/dxos/echo/metadata";
+import { MetadataStore } from "../metadata";
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from "../space";
+import { failUndefined } from "@dxos/debug";
+import { Timeframe } from "@dxos/protocols";
+import { CredentialGenerator, CredentialSigner } from "@dxos/halo-protocol";
+
+export interface IdentityForBrane {
+  identityKey: PublicKey;
+  deviceKey: PublicKey;
+  credentialSigner: CredentialSigner;
+}
+
+export class Brane {
+  public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash)
+
+  constructor(
+    private readonly _metadataStore: MetadataStore,
+    private readonly _keyring: Keyring,
+    private readonly _feedStore: FeedStore,
+    private readonly _networkManager: NetworkManager,
+    private readonly _identity: IdentityForBrane
+  ) { }
+
+  async open() {
+    await this._metadataStore.load()
+
+    for (const spaceMetadata of this._metadataStore.parties) {
+      const space = await this._constructSpace(spaceMetadata);
+      await space.open()
+      this.spaces.set(spaceMetadata.key, space)
+    }
+  }
+
+  async close() {
+    await Promise.all([...this.spaces.values()].map(space => space.close()))
+  }
+
+  private async _constructSpace(metadata: PartyMetadata) {
+    const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.controlFeedKey ?? failUndefined(), this._keyring)
+    const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(metadata.dataFeedKey ?? failUndefined(), this._keyring)
+
+    // Might be the same as controlFeed above, in case this space was created by the current agent.
+    const genesisFeed = await this._feedStore.openReadOnlyFeed(metadata.genesisFeedKey ?? failUndefined())
+
+    return new Space({
+      controlFeed,
+      dataFeed,
+      genesisFeed,
+      feedProvider: key => this._feedStore.openReadOnlyFeed(key),
+      spaceKey: metadata.key,
+      networkManager: this._networkManager,
+      initialTimeframe: new Timeframe(),
+      networkPlugins: [],
+      swarmIdentity: {
+        peerKey: this._identity.deviceKey,
+        credentialProvider: MOCK_AUTH_PROVIDER,
+        credentialAuthenticator: MOCK_AUTH_VERIFIER
+      },
+    })
+  }
+
+  async createSpace() {
+    const spaceKey = await this._keyring.createKey()
+
+    const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(await this._keyring.createKey(), this._keyring)
+    const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(await this._keyring.createKey(), this._keyring)
+
+    const metadata: PartyMetadata = {
+      key: spaceKey,
+      controlFeedKey: controlFeed.key,
+      dataFeedKey: dataFeed.key,
+      genesisFeedKey: controlFeed.key,
+    }
+    const space = await this._constructSpace(metadata)
+    await space.open()
+
+    // Write genesis credentials.
+    {
+      const credentialGenerator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey)
+
+      for (const credential of await credentialGenerator.createSpaceGenesis(spaceKey, controlFeed.key)) {
+        await space.controlPipeline.writer.write({
+          '@type': 'dxos.echo.feed.CredentialsMessage',
+          credential
+        })
+      }
+    }
+
+    this.spaces.set(spaceKey, space)
+
+    return space
+  }
+}

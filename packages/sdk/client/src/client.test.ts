@@ -224,8 +224,21 @@ describe('Client', () => {
       }).timeout(10_000);
     });
 
-    describe.skip('data', () => {
-      test('create party and item', async () => {
+    describe('data', () => {
+      test('create and list parties', async () => {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+        const party = await client.echo.createParty();
+
+        const parties = client.echo.queryParties().value
+
+        expect(parties).toEqual([party]);
+      });
+
+      test.skip('create party and item', async () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -239,7 +252,7 @@ describe('Client', () => {
         expect(item.model.get('foo')).toEqual('bar');
       });
 
-      test('set party properties', async () => {
+      test.skip('set party properties', async () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -252,7 +265,7 @@ describe('Client', () => {
         expect(title).toEqual('test-party');
       });
 
-      test('Properly creates multiple items in a party', async () => {
+      test.skip('Properly creates multiple items in a party', async () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -268,7 +281,7 @@ describe('Client', () => {
         expect(item1.model.get('prop1')).toEqual('x');
       });
 
-      test('party timeframe is incremented after creating ECHO mutations', async () => {
+      test.skip('party timeframe is incremented after creating ECHO mutations', async () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());

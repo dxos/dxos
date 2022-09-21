@@ -14,14 +14,22 @@ import { IdentityManager } from "./identity-manager";
 import { log } from '@dxos/log'
 import { codec } from "../../codec";
 import { PublicKey } from "@dxos/keys";
+import { Brane } from "./brane";
 
 export type SecretProvider = () => Promise<Buffer>
 
 export class Fubar {
+  // TODO(dmaretskyi): Make private.
   public metadataStore: MetadataStore;
+  // TODO(dmaretskyi): Make private.
   public keyring: Keyring;
+  // TODO(dmaretskyi): Make private.
   public feedStore: FeedStore;
+  // TODO(dmaretskyi): Make private.
   public identityManager: IdentityManager
+
+  // Initialized after identity is intitialized.
+  public brane?: Brane
 
   constructor(
     public storage: Storage,
@@ -44,6 +52,29 @@ export class Fubar {
 
   async close() {
     await this.identityManager.close()
+  }
+
+  private async _initBrane() {
+    const identity = this.identityManager.identity ?? failUndefined()
+    const brane = new Brane(
+      this.metadataStore,
+      this.keyring,
+      this.feedStore,
+      this.networkManager,
+      {
+        identityKey: identity.identityKey,
+        deviceKey: identity.deviceKey,
+        credentialSigner: identity.getIdentityCredentialSigner(),
+      }
+    )
+    await brane.open()
+    this.brane = brane
+  }
+
+  async createIdentity() {
+    const identity = await this.identityManager.createIdentity()
+    await this._initBrane()
+    return identity
   }
 
   /**
@@ -151,6 +182,8 @@ export class Fubar {
 
                   log(`Waiting for identity to be ready`)
                   await identity.ready()
+
+                  await this._initBrane()
 
                   done.wake()
                   log(`Invitee done`)

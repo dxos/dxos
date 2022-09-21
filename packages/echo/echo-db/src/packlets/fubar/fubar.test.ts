@@ -32,33 +32,49 @@ describe('fubar/fubar', () => {
     return fubar;
   };
 
-  test('creates identity', async () => {
-    const fubar = await setup();
-    await fubar.open();
-    afterTest(() => fubar.close());
+  describe('Identity management', () => {
+    test('creates identity', async () => {
+      const fubar = await setup();
+      await fubar.open();
+      afterTest(() => fubar.close());
 
-    const identity = await fubar.identityManager.createIdentity();
-    expect(identity).toBeTruthy();
-  });
+      const identity = await fubar.createIdentity();
+      expect(identity).toBeTruthy();
+    });
 
-  test('device invitations', async () => {
-    const signalContext  = new MemorySignalManagerContext()
+    test('device invitations', async () => {
+      const signalContext = new MemorySignalManagerContext()
 
-    const peer1 = await setup({ signalContext });
-    await peer1.open();
-    afterTest(() => peer1.close());
+      const peer1 = await setup({ signalContext });
+      await peer1.open();
+      afterTest(() => peer1.close());
 
-    const peer2 = await setup({ signalContext });
-    await peer2.open();
-    afterTest(() => peer2.close());
+      const peer2 = await setup({ signalContext });
+      await peer2.open();
+      afterTest(() => peer2.close());
 
-    const identity1 = await peer1.identityManager.createIdentity();
-    expect(identity1).toBeTruthy();
+      const identity1 = await peer1.createIdentity();
+      expect(identity1).toBeTruthy();
 
-    const invitation = await peer1.createInvitation();
-    const identity2 = await peer2.join(invitation);
+      const invitation = await peer1.createInvitation();
+      const identity2 = await peer2.join(invitation);
 
-    expect(identity2.identityKey).toEqual(identity1.identityKey);
+      expect(identity2.identityKey).toEqual(identity1.identityKey);
+    })
   })
+
+  describe('Data spaces', () => {
+    test('space genesis', async () => {
+      const fubar = await setup();
+      await fubar.open();
+      afterTest(() => fubar.close());
+      await fubar.createIdentity();
+
+      const space = await fubar.brane!.createSpace();
+      expect(space.database).toBeTruthy();
+      expect(fubar.brane!.spaces.has(space.key)).toBeTruthy();
+    })
+  })
+
 });
 

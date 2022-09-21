@@ -106,6 +106,14 @@ export class PublicKey {
     return key.toString('hex');
   }
 
+  /**
+   * To be used with ComplexMap and ComplexSet.
+   * Returns a scalar representation for this key.
+   */
+  static hash(key: PublicKey): string {
+    return key.toHex();
+  }
+
   constructor (
     private readonly _value: Uint8Array
   ) {

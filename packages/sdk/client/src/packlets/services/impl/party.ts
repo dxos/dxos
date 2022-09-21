@@ -9,7 +9,7 @@ import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { ECHO, InvitationDescriptor, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
+import { Fubar, InvitationDescriptor, PartyNotFoundError, resultSetToStream } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
@@ -40,7 +40,7 @@ class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
-    private readonly echo: ECHO
+    private readonly fubar: Fubar
   ) {}
 
   subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {

@@ -7,8 +7,8 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import {  Fubar, Identity, InvitationDescriptor } from '@dxos/echo-db';
+import { generatePasscode, SecretProvider } from '@dxos/credentials';
+import { Fubar, InvitationDescriptor } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
@@ -22,9 +22,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
+import { todo } from '@dxos/debug';
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
-import { failUndefined, todo } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
 
 /**
  * Profile service implementation.
@@ -48,7 +47,7 @@ export class ProfileService implements ProfileServiceRpc {
   }
 
   async createProfile (request: CreateProfileRequest) {
-    await this.fubar.identityManager.createIdentity();
+    await this.fubar.createIdentity();
     return { publicKey: this.fubar.identityManager.identity!.identityKey }
   }
 
