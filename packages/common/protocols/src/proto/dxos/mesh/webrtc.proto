@@ -15,7 +15,7 @@ package dxos.mesh.webrtc;
 service WebRTCService {
 
   ///
-  rpc Open(ConnectionRequest) returns (stream Event);
+  rpc Open(ConnectionRequest) returns (stream WebRTCEvent);
 
   ///
   rpc SendSignal(SignalRequest) returns (google.protobuf.Empty);
@@ -35,11 +35,11 @@ enum ConnectionState {
 }
 
 message ConnectionRequest {
-  int32 connection_id = 1;
+  // int32 connection_id = 1;
   bool initiator = 2;
 }
 
-message Event {
+message WebRTCEvent {
   message ConnectionEvent {
     ConnectionState state = 1;
     optional string error = 2; // TODO(burdon): Error type.
@@ -61,12 +61,12 @@ message Event {
 }
 
 message SignalRequest {
-  int32 connection_id = 1;
+  // int32 connection_id = 1;
   Signal signal = 2;
 }
 
 message DataRequest {
-  int32 connection_id = 1;
+  // int32 connection_id = 1;
   bytes payload = 2;
 }
 

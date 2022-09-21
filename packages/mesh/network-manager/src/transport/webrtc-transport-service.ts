@@ -3,22 +3,22 @@
 //
 
 import wrtc from '@koush/wrtc';
+import assert from 'assert';
+import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { WebRTCService, ConnectionRequest, SignalRequest, DataRequest, Event as WebRTCEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/webrtc';
-
-import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
-import assert from 'assert';
+import { WebRTCService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 
 export class WebRTCTransportService implements WebRTCService {
   protected peer: SimplePeer | undefined;
 
-  constructor(
+  constructor (
     private readonly _webrtcConfig?: any
   ) {
   }
 
-  open(request: ConnectionRequest): Stream<WebRTCEvent> {
+  open (request: ConnectionRequest): Stream<WebRTCEvent> {
     return new Stream(({ ready, next, close }) => {
 
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
@@ -32,7 +32,7 @@ export class WebRTCTransportService implements WebRTCService {
         connection: {
           state: ConnectionState.CONNECTING
         }
-      })
+      });
 
       this.peer.on('signal', async data => {
         next({
@@ -73,17 +73,17 @@ export class WebRTCTransportService implements WebRTCService {
     });
   }
 
-  async sendSignal({ signal }: SignalRequest): Promise<void> {
+  async sendSignal ({ signal }: SignalRequest): Promise<void> {
     assert(this.peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this.peer!.signal(JSON.parse(signal.json));
   }
 
-  async sendData(request: DataRequest): Promise<void> {
+  async sendData (request: DataRequest): Promise<void> {
     throw new Error('Not implemented yet');
   }
 
-  async close({ }: CloseRequest) {
+  async close () {
     this.peer!.destroy();
     log('Closed.');
   }
