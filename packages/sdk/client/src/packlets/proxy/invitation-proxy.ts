@@ -38,6 +38,12 @@ export class InvitationProxy {
   readonly activeInvitations: InvitationRequest[] = [];
   readonly invitationsUpdate = new Event();
 
+  private _isClosed = false;
+
+  close() {
+    this._isClosed = true;
+  }
+
   async createInvitationRequest ({ stream }: CreateInvitationRequestOpts): Promise<InvitationRequest> {
     return new Promise((resolve, reject) => {
       const connected = new Event();
@@ -76,7 +82,7 @@ export class InvitationProxy {
           error.emit(err);
         }
       }, err => {
-        if (err) {
+        if (err && !this._isClosed) {
           // TODO(rzadp): Handle retry.
           console.error(err);
           reject(error);

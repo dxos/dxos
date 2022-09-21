@@ -288,7 +288,7 @@ describe('Client', () => {
     });
   };
 
-  describe.only('local', () => {
+  describe('local', () => {
     testSuite(async () => new Client());
   });
 

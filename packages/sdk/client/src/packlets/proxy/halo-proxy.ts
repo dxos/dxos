@@ -209,5 +209,6 @@ export class HaloProxy implements Halo {
    */
   _close () {
     this._subscriptions.unsubscribe();
+    this._invitationProxy.close();
   }
 }
