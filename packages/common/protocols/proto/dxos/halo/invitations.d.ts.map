@@ -3,7 +3,7 @@
   "file": "invitations.d.ts",
   "sourceRoot": "",
   "sources": [
-    "../../src/proto/dxos/invitations.proto"
+    "../../../src/proto/dxos/halo/invitations.proto"
   ],
   "names": [],
   "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"

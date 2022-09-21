@@ -50,6 +50,9 @@ export class PublicKey {
     return new PublicKey(new Uint8Array(Buffer.from(hex, 'hex')));
   }
 
+  /**
+   * Creates a new key.
+   */
   static random (): PublicKey {
     return PublicKey.from(randomBytes(32));
   }
@@ -110,7 +113,7 @@ export class PublicKey {
    * To be used with ComplexMap and ComplexSet.
    * Returns a scalar representation for this key.
    */
-  static hash(key: PublicKey): string {
+  static hash (key: PublicKey): string {
     return key.toHex();
   }
 

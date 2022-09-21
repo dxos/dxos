@@ -25,19 +25,21 @@ describe('ServiceContext', () => {
       signalManager: new MemorySignalManager(signalContext)
     });
 
-    return new ServiceContext(
+    const context = new ServiceContext(
       storage,
       networkManager
     );
+
+    return context;
   };
 
   describe('Identity management', () => {
     test('creates identity', async () => {
-      const serviceContext = await setup();
-      await serviceContext.open();
-      afterTest(() => serviceContext.close());
+      const peer = await setup();
+      await peer.open();
+      afterTest(() => peer.close());
 
-      const identity = await serviceContext.createIdentity();
+      const identity = await peer.create();
       expect(identity).toBeTruthy();
     });
 
@@ -52,11 +54,11 @@ describe('ServiceContext', () => {
       await peer2.open();
       afterTest(() => peer2.close());
 
-      const identity1 = await peer1.createIdentity();
+      const identity1 = await peer1.create();
       expect(identity1).toBeTruthy();
 
-      const invitation = await peer1.createInvitation();
-      const identity2 = await peer2.join(invitation);
+      const invitation = await peer1.invitations.createInvitation();
+      const identity2 = await peer2.invitations.acceptInvitation(invitation);
 
       expect(identity2.identityKey).toEqual(identity1.identityKey);
     });
@@ -67,7 +69,7 @@ describe('ServiceContext', () => {
       const serviceContext = await setup();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
-      await serviceContext.createIdentity();
+      await serviceContext.create();
 
       const space = await serviceContext.spaceManager!.createSpace();
       expect(space.database).toBeTruthy();
@@ -78,13 +80,13 @@ describe('ServiceContext', () => {
       const serviceContext = await setup();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
-      await serviceContext.createIdentity();
+      await serviceContext.create();
 
       const space = await serviceContext.spaceManager!.createSpace();
 
       {
         const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
-        item.model.set('name', 'test');
+        void item.model.set('name', 'test');
       }
 
       {
