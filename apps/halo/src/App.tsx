@@ -10,10 +10,9 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { AppLayout } from './containers';
 import {
-  AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage, RequireProfile,
-  SpacePage, SpacesPage
+  AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
+  RequireProfile, SpacePage, SpacesPage
 } from './pages';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
