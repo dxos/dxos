@@ -27,7 +27,8 @@ export const IdentityPage = () => {
           margin: '0 auto'
         }}
       >
-        <QRCode value='https://dxos.org' />
+        {/* TODO(wittjosiah): Update with device invite. */}
+        <QRCode value='https://halo.dxos.org' />
         <TextField
           label='Username'
           fullWidth
@@ -35,6 +36,7 @@ export const IdentityPage = () => {
           onChange={event => setUsername(event.target.value)}
           sx={{ marginTop: 4 }}
         />
+        {/* TODO(wittjosiah): Allow updating username. */}
         {/* {username !== profile?.username && (
           <Button
             variant='outlined'

@@ -3,12 +3,11 @@
 //
 
 import React, { useCallback, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box, Button, FormControlLabel, Switch, Typography } from '@mui/material';
 
 import { Client, Party } from '@dxos/client';
-import { PublicKey } from '@dxos/protocols';
 import { useClient, useProfile } from '@dxos/react-client';
 import { FullScreen, QRCode } from '@dxos/react-components';
 import { JoinHaloDialog } from '@dxos/react-toolkit';
@@ -16,18 +15,6 @@ import { humanize } from '@dxos/util';
 
 import { ExistingIdentityDialog } from './ExistingIdentityDialog';
 import { NewIdentityDialog } from './NewIdentityDialog';
-
-const createPath = (spaceKey?: PublicKey, itemId?: string) => {
-  const parts = [];
-  if (spaceKey) {
-    parts.push(spaceKey.toHex());
-    if (itemId) {
-      parts.push(itemId);
-    }
-  }
-
-  return '/' + parts.join('/');
-};
 
 export interface RegistrationPageProps {
   onRegister?: (client: Client) => Promise<Party>
@@ -41,8 +28,8 @@ export const LockPage = () => {
   const profile = useProfile(true);
 
   const navigate = useNavigate();
-  const { pathname, search } = useLocation();
-  const redirect = pathname.split('/').slice(2).join('/');
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') ?? '/spaces';
 
   const [newIdentityOpen, setNewIdentityOpen] = useState(false);
   const [existingIdentityOpen, setExistingIdentityOpen] = useState(false);
@@ -63,7 +50,7 @@ export const LockPage = () => {
         maxHeight: '700px'
       }}>
         {/* TODO(wittjosiah): Update with device invite. */}
-        <QRCode value='https://dxos.org' />
+        <QRCode value='https://halo.dxos.org' />
 
         {!profile && (
           <>
@@ -104,9 +91,7 @@ export const LockPage = () => {
           // Create profile.
           // TODO(burdon): Error handling.
           await client.halo.createProfile({ username });
-
-          const path = redirect ? `/${redirect}${search}` : '/spaces';
-          navigate(path);
+          navigate(redirect);
         }}
       />
 
@@ -115,7 +100,7 @@ export const LockPage = () => {
         onClose={() => setExistingIdentityOpen(false)}
         onRecover={async seedphrase => {
           await client.halo.createProfile({ seedphrase });
-          navigate(`/${redirect}${search}`);
+          navigate(redirect);
         }}
         onInvite={() => {
           setExistingIdentityOpen(false);
@@ -128,7 +113,7 @@ export const LockPage = () => {
         closeOnSuccess={false}
         onClose={() => setDeviceInviteOpen(false)}
         onJoin={() => {
-          navigate(`/${redirect}${search}`);
+          navigate(redirect);
         }}
       />
     </FullScreen>

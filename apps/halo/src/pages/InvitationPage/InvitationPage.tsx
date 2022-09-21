@@ -31,8 +31,8 @@ export const InvitationPage = () => {
     <JoinPartyDialog
       open
       invitationCode={code}
-      onJoin={party => redirect(getPath(party.key))}
-      onClose={() => redirect('/')}
+      onJoin={space => redirect(getPath(space.key))}
+      onClose={() => redirect('/spaces')}
     />
   );
 };

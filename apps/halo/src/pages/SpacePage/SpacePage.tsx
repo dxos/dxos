@@ -14,9 +14,10 @@ import { Box, Fab, IconButton, TextField } from '@mui/material';
 
 import { useParty, useSelection } from '@dxos/react-client';
 import { CustomTextField, HashIcon } from '@dxos/react-components';
+import { PartySharingDialog } from '@dxos/react-toolkit';
 import { humanize } from '@dxos/util';
 
-import { ActionType, useActions, useSafeSpaceKey } from '../../hooks';
+import { useSafeSpaceKey } from '../../hooks';
 
 // TODO(wittjosiah): Copied from Kodama, make customizable.
 const LABEL_PROPERTY = 'name';
@@ -29,7 +30,7 @@ export const SpacePage = () => {
   const space = useParty(spaceKey);
   const items = useSelection(space?.select().filter({ type: TYPE_ITEM })) ?? [];
   const [name, setName] = useState('');
-  const [, dispatch] = useActions();
+  const [showShare, setShowShare] = useState(false);
 
   const handleCreateItem = useCallback(async () => {
     await space?.database.createItem({
@@ -111,7 +112,7 @@ export const SpacePage = () => {
       </Box>
 
       <Fab
-        onClick={() => dispatch({ type: ActionType.PARTY_SHARING, params: { partyKey: space.key } })}
+        onClick={() => setShowShare(true)}
         sx={{
           position: 'absolute',
           bottom: 16,
@@ -120,6 +121,12 @@ export const SpacePage = () => {
       >
         <ShareIcon />
       </Fab>
+
+      <PartySharingDialog
+        open={showShare}
+        partyKey={space.key}
+        onClose={() => setShowShare(false)}
+      />
     </Box>
   );
 };

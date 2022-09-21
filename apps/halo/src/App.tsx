@@ -10,14 +10,16 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { ActionProvider, AppLayout } from './containers';
+import { AppLayout } from './containers';
 import {
-  AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage, RequireProfile, SpacePage, SpacesPage
+  AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage, RequireProfile,
+  SpacePage, SpacesPage
 } from './pages';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => useRoutes([
+  // TODO(wittjosiah): Move behind RequireProfile.
   {
     path: '/auth/:origin',
     element: <AuthPage />
@@ -61,11 +63,9 @@ export const App = () => {
         clientRef={clientRef}
         config={configProvider}
       >
-        <ActionProvider>
-          <HashRouter>
-            <Routes />
-          </HashRouter>
-        </ActionProvider>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
       </ClientProvider>
     </ErrorBoundary>
   );

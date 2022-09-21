@@ -10,7 +10,6 @@ import { FormControlLabel, Switch, Tab, Tabs } from '@mui/material';
 import { useProfile } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { ActionDialog } from '../ActionDialog';
 import { AppToolbar } from './AppToolbar';
 
 const tabs = [
@@ -63,8 +62,6 @@ export const AppLayout = () => {
         ))}
       </Tabs>
       <Outlet />
-
-      <ActionDialog />
     </FullScreen>
   );
 };
