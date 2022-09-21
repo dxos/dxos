@@ -2361,6 +2361,7 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/feed-store': workspace:*
       '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
@@ -2398,6 +2399,7 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
@@ -2525,6 +2527,7 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
@@ -2556,6 +2559,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/protocols': link:../../common/protocols
       '@dxos/react-async': link:../../common/react-async
@@ -13389,7 +13393,7 @@ packages:
   /axios/0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.14.6
+      follow-redirects: 1.14.6_debug@4.3.4
     transitivePeerDependencies:
       - debug
 
@@ -18796,15 +18800,6 @@ packages:
       from2: 2.3.0
     dev: true
 
-  /follow-redirects/1.14.6:
-    resolution: {integrity: sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
   /follow-redirects/1.14.6_debug@4.3.4:
     resolution: {integrity: sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==}
     engines: {node: '>=4.0'}
@@ -18815,7 +18810,6 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
-    dev: true
 
   /for-in/1.0.2:
     resolution: {integrity: sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ==}

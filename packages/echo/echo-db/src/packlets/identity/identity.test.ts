@@ -21,9 +21,9 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../space';
-import { codec } from '../testing';
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
+import { codec } from '../../codec';
 
 describe('halo/identity', () => {
   test('create', async () => {

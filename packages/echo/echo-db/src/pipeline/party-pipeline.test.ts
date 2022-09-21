@@ -10,7 +10,7 @@ import { Keyring } from '@dxos/credentials';
 import { createId } from '@dxos/crypto';
 import { checkType, todo } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredential, AdmittedFeed, PartyMember } from '@dxos/halo-protocol';
+import { createCredential } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { createTestProtocolPair } from '@dxos/mesh-protocol';
 import { ModelFactory } from '@dxos/model-factory';
@@ -21,12 +21,12 @@ import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../../codec';
 import { createReplicatorPlugin } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { MetadataStore } from './metadata-store';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyPipeline } from './party-pipeline';
+import { codec } from '../codec';
 
 describe.skip('PartyPipeline', () => {
   const setup = async () => {

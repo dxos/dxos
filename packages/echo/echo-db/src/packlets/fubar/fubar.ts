@@ -1,11 +1,10 @@
 import { Trigger } from "@dxos/async";
 import { failUndefined } from "@dxos/debug";
-import { codec } from "@dxos/echo-protocol";
 import { FeedStore } from "@dxos/feed-store";
 import { Keyring } from "@dxos/keyring";
 import { createProtocolFactory, NetworkManager, StarTopology } from "@dxos/network-manager";
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
-import { PublicKey, schema } from "@dxos/protocols";
+import { schema } from "@dxos/protocols";
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { Storage } from "@dxos/random-access-storage";
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -13,6 +12,8 @@ import { InvitationDescriptor } from "../../invitations/invitation-descriptor";
 import { MetadataStore } from "../metadata";
 import { IdentityManager } from "./identity-manager";
 import { log } from '@dxos/log'
+import { codec } from "../../codec";
+import { PublicKey } from "@dxos/keys";
 
 export type SecretProvider = () => Promise<Buffer>
 
@@ -102,7 +103,7 @@ export class Fubar {
       })])
     })
 
-    return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey.asUint8Array(), new Uint8Array());
+    return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
   }
 
 

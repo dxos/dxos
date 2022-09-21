@@ -30,7 +30,6 @@ import { humanize } from '@dxos/util';
 
 import { defaultInvitationAuthenticator, OfflineInvitationClaimer } from '../invitations';
 import { Item } from '../packlets/database';
-import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createTestIdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
@@ -38,6 +37,7 @@ import { messageLogger } from '../testing';
 import { PARTY_ITEM_TYPE } from './data-party';
 import { PartyFactory } from './party-factory';
 import { PartyManager } from './party-manager';
+import { codec } from '../codec';
 
 const log = debug('dxos:echo:parties:party-manager:test');
 

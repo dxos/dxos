@@ -16,11 +16,11 @@ import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createDataPartyAdmissionMessages, defaultInvitationAuthenticator, GreetingInitiator } from '../invitations';
-import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { createAuthenticator, createCredentialsProvider, createTestIdentityCredentials, deriveTestDeviceCredentials, IdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { DataParty } from './data-party';
+import { codec } from '../codec';
 
 const signalContext = new MemorySignalManagerContext();
 
