@@ -91,7 +91,7 @@ export class FeedDescriptor {
   }
 
   get writable () {
-    return !!this.secretKey;
+    return !!this._signer;
   }
 
   /**

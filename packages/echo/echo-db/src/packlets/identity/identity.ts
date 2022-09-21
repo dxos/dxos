@@ -11,6 +11,8 @@ import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 
 import { Space } from '../space';
+import { Database } from '../database';
+import { failUndefined } from '@dxos/debug';
 
 export type IdentityParams = {
   identityKey: PublicKey
@@ -78,6 +80,10 @@ export class Identity {
 
   get haloGenesisFeedKey () {
     return this._halo.genesisFeedKey;
+  }
+
+  get haloDatabase(): Database {
+    return this._halo.database ?? failUndefined();
   }
 
   /**

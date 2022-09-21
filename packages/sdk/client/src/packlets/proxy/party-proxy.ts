@@ -2,11 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { failUndefined } from '@dxos/debug';
+import { failUndefined, todo } from '@dxos/debug';
 import {
-  PARTY_ITEM_TYPE,
-  PARTY_TITLE_PROPERTY,
-  ActivationOptions,
   Database,
   Item,
   RemoteDatabaseBackend,
@@ -16,10 +13,13 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { PartySnapshot } from 'packages/common/protocols/proto/dxos/echo/snapshot';
 
 import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
+
+export interface ActivationOptions {}
 
 /**
  * Main public Party API.
@@ -50,13 +50,13 @@ export class PartyProxy implements Party {
       return;
     }
 
-    if (this._serviceProvider instanceof ClientServiceProxy) {
+    if (true) { // TODO: Always run database in remote mode for now.
       this._database = new Database(
         this._modelFactory,
         new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
         memberKey
       );
-    } else if ((this._serviceProvider as any).echo) {
+    } else if (false) {
       // TODO(wittjosiah): Reconcile service provider host with interface.
       const party = (this._serviceProvider as any).echo.getParty(this._key) ?? failUndefined();
       this._database = party.database;
@@ -109,12 +109,12 @@ export class PartyProxy implements Party {
    * Called by EchoProxy open.
    */
   async initialize () {
-    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database.initialize();
-    }
+    // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+      await this._database!.initialize();
+    // }
 
     // Root item for properties.
-    this._item = await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
+    // this._item = await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
   }
 
   /**
@@ -147,13 +147,13 @@ export class PartyProxy implements Party {
 
   // TODO(burdon): Requires comment.
   async setActive (active: boolean, options: ActivationOptions) {
-    const activeGlobal = options.global ? active : undefined;
-    const activeDevice = options.device ? active : undefined;
-    await this._serviceProvider.services.PartyService.setPartyState({
-      partyKey: this.key,
-      activeGlobal,
-      activeDevice
-    });
+    // const activeGlobal = options.global ? active : undefined;
+    // const activeDevice = options.device ? active : undefined;
+    // await this._serviceProvider.services.PartyService.setPartyState({
+    //   partyKey: this.key,
+    //   activeGlobal,
+    //   activeDevice
+    // });
   }
 
   get properties (): ObjectProperties {
@@ -164,14 +164,15 @@ export class PartyProxy implements Party {
    * @deprecated Use party.properties.
    */
   async setTitle (title: string) {
-    await this.setProperty(PARTY_TITLE_PROPERTY, title);
+    // await this.setProperty(PARTY_TITLE_PROPERTY, title);
   }
 
   /**
    * @deprecated Use party.properties.
    */
   getTitle () {
-    return this.getProperty(PARTY_TITLE_PROPERTY);
+    return todo()
+    // return this.getProperty(PARTY_TITLE_PROPERTY);
   }
 
   /**
@@ -218,8 +219,9 @@ export class PartyProxy implements Party {
   /**
    * Implementation method.
    */
-  createSnapshot () {
-    return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
+  createSnapshot (): Promise<PartySnapshot> {
+    return todo()
+    // return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
 
   /**

@@ -9,6 +9,7 @@ import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Directory } from '@dxos/random-access-storage';
+import { log } from '@dxos/log'
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
@@ -96,25 +97,35 @@ export class FeedStore {
    * @deprecated Use openReadWriteFeedWithSigner instead.
    */
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
-    const descriptor = this._descriptors.get(key.toHex());
-    if (descriptor && descriptor.secretKey) {
-      return descriptor;
-    }
-    return this._createDescriptor({ key, secretKey });
+    throw new Error("openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.");
+    // const descriptor = this._descriptors.get(key.toHex());
+    // if (descriptor && descriptor.secretKey) {
+    //   return descriptor;
+    // }
+    // return this._createDescriptor({ key, secretKey });
   }
 
   /**
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
   async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer) {
-    assert(!this._descriptors.has(key.toHex()), 'Feed already exists.');
-    return this._createDescriptor({ key, signer });
+    log(`open read/write feed`, { key })
+    if(this._descriptors.has(key.toHex())) {
+      const descriptor = this._descriptors.get(key.toHex())!;
+      assert(descriptor.writable, 'Feed already exists and is not writable.');
+      return descriptor
+    }
+
+    const descriptor = await this._createDescriptor({ key, signer });
+    assert(descriptor.writable);
+    return descriptor;
   }
 
   /**
    * Create a readonly feed to Feedstore
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
+    log(`Open read-only feed`, { key })
     const descriptor = this._descriptors.get(key.toHex()) ?? await this._createDescriptor({ key });
     return descriptor;
   }

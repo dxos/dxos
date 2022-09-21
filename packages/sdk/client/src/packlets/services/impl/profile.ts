@@ -49,7 +49,7 @@ export class ProfileService implements ProfileServiceRpc {
   }
 
   async createProfile (request: CreateProfileRequest) {
-    await this.context.identityManager.createIdentity();
+    await this.context.createIdentity();
     return { publicKey: this.context.identityManager.identity!.identityKey };
   }
 

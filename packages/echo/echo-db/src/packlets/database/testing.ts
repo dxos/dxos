@@ -8,8 +8,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
+import { DataService } from './data-service';
 import { DataServiceHost } from './data-service-host';
-import { DataServiceRouter } from './data-service-router';
 import { Database } from './database';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 
@@ -32,7 +32,7 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   dataServiceHost: DataServiceHost
 ) => {
   const partyKey = PublicKey.random();
-  const dataServiceRouter = new DataServiceRouter();
+  const dataServiceRouter = new DataService();
   dataServiceRouter.trackParty(partyKey, dataServiceHost);
 
   const frontend = new Database(

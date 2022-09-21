@@ -9,7 +9,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import {
-  DataService,
+  DataService as DataServiceRpc,
   MutationReceipt,
   SubscribeEntitySetRequest,
   SubscribeEntitySetResponse,
@@ -27,7 +27,7 @@ const log = debug('dxos:echo-db:data-service-router');
 /**
  * Routes DataService requests to different DataServiceHost instances based on party id.
  */
-export class DataServiceRouter implements DataService {
+export class DataService implements DataServiceRpc {
   private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(x => x.toHex());
 
   trackParty (key: PublicKey, host: DataServiceHost) {

@@ -4,7 +4,7 @@
 
 export * from './data-mirror';
 export * from './data-service-host';
-export * from './data-service-router';
+export * from './data-service';
 export * from './database-backend';
 export * from './item-demuxer';
 export * from './item-manager';

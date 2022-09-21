@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event, latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { InvitationDescriptor, PARTY_ITEM_TYPE, ResultSet } from '@dxos/echo-db';
+import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -87,23 +87,23 @@ export class EchoProxy implements Echo {
           this._parties.set(partyProxy.key, partyProxy);
 
           // TODO(dmaretskyi): Replace with selection API when it has update filtering.
-          partyProxy.database.entityUpdate.on(entity => {
-            if (entity.type === PARTY_ITEM_TYPE) {
-              this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
-            }
-          });
+          // partyProxy.database.entityUpdate.on(entity => {
+          //   if (entity.type === PARTY_ITEM_TYPE) {
+          //     this._partiesChanged.emit(); // Trigger for `queryParties()` when a party is updated.
+          //   }
+          // });
 
-          const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ partyKey: party.publicKey });
-          partyStream.subscribe(async ({ party }) => {
-            if (!party) {
-              return;
-            }
+          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ partyKey: party.publicKey });
+          // partyStream.subscribe(async ({ party }) => {
+          //   if (!party) {
+          //     return;
+          //   }
 
-            partyProxy._processPartyUpdate(party);
-            this._partiesChanged.emit();
-          });
+          //   partyProxy._processPartyUpdate(party);
+          //   this._partiesChanged.emit();
+          // });
 
-          this._subscriptions.push(() => partyStream.close());
+          // this._subscriptions.push(() => partyStream.close());
         }
       }
 

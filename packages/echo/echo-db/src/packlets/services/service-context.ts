@@ -17,7 +17,9 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { codec } from '../../codec';
 import { InvitationDescriptor } from '../../invitations/invitation-descriptor';
+import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
+import { Brane } from './brane';
 import { IdentityManager } from './identity-manager';
 
 export type SecretProvider = () => Promise<Buffer>
@@ -26,10 +28,21 @@ export type SecretProvider = () => Promise<Buffer>
  *
  */
 export class ServiceContext {
+  // TODO(dmaretskyi): Make private.
   public metadataStore: MetadataStore;
+  // TODO(dmaretskyi): Make private.
   public keyring: Keyring;
+  // TODO(dmaretskyi): Make private.
   public feedStore: FeedStore;
+  // TODO(dmaretskyi): Make private.
   public identityManager: IdentityManager;
+
+  // Initialized after identity is intitialized.
+  public brane?: Brane;
+
+  public dataServiceRouter = new DataService();
+
+  public braneReady = new Trigger();
 
   constructor (
     public storage: Storage,
@@ -52,6 +65,32 @@ export class ServiceContext {
 
   async close () {
     await this.identityManager.close();
+  }
+
+  private async _initBrane () {
+    const identity = this.identityManager.identity ?? failUndefined();
+    const brane = new Brane(
+      this.metadataStore,
+      this.keyring,
+      this.feedStore,
+      this.networkManager,
+      {
+        identityKey: identity.identityKey,
+        deviceKey: identity.deviceKey,
+        credentialSigner: identity.getIdentityCredentialSigner()
+      },
+      this.dataServiceRouter
+    );
+    await brane.open();
+    this.brane = brane;
+    this.braneReady.wake();
+  }
+
+  async createIdentity () {
+    const identity = await this.identityManager.createIdentity();
+    this.dataServiceRouter.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
+    await this._initBrane();
+    return identity;
   }
 
   /**
@@ -157,6 +196,8 @@ export class ServiceContext {
 
                   log('Waiting for identity to be ready');
                   await identity.ready();
+
+                  await this._initBrane();
 
                   done.wake();
                   log('Invitee done');

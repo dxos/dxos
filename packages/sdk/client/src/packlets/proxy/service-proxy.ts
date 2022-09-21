@@ -3,7 +3,6 @@
 //
 
 import { promiseTimeout } from '@dxos/async';
-import { OpenProgress } from '@dxos/echo-db';
 import { createBundledRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { clientServiceBundle, ClientServiceProvider, ClientServices, RemoteServiceConnectionTimeout } from '../api';
@@ -28,7 +27,7 @@ export class ClientServiceProxy implements ClientServiceProvider {
 
   readonly services: ClientServices;
 
-  async open (onProgressCallback?: ((progress: OpenProgress) => void) | undefined) {
+  async open (onProgressCallback?: ((progress: any) => void) | undefined) {
     await promiseTimeout(this._client.open(), this._timeout, new RemoteServiceConnectionTimeout());
   }
 

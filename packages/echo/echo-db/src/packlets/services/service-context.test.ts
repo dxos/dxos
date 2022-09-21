@@ -7,6 +7,7 @@ import { it as test } from 'mocha';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -30,32 +31,66 @@ describe('ServiceContext', () => {
     );
   };
 
-  test('creates identity', async () => {
-    const serviceContext = await setup();
-    await serviceContext.open();
-    afterTest(() => serviceContext.close());
+  describe('Identity management', () => {
+    test('creates identity', async () => {
+      const serviceContext = await setup();
+      await serviceContext.open();
+      afterTest(() => serviceContext.close());
 
-    const identity = await serviceContext.identityManager.createIdentity();
-    expect(identity).toBeTruthy();
+      const identity = await serviceContext.createIdentity();
+      expect(identity).toBeTruthy();
+    });
+
+    test('device invitations', async () => {
+      const signalContext = new MemorySignalManagerContext();
+
+      const peer1 = await setup({ signalContext });
+      await peer1.open();
+      afterTest(() => peer1.close());
+
+      const peer2 = await setup({ signalContext });
+      await peer2.open();
+      afterTest(() => peer2.close());
+
+      const identity1 = await peer1.createIdentity();
+      expect(identity1).toBeTruthy();
+
+      const invitation = await peer1.createInvitation();
+      const identity2 = await peer2.join(invitation);
+
+      expect(identity2.identityKey).toEqual(identity1.identityKey);
+    });
   });
 
-  test('device invitations', async () => {
-    const signalContext = new MemorySignalManagerContext();
+  describe('Data spaces', () => {
+    test('space genesis', async () => {
+      const serviceContext = await setup();
+      await serviceContext.open();
+      afterTest(() => serviceContext.close());
+      await serviceContext.createIdentity();
 
-    const peer1 = await setup({ signalContext });
-    await peer1.open();
-    afterTest(() => peer1.close());
+      const space = await serviceContext.brane!.createSpace();
+      expect(space.database).toBeTruthy();
+      expect(serviceContext.brane!.spaces.has(space.key)).toBeTruthy();
+    });
 
-    const peer2 = await setup({ signalContext });
-    await peer2.open();
-    afterTest(() => peer2.close());
+    test('space genesis with database', async () => {
+      const serviceContext = await setup();
+      await serviceContext.open();
+      afterTest(() => serviceContext.close());
+      await serviceContext.createIdentity();
 
-    const identity1 = await peer1.identityManager.createIdentity();
-    expect(identity1).toBeTruthy();
+      const space = await serviceContext.brane!.createSpace();
 
-    const invitation = await peer1.createInvitation();
-    const identity2 = await peer2.join(invitation);
+      {
+        const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
+        item.model.set('name', 'test');
+      }
 
-    expect(identity2.identityKey).toEqual(identity1.identityKey);
+      {
+        const [item] = space.database!.select({ type: 'test' }).exec().entities;
+        expect(item.model.get('name')).toEqual('test');
+      }
+    });
   });
 });
