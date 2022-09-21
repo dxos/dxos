@@ -8,7 +8,6 @@ import assert from 'node:assert';
 import { synchronized } from '@dxos/async';
 import { Keyring, KeyStore, SecretProvider } from '@dxos/credentials';
 import { InvalidStateError, raise } from '@dxos/debug';
-import { codec } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,6 +29,7 @@ import { IdentityNotInitializedError, InvalidStorageVersionError } from './packl
 import { OpenProgress, PartyFactory, DataParty, PartyManager } from './parties';
 import { STORAGE_VERSION, MetadataStore, PartyFeedProvider } from './pipeline';
 import { SnapshotStore } from './snapshots';
+import { codec } from './codec';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PartyFilter {

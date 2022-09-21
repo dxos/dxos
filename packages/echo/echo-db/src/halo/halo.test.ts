@@ -19,10 +19,10 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, testTimeout } from '@dxos/testutils';
 
 import { defaultInvitationAuthenticator } from '../invitations';
-import { codec } from '../packlets/testing';
 import { MetadataStore, PartyFeedProvider } from '../pipeline';
 import { SnapshotStore } from '../snapshots';
 import { HALO } from './halo';
+import { codec } from '../codec';
 
 const signalContext = new MemorySignalManagerContext();
 

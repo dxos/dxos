@@ -4,7 +4,12 @@
     "outDir": "dist"
   },
   "include": [
-    "src/packlets"
+    "src/packlets",
+    "src/api",
+    "src/invitations/invitation-descriptor.ts",
+    "src/invitations/common.ts",
+    "src/codec.ts",
+    "src/index.ts"
   ],
   "exclude": [
   ],

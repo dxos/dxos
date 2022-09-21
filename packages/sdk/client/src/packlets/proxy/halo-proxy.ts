@@ -191,15 +191,15 @@ export class HaloProxy implements Halo {
 
     this._subscriptions.push(() => profileStream.close());
 
-    const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
-    contactsStream.subscribe(data => {
-      this._contacts = data.contacts as PartyMember[];
-      this._contactsChanged.emit();
-    });
+    // const contactsStream = this._serviceProvider.services.HaloService.subscribeContacts();
+    // contactsStream.subscribe(data => {
+    //   this._contacts = data.contacts as PartyMember[];
+    //   this._contactsChanged.emit();
+    // });
 
-    this._subscriptions.push(() => contactsStream.close());
+    // this._subscriptions.push(() => contactsStream.close());
 
-    await Promise.all([gotProfile, gotContacts]);
+    await Promise.all([gotProfile/*, gotContacts*/]);
   }
 
   /**

@@ -19,6 +19,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/messaging": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/rpc": "workspace:*",

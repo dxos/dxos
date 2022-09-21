@@ -38,7 +38,7 @@ export class InvitationDescriptor {
   static fromQueryParameters (queryParameters: InvitationQueryParameters): InvitationDescriptor {
     const { hash, swarmKey, invitation, identityKey, type } = queryParameters;
 
-    const descriptor = new InvitationDescriptor(parseInvitationType(type), PublicKey.bufferize(swarmKey),
+    const descriptor = new InvitationDescriptor(parseInvitationType(type), PublicKey.from(swarmKey),
       PublicKey.bufferize(invitation), identityKey ? PublicKey.from(identityKey) : undefined);
 
     if (hash !== descriptor.hash) {
@@ -55,7 +55,7 @@ export class InvitationDescriptor {
 
     return new InvitationDescriptor(
       invitation.type,
-      invitation.swarmKey,
+      PublicKey.from(invitation.swarmKey),
       Buffer.from(invitation.invitation),
       invitation.identityKey ? PublicKey.from(invitation.identityKey) : undefined,
       invitation.secret ? Buffer.from(invitation.secret) : undefined
@@ -76,7 +76,7 @@ export class InvitationDescriptor {
     public secret?: Uint8Array
   ) {
     assert(type !== undefined);
-    assert(swarmKey instanceof Uint8Array);
+    assert(PublicKey.isPublicKey(swarmKey));
     assert(invitation instanceof Uint8Array);
     if (identityKey) {
       PublicKey.assertValidPublicKey(identityKey);
@@ -96,7 +96,7 @@ export class InvitationDescriptor {
    */
   toQueryParameters (): InvitationQueryParameters {
     const query: Partial<InvitationQueryParameters> = {
-      swarmKey: PublicKey.stringify(this.swarmKey),
+      swarmKey: this.swarmKey.toHex(),
       invitation: PublicKey.stringify(this.invitation),
       type: stringifyInvitationType(this.type)
     };
@@ -113,7 +113,7 @@ export class InvitationDescriptor {
   toProto (): InvitationDescriptorProto {
     return {
       type: this.type,
-      swarmKey: this.swarmKey,
+      swarmKey: this.swarmKey.asUint8Array(),
       invitation: this.invitation,
       identityKey: this.identityKey?.asUint8Array(),
       secret: this.secret

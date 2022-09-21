@@ -15,7 +15,8 @@ import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto
 
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
-import { Identity } from './identity';
+import { Identity } from '../identity';
+import { Event } from '@dxos/async';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
@@ -29,9 +30,13 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey
 }
 
+// TODO(dmaretskyi): This represents the Peer S/M. Lets find a better name for it.
 export class IdentityManager {
   private _identity?: Identity;
 
+  readonly stateUpdate = new Event();
+
+  // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor (
     private readonly _metadataStore: MetadataStore,
     private readonly _keyring: Keyring,
@@ -51,6 +56,7 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open();
       await this._identity.ready();
+      this.stateUpdate.emit();
     }
   }
 
@@ -146,25 +152,30 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    this.stateUpdate.emit();
     return identity;
   }
 
-  async joinIdentity (params: JoinIdentityParams) {
+  /**
+   * Accept an existing identity. Expects it's device key to be authorized.
+   */
+  async acceptIdentity (params: JoinIdentityParams) {
     assert(!this._identity, 'Identity already exists.');
 
-    const controlFeedKey = await this._keyring.createKey();
-
     const identityRecord: IdentityRecord = {
-      identityKey: await this._keyring.createKey(),
+      identityKey: params.identityKey,
       deviceKey: await this._keyring.createKey(),
       haloSpace: {
-        spaceKey: await this._keyring.createKey(),
-        genesisFeedKey: controlFeedKey,
-        writeControlFeedKey: controlFeedKey,
+        spaceKey: params.haloSpaceKey,
+        genesisFeedKey: params.haloGenesisFeedKey,
+        writeControlFeedKey: await this._keyring.createKey(),
         writeDataFeedKey: await this._keyring.createKey()
       }
     };
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
+    this._identity = identity;
+    this.stateUpdate.emit();
+    return identity;
   }
 }

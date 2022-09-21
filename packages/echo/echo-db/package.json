@@ -36,6 +36,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "assert": "^2.0.0",
     "base-x": "~3.0.9",
     "buffer-json-encoding": "^1.0.2",
@@ -43,6 +44,7 @@
     "json-stable-stringify": "^1.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.unionwith": "^4.6.0",
+    "@dxos/protocol-plugin-rpc": "workspace:*",
     "pify": "~5.0.0"
   },
   "devDependencies": {

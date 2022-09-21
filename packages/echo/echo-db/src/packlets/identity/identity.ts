@@ -61,6 +61,8 @@ export class Identity {
 
   async ready () {
     await this._deviceStateMachine.deviceChainReady.wait();
+
+    // TODO(dmaretskyi): Should we also wait for our feeds to be admitted?
   }
 
   /**
@@ -68,6 +70,14 @@ export class Identity {
    */
   get controlPipeline () {
     return this._halo.controlPipeline;
+  }
+
+  get haloSpaceKey () {
+    return this._halo.key;
+  }
+
+  get haloGenesisFeedKey () {
+    return this._halo.genesisFeedKey;
   }
 
   /**

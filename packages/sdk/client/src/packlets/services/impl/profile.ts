@@ -8,7 +8,7 @@ import { v4 } from 'uuid';
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import { ECHO, InvitationDescriptor } from '@dxos/echo-db';
+import {  Fubar, Identity, InvitationDescriptor } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
@@ -23,6 +23,8 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
+import { failUndefined, todo } from '@dxos/debug';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Profile service implementation.
@@ -30,35 +32,36 @@ import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './typ
 export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  // TODO(burdon): Pass in HALO.
   constructor (
-    private readonly echo: ECHO
+    private readonly fubar: Fubar
   ) {}
 
   subscribeProfile (): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
       const emitNext = () => next({
-        profile: this.echo.halo.isInitialized ? this.echo.halo.getProfile() : undefined
+        profile: this.fubar.identityManager.identity ? { publicKey: this.fubar.identityManager.identity.identityKey } : undefined,
       });
 
       emitNext();
-      return this.echo.halo.subscribeToProfile(emitNext);
+      return this.fubar.identityManager.stateUpdate.on(emitNext);
     });
   }
 
   async createProfile (request: CreateProfileRequest) {
-    return this.echo.halo.createProfile(request);
+    await this.fubar.identityManager.createIdentity();
+    return { publicKey: this.fubar.identityManager.identity!.identityKey }
   }
 
   async recoverProfile (request: RecoverProfileRequest): Promise<Profile> {
+    return todo()
     if (!request.seedPhrase) {
       throw new Error('Recovery SeedPhrase not provided.');
     }
-    await this.echo.open();
-    await this.echo.halo.recover(request.seedPhrase);
-    const profile = this.echo.halo.getProfile();
-    assert(profile, 'Recovering profile failed.');
-    return profile;
+    // await this.echo.open();
+    // await this.echo.halo.recover(request.seedPhrase);
+    // const profile = this.echo.halo.getProfile();
+    // assert(profile, 'Recovering profile failed.');
+    // return profile;
   }
 
   createInvitation (): Stream<InvitationRequest> {
@@ -70,10 +73,7 @@ export class ProfileService implements ProfileServiceRpc {
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
         };
-        invitation = await this.echo.halo.createInvitation({
-          secretProvider,
-          secretValidator: defaultSecretValidator
-        }, {
+        invitation = await this.fubar.createInvitation({
           onFinish: () => {
             next({ state: InvitationState.SUCCESS });
             close();
@@ -103,12 +103,12 @@ export class ProfileService implements ProfileServiceRpc {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.echo.halo.join(InvitationDescriptor.fromProto(request), secretProvider);
+      const haloPartyPromise = this.fubar.join(InvitationDescriptor.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
-      haloPartyPromise.then(party => {
-        next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+      haloPartyPromise.then(identity => {
+        next({ id, state: InvitationState.SUCCESS, partyKey: identity.identityKey });
       }).catch(err => {
         next({ id, state: InvitationState.ERROR, error: String(err) });
       });
@@ -127,4 +127,4 @@ export class ProfileService implements ProfileServiceRpc {
   }
 }
 
-export const createProfileService = ({ echo }: CreateServicesOpts): ProfileService => new ProfileService(echo);
+export const createProfileService = ({ fubar }: CreateServicesOpts): ProfileService => new ProfileService(fubar);

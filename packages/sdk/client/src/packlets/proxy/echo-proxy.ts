@@ -32,9 +32,11 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    // TODO(wittjosiah): Reconcile service provider host with interface.
-    this._modelFactory = _serviceProvider instanceof ClientServiceProxy
-      ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
+    
+    // TODO(dmaretskyi): .
+    this._modelFactory = new ModelFactory()
+    // _serviceProvider instanceof ClientServiceProxy
+    //   ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
 
     this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
   }
