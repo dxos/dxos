@@ -65,9 +65,10 @@ export class Processor {
     if (projectName && filter) {
       const project = projectsByName.get(projectName);
       if (project) {
+        const cycles: string[][] = [];
+
         // Recursively process deps.
-        // TODO(burdon): Detect circular deps.
-        const processDeps = (project: Project): Project[] => {
+        const processDeps = (project: Project, chain: string[] = [project.package.name]): Project[] => {
           const { package: { dependencies } } = project;
           const deps: Project[] = Object.keys(dependencies)
             .filter(minimatch.filter(filter))
@@ -79,8 +80,13 @@ export class Processor {
             deps.forEach(dep => {
               project.descendents!.add(dep.package.name);
 
-              const sub = processDeps(dep);
-              sub.forEach(sub => project.descendents!.add(sub.package.name));
+              const nextChain = [...chain, dep.package.name];
+              if (chain.indexOf(dep.package.name) !== -1) {
+                cycles.push(nextChain);
+              } else {
+                const sub = processDeps(dep, nextChain);
+                sub.forEach(sub => project.descendents!.add(sub.package.name));
+              }
             });
           }
 
@@ -88,6 +94,11 @@ export class Processor {
         };
 
         processDeps(project);
+
+        if (cycles.length) {
+          cycles.forEach(cycle => log.warn(`Cycle detected: [${cycle.join(' => ')}]`));
+          process.exit(1);
+        }
 
         log.info('Done', {
           name: project.package.name,
