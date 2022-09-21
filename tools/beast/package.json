@@ -15,6 +15,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "array-iterate": "~2.0.1",
     "chalk": "^4.1.0",
     "debug": "^4.3.3",
@@ -25,7 +26,6 @@
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@babel/core": "^7.18.13",
-    "@dxos/log": "workspace:*",
     "@dxos/log-hook": "workspace:*",
     "@types/minimatch": "^5.1.2",
     "@types/yargs": "~16.0.1",

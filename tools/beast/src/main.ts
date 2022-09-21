@@ -46,6 +46,7 @@ const main = () => {
         const p = processor.run({ project, filter, verbose });
         if (p) {
           log.info('OK', { descendents: p.descendents });
+          processor.createDocs(p, './docs');
         }
       }
     })

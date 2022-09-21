@@ -21,6 +21,7 @@ type PackageJson = {
 type Project = {
   package: PackageJson
   subdir: string
+  dependencies: Set<Project>
   descendents?: Set<string>
   cycles?: string[][]
 }
@@ -56,7 +57,8 @@ export class Processor {
       const packageJson = this.readJson<PackageJson>(path.join(subdir, 'package.json'));
       const project: Project = {
         package: packageJson,
-        subdir
+        subdir,
+        dependencies: new Set<Project>()
       };
 
       projectsByName.set(name, project);
@@ -79,6 +81,7 @@ export class Processor {
           if (!project.descendents) {
             project.descendents = new Set();
             deps.forEach(dep => {
+              project.dependencies.add(dep);
               project.descendents!.add(dep.package.name);
 
               const nextChain = [...chain, dep.package.name];
@@ -106,7 +109,31 @@ export class Processor {
     }
   }
 
+  createDocs (project: Project, docsDir = './docs') {
+    const baseDir = path.join(this.baseDir, project.subdir, docsDir);
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir, { recursive: true });
+    }
+
+    const content = `# ${project.package.name}\n\n${generateMermaid(project)}`;
+
+    fs.writeFileSync(path.join(baseDir, 'README.md'), content);
+  }
+
   private readJson <T> (filepath: string): T {
     return JSON.parse(fs.readFileSync(path.join(this.baseDir, filepath), { encoding: 'utf-8' }));
   }
 }
+
+const generateMermaid = (project: Project) => {
+  const links: string[] = [];
+
+  const content = [
+    '```mermaid',
+    'graph TD;',
+    ...links,
+    '```'
+  ];
+
+  return content.join('\n');
+};

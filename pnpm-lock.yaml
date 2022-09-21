@@ -2971,6 +2971,7 @@ importers:
       typescript: ^4.7.2
       yargs: ~16.2.0
     dependencies:
+      '@dxos/log': link:../../packages/common/log
       array-iterate: 2.0.1
       chalk: 4.1.2
       debug: 4.3.4
@@ -2979,7 +2980,6 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@babel/core': 7.18.13
-      '@dxos/log': link:../../packages/common/log
       '@dxos/log-hook': link:../log-hook
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/minimatch': 5.1.2
