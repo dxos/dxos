@@ -8,12 +8,13 @@ import packageJson from './package.json';
 
 export type Input = {
   monorepo?: boolean
+  name: string
 }
 
 // TODO(wittjosiah): Nx executor to execute in place.
 const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
-  "name": "@dxos/bare-template",
-  "version": ${packageJson.version},
+  "name": "${input.name}",
+  "version": "${packageJson.version}",
   "private": true,
   "description": "Application template with only the essentials.",
   "license": "MIT",

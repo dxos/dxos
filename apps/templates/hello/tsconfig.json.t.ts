@@ -28,42 +28,34 @@ const template: TemplateFunction<Input> = ({ input }) => {
     'playwright'
   ];
 
-  const exclude = [
-    'vite.config.ts'
-  ];
-
-  const references = [
-    {
-      path: './tsconfig.node.json'
-    }
-  ];
-
   const tsconfig = input.monorepo ? {
     extends: '../../../tsconfig.json',
     compilerOptions,
     include,
-    exclude: [
-      ...exclude,
-      '*.t.ts'
-    ],
     references: [
-      ...references,
       {
-        path: './tsconfig.plate.json'
+        'path': '../../../packages/sdk/client'
       },
       {
-        path: '../../../packages/sdk/client'
+        'path': '../../../packages/sdk/config'
       },
       {
-        path: '../../../packages/sdk/config'
+        'path': '../../../packages/sdk/react-client'
+      },
+      {
+        'path': '../../../packages/sdk/react-client-testing'
+      },
+      {
+        'path': '../../../packages/sdk/react-components'
+      },
+      {
+        'path': '../../../packages/sdk/react-toolkit'
       }
     ]
   } : {
     ...rootTsconfig,
     compilerOptions,
-    include,
-    exclude,
-    references
+    include
   };
 
   return JSON.stringify(tsconfig, null, 2);

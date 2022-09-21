@@ -3,8 +3,8 @@
 //
 
 import { Flags } from '@oclif/core';
-import { mkdir, copyFile } from 'fs/promises';
 import { exec } from 'node:child_process';
+import { mkdir, copyFile, rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 
@@ -63,18 +63,25 @@ export default class Create extends BaseCommand {
         `${templateDirectory}/patches/vite@3.0.9.patch`
       );
 
+      // Remove unneccessary files.
+      await rm(`${templateDirectory}/project.json`);
+      await rm(`${templateDirectory}/tsconfig.plate.json`);
+
       // TS templating.
       const result = await executeDirectoryTemplate({
         templateDirectory,
         outputDirectory,
-        input: { monorepo: false }
+        input: {
+          monorepo: false,
+          name
+        }
       });
       await Promise.all(result.map(file => file.save()));
     } catch (err: any) {
       this.log(`Unable to create: ${err.message}`);
       this.error(err, { exit: 1 });
     } finally {
-      await promisify(exec)(`rm -rf ${tmpDirectory}`);
+      await rm(tmpDirectory, { recursive: true, force: true });
     }
   }
 }
