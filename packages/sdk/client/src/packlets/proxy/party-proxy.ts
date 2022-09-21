@@ -109,9 +109,9 @@ export class PartyProxy implements Party {
    * Called by EchoProxy open.
    */
   async initialize () {
-    if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database.initialize();
-    }
+    // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
+      await this._database!.initialize();
+    // }
 
     // Root item for properties.
     // this._item = await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });

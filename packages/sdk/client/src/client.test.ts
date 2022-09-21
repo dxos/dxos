@@ -238,7 +238,7 @@ describe('Client', () => {
         expect(parties).toEqual([party]);
       });
 
-      test.skip('create party and item', async () => {
+      test('create party and item', async () => {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());

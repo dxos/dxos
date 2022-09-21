@@ -11,6 +11,7 @@ import { Timeframe } from "@dxos/protocols";
 import { CredentialGenerator, CredentialSigner } from "@dxos/halo-protocol";
 import { AdmittedFeed } from "@dxos/protocols/proto/dxos/halo/credentials";
 import { Event } from "@dxos/async";
+import { DataServiceRouter } from "../database";
 
 export interface IdentityForBrane {
   identityKey: PublicKey;
@@ -28,7 +29,8 @@ export class Brane {
     private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStore,
     private readonly _networkManager: NetworkManager,
-    private readonly _identity: IdentityForBrane
+    private readonly _identity: IdentityForBrane,
+    private readonly _dataServiceRouter: DataServiceRouter
   ) { }
 
   async open() {
@@ -37,6 +39,7 @@ export class Brane {
     for (const spaceMetadata of this._metadataStore.parties) {
       const space = await this._constructSpace(spaceMetadata);
       await space.open()
+      this._dataServiceRouter.trackParty(space.key, space.database!.createDataServiceHost())
       this.spaces.set(spaceMetadata.key, space)
     }
   }
@@ -101,6 +104,7 @@ export class Brane {
     }
 
     await this._metadataStore.addSpace(metadata)
+    this._dataServiceRouter.trackParty(space.key, space.database!.createDataServiceHost())
     this.spaces.set(spaceKey, space)
     this.update.emit()
     return space

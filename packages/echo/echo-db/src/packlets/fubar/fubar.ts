@@ -15,6 +15,7 @@ import { log } from '@dxos/log'
 import { codec } from "../../codec";
 import { PublicKey } from "@dxos/keys";
 import { Brane } from "./brane";
+import { DataServiceRouter } from "../database";
 
 export type SecretProvider = () => Promise<Buffer>
 
@@ -30,6 +31,8 @@ export class Fubar {
 
   // Initialized after identity is intitialized.
   public brane?: Brane
+
+  public dataServiceRouter = new DataServiceRouter()
 
   public braneReady = new Trigger()
 
@@ -67,7 +70,8 @@ export class Fubar {
         identityKey: identity.identityKey,
         deviceKey: identity.deviceKey,
         credentialSigner: identity.getIdentityCredentialSigner(),
-      }
+      },
+      this.dataServiceRouter
     )
     await brane.open()
     this.brane = brane
@@ -76,6 +80,7 @@ export class Fubar {
 
   async createIdentity() {
     const identity = await this.identityManager.createIdentity()
+    this.dataServiceRouter.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost())
     await this._initBrane()
     return identity
   }

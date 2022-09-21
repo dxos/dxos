@@ -14,7 +14,7 @@ export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, '
   ProfileService: createProfileService(opts),
   HaloService: createHaloService(opts),
   PartyService: createPartyService(opts),
-  DataService: {} as any, //opts.echo.dataService,
+  DataService: opts.fubar.dataServiceRouter,
   TracingService: {
     setTracingOptions: () => {
       throw new Error('Tracing not available.');
