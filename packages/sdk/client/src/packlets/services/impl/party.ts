@@ -6,13 +6,14 @@ import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
-import { ServiceContext } from '@dxos/echo-db';
+import { InvitationDescriptor, SecretProvider, ServiceContext } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateInvitationRequest,
   CreateSnaspotRequest,
   GetPartyDetailsRequest,
   InvitationRequest,
+  InvitationState,
   Party,
   PartyDetails,
   PartyService as PartyServiceRpc,
@@ -27,7 +28,9 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { CreateServicesOpts, InviteeInvitations } from './types';
+import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
+import { v4 } from 'uuid';
+import { latch } from '@dxos/async';
 
 /**
  * Party service implementation.
@@ -88,7 +91,7 @@ class PartyService implements PartyServiceRpc {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
       const update = () => {
         next({
-          parties: Array.from(this.serviceContext.brane!.spaces.values()).map((space) => ({
+          parties: Array.from(this.serviceContext.spaceManager!.spaces.values()).map((space) => ({
             publicKey: space.key,
             isOpen: true,
             isActive: true
@@ -97,14 +100,14 @@ class PartyService implements PartyServiceRpc {
       };
 
       setImmediate(async () => {
-        if (!this.serviceContext.brane) {
+        if (!this.serviceContext.spaceManager) {
           next({ parties: [] });
         }
 
-        await this.serviceContext.braneReady.wait();
+        await this.serviceContext.initialized.wait();
 
         update();
-        return this.serviceContext.brane!.update.on(update);
+        return this.serviceContext.spaceManager!.update.on(update);
       });
     });
   }
@@ -118,8 +121,8 @@ class PartyService implements PartyServiceRpc {
   }
 
   async createParty () {
-    await this.serviceContext.braneReady.wait();
-    const space = await this.serviceContext.brane!.createSpace();
+    await this.serviceContext.initialized.wait();
+    const space = await this.serviceContext.spaceManager!.createSpace();
     return {
       publicKey: space.key,
       isOpen: true,
@@ -169,82 +172,74 @@ class PartyService implements PartyServiceRpc {
   }
 
   createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
-    return todo();
-    // return new Stream(({ next, close }) => {
-    //   const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
-    //   setImmediate(async () => {
-    //     try {
-    //       let invitation: InvitationDescriptor;
-    //       if (!request.inviteeKey) {
-    //         const secret = Buffer.from(generatePasscode());
-    //         const secretProvider = async () => {
-    //           next({ state: InvitationState.CONNECTED });
-    //           return Buffer.from(secret);
-    //         };
-    //         invitation = await party.invitationManager.createInvitation({
-    //           secretProvider,
-    //           secretValidator: defaultSecretValidator
-    //         }, {
-    //           onFinish: () => {
-    //             next({ state: InvitationState.SUCCESS });
-    //             close();
-    //           }
-    //         });
+    return new Stream(({ next, close }) => {
+      setImmediate(async () => {
+        try {
+          let invitation: InvitationDescriptor;
+          if (!request.inviteeKey) {
+            // const secret = Buffer.from(generatePasscode());
+            // const secretProvider = async () => {
+            //   next({ state: InvitationState.CONNECTED });
+            //   return Buffer.from(secret);
+            // };
+            invitation = await this.serviceContext.spaceManager!.createInvitation(request.partyKey, () => {
+              next({ state: InvitationState.SUCCESS });
+              close();
+            });
 
-    //         assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
-    //         invitation.secret = Buffer.from(secret);
-    //       } else {
-    //         invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
-    //       }
+            assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
+            // invitation.secret = Buffer.from(secret);
+          } else {
+            todo()
+            // invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
+          }
 
-    //       next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
+          next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
 
-    //       if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
-    //         close();
-    //       }
-    //     } catch (err: any) {
-    //       next({ state: InvitationState.ERROR, error: err.message });
-    //       close();
-    //     }
-    //   });
-    // });
+          // if (invitation.type === InvitationDescriptorProto.Type.OFFLINE) {
+          //   close();
+          // }
+        } catch (err: any) {
+          next({ state: InvitationState.ERROR, error: err.message });
+          close();
+        }
+      });
+    });
   }
 
   acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
-    return todo();
-    // return new Stream(({ next, close }) => {
-    //   const id = v4();
-    //   const [secretLatch, secretTrigger] = latch();
-    //   const inviteeInvitation: InviteeInvitation = { secretTrigger };
+    return new Stream(({ next, close }) => {
+      const id = v4();
+      const [secretLatch, secretTrigger] = latch();
+      const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
-    //   // Secret will be provided separately (in AuthenticateInvitation).
-    //   // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
-    //   const secretProvider: SecretProvider = async () => {
-    //     await secretLatch;
-    //     const secret = inviteeInvitation.secret;
-    //     if (!secret) {
-    //       throw new Error('Secret not provided.');
-    //     }
-    //     return Buffer.from(secret);
-    //   };
+      // Secret will be provided separately (in AuthenticateInvitation).
+      // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
+      const secretProvider: SecretProvider = async () => {
+        await secretLatch;
+        const secret = inviteeInvitation.secret;
+        if (!secret) {
+          throw new Error('Secret not provided.');
+        }
+        return Buffer.from(secret);
+      };
 
-    //   // Joining process is kicked off, and will await authentication with a secret.
-    //   const partyPromise = this.echo.joinParty(
-    //     InvitationDescriptor.fromProto(request),
-    //     request.type === InvitationDescriptorProto.Type.INTERACTIVE ? secretProvider : undefined
-    //   );
-    //   this.inviteeInvitations.set(id, inviteeInvitation);
-    //   next({ id, state: InvitationState.CONNECTED });
+      // Joining process is kicked off, and will await authentication with a secret.
+      const partyPromise = this.serviceContext.spaceManager!.joinSpace(
+        InvitationDescriptor.fromProto(request),
+      );
+      this.inviteeInvitations.set(id, inviteeInvitation);
+      next({ id, state: InvitationState.CONNECTED });
 
-    //   partyPromise.then(party => {
-    //     next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
-    //   }).catch(err => {
-    //     console.error(err);
-    //     next({ id, state: InvitationState.ERROR, error: String(err) });
-    //   }).finally(() => {
-    //     close();
-    //   });
-    // });
+      partyPromise.then(party => {
+        next({ id, state: InvitationState.SUCCESS, partyKey: party.key });
+      }).catch(err => {
+        console.error(err);
+        next({ id, state: InvitationState.ERROR, error: String(err) });
+      }).finally(() => {
+        close();
+      });
+    });
   }
 
   async authenticateInvitation (request: AuthenticateInvitationRequest) {

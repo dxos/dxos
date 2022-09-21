@@ -150,10 +150,10 @@ export class SpaceManager {
     return this._invitations.acceptInvitation(invitationDescriptor);
   }
 
-  async createInvitation(spaceKey: PublicKey) {
+  async createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
     const space = this.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
 
-    return this._invitations.createInvitation(space);
+    return this._invitations.createInvitation(space, { onFinish });
   }
 }
 

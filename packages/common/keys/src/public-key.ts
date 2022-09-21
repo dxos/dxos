@@ -88,8 +88,8 @@ export class PublicKey {
   static bufferize (str: string): Buffer {
     assert(typeof str === 'string', 'Invalid type');
     const buffer = Buffer.from(str, 'hex');
-    assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
-      `Invalid key length: ${buffer.length}`);
+    // assert(buffer.length === PUBLIC_KEY_LENGTH || buffer.length === SECRET_KEY_LENGTH,
+    //   `Invalid key length: ${buffer.length}`);
     return buffer;
   }
 
