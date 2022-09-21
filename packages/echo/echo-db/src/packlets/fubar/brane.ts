@@ -9,6 +9,7 @@ import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from "../space";
 import { failUndefined } from "@dxos/debug";
 import { Timeframe } from "@dxos/protocols";
 import { CredentialGenerator, CredentialSigner } from "@dxos/halo-protocol";
+import { AdmittedFeed } from "@dxos/protocols/proto/dxos/halo/credentials";
 
 export interface IdentityForBrane {
   identityKey: PublicKey;
@@ -82,14 +83,20 @@ export class Brane {
 
     // Write genesis credentials.
     {
-      const credentialGenerator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey)
+      const generator = new CredentialGenerator(this._keyring, this._identity.identityKey, this._identity.deviceKey)
+      const credentials = [
+        ...await generator.createSpaceGenesis(spaceKey, controlFeed.key),
+        await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA),
+      ]
 
-      for (const credential of await credentialGenerator.createSpaceGenesis(spaceKey, controlFeed.key)) {
+      for (const credential of credentials) {
         await space.controlPipeline.writer.write({
           '@type': 'dxos.echo.feed.CredentialsMessage',
           credential
         })
       }
+
+
     }
 
     this.spaces.set(spaceKey, space)

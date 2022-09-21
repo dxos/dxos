@@ -11,6 +11,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { afterTest } from '@dxos/testutils';
 
 import { Fubar } from './fubar';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('fubar/fubar', () => {
   const setup = async ({
@@ -73,6 +74,25 @@ describe('fubar/fubar', () => {
       const space = await fubar.brane!.createSpace();
       expect(space.database).toBeTruthy();
       expect(fubar.brane!.spaces.has(space.key)).toBeTruthy();
+    })
+
+    test('space genesis with database', async () => {
+      const fubar = await setup();
+      await fubar.open();
+      afterTest(() => fubar.close());
+      await fubar.createIdentity();
+
+      const space = await fubar.brane!.createSpace();
+
+      {
+        const item = await space.database!.createItem<ObjectModel>({ type: 'test' });
+        item.model.set('name', 'test');
+      }
+
+      {
+        const [item] = space.database!.select({ type: 'test' }).exec().entities;
+        expect(item.model.get('name')).toEqual('test');
+      }
     })
   })
 
