@@ -109,10 +109,10 @@ export class ServiceContext {
         log('Inviter connected');
         const peer = createProtoRpcPeer({
           requested: {
-            InviteeInvitationService: schema.getService('dxos.invitations.InviteeInvitationService')
+            InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
           },
           exposed: {
-            InviterInvitationService: schema.getService('dxos.invitations.InviterInvitationService')
+            InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
           },
           handlers: {
             InviterInvitationService: {
@@ -168,10 +168,10 @@ export class ServiceContext {
         log('Invitee connected');
         const peer = createProtoRpcPeer({
           requested: {
-            InviterInvitationService: schema.getService('dxos.invitations.InviterInvitationService')
+            InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
           },
           exposed: {
-            InviteeInvitationService: schema.getService('dxos.invitations.InviteeInvitationService')
+            InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
           },
           handlers: {
             InviteeInvitationService: {

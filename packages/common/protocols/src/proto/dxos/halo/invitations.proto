@@ -6,7 +6,7 @@ syntax = "proto3";
 
 import "dxos/halo/keys.proto";
 
-package dxos.invitations;
+package dxos.halo.invitations;
 
 // Mock invitation process
 
