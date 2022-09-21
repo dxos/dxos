@@ -269,7 +269,6 @@ importers:
       oclif: ^3.1.2
       react: ^17.0.2
       shx: ^0.3.3
-      strip-json-comments: ^5.0.0
       ts-node: 10.9.1
       tslib: ^2.3.0
       typescript: ^4.7.2
@@ -301,7 +300,6 @@ importers:
       node-fetch: 2.6.7
       oclif: 3.1.2
       react: 17.0.2
-      strip-json-comments: 5.0.0
       ws: 7.5.6
     devDependencies:
       '@dxos/protocols-toolchain': link:../../tools/deprecated/protocols-toolchain
@@ -34853,11 +34851,6 @@ packages:
   /strip-json-comments/3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
-
-  /strip-json-comments/5.0.0:
-    resolution: {integrity: sha512-V1LGY4UUo0jgwC+ELQ2BNWfPa17TIuwBLg+j1AA/9RPzKINl1lhxVEu2r+ZTTO8aetIsUzE5Qj6LMSBkoGYKKw==}
-    engines: {node: '>=14.16'}
-    dev: false
 
   /strip-outer/1.0.1:
     resolution: {integrity: sha512-k55yxKHwaXnpYGsOzg4Vl8+tDrWylxDEpknGjhTiZB8dFRU5rTo9CAzeycivxV3s+zlTKwrs6WxMxR95n26kwg==}
