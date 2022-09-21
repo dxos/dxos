@@ -69,9 +69,9 @@ describe('ServiceContext', () => {
       afterTest(() => serviceContext.close());
       await serviceContext.createIdentity();
 
-      const space = await serviceContext.brane!.createSpace();
+      const space = await serviceContext.spaceManager!.createSpace();
       expect(space.database).toBeTruthy();
-      expect(serviceContext.brane!.spaces.has(space.key)).toBeTruthy();
+      expect(serviceContext.spaceManager!.spaces.has(space.key)).toBeTruthy();
     });
 
     test('space genesis with database', async () => {
@@ -80,7 +80,7 @@ describe('ServiceContext', () => {
       afterTest(() => serviceContext.close());
       await serviceContext.createIdentity();
 
-      const space = await serviceContext.brane!.createSpace();
+      const space = await serviceContext.spaceManager!.createSpace();
 
       {
         const item = await space.database!.createItem<ObjectModel>({ type: 'test' });

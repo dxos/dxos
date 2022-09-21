@@ -16,12 +16,17 @@ import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend';
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();
   const backend = new FeedDatabaseBackend(feed, undefined, { snapshots: true });
-  feed.written.on(([data, meta]) => backend.echoProcessor({ data, meta: { ...meta, memberKey: PublicKey.random(), timeframe: new Timeframe([[meta.feedKey, meta.seq]]) } }));
-  const database = new Database(
-    modelFactory,
-    backend,
-    PublicKey.random()
-  );
+
+  feed.written.on(([data, meta]) => backend.echoProcessor({
+    data,
+    meta: {
+      ...meta,
+      memberKey: PublicKey.random(),
+      timeframe: new Timeframe([[meta.feedKey, meta.seq]])
+    }
+  }));
+
+  const database = new Database(modelFactory, backend, PublicKey.random());
 
   await database.initialize();
   return database;
@@ -35,11 +40,12 @@ export const createRemoteDatabaseFromDataServiceHost = async (
   const dataServiceRouter = new DataService();
   dataServiceRouter.trackParty(partyKey, dataServiceHost);
 
-  const frontend = new Database(
+  const database = new Database(
     modelFactory,
     new RemoteDatabaseBackend(dataServiceRouter, partyKey),
     PublicKey.random()
   );
-  await frontend.initialize();
-  return frontend;
+
+  await database.initialize();
+  return database;
 };

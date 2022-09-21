@@ -24,7 +24,7 @@ export interface IdentityForBrane {
   credentialSigner: CredentialSigner
 }
 
-export class Brane {
+export class SpaceManager {
   public readonly spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
 
   public readonly update = new Event();

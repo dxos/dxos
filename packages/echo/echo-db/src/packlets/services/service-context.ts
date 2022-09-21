@@ -19,30 +19,25 @@ import { codec } from '../../codec';
 import { InvitationDescriptor } from '../../invitations/invitation-descriptor';
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
-import { Brane } from './brane';
 import { IdentityManager } from './identity-manager';
+import { SpaceManager } from './space-manager';
 
 export type SecretProvider = () => Promise<Buffer>
 
 /**
- *
+ * Temporary container for infrastructure.
  */
 export class ServiceContext {
-  // TODO(dmaretskyi): Make private.
-  public metadataStore: MetadataStore;
-  // TODO(dmaretskyi): Make private.
-  public keyring: Keyring;
-  // TODO(dmaretskyi): Make private.
-  public feedStore: FeedStore;
-  // TODO(dmaretskyi): Make private.
-  public identityManager: IdentityManager;
+  public readonly dataServiceRouter = new DataService();
+  public readonly braneReady = new Trigger();
+
+  public readonly metadataStore: MetadataStore;
+  public readonly keyring: Keyring;
+  public readonly feedStore: FeedStore;
+  public readonly identityManager: IdentityManager;
 
   // Initialized after identity is intitialized.
-  public brane?: Brane;
-
-  public dataServiceRouter = new DataService();
-
-  public braneReady = new Trigger();
+  public spaceManager?: SpaceManager;
 
   constructor (
     public storage: Storage,
@@ -67,30 +62,81 @@ export class ServiceContext {
     await this.identityManager.close();
   }
 
-  private async _initBrane () {
-    const identity = this.identityManager.identity ?? failUndefined();
-    const brane = new Brane(
-      this.metadataStore,
-      this.keyring,
-      this.feedStore,
-      this.networkManager,
-      {
-        identityKey: identity.identityKey,
-        deviceKey: identity.deviceKey,
-        credentialSigner: identity.getIdentityCredentialSigner()
-      },
-      this.dataServiceRouter
-    );
-    await brane.open();
-    this.brane = brane;
-    this.braneReady.wake();
-  }
-
+  /**
+   * Create initial identity.
+   */
   async createIdentity () {
     const identity = await this.identityManager.createIdentity();
     this.dataServiceRouter.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initBrane();
     return identity;
+  }
+
+  /**
+   * Joins an existing identity HALO by invitation.
+   */
+  async join (invitationDescriptor: InvitationDescriptor) {
+    const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
+
+    const done = new Trigger();
+
+    this.networkManager.joinProtocolSwarm({
+      topic: swarmKey,
+      peerId: PublicKey.random(),
+      topology: new StarTopology(swarmKey),
+      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
+        log('Invitee connected');
+        const peer = createProtoRpcPeer({
+          requested: {
+            InviterInvitationService: schema.getService('dxos.invitations.InviterInvitationService')
+          },
+          exposed: {
+            InviteeInvitationService: schema.getService('dxos.invitations.InviteeInvitationService')
+          },
+          handlers: {
+            InviteeInvitationService: {
+              acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
+                try {
+                  log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
+
+                  const identity = await this.identityManager.acceptIdentity({
+                    identityKey,
+                    haloSpaceKey,
+                    haloGenesisFeedKey: genesisFeedKey
+                  });
+
+                  log('Try to admit device');
+                  await peer.rpc.InviterInvitationService.admitDevice({
+                    deviceKey: identity.deviceKey,
+                    // TODO(dmaretskyi): .
+                    controlFeedKey: PublicKey.random(),
+                    dataFeedKey: PublicKey.random()
+                  });
+
+                  log('Waiting for identity to be ready');
+                  await identity.ready();
+
+                  await this._initBrane();
+
+                  done.wake();
+                  log('Invitee done');
+                } catch (err: any) {
+                  log.catch(err);
+                }
+              }
+            }
+          },
+          port
+        });
+
+        await peer.open();
+        log('Invitee RPC open');
+      })])
+    });
+
+    await done.wait();
+
+    return this.identityManager.identity ?? failUndefined();
   }
 
   /**
@@ -137,7 +183,7 @@ export class ServiceContext {
         });
 
         await peer.open();
-        log('Inviter RPC open');
+        log('Inviter RPC open.');
 
         await peer.rpc.InviteeInvitationService.acceptIdenity({
           identityKey: identity.identityKey,
@@ -152,71 +198,22 @@ export class ServiceContext {
     return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
   }
 
-  /**
-   * Joins an existing identity HALO by invitation.
-   */
-  async join (invitationDescriptor: InvitationDescriptor) {
-    const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
-
-    const done = new Trigger();
-
-    this.networkManager.joinProtocolSwarm({
-      topic: swarmKey,
-      peerId: PublicKey.random(),
-      topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
-        log('Invitee connected');
-        const peer = createProtoRpcPeer({
-          requested: {
-            InviterInvitationService: schema.getService('dxos.invitations.InviterInvitationService')
-          },
-          exposed: {
-            InviteeInvitationService: schema.getService('dxos.invitations.InviteeInvitationService')
-          },
-          handlers: {
-            InviteeInvitationService: {
-              acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
-                try {
-
-                  log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
-
-                  const identity = await this.identityManager.acceptIdentity({
-                    identityKey,
-                    haloSpaceKey,
-                    haloGenesisFeedKey: genesisFeedKey
-                  });
-
-                  log('Try to admit device');
-                  await peer.rpc.InviterInvitationService.admitDevice({
-                    deviceKey: identity.deviceKey,
-                    // TODO(dmaretskyi): .
-                    controlFeedKey: PublicKey.random(),
-                    dataFeedKey: PublicKey.random()
-                  });
-
-                  log('Waiting for identity to be ready');
-                  await identity.ready();
-
-                  await this._initBrane();
-
-                  done.wake();
-                  log('Invitee done');
-                } catch (err: any) {
-                  log.catch(err);
-                }
-              }
-            }
-          },
-          port
-        });
-
-        await peer.open();
-        log('Invitee RPC open');
-      })])
-    });
-
-    await done.wait();
-
-    return this.identityManager.identity ?? failUndefined();
+  private async _initBrane () {
+    const identity = this.identityManager.identity ?? failUndefined();
+    const spaceManager = new SpaceManager(
+      this.metadataStore,
+      this.keyring,
+      this.feedStore,
+      this.networkManager,
+      {
+        identityKey: identity.identityKey,
+        deviceKey: identity.deviceKey,
+        credentialSigner: identity.getIdentityCredentialSigner()
+      },
+      this.dataServiceRouter
+    );
+    await spaceManager.open();
+    this.spaceManager = spaceManager;
+    this.braneReady.wake();
   }
 }
