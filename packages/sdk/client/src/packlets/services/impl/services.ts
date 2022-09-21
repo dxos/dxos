@@ -7,20 +7,16 @@ import { createHaloService } from './halo';
 import { createPartyService } from './party';
 import { createProfileService } from './profile';
 import { createSystemService } from './system';
+import { createTracingService } from './tracing';
 import { CreateServicesOpts } from './types';
 
+// TODO(burdon): Remove factory functions.
+// TODO(burdon): Rename CreateServicesOpts => ServiceContext.
 export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, 'DevtoolsHost'> => ({
   SystemService: createSystemService(opts),
   ProfileService: createProfileService(opts),
   HaloService: createHaloService(opts),
   PartyService: createPartyService(opts),
-  DataService: {} as any, //opts.echo.dataService,
-  TracingService: {
-    setTracingOptions: () => {
-      throw new Error('Tracing not available.');
-    },
-    subscribeToRpcTrace: () => {
-      throw new Error('Tracing not available.');
-    }
-  }
+  DataService: {} as any, // opts.echo.dataService,
+  TracingService: createTracingService(opts)
 });

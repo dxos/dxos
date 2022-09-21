@@ -7,8 +7,9 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { defaultSecretValidator, generatePasscode, SecretProvider } from '@dxos/credentials';
-import {  Fubar, Identity, InvitationDescriptor } from '@dxos/echo-db';
+import { generatePasscode, SecretProvider } from '@dxos/credentials';
+import { todo } from '@dxos/debug';
+import { InvitationDescriptor, ServiceContext } from '@dxos/echo-db';
 import {
   AuthenticateInvitationRequest,
   CreateProfileRequest,
@@ -23,8 +24,6 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
-import { failUndefined, todo } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
 
 /**
  * Profile service implementation.
@@ -33,27 +32,29 @@ export class ProfileService implements ProfileServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
-    private readonly fubar: Fubar
+    private readonly context: ServiceContext
   ) {}
 
   subscribeProfile (): Stream<SubscribeProfileResponse> {
     return new Stream(({ next }) => {
       const emitNext = () => next({
-        profile: this.fubar.identityManager.identity ? { publicKey: this.fubar.identityManager.identity.identityKey } : undefined,
+        profile: this.context.identityManager.identity ? {
+          publicKey: this.context.identityManager.identity.identityKey
+        } : undefined
       });
 
       emitNext();
-      return this.fubar.identityManager.stateUpdate.on(emitNext);
+      return this.context.identityManager.stateUpdate.on(emitNext);
     });
   }
 
   async createProfile (request: CreateProfileRequest) {
-    await this.fubar.identityManager.createIdentity();
-    return { publicKey: this.fubar.identityManager.identity!.identityKey }
+    await this.context.identityManager.createIdentity();
+    return { publicKey: this.context.identityManager.identity!.identityKey };
   }
 
   async recoverProfile (request: RecoverProfileRequest): Promise<Profile> {
-    return todo()
+    return todo();
     if (!request.seedPhrase) {
       throw new Error('Recovery SeedPhrase not provided.');
     }
@@ -73,7 +74,7 @@ export class ProfileService implements ProfileServiceRpc {
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
         };
-        invitation = await this.fubar.createInvitation({
+        invitation = await this.context.createInvitation({
           onFinish: () => {
             next({ state: InvitationState.SUCCESS });
             close();
@@ -103,7 +104,7 @@ export class ProfileService implements ProfileServiceRpc {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.fubar.join(InvitationDescriptor.fromProto(request));
+      const haloPartyPromise = this.context.join(InvitationDescriptor.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
@@ -127,4 +128,4 @@ export class ProfileService implements ProfileServiceRpc {
   }
 }
 
-export const createProfileService = ({ fubar }: CreateServicesOpts): ProfileService => new ProfileService(fubar);
+export const createProfileService = ({ context }: CreateServicesOpts): ProfileService => new ProfileService(context);

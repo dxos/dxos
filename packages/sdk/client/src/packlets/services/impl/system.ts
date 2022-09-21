@@ -2,14 +2,28 @@
 // Copyright 2022 DXOS.org
 //
 
-import { SystemService } from '@dxos/protocols/proto/dxos/client';
+import { Config } from '@dxos/config';
+import { todo } from '@dxos/debug';
+import { SystemService as SystemServiceRpc } from '@dxos/protocols/proto/dxos/client';
 
 import { CreateServicesOpts } from './types';
 
-export const createSystemService = ({ config, echo }: CreateServicesOpts): SystemService => ({
-  getConfig: async () => config.values,
+class SystemService implements SystemServiceRpc {
+  private readonly _config: Config;
 
-  reset: async () => {
-    await echo.reset();
+  constructor ({
+    config
+  }: CreateServicesOpts) {
+    this._config = config;
   }
-});
+
+  async getConfig (request: void) {
+    return this._config.values;
+  }
+
+  async reset (request: any) {
+    todo();
+  }
+}
+
+export const createSystemService = (opts: CreateServicesOpts) => new SystemService(opts);

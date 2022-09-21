@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { Event } from '@dxos/async';
 import { FeedStore } from '@dxos/feed-store';
 import { CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -13,10 +14,9 @@ import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { Identity } from '../identity';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '../space';
-import { Identity } from '../identity';
-import { Event } from '@dxos/async';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
@@ -88,7 +88,6 @@ export class IdentityManager {
   }
 
   private async _constructSpace ({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
-
     const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeControlFeedKey, this._keyring);
     const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeDataFeedKey, this._keyring);
 

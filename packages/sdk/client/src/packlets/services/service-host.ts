@@ -3,28 +3,26 @@
 //
 
 import { Config } from '@dxos/config';
-import { Keyring } from '@dxos/keyring';
-import * as debug from '@dxos/debug'; // Export to devtools.
-import { codec, Fubar, MetadataStore } from '@dxos/echo-db';
+// Export to devtools.
+import { todo } from '@dxos/debug';
+import { ServiceContext } from '@dxos/echo-db';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
-import { createDevtoolsHost, DevtoolsHostEvents, DevtoolsServiceDependencies } from '../devtools';
+import { DevtoolsHostEvents } from '../devtools';
 import { createServices } from './impl';
 import { createStorageObjects } from './storage';
-import { FeedStore } from '@dxos/feed-store';
-import { NetworkManager } from '@dxos/network-manager';
-import { todo } from '@dxos/debug';
 
-const SIGNAL_CONTEXT = new MemorySignalManagerContext()
+const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
 /**
  * Remote service implementation.
  */
 export class ClientServiceHost implements ClientServiceProvider {
   private readonly _devtoolsEvents = new DevtoolsHostEvents();
-  private readonly _fubar: Fubar;
+  private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
   constructor (
@@ -43,15 +41,15 @@ export class ClientServiceHost implements ClientServiceProvider {
       log: true
     } : {
       signalManager: new MemorySignalManager(SIGNAL_CONTEXT)
-    })
+    });
 
-    this._fubar = new Fubar(
+    this._context = new ServiceContext(
       storage,
       networkManager
     );
 
     this._services = {
-      ...createServices({ config: this._config, echo: null, fubar: this._fubar, signer: this._signer }),
+      ...createServices({ config: this._config, echo: null, context: this._context, signer: this._signer }),
       DevtoolsHost: this._createDevtoolsService()
     };
   }
@@ -62,16 +60,16 @@ export class ClientServiceHost implements ClientServiceProvider {
 
   // TODO(dmaretskyi): progress.
   async open (onProgressCallback?: ((progress: any) => void) | undefined) {
-    await this._fubar.open();
+    await this._context.open();
     this._devtoolsEvents.ready.emit();
   }
 
   async close () {
-    await this._fubar.close()
+    await this._context.close();
   }
 
   get echo () {
-    return todo()
+    return todo();
   }
 
   /**
@@ -91,6 +89,6 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     // return createDevtoolsHost(dependencies, this._devtoolsEvents);
     // TODO(dmaretskyi): .
-    return {} as any
+    return {} as any;
   }
 }

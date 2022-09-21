@@ -10,9 +10,9 @@ import { NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { Fubar } from './fubar';
+import { ServiceContext } from './service-context';
 
-describe('fubar/fubar', () => {
+describe('ServiceContext', () => {
   const setup = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
@@ -24,25 +24,23 @@ describe('fubar/fubar', () => {
       signalManager: new MemorySignalManager(signalContext)
     });
 
-    const fubar = new Fubar(
+    return new ServiceContext(
       storage,
       networkManager
     );
-
-    return fubar;
   };
 
   test('creates identity', async () => {
-    const fubar = await setup();
-    await fubar.open();
-    afterTest(() => fubar.close());
+    const serviceContext = await setup();
+    await serviceContext.open();
+    afterTest(() => serviceContext.close());
 
-    const identity = await fubar.identityManager.createIdentity();
+    const identity = await serviceContext.identityManager.createIdentity();
     expect(identity).toBeTruthy();
   });
 
   test('device invitations', async () => {
-    const signalContext  = new MemorySignalManagerContext()
+    const signalContext = new MemorySignalManagerContext();
 
     const peer1 = await setup({ signalContext });
     await peer1.open();
@@ -59,6 +57,5 @@ describe('fubar/fubar', () => {
     const identity2 = await peer2.join(invitation);
 
     expect(identity2.identityKey).toEqual(identity1.identityKey);
-  })
+  });
 });
-
