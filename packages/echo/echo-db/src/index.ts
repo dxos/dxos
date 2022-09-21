@@ -23,7 +23,7 @@ export { InvitationDescriptor } from './invitations/invitation-descriptor';
 // export * from './testing';
 
 // Stubs
-export interface PartyMember {}
+export type PartyMember = any
 export type CreateProfileOptions = any
 export type Contact = any
 export interface OpenProgress {}
