@@ -12,6 +12,7 @@
   },
   "files": [
     "dist",
+    "proto",
     "src"
   ],
   "scripts": {
