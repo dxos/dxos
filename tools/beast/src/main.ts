@@ -7,6 +7,8 @@ import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import { log } from '@dxos/log';
+
 import { Processor } from './processor';
 
 const main = () => {
@@ -37,9 +39,14 @@ const main = () => {
         filter?: string
         verbose?: boolean
       }) => {
-        new Processor(
+        const processor = new Processor(
           path.join(process.cwd(), '../..')
-        ).run({ project, filter, verbose });
+        );
+
+        const p = processor.run({ project, filter, verbose });
+        if (p) {
+          log.info('OK', { descendents: p.descendents });
+        }
       }
     })
     .help()

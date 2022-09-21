@@ -22,6 +22,7 @@ type Project = {
   package: PackageJson
   subdir: string
   descendents?: Set<string>
+  cycles?: string[][]
 }
 
 // TODO(burdon): Create dot files.
@@ -42,10 +43,10 @@ export class Processor {
     project?: string
     filter?: string
     verbose?: boolean
-  } = {}) {
+  } = {}): Project | undefined {
     const { projects } = this.readJson<WorkspaceJson>('workspace.json');
 
-    // TODO(burdon): Support filtering outside of workspace (require dynamic lookup).
+    // TODO(burdon): Support filtering outside of workspace (e.g., crypto).
 
     // Lazily evaluated map of packages indexed by package name.
     const projectsByName = new Map<string, Project>();
@@ -97,19 +98,12 @@ export class Processor {
 
         if (cycles.length) {
           cycles.forEach(cycle => log.warn(`Cycle detected: [${cycle.join(' => ')}]`));
-          process.exit(1);
+          project.cycles = cycles;
         }
 
-        log.info('Done', {
-          name: project.package.name,
-          descendents: [...project.descendents!.values()].sort()
-        });
-
-        process.exit();
+        return project;
       }
     }
-
-    log.error('Not found', { projectName, filter });
   }
 
   private readJson <T> (filepath: string): T {
