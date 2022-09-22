@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';

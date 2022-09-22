@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { subtleCrypto } from './crypto';
-
 import { PublicKey } from '@dxos/keys';
+
+import { subtleCrypto } from './crypto';
 
 /**
  * Verify a signature with the given key.

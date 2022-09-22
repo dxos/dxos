@@ -96,24 +96,24 @@ describe('ServiceContext', () => {
     });
 
     test('invitations', async () => {
-      const signalContext = new MemorySignalManagerContext()
+      const signalContext = new MemorySignalManagerContext();
 
       const peer1 = await setup({ signalContext });
       await peer1.open();
       afterTest(() => peer1.close());
-      await peer1.create()
+      await peer1.create();
 
       const peer2 = await setup({ signalContext });
       await peer2.open();
       afterTest(() => peer2.close());
-      await peer2.create()
+      await peer2.create();
 
       const space1 = await peer1.spaceManager!.createSpace();
       const invitation = await peer1.spaceManager!.createInvitation(space1.key);
       const space2 = await peer2.spaceManager!.joinSpace(invitation);
       expect(space1.key).toEqual(space2.key);
 
-        // TODO(burdon): Write multiple items.
+      // TODO(burdon): Write multiple items.
 
       {
         // Check item replicated from 1 => 2.
@@ -128,6 +128,6 @@ describe('ServiceContext', () => {
         const item2 = await space1.database!.waitForItem({ type: 'dxos.example.2' });
         expect(item1.id).toEqual(item2.id);
       }
-    })
+    });
   });
 });

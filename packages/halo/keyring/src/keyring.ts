@@ -3,7 +3,6 @@
 //
 
 import assert from 'node:assert';
-import { subtleCrypto } from './crypto';
 
 import { synchronized } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -13,6 +12,7 @@ import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
+import { subtleCrypto } from './crypto';
 import { Signer } from './signer';
 
 /**

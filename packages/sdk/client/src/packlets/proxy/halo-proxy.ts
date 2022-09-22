@@ -187,7 +187,7 @@ export class HaloProxy implements Halo {
    */
   async _open () {
     const gotProfile = this.profileChanged.waitForCount(1);
-    const gotContacts = this._contactsChanged.waitForCount(1);
+    // const gotContacts = this._contactsChanged.waitForCount(1);
 
     const profileStream = this._serviceProvider.services.ProfileService.subscribeProfile();
     profileStream.subscribe(data => {

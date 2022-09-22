@@ -127,7 +127,7 @@ export class MetadataStore {
     await this._save();
   }
 
-  async addSpace(record: PartyMetadata) {
+  async addSpace (record: PartyMetadata) {
     assert(!(this._metadata.parties ?? []).find(party => party.key === record.key), 'Cannot overwrite existing party in metadata');
 
     (this._metadata.parties ??= []).push(record);

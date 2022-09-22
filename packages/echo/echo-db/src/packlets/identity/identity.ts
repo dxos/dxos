@@ -4,15 +4,15 @@
 
 import assert from 'assert';
 
+import { failUndefined } from '@dxos/debug';
 import {
   CredentialSigner, DeviceStateMachine, createCredentialSignerWithChain, createCredentialSignerWithKey
 } from '@dxos/halo-protocol';
 import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 
-import { Space } from '../space';
 import { Database } from '../database';
-import { failUndefined } from '@dxos/debug';
+import { Space } from '../space';
 
 export type IdentityParams = {
   identityKey: PublicKey
@@ -82,7 +82,7 @@ export class Identity {
     return this._halo.genesisFeedKey;
   }
 
-  get haloDatabase(): Database {
+  get haloDatabase (): Database {
     return this._halo.database ?? failUndefined();
   }
 
