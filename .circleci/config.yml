@@ -45,16 +45,19 @@ jobs:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=prerelease
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - .local/share/pnpm/store/v3
+            - project
 
   e2e:
     docker:
       - *docker_image
     steps:
-      - checkout
-      - *cache_restore
-      - run: pnpm install
+      - attach_workspace:
+          at: ~/
       - run: pnpx playwright@1.25.1 install
-      - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
 
@@ -98,6 +101,8 @@ workflows:
           context:
             - Github
       - e2e:
+          requires:
+            - check
           context:
             - Github
 
