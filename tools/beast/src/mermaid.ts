@@ -72,8 +72,19 @@ export const generateMermaid = (project: Project) => {
     ].join('\n');
   });
 
+  const config = {
+    init: {
+      flowchart: {
+        curve: 'basis'
+      }
+    }
+  };
+
   const content = [
     '```mermaid',
+    // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-links
+    `%%${config}%%`,
+    // https://mermaid-js.github.io/mermaid/#/flowchart
     'flowchart LR;',
     '',
     ...sectionLabels,
