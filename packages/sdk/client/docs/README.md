@@ -3,7 +3,6 @@
 Primary DXOS Client API
 ## Dependency Graph
 ```mermaid
-%%{ init: { 'flowchart': { 'curve': 'basis' } } }%%
 flowchart LR;
 
 subgraph sdk

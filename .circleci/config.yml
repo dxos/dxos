@@ -97,7 +97,7 @@ workflows:
       - check:
           context:
             - Github
-      - e2e
+      - e2e:
           context:
             - Github
 
