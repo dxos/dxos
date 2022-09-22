@@ -2,11 +2,10 @@ version: 1
 
 package:
   modules:
-    - name: dxos:app/hello
+    - name: example:app/hello
       type: dxos:type/app
       build:
         command: npm run bundle
-        outdir: out/hello
 
 runtime:
   client:

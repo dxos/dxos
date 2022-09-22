@@ -17,6 +17,7 @@ export default defineConfig({
     ]
   },
   build: {
+    outDir: 'out/example/app/bare',
     commonjsOptions: {
       include: [
         /packages/,
