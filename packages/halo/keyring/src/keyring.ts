@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import * as crypto from 'node:crypto';
+import { subtleCrypto } from './crypto';
 
 import { synchronized } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -28,14 +28,14 @@ export class Keyring implements Signer {
   async sign (key: PublicKey, message: Uint8Array): Promise<Uint8Array> {
     const keyPair = await this._getKey(key);
 
-    return new Uint8Array(await crypto.webcrypto.subtle.sign({
+    return new Uint8Array(await subtleCrypto.sign({
       name: 'ECDSA',
       hash: 'SHA-256'
     }, keyPair.privateKey, message));
   }
 
   async createKey (): Promise<PublicKey> {
-    const keyPair = await crypto.webcrypto.subtle.generateKey({
+    const keyPair = await subtleCrypto.generateKey({
       name: 'ECDSA',
       namedCurve: 'P-256'
     }, true, ['sign', 'verify']);
@@ -62,11 +62,11 @@ export class Keyring implements Signer {
       assert(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
 
       const keyPair: CryptoKeyPair = {
-        publicKey: await crypto.webcrypto.subtle.importKey('raw', record.publicKey, {
+        publicKey: await subtleCrypto.importKey('raw', record.publicKey, {
           name: 'ECDSA',
           namedCurve: 'P-256'
         }, true, ['verify']),
-        privateKey: await crypto.webcrypto.subtle.importKey('pkcs8', record.privateKey, {
+        privateKey: await subtleCrypto.importKey('pkcs8', record.privateKey, {
           name: 'ECDSA',
           namedCurve: 'P-256'
         }, true, ['sign'])
@@ -84,7 +84,7 @@ export class Keyring implements Signer {
 
     const record: KeyRecord = {
       publicKey: publicKey.asUint8Array(),
-      privateKey: new Uint8Array(await crypto.webcrypto.subtle.exportKey('pkcs8', keyPair.privateKey))
+      privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey))
     };
 
     const file = this._storage.createOrOpenFile(publicKey.toHex());
@@ -104,4 +104,4 @@ export class Keyring implements Signer {
 }
 
 const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
-  PublicKey.from(new Uint8Array(await crypto.webcrypto.subtle.exportKey('raw', keyPair.publicKey)));
+  PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
