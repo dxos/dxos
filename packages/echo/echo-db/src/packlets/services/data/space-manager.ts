@@ -14,8 +14,8 @@ import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
 import { DataService } from '../../database';
+import { InvitationDescriptor } from '../../invitations';
 import { MetadataStore } from '../../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../../space';
 import { DataInvitations } from './invitations';

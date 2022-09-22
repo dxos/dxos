@@ -12,7 +12,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
-import { codec } from '../../codec';
+import { codec } from '../common';
 import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', () => {

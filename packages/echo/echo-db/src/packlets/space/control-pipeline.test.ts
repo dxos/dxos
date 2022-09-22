@@ -15,7 +15,7 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../../codec';
+import { codec } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {

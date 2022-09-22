@@ -10,7 +10,7 @@ import { ripemd160 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
-import { InvalidInvitationError } from '../packlets/errors';
+import { InvalidInvitationError } from '../errors';
 
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');

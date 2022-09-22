@@ -12,7 +12,7 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
+import { InvitationDescriptor } from '../../invitations';
 import { Space } from '../../space';
 import { IdentityForBrane, SpaceManager } from './space-manager';
 

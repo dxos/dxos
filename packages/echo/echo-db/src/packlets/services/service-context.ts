@@ -15,10 +15,10 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { Storage } from '@dxos/random-access-storage';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { codec } from '../../codec';
-import { InvitationDescriptor } from '../../invitations/invitation-descriptor'; // TOOD(burdon): ???
+import { codec } from '../common';
 import { DataService } from '../database';
 import { Identity } from '../identity';
+import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../metadata';
 import { SpaceManager } from './data/space-manager';
 import { IdentityManager } from './identity-manager';
