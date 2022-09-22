@@ -11,7 +11,7 @@ import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { Generator, OBJECT_PERSON } from './generator';
 
-test('generator', async () => {
+test.skip('generator', async () => {
   const echo = await createTestInstance({ initialize: true });
   const party = await echo.createParty();
   const generator = new Generator(party.database, { seed: 100 });
@@ -28,7 +28,7 @@ test('generator', async () => {
   await echo.close();
 });
 
-test('filter', async () => {
+test.skip('filter', async () => {
   const echo = await createTestInstance({ initialize: true });
   const party = await echo.createParty();
   const generator = new Generator(party.database, { seed: 100 });
