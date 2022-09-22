@@ -33,6 +33,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@oclif/core": "^1.14.1",
     "@oclif/plugin-help": "^5.1.12",

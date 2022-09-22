@@ -28,3 +28,4 @@ export type CreateProfileOptions = any
 export type Contact = any
 export interface OpenProgress {}
 export interface ActivationOptions {}
+export const PARTY_ITEM_TYPE = 'dxos:item/party'; // TODO(burdon): Remove.

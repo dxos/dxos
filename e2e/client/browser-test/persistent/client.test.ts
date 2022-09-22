@@ -7,9 +7,6 @@ import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
-import { MetadataStore } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/keys';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Client - persistent', () => {
   it('reset storage', async () => {
@@ -50,6 +47,7 @@ describe('Client - persistent', () => {
     }
   }).timeout(10_000).retries(10);
 
+  /*
   it('MetadataStore save/load', async () => {
     const storage = createStorage({ type: StorageType.IDB });
     const directory = storage.createDirectory('metadata');
@@ -69,4 +67,5 @@ describe('Client - persistent', () => {
       expect(partyLoaded?.key).toEqual(partyKey);
     }
   }).retries(10);
+  */
 });

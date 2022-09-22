@@ -18,6 +18,8 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools-mesh": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/messenger-model": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/model-factory": "workspace:*",

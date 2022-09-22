@@ -57,9 +57,6 @@
       "path": "../../mesh/protocol-plugin-replicator"
     },
     {
-      "path": "../echo-protocol"
-    },
-    {
       "path": "../../common/feed-store"
     },
     {

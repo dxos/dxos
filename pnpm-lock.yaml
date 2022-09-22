@@ -170,6 +170,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@oclif/core': ^1.14.1
@@ -205,6 +206,7 @@ importers:
       '@dxos/client': link:../../packages/sdk/client
       '@dxos/config': link:../../packages/sdk/config
       '@dxos/debug': link:../../packages/common/debug
+      '@dxos/keys': link:../../packages/common/keys
       '@dxos/protocols': link:../../packages/common/protocols
       '@oclif/core': 1.14.2
       '@oclif/plugin-help': 5.1.12
@@ -405,6 +407,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -445,6 +448,7 @@ importers:
       '@dxos/codec-protobuf': link:../../../packages/common/codec-protobuf
       '@dxos/config': link:../../../packages/sdk/config
       '@dxos/debug': link:../../../packages/common/debug
+      '@dxos/keys': link:../../../packages/common/keys
       '@dxos/protocols': link:../../../packages/common/protocols
       '@dxos/react-async': link:../../../packages/common/react-async
       '@dxos/react-client': link:../../../packages/sdk/react-client
@@ -672,6 +676,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -701,6 +706,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../packages/sdk/client
       '@dxos/config': link:../../packages/sdk/config
+      '@dxos/keys': link:../../packages/common/keys
       '@dxos/protocols': link:../../packages/common/protocols
       '@dxos/react-async': link:../../packages/common/react-async
       '@dxos/react-client': link:../../packages/sdk/react-client
@@ -1350,6 +1356,8 @@ importers:
       '@dxos/devtools-mesh': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/messenger-model': workspace:*
       '@dxos/model-factory': workspace:*
@@ -1390,6 +1398,8 @@ importers:
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools-mesh': link:../devtools-mesh
+      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/messenger-model': link:../../echo/messenger-model
       '@dxos/model-factory': link:../../echo/model-factory
@@ -2858,6 +2868,7 @@ importers:
       '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
@@ -2914,6 +2925,7 @@ importers:
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/keys': link:../../common/keys
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/react-client': link:../react-client
       '@dxos/react-client-testing': link:../react-client-testing
@@ -6550,7 +6562,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
-    dev: false
 
   /@mui/icons-material/5.8.4_3qrniyd4fth4fdw4jngl7l7ure:
     resolution: {integrity: sha512-9Z/vyj2szvEhGWDvb+gG875bOGm8b8rlHBKOD1+nA3PcgC3fV6W1AU6pfOorPeBfH2X4mb9Boe97vHvaSndQvA==}
@@ -6830,7 +6841,6 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
       react-transition-group: 4.4.2_biqbaboplfbrettd7655fr4n2y
-    dev: false
 
   /@mui/material/5.8.7_zxljzmqdrxwnuenbkrz77w74uy:
     resolution: {integrity: sha512-Oo62UhrgEi+BMLr3nUEASJgScE2/hhq14CbBUmrVV3GQlEGtqMZsy26Vb0AqEmphFeN3TXlsbM9aeW5yq8ZFlw==}
@@ -6896,7 +6906,6 @@ packages:
       '@types/react': 18.0.17
       prop-types: 15.8.1
       react: 18.2.0
-    dev: false
 
   /@mui/styled-engine/5.8.7_fdnqutfacy7v3gmlcm66flps3q:
     resolution: {integrity: sha512-tVqtowjbYmiRq+qcqXK731L9eWoL9H8xTRhuTgaDGKdch1zlt4I2UwInUe1w2N9N/u3/jHsFbLcl1Un3uOwpQg==}
@@ -7023,7 +7032,6 @@ packages:
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 18.2.0
-    dev: false
 
   /@mui/system/5.8.7_ug65io7jkbhmo4fihdmbrh3ina:
     resolution: {integrity: sha512-yFoFbfO42FWeSUDrFPixYjpqySQMqVMOSbSlAxiKnwFpvXGGn/bkfQTboCRNO31fvES29FJLQd4mwwMHd5mXng==}
@@ -7072,7 +7080,6 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.0.17
-    dev: false
 
   /@mui/utils/5.8.6_react@18.2.0:
     resolution: {integrity: sha512-QM2Sd1xZo2jOt2Vz5Rmro+pi2FLJyiv4+OjxkUwXR3oUM65KSMAMLl/KNYU55s3W3DLRFP5MVwE4FhAbHseHAg==}
@@ -7133,8 +7140,8 @@ packages:
       '@date-io/dayjs': 2.13.1
       '@date-io/luxon': 2.13.1
       '@date-io/moment': 2.13.1
-      '@mui/material': 5.8.7_bl6qrq6463ovzmqn4cmwv7vydq
-      '@mui/system': 5.8.7_kgoqblbzxlux4bm4vftowiq75m
+      '@mui/material': 5.8.7_mugunlselc52kyz7qt5aa5ixva
+      '@mui/system': 5.8.7_q75tbj2u2psqs4y633sohfsc6i
       '@mui/utils': 5.8.6_react@18.2.0
       clsx: 1.2.1
       prop-types: 15.8.1
@@ -23730,7 +23737,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1

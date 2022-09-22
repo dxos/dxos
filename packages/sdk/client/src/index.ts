@@ -5,7 +5,7 @@
 export { generateSeedPhrase } from '@dxos/credentials';
 
 export {
-  // PARTY_ITEM_TYPE, // TODO(burdon): Remove?
+  PARTY_ITEM_TYPE, // TODO(burdon): Remove?
   TYPE_SCHEMA,
   Entity,
   Item,

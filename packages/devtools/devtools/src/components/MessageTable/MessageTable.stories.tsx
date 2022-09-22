@@ -5,8 +5,8 @@
 import faker from 'faker';
 import React from 'react';
 
-import { IFeedGenericBlock } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
+import { IFeedGenericBlock } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
 import { MessageTable } from './MessageTable';

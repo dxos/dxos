@@ -47,9 +47,6 @@
       "path": "../../echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
-    },
-    {
       "path": "../../common/feed-store"
     },
     {
