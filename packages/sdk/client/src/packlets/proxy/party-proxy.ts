@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { failUndefined, todo } from '@dxos/debug';
+import { todo } from '@dxos/debug';
 import {
   Database,
   Item,
