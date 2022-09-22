@@ -33,7 +33,7 @@ jobs:
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+#     - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
