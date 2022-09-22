@@ -2,14 +2,15 @@ version: 1
 
 package:
   modules:
-    - name: dxos:story/hello-world
+    - name: dxos:app/bare
       type: dxos:type/app
       build:
-        command: npm run build
-        outdir: out/book
+        command: npm run bundle
+        outdir: out/bare
 
 runtime:
   client:
+    mode: local
     storage:
       persistent: true
   services:

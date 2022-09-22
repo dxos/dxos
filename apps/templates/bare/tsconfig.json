@@ -1,0 +1,25 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "playwright"
+  ],
+  "references": [
+    {
+      "path": "../../../packages/sdk/client"
+    },
+    {
+      "path": "../../../packages/sdk/config"
+    }
+  ]
+}
