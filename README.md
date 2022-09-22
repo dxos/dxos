@@ -1,5 +1,6 @@
-[![DXOS](https://circleci.com/gh/dxos/dxos/tree/main.svg?style=shield)](<LINK>)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
+[![DXOS](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
+[![MIT License](https://img.shields.io/npm/l/@dxos/client?style=flat)](https://github.com/dxos/dxos/blob/main/LICENSE)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
 
 ![js-dxos](./docs/assets/images/github-repo-banner.png)
 
