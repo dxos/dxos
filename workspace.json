@@ -3,6 +3,7 @@
   "projects": {
     "async": "packages/common/async",
     "bot-factory-client": "packages/bot/bot-factory-client",
+    "beast": "tools/beast",
     "botkit": "packages/bot/botkit",
     "broadcast": "packages/mesh/broadcast",
     "client": "packages/sdk/client",
