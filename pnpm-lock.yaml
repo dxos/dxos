@@ -771,14 +771,12 @@ importers:
       '@types/node': ^16.11.27
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
-      '@types/url-join': ~4.0.1
       '@vitejs/plugin-react': ^2.0.1
       debug: ^4.3.3
       react: ^17.0.2
       react-dom: ^17.0.2
       react-router-dom: ^6.3.0
       typescript: ^4.7.2
-      url-join: ^4.0.1
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
@@ -798,7 +796,6 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
-      url-join: 4.0.1
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/react-client-testing': link:../../packages/sdk/react-client-testing
@@ -807,7 +804,6 @@ importers:
       '@types/node': 16.11.27
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
-      '@types/url-join': 4.0.1
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9
       typescript: 4.7.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
@@ -15793,7 +15789,7 @@ packages:
   /axios/0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.14.6
+      follow-redirects: 1.14.6_debug@4.3.4
     transitivePeerDependencies:
       - debug
 
@@ -21769,7 +21765,6 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4
-    dev: true
 
   /follow-redirects/1.15.2:
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}

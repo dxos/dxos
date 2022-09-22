@@ -8,8 +8,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMounted } from '@dxos/react-async';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 
-import { getPath } from '../../paths';
-
 /**
  * Renders JoinPartyDialog, automatically setting the invitation code if available.
  * Redirects to index route on close.
@@ -31,8 +29,8 @@ export const InvitationPage = () => {
     <JoinPartyDialog
       open
       invitationCode={code}
-      onJoin={party => redirect(getPath(party.key))}
-      onClose={() => redirect('/')}
+      onJoin={space => redirect(`/spaces/${space.key.toHex()}`)}
+      onClose={() => redirect('/spaces')}
     />
   );
 };
