@@ -21,6 +21,8 @@ aliases:
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
+  # This job must pass for merging to main (due to GH branch protection).
+  # https://github.com/dxos/dxos/settings/branches
   check:
     docker:
       - *docker_image
@@ -28,12 +30,10 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
-#     - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
@@ -45,6 +45,18 @@ jobs:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=prerelease
+
+  e2e:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpx playwright@1.25.1 install
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
 
   deploy:
     docker:
@@ -83,6 +95,9 @@ workflows:
   main:
     jobs:
       - check:
+          context:
+            - Github
+      - e2e
           context:
             - Github
 
