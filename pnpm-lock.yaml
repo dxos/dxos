@@ -297,6 +297,7 @@ importers:
       '@dxos/gem-core': 2.2.1-beta.11
       '@dxos/gem-spore': 2.2.1-beta.11
       '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-client-testing': workspace:*
@@ -349,6 +350,7 @@ importers:
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/gem-spore': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@dxos/object-model': link:../../../packages/echo/object-model
+      '@dxos/protocols': link:../../../packages/common/protocols
       '@dxos/react-client': link:../../../packages/sdk/react-client
       '@dxos/react-client-testing': link:../../../packages/sdk/react-client-testing
       '@dxos/react-components': link:../../../packages/sdk/react-components

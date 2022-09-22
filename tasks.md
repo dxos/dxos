@@ -4,6 +4,7 @@
 - [ ] @dxos/echo-db
   - Fix mock imports
   - Remove dead code
+  - Refactor database integration
 
 - [ ] @dxos/client
   - Fix broken services
@@ -17,3 +18,7 @@
 - [ ] @dxos/feed-store
   - [ ] Refactor
   - [ ] Fix tests
+
+- [ ] @dxos/crypto
+  - Remove unused function
+  - Try to minimize dependency on third-party crypto libraries

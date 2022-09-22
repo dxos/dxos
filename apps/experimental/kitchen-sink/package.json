@@ -26,6 +26,7 @@
     "@dxos/client-testing": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/echo-testing": "workspace:*",
     "@dxos/gem-core": "2.2.1-beta.11",
     "@dxos/gem-spore": "2.2.1-beta.11",
