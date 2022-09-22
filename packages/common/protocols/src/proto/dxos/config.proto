@@ -161,6 +161,9 @@ message Runtime {
     message Https {
       optional bool enabled = 1;
       optional string port = 2;
+      optional string email = 3;
+      optional string certfile = 4;
+      optional string keyfile = 5;
     }
     message P2P {
       optional string privatekey = 1;
