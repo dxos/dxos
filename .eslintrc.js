@@ -25,9 +25,14 @@ module.exports = {
     'jest.config.ts',
     'esbuild-server.config.js',
     'webpack.config.js',
+    'vite.config.ts',
 
     // Dependencies
-    'node_modules'
+    'node_modules',
+
+    // Templates
+    // TODO(wittjosiah): Fix lint config to lint these files.
+    '*.t.ts'
   ],
   overrides: [
     {
@@ -35,24 +40,6 @@ module.exports = {
       extends: [
         'plugin:@dxos/recommended'
       ]
-    },
-    {
-      files: '**/*.t.ts',
-      extends: [
-        'plugin:@dxos/typescript'
-      ],
-      parserOptions: {
-        project: './tsconfig.plate.json'
-      }
-    },
-    {
-      files: '**/vite.config.ts',
-      extends: [
-        'plugin:@dxos/typescript'
-      ],
-      parserOptions: {
-        project: './tsconfig.node.json'
-      }
     },
     {
       files: '**/*.{ts,tsx}',
