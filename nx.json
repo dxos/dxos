@@ -34,6 +34,11 @@
       ]
     },
     "bundle": {
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        }
+      ],
       "dependsOn": [
         "^bundle",
         "build",
