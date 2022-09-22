@@ -87,7 +87,7 @@ const main = () => {
         const processor = new Processor(path.join(process.cwd(), '../..'));
 
         processor.match(pattern).forEach(project => {
-          console.log(`Generating: ${project.package.name}`);
+          console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
           processor.process(project.name, { filter });
           processor.createDocs(project);
         });

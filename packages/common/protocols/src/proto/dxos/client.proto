@@ -85,7 +85,6 @@ message CreateProfileRequest {
 message RecoverProfileRequest {
   string seedPhrase = 1;
 }
-
 message Contact {
   dxos.halo.keys.PubKey publicKey = 1;
   optional string displayName = 2;
