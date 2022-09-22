@@ -1,0 +1,21 @@
+version: 1
+
+package:
+  modules:
+    - name: dxos:app/hello
+      type: dxos:type/app
+      build:
+        command: npm run bundle
+        outdir: out/hello
+
+runtime:
+  client:
+    storage:
+      persistent: true
+  services:
+    signal:
+      server: ws://localhost:8888/.well-known/dx/signal
+    ice:
+      - urls: turn:demo.kube.dxos.network:3478
+        username: dxos
+        credential: dxos
