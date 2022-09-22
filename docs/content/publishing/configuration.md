@@ -20,7 +20,7 @@ Let's prepare the ground for this.
 Create a folder `config` at the root of your project and add the following files:
 
 - `config.yml`: _special_ file that will be loaded if the `CONFIG_DYNAMIC` property is set to `false`.
-  If `CONFIG_DYNAMIC` is set to `true` each app will try to load from an endpoint (using `{publicUrl}/config/config.json`).
+  If `CONFIG_DYNAMIC` is set to `true` each app will try to load from an endpoint (using `{publicUrl}/.well-known/dx/config`).
   This allows to dynamically inject settings to our applications.
 
 - `defaults.yml`: contains the default values for your app.
