@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import {
   codec,
   createAuthMessage,
@@ -157,7 +158,10 @@ export class HaloRecoveryInitiator {
     ));
   }
 
-  static createHaloInvitationClaimHandler (identityKey: PublicKey, invitationManager: InvitationFactory) {
+  static createHaloInvitationClaimHandler (
+    identityKey: PublicKey,
+    invitationManager: InvitationFactory
+  ): (message: any, remotePeerId: Buffer, peerId: Buffer) => Promise<WithTypeUrl<ClaimResponse>> {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer, remotePeerId: Buffer, peerId: Buffer) => {
       // The invitationtId is the signature of both peerIds, signed by the Identity key.
       const ok = verify(Buffer.concat([remotePeerId, peerId]), invitationID, identityKey.asBuffer());

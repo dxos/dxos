@@ -10,25 +10,26 @@ import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { ActionProvider, AppLayout } from './containers';
 import {
-  AuthPage, InvitationPage, MainPage, PartyPage, ProfilePage, RegistrationPage, RequireProfile
+  AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
+  RequireProfile, SpacePage, SpacesPage
 } from './pages';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const Routes = () => useRoutes([
+  // TODO(wittjosiah): Move behind RequireProfile.
   {
     path: '/auth/:origin',
     element: <AuthPage />
   },
   {
-    path: '/register/*',
-    element: <RegistrationPage />
+    path: '/',
+    element: <LockPage />
   },
   {
     path: '/',
-    element: <RequireProfile redirect='/register' />,
+    element: <RequireProfile redirect='/' />,
     children: [
       {
         path: '/invitation/:code',
@@ -38,9 +39,10 @@ const Routes = () => useRoutes([
         path: '/',
         element: <AppLayout />,
         children: [
-          { path: '/profile', element: <ProfilePage /> },
-          { path: '/:party', element: <PartyPage /> },
-          { path: '/', element: <MainPage /> }
+          { path: '/devices', element: <DevicesPage /> },
+          { path: '/identity', element: <IdentityPage /> },
+          { path: '/spaces', element: <SpacesPage /> },
+          { path: '/spaces/:space', element: <SpacePage /> }
         ]
       }]
   }
@@ -60,11 +62,9 @@ export const App = () => {
         clientRef={clientRef}
         config={configProvider}
       >
-        <ActionProvider>
-          <HashRouter>
-            <Routes />
-          </HashRouter>
-        </ActionProvider>
+        <HashRouter>
+          <Routes />
+        </HashRouter>
       </ClientProvider>
     </ErrorBoundary>
   );

@@ -1,5 +1,7 @@
 ## Mermaid diagrams
 
+Example:
+
 ```mermaid
   graph TD;
       A-->B;

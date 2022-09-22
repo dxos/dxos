@@ -12,21 +12,26 @@
     "build": "toolchain build",
     "check": "true",
     "info": "tsc --showConfig | jq",
+    "update:docs": "ts-node --esm ./src/main.ts docs",
     "test": "mocha"
   },
   "dependencies": {
+    "@dxos/log": "workspace:*",
     "array-iterate": "~2.0.1",
     "chalk": "^4.1.0",
+    "color-hash": "^1.0.3",
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
+    "madge": "^5.0.1",
     "minimatch": "^5.1.0",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@babel/core": "^7.18.13",
-    "@dxos/log": "workspace:*",
     "@dxos/log-hook": "workspace:*",
+    "@types/color-hash": "^1.0.1",
+    "@types/madge": "^5.0.0",
     "@types/minimatch": "^5.1.2",
     "@types/yargs": "~16.0.1",
     "mocha": "^8.4.0",

@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import {
   codec,
   createAuthMessage,
@@ -137,7 +138,9 @@ export class OfflineInvitationClaimer {
    * of the Party for responding to attempts to claim an Invitation which has been written to the Party.
    * @param {InvitationFactory} invitationManager
    */
-  static createOfflineInvitationClaimHandler (invitationManager: InvitationFactory) {
+  static createOfflineInvitationClaimHandler (
+    invitationManager: InvitationFactory
+  ): (message: any, remotePeerId: Buffer, peerId: Buffer) => Promise<WithTypeUrl<ClaimResponse>> {
     const claimHandler = new PartyInvitationClaimHandler(async (invitationID: Buffer) => {
       const invitationMessage = invitationManager.getOfflineInvitation(invitationID);
       if (!invitationMessage) {

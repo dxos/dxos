@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
-import { PartySnapshot } from 'packages/common/protocols/proto/dxos/echo/snapshot';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
 import { InvitationProxy } from './invitation-proxy';

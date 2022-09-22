@@ -15,6 +15,7 @@
           "e2e",
           "lint",
           "prebuild",
+          "prerelease",
           "proto",
           "test"
         ],
@@ -33,6 +34,11 @@
       ]
     },
     "bundle": {
+      "inputs": [
+        {
+          "env": "CONFIG_DYNAMIC"
+        }
+      ],
       "dependsOn": [
         "^bundle",
         "build",
