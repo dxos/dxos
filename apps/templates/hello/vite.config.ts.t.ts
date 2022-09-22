@@ -20,6 +20,7 @@ const monorepoConfig = /* javascript */ `
     ]
   },
   build: {
+    outDir: 'out/example/app/hello',
     commonjsOptions: {
       include: [
         /packages/,
@@ -27,6 +28,12 @@ const monorepoConfig = /* javascript */ `
       ]
     }
   },
+`;
+
+const basicBuildConfig = /* javascript */ `
+  build: {
+    outDir: 'out/example/app/hello'
+  }
 `;
 
 // TODO(wittjosiah): Nx executor to execute in place.
@@ -38,7 +45,7 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
-  ${input.monorepo ? monorepoConfig : ''}
+  ${input.monorepo ? monorepoConfig : basicBuildConfig}
   plugins: [
     dxosPlugin(${input.monorepo ? '__dirname' : ''})
   ]

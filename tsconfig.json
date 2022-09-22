@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "allowJs": true,
+    "allowJs": false,
     "baseUrl": ".",
     "composite": true,
     "declarationMap": true,
