@@ -416,7 +416,7 @@ export class PresencePlugin {
         connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
-      await this._broadcast.publish(this._codec.encode(message));
+      await this._broadcast.publish(Buffer.from(this._codec.encode(message)));
       log('ping', message);
     } catch (err: any) {
       // TODO(dmaretskyi): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
