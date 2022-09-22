@@ -8,8 +8,8 @@ import assert from 'node:assert';
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
-import { log } from '@dxos/log'
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
@@ -97,7 +97,7 @@ export class FeedStore {
    * @deprecated Use openReadWriteFeedWithSigner instead.
    */
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
-    throw new Error("openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.");
+    throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
     // const descriptor = this._descriptors.get(key.toHex());
     // if (descriptor && descriptor.secretKey) {
     //   return descriptor;
@@ -109,11 +109,11 @@ export class FeedStore {
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
   async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer) {
-    log(`open read/write feed`, { key })
-    if(this._descriptors.has(key.toHex())) {
+    log('open read/write feed', { key });
+    if (this._descriptors.has(key.toHex())) {
       const descriptor = this._descriptors.get(key.toHex())!;
       assert(descriptor.writable, 'Feed already exists and is not writable.');
-      return descriptor
+      return descriptor;
     }
 
     const descriptor = await this._createDescriptor({ key, signer });
@@ -125,7 +125,7 @@ export class FeedStore {
    * Create a readonly feed to Feedstore
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
-    log(`Open read-only feed`, { key })
+    log('Open read-only feed', { key });
     const descriptor = this._descriptors.get(key.toHex()) ?? await this._createDescriptor({ key });
     return descriptor;
   }

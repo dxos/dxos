@@ -9,8 +9,8 @@ import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '
 import { NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { codec } from '../../codec';
 
+import { codec } from '../../codec';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
 

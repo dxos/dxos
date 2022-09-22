@@ -3,12 +3,15 @@
 //
 
 import debug from 'debug';
+import expect from 'expect';
 import faker from 'faker';
+import { it as test } from 'mocha';
 import assert from 'node:assert';
 import pify from 'pify';
 
 import { latch } from '@dxos/async';
-import { createId, createKeyPair } from '@dxos/crypto';
+import { createId } from '@dxos/crypto';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe, schema, createTestItemMutation } from '@dxos/protocols';
 import { FeedBlock } from '@dxos/protocols/dist/src/types';
@@ -17,10 +20,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { it as test } from 'mocha';
 import { HypercoreFeed } from './hypercore-types';
-import { Keyring } from '@dxos/keyring';
-import expect from 'expect'
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
@@ -83,7 +83,7 @@ describe('feed store iterator', () => {
 
     const feeds = new ComplexMap<PublicKey, HypercoreFeed>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
-      const keyring = new Keyring()
+      const keyring = new Keyring();
       const descriptor = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
       const feed = descriptor.feed;
       feeds.set(PublicKey.from(feed.key), feed);
@@ -125,7 +125,7 @@ describe('feed store iterator', () => {
       valueEncoding: schema.getCodecForType('example.testing.data.TestItemMutation')
     });
 
-    const keyring = new Keyring()
+    const keyring = new Keyring();
     const descriptor1 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
     const descriptor2 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 

@@ -32,9 +32,9 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    
+
     // TODO(dmaretskyi): .
-    this._modelFactory = new ModelFactory()
+    this._modelFactory = new ModelFactory();
     // _serviceProvider instanceof ClientServiceProxy
     //   ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
 

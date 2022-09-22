@@ -110,7 +110,7 @@ export class PartyProxy implements Party {
    */
   async initialize () {
     // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database!.initialize();
+    await this._database!.initialize();
     // }
 
     // Root item for properties.
@@ -171,7 +171,7 @@ export class PartyProxy implements Party {
    * @deprecated Use party.properties.
    */
   getTitle () {
-    return todo()
+    return todo();
     // return this.getProperty(PARTY_TITLE_PROPERTY);
   }
 
@@ -220,7 +220,7 @@ export class PartyProxy implements Party {
    * Implementation method.
    */
   createSnapshot (): Promise<PartySnapshot> {
-    return todo()
+    return todo();
     // return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
 

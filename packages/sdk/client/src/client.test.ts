@@ -233,7 +233,7 @@ describe('Client', () => {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const parties = client.echo.queryParties().value
+        const parties = client.echo.queryParties().value;
 
         expect(parties).toEqual([party]);
       });

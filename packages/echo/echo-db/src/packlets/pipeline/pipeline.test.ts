@@ -12,8 +12,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
-import { Pipeline } from './pipeline';
 import { codec } from '../../codec';
+import { Pipeline } from './pipeline';
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {

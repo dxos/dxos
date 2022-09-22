@@ -1,16 +1,20 @@
-import { failUndefined } from "@dxos/debug";
-import { PublicKey } from "@dxos/keys";
-import { createProtocolFactory, NetworkManager, StarTopology } from "@dxos/network-manager";
-import { InvitationDescriptor } from "../../../invitations/invitation-descriptor";
-import { log } from "@dxos/log";
-import { PluginRpc } from "@dxos/protocol-plugin-rpc";
-import { createProtoRpcPeer } from "@dxos/rpc";
-import { schema } from "@dxos/protocols";
-import { IdentityForBrane, SpaceManager } from "./space-manager";
-import { Trigger } from "@dxos/async";
-import { Space } from "../../space";
-import { AdmittedFeed, PartyMember } from "@dxos/protocols/proto/dxos/halo/credentials";
-import { InvitationDescriptor as InvitationDescriptorProto } from "@dxos/protocols/proto/dxos/echo/invitation";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Trigger } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
+import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { schema } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { createProtoRpcPeer } from '@dxos/rpc';
+
+import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
+import { Space } from '../../space';
+import { IdentityForBrane, SpaceManager } from './space-manager';
 
 // TODO(burdon): Factor out.
 export class DataInvitations {
@@ -44,44 +48,44 @@ export class DataInvitations {
             InviterInvitationService: {
               admit: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
                 await space.controlPipeline.writer.write({
-                  "@type": "dxos.echo.feed.CredentialsMessage",
+                  '@type': 'dxos.echo.feed.CredentialsMessage',
                   credential: await this._identity.credentialSigner.createCredential({
                     subject: identityKey,
                     assertion: {
-                      '@type': "dxos.halo.credentials.PartyMember",
+                      '@type': 'dxos.halo.credentials.PartyMember',
                       partyKey: space.key,
-                      role: PartyMember.Role.ADMIN,
+                      role: PartyMember.Role.ADMIN
                     }
                   })
-                })
+                });
 
                 await space.controlPipeline.writer.write({
-                  "@type": "dxos.echo.feed.CredentialsMessage",
+                  '@type': 'dxos.echo.feed.CredentialsMessage',
                   credential: await this._identity.credentialSigner.createCredential({
                     subject: controlFeedKey,
                     assertion: {
-                      '@type': "dxos.halo.credentials.AdmittedFeed",
+                      '@type': 'dxos.halo.credentials.AdmittedFeed',
                       partyKey: space.key,
                       deviceKey,
                       identityKey,
-                      designation: AdmittedFeed.Designation.CONTROL,
+                      designation: AdmittedFeed.Designation.CONTROL
                     }
                   })
-                })
+                });
 
                 await space.controlPipeline.writer.write({
-                  "@type": "dxos.echo.feed.CredentialsMessage",
+                  '@type': 'dxos.echo.feed.CredentialsMessage',
                   credential: await this._identity.credentialSigner.createCredential({
                     subject: dataFeedKey,
                     assertion: {
-                      '@type': "dxos.halo.credentials.AdmittedFeed",
+                      '@type': 'dxos.halo.credentials.AdmittedFeed',
                       partyKey: space.key,
                       deviceKey,
                       identityKey,
-                      designation: AdmittedFeed.Designation.DATA,
+                      designation: AdmittedFeed.Designation.DATA
                     }
                   })
-                })
+                });
               }
             }
           },

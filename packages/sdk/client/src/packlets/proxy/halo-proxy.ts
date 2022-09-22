@@ -204,7 +204,7 @@ export class HaloProxy implements Halo {
 
     // this._subscriptions.push(() => contactsStream.close());
 
-    await Promise.all([gotProfile/*, gotContacts*/]);
+    await Promise.all([gotProfile/*, gotContacts */]);
   }
 
   /**

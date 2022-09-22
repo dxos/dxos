@@ -12,11 +12,9 @@ import { NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../../codec'
+import { codec } from '../../codec';
 import { MetadataStore } from '../metadata';
 import { IdentityManager } from './identity-manager';
-import { StateManager } from '@dxos/model-factory';
-import { PubKey } from 'packages/common/protocols/proto/dxos/halo/keys';
 
 describe('fubar/identity-manager', () => {
   const setup = async ({
@@ -76,35 +74,34 @@ describe('fubar/identity-manager', () => {
   });
 
   test('admit another device', async () => {
-    const signalContext = new MemorySignalManagerContext()
+    const signalContext = new MemorySignalManagerContext();
 
-    const peer1 = await setup({ signalContext })
-    const identity1 = await peer1.identityManager.createIdentity()
+    const peer1 = await setup({ signalContext });
+    const identity1 = await peer1.identityManager.createIdentity();
 
-    const peer2 = await setup({ signalContext })
+    const peer2 = await setup({ signalContext });
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     const identity2 = await peer2.identityManager.acceptIdentity({
       identityKey: identity1.identityKey,
       haloSpaceKey: identity1.haloSpaceKey,
       haloGenesisFeedKey: identity1.haloGenesisFeedKey
-    })
+    });
 
     await identity1.controlPipeline.writer.write({
       '@type': 'dxos.echo.feed.CredentialsMessage',
       credential: await identity1.getIdentityCredentialSigner().createCredential({
         subject: identity2.deviceKey,
         assertion: {
-          "@type": 'dxos.halo.credentials.AuthorizedDevice',
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
           identityKey: identity2.identityKey,
-          deviceKey: identity2.deviceKey,
+          deviceKey: identity2.deviceKey
         }
       })
     });
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
 
     // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.
-    await identity2.ready()
-  })
+    await identity2.ready();
+  });
 });
-

@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
-import { resultSetToStream } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 import {
   AddKeyRecordRequest,
@@ -50,7 +49,9 @@ export class HaloService implements HaloServiceRpc {
   // TODO(burdon): subscribeToContacts or just query/contacts with subscription object.
   //  ResultSet vs Stream?
   subscribeContacts (): Stream<Contacts> {
-    return new Stream(({ next }) => { next({ contacts: []})})
+    return new Stream(({ next }) => {
+      next({ contacts: [] });
+    });
     if (this.echo.halo.identity) {
       // return resultSetToStream(this.echo.halo.queryContacts(), (contacts): Contacts => ({ contacts }));
     }

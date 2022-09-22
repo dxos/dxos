@@ -40,7 +40,7 @@ export class InvitationProxy {
 
   private _isClosed = false;
 
-  close() {
+  close () {
     this._isClosed = true;
   }
 

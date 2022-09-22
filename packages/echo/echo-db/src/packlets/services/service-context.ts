@@ -20,8 +20,8 @@ import { InvitationDescriptor } from '../../invitations/invitation-descriptor'; 
 import { DataService } from '../database';
 import { Identity } from '../identity';
 import { MetadataStore } from '../metadata';
-import { IdentityManager } from './identity-manager';
 import { SpaceManager } from './data/space-manager';
+import { IdentityManager } from './identity-manager';
 
 export type SecretProvider = () => Promise<Buffer>
 

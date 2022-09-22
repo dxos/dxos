@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import expect from 'expect';
+import { it as test } from 'mocha';
 import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
@@ -12,8 +14,6 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedStore } from './feed-store';
 import { createFeedWriter } from './feed-writer';
-import { it as test } from 'mocha';
-import expect from 'expect'
 
 // TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');

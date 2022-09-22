@@ -13,8 +13,8 @@ import { Timeframe } from '@dxos/protocols';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
-import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
 
+import { InvitationDescriptor } from '../../../invitations/invitation-descriptor';
 import { DataService } from '../../database';
 import { MetadataStore } from '../../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '../../space';
@@ -45,12 +45,12 @@ export class SpaceManager {
     private readonly _networkManager: NetworkManager,
     private readonly _identity: IdentityForBrane,
     private readonly _dataService: DataService
-  ) { 
+  ) {
     this._invitations = new DataInvitations(
       this._networkManager,
       this._identity,
       this
-    )
+    );
   }
 
   async open () {
@@ -130,13 +130,13 @@ export class SpaceManager {
     return space;
   }
 
-  async acceptSpace(opts: AcceptSpaceOptions): Promise<Space> {
+  async acceptSpace (opts: AcceptSpaceOptions): Promise<Space> {
     const space = await this._constructSpace({
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlFeedKey: await this._keyring.createKey(),
       dataFeedKey: await this._keyring.createKey()
-    })
+    });
 
     await space.open();
     this._dataService.trackParty(space.key, space.database!.createDataServiceHost());
@@ -146,14 +146,13 @@ export class SpaceManager {
     return space;
   }
 
-  async joinSpace(invitationDescriptor: InvitationDescriptor) {
+  async joinSpace (invitationDescriptor: InvitationDescriptor) {
     return this._invitations.acceptInvitation(invitationDescriptor);
   }
 
-  async createInvitation(spaceKey: PublicKey, onFinish?: () => void) {
+  async createInvitation (spaceKey: PublicKey, onFinish?: () => void) {
     const space = this.spaces.get(spaceKey) ?? raise(new Error('Space not found.'));
 
     return this._invitations.createInvitation(space, { onFinish });
   }
 }
-
