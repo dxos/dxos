@@ -14,7 +14,6 @@ import glob from 'glob';
 import Mocha from 'mocha';
 import { resolve } from 'path';
 
-import './util/react-setup';
 import './util/catch-unhandled-rejections';
 
 export interface MochaExecutorOptions {
