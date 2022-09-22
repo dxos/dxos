@@ -175,6 +175,7 @@ message Runtime {
     optional Autoupdate autoupdate = 3;
     optional Https https = 4;
     optional P2P p2p = 5;
+    optional string confhost = 6;
   }
 
   //
