@@ -36,7 +36,8 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          # TODO(wittjosiah): CI kills processes often if running in parallel.
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle --parallel 1
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
