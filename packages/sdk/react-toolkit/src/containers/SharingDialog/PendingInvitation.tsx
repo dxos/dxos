@@ -46,7 +46,7 @@ export const PendingInvitation = ({
 
       {/* TODO(burdon): Show expiration time. */}
       <Typography sx={{ flex: 1, marginLeft: 2, marginRight: 2, whiteSpace: 'nowrap' }}>
-        {!pin ? 'Waiting for peer...' : 'Passcode'}
+        {!pin ? 'Waiting...' : 'Passcode'}
       </Typography>
 
       {!pin && (

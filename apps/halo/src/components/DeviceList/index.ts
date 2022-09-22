@@ -3,4 +3,3 @@
 //
 
 export * from './DeviceList';
-export * from './SpaceList';
