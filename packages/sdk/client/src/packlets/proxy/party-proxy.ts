@@ -19,7 +19,7 @@ import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Pa
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
 
-export interface ActivationOptions {}
+export type ActivationOptions = any
 
 /**
  * Main public Party API.
@@ -50,19 +50,19 @@ export class PartyProxy implements Party {
       return;
     }
 
-    if (true) { // TODO: Always run database in remote mode for now.
-      this._database = new Database(
-        this._modelFactory,
-        new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
-        memberKey
-      );
-    } else if (false) {
-      // TODO(wittjosiah): Reconcile service provider host with interface.
-      const party = (this._serviceProvider as any).echo.getParty(this._key) ?? failUndefined();
-      this._database = party.database;
-    } else {
-      throw new Error('Unrecognized service provider.');
-    }
+    // if (true) { // TODO: Always run database in remote mode for now.
+    this._database = new Database(
+      this._modelFactory,
+      new RemoteDatabaseBackend(this._serviceProvider.services.DataService, this._key),
+      memberKey
+    );
+    // } else if (false) {
+    //   // TODO(wittjosiah): Reconcile service provider host with interface.
+    //   const party = (this._serviceProvider as any).echo.getParty(this._key) ?? failUndefined();
+    //   this._database = party.database;
+    // } else {
+    //   throw new Error('Unrecognized service provider.');
+    // }
   }
 
   // TODO(burdon): Getter required by react hook.

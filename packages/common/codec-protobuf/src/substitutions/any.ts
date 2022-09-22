@@ -23,7 +23,7 @@ export const anySubstitutions = {
         // eslint-disable-next-line camelcase
         const { type_url, value: payload } = value as any as Any;
         return {
-          type_url, // // eslint-disable-line camelcase
+          type_url, // eslint-disable-line camelcase
           value: payload
         };
       }

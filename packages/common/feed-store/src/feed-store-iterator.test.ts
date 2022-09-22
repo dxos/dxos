@@ -14,7 +14,7 @@ import { createId } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe, schema, createTestItemMutation } from '@dxos/protocols';
-import { FeedBlock } from '@dxos/protocols/dist/src/types';
+import { FeedBlock } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 

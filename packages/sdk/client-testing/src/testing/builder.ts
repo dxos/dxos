@@ -20,7 +20,7 @@ export class Builder {
     expect(client.initialized).toBeTruthy();
 
     await client.halo.createProfile({ username: 'test-user' });
-    const { username } = client.halo.profile!;
+    // const { username } = client.halo.profile!;
     // expect(username).toEqual('test-user');
 
     this._client = client;
