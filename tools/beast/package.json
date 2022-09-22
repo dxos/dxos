@@ -22,6 +22,7 @@
     "color-hash": "^1.0.3",
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
+    "madge": "^5.0.1",
     "minimatch": "^5.1.0",
     "yargs": "~16.2.0"
   },
@@ -30,6 +31,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/log-hook": "workspace:*",
     "@types/color-hash": "^1.0.1",
+    "@types/madge": "^5.0.0",
     "@types/minimatch": "^5.1.2",
     "@types/yargs": "~16.0.1",
     "mocha": "^8.4.0",

@@ -21,6 +21,8 @@ aliases:
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
+  # This job must pass for merging to main (due to GH branch protection).
+  # https://github.com/dxos/dxos/settings/branches
   check:
     docker:
       - *docker_image
