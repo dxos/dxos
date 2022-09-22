@@ -14,7 +14,17 @@
     "src",
     "playwright"
   ],
+  "exclude": [
+    "vite.config.ts",
+    "*.t.ts"
+  ],
   "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.plate.json"
+    },
     {
       "path": "../../../packages/sdk/client"
     },
