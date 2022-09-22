@@ -5,6 +5,7 @@
 import assert from 'node:assert';
 
 import { Event, latch } from '@dxos/async';
+import { ClientServiceProvider } from '@dxos/client-services';
 import { failUndefined } from '@dxos/debug';
 import { InvitationDescriptor, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
@@ -13,7 +14,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ClientServiceProvider, Echo, Party, PartyInvitation } from '../api';
+import { Echo, Party, PartyInvitation } from '../api';
 import { HaloProxy } from './halo-proxy';
 import { InvitationProxy } from './invitation-proxy';
 import { PartyProxy } from './party-proxy';
@@ -32,9 +33,9 @@ export class EchoProxy implements Echo {
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _haloProxy: HaloProxy
   ) {
-    
+
     // TODO(dmaretskyi): .
-    this._modelFactory = new ModelFactory()
+    this._modelFactory = new ModelFactory();
     // _serviceProvider instanceof ClientServiceProxy
     //   ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
 

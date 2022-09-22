@@ -6,6 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import {
+  InvalidConfigurationError, ClientServiceProvider, ClientServices, ClientServiceHost, HaloSigner, RemoteServiceConnectionTimeout
+} from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
@@ -15,10 +18,6 @@ import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
-import {
-  InvalidConfigurationError, ClientServiceProvider, ClientServices, HaloSigner, RemoteServiceConnectionTimeout
-} from '../api';
-import { ClientServiceHost } from '../services';
 import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';

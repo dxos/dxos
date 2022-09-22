@@ -155,7 +155,7 @@ const getMessages = async (sender: Node, receiver: Node): Promise<any[]> => {
   });
 };
 
-describe('Auth plugins', () => {
+describe.skip('Auth plugins', () => {
   it('Auth Plugin (GOOD)', async () => {
     const keyring = await createTestKeyring();
     const partyKey = PublicKey.from(randomBytes(32));

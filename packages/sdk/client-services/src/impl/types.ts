@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { ServiceContext } from '@dxos/echo-db';
 
-import { HaloSigner } from '../../api';
+import { HaloSigner } from '../signer';
 
 export type CreateServicesOpts = {
   config: Config

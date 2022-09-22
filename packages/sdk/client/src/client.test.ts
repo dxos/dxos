@@ -8,6 +8,7 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
+import { clientServiceBundle } from '@dxos/client-services';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { InvitationDescriptor } from '@dxos/echo-db';
@@ -18,7 +19,6 @@ import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { clientServiceBundle } from './packlets/api';
 import { Client } from './packlets/proxy';
 
 describe('Client', () => {
@@ -233,7 +233,7 @@ describe('Client', () => {
         await client.halo.createProfile();
         const party = await client.echo.createParty();
 
-        const parties = client.echo.queryParties().value
+        const parties = client.echo.queryParties().value;
 
         expect(parties).toEqual([party]);
       });

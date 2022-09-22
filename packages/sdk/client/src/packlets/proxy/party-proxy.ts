@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { ClientServiceProvider } from '@dxos/client-services';
 import { failUndefined, todo } from '@dxos/debug';
 import {
   Database,
@@ -15,7 +16,7 @@ import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
+import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
 
@@ -110,7 +111,7 @@ export class PartyProxy implements Party {
    */
   async initialize () {
     // if (this._database && this._serviceProvider instanceof ClientServiceProxy) {
-      await this._database!.initialize();
+    await this._database!.initialize();
     // }
 
     // Root item for properties.
@@ -171,7 +172,7 @@ export class PartyProxy implements Party {
    * @deprecated Use party.properties.
    */
   getTitle () {
-    return todo()
+    return todo();
     // return this.getProperty(PARTY_TITLE_PROPERTY);
   }
 
@@ -220,7 +221,7 @@ export class PartyProxy implements Party {
    * Implementation method.
    */
   createSnapshot (): Promise<PartySnapshot> {
-    return todo()
+    return todo();
     // return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
 

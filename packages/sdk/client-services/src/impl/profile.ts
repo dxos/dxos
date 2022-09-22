@@ -48,7 +48,7 @@ export class ProfileService implements ProfileServiceRpc {
     });
   }
 
-  async createProfile (request: CreateProfileRequest) {
+  async createProfile (request: CreateProfileRequest): Promise<Profile> {
     await this.context.create();
     return { publicKey: this.context.identityManager.identity!.identityKey };
   }

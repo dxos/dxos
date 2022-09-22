@@ -4,9 +4,9 @@
 
 import debug from 'debug';
 
+import { clientServiceBundle, ClientServiceProvider } from '@dxos/client-services';
 import { createBundledRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 
-import { clientServiceBundle, ClientServiceProvider } from '../api';
 import { Client } from './client';
 
 const log = debug('dxos:client:devtools');

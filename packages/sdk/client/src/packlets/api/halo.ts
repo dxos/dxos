@@ -11,13 +11,6 @@ import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { Invitation, InvitationRequest } from './invitations';
 
 /**
- * Signer plugin.
- */
-export interface HaloSigner {
-  sign: (request: SignRequest, key: KeyRecord) => Promise<SignResponse>
-}
-
-/**
  * HALO API.
  */
 // TODO(burdon): Separate public API form implementation (move comments here).

@@ -10,9 +10,10 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
-import { ClientServiceProvider, ClientServices, HaloSigner } from '../api';
-// import { DevtoolsHostEvents } from '../devtools';
+import { ClientServiceProvider, ClientServices } from './client-service';
 import { createServices } from './impl';
+import { HaloSigner } from './signer';
+// import { DevtoolsHostEvents } from '../devtools';
 import { createStorageObjects } from './storage';
 
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();

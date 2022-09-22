@@ -21,7 +21,7 @@ export type ClientServices = {
   TracingService: TracingService
 }
 
-// TODO(burdon): Required by devtools?
+// TODO(burdon): Rethink name/factory.
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   SystemService: schema.getService('dxos.client.SystemService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),

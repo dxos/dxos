@@ -2399,6 +2399,7 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
@@ -2432,6 +2433,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
@@ -2469,18 +2471,23 @@ importers:
       '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/util': workspace:*
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
       abstract-leveldown: ~7.0.0
+      assert: ^2.0.0
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
@@ -2489,16 +2496,21 @@ importers:
       '@dxos/client-services': 'link:'
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../../echo/model-factory
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/object-model': link:../../echo/object-model
       '@dxos/protocols': link:../../common/protocols
+      '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
+      assert: 2.0.0
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii

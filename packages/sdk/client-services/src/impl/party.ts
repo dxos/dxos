@@ -3,7 +3,9 @@
 //
 
 import assert from 'node:assert';
+import { v4 } from 'uuid';
 
+import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { todo } from '@dxos/debug';
 import { InvitationDescriptor, SecretProvider, ServiceContext } from '@dxos/echo-db';
@@ -29,8 +31,6 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { CreateServicesOpts, InviteeInvitation, InviteeInvitations } from './types';
-import { v4 } from 'uuid';
-import { latch } from '@dxos/async';
 
 /**
  * Party service implementation.
@@ -120,7 +120,7 @@ class PartyService implements PartyServiceRpc {
     // };
   }
 
-  async createParty () {
+  async createParty (): Promise<Party> {
     await this.serviceContext.initialized.wait();
     const space = await this.serviceContext.spaceManager!.createSpace();
     return {
@@ -190,7 +190,7 @@ class PartyService implements PartyServiceRpc {
             assert(invitation.type === InvitationDescriptorProto.Type.INTERACTIVE);
             // invitation.secret = Buffer.from(secret);
           } else {
-            todo()
+            todo();
             // invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
           }
 
@@ -226,7 +226,7 @@ class PartyService implements PartyServiceRpc {
 
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.serviceContext.spaceManager!.joinSpace(
-        InvitationDescriptor.fromProto(request),
+        InvitationDescriptor.fromProto(request)
       );
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
