@@ -3,13 +3,8 @@
 //
 
 import { ClientServiceProvider } from '@dxos/client-services';
-import { failUndefined, todo } from '@dxos/debug';
-import {
-  Database,
-  Item,
-  RemoteDatabaseBackend,
-  streamToResultSet
-} from '@dxos/echo-db';
+import { todo } from '@dxos/debug';
+import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
