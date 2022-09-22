@@ -1847,6 +1847,50 @@ importers:
       '@types/faker': 5.5.9
       faker: 5.5.3
 
+  packages/fx/file:
+    specifiers:
+      '@types/mkdirp': ^1.0.2
+      '@types/node': ^16.11.27
+      mkdirp: ^1.0.4
+      typescript: ^4.7.2
+    dependencies:
+      mkdirp: 1.0.4
+    devDependencies:
+      '@types/mkdirp': 1.0.2
+      '@types/node': 16.11.27
+      typescript: 4.7.4
+
+  packages/fx/plate:
+    specifiers:
+      '@dxos/file': workspace:*
+      '@types/lodash.flatten': ^4.4.6
+      '@types/lodash.zip': ^4.2.6
+      '@types/node': ^16.11.27
+      '@types/prettier': ^2.4.2
+      '@types/recursive-readdir': ^2.2.0
+      esbuild: ~0.14.1
+      lodash.flatten: ^4.4.0
+      lodash.zip: ^4.2.0
+      prettier: ^2.5.1
+      recursive-readdir: ^2.2.2
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+    dependencies:
+      '@dxos/file': link:../file
+      esbuild: 0.14.49
+      lodash.flatten: 4.4.0
+      lodash.zip: 4.2.0
+      prettier: 2.7.1
+      recursive-readdir: 2.2.2
+    devDependencies:
+      '@types/lodash.flatten': 4.4.7
+      '@types/lodash.zip': 4.2.7
+      '@types/node': 16.11.27
+      '@types/prettier': 2.4.2
+      '@types/recursive-readdir': 2.2.1
+      ts-node: 10.9.1_sx5ynny5elbe7xjikueazwirqy
+      typescript: 4.7.4
+
   packages/gravity/gravity-dashboard:
     specifiers:
       '@babel/core': ^7.18.13
@@ -14619,6 +14663,12 @@ packages:
       '@types/lodash': 4.14.181
     dev: true
 
+  /@types/lodash.flatten/4.4.7:
+    resolution: {integrity: sha512-6yyP/mHEKL2sa86V61F7TnEcUKlLML9+aWI7TCKvnS4SFt7RD4zTVwkdDgluOJqxVkwZ/2z7HvtRs/7j/Uru7g==}
+    dependencies:
+      '@types/lodash': 4.14.184
+    dev: true
+
   /@types/lodash.get/4.4.6:
     resolution: {integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==}
     dependencies:
@@ -14659,6 +14709,12 @@ packages:
     resolution: {integrity: sha512-KyF2s7HCVf9Wd+QTlXrMBE4iSQPHAuIy3sE+ZERjD4Nr5YJd2vBOHrzLL8NatQLgeTs68dWTkgZ25yWHbSiq1w==}
     dependencies:
       '@types/lodash': 4.14.181
+    dev: true
+
+  /@types/lodash.zip/4.2.7:
+    resolution: {integrity: sha512-wRtK2bZ0HYXkJkeldrD35qOquGn5GOmp8+o886N18Aqw2DGFLP7JCTEb00j3xQZ+PCMTyfMS2OMbLUwah+bcyg==}
+    dependencies:
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash/4.14.181:
@@ -14703,6 +14759,12 @@ packages:
 
   /@types/minimatch/5.1.2:
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
+    dev: true
+
+  /@types/mkdirp/1.0.2:
+    resolution: {integrity: sha512-o0K1tSO0Dx5X6xlU5F1D6625FawhC3dU3iqr25lluNv/+/QIVH8RLNEiVokgIZo+mz+87w/3Mkg/VvQS+J51fQ==}
+    dependencies:
+      '@types/node': 17.0.45
     dev: true
 
   /@types/mocha/8.2.3:
@@ -14866,6 +14928,12 @@ packages:
     dependencies:
       '@types/node': 16.11.27
       safe-buffer: 5.2.1
+    dev: true
+
+  /@types/recursive-readdir/2.2.1:
+    resolution: {integrity: sha512-Xd+Ptc4/F2ueInqy5yK2FI5FxtwwbX2+VZpcg+9oYsFJVen8qQKGapCr+Bi5wQtHU1cTXT8s+07lo/nKPgu8Gg==}
+    dependencies:
+      '@types/node': 17.0.45
     dev: true
 
   /@types/resolve/1.17.1:
@@ -27272,7 +27340,6 @@ packages:
 
   /lodash.flatten/4.4.0:
     resolution: {integrity: sha512-C5N2Z3DgnnKr0LOpv/hKCgKdb7ZZwafIrsesve6lmzvZIRZRGaZ/l6Q8+2W7NaT+ZwO3fFlSCzCzrDCFdJfZ4g==}
-    dev: true
 
   /lodash.flow/3.5.0:
     resolution: {integrity: sha512-ff3BX/tSioo+XojX4MOsOMhJw0nZoUEF011LX8g8d3gvjVbxd89cCio4BCXronjxcTUIJUoqKEUA+n4CqvvRPw==}
@@ -27350,6 +27417,10 @@ packages:
 
   /lodash.uniq/4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
+
+  /lodash.zip/4.2.0:
+    resolution: {integrity: sha512-C7IOaBBK/0gMORRBd8OETNx3kmOkgIWIPvyDpZSCTwUrpYmgZwJkjZeOD8ww4xbOUOs4/attY+pciKvadNfFbg==}
+    dev: false
 
   /lodash/4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -31490,6 +31561,12 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
+
+  /prettier/2.7.1:
+    resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    dev: false
 
   /pretty-bytes/5.6.0:
     resolution: {integrity: sha512-FFw039TmrBqFK8ma/7OL3sDz/VytdtJr044/QUJtH0wK9lb9jLq9tJyIxUwtQJHwar2BqtiA4iCWSwo9JLkzFg==}

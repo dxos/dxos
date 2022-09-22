@@ -28,6 +28,8 @@
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-rules": "tools/eslint-rules",
     "feed-store": "packages/echo/feed-store",
+    "fx-file": "packages/fx/file",
+    "fx-plate": "packages/fx/plate",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-app": "apps/halo",
     "halo-protocol": "packages/halo/halo-protocol",
