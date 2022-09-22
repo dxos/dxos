@@ -2960,10 +2960,12 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/log-hook': workspace:*
       '@dxos/protocols-toolchain': workspace:*
+      '@types/color-hash': ^1.0.1
       '@types/minimatch': ^5.1.2
       '@types/yargs': ~16.0.1
       array-iterate: ~2.0.1
       chalk: ^4.1.0
+      color-hash: ^1.0.3
       debug: ^4.3.3
       js-yaml: ^4.1.0
       minimatch: ^5.1.0
@@ -2974,6 +2976,7 @@ importers:
       '@dxos/log': link:../../packages/common/log
       array-iterate: 2.0.1
       chalk: 4.1.2
+      color-hash: 1.1.1
       debug: 4.3.4
       js-yaml: 4.1.0
       minimatch: 5.1.0
@@ -2982,6 +2985,7 @@ importers:
       '@babel/core': 7.18.13
       '@dxos/log-hook': link:../log-hook
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
+      '@types/color-hash': 1.0.2
       '@types/minimatch': 5.1.2
       '@types/yargs': 16.0.4
       mocha: 8.4.0
