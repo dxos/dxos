@@ -12,11 +12,7 @@
     ]
   },
   "include": [
-    "src/experimental",
-    "src/packlets/api",
-    "src/packlets/proxy",
-    "src/packlets/services",
-    "src/*.ts"
+    "./src/**"
   ],
   "references": [
     {
@@ -44,10 +40,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../common/feed-store"
     },
     {
-      "path": "../../common/feed-store"
+      "path": "../../echo/echo-db"
     },
     {
       "path": "../../echo/model-factory"

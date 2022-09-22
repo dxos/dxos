@@ -6,14 +6,16 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { timed } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { FeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Message as HaloMessage, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { InvitationAuthenticator, InvitationDescriptor, InvitationFactory, InvitationOptions } from '../invitations';
 import { PARTY_ITEM_TYPE } from '../parties';
 import { PartyFeedProvider, PartyProtocolFactory, PartyPipeline, PipelineOptions } from '../pipeline';
+import { createAuthenticator, createAuthPlugin, createCredentialsProvider, createHaloRecoveryPlugin } from '../protocol';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { createReplicatorPlugin } from '../protocol/replicator-plugin';
 import { SnapshotStore } from '../snapshots';
@@ -125,7 +127,7 @@ export class HaloParty {
     return this._partyCore.processor.feedKeys;
   }
 
-  get credentialsWriter () {
+  get credentialsWriter (): FeedWriter<HaloMessage> {
     return this._partyCore.credentialsWriter;
   }
 

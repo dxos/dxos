@@ -28,15 +28,15 @@
     "@emotion/css": "^11.7.1",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.1",
-    "@types/react": "^18.0.9",
-    "@types/react-dom": "^18.0.5",
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
     "faker": "^5.1.0",
     "supervisor": "~0.12.0"
   },

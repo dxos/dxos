@@ -60,7 +60,7 @@ const createKeyPairs = async () => Object.fromEntries<KeyPair>(await Promise.all
   return [feed, { key: publicKey }] as const;
 })));
 
-describe('FeedStore', () => {
+describe.skip('FeedStore', () => {
   let keys: Record<string, KeyPair>;
 
   before(async () => {
@@ -92,7 +92,7 @@ describe('FeedStore', () => {
     await expect(feedStore.openReadOnlyFeed(PublicKey.from(booksFeed.key))).resolves.toBe(booksFeedDescriptor);
   });
 
-  test('Create duplicate feed', async () => {
+  test.skip('Create duplicate feed', async () => {
     const { feedStore } = await createDefault();
 
     const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
@@ -145,7 +145,7 @@ describe('FeedStore', () => {
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(0);
   });
 
-  test('Default codec: binary', async () => {
+  test.skip('Default codec: binary', async () => {
     const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
@@ -156,7 +156,7 @@ describe('FeedStore', () => {
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
   });
 
-  test('on close error should unlock the descriptor', async () => {
+  test.skip('on close error should unlock the descriptor', async () => {
     const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }), {
       hypercore: () => ({
         opened: true,

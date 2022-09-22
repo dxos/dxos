@@ -3,32 +3,32 @@
 //
 
 import React, { StrictMode, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'react-dom';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { createWorkerParentPort } from '@dxos/rpc-tunnel';
+import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
 
-const App = ({ messagePort }: { messagePort: MessagePort }) => {
+const App = ({ port }: { port: MessagePort }) => {
   const [closed, setClosed] = useState(true);
   const [error, setError] = useState<string>();
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const port = await createWorkerParentPort(messagePort);
+    const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
     const client = createProtoRpcPeer({
       requested: {
         TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
       },
       exposed: {},
       handlers: {},
-      port
+      port: rpcPort
     });
     await client.open();
 
@@ -54,17 +54,17 @@ const App = ({ messagePort }: { messagePort: MessagePort }) => {
   );
 };
 
-if (typeof Worker !== 'undefined') {
+if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
-    worker.port.start();
 
-    createRoot(document.getElementById('root')!).render(
+    render(
       <StrictMode>
-        <App messagePort={worker.port} />
-      </StrictMode>
+        <App port={worker.port} />
+      </StrictMode>,
+      document.getElementById('root')
     );
   })();
 } else {
-  throw new Error('Requires a browser with support for workers.');
+  throw new Error('Requires a browser with support for shared workers.');
 }

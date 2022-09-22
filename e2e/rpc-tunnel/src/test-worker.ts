@@ -3,14 +3,12 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { createProtoRpcPeer } from '@dxos/rpc';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
 
 import { TestClient } from './test-client';
 
-onconnect = async (event: MessageEvent<any>) => {
-  const port = createWorkerPort(event.ports[0]);
-  const client = new TestClient();
+const setup = async (port: RpcPort, client: TestClient) => {
   const server = createProtoRpcPeer({
     requested: {},
     exposed: {
@@ -19,5 +17,21 @@ onconnect = async (event: MessageEvent<any>) => {
     handlers: client.handlers,
     port
   });
+
   await server.open();
 };
+
+const channel = new MessageChannel(async (channel, port) => {
+  await Promise.all([
+    setup(
+      createWorkerPort({ channel, port, source: 'child', destination: 'parent' }),
+      new TestClient()
+    ),
+    setup(
+      createWorkerPort({ channel, port, source: 'router', destination: 'proxy' }),
+      new TestClient({ value: 10050 })
+    )
+  ]);
+});
+
+onconnect = event => channel.onConnect(event);

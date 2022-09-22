@@ -9,10 +9,13 @@ runtime:
   # TODO(burdon): Configure local kube.
   services:
     ipfs:
-      server: 'https://ipfs-pub1.kube.dxos.network'
+      server: "http://127.0.0.1:5001"
+      gateway: "http://127.0.0.1:8888/ipfs/"
     signal:
-      server: 'ws://localhost:8888/.well-known/dx/signal'
+      server: 'ws://localhost:9003/.well-known/dx/signal'
     ice:
       - urls: 'turn:demo.kube.dxos.network:3478'
         username: 'dxos'
         credential: 'dxos'
+    publisher:
+      server: 'ws://localhost:9003/.well-known/dx/deploy'

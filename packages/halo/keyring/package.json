@@ -4,6 +4,10 @@
   "description": "DXOS Keyring",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/crypto/index.js": "./dist/src/crypto/browser.js",
+    "node:assert": "assert"
+  },
   "scripts": {
     "check": "true"
   },
@@ -15,7 +19,8 @@
     "@dxos/log": "workspace:^2.33.4",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "assert": "^2.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

@@ -22,7 +22,7 @@
     "@types/node": "^16.11.58",
     "@types/react": "^18.0.9",
     "node-fetch": "^2.6.0",
-    "react": "^18.1.0"
+    "react": "^17.0.2"
   },
   "peerDependencies": {
     "react": "*"

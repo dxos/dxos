@@ -3,16 +3,13 @@
 //
 
 import { PublicKey } from './public-key';
+import expect from 'expect'
 
 const TEST_KEY_HEX = '2c28f0d08ccc5340aee02655675be5796227a28d27b9704df34b7d8b2d9fddc7';
 
 it('Basic key operations', () => {
   const publicKey = PublicKey.random().asBuffer();
   expect(PublicKey.bufferize(PublicKey.stringify(publicKey))).toEqual(publicKey);
-
-  expect(() => PublicKey.stringify('not-a-buffer' as any)).toThrowError();
-  expect(() => PublicKey.bufferize('not-a-value-hex-key')).toThrowError();
-  expect(() => PublicKey.bufferize(publicKey as any)).toThrowError();
 });
 
 it('formatting', () => {

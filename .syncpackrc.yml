@@ -18,6 +18,11 @@ semverGroups:
     dependencies:
       - nx
       - '@nwrl/*'
+versionGroups:
+  - packages:
+      - '@dxos/docs'
+    dependencies:
+      - '@mdx-js/react'
 sortFirst:
   - name
   - version

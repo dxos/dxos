@@ -3,13 +3,13 @@
 //
 
 import React, { StrictMode, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'react-dom';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
-import { createIframeParentPort, createIframePort } from '@dxos/rpc-tunnel';
+import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { TestClient } from './test-client';
 
@@ -23,7 +23,7 @@ const App = () => {
 
   useAsyncEffect(async () => {
     if (IN_IFRAME) {
-      const port = createIframePort('http://127.0.0.1:5173');
+      const port = createIFramePort({ origin: 'http://127.0.0.1:5173' });
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
@@ -39,7 +39,7 @@ const App = () => {
 
       client.subscribe(value => setValue(String(value)));
     } else {
-      const port = await createIframeParentPort(iframeRef.current!, 'http://localhost:5173');
+      const port = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
       const client = createProtoRpcPeer({
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
@@ -93,8 +93,9 @@ const App = () => {
   );
 };
 
-createRoot(document.getElementById('root')!).render(
+render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
+  document.getElementById('root')
 );

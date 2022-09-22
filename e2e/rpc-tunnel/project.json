@@ -35,7 +35,7 @@
       "executor": "@dxos/playwright:playwright",
       "options": {
         "testPatterns": [
-          "e2e/rpc-tunnel/playwright/tests/*.test.ts"
+          "e2e/rpc-tunnel/playwright/tests/*.spec.ts"
         ],
         "config": "e2e/rpc-tunnel/playwright/config.ts"
       }

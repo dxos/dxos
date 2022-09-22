@@ -8,7 +8,8 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { ItemID, ItemType } from '@dxos/protocols';
+import { PublicKey } from '@dxos/protocols';
+import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';
 import { DatabaseBackend } from './database-backend';
@@ -197,7 +198,7 @@ export class Database {
     );
   }
 
-  createSnapshot () {
+  createSnapshot (): DatabaseSnapshot {
     this._assertInitialized();
     return this._backend.createSnapshot();
   }

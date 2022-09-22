@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/sdk/client/src",
+  "sourceRoot": "packages/sdk/client-services/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/sdk/client/dist",
-        "tsConfig": "packages/sdk/client/tsconfig.json",
-        "main": "packages/sdk/client/src/index.ts"
+        "outputPath": "packages/sdk/client-services/dist",
+        "tsConfig": "packages/sdk/client-services/tsconfig.json",
+        "main": "packages/sdk/client-services/src/index.ts"
       }
     },
     "bundle": {
@@ -20,9 +20,9 @@
       ],
       "options": {
         "entryPoints": [
-          "packages/sdk/client/src/index.ts"
+          "packages/sdk/client-services/src/index.ts"
         ],
-        "outdir": "packages/sdk/client/dist/browser",
+        "outdir": "packages/sdk/client-services/dist/browser",
         "bundlePackages": [
           "@dxos/credentials",
           "@dxos/crypto",
@@ -40,7 +40,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
+          "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
@@ -48,7 +48,7 @@
       "executor": "@dxos/mocha:mocha",
       "options": {
         "testPatterns": [
-          "packages/sdk/client/src/**/*.test.{ts,js}"
+          "packages/sdk/client-services/src/**/*.test.{ts,js}"
         ]
       }
     }

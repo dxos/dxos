@@ -13,6 +13,8 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 
+import { PublisherRpcPeer } from './util';
+
 const log = debug('dxos:cli:main');
 const error = log.extend('error');
 
@@ -27,7 +29,7 @@ export abstract class BaseCommand extends Command {
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
       default: async (context: any) => {
-        return path.join(context.config.configDir, 'config.json');
+        return path.join(context.config.configDir, 'config.yml');
       }
     }),
 
@@ -113,6 +115,36 @@ export abstract class BaseCommand extends Command {
       return value;
     } catch (err: any) {
       this.error(err);
+    }
+  }
+
+  /**
+   * Convenience function to wrap command passing in kube publisher.
+   */
+  async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    let rpc: PublisherRpcPeer | undefined;
+    try {
+      assert(this._clientConfig);
+
+      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
+      assert(wsEndpoint);
+
+      rpc = new PublisherRpcPeer(wsEndpoint);
+
+      await Promise.race([
+        rpc.connected.waitForCount(1),
+        rpc.error.waitForCount(1).then(err => Promise.reject(err))
+      ]);
+
+      const value = await callback(rpc);
+
+      return value;
+    } catch (err: any) {
+      this.error(err);
+    } finally {
+      if (rpc) {
+        await rpc.close();
+      }
     }
   }
 }

@@ -12,6 +12,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedStore } from './feed-store';
 import { createFeedWriter } from './feed-writer';
+import { it as test } from 'mocha';
+import expect from 'expect'
 
 // TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
@@ -30,7 +32,7 @@ describe('Feed tests:', () => {
     expect(message1).toEqual(message2);
   });
 
-  test('hypercore', async () => {
+  test.skip('hypercore', async () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
@@ -51,7 +53,7 @@ describe('Feed tests:', () => {
     expect(block).toEqual(data);
   });
 
-  test('feed writer', async () => {
+  test.skip('feed writer', async () => {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();

@@ -5,14 +5,14 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { promiseTimeout, synchronized } from '@dxos/async';
+import { synchronized } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
-import { createSingletonPort } from '@dxos/rpc-worker-proxy';
+import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
 import {
@@ -28,7 +28,8 @@ import { DXOS_VERSION } from './version';
 const log = debug('dxos:client-proxy');
 
 // TODO(wittjosiah): Should be kube.local or equivalent.
-const DEFAULT_SINGLETON_HOST = 'http://localhost:3967';
+const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967';
+const IFRAME_ID = '__DXOS_CLIENT__';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
@@ -64,6 +65,12 @@ export interface ClientOptions {
    *
    */
   timeout?: number
+}
+
+export interface ClientInfo {
+  initialized: boolean
+  echo: EchoProxy['info']
+  halo: HaloProxy['info']
 }
 
 export class Client {
@@ -109,7 +116,7 @@ export class Client {
     return `Client(${JSON.stringify(this.info)})`;
   }
 
-  get info () {
+  get info (): ClientInfo {
     return {
       initialized: this.initialized,
       echo: this.echo.info,
@@ -193,18 +200,19 @@ export class Client {
     clearInterval(timeout);
   }
 
+  private initializeIFramePort () {
+    const source = new URL(this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN);
+    const iframe = createIFrame(source.toString(), IFRAME_ID);
+    return createIFramePort({ origin: source.origin, iframe });
+  }
+
   private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
     if (!this._options.rpcPort && isNode()) {
       throw new Error('RPC port is required to run client in remote mode on Node environment.');
     }
 
     log('Creating client proxy.');
-    const singletonSource = this._config.get('runtime.client.singletonSource') ?? DEFAULT_SINGLETON_HOST;
-    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? await promiseTimeout(
-      createSingletonPort(singletonSource),
-      300,
-      new RemoteServiceConnectionTimeout()
-    ));
+    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? this.initializeIFramePort());
     await this._serviceProvider.open(onProgressCallback);
   }
 
@@ -224,6 +232,8 @@ export class Client {
       } catch (err) {
         if (err instanceof RemoteServiceConnectionTimeout) {
           log('Failed to connect to remote services. Starting local services.');
+          document.getElementById(IFRAME_ID)?.remove();
+          await this._serviceProvider.close();
           await this.initializeLocal(onProgressCallback);
         } else {
           throw err;
