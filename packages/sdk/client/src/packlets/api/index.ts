@@ -4,4 +4,5 @@
 
 export * from './echo';
 export * from './halo';
-export * from './invitations';
+export * from './invitation';
+export * from './invitation-request';

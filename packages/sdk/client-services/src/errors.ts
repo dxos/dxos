@@ -4,6 +4,8 @@
 
 import { DXOSError } from '@dxos/debug';
 
+// TODO(burdon): Consolidate with @dxos/echo-db.
+
 export class InvalidConfigurationError extends DXOSError {
   constructor (message: string) {
     super('INVALID_CONFIGURATION', message);

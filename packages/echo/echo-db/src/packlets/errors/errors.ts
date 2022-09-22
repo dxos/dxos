@@ -24,12 +24,14 @@ export class UnknownModelError extends DXOSError {
   }
 }
 
+// TODO(burdon): Move.
 export class IdentityNotInitializedError extends DXOSError {
   constructor () {
     super('IDENTITY_NOT_INITIALIZED', 'Identity not initialized.');
   }
 }
 
+// TODO(burdon): Move.
 export class InvalidInvitationError extends DXOSError {
   constructor () {
     super('INVALID_INVITATION', 'Invitation is invalid.');

@@ -38,7 +38,6 @@
     "@dxos/util": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "assert": "^2.0.0",
-    "base-x": "~3.0.9",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "json-stable-stringify": "^1.0.1",

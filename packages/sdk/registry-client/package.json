@@ -21,6 +21,8 @@
     "test:integration:registry": "NODE_ENV=test mocha 'test/integration/**/registry-client.test.ts'"
   },
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",

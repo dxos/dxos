@@ -14,6 +14,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",

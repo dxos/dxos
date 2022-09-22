@@ -14,7 +14,7 @@
   "include": [
     "src/experimental",
     "src/packlets/api",
-    "src/packlets/proxy",
+    "src/packlets/proxies",
     "src/packlets/services",
     "src/*.ts"
   ],

@@ -1360,6 +1360,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -1405,6 +1406,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
+      '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/credentials': link:../../halo/credentials
       '@dxos/debug': link:../../common/debug
@@ -1630,7 +1632,6 @@ importers:
       '@types/memdown': ^3.0.0
       '@types/pify': ^3.0.2
       assert: ^2.0.0
-      base-x: ~3.0.9
       buffer-json-encoding: ^1.0.2
       chalk: ^4.1.0
       columnify: ^1.6.0
@@ -1668,7 +1669,6 @@ importers:
       '@dxos/rpc': link:../../common/rpc
       '@dxos/util': link:../../common/util
       assert: 2.0.0
-      base-x: 3.0.9
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       json-stable-stringify: 1.0.1
@@ -2000,6 +2000,7 @@ importers:
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       '@types/json-stable-stringify': ^1.0.32
+      assert: ^2.0.0
       debug: ^4.3.3
       json-stable-stringify: ^1.0.1
     dependencies:
@@ -2012,6 +2013,7 @@ importers:
       '@dxos/protocols': link:../../common/protocols
       '@dxos/util': link:../../common/util
       '@types/json-stable-stringify': 1.0.33
+      assert: 2.0.0
       debug: 4.3.4
       json-stable-stringify: 1.0.1
     devDependencies:
@@ -2472,22 +2474,31 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
+      '@types/json-stable-stringify': ^1.0.32
       '@types/level-js': ~4.0.1
       '@types/memdown': ^3.0.0
       abstract-leveldown: ~7.0.0
       assert: ^2.0.0
+      base-x: ~3.0.9
+      json-stable-stringify: ^1.0.1
       jsondown: dxos/jsondown#main
       level-js: ^5.0.2
       memdown: ^5.1.0
@@ -2497,24 +2508,33 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../mesh/messaging
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/network-manager': link:../../mesh/network-manager
       '@dxos/object-model': link:../../echo/object-model
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
       '@dxos/protocols': link:../../common/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/testutils': link:../../common/testutils
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
+      base-x: 3.0.9
+      json-stable-stringify: 1.0.1
       jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
+      '@types/json-stable-stringify': 1.0.33
       '@types/level-js': 4.0.2
       '@types/memdown': 3.0.0
 
@@ -2605,6 +2625,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -2638,6 +2659,7 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/bot-factory-client': link:../../bot/bot-factory-client
       '@dxos/client': link:../client
+      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
@@ -3019,6 +3041,7 @@ importers:
   packages/sdk/registry-client:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -3049,6 +3072,8 @@ importers:
       randombytes: ^2.1.0
       util: ^0.12.4
     dependencies:
+      '@dxos/client': link:../client
+      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
@@ -3063,7 +3088,6 @@ importers:
       randombytes: 2.1.0
       util: 0.12.4
     devDependencies:
-      '@dxos/client': link:../client
       '@polkadot/api': 4.17.1
       '@polkadot/keyring': 6.11.1
       '@polkadot/metadata': 4.17.1

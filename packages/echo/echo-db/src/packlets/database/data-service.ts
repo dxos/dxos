@@ -27,6 +27,7 @@ const log = debug('dxos:echo-db:data-service-router');
 /**
  * Routes DataService requests to different DataServiceHost instances based on party id.
  */
+// TODO(burdon): Move service definition to client-services.
 export class DataService implements DataServiceRpc {
   private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(x => x.toHex());
 

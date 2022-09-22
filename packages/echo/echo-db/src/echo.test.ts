@@ -8,9 +8,7 @@ import { it as test } from 'mocha';
 import assert from 'node:assert';
 
 import { latch, promiseTimeout, waitForCondition } from '@dxos/async';
-import {
-  defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase
-} from '@dxos/credentials';
+import { defaultSecretProvider, defaultSecretValidator, generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 import { humanize } from '@dxos/util';

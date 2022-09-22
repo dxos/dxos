@@ -5,13 +5,10 @@
 export * from './packlets/common';
 export * from './packlets/database';
 export * from './packlets/errors';
-export * from './packlets/identity';
 export * from './packlets/metadata';
-export * from './packlets/services';
-export * from './packlets/invitations';
+export * from './packlets/space';
 
 export * from './api';
-
 
 // export * from './echo';
 // export * from './halo';

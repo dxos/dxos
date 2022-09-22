@@ -14,7 +14,6 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
-  InvitationDescriptor,
   OpenProgress,
   PartyMember,
   ResultSet,
@@ -23,6 +22,10 @@ export {
   SchemaField,
   SchemaRef
 } from '@dxos/echo-db';
+
+export {
+  InvitationDescriptor
+} from '@dxos/client-services';
 
 export {
   PublicKey
@@ -56,4 +59,4 @@ export {
 
 export * from './packlets/api';
 // export * from './packlets/devtools';
-export * from './packlets/proxy';
+export * from './packlets/proxies';
