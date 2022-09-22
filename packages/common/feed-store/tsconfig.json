@@ -25,9 +25,6 @@
     },
     {
       "path": "../util"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

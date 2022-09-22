@@ -31,6 +31,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/messaging": "workspace:*",
+    "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
     "abstract-leveldown": "~7.0.0",
     "assert": "^2.0.0",

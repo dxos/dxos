@@ -8,7 +8,8 @@ import { Event, synchronized } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelConstructor, ModelFactory, validateModelClass } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { ItemType } from '@dxos/protocols'
+import { ItemID } from '@dxos/protocols'
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataServiceHost } from './data-service-host';

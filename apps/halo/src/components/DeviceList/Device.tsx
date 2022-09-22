@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Box, Card, CardContent, Typography } from '@mui/material';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { HashIcon } from '@dxos/react-components';
 
 export interface DeviceProps {

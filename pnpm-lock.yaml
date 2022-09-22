@@ -2398,6 +2398,7 @@ importers:
       '@dxos/random-access-storage': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
@@ -2430,6 +2431,7 @@ importers:
       '@dxos/model-factory': link:../../echo/model-factory
       '@dxos/protocols': link:../../common/protocols
       '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
       abstract-leveldown: 7.0.0
       assert: 2.0.0
