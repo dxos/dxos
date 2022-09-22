@@ -2,7 +2,7 @@ version: 1
 
 package:
   modules:
-    - name: dxos:app/bare
+    - name: example:app/bare
       type: dxos:type/app
       build:
         command: npm run bundle

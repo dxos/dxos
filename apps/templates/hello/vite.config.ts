@@ -22,6 +22,7 @@ export default defineConfig({
     ]
   },
   build: {
+    outDir: 'out/example/app/hello',
     commonjsOptions: {
       include: [
         /packages/,
