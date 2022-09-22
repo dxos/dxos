@@ -8,6 +8,7 @@
     "broadcast": "packages/mesh/broadcast",
     "client": "packages/sdk/client",
     "client-e2e": "e2e/client",
+    "client-services": "packages/sdk/client-services",
     "client-testing": "packages/sdk/client-testing",
     "codec-protobuf": "packages/common/codec-protobuf",
     "config": "packages/sdk/config",

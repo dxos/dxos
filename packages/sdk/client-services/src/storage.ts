@@ -11,7 +11,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
-import { InvalidConfigurationError } from '../api';
+import { InvalidConfigurationError } from './api';
 
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 

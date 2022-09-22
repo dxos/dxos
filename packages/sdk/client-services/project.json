@@ -1,0 +1,60 @@
+{
+  "sourceRoot": "packages/sdk/client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/client/dist",
+        "tsConfig": "packages/sdk/client/tsconfig.json",
+        "main": "packages/sdk/client/src/index.ts"
+      }
+    },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outdir}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/sdk/client/src/index.ts"
+        ],
+        "outdir": "packages/sdk/client/dist/browser",
+        "bundlePackages": [
+          "@dxos/credentials",
+          "@dxos/crypto",
+          "@dxos/echo-db",
+          "@dxos/feed-store",
+          "@dxos/network-manager",
+          "@dxos/object-model"
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

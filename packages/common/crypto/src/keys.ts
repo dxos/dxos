@@ -9,7 +9,6 @@ import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH
 
 /**
  * @deprecated
- * @return {string}
  */
 // TODO(burdon): Remove.
 export const createId = (): string => PublicKey.stringify(randomBytes(32));

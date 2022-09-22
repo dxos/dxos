@@ -2450,6 +2450,31 @@ importers:
       '@types/uuid': 8.3.3
       jsonify: 0.0.0
 
+  packages/sdk/client-services:
+    specifiers:
+      '@dxos/debug': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
+      '@types/level-js': ~4.0.1
+      '@types/memdown': ^3.0.0
+      abstract-leveldown: ~7.0.0
+      jsondown: dxos/jsondown#main
+      level-js: ^5.0.2
+      memdown: ^5.1.0
+    dependencies:
+      '@dxos/debug': link:../../common/debug
+      '@dxos/protocols': link:../../common/protocols
+      '@dxos/random-access-storage': link:../../common/random-access-storage
+      '@dxos/util': link:../../common/util
+      abstract-leveldown: 7.0.0
+      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
+      level-js: 5.0.2
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
+    devDependencies:
+      '@types/level-js': 4.0.2
+      '@types/memdown': 3.0.0
+
   packages/sdk/client-testing:
     specifiers:
       '@dxos/async': workspace:*
@@ -5434,7 +5459,7 @@ packages:
     dependencies:
       '@dxos/gem-core': 2.2.1-beta.11_2z7gpx7w77mn2fduvx4j6f34be
       '@emotion/css': 11.7.1_@babel+core@7.18.13
-      '@emotion/react': 11.9.3_zfzsuujtas3qx4obtqtcqraz7y
+      '@emotion/react': 11.9.3_tu23i5xxn6kbev62oblybgbdem
       clsx: 1.1.1
       csstype: 3.1.0
       d3: 7.3.0
@@ -23737,7 +23762,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
