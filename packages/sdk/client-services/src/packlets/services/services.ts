@@ -13,7 +13,7 @@ import { CreateServicesOpts } from './types';
 // TODO(burdon): Remove factory functions.
 // TODO(burdon): Rename CreateServicesOpts => ServiceContext.
 export const createServices = (opts: CreateServicesOpts): Omit<ClientServices, 'DevtoolsHost'> => ({
-  DataService: opts.context.dataServiceRouter,
+  DataService: opts.context.dataService,
   HaloService: createHaloService(opts),
   PartyService: createPartyService(opts),
   ProfileService: createProfileService(opts),

@@ -38,8 +38,8 @@ export class IdentityManager {
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor (
     private readonly _metadataStore: MetadataStore,
-    private readonly _keyring: Keyring,
     private readonly _feedStore: FeedStore,
+    private readonly _keyring: Keyring,
     private readonly _networkManager: NetworkManager
   ) {}
 
@@ -160,7 +160,7 @@ export class IdentityManager {
   async acceptIdentity (params: JoinIdentityParams) {
     assert(!this._identity, 'Identity already exists.');
 
-    const identityRecord: IdentityRecord = {
+    const identity = await this._constructIdentity({
       identityKey: params.identityKey,
       deviceKey: await this._keyring.createKey(),
       haloSpace: {
@@ -169,8 +169,8 @@ export class IdentityManager {
         writeControlFeedKey: await this._keyring.createKey(),
         writeDataFeedKey: await this._keyring.createKey()
       }
-    };
-    const identity = await this._constructIdentity(identityRecord);
+    });
+
     await identity.open();
     this._identity = identity;
     this.stateUpdate.emit();

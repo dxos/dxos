@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Space } from '@dxos/echo-db';
+import { Space, SigningContext, SpaceManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -13,15 +13,14 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { SigningContext, SpaceManager } from '../services';
 import { InvitationDescriptor } from './invitation-descriptor';
 
-// TODO(burdon): Factor out. Make factory?
+// TODO(burdon): Move to @dxos/identity?
 export class DataInvitations {
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _signingContext: SigningContext,
-    private readonly _spaceManager: SpaceManager
+    private readonly _spaceManager: SpaceManager,
+    private readonly _signingContext: SigningContext
   ) {}
 
   /**

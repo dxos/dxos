@@ -183,7 +183,7 @@ class PartyService implements PartyServiceRpc {
             //   next({ state: InvitationState.CONNECTED });
             //   return Buffer.from(secret);
             // };
-            invitation = await this.serviceContext.spaceManager!.createInvitation(request.partyKey, () => {
+            invitation = await this.serviceContext.createInvitation(request.partyKey, () => {
               next({ state: InvitationState.SUCCESS });
               close();
             });
@@ -226,9 +226,7 @@ class PartyService implements PartyServiceRpc {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const partyPromise = this.serviceContext.spaceManager!.joinSpace(
-        InvitationDescriptor.fromProto(request)
-      );
+      const partyPromise = this.serviceContext.joinSpace(InvitationDescriptor.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 

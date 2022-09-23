@@ -23,9 +23,9 @@ describe('fubar/identity-manager', () => {
     signalContext?: MemorySignalManagerContext
     storage?: Storage
   } = {}) => {
-    const metadata = new MetadataStore(storage.createDirectory('metadata'));
-    const keyring = new Keyring(storage.createDirectory('keyring'));
+    const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     const feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
+    const keyring = new Keyring(storage.createDirectory('keyring'));
     afterTest(() => feedStore.close());
 
     const networkManager = new NetworkManager({
@@ -33,9 +33,9 @@ describe('fubar/identity-manager', () => {
     });
 
     const identityManager = new IdentityManager(
-      metadata,
-      keyring,
+      metadataStore,
       feedStore,
+      keyring,
       networkManager
     );
 
