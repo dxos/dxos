@@ -4,17 +4,17 @@ sidebar_label: Quick start
 title: Quick start
 ---
 ## Using an ECHO database for state consensus
-Install the ECHO client with your package manager of choice
+Install ECHO with your package manager of choice
 ```bash
 > npm install --save @dxos/echo
 ```
-Create an ECHO instance either in browser or on the server:
+Create an ECHO client instance either in browser or on the server:
 ```ts
 import { Client } from "@dxos/echo"
 
 const client = new Client();
 ```
-See here for the [configuration options](/docs/echo/config) you can pass in.
+See here for the [configuration options](/docs/echo/configuration) you can pass in.
 
 Create a space and query items:
 ```ts
@@ -42,6 +42,7 @@ ReactDOM.render(
 
 Read more:
 - [ECHO overview](/docs/echo/overview)
+- [ECHO configuration](/docs/echo/configuration)
 - [ECHO with React](/docs/echo/react)
 - [how ECHO works](/docs/echo/how-echo-works)
 - Implement user identity with [HALO](/docs/halo/overview)
