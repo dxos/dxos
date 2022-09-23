@@ -28,7 +28,7 @@ TODO(telackey): DoS mitigation
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:49](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L49)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:51](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L51)
 
 ## Properties
 
@@ -38,7 +38,7 @@ TODO(telackey): DoS mitigation
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:46](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L46)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L48)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:47](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L47)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L49)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:45](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L45)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L47)
 
 ## Accessors
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:56](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L56)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L58)
 
 ## Methods
 
@@ -90,7 +90,7 @@ Those will be returned in the form of an InvitationDescriptor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:98](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L98)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L100)
 
 ___
 
@@ -112,7 +112,7 @@ Initiate a connection to some Party member node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:64](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L64)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:66](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L66)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:144](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L144)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:146](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L146)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:136](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L136)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:138](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L138)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:130](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L130)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:132](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L132)
 
 ___
 
@@ -189,4 +189,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:159](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L159)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:161](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L161)

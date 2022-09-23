@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:12](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/party-preferences.ts#L12)
+[packages/echo/echo-db/src/parties/party-preferences.ts:12](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-preferences.ts#L12)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:11](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/party-preferences.ts#L11)
+[packages/echo/echo-db/src/parties/party-preferences.ts:11](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-preferences.ts#L11)

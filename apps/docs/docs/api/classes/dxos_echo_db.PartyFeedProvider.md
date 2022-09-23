@@ -24,7 +24,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L25)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L26)
 
 ## Properties
 
@@ -34,7 +34,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:22](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L22)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L23)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L23)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L24)
 
 ## Methods
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:83](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L83)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L84)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:72](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L72)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:73](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L73)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:93](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L93)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L94)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:57](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L57)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L58)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:36](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L36)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L37)
 
 ___
 
@@ -148,4 +148,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:32](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L32)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L33)

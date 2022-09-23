@@ -27,7 +27,7 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L33)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L34)
 
 ## Properties
 
@@ -37,7 +37,7 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L31)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L32)
 
 ## Methods
 
@@ -57,7 +57,7 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:126](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L126)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:127](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L127)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:138](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L138)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:139](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L139)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:118](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L118)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:119](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L119)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:39](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L39)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L40)
 
 ___
 
@@ -125,4 +125,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:151](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L151)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:152](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L152)

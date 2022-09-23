@@ -28,7 +28,7 @@ Create and manage HALO parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:48](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L48)
+[packages/echo/echo-db/src/halo/halo-factory.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L54)
 
 ## Methods
 
@@ -49,7 +49,7 @@ Create and manage HALO parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:152](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L152)
+[packages/echo/echo-db/src/halo/halo-factory.ts:158](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L158)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:57](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L57)
+[packages/echo/echo-db/src/halo/halo-factory.ts:63](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L63)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:73](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L73)
+[packages/echo/echo-db/src/halo/halo-factory.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L79)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:146](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L146)
+[packages/echo/echo-db/src/halo/halo-factory.ts:152](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L152)
 
 ___
 
@@ -124,4 +124,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:129](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-factory.ts#L129)
+[packages/echo/echo-db/src/halo/halo-factory.ts:135](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L135)

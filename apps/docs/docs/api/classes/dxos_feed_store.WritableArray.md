@@ -39,7 +39,7 @@ Writable.constructor
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:78](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/feed-store/src/stream.ts#L78)
+[packages/echo/feed-store/src/stream.ts:78](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L78)
 
 ## Properties
 
@@ -49,7 +49,7 @@ Writable.constructor
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:76](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/feed-store/src/stream.ts#L76)
+[packages/echo/feed-store/src/stream.ts:76](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L76)
 
 ___
 
@@ -294,7 +294,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/feed-store/src/stream.ts#L86)
+[packages/echo/feed-store/src/stream.ts:86](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L86)
 
 ## Methods
 
@@ -393,7 +393,7 @@ Writable.\_write
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:90](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/feed-store/src/stream.ts#L90)
+[packages/echo/feed-store/src/stream.ts:90](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L90)
 
 ___
 
@@ -592,7 +592,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:82](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/feed-store/src/stream.ts#L82)
+[packages/echo/feed-store/src/stream.ts:82](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L82)
 
 ___
 

@@ -36,7 +36,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:85](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L85)
+[packages/echo/model-factory/src/types.ts:85](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L85)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L25)
+[packages/echo/model-factory/src/types.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L25)
 
 ___
 
@@ -89,7 +89,7 @@ Model configuration.
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:58](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L58)
+[packages/echo/model-factory/src/types.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L58)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:14](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L14)
+[packages/echo/model-factory/src/types.ts:14](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L14)
 
 ___
 
@@ -115,7 +115,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:20](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L20)
+[packages/echo/model-factory/src/types.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L20)
 
 ___
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L34)
+[packages/echo/model-factory/src/types.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L34)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:17](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L17)
+[packages/echo/model-factory/src/types.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L17)
 
 ## Functions
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/messages.ts:10](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/testing/messages.ts#L10)
+[packages/echo/model-factory/src/testing/messages.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/messages.ts#L9)
 
 ___
 
@@ -204,4 +204,4 @@ asserts model is ModelConstructor<any\>
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:100](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/types.ts#L100)
+[packages/echo/model-factory/src/types.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/types.ts#L100)

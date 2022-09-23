@@ -25,7 +25,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L28)
+[packages/echo/echo-protocol/src/types.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L29)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L33)
+[packages/echo/echo-protocol/src/types.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L34)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:29](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L29)
+[packages/echo/echo-protocol/src/types.ts:30](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L30)
 
 ___
 
@@ -63,4 +63,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:37](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L37)
+[packages/echo/echo-protocol/src/types.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L38)

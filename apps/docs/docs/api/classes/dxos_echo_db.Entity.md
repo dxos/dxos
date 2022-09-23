@@ -48,7 +48,7 @@ Subclassed by Item and Link.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L28)
+[packages/echo/echo-db/src/packlets/database/entity.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L28)
 
 ## Properties
 
@@ -58,7 +58,7 @@ Subclassed by Item and Link.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
+[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
+[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L21)
+[packages/echo/echo-db/src/packlets/database/entity.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L21)
 
 ## Accessors
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
+[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
 
 ___
 
@@ -106,7 +106,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
+[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
+[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
+[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
 
 ## Methods
 
@@ -168,4 +168,4 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
+[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/entity.ts#L65)

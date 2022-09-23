@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:68](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L68)
+[packages/echo/echo-protocol/src/types.ts:70](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L70)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:66](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L66)
+[packages/echo/echo-protocol/src/types.ts:69](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L69)

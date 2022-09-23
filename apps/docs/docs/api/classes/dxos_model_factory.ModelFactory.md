@@ -23,7 +23,7 @@ Creates Model instances from a registered collection of Model types.
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L21)
+[packages/echo/model-factory/src/model-factory.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L22)
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L19)
+[packages/echo/model-factory/src/model-factory.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L20)
 
 ## Methods
 
@@ -65,7 +65,7 @@ Instantiates new StateManager with the underlying model.
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:63](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L63)
+[packages/echo/model-factory/src/model-factory.ts:64](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L64)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L31)
+[packages/echo/model-factory/src/model-factory.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L32)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:37](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L37)
+[packages/echo/model-factory/src/model-factory.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L38)
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:27](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L27)
+[packages/echo/model-factory/src/model-factory.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L28)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L23)
+[packages/echo/model-factory/src/model-factory.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L24)
 
 ___
 
@@ -159,4 +159,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model-factory.ts:47](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/model-factory.ts#L47)
+[packages/echo/model-factory/src/model-factory.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/model-factory.ts#L48)

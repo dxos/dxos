@@ -27,7 +27,7 @@ Routes DataService requests to different DataServiceHost instances based on part
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L31)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L31)
 
 ## Methods
 
@@ -51,7 +51,7 @@ DataService.subscribeEntitySet
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L38)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L38)
 
 ___
 
@@ -75,7 +75,7 @@ DataService.subscribeEntityStream
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:44](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L44)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L44)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L33)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L33)
 
 ___
 
@@ -120,4 +120,4 @@ DataService.write
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:50](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L50)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L50)

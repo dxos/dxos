@@ -23,17 +23,17 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:51](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L51)
+[packages/echo/object-model/src/object-model.ts:52](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L52)
 
 ## Properties
 
 ### \_mutations
 
-• **\_mutations**: [`ObjectMutation`](../interfaces/dxos_object_model.ObjectMutation-1.md)[] = `[]`
+• **\_mutations**: `ObjectMutation`[] = `[]`
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:49](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L49)
+[packages/echo/object-model/src/object-model.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L50)
 
 ## Methods
 
@@ -47,7 +47,7 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:60](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L60)
+[packages/echo/object-model/src/object-model.ts:61](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L61)
 
 ___
 
@@ -68,4 +68,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:55](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L55)
+[packages/echo/object-model/src/object-model.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L56)

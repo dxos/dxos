@@ -53,7 +53,7 @@ The state of the model is formed from the following components (in order):
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:78](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L78)
+[packages/echo/model-factory/src/state-manager.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L79)
 
 ## Properties
 
@@ -63,7 +63,7 @@ The state of the model is formed from the following components (in order):
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:62](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L62)
+[packages/echo/model-factory/src/state-manager.ts:63](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L63)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:60](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L60)
+[packages/echo/model-factory/src/state-manager.ts:61](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L61)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:58](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L58)
+[packages/echo/model-factory/src/state-manager.ts:59](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L59)
 
 ___
 
@@ -95,7 +95,7 @@ Mutations that were applied on top of the _snapshot.
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:67](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L67)
+[packages/echo/model-factory/src/state-manager.ts:68](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L68)
 
 ___
 
@@ -107,7 +107,7 @@ Mutations that were optimistically applied and haven't yet passed through the fe
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:72](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L72)
+[packages/echo/model-factory/src/state-manager.ts:73](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L73)
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:61](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L61)
+[packages/echo/model-factory/src/state-manager.ts:62](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L62)
 
 ## Accessors
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:91](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L91)
+[packages/echo/model-factory/src/state-manager.ts:92](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L92)
 
 ___
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:104](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L104)
+[packages/echo/model-factory/src/state-manager.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L105)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:99](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L99)
+[packages/echo/model-factory/src/state-manager.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L100)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:95](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L95)
+[packages/echo/model-factory/src/state-manager.ts:96](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L96)
 
 ## Methods
 
@@ -189,7 +189,7 @@ Re-creates the state machine based on the current snapshot and enqueued mutation
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:168](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L168)
+[packages/echo/model-factory/src/state-manager.ts:169](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L169)
 
 ___
 
@@ -211,7 +211,7 @@ Writes the mutation to the output stream.
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:112](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L112)
+[packages/echo/model-factory/src/state-manager.ts:113](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L113)
 
 ___
 
@@ -227,7 +227,7 @@ Create a snapshot of the current state.
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:262](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L262)
+[packages/echo/model-factory/src/state-manager.ts:263](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L263)
 
 ___
 
@@ -251,7 +251,7 @@ Only possible if the modelContructor wasn't passed during StateManager's creatio
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:205](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L205)
+[packages/echo/model-factory/src/state-manager.ts:206](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L206)
 
 ___
 
@@ -274,7 +274,7 @@ Processes mutations from the inbound stream.
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:224](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L224)
+[packages/echo/model-factory/src/state-manager.ts:225](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L225)
 
 ___
 
@@ -296,4 +296,4 @@ Reset the state to existing snapshot.
 
 #### Defined in
 
-[packages/echo/model-factory/src/state-manager.ts:282](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/model-factory/src/state-manager.ts#L282)
+[packages/echo/model-factory/src/state-manager.ts:283](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/state-manager.ts#L283)

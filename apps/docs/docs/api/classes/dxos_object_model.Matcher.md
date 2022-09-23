@@ -24,7 +24,7 @@ NOTE: The approach here is to match items against the DNF predicate tree.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/matcher.ts#L21)
+[packages/echo/object-model/src/matcher.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L22)
 
 ## Methods
 
@@ -39,7 +39,7 @@ Recursively match predicate tree against current item.
 | Name | Type |
 | :------ | :------ |
 | `item` | `any` |
-| `predicate` | [`Predicate`](../interfaces/dxos_object_model.Predicate-1.md) |
+| `predicate` | `Predicate` |
 
 #### Returns
 
@@ -47,7 +47,7 @@ Recursively match predicate tree against current item.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:40](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/matcher.ts#L40)
+[packages/echo/object-model/src/matcher.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L41)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `query` | [`Query`](../interfaces/dxos_object_model.Query.md) |
+| `query` | `Query` |
 
 #### Returns
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/matcher.ts#L25)
+[packages/echo/object-model/src/matcher.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L26)
 
 ___
 
@@ -93,7 +93,7 @@ Returns list of matched items.
 
 | Name | Type |
 | :------ | :------ |
-| `query` | [`Query`](../interfaces/dxos_object_model.Query.md) |
+| `query` | `Query` |
 | `items` | `any`[] |
 
 #### Returns
@@ -102,4 +102,4 @@ Returns list of matched items.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/matcher.ts#L33)
+[packages/echo/object-model/src/matcher.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L34)

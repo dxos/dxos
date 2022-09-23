@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:30](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L30)
+[packages/echo/echo-db/src/halo/halo.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L31)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L31)
+[packages/echo/echo-db/src/halo/halo.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L32)

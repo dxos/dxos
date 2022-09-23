@@ -11,7 +11,7 @@ Object mutation model.
 
 ## Hierarchy
 
-- `Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), [`ObjectMutationSet`](../interfaces/dxos_object_model.ObjectMutationSet.md)\>
+- `Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), `ObjectMutationSet`\>
 
   ↳ **`ObjectModel`**
 
@@ -32,7 +32,7 @@ Object mutation model.
 | `_meta` | `ModelMeta`<`any`, `any`, `any`\> | Metadata definitions. |
 | `_itemId` | `string` | Parent item. |
 | `_getState` | () => [`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate) | Retrieves the underlying state object. |
-| `_mutationWriter?` | `MutationWriter`<[`ObjectMutationSet`](../interfaces/dxos_object_model.ObjectMutationSet.md)\> | Output mutation stream (unless read-only). |
+| `_mutationWriter?` | `MutationWriter`<`ObjectMutationSet`\> | Output mutation stream (unless read-only). |
 
 #### Inherited from
 
@@ -68,7 +68,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), [`ObjectMutationSet`](../interfaces/dxos_object_model.ObjectMutationSet.md)\>\>
+• `Readonly` **update**: `Event`<`Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), `ObjectMutationSet`\>\>
 
 #### Inherited from
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:78](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L78)
+[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L79)
 
 ## Accessors
 
@@ -161,7 +161,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:144](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L144)
+[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L145)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:100](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L100)
+[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L101)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:104](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L104)
+[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L105)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:122](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L122)
+[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L123)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:168](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L168)
+[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L169)
 
 ___
 
@@ -265,7 +265,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:156](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L156)
+[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L157)
 
 ___
 
@@ -290,7 +290,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:109](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L109)
+[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L110)
 
 ___
 
@@ -312,7 +312,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:138](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L138)
+[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L139)
 
 ___
 
@@ -335,7 +335,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:130](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L130)
+[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L131)
 
 ___
 
@@ -404,7 +404,7 @@ Returns an immutable object.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:96](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/object-model.ts#L96)
+[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L97)
 
 ___
 
@@ -436,7 +436,7 @@ Writes the raw mutation to the output stream.
 
 | Name | Type |
 | :------ | :------ |
-| `mutation` | [`ObjectMutationSet`](../interfaces/dxos_object_model.ObjectMutationSet.md) |
+| `mutation` | `ObjectMutationSet` |
 
 #### Returns
 

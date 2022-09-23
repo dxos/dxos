@@ -27,7 +27,7 @@ Represents scalar, array, and hierarchical values.
 | Name | Type |
 | :------ | :------ |
 | `object` | `any` |
-| `keyValue` | [`KeyValue`](../interfaces/dxos_object_model.KeyValue.md) |
+| `keyValue` | `KeyValue` |
 
 #### Returns
 
@@ -35,7 +35,7 @@ Represents scalar, array, and hierarchical values.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:159](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L159)
+[packages/echo/object-model/src/mutation.ts:162](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L162)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 | :------ | :------ |
 | `object` | `any` |
 | `key` | `string` |
-| `value?` | [`Value`](../interfaces/dxos_object_model.Value.md) |
+| `value?` | `Value` |
 
 #### Returns
 
@@ -57,13 +57,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:164](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L164)
+[packages/echo/object-model/src/mutation.ts:167](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L167)
 
 ___
 
 ### bool
 
-▸ `Static` **bool**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **bool**(`value`): `Value`
 
 #### Parameters
 
@@ -73,17 +73,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:116](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L116)
+[packages/echo/object-model/src/mutation.ts:119](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L119)
 
 ___
 
 ### bytes
 
-▸ `Static` **bytes**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **bytes**(`value`): `Value`
 
 #### Parameters
 
@@ -93,17 +93,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:112](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L112)
+[packages/echo/object-model/src/mutation.ts:115](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L115)
 
 ___
 
 ### createMessage
 
-▸ `Static` **createMessage**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **createMessage**(`value`): `Value`
 
 #### Parameters
 
@@ -113,17 +113,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:72](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L72)
+[packages/echo/object-model/src/mutation.ts:75](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L75)
 
 ___
 
 ### datetime
 
-▸ `Static` **datetime**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **datetime**(`value`): `Value`
 
 #### Parameters
 
@@ -133,17 +133,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:132](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L132)
+[packages/echo/object-model/src/mutation.ts:135](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L135)
 
 ___
 
 ### float
 
-▸ `Static` **float**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **float**(`value`): `Value`
 
 #### Parameters
 
@@ -153,11 +153,11 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:124](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L124)
+[packages/echo/object-model/src/mutation.ts:127](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L127)
 
 ___
 
@@ -169,7 +169,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `value` | [`KeyValueObject`](../interfaces/dxos_object_model.KeyValueObject.md) |
+| `value` | `KeyValueObject` |
 
 #### Returns
 
@@ -177,33 +177,33 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:145](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L145)
+[packages/echo/object-model/src/mutation.ts:148](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L148)
 
 ___
 
 ### getScalarValue
 
-▸ `Static` **getScalarValue**(`value`): `undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| [`KeyValueObject`](../interfaces/dxos_object_model.KeyValueObject.md)
+▸ `Static` **getScalarValue**(`value`): `undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| `KeyValueObject`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `value` | [`Value`](../interfaces/dxos_object_model.Value.md) |
+| `value` | `Value` |
 
 #### Returns
 
-`undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| [`KeyValueObject`](../interfaces/dxos_object_model.KeyValueObject.md)
+`undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| `KeyValueObject`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:152](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L152)
+[packages/echo/object-model/src/mutation.ts:155](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L155)
 
 ___
 
 ### integer
 
-▸ `Static` **integer**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **integer**(`value`): `Value`
 
 #### Parameters
 
@@ -213,17 +213,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:120](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L120)
+[packages/echo/object-model/src/mutation.ts:123](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L123)
 
 ___
 
 ### object
 
-▸ `Static` **object**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **object**(`value`): `Value`
 
 #### Parameters
 
@@ -233,17 +233,17 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:136](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L136)
+[packages/echo/object-model/src/mutation.ts:139](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L139)
 
 ___
 
 ### string
 
-▸ `Static` **string**(`value`): [`Value`](../interfaces/dxos_object_model.Value.md)
+▸ `Static` **string**(`value`): `Value`
 
 #### Parameters
 
@@ -253,11 +253,11 @@ ___
 
 #### Returns
 
-[`Value`](../interfaces/dxos_object_model.Value.md)
+`Value`
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:128](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L128)
+[packages/echo/object-model/src/mutation.ts:131](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L131)
 
 ___
 
@@ -269,7 +269,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `value` | [`Value`](../interfaces/dxos_object_model.Value.md) |
+| `value` | `Value` |
 
 #### Returns
 
@@ -277,4 +277,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:91](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/object-model/src/mutation.ts#L91)
+[packages/echo/object-model/src/mutation.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L94)

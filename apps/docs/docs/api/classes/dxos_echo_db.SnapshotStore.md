@@ -25,7 +25,7 @@ Passing `ram` as a backend will make all of files temporary, effectively disabli
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L19)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L20)
 
 ## Methods
 
@@ -41,7 +41,7 @@ Removes all data.
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:60](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L60)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:61](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L61)
 
 ___
 
@@ -61,7 +61,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L23)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L24)
 
 ___
 
@@ -81,4 +81,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:45](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L45)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:46](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L46)

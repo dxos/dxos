@@ -33,7 +33,7 @@ The core class also handles the combined ECHO and HALO state snapshots.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:73](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L73)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:73](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L73)
 
 ## Properties
 
@@ -43,7 +43,7 @@ The core class also handles the combined ECHO and HALO state snapshots.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:68](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L68)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:68](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L68)
 
 ___
 
@@ -55,7 +55,7 @@ Snapshot to be restored from when party.open() is called.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:64](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L64)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:64](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L64)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:70](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L70)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:70](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L70)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:69](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L69)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:69](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L69)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:66](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L66)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:66](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L66)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:71](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L71)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:71](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L71)
 
 ## Accessors
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:121](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L121)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:121](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L121)
 
 ___
 
@@ -123,7 +123,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:90](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L90)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:90](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L90)
 
 ___
 
@@ -137,7 +137,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L86)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:86](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L86)
 
 ___
 
@@ -151,7 +151,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:82](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L82)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:82](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L82)
 
 ___
 
@@ -165,7 +165,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:100](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L100)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L100)
 
 ___
 
@@ -179,7 +179,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:95](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L95)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:95](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L95)
 
 ___
 
@@ -193,7 +193,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:105](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L105)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L105)
 
 ___
 
@@ -207,7 +207,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:110](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L110)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:110](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L110)
 
 ## Methods
 
@@ -223,7 +223,7 @@ Closes the pipeline and streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:215](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L215)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:215](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L215)
 
 ___
 
@@ -239,7 +239,7 @@ Create a snapshot of the current state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:238](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L238)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:238](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L238)
 
 ___
 
@@ -253,7 +253,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:115](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L115)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:115](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L115)
 
 ___
 
@@ -275,7 +275,7 @@ Opens the pipeline and connects the streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:129](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L129)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:129](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L129)
 
 ___
 
@@ -295,4 +295,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:250](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L250)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:250](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L250)

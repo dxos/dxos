@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:40](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L40)
+[packages/echo/echo-db/src/halo/halo.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L41)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:35](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L35)
+[packages/echo/echo-db/src/halo/halo.ts:36](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L36)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:37](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L37)
+[packages/echo/echo-db/src/halo/halo.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L38)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L38)
+[packages/echo/echo-db/src/halo/halo.ts:39](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L39)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:36](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L36)
+[packages/echo/echo-db/src/halo/halo.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L37)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:41](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L41)
+[packages/echo/echo-db/src/halo/halo.ts:42](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L42)
 
 ___
 
@@ -89,4 +89,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:39](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo.ts#L39)
+[packages/echo/echo-db/src/halo/halo.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L40)

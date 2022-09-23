@@ -15,4 +15,4 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L21)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)

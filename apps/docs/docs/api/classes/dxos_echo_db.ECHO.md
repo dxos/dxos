@@ -31,11 +31,11 @@ Default will create an in-memory database.
 
 | Name | Type |
 | :------ | :------ |
-| `__namedParameters` | [`EchoCreationOptions`](../interfaces/dxos_echo_db.EchoCreationOptions.md) |
+| `__namedParameters` | [`EchoParams`](../interfaces/dxos_echo_db.EchoParams.md) |
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:106](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L106)
+[packages/echo/echo-db/src/echo.ts:113](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L113)
 
 ## Properties
 
@@ -45,7 +45,7 @@ Default will create an in-memory database.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:99](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L99)
+[packages/echo/echo-db/src/echo.ts:106](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L106)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:94](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L94)
+[packages/echo/echo-db/src/echo.ts:101](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L101)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:89](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L89)
+[packages/echo/echo-db/src/echo.ts:96](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L96)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L86)
+[packages/echo/echo-db/src/echo.ts:93](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L93)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:98](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L98)
+[packages/echo/echo-db/src/echo.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L105)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:95](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L95)
+[packages/echo/echo-db/src/echo.ts:102](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L102)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:96](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L96)
+[packages/echo/echo-db/src/echo.ts:103](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L103)
 
 ___
 
@@ -115,7 +115,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:90](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L90)
+[packages/echo/echo-db/src/echo.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L97)
 
 ___
 
@@ -125,7 +125,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:97](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L97)
+[packages/echo/echo-db/src/echo.ts:104](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L104)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:93](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L93)
+[packages/echo/echo-db/src/echo.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L100)
 
 ___
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:91](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L91)
+[packages/echo/echo-db/src/echo.ts:98](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L98)
 
 ## Accessors
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:220](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L220)
+[packages/echo/echo-db/src/echo.ts:232](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L232)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:208](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L208)
+[packages/echo/echo-db/src/echo.ts:220](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L220)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:199](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L199)
+[packages/echo/echo-db/src/echo.ts:211](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L211)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:195](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L195)
+[packages/echo/echo-db/src/echo.ts:207](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L207)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:216](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L216)
+[packages/echo/echo-db/src/echo.ts:228](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L228)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:212](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L212)
+[packages/echo/echo-db/src/echo.ts:224](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L224)
 
 ___
 
@@ -243,7 +243,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:224](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L224)
+[packages/echo/echo-db/src/echo.ts:236](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L236)
 
 ## Methods
 
@@ -265,7 +265,7 @@ Clones an existing party from a snapshot.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:309](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L309)
+[packages/echo/echo-db/src/echo.ts:321](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L321)
 
 ___
 
@@ -281,7 +281,7 @@ Closes the ECHO instance.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:255](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L255)
+[packages/echo/echo-db/src/echo.ts:267](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L267)
 
 ___
 
@@ -297,7 +297,7 @@ Creates a new party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:297](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L297)
+[packages/echo/echo-db/src/echo.ts:309](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L309)
 
 ___
 
@@ -319,7 +319,7 @@ Returns an individual party by it's key.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:321](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L321)
+[packages/echo/echo-db/src/echo.ts:333](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L333)
 
 ___
 
@@ -338,7 +338,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:188](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L188)
+[packages/echo/echo-db/src/echo.ts:200](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L200)
 
 ___
 
@@ -361,7 +361,7 @@ Joins a party that was created by another peer and starts replicating with it.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:367](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L367)
+[packages/echo/echo-db/src/echo.ts:379](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L379)
 
 ___
 
@@ -385,7 +385,7 @@ Previously active parties will be opened and will begin replication.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:233](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L233)
+[packages/echo/echo-db/src/echo.ts:245](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L245)
 
 ___
 
@@ -407,7 +407,7 @@ Queries for a set of Parties matching the optional filter.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:334](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L334)
+[packages/echo/echo-db/src/echo.ts:346](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L346)
 
 ___
 
@@ -424,7 +424,7 @@ The instance will be in an unusable state at this point and a page refresh is re
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:276](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L276)
+[packages/echo/echo-db/src/echo.ts:288](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L288)
 
 ___
 
@@ -438,4 +438,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:184](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/echo.ts#L184)
+[packages/echo/echo-db/src/echo.ts:196](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L196)

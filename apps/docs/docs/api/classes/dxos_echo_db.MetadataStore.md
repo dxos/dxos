@@ -21,7 +21,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L38)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L37)
 
 ## Properties
 
@@ -31,7 +31,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:36](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L36)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:35](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L35)
 
 ## Accessors
 
@@ -48,7 +48,7 @@ addPartyFeed functions.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:50](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L50)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L49)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:42](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L42)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L41)
 
 ## Methods
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L86)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:85](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L85)
 
 ___
 
@@ -98,7 +98,7 @@ Adds new party to store and saves it in persistent storage.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:123](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L123)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:122](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L122)
 
 ___
 
@@ -122,7 +122,7 @@ Creates party if it doesn't exist. Does nothing if party already has feed with g
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:139](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L139)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:138](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L138)
 
 ___
 
@@ -138,7 +138,7 @@ Clears storage - doesn't work for now.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:115](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L115)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:114](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L114)
 
 ___
 
@@ -160,7 +160,7 @@ Returns party with given public key.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:179](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L179)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:178](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L178)
 
 ___
 
@@ -183,7 +183,7 @@ Checks if a party with given key has a feed with given key.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:186](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L186)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:185](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L185)
 
 ___
 
@@ -199,7 +199,7 @@ Loads metadata from persistent storage.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:57](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L57)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L56)
 
 ___
 
@@ -224,7 +224,7 @@ Creates party if it doesn't exist. Does nothing if party already has feed with g
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:169](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L169)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:168](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L168)
 
 ___
 
@@ -245,7 +245,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:156](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L156)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:155](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L155)
 
 ___
 
@@ -266,4 +266,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:194](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L194)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:193](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L193)

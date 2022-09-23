@@ -17,7 +17,7 @@ A serialized version of InvitationDescriptor that's suitable to be encoded as an
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:30](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L30)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L23)
 
 ___
 
@@ -27,7 +27,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L33)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L26)
 
 ___
 
@@ -37,7 +37,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:32](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L32)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L25)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L31)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L24)
 
 ___
 
@@ -57,4 +57,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L34)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L27)

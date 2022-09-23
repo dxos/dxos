@@ -6,12 +6,6 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
-## Namespaces
-
-- [InvitationDescriptor](../namespaces/dxos_echo_protocol.InvitationDescriptor.md)
-- [ItemMutation](../namespaces/dxos_echo_protocol.ItemMutation.md)
-- [SubscribeEntityStreamResponse](../namespaces/dxos_echo_protocol.SubscribeEntityStreamResponse.md)
-
 ## Classes
 
 - [FeedStoreIterator](../classes/dxos_echo_protocol.FeedStoreIterator.md)
@@ -19,52 +13,23 @@ custom_edit_url: null
 
 ## Interfaces
 
-- [CredentialsMessage](../interfaces/dxos_echo_protocol.CredentialsMessage.md)
-- [DataService](../interfaces/dxos_echo_protocol.DataService.md)
-- [DatabaseSnapshot](../interfaces/dxos_echo_protocol.DatabaseSnapshot.md)
-- [EchoEnvelope](../interfaces/dxos_echo_protocol.EchoEnvelope.md)
-- [EchoMetadata](../interfaces/dxos_echo_protocol.EchoMetadata.md)
-- [FeedMessage](../interfaces/dxos_echo_protocol.FeedMessage.md)
 - [FeedWriter](../interfaces/dxos_echo_protocol.FeedWriter.md)
-- [HaloStateSnapshot](../interfaces/dxos_echo_protocol.HaloStateSnapshot.md)
 - [IEchoStream](../interfaces/dxos_echo_protocol.IEchoStream.md)
 - [IFeedGenericBlock](../interfaces/dxos_echo_protocol.IFeedGenericBlock.md)
 - [IHaloStream](../interfaces/dxos_echo_protocol.IHaloStream.md)
-- [InvitationDescriptor](../interfaces/dxos_echo_protocol.InvitationDescriptor-1.md)
-- [ItemGenesis](../interfaces/dxos_echo_protocol.ItemGenesis.md)
-- [ItemMutation](../interfaces/dxos_echo_protocol.ItemMutation-1.md)
-- [ItemSnapshot](../interfaces/dxos_echo_protocol.ItemSnapshot.md)
-- [LinkData](../interfaces/dxos_echo_protocol.LinkData.md)
-- [LinkSnapshot](../interfaces/dxos_echo_protocol.LinkSnapshot.md)
-- [ModelMutation](../interfaces/dxos_echo_protocol.ModelMutation.md)
-- [ModelMutationMeta](../interfaces/dxos_echo_protocol.ModelMutationMeta.md)
-- [ModelSnapshot](../interfaces/dxos_echo_protocol.ModelSnapshot.md)
 - [MutationMeta](../interfaces/dxos_echo_protocol.MutationMeta.md)
 - [MutationMetaWithTimeframe](../interfaces/dxos_echo_protocol.MutationMetaWithTimeframe.md)
-- [MutationReceipt](../interfaces/dxos_echo_protocol.MutationReceipt.md)
-- [PartyMetadata](../interfaces/dxos_echo_protocol.PartyMetadata.md)
-- [PartySnapshot](../interfaces/dxos_echo_protocol.PartySnapshot.md)
-- [SERVICES](../interfaces/dxos_echo_protocol.SERVICES.md)
-- [SubscribeEntitySetRequest](../interfaces/dxos_echo_protocol.SubscribeEntitySetRequest.md)
-- [SubscribeEntitySetResponse](../interfaces/dxos_echo_protocol.SubscribeEntitySetResponse.md)
-- [SubscribeEntityStreamRequest](../interfaces/dxos_echo_protocol.SubscribeEntityStreamRequest.md)
-- [SubscribeEntityStreamResponse](../interfaces/dxos_echo_protocol.SubscribeEntityStreamResponse-1.md)
-- [TYPES](../interfaces/dxos_echo_protocol.TYPES.md)
-- [TestItemMutation](../interfaces/dxos_echo_protocol.TestItemMutation.md)
-- [TestItemSnapshot](../interfaces/dxos_echo_protocol.TestItemSnapshot.md)
-- [TestListMutation](../interfaces/dxos_echo_protocol.TestListMutation.md)
 - [WriteReceipt](../interfaces/dxos_echo_protocol.WriteReceipt.md)
-- [WriteRequest](../interfaces/dxos_echo_protocol.WriteRequest.md)
 
 ## Type Aliases
 
 ### FeedBlock
 
-Ƭ **FeedBlock**: [`IFeedGenericBlock`](../interfaces/dxos_echo_protocol.IFeedGenericBlock.md)<[`FeedMessage`](../interfaces/dxos_echo_protocol.FeedMessage.md)\>
+Ƭ **FeedBlock**: [`IFeedGenericBlock`](../interfaces/dxos_echo_protocol.IFeedGenericBlock.md)<`FeedMessage`\>
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:63](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L63)
+[packages/echo/echo-protocol/src/types.ts:64](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L64)
 
 ___
 
@@ -74,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L25)
+[packages/echo/echo-protocol/src/types.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L26)
 
 ___
 
@@ -91,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:27](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L27)
+[packages/echo/echo-protocol/src/types.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L28)
 
 ___
 
@@ -115,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L25)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L27)
 
 ___
 
@@ -125,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:97](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L97)
+[packages/echo/echo-protocol/src/types.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L100)
 
 ___
 
@@ -135,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:81](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L81)
+[packages/echo/echo-protocol/src/types.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L84)
 
 ___
 
@@ -145,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:83](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L83)
+[packages/echo/echo-protocol/src/types.ts:86](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L86)
 
 ___
 
@@ -169,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:24](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L24)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L26)
 
 ___
 
@@ -179,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:91](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L91)
+[packages/echo/echo-protocol/src/types.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L94)
 
 ___
 
@@ -189,37 +154,17 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L19)
+[packages/echo/echo-protocol/src/types.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L20)
 
 ## Variables
 
 ### codec
 
-• `Const` **codec**: `ProtoCodec`<[`FeedMessage`](../interfaces/dxos_echo_protocol.FeedMessage.md)\>
+• `Const` **codec**: `WithTypeUrl`<`any`\>
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/proto/index.ts:18](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/proto/index.ts#L18)
-
-___
-
-### schema
-
-• `Const` **schema**: `Schema`<[`TYPES`](../interfaces/dxos_echo_protocol.TYPES.md), [`SERVICES`](../interfaces/dxos_echo_protocol.SERVICES.md)\>
-
-#### Defined in
-
-packages/echo/echo-protocol/src/proto/gen/index.ts:67
-
-___
-
-### schemaJson
-
-• `Const` **schemaJson**: `any`
-
-#### Defined in
-
-packages/echo/echo-protocol/src/proto/gen/index.ts:66
+[packages/echo/echo-protocol/src/codec.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/codec.ts#L9)
 
 ## Functions
 
@@ -241,7 +186,7 @@ Constructs a meta object from the raw stream object.
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:58](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L58)
+[packages/echo/echo-protocol/src/types.ts:59](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L59)
 
 ___
 
@@ -267,7 +212,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:27](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L27)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L27)
 
 ___
 
@@ -287,13 +232,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:37](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L37)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L37)
 
 ___
 
 ### createTestItemMutation
 
-▸ **createTestItemMutation**(`itemId`, `key`, `value`, `timeframe?`): [`FeedMessage`](../interfaces/dxos_echo_protocol.FeedMessage.md)
+▸ **createTestItemMutation**(`itemId`, `key`, `value`, `timeframe?`): `FeedMessage`
 
 #### Parameters
 
@@ -306,11 +251,11 @@ ___
 
 #### Returns
 
-[`FeedMessage`](../interfaces/dxos_echo_protocol.FeedMessage.md)
+`FeedMessage`
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/proto/messages.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/proto/messages.ts#L15)
+[packages/echo/echo-protocol/src/testing.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/testing.ts#L15)
 
 ___
 
@@ -338,4 +283,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L23)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L23)

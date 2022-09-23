@@ -26,7 +26,7 @@ Manages the party's connection to the network swarm.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:26](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L26)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L26)
 
 ## Properties
 
@@ -36,7 +36,7 @@ Manages the party's connection to the network swarm.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:22](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L22)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L22)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:24](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L24)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L24)
 
 ## Methods
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:67](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L67)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:67](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L67)
 
 ___
 
@@ -89,7 +89,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L33)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L33)
 
 ___
 
@@ -103,4 +103,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:57](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L57)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:57](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L57)

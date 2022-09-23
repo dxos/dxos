@@ -9,7 +9,6 @@ custom_edit_url: null
 ## Enumerations
 
 - [GreetingState](../enums/dxos_echo_db.GreetingState.md)
-- [InvitationDescriptorType](../enums/dxos_echo_db.InvitationDescriptorType.md)
 - [ItemFilterDeleted](../enums/dxos_echo_db.ItemFilterDeleted.md)
 - [State](../enums/dxos_echo_db.State.md)
 
@@ -74,7 +73,7 @@ custom_edit_url: null
 - [CredentialProcessor](../interfaces/dxos_echo_db.CredentialProcessor.md)
 - [CredentialsProvider](../interfaces/dxos_echo_db.CredentialsProvider.md)
 - [DatabaseBackend](../interfaces/dxos_echo_db.DatabaseBackend.md)
-- [EchoCreationOptions](../interfaces/dxos_echo_db.EchoCreationOptions.md)
+- [EchoParams](../interfaces/dxos_echo_db.EchoParams.md)
 - [HaloConfiguration](../interfaces/dxos_echo_db.HaloConfiguration.md)
 - [HaloCreationOptions](../interfaces/dxos_echo_db.HaloCreationOptions.md)
 - [InvitationAuthenticator](../interfaces/dxos_echo_db.InvitationAuthenticator.md)
@@ -109,7 +108,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing-factories.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing-factories.ts#L19)
+[packages/echo/echo-db/src/testing/testing-factories.ts:19](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing-factories.ts#L19)
 
 ___
 
@@ -145,7 +144,7 @@ which may be modified and returned.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L38)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L38)
 
 ___
 
@@ -155,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:17](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/contact-manager.ts#L17)
+[packages/echo/echo-db/src/halo/contact-manager.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/contact-manager.ts#L17)
 
 ___
 
@@ -179,7 +178,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:24](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L24)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L25)
 
 ___
 
@@ -189,7 +188,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:9](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/schema.ts#L9)
+[packages/echo/echo-db/src/api/schema.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L9)
 
 ___
 
@@ -206,7 +205,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:20](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L20)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L20)
 
 ___
 
@@ -222,7 +221,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:16](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L16)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L16)
 
 ___
 
@@ -241,7 +240,7 @@ A record in HALO party representing a party that user is currently a member of.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:33](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-party.ts#L33)
+[packages/echo/echo-db/src/halo/halo-party.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-party.ts#L33)
 
 ___
 
@@ -257,7 +256,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L25)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L25)
 
 ___
 
@@ -273,7 +272,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:9](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/util.ts#L9)
+[packages/echo/echo-db/src/packlets/database/selection/util.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/util.ts#L9)
 
 ___
 
@@ -303,7 +302,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:29](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L29)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L29)
 
 ___
 
@@ -319,7 +318,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:58](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L58)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L58)
 
 ___
 
@@ -329,7 +328,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L31)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L31)
 
 ___
 
@@ -346,7 +345,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/schema.ts#L25)
+[packages/echo/echo-db/src/api/schema.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L25)
 
 ___
 
@@ -365,7 +364,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:18](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/schema.ts#L18)
+[packages/echo/echo-db/src/api/schema.ts:18](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L18)
 
 ___
 
@@ -382,7 +381,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:13](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/schema.ts#L13)
+[packages/echo/echo-db/src/api/schema.ts:13](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L13)
 
 ___
 
@@ -401,7 +400,7 @@ Returned from each stage of the visitor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/result.ts#L21)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/result.ts#L21)
 
 ___
 
@@ -413,7 +412,7 @@ Represents where the selection has started.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:16](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/result.ts#L16)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/result.ts#L16)
 
 ___
 
@@ -423,7 +422,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing-factories.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing-factories.ts#L21)
+[packages/echo/echo-db/src/testing/testing-factories.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing-factories.ts#L21)
 
 ___
 
@@ -439,7 +438,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing-factories.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing-factories.ts#L23)
+[packages/echo/echo-db/src/testing/testing-factories.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing-factories.ts#L23)
 
 ## Variables
 
@@ -449,7 +448,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/party-manager.ts#L23)
+[packages/echo/echo-db/src/parties/party-manager.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-manager.ts#L24)
 
 ___
 
@@ -459,7 +458,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:26](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-party.ts#L26)
+[packages/echo/echo-db/src/halo/halo-party.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-party.ts#L26)
 
 ___
 
@@ -469,7 +468,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-party.ts#L25)
+[packages/echo/echo-db/src/halo/halo-party.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-party.ts#L25)
 
 ___
 
@@ -479,7 +478,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-party.ts#L28)
+[packages/echo/echo-db/src/halo/halo-party.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-party.ts#L28)
 
 ___
 
@@ -489,7 +488,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:27](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/halo-party.ts#L27)
+[packages/echo/echo-db/src/halo/halo-party.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-party.ts#L27)
 
 ___
 
@@ -499,7 +498,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L28)
+[packages/echo/echo-db/src/parties/data-party.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L29)
 
 ___
 
@@ -509,7 +508,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:30](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L30)
+[packages/echo/echo-db/src/parties/data-party.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L31)
 
 ___
 
@@ -518,12 +517,11 @@ ___
 • `Const` **STORAGE\_VERSION**: ``1``
 
 Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
-
 Should be incremented every time there's a breaking change to the stored data.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:19](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/metadata-store.ts#L19)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:18](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L18)
 
 ___
 
@@ -533,17 +531,17 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:7](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/schema.ts#L7)
+[packages/echo/echo-db/src/api/schema.ts:7](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L7)
 
 ___
 
 ### codec
 
-• `Const` **codec**: `ProtoCodec`
+• `Const` **codec**: `WithTypeUrl`<`any`\>
 
 #### Defined in
 
-packages/echo/echo-protocol/dist/src/proto/index.d.ts:9
+packages/echo/echo-protocol/dist/src/codec.d.ts:2
 
 ___
 
@@ -553,7 +551,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/common.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/common.ts#L15)
+[packages/echo/echo-db/src/invitations/common.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/common.ts#L15)
 
 ## Functions
 
@@ -576,7 +574,7 @@ Automatically adds, opens, and clothes parties from HALO preferences.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/party-opener.ts:17](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/party-opener.ts#L17)
+[packages/echo/echo-db/src/halo/party-opener.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/party-opener.ts#L17)
 
 ___
 
@@ -596,7 +594,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:13](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/util.ts#L13)
+[packages/echo/echo-db/src/packlets/database/selection/util.ts:13](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/util.ts#L13)
 
 ___
 
@@ -619,7 +617,7 @@ Creates authenticator network-protocol plugin that guards access to the replicat
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/auth-plugin.ts:12](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/auth-plugin.ts#L12)
+[packages/echo/echo-db/src/protocol/auth-plugin.ts:12](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/auth-plugin.ts#L12)
 
 ___
 
@@ -641,7 +639,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/authenticator.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/authenticator.ts#L15)
+[packages/echo/echo-db/src/protocol/authenticator.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/authenticator.ts#L16)
 
 ___
 
@@ -676,7 +674,7 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-generator.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/snapshots/snapshot-generator.ts#L15)
+[packages/echo/echo-db/src/snapshots/snapshot-generator.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/snapshots/snapshot-generator.ts#L15)
 
 ___
 
@@ -698,7 +696,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/authenticator.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/authenticator.ts#L38)
+[packages/echo/echo-db/src/protocol/authenticator.ts:39](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/authenticator.ts#L39)
 
 ___
 
@@ -723,7 +721,7 @@ Create credentials messages that should be written to invite member to the data 
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:216](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L216)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:216](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L216)
 
 ___
 
@@ -746,7 +744,7 @@ Create credentials messages that should be written to invite new device to the H
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:202](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L202)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:202](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L202)
 
 ___
 
@@ -771,7 +769,7 @@ Plugin is intended to be used in HALO party swarm.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/halo-recovery-plugin.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/halo-recovery-plugin.ts#L15)
+[packages/echo/echo-db/src/protocol/halo-recovery-plugin.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/halo-recovery-plugin.ts#L15)
 
 ___
 
@@ -791,7 +789,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/testing.ts:14](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/testing.ts#L14)
+[packages/echo/echo-db/src/packlets/database/testing.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/testing.ts#L15)
 
 ___
 
@@ -821,7 +819,7 @@ Factory for specific item selector.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:60](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L60)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:60](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L60)
 
 ___
 
@@ -846,7 +844,7 @@ and we begin processing messages from them as well.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/message-selector.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/message-selector.ts#L23)
+[packages/echo/echo-db/src/pipeline/message-selector.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/message-selector.ts#L23)
 
 ___
 
@@ -876,7 +874,7 @@ Item instances from each of the peers.
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing-factories.ts:56](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing-factories.ts#L56)
+[packages/echo/echo-db/src/testing/testing-factories.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing-factories.ts#L56)
 
 ___
 
@@ -900,7 +898,7 @@ Plugin is intended to be used in data-party swarms.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/offline-invitation-plugin.ts:14](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/offline-invitation-plugin.ts#L14)
+[packages/echo/echo-db/src/protocol/offline-invitation-plugin.ts:14](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/offline-invitation-plugin.ts#L14)
 
 ___
 
@@ -920,7 +918,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:89](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L89)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:89](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L89)
 
 ___
 
@@ -941,7 +939,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/testing.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/testing.ts#L28)
+[packages/echo/echo-db/src/packlets/database/testing.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/testing.ts#L29)
 
 ___
 
@@ -963,7 +961,7 @@ Creates the protocol plugin for feed replication.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/replicator-plugin.ts:16](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/protocol/replicator-plugin.ts#L16)
+[packages/echo/echo-db/src/protocol/replicator-plugin.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/replicator-plugin.ts#L16)
 
 ___
 
@@ -995,7 +993,7 @@ Factory for selector that provides a root set of items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:31](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L31)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L31)
 
 ___
 
@@ -1017,7 +1015,7 @@ Creates ECHO instance for testing.
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing.ts#L34)
+[packages/echo/echo-db/src/testing/testing.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing.ts#L34)
 
 ___
 
@@ -1043,7 +1041,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:11](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/util.ts#L11)
+[packages/echo/echo-db/src/packlets/database/selection/util.ts:11](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/util.ts#L11)
 
 ___
 
@@ -1063,7 +1061,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:69](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L69)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:69](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L69)
 
 ___
 
@@ -1089,7 +1087,7 @@ swarm
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-protocol-provider.ts:17](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/invitations/greeting-protocol-provider.ts#L17)
+[packages/echo/echo-db/src/invitations/greeting-protocol-provider.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-protocol-provider.ts#L17)
 
 ___
 
@@ -1114,7 +1112,7 @@ Party instance on provided test instance.
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing.ts:65](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing.ts#L65)
+[packages/echo/echo-db/src/testing/testing.ts:65](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing.ts#L65)
 
 ___
 
@@ -1134,7 +1132,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:77](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L77)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:77](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L77)
 
 ___
 
@@ -1154,7 +1152,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:87](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L87)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:87](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L87)
 
 ___
 
@@ -1207,7 +1205,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/testing/testing.ts:16](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/testing/testing.ts#L16)
+[packages/echo/echo-db/src/testing/testing.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/testing/testing.ts#L16)
 
 ___
 
@@ -1235,7 +1233,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/subscription.ts:10](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/subscription.ts#L10)
+[packages/echo/echo-db/src/api/subscription.ts:10](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/subscription.ts#L10)
 
 ___
 
@@ -1257,7 +1255,7 @@ Sort based on parents.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:191](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L191)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:192](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L192)
 
 ___
 
@@ -1285,7 +1283,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/subscription.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/api/subscription.ts#L15)
+[packages/echo/echo-db/src/api/subscription.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/subscription.ts#L15)
 
 ___
 
@@ -1312,4 +1310,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:21](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/selection/util.ts#L21)
+[packages/echo/echo-db/src/packlets/database/selection/util.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/util.ts#L21)

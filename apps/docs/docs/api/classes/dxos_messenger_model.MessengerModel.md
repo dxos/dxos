@@ -11,7 +11,7 @@ MessengerModel is a simple model which represents a chat as an array of Messages
 
 ## Hierarchy
 
-- `Model`<[`Message`](../interfaces/dxos_messenger_model.Message.md)[], [`Message`](../interfaces/dxos_messenger_model.Message.md)\>
+- `Model`<`Message`[], `Message`\>
 
   ↳ **`MessengerModel`**
 
@@ -27,8 +27,8 @@ MessengerModel is a simple model which represents a chat as an array of Messages
 | :------ | :------ | :------ |
 | `_meta` | `ModelMeta`<`any`, `any`, `any`\> | Metadata definitions. |
 | `_itemId` | `string` | Parent item. |
-| `_getState` | () => [`Message`](../interfaces/dxos_messenger_model.Message.md)[] | Retrieves the underlying state object. |
-| `_mutationWriter?` | `MutationWriter`<[`Message`](../interfaces/dxos_messenger_model.Message.md)\> | Output mutation stream (unless read-only). |
+| `_getState` | () => `Message`[] | Retrieves the underlying state object. |
+| `_mutationWriter?` | `MutationWriter`<`Message`\> | Output mutation stream (unless read-only). |
 
 #### Inherited from
 
@@ -42,15 +42,15 @@ packages/echo/model-factory/dist/src/model.d.ts:20
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => [`Message`](../interfaces/dxos_messenger_model.Message.md)[]
+• `Protected` `Readonly` **\_getState**: () => `Message`[]
 
 #### Type declaration
 
-▸ (): [`Message`](../interfaces/dxos_messenger_model.Message.md)[]
+▸ (): `Message`[]
 
 ##### Returns
 
-[`Message`](../interfaces/dxos_messenger_model.Message.md)[]
+`Message`[]
 
 #### Inherited from
 
@@ -64,7 +64,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<[`Message`](../interfaces/dxos_messenger_model.Message.md)[], [`Message`](../interfaces/dxos_messenger_model.Message.md)\>\>
+• `Readonly` **update**: `Event`<`Model`<`Message`[], `Message`\>\>
 
 #### Inherited from
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/messenger-model/src/model.ts#L34)
+[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L34)
 
 ## Accessors
 
@@ -106,15 +106,15 @@ ___
 
 ### messages
 
-• `get` **messages**(): [`Message`](../interfaces/dxos_messenger_model.Message.md)[]
+• `get` **messages**(): `Message`[]
 
 #### Returns
 
-[`Message`](../interfaces/dxos_messenger_model.Message.md)[]
+`Message`[]
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/messenger-model/src/model.ts#L40)
+[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L40)
 
 ___
 
@@ -162,7 +162,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 | Name | Type |
 | :------ | :------ |
-| `message` | `Pick`<[`Message`](../interfaces/dxos_messenger_model.Message.md), ``"text"`` \| ``"sender"``\> |
+| `message` | `Pick`<`Message`, ``"text"`` \| ``"sender"``\> |
 
 #### Returns
 
@@ -170,7 +170,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/messenger-model/src/model.ts#L44)
+[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L44)
 
 ___
 
@@ -255,7 +255,7 @@ Writes the raw mutation to the output stream.
 
 | Name | Type |
 | :------ | :------ |
-| `mutation` | [`Message`](../interfaces/dxos_messenger_model.Message.md) |
+| `mutation` | `Message` |
 
 #### Returns
 

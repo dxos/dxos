@@ -25,7 +25,7 @@ Manages the keyring and HALO party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:28](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L28)
+[packages/echo/echo-db/src/halo/identity-manager.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L29)
 
 ## Properties
 
@@ -35,7 +35,7 @@ Manages the keyring and HALO party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:24](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L24)
+[packages/echo/echo-db/src/halo/identity-manager.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L25)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:26](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L26)
+[packages/echo/echo-db/src/halo/identity-manager.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L27)
 
 ## Accessors
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L34)
+[packages/echo/echo-db/src/halo/identity-manager.ts:35](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L35)
 
 ## Methods
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:38](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L38)
+[packages/echo/echo-db/src/halo/identity-manager.ts:39](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L39)
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:52](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L52)
+[packages/echo/echo-db/src/halo/identity-manager.ts:53](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L53)
 
 ___
 
@@ -115,7 +115,7 @@ Creates the Identity HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:87](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L87)
+[packages/echo/echo-db/src/halo/identity-manager.ts:88](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L88)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:59](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L59)
+[packages/echo/echo-db/src/halo/identity-manager.ts:60](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L60)
 
 ___
 
@@ -152,7 +152,7 @@ Joins an existing Identity HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:119](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L119)
+[packages/echo/echo-db/src/halo/identity-manager.ts:120](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L120)
 
 ___
 
@@ -166,7 +166,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:63](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L63)
+[packages/echo/echo-db/src/halo/identity-manager.ts:64](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L64)
 
 ___
 
@@ -192,4 +192,4 @@ The downside is that would wreck the symmetry to createParty/joinParty.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:107](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/halo/identity-manager.ts#L107)
+[packages/echo/echo-db/src/halo/identity-manager.ts:108](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/identity-manager.ts#L108)

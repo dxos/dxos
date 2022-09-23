@@ -25,7 +25,7 @@ Manages the creation and indexing of items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:72](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L72)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:74](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L74)
 
 ## Properties
 
@@ -37,7 +37,7 @@ Map of active items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:60](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L60)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:62](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L62)
 
 ___
 
@@ -49,7 +49,7 @@ Map of item promises (waiting for item construction after genesis message has be
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:66](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L66)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:68](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L68)
 
 ___
 
@@ -62,7 +62,7 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:54](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L54)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L56)
 
 ___
 
@@ -76,7 +76,7 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:48](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L48)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L50)
 
 ## Accessors
 
@@ -90,7 +90,7 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:78](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L78)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:80](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L80)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:82](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L82)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L84)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L86)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:88](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L88)
 
 ## Methods
 
@@ -141,7 +141,7 @@ Adds new entity to the tracked set. Sets up events and notifies any listeners wa
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:205](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L205)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:207](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L207)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:190](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L190)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:192](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L192)
 
 ___
 
@@ -183,7 +183,7 @@ Constructs an item with the appropriate model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:226](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L226)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:228](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L228)
 
 ___
 
@@ -205,7 +205,7 @@ Constructs an item with the appropriate model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:261](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L261)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:263](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L263)
 
 ___
 
@@ -230,7 +230,7 @@ Creates an item and writes the genesis message.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:97](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L97)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:99](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L99)
 
 ___
 
@@ -254,7 +254,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:145](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L145)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:147](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L147)
 
 ___
 
@@ -276,7 +276,7 @@ Recursive method to unlink and remove items from the active set.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:336](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L336)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:338](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L338)
 
 ___
 
@@ -304,7 +304,7 @@ Retrieves a item from the index.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:320](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L320)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:322](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L322)
 
 ___
 
@@ -318,7 +318,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:328](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L328)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:330](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L330)
 
 ___
 
@@ -341,7 +341,7 @@ New model instance is created and streams are reconnected.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:365](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L365)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:367](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L367)
 
 ___
 
@@ -364,4 +364,4 @@ Process a message directed to a specific model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:308](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L308)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:310](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L310)

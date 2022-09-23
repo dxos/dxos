@@ -27,7 +27,7 @@ Creates a new database instance. `database.initialize()` must be called afterwar
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:53](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L53)
+[packages/echo/echo-db/src/packlets/database/database.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L54)
 
 ## Properties
 
@@ -37,7 +37,7 @@ Creates a new database instance. `database.initialize()` must be called afterwar
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:46](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L46)
+[packages/echo/echo-db/src/packlets/database/database.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L47)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:48](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L48)
+[packages/echo/echo-db/src/packlets/database/database.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L49)
 
 ## Accessors
 
@@ -64,7 +64,7 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:82](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L82)
+[packages/echo/echo-db/src/packlets/database/database.ts:83](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L83)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:65](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L65)
+[packages/echo/echo-db/src/packlets/database/database.ts:66](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L66)
 
 ___
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:61](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L61)
+[packages/echo/echo-db/src/packlets/database/database.ts:62](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L62)
 
 ___
 
@@ -109,7 +109,7 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:73](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L73)
+[packages/echo/echo-db/src/packlets/database/database.ts:74](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L74)
 
 ## Methods
 
@@ -123,7 +123,7 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:209](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L209)
+[packages/echo/echo-db/src/packlets/database/database.ts:210](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L210)
 
 ___
 
@@ -137,7 +137,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:205](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L205)
+[packages/echo/echo-db/src/packlets/database/database.ts:206](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L206)
 
 ___
 
@@ -165,7 +165,7 @@ Creates a new item with the given queryable type and model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:109](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L109)
+[packages/echo/echo-db/src/packlets/database/database.ts:110](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L110)
 
 ___
 
@@ -193,7 +193,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:130](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L130)
+[packages/echo/echo-db/src/packlets/database/database.ts:131](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L131)
 
 ___
 
@@ -207,7 +207,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:200](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L200)
+[packages/echo/echo-db/src/packlets/database/database.ts:201](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L201)
 
 ___
 
@@ -221,7 +221,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:96](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L96)
+[packages/echo/echo-db/src/packlets/database/database.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L97)
 
 ___
 
@@ -243,7 +243,7 @@ Retrieves a item from the index.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:154](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L154)
+[packages/echo/echo-db/src/packlets/database/database.ts:155](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L155)
 
 ___
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:86](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L86)
+[packages/echo/echo-db/src/packlets/database/database.ts:87](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L87)
 
 ___
 
@@ -286,7 +286,7 @@ Returns a reducer selection context.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:190](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L190)
+[packages/echo/echo-db/src/packlets/database/database.ts:191](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L191)
 
 ___
 
@@ -308,7 +308,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:175](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L175)
+[packages/echo/echo-db/src/packlets/database/database.ts:176](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L176)
 
 ___
 
@@ -336,4 +336,4 @@ Waits for item matching the filter to be present and returns it.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:163](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/database.ts#L163)
+[packages/echo/echo-db/src/packlets/database/database.ts:164](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database.ts#L164)

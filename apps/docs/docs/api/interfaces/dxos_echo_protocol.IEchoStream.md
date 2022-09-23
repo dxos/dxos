@@ -11,11 +11,11 @@ custom_edit_url: null
 
 ### data
 
-• **data**: [`EchoEnvelope`](dxos_echo_protocol.EchoEnvelope.md)
+• **data**: `EchoEnvelope`
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:73](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L73)
+[packages/echo/echo-protocol/src/types.ts:76](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L76)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:72](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-protocol/src/types.ts#L72)
+[packages/echo/echo-protocol/src/types.ts:75](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L75)

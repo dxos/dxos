@@ -17,7 +17,7 @@ Initial feed that contains PartyGenesis message and acts as the root for the fee
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:40](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L40)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L40)
 
 ___
 
@@ -29,7 +29,7 @@ Timeframe to start processing feed messages from.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:44](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L44)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L44)
 
 ___
 
@@ -42,4 +42,4 @@ PartyCore.open will block until this timeframe is reached.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:49](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L49)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L49)

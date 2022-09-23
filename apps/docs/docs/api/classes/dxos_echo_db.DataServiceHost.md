@@ -27,7 +27,7 @@ A DataServiceRouter must be placed before it to route requests to different Data
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:35](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L35)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L34)
 
 ## Methods
 
@@ -43,7 +43,7 @@ Returns a stream with a list of active entities in the party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:44](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L44)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:43](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L43)
 
 ___
 
@@ -68,7 +68,7 @@ Subsequent messages are updates.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:101](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L101)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L100)
 
 ___
 
@@ -88,4 +88,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:141](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L141)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:140](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L140)

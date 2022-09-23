@@ -25,7 +25,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:23](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L23)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:34](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L34)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:36](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L36)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:24](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L24)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:35](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L35)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L37)
 
 ___
 
@@ -83,4 +83,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:36](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/item-manager.ts#L36)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L38)

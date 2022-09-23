@@ -34,7 +34,7 @@ This class handles data-storage, replication, snapshots, access-control, and inv
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:53](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L53)
+[packages/echo/echo-db/src/parties/data-party.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L54)
 
 ## Properties
 
@@ -44,7 +44,7 @@ This class handles data-storage, replication, snapshots, access-control, and inv
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:51](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L51)
+[packages/echo/echo-db/src/parties/data-party.ts:52](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L52)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:48](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L48)
+[packages/echo/echo-db/src/parties/data-party.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L49)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:46](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L46)
+[packages/echo/echo-db/src/parties/data-party.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L47)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:47](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L47)
+[packages/echo/echo-db/src/parties/data-party.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L48)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:49](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L49)
+[packages/echo/echo-db/src/parties/data-party.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L50)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:44](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L44)
+[packages/echo/echo-db/src/parties/data-party.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L45)
 
 ## Accessors
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:132](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L132)
+[packages/echo/echo-db/src/parties/data-party.ts:133](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L133)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:100](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L100)
+[packages/echo/echo-db/src/parties/data-party.ts:101](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L101)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:146](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L146)
+[packages/echo/echo-db/src/parties/data-party.ts:147](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L147)
 
 ___
 
@@ -150,7 +150,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:127](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L127)
+[packages/echo/echo-db/src/parties/data-party.ts:128](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L128)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:250](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L250)
+[packages/echo/echo-db/src/parties/data-party.ts:251](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L251)
 
 ___
 
@@ -178,7 +178,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:96](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L96)
+[packages/echo/echo-db/src/parties/data-party.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L97)
 
 ___
 
@@ -192,7 +192,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:92](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L92)
+[packages/echo/echo-db/src/parties/data-party.ts:93](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L93)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:81](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L81)
+[packages/echo/echo-db/src/parties/data-party.ts:82](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L82)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:112](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L112)
+[packages/echo/echo-db/src/parties/data-party.ts:113](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L113)
 
 ___
 
@@ -243,7 +243,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:107](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L107)
+[packages/echo/echo-db/src/parties/data-party.ts:108](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L108)
 
 ___
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:117](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L117)
+[packages/echo/echo-db/src/parties/data-party.ts:118](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L118)
 
 ___
 
@@ -271,7 +271,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:122](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L122)
+[packages/echo/echo-db/src/parties/data-party.ts:123](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L123)
 
 ___
 
@@ -285,7 +285,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:136](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L136)
+[packages/echo/echo-db/src/parties/data-party.ts:137](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L137)
 
 ## Methods
 
@@ -305,7 +305,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:255](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L255)
+[packages/echo/echo-db/src/parties/data-party.ts:256](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L256)
 
 ___
 
@@ -321,7 +321,7 @@ Closes the pipeline and streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:222](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L222)
+[packages/echo/echo-db/src/parties/data-party.ts:223](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L223)
 
 ___
 
@@ -337,7 +337,7 @@ Create a snapshot of the current state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:300](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L300)
+[packages/echo/echo-db/src/parties/data-party.ts:301](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L301)
 
 ___
 
@@ -357,7 +357,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:266](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L266)
+[packages/echo/echo-db/src/parties/data-party.ts:267](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L267)
 
 ___
 
@@ -371,7 +371,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:246](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L246)
+[packages/echo/echo-db/src/parties/data-party.ts:247](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L247)
 
 ___
 
@@ -387,7 +387,7 @@ Returns a special Item that is used by the Party to manage its properties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:280](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L280)
+[packages/echo/echo-db/src/parties/data-party.ts:281](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L281)
 
 ___
 
@@ -403,7 +403,7 @@ Get the SelectionResult for the Properties Item query.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:292](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L292)
+[packages/echo/echo-db/src/parties/data-party.ts:293](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L293)
 
 ___
 
@@ -417,7 +417,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:242](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L242)
+[packages/echo/echo-db/src/parties/data-party.ts:243](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L243)
 
 ___
 
@@ -433,7 +433,7 @@ Opens the pipeline and connects the streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:161](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L161)
+[packages/echo/echo-db/src/parties/data-party.ts:162](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L162)
 
 ___
 
@@ -449,7 +449,7 @@ Get all party members.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:311](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L311)
+[packages/echo/echo-db/src/parties/data-party.ts:312](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L312)
 
 ___
 
@@ -469,7 +469,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:304](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L304)
+[packages/echo/echo-db/src/parties/data-party.ts:305](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L305)
 
 ___
 
@@ -489,4 +489,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/data-party.ts:140](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/parties/data-party.ts#L140)
+[packages/echo/echo-db/src/parties/data-party.ts:141](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/data-party.ts#L141)

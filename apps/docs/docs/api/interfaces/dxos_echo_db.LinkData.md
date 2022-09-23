@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:17](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/link.ts#L17)
+[packages/echo/echo-db/src/packlets/database/link.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/link.ts#L17)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:15](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/link.ts#L15)
+[packages/echo/echo-db/src/packlets/database/link.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/link.ts#L15)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:18](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/link.ts#L18)
+[packages/echo/echo-db/src/packlets/database/link.ts:18](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/link.ts#L18)
 
 ___
 
@@ -45,4 +45,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:16](https://github.com/dxos/protocols/blob/6f4c34af3/packages/echo/echo-db/src/packlets/database/link.ts#L16)
+[packages/echo/echo-db/src/packlets/database/link.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/link.ts#L16)
