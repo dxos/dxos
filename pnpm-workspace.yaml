@@ -8,6 +8,7 @@ packages:
   - packages/devtools/*
   - packages/echo/*
   - packages/fx/*
+  - packages/gem/*
   - packages/gravity/*
   - packages/halo/*
   - packages/mesh/*

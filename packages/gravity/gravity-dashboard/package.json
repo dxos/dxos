@@ -25,7 +25,7 @@
     "> 5%"
   ],
   "dependencies": {
-    "@dxos/gem-core": "2.2.1-beta.11",
+    "@dxos/gem-core": "workspace:*",
     "d3": "^7.4.4",
     "debug": "^4.3.3",
     "use-resize-observer": "^9.0.0"
@@ -39,9 +39,9 @@
     "@emotion/react": "^11.9.0",
     "@types/d3": "^7.1.0",
     "@types/debug": "^4.1.7",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/lodash": "^4.14.182",
-    "faker": "^5.1.0",
+    "faker": "^5.5.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
