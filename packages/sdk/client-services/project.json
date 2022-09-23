@@ -51,6 +51,15 @@
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
         ]
       }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client-services/browser-test/**/*.test.ts"
+        ]
+        // "setup": "packages/sdk/client-services/browser-test/setup.js"
+      }
     }
   },
   "implicitDependencies": [
