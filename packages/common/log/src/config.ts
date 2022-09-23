@@ -65,7 +65,7 @@ export interface LogConfig {
 
 export const defaultConfig: LogConfig = {
   processor: ('process' in globalThis ? process!.env?.LOG_PROCESSOR : undefined) ?? LogProcessorType.CONSOLE,
-  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.WARN]
+  filter: ('process' in globalThis ? process!.env?.LOG_FILTER : undefined) ?? LogLevel[LogLevel.INFO]
 };
 
 export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boolean => {

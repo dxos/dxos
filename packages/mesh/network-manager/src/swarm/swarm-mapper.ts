@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
-
 import { Event } from '@dxos/async';
+import { log } from '@dxos/log';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
@@ -27,8 +26,6 @@ export interface PeerInfo {
 }
 
 type Unsubscribe = () => void;
-
-const log = debug('dxos:network-manager:swarm-mapper');
 
 export class SwarmMapper {
   private readonly _subscriptions = new SubscriptionGroup();

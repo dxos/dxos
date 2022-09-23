@@ -5,4 +5,4 @@
 export * from './bot-container';
 export * from './bot-factory';
 export * from './bots';
-export { BotPackageSpecifier } from './proto/gen/dxos/bot';
+export { BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';

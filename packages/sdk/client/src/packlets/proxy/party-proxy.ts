@@ -16,9 +16,10 @@ import { PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ClientServiceProvider, CreationInvitationOptions, InvitationRequest, Party } from '../api';
-import { Party as PartyProto, PartyDetails } from '../proto';
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
 
@@ -219,7 +220,7 @@ export class PartyProxy implements Party {
   /**
    * Implementation method.
    */
-  createSnapshot () {
+  createSnapshot (): Promise<PartySnapshot> {
     return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
   }
 

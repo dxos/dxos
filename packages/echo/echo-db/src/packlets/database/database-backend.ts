@@ -5,8 +5,11 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { DatabaseSnapshot, DataService, EchoEnvelope, FeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
+import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
@@ -27,11 +30,8 @@ export interface DatabaseBackend {
   close(): Promise<void>
 
   isReadOnly: boolean
-
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined
-
   createSnapshot(): DatabaseSnapshot
-
   createDataServiceHost(): DataServiceHost
 }
 

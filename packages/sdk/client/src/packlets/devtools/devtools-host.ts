@@ -3,8 +3,8 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { DevtoolsHost, Event as ClientAPIEvent } from '@dxos/protocols/proto/dxos/devtools';
 
-import { DevtoolsHost, Event as ClientAPIEvent } from '../proto';
 import { getConfig } from './config';
 import { enableDebugLogging, disableDebugLogging } from './debug-logging';
 import { DevtoolsServiceDependencies } from './devtools-context';

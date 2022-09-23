@@ -9,12 +9,13 @@ import {
   PartyMember,
   ResultSet
 } from '@dxos/echo-db';
-import { PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { PartyKey } from '@dxos/echo-protocol';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
 import { PublicKey } from '@dxos/protocols';
+import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { PartyDetails } from '../proto';
 import { Invitation, InvitationRequest } from './invitations';
 
 export interface CreationInvitationOptions {

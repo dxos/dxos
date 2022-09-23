@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import { expect, mockFn } from 'earljs';
 import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
@@ -17,8 +17,6 @@ import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
-
-const log = debug('dxos:network-manager:swarm:test');
 
 describe('Swarm', () => {
   class MockSignalConnection implements SignalMessaging {
@@ -52,14 +50,12 @@ describe('Swarm', () => {
       onSignal: msg => swarm1.onSignal(msg),
       onOffer: msg => swarm1.onOffer(msg)
     });
-    afterTest(() => mr1.destroy());
 
     const mr2: MessageRouter = new MessageRouter({
       sendMessage: (...data) => mr1.receiveMessage(...data),
       onSignal: msg => swarm2.onSignal(msg),
       onOffer: msg => swarm2.onOffer(msg)
     });
-    afterTest(() => mr2.destroy());
 
     const sm1: SignalMessaging = router ? mr1 : new MockSignalConnection(() => swarm2);
 

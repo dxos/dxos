@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { EnableDebugLoggingRequest } from '../proto';
+import { EnableDebugLoggingRequest } from '@dxos/protocols/proto/dxos/devtools';
+
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 /* Note that we can not simply import the debug module here and call its enable, disable

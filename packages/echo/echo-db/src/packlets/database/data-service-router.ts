@@ -7,16 +7,16 @@ import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
+import { PartyKey } from '@dxos/echo-protocol';
 import {
   DataService,
   MutationReceipt,
-  PartyKey,
   SubscribeEntitySetRequest,
   SubscribeEntitySetResponse,
   SubscribeEntityStreamRequest,
   SubscribeEntityStreamResponse,
   WriteRequest
-} from '@dxos/echo-protocol';
+} from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 import { PartyNotFoundError } from '../errors';

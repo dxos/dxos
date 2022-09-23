@@ -7,6 +7,8 @@ import { Option } from '@polkadot/types/codec/Option';
 import { compactAddLength } from '@polkadot/util';
 import assert from 'node:assert';
 
+import { schema } from '@dxos/protocols';
+import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import {
@@ -18,7 +20,6 @@ import {
   RecordWithCid,
   RegistryClientBackend
 } from '../api';
-import { Record as RawRecord, schema as dxnsSchema } from '../proto';
 import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
 import { PolkadotClient } from './polkadot-client';
 
@@ -177,7 +178,7 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
   }
 
   async registerRecord (record: RawRecord): Promise<CID> {
-    const data = compactAddLength(dxnsSchema
+    const data = compactAddLength(schema
       .getCodecForType('dxos.registry.Record')
       .encode(record)
     );
@@ -197,7 +198,7 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
   }
 
   private _decodeRecord (record: PolkadotRecord): RawRecord {
-    return dxnsSchema
+    return schema
       .getCodecForType('dxos.registry.Record')
       .decode(Buffer.from(record.data));
   }

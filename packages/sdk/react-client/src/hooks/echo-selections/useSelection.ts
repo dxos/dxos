@@ -28,7 +28,6 @@ export const useSelection = <T extends Entity<any>> (
   // Update selection when the query or customs deps change.
   useEffect(() => {
     const newResult = coerceSelection(selection);
-    console.log({ selection, newResult });
     setResult(newResult);
     setData(newResult?.entities);
   }, [!!selection, !!selection && selection.root, ...deps]);
@@ -36,7 +35,6 @@ export const useSelection = <T extends Entity<any>> (
   // Update data when database updates.
   useEffect(() => {
     if (result) {
-      console.log({ result, update: result.update });
       return result.update.on(result => {
         setData(result.entities);
       });

@@ -14,7 +14,8 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/model-factory": "workspace:*"
+    "@dxos/model-factory": "workspace:*",
+    "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

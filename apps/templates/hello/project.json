@@ -1,0 +1,15 @@
+{
+  "sourceRoot": "apps/templates/hello/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/templates/hello/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}

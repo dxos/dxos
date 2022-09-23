@@ -15,6 +15,7 @@ module.exports = {
     'dist',
     'out',
     '**/proto/gen/*',
+    'packages/common/protocols/proto/**/*',
     'packages/sdk/client/src/packlets/proxy/version.ts',
 
     // Config
@@ -27,7 +28,11 @@ module.exports = {
     'vite.config.ts',
 
     // Dependencies
-    'node_modules'
+    'node_modules',
+
+    // Templates
+    // TODO(wittjosiah): Fix lint config to lint these files.
+    '*.t.ts'
   ],
   overrides: [
     {

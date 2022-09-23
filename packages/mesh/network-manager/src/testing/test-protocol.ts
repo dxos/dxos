@@ -4,16 +4,14 @@
 
 // Test/mock Protocol implementation used in network-manager tests.
 
-import debug from 'debug';
 import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
+import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { protocolFactory } from '../protocol-factory';
-
-const log = debug('dxos:network-manager:test');
 
 const EXTENSION_NAME = 'test';
 
@@ -102,7 +100,7 @@ export class TestProtocolPlugin extends EventEmitter {
     // TODO(dboreham): Throw fatal error if peer not found.
     const extension = peer.getExtension(EXTENSION_NAME);
     const encoded = Buffer.from(payload);
-    log('Sent to %s: %s', peerIdStr, payload);
+    log('Sent', { peerIdStr, payload });
     return await extension.send(encoded, { oneway: true });
   }
 
@@ -116,7 +114,7 @@ export class TestProtocolPlugin extends EventEmitter {
     if (this._uppercase) {
       payload = payload.toUpperCase();
     }
-    log('Received from %s: %s', peerIdStr, payload);
+    log('Received', { peerIdStr, payload });
     this.emit('receive', protocol, payload);
   }
 

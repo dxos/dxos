@@ -22,5 +22,8 @@
         "build"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
 }

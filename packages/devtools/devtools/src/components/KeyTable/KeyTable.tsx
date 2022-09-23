@@ -8,9 +8,9 @@ import React from 'react';
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
 import { keyTypeName } from '@dxos/credentials';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { CopyText } from '@dxos/react-components';
 
-import { KeyRecord } from '../../proto/gen/dxos/halo/keys';
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
 

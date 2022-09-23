@@ -7,17 +7,18 @@ import { dirname, join } from 'path';
 import pb from 'protobufjs';
 import * as ts from 'typescript';
 
-import { preconfigureProtobufjs } from './configure';
-import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator/file-generator';
+import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
 import { logger } from './logger';
 import { ModuleSpecifier } from './module-specifier';
 import { splitSchemaIntoNamespaces } from './namespaces';
-import { parseSubstitutionsFile, registerResolver, SubstitutionsMap } from './parser';
+import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
 
-registerResolver();
-preconfigureProtobufjs();
-
-export const parseAndGenerateSchema = async (substitutionsModule: ModuleSpecifier | undefined, protoFiles: string[], outDirPath: string) => {
+export const parseAndGenerateSchema = async (
+  substitutionsModule: ModuleSpecifier | undefined,
+  protoFiles: string[],
+  baseDirPath: string | undefined,
+  outDirPath: string
+) => {
   const substitutions = substitutionsModule ? parseSubstitutionsFile(substitutionsModule.resolve()) : {};
   const root = await pb.load(protoFiles);
 
@@ -31,23 +32,20 @@ export const parseAndGenerateSchema = async (substitutionsModule: ModuleSpecifie
 
   await generateSchema({
     schema: root,
-    outDir: outDirPath,
-    substitutions: substitutions
-      ? {
-          map: substitutions,
-          module: substitutionsModule!
-        }
-      : undefined
+    substitutions: substitutions ? { map: substitutions, module: substitutionsModule! } : undefined,
+    baseDir: baseDirPath,
+    outDir: outDirPath
   });
 };
 
 export interface GenerateSchemaOptions {
   schema: pb.Root
-  outDir: string
   substitutions?: {
     map: SubstitutionsMap
     module: ModuleSpecifier
   }
+  baseDir: string | undefined
+  outDir: string
 }
 
 /**
@@ -70,16 +68,16 @@ export const generateSchema = (options: GenerateSchemaOptions) => {
       Array.from(namespaces.keys())
     );
 
-    const source = printer.printFile(generatedSourceFile);
-
     if (!existsSync(dirname(outFile))) {
       mkdirSync(dirname(outFile), { recursive: true });
     }
+
+    const source = printer.printFile(generatedSourceFile);
     writeFileSync(outFile, source);
   }
 
-  const generatedSourceFile = createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()));
-
+  const generatedSourceFile =
+    createIndexSourceFile(options.substitutions?.module, options.schema, options.outDir, Array.from(namespaces.keys()));
   const source = printer.printFile(generatedSourceFile);
 
   writeFileSync(join(options.outDir, 'index.ts'), source);

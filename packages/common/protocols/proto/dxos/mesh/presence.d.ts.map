@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "presence.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../../src/proto/dxos/mesh/presence.proto"
+  ],
+  "names": [],
+  "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"
+}

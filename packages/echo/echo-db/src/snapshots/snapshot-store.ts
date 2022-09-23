@@ -5,8 +5,9 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { schema, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { PartyKey } from '@dxos/echo-protocol';
+import { schema, PublicKey } from '@dxos/protocols';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Directory } from '@dxos/random-access-storage';
 
 const log = debug('dxos:snapshot-store');

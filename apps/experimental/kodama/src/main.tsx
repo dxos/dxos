@@ -8,7 +8,7 @@ import * as process from 'process';
 import yargs from 'yargs';
 
 import { Client } from '@dxos/client';
-import { ConfigObject } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -70,7 +70,7 @@ const main = async () => {
         }
 
         // Create client.
-        const config: ConfigObject = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigObject;
+        const config: ConfigProto = yaml.load(fs.readFileSync(configFile, { encoding: 'utf8' })) as ConfigProto;
         const client = new Client(config);
         await client.initialize();
 

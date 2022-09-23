@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/protocols';
-
-import { Any } from './proto/gen/google/protobuf';
 
 export interface Message {
   author: PublicKey

@@ -5,11 +5,11 @@
 import faker from 'faker';
 
 import { decodeProtobuf } from '@dxos/codec-protobuf';
+import { schemaJson } from '@dxos/protocols';
 
 import {
   AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata
 } from '../api';
-import { schemaJson } from '../proto';
 
 /**
  * Generates a random CID.

@@ -8,20 +8,13 @@ import assert from 'node:assert';
 
 import { ripemd160 } from '@dxos/crypto';
 import { SwarmKey } from '@dxos/echo-protocol';
-import * as proto from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
 import { InvalidInvitationError } from '../packlets/errors';
 
-// Re-exporting type enum from protobuf definitions.
-export import InvitationDescriptorType = proto.InvitationDescriptor.Type;
-
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-
-// Workaround for swc not properly handling namespace re-exports.
-// eslint-disable-next-line unused-imports/no-unused-vars
-const ___WORKAROUND = proto;
 
 /**
  * A serialized version of InvitationDescriptor that's suitable to be encoded as an URL query string.
@@ -56,17 +49,17 @@ export class InvitationDescriptor {
     return descriptor;
   }
 
-  static fromProto (protoInvitation: proto.InvitationDescriptor): InvitationDescriptor {
-    assert(protoInvitation.type, 'Invitation type not provided.');
-    assert(protoInvitation.swarmKey, 'Invitation swarm key not provided.');
-    assert(protoInvitation.invitation, 'Invitation not provided.');
+  static fromProto (invitation: InvitationDescriptorProto): InvitationDescriptor {
+    assert(invitation.type !== undefined, 'Invitation type not provided.');
+    assert(invitation.swarmKey, 'Invitation swarm key not provided.');
+    assert(invitation.invitation, 'Invitation not provided.');
 
     return new InvitationDescriptor(
-      protoInvitation.type,
-      protoInvitation.swarmKey,
-      Buffer.from(protoInvitation.invitation),
-      protoInvitation.identityKey ? PublicKey.from(protoInvitation.identityKey) : undefined,
-      protoInvitation.secret ? Buffer.from(protoInvitation.secret) : undefined
+      invitation.type,
+      invitation.swarmKey,
+      Buffer.from(invitation.invitation),
+      invitation.identityKey ? PublicKey.from(invitation.identityKey) : undefined,
+      invitation.secret ? Buffer.from(invitation.secret) : undefined
     );
   }
 
@@ -77,13 +70,13 @@ export class InvitationDescriptor {
 
   // TODO(dboreham): Switch back to private member variables since we have encapsulated this class everywhere.
   constructor (
-    public readonly type: InvitationDescriptorType,
+    public readonly type: InvitationDescriptorProto.Type,
     public readonly swarmKey: SwarmKey,
     public readonly invitation: Uint8Array,
     public readonly identityKey?: PublicKey,
     public secret?: Uint8Array
   ) {
-    assert(type);
+    assert(type !== undefined);
     assert(swarmKey instanceof Uint8Array);
     assert(invitation instanceof Uint8Array);
     if (identityKey) {
@@ -118,7 +111,7 @@ export class InvitationDescriptor {
     return query as InvitationQueryParameters;
   }
 
-  toProto (): proto.InvitationDescriptor {
+  toProto (): InvitationDescriptorProto {
     return {
       type: this.type,
       swarmKey: this.swarmKey,
@@ -134,10 +127,10 @@ export class InvitationDescriptor {
   }
 }
 
-const parseInvitationType = (str: string): InvitationDescriptorType => {
+const parseInvitationType = (str: string): InvitationDescriptorProto.Type => {
   const type = parseInt(str);
-  assert(type === 1 || type === 2, 'Invalid invitation type');
+  assert(type === InvitationDescriptorProto.Type.INTERACTIVE || type === InvitationDescriptorProto.Type.OFFLINE, 'Invalid invitation type');
   return type;
 };
 
-const stringifyInvitationType = (type: InvitationDescriptorType): string => type.toString();
+const stringifyInvitationType = (type: InvitationDescriptorProto.Type): string => type.toString();

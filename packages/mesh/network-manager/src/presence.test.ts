@@ -5,6 +5,7 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
@@ -13,10 +14,12 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { FullyConnectedTopology } from './topology';
 
+const signalContext = new MemorySignalManagerContext();
+
 const createPeer = (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
-  const networkManager = new NetworkManager();
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   afterTest(() => networkManager.destroy());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());

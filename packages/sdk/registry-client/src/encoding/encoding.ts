@@ -6,9 +6,10 @@ import assert from 'node:assert';
 import type { IConversionOptions, Type } from 'protobufjs';
 
 import { FieldMapper, mapMessage } from '@dxos/codec-protobuf';
+import { TYPES } from '@dxos/protocols';
+import { Record } from '@dxos/protocols/proto/dxos/registry';
 
 import { CID, RegistryType } from '../api';
-import { Record, TYPES } from '../proto';
 
 const getProtoTypeFromTypeRecord = (record: RegistryType): Type =>
   record.type.protobufDefs.lookupType(record.type.messageName);
