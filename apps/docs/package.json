@@ -26,8 +26,11 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.1.0",
     "@docusaurus/types": "2.1.0",
+    "docusaurus-plugin-typedoc": "^0.17.5",
     "svg-url-loader": "^8.0.0",
     "typescript": "^4.7.2",
-    "webpack": "^5.74.0"
+    "webpack": "^5.74.0",
+    "typedoc": "^0.23.15",
+    "typedoc-plugin-markdown": "^3.13.6"
   }
 }

@@ -22,7 +22,13 @@ const config = {
   organizationName: 'dxos',
   projectName: 'DXOS',
   plugins: [
-    './plugins/webpack-plugin.js'
+    './plugins/webpack-plugin.js',
+    ['docusaurus-plugin-typedoc',
+    {
+      entryPoints: ['./packages/echo/*'],
+      tsconfig: './tsconfig.json',
+      entryPointStrategy: 'packages'
+    }]
   ],
 
   presets: [
