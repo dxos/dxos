@@ -9,6 +9,9 @@ subgraph sdk
   style sdk fill:#f4f5d6,stroke:#fff;
   dxos/client("@dxos/client");
   dxos/config("@dxos/config");
+
+
+  click dxos/client "https://google.com";
 end
 
 subgraph common
@@ -89,6 +92,8 @@ dxos/random-access-storage --> dxos/log;
 dxos/client --> dxos/rpc-tunnel;
 dxos/rpc-tunnel --> dxos/rpc;
 ```
+
+
 ## Dependencies
 | Module | Direct |
 |---|---|

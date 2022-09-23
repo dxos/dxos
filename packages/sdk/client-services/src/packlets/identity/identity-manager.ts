@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { MetadataStore, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SwarmIdentity } from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
