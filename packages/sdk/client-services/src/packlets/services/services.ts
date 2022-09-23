@@ -1,31 +1,38 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
-import { Config } from '@dxos/config';
+import { OpenProgress } from '@dxos/echo-db';
+import { schema } from '@dxos/protocols';
+import { PartyService, ProfileService, SystemService, HaloService } from '@dxos/protocols/proto/dxos/client';
+import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools';
+import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { createServiceBundle } from '@dxos/rpc';
 
-import { ClientServices } from './client-service';
-import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl';
-import { ServiceContext } from './service-context';
-import { HaloSigner } from './signer';
+// TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
+export type ClientServices = {
+  DataService: DataService
+  DevtoolsHost: DevtoolsHost
+  HaloService: HaloService
+  PartyService: PartyService
+  ProfileService: ProfileService
+  SystemService: SystemService
+  TracingService: TracingService
+}
 
-// TODO(burdon): Remove factory functions.
-// TODO(burdon): Rename CreateServicesOpts => ServiceContext.
-export const createServices = ({
-  config,
-  context, // TODO(burdon): Too big to pass into services.?
-  echo,
-  signer
-}: {
-  config: Config
-  context: ServiceContext
-  echo: any // TODO(burdon): Remove.
-  signer?: HaloSigner
-}): Omit<ClientServices, 'DevtoolsHost'> => ({
-  DataService: context.dataService,
-  HaloService: new HaloService(echo, signer), // TODO(burdon): Remove.
-  PartyService: new PartyService(context),
-  ProfileService: new ProfileService(context),
-  SystemService: new SystemService(config),
-  TracingService: new TracingService(config)
+// TODO(burdon): Rethink name/factory.
+export const clientServiceBundle = createServiceBundle<ClientServices>({
+  DataService: schema.getService('dxos.echo.service.DataService'),
+  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
+  HaloService: schema.getService('dxos.client.HaloService'),
+  PartyService: schema.getService('dxos.client.PartyService'),
+  ProfileService: schema.getService('dxos.client.ProfileService'),
+  SystemService: schema.getService('dxos.client.SystemService'),
+  TracingService: schema.getService('dxos.devtools.TracingService')
 });
+
+export interface ClientServiceProvider {
+  services: ClientServices
+  open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
+  close(): Promise<void>
+}

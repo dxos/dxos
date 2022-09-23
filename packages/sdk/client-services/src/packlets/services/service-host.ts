@@ -3,16 +3,15 @@
 //
 
 import { Config } from '@dxos/config';
-// Export to devtools.
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { createStorageObjects } from '../storage';
-import { ClientServiceProvider, ClientServices } from './client-service';
 import { ServiceContext } from './service-context';
-import { createServices } from './services';
+import { createServices } from './service-factory';
+import { ClientServiceProvider, ClientServices } from './services';
 import { HaloSigner } from './signer';
 // import { DevtoolsHostEvents } from '../devtools';
 
@@ -51,7 +50,7 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     this._services = {
       ...createServices({ config: this._config, echo: null, context: this._context, signer: this._signer }),
-      DevtoolsHost: this._createDevtoolsService()
+      DevtoolsHost: this._createDevtoolsService() // TODO(burdon): Move into createServices.
     };
   }
 
