@@ -760,6 +760,7 @@ importers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
@@ -788,6 +789,7 @@ importers:
       '@dxos/client': link:../../packages/sdk/client
       '@dxos/config': link:../../packages/sdk/config
       '@dxos/keys': link:../../packages/common/keys
+      '@dxos/log': link:../../packages/common/log
       '@dxos/protocols': link:../../packages/common/protocols
       '@dxos/react-async': link:../../packages/common/react-async
       '@dxos/react-client': link:../../packages/sdk/react-client
