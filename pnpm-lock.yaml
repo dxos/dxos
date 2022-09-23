@@ -884,6 +884,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/messaging': workspace:*
@@ -898,6 +899,7 @@ importers:
       '@dxos/crypto': link:../../packages/common/crypto
       '@dxos/echo-db': link:../../packages/echo/echo-db
       '@dxos/feed-store': link:../../packages/common/feed-store
+      '@dxos/halo-protocol': link:../../packages/halo/halo-protocol
       '@dxos/keyring': link:../../packages/halo/keyring
       '@dxos/keys': link:../../packages/common/keys
       '@dxos/messaging': link:../../packages/mesh/messaging

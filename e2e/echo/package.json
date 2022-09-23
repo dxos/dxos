@@ -20,6 +20,7 @@
     "@dxos/feed-store": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/messaging": "workspace:*",
+    "@dxos/halo-protocol": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
