@@ -12,10 +12,12 @@
   },
   "files": [
     "dist",
+    "proto",
     "src"
   ],
   "scripts": {
-    "check": "true"
+    "check": "true",
+    "gen-proto-defs": "ts-node ./scripts/gen-proto-defs.ts"
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
@@ -26,7 +28,8 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/randombytes": "^2.0.0",
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "glob": "~7.1.6"
   },
   "publishConfig": {
     "access": "public"

@@ -6,10 +6,10 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/protocols';
+import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
-import { Credential, PartyMember } from '../proto';
 
 export interface MemberInfo {
   key: PublicKey

@@ -2,19 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
+import { Any } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/protocols';
+import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { SwarmEvent } from './proto';
-import { Any } from './proto/gen/google/protobuf';
 import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
 import { SignalManager } from './signal-manager';
-
-const log = debug('dxos:signaling:websocket-signal-manager');
 
 // TODO: Make class re-entrant.
 export class WebsocketSignalManager implements SignalManager {
@@ -100,7 +98,7 @@ export class WebsocketSignalManager implements SignalManager {
         },
         (err) => {
           this._reconciling = false;
-          log(`Error while reconciling: ${err}`);
+          log.error(`Error while reconciling: ${err}`);
           this._reconcileLater();
         }
       );
@@ -138,7 +136,7 @@ export class WebsocketSignalManager implements SignalManager {
             actualJoinedTopics.delete(topic);
           }
         } catch (err) {
-          log(`Error leaving swarm: ${err}`);
+          log.error(`Error leaving swarm: ${err}`);
           this._scheduleReconcile();
         }
       }
@@ -161,7 +159,7 @@ export class WebsocketSignalManager implements SignalManager {
             }
           }
         } catch (err) {
-          log(`Error joining swarm: ${err}`);
+          log.error(`Error joining swarm: ${err}`);
           this._scheduleReconcile();
         }
       }
@@ -184,7 +182,7 @@ export class WebsocketSignalManager implements SignalManager {
       [...this._servers.values()].map((server: SignalClient) =>
         server
           .sendMessage({ author, recipient, payload })
-          .catch((err) => console.log(`Error signaling: ${err}`))
+          .catch((err) => log.error(`Error signaling: ${err}`))
       )
     );
   }

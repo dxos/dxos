@@ -6,6 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { waitForEvent } from '@dxos/async';
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import {
   ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT,
   createEnvelopeMessage,
@@ -17,19 +18,18 @@ import {
   wrapMessage,
   Greeter,
   GreetingCommandPlugin,
-  Message,
-  SecretProvider,
-  WithTypeUrl,
-  SignedMessage,
-  NotarizeResponse
+  SecretProvider
 } from '@dxos/credentials';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
 import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
+import { NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
+import { InvitationDescriptor } from '../invitations';
 import { CredentialsSigner } from '../protocol/credentials-signer';
 import { greetingProtocolProvider } from './greeting-protocol-provider';
 import { GreetingState } from './greeting-responder';
-import { InvitationDescriptor, InvitationDescriptorType } from './invitation-descriptor';
 
 const log = debug('dxos:echo-db:greeting-initiator');
 
@@ -61,7 +61,7 @@ export class GreetingInitiator {
     private readonly _invitationDescriptor: InvitationDescriptor,
     private readonly _getMessagesToNotarize: (partyKey: PublicKey, nonce: Uint8Array) => Promise<Message[]>
   ) {
-    assert(InvitationDescriptorType.INTERACTIVE === this._invitationDescriptor.type);
+    assert(InvitationDescriptorProto.Type.INTERACTIVE === this._invitationDescriptor.type);
   }
 
   get state () {

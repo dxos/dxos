@@ -3,7 +3,7 @@
   "sourceRoot": "apps/docs/src",
   "projectType": "application",
   "targets": {
-    "build": {
+    "prerelease": {
       "executor": "@nx-plus/docusaurus:browser",
       "outputs": ["{options.outputPath}"],
       "options": {

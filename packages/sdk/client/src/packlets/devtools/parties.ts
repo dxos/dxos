@@ -3,7 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-
 import {
   GetPartySnapshotRequest,
   GetPartySnapshotResponse,
@@ -11,7 +10,8 @@ import {
   SavePartySnapshotResponse,
   SubscribeToPartiesRequest,
   SubscribeToPartiesResponse
-} from '../proto';
+} from '@dxos/protocols/proto/dxos/devtools';
+
 import { DevtoolsServiceDependencies } from './devtools-context';
 
 export const subscribeToParties = (

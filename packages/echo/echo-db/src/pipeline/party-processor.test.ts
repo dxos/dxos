@@ -9,7 +9,6 @@ import { it as test } from 'mocha';
 import { promiseTimeout } from '@dxos/async';
 import {
   Keyring,
-  KeyType,
   createEnvelopeMessage,
   createFeedAdmitMessage,
   createIdentityInfoMessage,
@@ -17,6 +16,7 @@ import {
   createPartyGenesisMessage
 } from '@dxos/credentials';
 import { IHaloStream } from '@dxos/echo-protocol';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { PartyProcessor } from '../pipeline';
 

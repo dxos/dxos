@@ -21,6 +21,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/model-factory": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",
@@ -31,11 +32,11 @@
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/lodash.get": "^4.4.6",
     "@types/lodash.set": "^4.3.6",
-    "faker": "^5.1.0"
+    "faker": "^5.5.3"
   },
   "publishConfig": {
     "access": "public"

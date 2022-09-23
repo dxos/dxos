@@ -2,16 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
+import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
 
 import { ProtocolProvider } from './network-manager';
-
-const log = debug('dxos:network-manager:protocol-factory');
 
 interface ProtocolFactoryOptions {
   plugins: any[]

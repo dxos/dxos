@@ -4,11 +4,9 @@
 
 syntax = "proto3";
 
-package dxos.config;
-
 import "google/protobuf/any.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/descriptor.proto";
+
+package dxos.config;
 
 message Config {
   optional int32 version = 1;
@@ -52,6 +50,7 @@ message Module {
   optional string display_name = 3;
   optional string description = 4;
   repeated string tags = 5;
+  optional bytes bundle = 6;
 
   optional Build build = 100;
   repeated Repo repos = 101;
@@ -89,10 +88,10 @@ message Runtime {
         JSONDOWN = 12;
       }
 
-      optional bool persistent = 1; // TODO(burdon): Replace with type.
-      optional StorageDriver key_storage = 3; // TODO(burdon): Rename key_store.
-      optional StorageDriver storage_type = 2; // TODO(burdon): Rename data_store.
-      optional string path = 4; // TODO(burdon): Rename data_path.
+      optional bool persistent = 1;             // TODO(burdon): Replace with type.
+      optional StorageDriver key_storage = 3;   // TODO(burdon): Rename key_store.
+      optional StorageDriver storage_type = 2;  // TODO(burdon): Rename data_store.
+      optional string path = 4;                 // TODO(burdon): Rename data_path.
     }
 
     optional string debug = 1 [(env) = "DEBUG"];
@@ -107,7 +106,7 @@ message Runtime {
 
     optional Mode mode = 6;
 
-    optional string singleton_source = 7;
+    optional string remote_source = 7;
   }
 
   message App {
@@ -151,6 +150,32 @@ message Runtime {
 
   message System {
     optional string debug = 1;
+  }
+
+  message Kube {
+    message Autoupdate {
+      optional bool enabled = 1;
+      /// Seconds
+      optional int64 interval = 2;
+    }
+    message Https {
+      optional bool enabled = 1;
+      optional string port = 2;
+      optional string email = 3;
+      optional string certfile = 4;
+      optional string keyfile = 5;
+    }
+    message P2P {
+      optional string privatekey = 1;
+      optional string port = 2;
+      repeated string bootstrap = 3;
+    }
+    optional string host = 1;
+    optional string port = 2;
+    optional Autoupdate autoupdate = 3;
+    optional Https https = 4;
+    optional P2P p2p = 5;
+    optional string confhost = 6;
   }
 
   //
@@ -231,6 +256,10 @@ message Runtime {
       optional int32 retry_interval = 4;
     }
 
+    message Publisher {
+      optional string server = 1;
+    }
+
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -239,6 +268,7 @@ message Runtime {
     repeated Ice ice = 6;
     optional Machine machine = 7;
     optional BotFactory bot = 8;
+    optional Publisher publisher = 9;
   }
 
   optional Client client = 1;
@@ -247,4 +277,5 @@ message Runtime {
   optional Props props = 4;
   optional Services services = 5;
   optional System system = 6;
+  optional Kube kube = 7;
 }

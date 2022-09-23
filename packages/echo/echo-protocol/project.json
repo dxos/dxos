@@ -2,15 +2,6 @@
   "sourceRoot": "packages/echo/echo-protocol/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/echo/echo-protocol/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -43,8 +34,5 @@
         "passWithNoTests": true
       }
     }
-  },
-  "implicitDependencies": [
-    "protobuf-compiler"
-  ]
+  }
 }

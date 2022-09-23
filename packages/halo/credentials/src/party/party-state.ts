@@ -8,10 +8,13 @@ import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { KeyHint } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
+import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { isIdentityMessage, IdentityMessageProcessor, IdentityEvents } from '../identity';
 import { Keyring, assertValidPublicKey, keyTypeName } from '../keys';
-import { Message, KeyChain, KeyHint, KeyRecord, KeyType, PartyCredential, SignedMessage } from '../proto';
 import { PartyEventType } from './events';
 import { isEnvelope, isPartyInvitationMessage, isSignedMessage } from './party-credential';
 import { PartyInvitationManager } from './party-invitation-manager';
@@ -455,6 +458,7 @@ export class PartyState extends EventEmitter {
         checkParty(partyKey);
 
         if (!admitKey || !feedKey) {
+          console.log(message);
           throw new Error(`Invalid message: ${message}`);
         }
 

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "registry.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../src/proto/dxos/registry.proto"
+  ],
+  "names": [],
+  "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"
+}

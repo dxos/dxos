@@ -7,12 +7,14 @@ import assert from 'node:assert';
 import { synchronized, Event } from '@dxos/async';
 import { Message as HaloMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import { FeedWriter, PartyKey, PartySnapshot } from '@dxos/echo-protocol';
+import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { ResultSet } from '../api';
 import { ActivationOptions, PartyPreferences, Preferences } from '../halo';

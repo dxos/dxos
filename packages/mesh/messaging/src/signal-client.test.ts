@@ -7,11 +7,11 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
-import { PublicKey } from '@dxos/protocols';
+import { Any, TaggedType } from '@dxos/codec-protobuf';
+import { PublicKey, TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Any } from './proto/gen/google/protobuf';
 import { SignalClient } from './signal-client';
 
 describe('SignalClient', () => {
@@ -28,6 +28,12 @@ describe('SignalClient', () => {
     broker1.stop();
     // code await broker2.stop();
   });
+
+  const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
+    '@type': 'google.protobuf.Any',
+    type_url: 'dxos.Example',
+    value: Buffer.from('1')
+  };
 
   test('message between 2 clients', async () => {
     const topic = PublicKey.random();
@@ -52,10 +58,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: {
-        type_url: 'something',
-        value: Buffer.from('0')
-      }
+      payload: PAYLOAD
     };
     await api2.sendMessage(message);
     await waitForExpect(() => {
@@ -110,10 +113,7 @@ describe('SignalClient', () => {
     const message = {
       author: peer2,
       recipient: peer1,
-      payload: {
-        type_url: 'something',
-        value: Buffer.from('0')
-      }
+      payload: PAYLOAD
     };
     await api1.sendMessage(message);
 

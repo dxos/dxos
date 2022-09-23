@@ -4,8 +4,9 @@
 
 import debug from 'debug';
 
-import { Message as HaloMessage, Authenticator, codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, PartyAuthenticator } from '@dxos/credentials';
+import { codec, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, Authenticator, PartyAuthenticator } from '@dxos/credentials';
 import { FeedKey, FeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { PartyProcessor } from '../pipeline';
 import { CredentialsSigner } from './credentials-signer';

@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import urlJoin from 'url-join';
 
 import { useProfile } from '@dxos/react-client';
 
@@ -18,11 +17,11 @@ export interface RequireProfileProps {
  */
 export const RequireProfile = ({ redirect }: RequireProfileProps) => {
   const { pathname, search } = useLocation();
-  const profile = useProfile();
+  const profile = useProfile(true);
 
   if (!profile) {
     return (
-      <Navigate to={urlJoin(redirect, pathname, search)} />
+      <Navigate to={`${redirect}?redirect=${pathname}${search}`} />
     );
   }
 

@@ -5,13 +5,13 @@
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { KeyType, Message as HaloMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
-import {
-  createFeedWriter, DatabaseSnapshot, FeedSelector, FeedWriter, PartyKey, PartySnapshot
-} from '@dxos/echo-protocol';
+import { createFeedWriter, FeedSelector, FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { PublicKey, Timeframe } from '@dxos/protocols';
+import { DatabaseSnapshot, PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { SubscriptionGroup } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';

@@ -4,11 +4,14 @@
 
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
+import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
+import { Message } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { Signer, SigningKey } from '../keys';
 import { wrapMessage } from '../party';
-import { Auth, KeyChain, KeyRecord, Message, WithTypeUrl } from '../proto';
 
 /**
  * Create `dxos.credentials.auth.Auth` credentials.
@@ -32,7 +35,7 @@ export const createAuthMessage = (
   }
 
   const authMessage: WithTypeUrl<Auth> = {
-    '@type': 'dxos.credentials.auth.Auth',
+    '@type': 'dxos.halo.credentials.auth.Auth',
     partyKey,
     identityKey: identityKey.publicKey,
     deviceKey: deviceKey.publicKey,

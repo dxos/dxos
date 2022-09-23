@@ -11,7 +11,9 @@ import * as path from 'path';
 
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { ConfigObject } from '@dxos/config';
+import { ConfigProto } from '@dxos/config';
+
+import { PublisherRpcPeer } from './util';
 
 const log = debug('dxos:cli:main');
 const error = log.extend('error');
@@ -19,7 +21,7 @@ const error = log.extend('error');
 const ENV_DX_CONFIG = 'DX_CONFIG';
 
 export abstract class BaseCommand extends Command {
-  private _clientConfig?: ConfigObject;
+  private _clientConfig?: ConfigProto;
   private _client?: Client;
 
   static override flags = {
@@ -27,7 +29,7 @@ export abstract class BaseCommand extends Command {
       env: ENV_DX_CONFIG,
       description: 'Specify config file',
       default: async (context: any) => {
-        return path.join(context.config.configDir, 'config.json');
+        return path.join(context.config.configDir, 'config.yml');
       }
     }),
 
@@ -58,7 +60,7 @@ export abstract class BaseCommand extends Command {
     const { config: configFile } = flags as any;
     if (fs.existsSync(configFile)) {
       try {
-        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigObject;
+        this._clientConfig = yaml.load(String(fs.readFileSync(configFile))) as ConfigProto;
       } catch (err) {
         console.error(`Invalid config file: ${configFile}`);
       }
@@ -113,6 +115,36 @@ export abstract class BaseCommand extends Command {
       return value;
     } catch (err: any) {
       this.error(err);
+    }
+  }
+
+  /**
+   * Convenience function to wrap command passing in kube publisher.
+   */
+  async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    let rpc: PublisherRpcPeer | undefined;
+    try {
+      assert(this._clientConfig);
+
+      const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
+      assert(wsEndpoint);
+
+      rpc = new PublisherRpcPeer(wsEndpoint);
+
+      await Promise.race([
+        rpc.connected.waitForCount(1),
+        rpc.error.waitForCount(1).then(err => Promise.reject(err))
+      ]);
+
+      const value = await callback(rpc);
+
+      return value;
+    } catch (err: any) {
+      this.error(err);
+    } finally {
+      if (rpc) {
+        await rpc.close();
+      }
     }
   }
 }

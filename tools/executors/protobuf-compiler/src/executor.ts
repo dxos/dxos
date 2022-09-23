@@ -6,6 +6,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import { sync as glob } from 'glob';
 import { rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { resolve } from 'path';
 
 import { build } from './build';
 
@@ -20,12 +21,13 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   console.info('Executing "generate"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  const outdir = join(options.basePath, options.outputPath);
   const src = join(options.basePath, options.srcPath);
   const substitutionsPath = join(options.basePath, options.substitutionsPath);
+  const baseDir = resolve(process.cwd(), options.basePath);
+  const outDir = join(options.basePath, options.outputPath);
 
   try {
-    rmSync(outdir, { recursive: true, force: true });
+    rmSync(outDir, { recursive: true, force: true });
   } catch (err: any) {
     err(err.message);
   }
@@ -34,9 +36,10 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   const proto = glob(src, { cwd: context.cwd });
 
   await build({
-    outdir,
     proto,
-    substitutions
+    substitutions,
+    baseDir,
+    outDir
   });
 
   return { success: true };

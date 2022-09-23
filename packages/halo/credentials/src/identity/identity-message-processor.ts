@@ -7,11 +7,11 @@ import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';
+import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { isDeviceInfoMessage, isIdentityInfoMessage } from '../identity';
 import { Keyring, assertValidPublicKey } from '../keys';
 import { PartyState, isEnvelope, isSignedMessage } from '../party';
-import { SignedMessage } from '../proto';
 
 const log = debug('dxos:halo:party');
 

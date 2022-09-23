@@ -4,16 +4,16 @@
 
 syntax = "proto3";
 
-package dxos.echo.metadata;
-
+import "dxos/echo/timeframe.proto";
 import "google/protobuf/timestamp.proto";
 
-import "../halo/keys.proto";
+import "dxos/halo/keys.proto";
+
+package dxos.echo.metadata;
 
 message EchoMetadata {
   /**
    * Version number that is inceremnted every time there's a breaking change to the storage schema.
-   *
    * This is used to detect if the storage schema has changed since the last time the client was run.
    * Loading data from a different version will might result in an error.
    */
@@ -28,19 +28,19 @@ message EchoMetadata {
 // TODO(dmaretskyi): Cleanup numbering.
 message PartyMetadata {
   /// Party key.
-  PubKey key = 1;
+  dxos.halo.keys.PubKey key = 1;
 
-  optional PubKey genesis_feed_key = 6;
+  optional dxos.halo.keys.PubKey genesis_feed_key = 6;
 
   /// Key of the wriatable control feed.
-  optional PubKey control_feed_key = 4;
+  optional dxos.halo.keys.PubKey control_feed_key = 4;
 
   /// Key of the wriatable data feed.
-  optional PubKey data_feed_key = 3;
+  optional dxos.halo.keys.PubKey data_feed_key = 3;
 
   // Latest timeframe reached while processing party messages.
-  optional TimeframeVector latest_timeframe = 5;
+  optional timeframe.TimeframeVector latest_timeframe = 5;
 
   /// List of all feed associated with the party.
-  repeated PubKey feed_keys = 2;
+  repeated dxos.halo.keys.PubKey feed_keys = 2;
 }

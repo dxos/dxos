@@ -2,19 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import debug from 'debug';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey } from '@dxos/protocols';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { Signal } from '../proto/gen/dxos/mesh/swarm';
 import { SignalMessage, SignalMessaging } from '../signal';
 import { Transport, TransportFactory } from '../transport';
-
-const log = debug('dxos:network-manager:swarm:connection');
 
 /**
  * State machine for each connection.

@@ -4,12 +4,13 @@
 
 syntax = "proto3";
 
+import "dxos/echo/invitation.proto";
+import "dxos/echo/snapshot.proto";
+import "dxos/echo/timeframe.proto";
 import "google/protobuf/empty.proto";
 
-import "./config.proto";
-import "./echo/invitation.proto";
-import "./echo/snapshot.proto";
-import "./halo/keys.proto";
+import "dxos/config.proto";
+import "dxos/halo/keys.proto";
 
 package dxos.client;
 
@@ -18,7 +19,7 @@ package dxos.client;
 //
 
 service SystemService {
-  rpc GetConfig(google.protobuf.Empty) returns (Config);
+  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
   rpc Reset (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -27,15 +28,15 @@ service SystemService {
 //
 
 enum InvitationState {
-  WAITING_FOR_CONNECTION = 1;
-  CONNECTED = 2;
-  SUCCESS = 3;
-  ERROR = 4;
+  WAITING_FOR_CONNECTION = 0;
+  CONNECTED = 1;
+  SUCCESS = 2;
+  ERROR = 3;
 }
 
 /// Invitation process created by sender.
 message InvitationRequest {
-  optional InvitationDescriptor descriptor = 1;
+  optional dxos.echo.invitation.InvitationDescriptor descriptor = 1;
 
   InvitationState state = 2;
 
@@ -67,7 +68,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  required dxos.halo.keys.PubKey publicKey = 1;
+  dxos.halo.keys.PubKey publicKey = 1;
   optional string username = 2;
 }
 
@@ -84,7 +85,6 @@ message CreateProfileRequest {
 message RecoverProfileRequest {
   string seedPhrase = 1;
 }
-
 message Contact {
   dxos.halo.keys.PubKey publicKey = 1;
   optional string displayName = 2;
@@ -100,19 +100,19 @@ service ProfileService {
   rpc RecoverProfile(RecoverProfileRequest) returns (Profile);
 
   rpc CreateInvitation(google.protobuf.Empty) returns (stream InvitationRequest);
-  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeemedInvitation);
+  rpc AcceptInvitation(echo.invitation.InvitationDescriptor) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 }
 
 message AddKeyRecordRequest {
-  KeyRecord keyRecord = 1;
+  dxos.halo.keys.KeyRecord keyRecord = 1;
 }
 
 message SignRequest {
   /**
    * - The public key of the key that is supposed to be used for signing.
    */
-  PubKey publicKey = 1;
+  dxos.halo.keys.PubKey publicKey = 1;
 
   bytes payload = 2;
 }
@@ -154,29 +154,28 @@ service HaloService {
 
 message Party {
   message Member {
-    required dxos.halo.keys.PubKey publicKey = 1;
+    dxos.halo.keys.PubKey publicKey = 1;
     optional string displayName = 2;
   }
 
-  required dxos.halo.keys.PubKey publicKey = 1;
-  required bool isOpen = 2;
-  required bool isActive = 3;
+  dxos.halo.keys.PubKey publicKey = 1;
+  bool isOpen = 2;
+  bool isActive = 3;
 
   repeated Member members = 4;
 }
 
 message SubscribePartyRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 message GetPartyDetailsRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
-
 
 message PartyDetails {
   /// The timeframe of mutations processed by the client.
-  required dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
+  dxos.echo.timeframe.TimeframeVector processed_timeframe = 1;
 }
 
 message SubscribePartyResponse {
@@ -189,7 +188,7 @@ message SubscribePartiesResponse {
 }
 
 message CreateInvitationRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
   optional dxos.halo.keys.PubKey inviteeKey = 2;
@@ -201,7 +200,7 @@ message PartyActivationOptions {
 }
 
 message SetPartyStateRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 
   optional bool open = 2;
   optional bool activeGlobal = 3;
@@ -209,12 +208,12 @@ message SetPartyStateRequest {
 }
 
 message SubscribeMembersRequest {
-  required dxos.halo.keys.PubKey partyKey = 1;
+  dxos.halo.keys.PubKey partyKey = 1;
 }
 
 message SubscribeMembersResponse {
   message PartyMember {
-    required dxos.halo.keys.PubKey publicKey = 1;
+    dxos.halo.keys.PubKey publicKey = 1;
     optional string displayName = 2;
   }
 
@@ -234,17 +233,17 @@ service PartyService {
   rpc GetPartyDetails(GetPartyDetailsRequest) returns (PartyDetails);
 
   rpc CreateParty(google.protobuf.Empty) returns(Party);
-  rpc CloneParty(PartySnapshot) returns(Party);
+  rpc CloneParty(echo.snapshot.PartySnapshot) returns(Party);
 
   /// Open and close or activate and deactivate a party.
   rpc SetPartyState(SetPartyStateRequest) returns(Party);
 
   rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
-  rpc AcceptInvitation(InvitationDescriptor) returns (stream RedeemedInvitation);
+  rpc AcceptInvitation(echo.invitation.InvitationDescriptor) returns (stream RedeemedInvitation);
   rpc AuthenticateInvitation(AuthenticateInvitationRequest) returns (google.protobuf.Empty);
 
   // TODO(rzadp): Remove and join with Subscribing to Party.
   rpc SubscribeMembers (SubscribeMembersRequest) returns (stream SubscribeMembersResponse);
 
-  rpc CreateSnapshot(CreateSnaspotRequest) returns (PartySnapshot);
+  rpc CreateSnapshot(CreateSnaspotRequest) returns (echo.snapshot.PartySnapshot);
 }

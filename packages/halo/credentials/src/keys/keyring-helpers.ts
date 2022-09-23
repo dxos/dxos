@@ -11,8 +11,9 @@ import assert from 'node:assert';
 
 import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
+import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { KeyChain, KeyRecord, KeyType, createDateTimeString } from '../proto';
+import { createDateTimeString } from '../proto';
 import { MakeOptional } from '../typedefs';
 import { SecretKey } from './keytype';
 
@@ -27,8 +28,10 @@ export const isValidPublicKey = (key: PublicKeyLike, keyType?: KeyType): key is 
       assert(PublicKey.from(key).asUint8Array().length === PUBLIC_KEY_LENGTH);
     }
     return true;
-  } catch (e: any) {
+  } catch (err: any) {
+    // Ignore.
   }
+
   return false;
 };
 

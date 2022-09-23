@@ -6,7 +6,8 @@ import React, { useState } from 'react';
 
 import { Box, Button, Toolbar } from '@mui/material';
 
-import { ConfigProvider, defs } from '@dxos/config';
+import { ConfigProvider } from '@dxos/config';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ClientProvider, useParties, useProfile } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
@@ -114,7 +115,7 @@ export const Remote = () => {
     version: 1,
     runtime: {
       client: {
-        mode: defs.Runtime.Client.Mode.REMOTE
+        mode: Runtime.Client.Mode.REMOTE
       }
     }
   };

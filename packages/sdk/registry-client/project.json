@@ -2,15 +2,6 @@
   "sourceRoot": "packages/sdk/registry-client/src",
   "projectType": "library",
   "targets": {
-    "proto": {
-      "executor": "@dxos/protobuf-compiler:generate",
-      "outputs": [
-        "{options.basePath}/gen"
-      ],
-      "options": {
-        "basePath": "packages/sdk/registry-client/src/proto"
-      }
-    },
     "build": {
       "executor": "@nrwl/js:tsc",
       "outputs": [
@@ -65,7 +56,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "mocha",
-    "protobuf-compiler"
+    "mocha"
   ]
 }

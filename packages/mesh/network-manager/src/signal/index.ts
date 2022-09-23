@@ -4,3 +4,4 @@
 
 export * from './signal-connection';
 export * from './signal-messaging';
+export * from './message-router';

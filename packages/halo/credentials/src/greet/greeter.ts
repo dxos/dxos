@@ -5,13 +5,16 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
+import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
 import { PublicKeyLike, PublicKey } from '@dxos/protocols';
+import { Command, NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
+import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
+import { Message } from '@dxos/protocols/proto/dxos/halo/signed';
 import { arraysEqual } from '@dxos/util';
 
 import { Keyring } from '../keys';
 import { getPartyCredentialMessageType } from '../party';
-import { PartyCredential, Message, Command, NotarizeResponse, WithTypeUrl } from '../proto';
 import { PeerId } from '../typedefs';
 import {
   ERR_GREET_INVALID_COMMAND,
@@ -192,7 +195,7 @@ export class Greeter {
     await invitation.begin();
 
     return {
-      '@type': 'dxos.credentials.greet.BeginResponse',
+      '@type': 'dxos.halo.credentials.greet.BeginResponse',
       info: {
         id: {
           '@type': 'google.protobuf.BytesValue',
@@ -213,7 +216,7 @@ export class Greeter {
 
     await invitation.handshake();
     return {
-      '@type': 'dxos.credentials.greet.HandshakeResponse',
+      '@type': 'dxos.halo.credentials.greet.HandshakeResponse',
       partyKey: invitation.partyKey,
       nonce: invitation.nonce
     };
@@ -256,7 +259,7 @@ export class Greeter {
     await invitation.notarize();
     assert(this._genesisFeedKey);
     return {
-      '@type': 'dxos.credentials.greet.NotarizeResponse',
+      '@type': 'dxos.halo.credentials.greet.NotarizeResponse',
       copies,
       genesisFeed: this._genesisFeedKey
     };

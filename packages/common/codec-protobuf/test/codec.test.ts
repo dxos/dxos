@@ -5,8 +5,8 @@
 import { join } from 'path';
 import * as pb from 'protobufjs';
 
-import { anySubstitutions } from '../src';
 import { Schema } from '../src/schema';
+import { anySubstitutions } from '../src/substitutions/any';
 
 describe('extending protobuf', () => {
   it('extends proto with another file', async () => {
@@ -15,7 +15,6 @@ describe('extending protobuf', () => {
 
     const schema = new Schema(anyProto, anySubstitutions);
     const codec = schema.tryGetCodecForType('dxos.test.any.Wrapper');
-
     codec.addJson(anotherProto.toJSON());
 
     const data = {

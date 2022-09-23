@@ -4,16 +4,16 @@
 
 syntax = "proto3";
 
-// TODO(burdon): Rename dxos.halo?
-package dxos.credentials;
-
 import "google/protobuf/any.proto";
 
-import "./keys.proto";
+import "dxos/halo/keys.proto";
 
+package dxos.halo.signed;
+
+// TODO(burdon): Rename (too generic).
 // TODO(burdon): Use default from codec-protobuf.
 message Message {
-  required google.protobuf.Any payload = 1;
+  google.protobuf.Any payload = 1;
 }
 
 /**
@@ -25,10 +25,10 @@ message SignedMessage {
   //
   message Signed {
     /// RFC-3339 datetime string.
-    required string created = 1;
-    required bytes nonce = 2;
+    string created = 1;
+    bytes nonce = 2;
     /// The payload to be signed.
-    required google.protobuf.Any payload = 10;
+    google.protobuf.Any payload = 10;
   }
 
   //
@@ -36,15 +36,15 @@ message SignedMessage {
   //
   message Signature {
     /// The publicKey of the keypair that made this signature.
-    required PubKey key = 1;
+    keys.PubKey key = 1;
     /// The bytes of the signature.
-    required bytes signature = 2;
+    bytes signature = 2;
     /// The certification chain of SignedMessages for this key.
-    optional KeyChain keyChain = 3;
+    optional keys.KeyChain keyChain = 3;
   }
 
   /// The signed message contents.
-  required Signed signed = 1;
+  Signed signed = 1;
   /// An array of Signatures, one for each key that signed the message.
   repeated Signature signatures = 2;
 }

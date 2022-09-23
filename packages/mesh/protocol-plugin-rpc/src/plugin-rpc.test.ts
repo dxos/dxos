@@ -7,21 +7,23 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
+import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
+import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { PluginRpc } from './plugin-rpc';
-import { schema } from './proto/gen';
-import { Test } from './proto/gen/dxos/rpc/test';
+
+const signalContext = new MemorySignalManagerContext();
 
 const createPeer = (
   topic: PublicKey,
   peerId: PublicKey,
   onConnect: (port: RpcPort, peerId: string) => void
 ) => {
-  const networkManager = new NetworkManager();
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
   afterTest(() => networkManager.destroy());
   const plugin = new PluginRpc(onConnect);
   networkManager.joinProtocolSwarm({
@@ -76,12 +78,13 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('Works with protobuf service', async () => {
-    const service = schema.getService('dxos.rpc.test.Test');
+    const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     const connected = new Event();
+
     let server: RpcPeer | undefined;
-    let client: ProtoRpcPeer<Test> | undefined;
+    let client: ProtoRpcPeer<TestService> | undefined;
     const serverConnected = connected.waitFor(() => !!server);
     const clientConnected = connected.waitFor(() => !!client);
 
@@ -121,13 +124,14 @@ describe('Protocol plugin rpc', () => {
   });
 
   it('One server two clients', async () => {
-    const service = schema.getService('dxos.rpc.test.Test');
+    const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();
     const client2Id = PublicKey.random();
     const connected = new Event();
-    let client1: ProtoRpcPeer<Test> | undefined;
-    let client2: ProtoRpcPeer<Test> | undefined;
+
+    let client1: ProtoRpcPeer<TestService> | undefined;
+    let client2: ProtoRpcPeer<TestService> | undefined;
     const client1Connected = connected.waitFor(() => !!client1);
     const client2Connected = connected.waitFor(() => !!client2);
 
