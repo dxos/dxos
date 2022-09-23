@@ -30,6 +30,8 @@
     "feed-store": "packages/echo/feed-store",
     "fx-file": "packages/fx/file",
     "fx-plate": "packages/fx/plate",
+    "gem-core": "packages/gem/gem-core",
+    "gem-spore": "packages/gem/gem-spore",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-app": "apps/halo",
     "halo-protocol": "packages/halo/halo-protocol",
