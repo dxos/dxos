@@ -3,12 +3,10 @@
 //
 
 export * from './space';
+export * from './space-protocol';
+export * from './replicator-plugin'
 
 // TODO(burdon): Why not * (if not then move other definitions).
-export {
-  SwarmIdentity
-} from './space-protocol';
-
 export {
   AuthProvider,
   AuthVerifier,

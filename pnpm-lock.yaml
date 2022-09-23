@@ -879,6 +879,37 @@ importers:
       '@dxos/random-access-storage': link:../../packages/common/random-access-storage
       '@dxos/signal': link:../../packages/mesh/signal
 
+  e2e/echo:
+    specifiers:
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/messaging': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      source-map-support: ^0.5.12
+    dependencies:
+      '@dxos/crypto': link:../../packages/common/crypto
+      '@dxos/echo-db': link:../../packages/echo/echo-db
+      '@dxos/feed-store': link:../../packages/common/feed-store
+      '@dxos/keyring': link:../../packages/halo/keyring
+      '@dxos/keys': link:../../packages/common/keys
+      '@dxos/messaging': link:../../packages/mesh/messaging
+      '@dxos/network-manager': link:../../packages/mesh/network-manager
+      '@dxos/object-model': link:../../packages/echo/object-model
+      '@dxos/random-access-storage': link:../../packages/common/random-access-storage
+      '@dxos/testutils': link:../../packages/common/testutils
+      source-map-support: 0.5.21
+    devDependencies:
+      '@dxos/protocols': link:../../packages/common/protocols
+      '@dxos/signal': link:../../packages/mesh/signal
+
   e2e/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*

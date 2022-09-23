@@ -1,0 +1,38 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "mocha",
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "test",
+    "browser-test"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/crypto"
+    },
+    {
+      "path": "../../packages/echo/echo-db"
+    },
+    {
+      "path": "../../packages/echo/object-model"
+    },
+    {
+      "path": "../../packages/gravity/browser-mocha"
+    },
+    {
+      "path": "../../packages/halo/credentials"
+    },
+    {
+      "path": "../../packages/mesh/signal"
+    },
+    {
+      "path": "../../packages/sdk/client"
+    }
+  ]
+}

@@ -69,6 +69,7 @@ export class FeedDescriptor {
     this._feed = null;
   }
 
+  // TODO(dmaretskyi): Rename to `hypercore` to avoid code spelling `feed.feed`.
   get feed (): HypercoreFeed {
     assert(this._feed, 'Feed is not initialized');
     return this._feed;
