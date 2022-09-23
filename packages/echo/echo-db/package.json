@@ -47,7 +47,7 @@
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",
     "@types/debug": "^4.1.7",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.unionwith": "^4.6.6",
@@ -55,7 +55,7 @@
     "@types/pify": "^3.0.2",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
-    "faker": "^5.1.0",
+    "faker": "^5.5.3",
     "memdown": "^5.1.0"
   },
   "publishConfig": {
