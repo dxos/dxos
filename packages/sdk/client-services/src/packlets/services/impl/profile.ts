@@ -24,7 +24,6 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 
 import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
-import { CreateServicesOpts } from '../types';
 
 /**
  * Profile service implementation.
@@ -71,10 +70,12 @@ export class ProfileService implements ProfileServiceRpc {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
         let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
+        // TODO(burdon): Not used.
         const secretProvider = async () => {
           next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
           return Buffer.from(secret);
         };
+
         invitation = await this.context.invitations.createInvitation({
           onFinish: () => {
             next({ state: InvitationState.SUCCESS });
@@ -82,6 +83,7 @@ export class ProfileService implements ProfileServiceRpc {
           }
         });
         invitation.secret = secret;
+
         next({ descriptor: invitation.toProto(), state: InvitationState.WAITING_FOR_CONNECTION });
       });
     });
@@ -128,5 +130,3 @@ export class ProfileService implements ProfileServiceRpc {
     invitation.secretTrigger?.();
   }
 }
-
-export const createProfileService = ({ context }: CreateServicesOpts): ProfileService => new ProfileService(context);

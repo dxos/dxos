@@ -29,14 +29,13 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
-import { SecretProvider, ServiceContext } from '../service-context';
-import { CreateServicesOpts } from '../types';
+import { InvitationDescriptor, InviteeInvitation, InviteeInvitations, SecretProvider } from '../../invitations';
+import { ServiceContext } from '../service-context';
 
 /**
  * Party service implementation.
  */
-class PartyService implements PartyServiceRpc {
+export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
@@ -284,5 +283,3 @@ class PartyService implements PartyServiceRpc {
     // return party.createSnapshot();
   }
 }
-
-export const createPartyService = ({ context }: CreateServicesOpts): PartyService => new PartyService(context);

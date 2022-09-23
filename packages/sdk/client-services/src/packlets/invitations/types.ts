@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export type SecretProvider = () => Promise<Buffer>
+
 // TODO(burdon): Change to type def.
 export interface InviterInvitation {
   // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
