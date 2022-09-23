@@ -7,6 +7,7 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { SecretProvider } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
@@ -29,7 +30,7 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations, SecretProvider } from '../../invitations';
+import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
 import { ServiceContext } from '../service-context';
 
 /**
@@ -221,6 +222,7 @@ export class PartyService implements PartyServiceRpc {
         if (!secret) {
           throw new Error('Secret not provided.');
         }
+
         return Buffer.from(secret);
       };
 

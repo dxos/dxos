@@ -61,6 +61,7 @@ export class InvitationDescriptor {
     );
   }
 
+  // TODO(burdon): Move to client API.
   static decode (code: string): InvitationDescriptor {
     const json = base62.decode(code).toString();
     return InvitationDescriptor.fromQueryParameters(JSON.parse(json));
@@ -119,16 +120,19 @@ export class InvitationDescriptor {
     };
   }
 
+  // TODO(burdon): Move to client API.
   encode (): string {
     const buffer = Buffer.from(JSON.stringify(this.toQueryParameters()));
     return base62.encode(buffer);
   }
 }
 
+// TODO(burdon): Move to client API.
 const parseInvitationType = (str: string): InvitationDescriptorProto.Type => {
   const type = parseInt(str);
   assert(type === InvitationDescriptorProto.Type.INTERACTIVE || type === InvitationDescriptorProto.Type.OFFLINE, 'Invalid invitation type');
   return type;
 };
 
+// TODO(burdon): Move to client API.
 const stringifyInvitationType = (type: InvitationDescriptorProto.Type): string => type.toString();

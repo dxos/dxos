@@ -29,11 +29,11 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey
 }
 
-// TODO(dmaretskyi): This represents the Peer S/M. Lets find a better name for it.
+// TODO(dmaretskyi): Rename: represents the peer's state machine.
 export class IdentityManager {
-  private _identity?: Identity;
-
   readonly stateUpdate = new Event();
+
+  private _identity?: Identity;
 
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
   constructor (
@@ -112,7 +112,6 @@ export class IdentityManager {
     assert(!this._identity, 'Identity already exists.');
 
     const controlFeedKey = await this._keyring.createKey();
-
     const identityRecord: IdentityRecord = {
       identityKey: await this._keyring.createKey(),
       deviceKey: await this._keyring.createKey(),

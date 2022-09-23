@@ -7,7 +7,7 @@ import assert from 'assert';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
 import {
-  CredentialSigner, DeviceStateMachine, createCredentialSignerWithChain, createCredentialSignerWithKey
+  createCredentialSignerWithChain, createCredentialSignerWithKey, CredentialSigner, DeviceStateMachine
 } from '@dxos/halo-protocol';
 import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -19,12 +19,16 @@ export type IdentityParams = {
   space: Space
 }
 
+/**
+ * Agent identity manager, which includes the agent's Halo space.
+ */
+// TODO(burdon): Rename Halo (i.e., something bigger?)
 export class Identity {
   public readonly identityKey: PublicKey;
   public readonly deviceKey: PublicKey;
 
   private readonly _signer: Signer;
-  private readonly _halo: Space;
+  private readonly _space: Space;
   private readonly _deviceStateMachine: DeviceStateMachine;
 
   constructor ({
@@ -35,13 +39,14 @@ export class Identity {
   }: IdentityParams) {
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
+
     this._signer = signer;
-    this._halo = space; // TODO(burdon): Rename space.
+    this._space = space;
     this._deviceStateMachine = new DeviceStateMachine(this.identityKey, this.deviceKey);
 
     // TODO(burdon): Unbind on destroy? (Pattern).
     // Save device key chain credential when processed by the party state machine.
-    this._halo.onCredentialProcessed.set(async credential => {
+    this._space.onCredentialProcessed.set(async credential => {
       await this._deviceStateMachine.process(credential);
     });
   }
@@ -52,11 +57,11 @@ export class Identity {
   }
 
   async open () {
-    await this._halo.open();
+    await this._space.open();
   }
 
   async close () {
-    await this._halo.close();
+    await this._space.close();
   }
 
   async ready () {
@@ -69,19 +74,19 @@ export class Identity {
    * @test-only
    */
   get controlPipeline () {
-    return this._halo.controlPipeline;
+    return this._space.controlPipeline;
   }
 
   get haloSpaceKey () {
-    return this._halo.key;
+    return this._space.key;
   }
 
   get haloGenesisFeedKey () {
-    return this._halo.genesisFeedKey;
+    return this._space.genesisFeedKey;
   }
 
   get haloDatabase (): Database {
-    return this._halo.database ?? failUndefined();
+    return this._space.database ?? failUndefined();
   }
 
   /**

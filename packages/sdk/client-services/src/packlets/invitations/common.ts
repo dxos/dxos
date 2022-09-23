@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SecretProvider, SecretValidator, defaultSecretProvider, defaultSecretValidator } from '@dxos/credentials';
+import { defaultSecretProvider, defaultSecretValidator, SecretProvider, SecretValidator } from '@dxos/credentials';
 
 /**
  * Defines a way for peers to authenticate each other through a side channel.
@@ -31,3 +31,18 @@ export interface InvitationOptions {
    */
   expiration?: number
 }
+
+export type InviterInvitation = {
+  // TODO(rzadp): Change it to use descriptors with secrets build-in instead.
+  invitationCode: string
+  secret: Uint8Array | undefined
+}
+
+export type InviteeInvitation = {
+  secret?: Uint8Array | undefined // Can be undefined initially, then set after receiving secret from the inviter.
+  secretTrigger?: () => void // Is triggered after supplying the secret.
+}
+
+export type InviterInvitations = InviterInvitation[];
+
+export type InviteeInvitations = Map<string, InviteeInvitation>;

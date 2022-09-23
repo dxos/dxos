@@ -16,7 +16,7 @@ import { Identity, IdentityManager } from '../identity';
 import { InvitationDescriptor } from '../invitations';
 
 /**
- *
+ * Create and process Halo (space) invitations for device management.
  */
 export class HaloInvitations {
   constructor (
