@@ -6,7 +6,7 @@ title: Quick start
 ## Using an ECHO database for state consensus
 Install ECHO with your package manager of choice
 ```bash
-> npm install --save @dxos/echo
+npm install --save @dxos/echo
 ```
 Create an ECHO client instance either in browser or on the server:
 ```ts
@@ -52,19 +52,19 @@ The `dx` cli offers a production-ready application template for building **local
 
 Using your favorite package manager of choice like `npm`, `yarn`, or `pnpm`:
 ```bash
-> npm i -g @dxos/cli 
+npm i -g @dxos/cli 
 ```
 Now you can use the `dx` command line tool:
 ```bash
-> dx apps create hello # or with --template=bare
-> cd hello
-> npm run dev
+dx apps create hello # or with --template=bare
+cd hello
+npm run dev
 ```
 This will start the development server in the new application .
 
 Building your app for production:
 ```bash
-> npm build
+npm build
 ```
 This will produce a `dist` folder with an entry point and a `dist/README.md`
 
@@ -75,12 +75,12 @@ Read more:
 ## Starting a KUBE
 Runnig a [KUBE](/docs/kube/overview) gives you superpowers. Installation:
 ```bash
-> sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
+sudo ch=dev bash -c "$(curl -fsSL https://dxos.nyc3.digitaloceanspaces.com/install.sh)"
 ```
 Then:
 ```bash
-> kube start # start the service in the background
-> open localhost:9000 # open the browser to the console
+kube start # start the service in the background
+open localhost:9000 # open the browser to the console
 ```
 Read more:
 - [KUBE Overview](/docs/kube/overview)
@@ -88,14 +88,16 @@ Read more:
 ## Deploying your app to a KUBE
 Use the `dx` cli to create a default `dx.yml` file:
 ```bash
-> dx app init
+dx app init
 ```
-Read more about the [`dx.yml` file schema](/docs/kube/dx-file).
+Read more about the [`dx.yml` file schema](/docs/kube/dx-yml-file).
 
-Publish your app:
+Publish your app to your local kube:
 ```bash
-> dx app publish
+dx app publish
 ```
+Read more:
+- [Publishing apps](kube/publishing)
 
 ## Sharing your app
 > TODO
