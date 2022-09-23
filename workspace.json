@@ -85,6 +85,7 @@
     "typedoc": "packages/common/typedoc",
     "util": "packages/common/util",
     "vite-plugin": "tools/vite-plugin",
+    "vuepress": "apps/vuepress",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"
   }
