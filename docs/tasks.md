@@ -26,6 +26,9 @@
 # 2022-09-19 RB
 
 - [ ] `dxos/client-services`
+  - [ ] move SpaceManager to echo-db (factor out invitations)
+  - [ ] move HaloInvitations from ServiceContext
+  - [ ] ServiceContext remove public member access
   - [ ] document design pattern
   - [ ] client proxies vs. services
   - [ ] SpaceManager/DataInvitations constructor SigningContext

@@ -13,3 +13,5 @@ export {
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER
 } from './auth-plugin';
+
+export * from './space-manager';
