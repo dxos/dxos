@@ -12,22 +12,24 @@ import { createServiceBundle } from '@dxos/rpc';
 // TODO(burdon): Is there a way to mark TS (generics) so cast isn't required for result of stream?
 export type ClientServices = {
   DataService: DataService
-  DevtoolsHost: DevtoolsHost
   HaloService: HaloService
   PartyService: PartyService
   ProfileService: ProfileService
   SystemService: SystemService
+
+  DevtoolsHost: DevtoolsHost
   TracingService: TracingService
 }
 
 // TODO(burdon): Rethink name/factory.
 export const clientServiceBundle = createServiceBundle<ClientServices>({
   DataService: schema.getService('dxos.echo.service.DataService'),
-  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
   HaloService: schema.getService('dxos.client.HaloService'),
   PartyService: schema.getService('dxos.client.PartyService'),
   ProfileService: schema.getService('dxos.client.ProfileService'),
   SystemService: schema.getService('dxos.client.SystemService'),
+
+  DevtoolsHost: schema.getService('dxos.devtools.DevtoolsHost'),
   TracingService: schema.getService('dxos.devtools.TracingService')
 });
 

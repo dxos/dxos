@@ -23,19 +23,18 @@ import { Storage } from '@dxos/random-access-storage';
 import { IdentityManager } from '../identity';
 import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
 
-/**
- *
- */
+// TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
-  // TODO(burdon): Remove public access.
-  public readonly dataService = new DataService();
   public readonly initialized = new Trigger();
+
+  // TODO(burdon): Factor out with other services.
+  public readonly dataService = new DataService();
 
   public readonly metadataStore: MetadataStore;
   public readonly feedStore: FeedStore;
   public readonly keyring: Keyring;
   public readonly identityManager: IdentityManager;
-  public readonly invitations: HaloInvitations; // TOOD(burdon): Move.
+  public readonly haloInvitations: HaloInvitations; // TOOD(burdon): Move.
 
   // Initialized after identity is intitialized.
   public spaceManager?: SpaceManager;
@@ -56,7 +55,7 @@ export class ServiceContext {
     );
 
     // TODO(burdon): Rename.
-    this.invitations = new HaloInvitations(this.networkManager, this.identityManager, async () => {
+    this.haloInvitations = new HaloInvitations(this.networkManager, this.identityManager, async () => {
       await this._initialize();
     });
   }
@@ -69,8 +68,7 @@ export class ServiceContext {
     await this.identityManager.close();
   }
 
-  // TODO(dmaretskyi): Rename to createIdentity.
-  async create () {
+  async createIdentity () {
     const identity = await this.identityManager.createIdentity();
     this.dataService.trackParty(identity.haloSpaceKey, identity.haloDatabase.createDataServiceHost());
     await this._initialize();

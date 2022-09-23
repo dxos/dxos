@@ -49,7 +49,7 @@ export class ProfileService implements ProfileServiceRpc {
   }
 
   async createProfile (request: CreateProfileRequest): Promise<Profile> {
-    await this.context.create();
+    await this.context.createIdentity();
     return { publicKey: this.context.identityManager.identity!.identityKey };
   }
 
@@ -76,7 +76,7 @@ export class ProfileService implements ProfileServiceRpc {
           return Buffer.from(secret);
         };
 
-        invitation = await this.context.invitations.createInvitation({
+        invitation = await this.context.haloInvitations.createInvitation({
           onFinish: () => {
             next({ state: InvitationState.SUCCESS });
             close();
@@ -107,7 +107,7 @@ export class ProfileService implements ProfileServiceRpc {
       };
 
       // Joining process is kicked off, and will await authentication with a secret.
-      const haloPartyPromise = this.context.invitations.acceptInvitation(InvitationDescriptor.fromProto(request));
+      const haloPartyPromise = this.context.haloInvitations.acceptInvitation(InvitationDescriptor.fromProto(request));
       this.inviteeInvitations.set(id, inviteeInvitation);
       next({ id, state: InvitationState.CONNECTED });
 
