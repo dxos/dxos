@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
-import { Message as HaloMessage, SignedMessage } from '@dxos/credentials';
 import { timed } from '@dxos/debug';
 import { FeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
