@@ -85,7 +85,7 @@ const main = () => {
         .option('baseUrl', {
           description: 'Base URL for links',
           type: 'string',
-          default: 'https://github.com/dxos/dxos/tree/main'
+          default: '/dxos/dxos/tree/main'
         })
         .option('outDir', {
           description: 'Folder for generated docs',
