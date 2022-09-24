@@ -23,7 +23,7 @@
     "glob": "~7.1.6",
     "protobufjs": "^6.9.0",
     "read-pkg": "^5.2.0",
-    "ts-morph": "~10.0.2"
+    "ts-morph": "~16.0.0"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
