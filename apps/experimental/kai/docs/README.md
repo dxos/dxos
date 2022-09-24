@@ -5,133 +5,159 @@ Kai Web shell.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/kai fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/client "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
-click dxos/client-testing "https:/github.com/dxos/dxos/tree/main/packages/sdk/client-testing/docs";
-click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
-click dxos/bot-factory-client "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-
-subgraph experimental
-  style experimental fill:#d9f5d6,stroke:#fff;
-  dxos/kai("@dxos/kai");
-end
-
-subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-  dxos/protocols("@dxos/protocols");
-  dxos/util("@dxos/util");
-  dxos/log("@dxos/log");
-  dxos/crypto("@dxos/crypto");
-  dxos/rpc("@dxos/rpc");
-  dxos/random-access-storage("@dxos/random-access-storage");
-  dxos/rpc-tunnel("@dxos/rpc-tunnel");
-  dxos/react-async("@dxos/react-async");
-end
-
-subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/client("@dxos/client");
-  dxos/config("@dxos/config");
-  dxos/client-testing("@dxos/client-testing");
-  dxos/react-client("@dxos/react-client");
-end
-
-subgraph echo
-  style echo fill:#d6e4f5,stroke:#fff;
-  dxos/echo-db("@dxos/echo-db");
-  dxos/feed-store("@dxos/feed-store");
-  dxos/echo-protocol("@dxos/echo-protocol");
-  dxos/model-factory("@dxos/model-factory");
-  dxos/object-model("@dxos/object-model");
-end
-
-subgraph halo
-  style halo fill:#e3d6f5,stroke:#fff;
-  dxos/credentials("@dxos/credentials");
-end
-
-subgraph mesh
-  style mesh fill:#d6f5de,stroke:#fff;
-  dxos/mesh-protocol("@dxos/mesh-protocol");
-  dxos/messaging("@dxos/messaging");
-  dxos/network-manager("@dxos/network-manager");
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence");
-  dxos/broadcast("@dxos/broadcast");
-  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator");
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc");
-end
-
-subgraph bot
-  style bot fill:#dfd6f5,stroke:#fff;
-  dxos/bot-factory-client("@dxos/bot-factory-client");
-end
-
-dxos/async --> dxos/debug;
+%% Links
+dxos/bot-factory-client --> dxos/protocol-plugin-rpc;
+dxos/broadcast --> dxos/crypto;
 dxos/client --> dxos/config;
-dxos/protocols --> dxos/codec-protobuf;
-dxos/config --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
 dxos/client --> dxos/echo-db;
+dxos/client --> dxos/rpc-tunnel;
+dxos/client-testing --> dxos/client;
 dxos/credentials --> dxos/crypto;
-dxos/crypto --> dxos/protocols;
 dxos/credentials --> dxos/feed-store;
-dxos/feed-store --> dxos/async;
-dxos/feed-store --> dxos/util;
 dxos/credentials --> dxos/mesh-protocol;
-dxos/mesh-protocol --> dxos/async;
-dxos/mesh-protocol --> dxos/util;
-dxos/echo-protocol --> dxos/credentials;
-dxos/messaging --> dxos/log;
-dxos/messaging --> dxos/rpc;
-dxos/rpc --> dxos/async;
-dxos/rpc --> dxos/util;
-dxos/model-factory --> dxos/async;
-dxos/model-factory --> dxos/util;
+dxos/crypto --> dxos/protocols;
 dxos/echo-db --> dxos/network-manager;
+dxos/echo-db --> dxos/object-model;
+dxos/echo-db --> dxos/protocol-plugin-replicator;
+dxos/echo-db --> dxos/random-access-storage;
+dxos/echo-protocol --> dxos/credentials;
+dxos/kai --> dxos/client-testing;
+dxos/kai --> dxos/react-client;
+dxos/messaging --> dxos/rpc;
 dxos/network-manager --> dxos/credentials;
 dxos/network-manager --> dxos/messaging;
 dxos/network-manager --> dxos/protocol-plugin-presence;
-dxos/protocol-plugin-presence --> dxos/broadcast;
-dxos/broadcast --> dxos/async;
-dxos/broadcast --> dxos/crypto;
-dxos/protocol-plugin-presence --> dxos/mesh-protocol;
-dxos/echo-db --> dxos/object-model;
 dxos/object-model --> dxos/echo-protocol;
 dxos/object-model --> dxos/model-factory;
-dxos/echo-db --> dxos/protocol-plugin-replicator;
+dxos/protocol-plugin-presence --> dxos/broadcast;
+dxos/protocol-plugin-presence --> dxos/mesh-protocol;
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol;
-dxos/echo-db --> dxos/random-access-storage;
-dxos/random-access-storage --> dxos/log;
-dxos/client --> dxos/rpc-tunnel;
-dxos/rpc-tunnel --> dxos/rpc;
-dxos/kai --> dxos/client-testing;
-dxos/client-testing --> dxos/client;
-dxos/kai --> dxos/react-client;
-dxos/react-client --> dxos/bot-factory-client;
-dxos/bot-factory-client --> dxos/protocol-plugin-rpc;
-dxos/protocol-plugin-rpc --> dxos/messaging;
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
+dxos/protocol-plugin-rpc --> dxos/messaging;
+dxos/protocols --> dxos/codec-protobuf;
+dxos/react-client --> dxos/bot-factory-client;
 dxos/react-client --> dxos/client;
 dxos/react-client --> dxos/react-async;
+dxos/rpc-tunnel --> dxos/rpc;
+dxos/util --> dxos/protocols;
+
+%% Sections
+subgraph experimental
+  style experimental fill:#b8e6b3,stroke:#fff;
+
+  dxos/kai("@dxos/kai")
+end
+
+subgraph common
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/crypto("@dxos/crypto")
+  dxos/protocols("@dxos/protocols")
+  dxos/random-access-storage("@dxos/random-access-storage")
+  dxos/react-async("@dxos/react-async")
+  dxos/rpc("@dxos/rpc")
+  dxos/rpc-tunnel("@dxos/rpc-tunnel")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+    dxos/log("@dxos/log")
+    dxos/util("@dxos/util")
+  end
+end
+
+subgraph sdk
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/client("@dxos/client")
+  dxos/client-testing("@dxos/client-testing")
+  dxos/config("@dxos/config")
+  dxos/react-client("@dxos/react-client")
+end
+
+subgraph echo
+  style echo fill:#b3cae6,stroke:#fff;
+
+  dxos/echo-db("@dxos/echo-db")
+  dxos/echo-protocol("@dxos/echo-protocol")
+  dxos/feed-store("@dxos/feed-store")
+  dxos/model-factory("@dxos/model-factory")
+  dxos/object-model("@dxos/object-model")
+end
+
+subgraph halo
+  style halo fill:#cabade,stroke:#fff;
+
+  dxos/credentials("@dxos/credentials")
+end
+
+subgraph mesh
+  style mesh fill:#b3e6c0,stroke:#fff;
+
+  dxos/broadcast("@dxos/broadcast")
+  dxos/mesh-protocol("@dxos/mesh-protocol")
+  dxos/messaging("@dxos/messaging")
+  dxos/network-manager("@dxos/network-manager")
+  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence")
+  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator")
+  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc")
+end
+
+subgraph bot
+  style bot fill:#c2b3e6,stroke:#fff;
+
+  dxos/bot-factory-client("@dxos/bot-factory-client")
+end
+
+
+%% Hyperlinks
+click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/bot-factory-client href "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/client-testing href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client-testing/docs";
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/model-factory href "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/kai:::rootNode
+
+dxos/async:::defaultNode
+dxos/bot-factory-client:::defaultNode
+dxos/client:::defaultNode
+dxos/client-testing:::defaultNode
+dxos/codec-protobuf:::defaultNode
+dxos/config:::defaultNode
+dxos/debug:::defaultNode
+dxos/echo-db:::defaultNode
+dxos/messaging:::defaultNode
+dxos/model-factory:::defaultNode
+dxos/protocols:::defaultNode
+dxos/react-async:::defaultNode
+dxos/react-client:::defaultNode
+dxos/rpc:::defaultNode
+dxos/rpc-tunnel:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

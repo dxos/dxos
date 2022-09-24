@@ -5,22 +5,37 @@ Basic crypto key utils
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/crypto fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-
-subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/crypto("@dxos/crypto");
-  dxos/protocols("@dxos/protocols");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-end
-
+%% Links
 dxos/crypto --> dxos/protocols;
 dxos/protocols --> dxos/codec-protobuf;
+
+%% Sections
+subgraph common
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/crypto("@dxos/crypto")
+  dxos/protocols("@dxos/protocols")
+end
+
+
+%% Hyperlinks
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/crypto:::rootNode
+
+dxos/codec-protobuf:::defaultNode
+dxos/protocols:::defaultNode
 ```
 
 ## Dependencies

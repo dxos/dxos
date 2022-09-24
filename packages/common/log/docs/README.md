@@ -5,15 +5,33 @@ Logger
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/log fill:#fff,stroke-width:4px;
+flowchart LR
 
+%% Links
 
+%% Sections
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/log("@dxos/log");
+  style common fill:#debac2,stroke:#fff;
+
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/log("@dxos/log")
+  end
 end
+
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/log:::rootNode
 
 ```
 

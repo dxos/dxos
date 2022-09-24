@@ -5,19 +5,37 @@ Async utils.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/async fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+%% Links
 
+%% Sections
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
+  style common fill:#debac2,stroke:#fff;
+
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+  end
 end
 
-dxos/async --> dxos/debug;
+
+%% Hyperlinks
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/async:::rootNode
+
+dxos/debug:::defaultNode
 ```
 
 ## Dependencies

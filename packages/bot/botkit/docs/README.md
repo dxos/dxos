@@ -5,103 +5,132 @@ Bot
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/botkit fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/bot-factory-client "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/protocol-plugin-rpc "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
-click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/network-manager "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/protocol-plugin-presence "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-
-subgraph bot
-  style bot fill:#dfd6f5,stroke:#fff;
-  dxos/botkit("@dxos/botkit");
-  dxos/bot-factory-client("@dxos/bot-factory-client");
-end
-
-subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-  dxos/log("@dxos/log");
-  dxos/protocols("@dxos/protocols");
-  dxos/rpc("@dxos/rpc");
-  dxos/util("@dxos/util");
-  dxos/crypto("@dxos/crypto");
-end
-
-subgraph mesh
-  style mesh fill:#d6f5de,stroke:#fff;
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc");
-  dxos/messaging("@dxos/messaging");
-  dxos/mesh-protocol("@dxos/mesh-protocol");
-  dxos/network-manager("@dxos/network-manager");
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence");
-  dxos/broadcast("@dxos/broadcast");
-end
-
-subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/config("@dxos/config");
-  dxos/registry-client("@dxos/registry-client");
-end
-
-subgraph halo
-  style halo fill:#e3d6f5,stroke:#fff;
-  dxos/credentials("@dxos/credentials");
-end
-
-subgraph echo
-  style echo fill:#d6e4f5,stroke:#fff;
-  dxos/feed-store("@dxos/feed-store");
-end
-
-dxos/botkit --> dxos/bot-factory-client;
-dxos/async --> dxos/debug;
+%% Links
 dxos/bot-factory-client --> dxos/protocol-plugin-rpc;
-dxos/protocol-plugin-rpc --> dxos/messaging;
-dxos/messaging --> dxos/log;
-dxos/protocols --> dxos/codec-protobuf;
-dxos/messaging --> dxos/rpc;
-dxos/rpc --> dxos/async;
-dxos/rpc --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
-dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
-dxos/mesh-protocol --> dxos/async;
-dxos/mesh-protocol --> dxos/util;
-dxos/config --> dxos/util;
-dxos/crypto --> dxos/protocols;
+dxos/botkit --> dxos/bot-factory-client;
 dxos/botkit --> dxos/network-manager;
-dxos/network-manager --> dxos/credentials;
+dxos/botkit --> dxos/registry-client;
+dxos/broadcast --> dxos/crypto;
 dxos/credentials --> dxos/crypto;
 dxos/credentials --> dxos/feed-store;
-dxos/feed-store --> dxos/async;
-dxos/feed-store --> dxos/util;
 dxos/credentials --> dxos/mesh-protocol;
+dxos/crypto --> dxos/protocols;
+dxos/messaging --> dxos/rpc;
+dxos/network-manager --> dxos/credentials;
 dxos/network-manager --> dxos/messaging;
 dxos/network-manager --> dxos/protocol-plugin-presence;
 dxos/protocol-plugin-presence --> dxos/broadcast;
-dxos/broadcast --> dxos/async;
-dxos/broadcast --> dxos/crypto;
 dxos/protocol-plugin-presence --> dxos/mesh-protocol;
-dxos/botkit --> dxos/registry-client;
+dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
+dxos/protocol-plugin-rpc --> dxos/messaging;
+dxos/protocols --> dxos/codec-protobuf;
 dxos/registry-client --> dxos/config;
+dxos/util --> dxos/protocols;
+
+%% Sections
+subgraph bot
+  style bot fill:#c2b3e6,stroke:#fff;
+
+  dxos/bot-factory-client("@dxos/bot-factory-client")
+  dxos/botkit("@dxos/botkit")
+end
+
+subgraph common
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/crypto("@dxos/crypto")
+  dxos/protocols("@dxos/protocols")
+  dxos/rpc("@dxos/rpc")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+    dxos/log("@dxos/log")
+    dxos/util("@dxos/util")
+  end
+end
+
+subgraph mesh
+  style mesh fill:#b3e6c0,stroke:#fff;
+
+  dxos/broadcast("@dxos/broadcast")
+  dxos/mesh-protocol("@dxos/mesh-protocol")
+  dxos/messaging("@dxos/messaging")
+  dxos/network-manager("@dxos/network-manager")
+  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence")
+  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc")
+end
+
+subgraph sdk
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/config("@dxos/config")
+  dxos/registry-client("@dxos/registry-client")
+end
+
+subgraph halo
+  style halo fill:#cabade,stroke:#fff;
+
+  dxos/credentials("@dxos/credentials")
+end
+
+subgraph echo
+  style echo fill:#b3cae6,stroke:#fff;
+
+  dxos/feed-store("@dxos/feed-store")
+end
+
+
+%% Hyperlinks
+click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/bot-factory-client href "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocol-plugin-rpc href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/botkit:::rootNode
+
+dxos/async:::defaultNode
+dxos/bot-factory-client:::defaultNode
+dxos/codec-protobuf:::defaultNode
+dxos/config:::defaultNode
+dxos/credentials:::defaultNode
+dxos/crypto:::defaultNode
+dxos/debug:::defaultNode
+dxos/log:::defaultNode
+dxos/mesh-protocol:::defaultNode
+dxos/messaging:::defaultNode
+dxos/network-manager:::defaultNode
+dxos/protocol-plugin-presence:::defaultNode
+dxos/protocol-plugin-rpc:::defaultNode
+dxos/protocols:::defaultNode
+dxos/registry-client:::defaultNode
+dxos/rpc:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

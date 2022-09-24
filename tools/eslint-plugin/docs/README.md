@@ -5,19 +5,33 @@
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/eslint-plugin fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/eslint-plugin-rules "https:/github.com/dxos/dxos/tree/main/tools/eslint-rules/docs";
+%% Links
+dxos/eslint-plugin --> dxos/eslint-plugin-rules;
 
+%% Sections
 subgraph tools
-  style tools fill:#ded6f5,stroke:#fff;
-  dxos/eslint-plugin("@dxos/eslint-plugin");
-  dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules");
+  style tools fill:#bbabed,stroke:#fff;
+
+  dxos/eslint-plugin("@dxos/eslint-plugin")
+  dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules")
 end
 
-dxos/eslint-plugin --> dxos/eslint-plugin-rules;
+
+%% Hyperlinks
+click dxos/eslint-plugin-rules href "https:/github.com/dxos/dxos/tree/main/tools/eslint-rules/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/eslint-plugin:::rootNode
+
+dxos/eslint-plugin-rules:::defaultNode
 ```
 
 ## Dependencies

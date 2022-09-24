@@ -5,31 +5,32 @@ Low level components using gem library.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/react-echo-graph fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/gem-core "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-core/docs";
-click dxos/gem-spore "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+%% Links
 
+%% Sections
 subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/react-echo-graph("@dxos/react-echo-graph");
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/react-echo-graph("@dxos/react-echo-graph")
 end
 
-subgraph gem
-  style gem fill:#d6e2f5,stroke:#fff;
-  dxos/gem-core("@dxos/gem-core");
-  dxos/gem-spore("@dxos/gem-spore");
-end
 
-dxos/react-echo-graph --> dxos/gem-spore;
-dxos/gem-spore --> dxos/gem-core;
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/react-echo-graph:::rootNode
+
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
-| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |

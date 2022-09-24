@@ -5,15 +5,28 @@
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/protobuf-compiler-e2e fill:#fff,stroke-width:4px;
+flowchart LR
 
+%% Links
 
+%% Sections
 subgraph e2e
-  style e2e fill:#d6e5f5,stroke:#fff;
-  dxos/protobuf-compiler-e2e("@dxos/protobuf-compiler-e2e");
+  style e2e fill:#abcced,stroke:#fff;
+
+  dxos/protobuf-compiler-e2e("@dxos/protobuf-compiler-e2e")
 end
+
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/protobuf-compiler-e2e:::rootNode
 
 ```
 

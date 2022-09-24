@@ -5,26 +5,42 @@
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/protocols-toolchain fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/toolchain-node-library "https:/github.com/dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
-click dxos/protobuf-compiler "https:/github.com/dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
+%% Links
+dxos/protocols-toolchain --> dxos/toolchain-node-library;
+dxos/toolchain-node-library --> dxos/protobuf-compiler;
 
+%% Sections
 subgraph deprecated
-  style deprecated fill:#d6dff5,stroke:#fff;
-  dxos/protocols-toolchain("@dxos/protocols-toolchain");
-  dxos/toolchain-node-library("@dxos/toolchain-node-library");
+  style deprecated fill:#bac5de,stroke:#fff;
+
+  dxos/protocols-toolchain("@dxos/protocols-toolchain")
+  dxos/toolchain-node-library("@dxos/toolchain-node-library")
 end
 
 subgraph executors
-  style executors fill:#f5d6d9,stroke:#fff;
-  dxos/protobuf-compiler("@dxos/protobuf-compiler");
+  style executors fill:#edabb0,stroke:#fff;
+
+  dxos/protobuf-compiler("@dxos/protobuf-compiler")
 end
 
-dxos/protocols-toolchain --> dxos/toolchain-node-library;
-dxos/toolchain-node-library --> dxos/protobuf-compiler;
+
+%% Hyperlinks
+click dxos/protobuf-compiler href "https:/github.com/dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
+click dxos/toolchain-node-library href "https:/github.com/dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/protocols-toolchain:::rootNode
+
+dxos/protobuf-compiler:::defaultNode
+dxos/toolchain-node-library:::defaultNode
 ```
 
 ## Dependencies

@@ -5,15 +5,28 @@
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/esbuild fill:#fff,stroke-width:4px;
+flowchart LR
 
+%% Links
 
+%% Sections
 subgraph executors
-  style executors fill:#f5d6d9,stroke:#fff;
-  dxos/esbuild("@dxos/esbuild");
+  style executors fill:#edabb0,stroke:#fff;
+
+  dxos/esbuild("@dxos/esbuild")
 end
+
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/esbuild:::rootNode
 
 ```
 

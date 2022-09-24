@@ -5,32 +5,53 @@ Config utilities
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/config fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+%% Links
+dxos/protocols --> dxos/codec-protobuf;
+dxos/util --> dxos/protocols;
 
+%% Sections
 subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/config("@dxos/config");
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/config("@dxos/config")
 end
 
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-  dxos/debug("@dxos/debug");
-  dxos/protocols("@dxos/protocols");
-  dxos/util("@dxos/util");
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/protocols("@dxos/protocols")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/debug("@dxos/debug")
+    dxos/util("@dxos/util")
+  end
 end
 
-dxos/protocols --> dxos/codec-protobuf;
-dxos/config --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
+
+%% Hyperlinks
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/config:::rootNode
+
+dxos/codec-protobuf:::defaultNode
+dxos/debug:::defaultNode
+dxos/protocols:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

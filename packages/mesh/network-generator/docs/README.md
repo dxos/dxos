@@ -5,26 +5,45 @@ Network generator.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/network-generator fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+%% Links
 
+%% Sections
 subgraph mesh
-  style mesh fill:#d6f5de,stroke:#fff;
-  dxos/network-generator("@dxos/network-generator");
+  style mesh fill:#b3e6c0,stroke:#fff;
+
+  dxos/network-generator("@dxos/network-generator")
 end
 
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
+  style common fill:#debac2,stroke:#fff;
+
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+  end
 end
 
-dxos/network-generator --> dxos/async;
-dxos/async --> dxos/debug;
+
+%% Hyperlinks
+click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/network-generator:::rootNode
+
+dxos/async:::defaultNode
+dxos/debug:::defaultNode
 ```
 
 ## Dependencies

@@ -5,44 +5,69 @@ Application framework components
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/react-toolkit fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
-click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+%% Links
+dxos/protocols --> dxos/codec-protobuf;
+dxos/react-registry-client --> dxos/registry-client;
+dxos/react-toolkit --> dxos/react-async;
+dxos/react-toolkit --> dxos/react-registry-client;
+dxos/registry-client --> dxos/config;
+dxos/util --> dxos/protocols;
 
+%% Sections
 subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/react-toolkit("@dxos/react-toolkit");
-  dxos/react-registry-client("@dxos/react-registry-client");
-  dxos/config("@dxos/config");
-  dxos/registry-client("@dxos/registry-client");
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/config("@dxos/config")
+  dxos/react-registry-client("@dxos/react-registry-client")
+  dxos/react-toolkit("@dxos/react-toolkit")
+  dxos/registry-client("@dxos/registry-client")
 end
 
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/debug("@dxos/debug");
-  dxos/protocols("@dxos/protocols");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-  dxos/react-async("@dxos/react-async");
-  dxos/util("@dxos/util");
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/protocols("@dxos/protocols")
+  dxos/react-async("@dxos/react-async")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/debug("@dxos/debug")
+    dxos/util("@dxos/util")
+  end
 end
 
-dxos/protocols --> dxos/codec-protobuf;
-dxos/react-toolkit --> dxos/react-async;
-dxos/react-toolkit --> dxos/react-registry-client;
-dxos/config --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
-dxos/react-registry-client --> dxos/registry-client;
-dxos/registry-client --> dxos/config;
+
+%% Hyperlinks
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/react-toolkit:::rootNode
+
+dxos/codec-protobuf:::defaultNode
+dxos/config:::defaultNode
+dxos/debug:::defaultNode
+dxos/protocols:::defaultNode
+dxos/react-async:::defaultNode
+dxos/react-registry-client:::defaultNode
+dxos/registry-client:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

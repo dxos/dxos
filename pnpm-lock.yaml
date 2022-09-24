@@ -2954,7 +2954,6 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/log': workspace:*
-      '@dxos/log-hook': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/color-hash': ^1.0.1
       '@types/madge': ^5.0.0
@@ -2982,7 +2981,6 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@babel/core': 7.18.13
-      '@dxos/log-hook': link:../log-hook
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/color-hash': 1.0.2
       '@types/madge': 5.0.0
@@ -27283,7 +27281,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
+    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1

@@ -5,15 +5,28 @@ Tools for react testing.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/react-client-testing fill:#fff,stroke-width:4px;
+flowchart LR
 
+%% Links
 
+%% Sections
 subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/react-client-testing("@dxos/react-client-testing");
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/react-client-testing("@dxos/react-client-testing")
 end
+
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/react-client-testing:::rootNode
 
 ```
 

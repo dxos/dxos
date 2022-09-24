@@ -5,36 +5,56 @@ ECHO model factory.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/model-factory fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+%% Links
+dxos/protocols --> dxos/codec-protobuf;
+dxos/util --> dxos/protocols;
 
+%% Sections
 subgraph echo
-  style echo fill:#d6e4f5,stroke:#fff;
-  dxos/model-factory("@dxos/model-factory");
+  style echo fill:#b3cae6,stroke:#fff;
+
+  dxos/model-factory("@dxos/model-factory")
 end
 
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
-  dxos/protocols("@dxos/protocols");
-  dxos/util("@dxos/util");
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/protocols("@dxos/protocols")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+    dxos/util("@dxos/util")
+  end
 end
 
-dxos/model-factory --> dxos/async;
-dxos/async --> dxos/debug;
-dxos/protocols --> dxos/codec-protobuf;
-dxos/model-factory --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
+
+%% Hyperlinks
+click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/model-factory:::rootNode
+
+dxos/async:::defaultNode
+dxos/codec-protobuf:::defaultNode
+dxos/debug:::defaultNode
+dxos/protocols:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

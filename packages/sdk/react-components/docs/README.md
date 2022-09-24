@@ -5,38 +5,58 @@ Low-level material components.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/react-components fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
-click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+%% Links
+dxos/protocols --> dxos/codec-protobuf;
+dxos/react-components --> dxos/react-async;
+dxos/util --> dxos/protocols;
 
+%% Sections
 subgraph sdk
-  style sdk fill:#f4f5d6,stroke:#fff;
-  dxos/react-components("@dxos/react-components");
+  style sdk fill:#dddeba,stroke:#fff;
+
+  dxos/react-components("@dxos/react-components")
 end
 
 subgraph common
-  style common fill:#f5d6dd,stroke:#fff;
-  dxos/async("@dxos/async");
-  dxos/debug("@dxos/debug");
-  dxos/react-async("@dxos/react-async");
-  dxos/util("@dxos/util");
-  dxos/protocols("@dxos/protocols");
-  dxos/codec-protobuf("@dxos/codec-protobuf");
+  style common fill:#debac2,stroke:#fff;
+
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/protocols("@dxos/protocols")
+  dxos/react-async("@dxos/react-async")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
+    dxos/util("@dxos/util")
+  end
 end
 
-dxos/react-components --> dxos/async;
-dxos/async --> dxos/debug;
-dxos/react-components --> dxos/react-async;
-dxos/react-components --> dxos/util;
-dxos/util --> dxos/debug;
-dxos/util --> dxos/protocols;
-dxos/protocols --> dxos/codec-protobuf;
+
+%% Hyperlinks
+click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/react-components:::rootNode
+
+dxos/async:::defaultNode
+dxos/debug:::defaultNode
+dxos/protocols:::defaultNode
+dxos/react-async:::defaultNode
+dxos/util:::defaultNode
 ```
 
 ## Dependencies

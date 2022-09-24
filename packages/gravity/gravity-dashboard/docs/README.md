@@ -5,27 +5,32 @@ Gravity dashboard.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/gravity-dashboard fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/gem-core "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-core/docs";
+%% Links
 
+%% Sections
 subgraph gravity
-  style gravity fill:#f5d6d7,stroke:#fff;
-  dxos/gravity-dashboard("@dxos/gravity-dashboard");
+  style gravity fill:#edabad,stroke:#fff;
+
+  dxos/gravity-dashboard("@dxos/gravity-dashboard")
 end
 
-subgraph gem
-  style gem fill:#d6e2f5,stroke:#fff;
-  dxos/gem-core("@dxos/gem-core");
-end
 
-dxos/gravity-dashboard --> dxos/gem-core;
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/gravity-dashboard:::rootNode
+
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |

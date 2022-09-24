@@ -30,7 +30,6 @@
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@babel/core": "^7.18.13",
-    "@dxos/log-hook": "workspace:*",
     "@types/color-hash": "^1.0.1",
     "@types/madge": "^5.0.0",
     "@types/minimatch": "^5.1.2",
