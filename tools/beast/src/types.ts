@@ -18,6 +18,6 @@ export type Project = {
   subdir: string
   package: PackageJson
   dependencies: Set<Project>
-  descendents?: Set<string>
+  descendents: Set<string>
   cycles?: string[][]
 }
