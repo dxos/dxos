@@ -1,5 +1,4 @@
 ---
-sidebar_position: 1
-sidebar_label: "Why DXOS?"
+position: 1
+label: "Why DXOS?"
 ---
-# Why DXOS?

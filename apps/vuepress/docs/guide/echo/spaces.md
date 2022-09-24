@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
-sidebar_label: Spaces
+position: 3
+label: Spaces
 ---
 
 ```tsx

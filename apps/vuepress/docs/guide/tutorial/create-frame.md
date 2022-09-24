@@ -1,6 +1,6 @@
 ---
-sidebar_position: 6
-sidebar_label: Create A Frame
+position: 6
+label: Create A Frame
 ---
 
 # Create A Frame

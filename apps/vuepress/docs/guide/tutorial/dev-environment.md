@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
-sidebar_label: Developer Environment
+position: 3
+label: Developer Environment
 ---
 
 # Developer Environment Setup

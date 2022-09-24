@@ -1,6 +1,6 @@
 ---
-sidebar_position: 7
-sidebar_label: Deploy Frame
+position: 7
+label: Deploy Frame
 ---
 
 # Deploy Frame

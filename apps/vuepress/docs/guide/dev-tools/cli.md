@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-sidebar_label: CLI
+position: 1
+label: CLI
 ---
 
 # CLI

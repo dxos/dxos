@@ -1,7 +1,6 @@
 ---
-sidebar_position: 1.5
-sidebar_label: Quick start
-title: Quick start
+position: 1.5
+label: Quick start
 ---
 ## Using an ECHO database for state consensus
 Install ECHO with your package manager of choice

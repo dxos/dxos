@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: Queries
+position: 2
+label: Queries
 ---
 # Querying data
 

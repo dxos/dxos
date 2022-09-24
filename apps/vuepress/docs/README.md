@@ -1,10 +1,23 @@
-# DXOS
-
-> DXOS is an Operating System for Decentralized Software.
-
-DXOS is a collection of several technologies:
-
-- **Local consensus: [`ECHO`](echo/overview)** - state synchronization under real-time multiple writers and latent offline writers between a group of peers
-- **Peer networking: [`MESH`](mesh/overview)** - peer discovery, NAT traversal
-- **Infrastructure: [`KUBE`](kube/overview)** - deploy and host your code making it available to the network
-- **Identity: [`HALO`](halo/overview)** - decentralized, private, secure, convenient identity
+---
+home: true
+title: Home
+heroImage: /images/hero.png
+heroImageDark: /images/hero.png
+actions:
+  - text: Get Started
+    link: /guide/quick-start.html
+    type: primary
+  - text: Introduction
+    link: /guide/
+    type: secondary
+features:
+  - title: 'Local consensus: ECHO'
+    details: State synchronization under real-time multiple writers and latent offline writers between a group of peers.
+  - title: 'Peer networking: MESH'
+    details: Peer discovery, NAT traversal.
+  - title: 'Infrastructure: KUBE'
+    details: Deploy and host your code making it available to the network.
+  - title: 'Identity: HALO'
+    details: Decentralized, private, secure, convenient identity.
+footer: MIT Licensed | Copyright © DXOS.org
+---

@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: KUBE
+position: 2
+label: KUBE
 ---
 
 # KUBE

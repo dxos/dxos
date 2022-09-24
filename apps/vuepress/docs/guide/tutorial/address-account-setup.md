@@ -1,6 +1,6 @@
 ---
-sidebar_position: 4
-sidebar_label: Address and Account Setup
+position: 4
+label: Address and Account Setup
 ---
 
 # Address and Account Setup

@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
-sidebar_label: Dev Tools
+position: 3
+label: Dev Tools
 ---
 
 # Dev Tools Web Extension

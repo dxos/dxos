@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: DXOS Overview
+position: 2
+label: DXOS Overview
 ---
 
 # Overview

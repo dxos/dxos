@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
-sidebar_label: Mutations
+position: 3
+label: Mutations
 ---
 # Mutating data
 

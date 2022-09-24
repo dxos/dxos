@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-sidebar_label: Getting Started
+position: 1
+label: Getting Started
 title: Getting Started
 ---
 import 'setimmediate';

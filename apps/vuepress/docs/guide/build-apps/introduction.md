@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-sidebar_label: Introduction
+position: 1
+label: Introduction
 ---
 # Developer Guide
 

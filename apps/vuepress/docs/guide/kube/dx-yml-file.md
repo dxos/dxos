@@ -1,6 +1,6 @@
 ---
-sidebar_position: 2
-sidebar_label: dx.yml file
+position: 2
+label: dx.yml file
 ---
 
 # `dx.yml` file

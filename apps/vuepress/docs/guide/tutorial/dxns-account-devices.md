@@ -1,6 +1,6 @@
 ---
-sidebar_position: 5
-sidebar_label: DXNS Account Devices
+position: 5
+label: DXNS Account Devices
 ---
 
 # DXNS Account Devices

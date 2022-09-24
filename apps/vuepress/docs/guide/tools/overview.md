@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-sidebar_label: Browser Devtool
+position: 1
+label: Browser Devtool
 ---
 
 # Browser Devtool
