@@ -1,9 +1,28 @@
 # @dxos/dx-cli
 
 CLI Test using oclif.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/dx-cli fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/client "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/plate "https:/github.com/dxos/dxos/tree/main/packages/fx/plate/docs";
+click dxos/file "https:/github.com/dxos/dxos/tree/main/packages/fx/file/docs";
 
 subgraph apps
   style apps fill:#d6f5f4,stroke:#fff;
@@ -54,6 +73,12 @@ subgraph mesh
   dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator");
 end
 
+subgraph fx
+  style fx fill:#f5d6e0,stroke:#fff;
+  dxos/plate("@dxos/plate");
+  dxos/file("@dxos/file");
+end
+
 dxos/async --> dxos/debug;
 dxos/dx-cli --> dxos/client;
 dxos/client --> dxos/config;
@@ -94,8 +119,12 @@ dxos/echo-db --> dxos/random-access-storage;
 dxos/random-access-storage --> dxos/log;
 dxos/client --> dxos/rpc-tunnel;
 dxos/rpc-tunnel --> dxos/rpc;
+dxos/dx-cli --> dxos/plate;
+dxos/plate --> dxos/file;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../packages/common/async/docs/README.md) | &check; |
@@ -104,8 +133,10 @@ dxos/rpc-tunnel --> dxos/rpc;
 | [`@dxos/config`](../../../packages/sdk/config/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../packages/echo/echo-db/docs/README.md) |  |
+| [`@dxos/file`](../../../packages/fx/file/docs/README.md) |  |
 | [`@dxos/messaging`](../../../packages/mesh/messaging/docs/README.md) |  |
 | [`@dxos/model-factory`](../../../packages/echo/model-factory/docs/README.md) |  |
+| [`@dxos/plate`](../../../packages/fx/plate/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../packages/common/protocols/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../packages/common/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../packages/common/rpc-tunnel/docs/README.md) |  |

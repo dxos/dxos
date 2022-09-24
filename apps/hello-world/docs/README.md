@@ -1,13 +1,36 @@
-# @dxos/hello-world
+# @dxos/hello-template
 
-Hello World.
+DXOS 'hello world' application template.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
 
-subgraph apps
-  style apps fill:#d6f5f4,stroke:#fff;
-  dxos/hello-world("@dxos/hello-world");
+style dxos/hello-template fill:#fff,stroke-width:4px;
+
+click dxos/client "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/react-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/bot-factory-client "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-components "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-toolkit "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/react-registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+
+subgraph templates
+  style templates fill:#f5ead6,stroke:#fff;
+  dxos/hello-template("@dxos/hello-template");
 end
 
 subgraph sdk
@@ -105,41 +128,43 @@ dxos/echo-db --> dxos/random-access-storage;
 dxos/random-access-storage --> dxos/log;
 dxos/client --> dxos/rpc-tunnel;
 dxos/rpc-tunnel --> dxos/rpc;
-dxos/hello-world --> dxos/react-client;
+dxos/hello-template --> dxos/react-client;
 dxos/react-client --> dxos/bot-factory-client;
 dxos/bot-factory-client --> dxos/protocol-plugin-rpc;
 dxos/protocol-plugin-rpc --> dxos/messaging;
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
 dxos/react-client --> dxos/client;
 dxos/react-client --> dxos/react-async;
-dxos/hello-world --> dxos/react-components;
+dxos/hello-template --> dxos/react-components;
 dxos/react-components --> dxos/async;
 dxos/react-components --> dxos/react-async;
 dxos/react-components --> dxos/util;
-dxos/hello-world --> dxos/react-toolkit;
+dxos/hello-template --> dxos/react-toolkit;
 dxos/react-toolkit --> dxos/react-async;
 dxos/react-toolkit --> dxos/react-registry-client;
 dxos/react-registry-client --> dxos/registry-client;
 dxos/registry-client --> dxos/config;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
-| [`@dxos/async`](../../../packages/common/async/docs/README.md) |  |
-| [`@dxos/bot-factory-client`](../../../packages/bot/bot-factory-client/docs/README.md) |  |
-| [`@dxos/client`](../../../packages/sdk/client/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../../packages/common/codec-protobuf/docs/README.md) |  |
-| [`@dxos/config`](../../../packages/sdk/config/docs/README.md) | &check; |
-| [`@dxos/debug`](../../../packages/common/debug/docs/README.md) |  |
-| [`@dxos/echo-db`](../../../packages/echo/echo-db/docs/README.md) |  |
-| [`@dxos/messaging`](../../../packages/mesh/messaging/docs/README.md) |  |
-| [`@dxos/model-factory`](../../../packages/echo/model-factory/docs/README.md) |  |
-| [`@dxos/protocols`](../../../packages/common/protocols/docs/README.md) |  |
-| [`@dxos/react-async`](../../../packages/common/react-async/docs/README.md) |  |
-| [`@dxos/react-client`](../../../packages/sdk/react-client/docs/README.md) | &check; |
-| [`@dxos/react-components`](../../../packages/sdk/react-components/docs/README.md) | &check; |
-| [`@dxos/react-registry-client`](../../../packages/sdk/react-registry-client/docs/README.md) |  |
-| [`@dxos/react-toolkit`](../../../packages/sdk/react-toolkit/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../packages/common/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../packages/common/rpc-tunnel/docs/README.md) |  |
-| [`@dxos/util`](../../../packages/common/util/docs/README.md) |  |
+| [`@dxos/async`](../../../../packages/common/async/docs/README.md) |  |
+| [`@dxos/bot-factory-client`](../../../../packages/bot/bot-factory-client/docs/README.md) |  |
+| [`@dxos/client`](../../../../packages/sdk/client/docs/README.md) | &check; |
+| [`@dxos/codec-protobuf`](../../../../packages/common/codec-protobuf/docs/README.md) |  |
+| [`@dxos/config`](../../../../packages/sdk/config/docs/README.md) | &check; |
+| [`@dxos/debug`](../../../../packages/common/debug/docs/README.md) |  |
+| [`@dxos/echo-db`](../../../../packages/echo/echo-db/docs/README.md) |  |
+| [`@dxos/messaging`](../../../../packages/mesh/messaging/docs/README.md) |  |
+| [`@dxos/model-factory`](../../../../packages/echo/model-factory/docs/README.md) |  |
+| [`@dxos/protocols`](../../../../packages/common/protocols/docs/README.md) |  |
+| [`@dxos/react-async`](../../../../packages/common/react-async/docs/README.md) |  |
+| [`@dxos/react-client`](../../../../packages/sdk/react-client/docs/README.md) | &check; |
+| [`@dxos/react-components`](../../../../packages/sdk/react-components/docs/README.md) | &check; |
+| [`@dxos/react-registry-client`](../../../../packages/sdk/react-registry-client/docs/README.md) |  |
+| [`@dxos/react-toolkit`](../../../../packages/sdk/react-toolkit/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../../../packages/common/rpc/docs/README.md) |  |
+| [`@dxos/rpc-tunnel`](../../../../packages/common/rpc-tunnel/docs/README.md) |  |
+| [`@dxos/util`](../../../../packages/common/util/docs/README.md) |  |

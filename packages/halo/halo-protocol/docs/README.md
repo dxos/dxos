@@ -1,9 +1,23 @@
 # @dxos/halo-protocol
 
 DXOS HALO Protocol
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/halo-protocol fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/feed-store "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph halo
   style halo fill:#e3d6f5,stroke:#fff;
@@ -45,7 +59,9 @@ dxos/credentials --> dxos/mesh-protocol;
 dxos/mesh-protocol --> dxos/async;
 dxos/mesh-protocol --> dxos/util;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

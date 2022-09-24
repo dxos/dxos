@@ -1,9 +1,16 @@
 # @dxos/protocol-network-generator
 
 Protocol network generator.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/protocol-network-generator fill:#fff,stroke-width:4px;
+
+click dxos/network-generator "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-generator/docs";
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
 
 subgraph mesh
   style mesh fill:#d6f5de,stroke:#fff;
@@ -21,7 +28,9 @@ dxos/protocol-network-generator --> dxos/network-generator;
 dxos/network-generator --> dxos/async;
 dxos/async --> dxos/debug;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |

@@ -89,7 +89,8 @@ const main = () => {
         processor.match(pattern).forEach(project => {
           console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
           processor.process(project.name, { filter });
-          processor.createDocs(project);
+          // TODO(burdon): Infer URL.
+          processor.createDocs(project, './docs', 'https://github.com/dxos/dxos');
         });
       }
     })

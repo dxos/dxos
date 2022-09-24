@@ -1,9 +1,35 @@
 # @dxos/lexical-editor
 
 Lexical text editor.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/lexical-editor fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/client "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/object-model "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/echo-protocol "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/react-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/bot-factory-client "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-components "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-toolkit "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/react-registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/text-model "https:/github.com/dxos/dxos/tree/main/packages/echo/text-model/docs";
 
 subgraph experimental
   style experimental fill:#d9f5d6,stroke:#fff;
@@ -125,7 +151,9 @@ dxos/registry-client --> dxos/config;
 dxos/lexical-editor --> dxos/text-model;
 dxos/text-model --> dxos/echo-db;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../../packages/common/async/docs/README.md) | &check; |

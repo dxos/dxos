@@ -1,9 +1,21 @@
 # @dxos/messaging
 
 Messaging
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/messaging fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph mesh
   style mesh fill:#d6f5de,stroke:#fff;
@@ -30,7 +42,9 @@ dxos/rpc --> dxos/util;
 dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

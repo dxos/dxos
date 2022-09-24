@@ -1,9 +1,19 @@
 # @dxos/react-components
 
 Low-level material components.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/react-components fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
 
 subgraph sdk
   style sdk fill:#f4f5d6,stroke:#fff;
@@ -28,7 +38,9 @@ dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 dxos/protocols --> dxos/codec-protobuf;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

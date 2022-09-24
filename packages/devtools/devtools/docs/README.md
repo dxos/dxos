@@ -1,9 +1,47 @@
 # @dxos/devtools
 
 
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/devtools fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/client "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/feed-store "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/devtools-mesh "https:/github.com/dxos/dxos/tree/main/packages/devtools/devtools-mesh/docs";
+click dxos/gem-core "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-core/docs";
+click dxos/gem-spore "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+click dxos/network-manager "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/protocol-plugin-presence "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/react-components "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-toolkit "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/echo-protocol "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/messenger-model "https:/github.com/dxos/dxos/tree/main/packages/echo/messenger-model/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/object-model "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/bot-factory-client "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/react-registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/text-model "https:/github.com/dxos/dxos/tree/main/packages/echo/text-model/docs";
 
 subgraph devtools
   style devtools fill:#d6f2f5,stroke:#fff;
@@ -64,6 +102,12 @@ subgraph mesh
   dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc");
 end
 
+subgraph gem
+  style gem fill:#d6e2f5,stroke:#fff;
+  dxos/gem-core("@dxos/gem-core");
+  dxos/gem-spore("@dxos/gem-spore");
+end
+
 subgraph bot
   style bot fill:#dfd6f5,stroke:#fff;
   dxos/bot-factory-client("@dxos/bot-factory-client");
@@ -109,6 +153,8 @@ dxos/random-access-storage --> dxos/log;
 dxos/client --> dxos/rpc-tunnel;
 dxos/rpc-tunnel --> dxos/rpc;
 dxos/devtools --> dxos/devtools-mesh;
+dxos/devtools-mesh --> dxos/gem-spore;
+dxos/gem-spore --> dxos/gem-core;
 dxos/devtools-mesh --> dxos/network-manager;
 dxos/devtools-mesh --> dxos/react-components;
 dxos/react-components --> dxos/async;
@@ -132,7 +178,9 @@ dxos/react-client --> dxos/react-async;
 dxos/devtools --> dxos/text-model;
 dxos/text-model --> dxos/echo-db;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
@@ -147,6 +195,8 @@ dxos/text-model --> dxos/echo-db;
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) |  |
 | [`@dxos/echo-protocol`](../../../echo/echo-protocol/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../echo/feed-store/docs/README.md) |  |
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) |  |
+| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) |  |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) | &check; |

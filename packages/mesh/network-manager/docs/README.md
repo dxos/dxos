@@ -1,9 +1,28 @@
 # @dxos/network-manager
 
 Network Manager
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/network-manager fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/feed-store "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/protocol-plugin-presence "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/broadcast "https:/github.com/dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 
 subgraph mesh
   style mesh fill:#d6f5de,stroke:#fff;
@@ -60,7 +79,9 @@ dxos/broadcast --> dxos/async;
 dxos/broadcast --> dxos/crypto;
 dxos/protocol-plugin-presence --> dxos/mesh-protocol;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

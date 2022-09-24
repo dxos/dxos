@@ -1,9 +1,19 @@
 # @dxos/vite-plugin
 
 Plugin to enable Vite to build DXOS apps.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/vite-plugin fill:#fff,stroke-width:4px;
+
+click dxos/config "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph tools
   style tools fill:#ded6f5,stroke:#fff;
@@ -29,7 +39,9 @@ dxos/config --> dxos/util;
 dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/codec-protobuf`](../../../packages/common/codec-protobuf/docs/README.md) |  |

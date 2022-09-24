@@ -1,9 +1,14 @@
 # @dxos/showcase
 
 Components that display other components and references to APIs.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/showcase fill:#fff,stroke-width:4px;
+
 
 subgraph tools
   style tools fill:#ded6f5,stroke:#fff;
@@ -11,6 +16,8 @@ subgraph tools
 end
 
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|

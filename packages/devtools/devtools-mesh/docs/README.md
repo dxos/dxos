@@ -1,9 +1,34 @@
 # @dxos/devtools-mesh
 
 
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/devtools-mesh fill:#fff,stroke-width:4px;
+
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/gem-core "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-core/docs";
+click dxos/gem-spore "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+click dxos/network-manager "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/protocol-plugin-presence "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/broadcast "https:/github.com/dxos/dxos/tree/main/packages/mesh/broadcast/docs";
+click dxos/react-components "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-toolkit "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/react-registry-client "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
 
 subgraph devtools
   style devtools fill:#d6f2f5,stroke:#fff;
@@ -21,6 +46,12 @@ subgraph common
   dxos/log("@dxos/log");
   dxos/rpc("@dxos/rpc");
   dxos/react-async("@dxos/react-async");
+end
+
+subgraph gem
+  style gem fill:#d6e2f5,stroke:#fff;
+  dxos/gem-core("@dxos/gem-core");
+  dxos/gem-spore("@dxos/gem-spore");
 end
 
 subgraph mesh
@@ -51,6 +82,8 @@ subgraph sdk
   dxos/registry-client("@dxos/registry-client");
 end
 
+dxos/devtools-mesh --> dxos/gem-spore;
+dxos/gem-spore --> dxos/gem-core;
 dxos/devtools-mesh --> dxos/network-manager;
 dxos/async --> dxos/debug;
 dxos/network-manager --> dxos/credentials;
@@ -86,7 +119,9 @@ dxos/config --> dxos/util;
 dxos/react-registry-client --> dxos/registry-client;
 dxos/registry-client --> dxos/config;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
@@ -95,6 +130,8 @@ dxos/registry-client --> dxos/config;
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) | &check; |

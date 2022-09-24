@@ -1,9 +1,16 @@
 # @dxos/protocols-toolchain
 
 
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/protocols-toolchain fill:#fff,stroke-width:4px;
+
+click dxos/toolchain-node-library "https:/github.com/dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
+click dxos/protobuf-compiler "https:/github.com/dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
 
 subgraph deprecated
   style deprecated fill:#d6dff5,stroke:#fff;
@@ -19,7 +26,9 @@ end
 dxos/protocols-toolchain --> dxos/toolchain-node-library;
 dxos/toolchain-node-library --> dxos/protobuf-compiler;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/protobuf-compiler`](../../../executors/protobuf-compiler/docs/README.md) |  |

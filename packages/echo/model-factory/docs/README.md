@@ -1,9 +1,19 @@
 # @dxos/model-factory
 
 ECHO model factory.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/model-factory fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph echo
   style echo fill:#d6e4f5,stroke:#fff;
@@ -26,7 +36,9 @@ dxos/model-factory --> dxos/util;
 dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

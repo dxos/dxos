@@ -1,9 +1,18 @@
 # @dxos/feed-store
 
 A consistent store for your hypercore feeds.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/feed-store fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
 
 subgraph echo
   style echo fill:#d6e4f5,stroke:#fff;
@@ -26,7 +35,9 @@ dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 dxos/protocols --> dxos/codec-protobuf;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

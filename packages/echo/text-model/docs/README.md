@@ -1,9 +1,33 @@
 # @dxos/text-model
 
 ECHO text model.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/text-model fill:#fff,stroke-width:4px;
+
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/echo-db "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/credentials "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-protocol "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/feed-store "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/model-factory "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/network-manager "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/object-model "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/protocol-plugin-presence "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocol-plugin-replicator "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/random-access-storage "https:/github.com/dxos/dxos/tree/main/packages/common/random-access-storage/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph echo
   style echo fill:#d6e4f5,stroke:#fff;
@@ -79,7 +103,9 @@ dxos/protocol-plugin-replicator --> dxos/mesh-protocol;
 dxos/echo-db --> dxos/random-access-storage;
 dxos/random-access-storage --> dxos/log;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |

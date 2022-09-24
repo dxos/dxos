@@ -1,9 +1,23 @@
 # @dxos/protocol-plugin-rpc
 
 Protocol plugin to be used with @dxos/rpc
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/protocol-plugin-rpc fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/messaging "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/log "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
 
 subgraph mesh
   style mesh fill:#d6f5de,stroke:#fff;
@@ -36,7 +50,9 @@ dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
 dxos/mesh-protocol --> dxos/async;
 dxos/mesh-protocol --> dxos/util;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |

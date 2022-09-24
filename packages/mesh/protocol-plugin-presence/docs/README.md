@@ -1,9 +1,21 @@
 # @dxos/protocol-plugin-presence
 
 Protocol plugin presence.
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/protocol-plugin-presence fill:#fff,stroke-width:4px;
+
+click dxos/broadcast "https:/github.com/dxos/dxos/tree/main/packages/mesh/broadcast/docs";
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/crypto "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/mesh-protocol "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
 
 subgraph mesh
   style mesh fill:#d6f5de,stroke:#fff;
@@ -34,7 +46,9 @@ dxos/mesh-protocol --> dxos/util;
 dxos/util --> dxos/debug;
 dxos/util --> dxos/protocols;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |

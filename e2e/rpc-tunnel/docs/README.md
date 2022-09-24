@@ -1,9 +1,23 @@
 # @dxos/rpc-tunnel-e2e
 
 
+
 ## Dependency Graph
+
 ```mermaid
 flowchart LR;
+
+style dxos/rpc-tunnel-e2e fill:#fff,stroke-width:4px;
+
+click dxos/async "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/codec-protobuf "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/protocols "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-components "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/util "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/rpc "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
 
 subgraph e2e
   style e2e fill:#d6e5f5,stroke:#fff;
@@ -40,7 +54,9 @@ dxos/rpc --> dxos/util;
 dxos/rpc-tunnel-e2e --> dxos/rpc-tunnel;
 dxos/rpc-tunnel --> dxos/rpc;
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../packages/common/async/docs/README.md) | &check; |
