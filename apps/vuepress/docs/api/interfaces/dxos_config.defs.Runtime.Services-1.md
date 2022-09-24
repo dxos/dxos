@@ -1,0 +1,134 @@
+# Interface: Services
+
+[defs](../modules/dxos_config.defs.md).[Runtime](../modules/dxos_config.defs.Runtime.md).Services
+
+Defined in:
+  file://./../../dxos/config.proto
+
+## Table of contents
+
+### Properties
+
+- [app](dxos_config.defs.Runtime.Services-1.md#app)
+- [bot](dxos_config.defs.Runtime.Services-1.md#bot)
+- [dxns](dxos_config.defs.Runtime.Services-1.md#dxns)
+- [ice](dxos_config.defs.Runtime.Services-1.md#ice)
+- [ipfs](dxos_config.defs.Runtime.Services-1.md#ipfs)
+- [kube](dxos_config.defs.Runtime.Services-1.md#kube)
+- [machine](dxos_config.defs.Runtime.Services-1.md#machine)
+- [publisher](dxos_config.defs.Runtime.Services-1.md#publisher)
+- [signal](dxos_config.defs.Runtime.Services-1.md#signal)
+
+## Properties
+
+### app
+
+• `Optional` **app**: [`AppServer`](dxos_config.defs.Runtime.Services.AppServer.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:542
+
+___
+
+### bot
+
+• `Optional` **bot**: [`BotFactory`](dxos_config.defs.Runtime.Services.BotFactory.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:568
+
+___
+
+### dxns
+
+• `Optional` **dxns**: [`Dxns`](dxos_config.defs.Runtime.Services.Dxns.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:547
+
+___
+
+### ice
+
+• `Optional` **ice**: [`Ice`](dxos_config.defs.Runtime.Services.Ice.md)[]
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:558
+
+___
+
+### ipfs
+
+• `Optional` **ipfs**: [`Ipfs`](dxos_config.defs.Runtime.Services.Ipfs.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:552
+
+___
+
+### kube
+
+• `Optional` **kube**: [`Kube`](dxos_config.defs.Runtime.Services.Kube-1.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:537
+
+___
+
+### machine
+
+• `Optional` **machine**: [`Machine`](dxos_config.defs.Runtime.Services.Machine.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:563
+
+___
+
+### publisher
+
+• `Optional` **publisher**: [`Publisher`](dxos_config.defs.Runtime.Services.Publisher.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:573
+
+___
+
+### signal
+
+• `Optional` **signal**: [`Signal`](dxos_config.defs.Runtime.Services.Signal.md)
+
+Options:
+  - proto3_optional = true
+
+#### Defined in
+
+packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:557

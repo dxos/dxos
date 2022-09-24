@@ -1,0 +1,72 @@
+# Class: DataMirror
+
+[@dxos/echo-db](../modules/dxos_echo_db.md).DataMirror
+
+Maintains subscriptions via DataService to create a local copy of the entities (items and links) in the database.
+
+Entities are updated using snapshots and mutations sourced from the DataService.
+Entity and model mutations are forwarded to the DataService.
+This class is analogous to ItemDemuxer but for databases running in remote mode.
+
+## Table of contents
+
+### Constructors
+
+- [constructor](dxos_echo_db.DataMirror.md#constructor)
+
+### Methods
+
+- [\_subscribeToUpdates](dxos_echo_db.DataMirror.md#_subscribetoupdates)
+- [open](dxos_echo_db.DataMirror.md#open)
+
+## Constructors
+
+### constructor
+
+• **new DataMirror**(`_itemManager`, `_dataService`, `_partyKey`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `_itemManager` | [`ItemManager`](dxos_echo_db.ItemManager.md) |
+| `_dataService` | `DataService` |
+| `_partyKey` | `PublicKey` |
+
+#### Defined in
+
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L28)
+
+## Methods
+
+### \_subscribeToUpdates
+
+▸ `Private` **_subscribeToUpdates**(`entity`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `entity` | [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\> |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L77)
+
+___
+
+### open
+
+▸ **open**(): `void`
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L34)

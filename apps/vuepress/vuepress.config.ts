@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { searchPlugin } from '@vuepress/plugin-search';
 import frontMatter from 'front-matter';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -71,6 +72,10 @@ const config: UserConfig = defineUserConfig({
         link: '/guide'
       },
       {
+        text: 'Reference',
+        link: '/api'
+      },
+      {
         text: 'Github',
         link: 'https://github.com/dxos/dxos'
       }
@@ -78,24 +83,32 @@ const config: UserConfig = defineUserConfig({
     sidebar: sidebar()
   }),
   plugins: [
+    searchPlugin(),
     // TODO(wittjosiah): Can these link to each other?
-    typedocPlugin({
-      entryPoints: ['../../packages/echo/echo-db/src/index.ts'],
-      tsconfig: '../../packages/echo/echo-db/tsconfig.json',
-      out: 'api/echo-db'
-    }),
-    typedocPlugin({
-      entryPoints: ['../../packages/echo/echo-protocol/src/index.ts'],
-      tsconfig: '../../packages/echo/echo-protocol/tsconfig.json',
-      out: 'api/echo-protocol'
-    })
-    // TODO(wittjosiah): This strategy doesn't work because it bunches everything together.
-    //   Might work if we fork the plugin and make it output the md files in a different structure based on the typedoc data?
     // typedocPlugin({
-    //   entryPoints: ['../../packages/echo/*'],
-    //   tsconfig: '../../tsconfig.json',
-    //   entryPointStrategy: 'packages'
+    //   entryPoints: ['../../packages/echo/echo-db/src/index.ts'],
+    //   tsconfig: '../../packages/echo/echo-db/tsconfig.json',
+    //   out: 'api/echo-db'
+    // }),
+    // typedocPlugin({
+    //   entryPoints: ['../../packages/echo/echo-protocol/src/index.ts'],
+    //   tsconfig: '../../packages/echo/echo-protocol/tsconfig.json',
+    //   out: 'api/echo-protocol'
     // })
+    // TODO(wittjosiah): This strategy doesn't work well because it bunches everything together.
+    //   Might work if we fork the plugin and make it output the md files in a different structure based on the typedoc data?
+    // TODO(wittjosiah): Running typedoc on everything is slooooow (~300s), also runs out of memory sometimes.
+    //   Can we take advantage of Nx cache to skip generation when nothing has changed?
+    typedocPlugin({
+      entryPoints: [
+        '../../packages/echo/*',
+        '../../packages/halo/*',
+        '../../packages/mesh/*',
+        '../../packages/sdk/*'
+      ],
+      tsconfig: '../../tsconfig.json',
+      entryPointStrategy: 'packages'
+    })
   ]
 });
 
