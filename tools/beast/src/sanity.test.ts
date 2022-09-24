@@ -3,11 +3,10 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import pick from 'lodash/pick';
-import { JSONFile } from 'packages/fx/file/src';
+import { it as test } from 'mocha';
 import path from 'path';
-import { Project } from "ts-morph";
+import { Project } from 'ts-morph';
 
 describe('Code analysis', () => {
   test('sanity', async () => {
@@ -23,11 +22,11 @@ describe('Code analysis', () => {
   });
 
   test('client', async () => {
-    const projectDir = path.join(__dirname, '../../..', 'packages/sdk/client')
+    const projectDir = path.join(__dirname, '../../..', 'packages/sdk/client');
 
     // https://ts-morph.com/navigation/getting-source-files
     const project = new Project({
-      tsConfigFilePath: path.join(projectDir, 'tsconfig.json'),
+      tsConfigFilePath: path.join(projectDir, 'tsconfig.json')
       // skipAddingFilesFromTsConfig: false
     });
 
