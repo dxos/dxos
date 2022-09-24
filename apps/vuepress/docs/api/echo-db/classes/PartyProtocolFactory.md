@@ -1,0 +1,116 @@
+# Class: PartyProtocolFactory
+
+Manages the party's connection to the network swarm.
+
+## Table of contents
+
+### Constructors
+
+- [constructor](PartyProtocolFactory.md#constructor)
+
+### Properties
+
+- [\_presencePlugin](PartyProtocolFactory.md#_presenceplugin)
+- [\_started](PartyProtocolFactory.md#_started)
+
+### Methods
+
+- [\_createProtocol](PartyProtocolFactory.md#_createprotocol)
+- [start](PartyProtocolFactory.md#start)
+- [stop](PartyProtocolFactory.md#stop)
+
+## Constructors
+
+### constructor
+
+• **new PartyProtocolFactory**(`_partyKey`, `_networkManager`, `_peerId`, `_credentials`)
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `_partyKey` | `PublicKey` |
+| `_networkManager` | `NetworkManager` |
+| `_peerId` | `PublicKey` |
+| `_credentials` | [`CredentialsProvider`](../interfaces/CredentialsProvider.md) |
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:26](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L26)
+
+## Properties
+
+### \_presencePlugin
+
+• `Private` `Readonly` **\_presencePlugin**: `PresencePlugin`
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:22](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L22)
+
+___
+
+### \_started
+
+• `Private` **\_started**: `boolean` = `false`
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:24](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L24)
+
+## Methods
+
+### \_createProtocol
+
+▸ `Private` **_createProtocol**(`channel`, `opts`, `extraPlugins`): `Protocol`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `channel` | `any` |
+| `opts` | `Object` |
+| `opts.initiator` | `boolean` |
+| `extraPlugins` | `Plugin`[] |
+
+#### Returns
+
+`Protocol`
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:67](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L67)
+
+___
+
+### start
+
+▸ **start**(`plugins`): `Promise`<`undefined` \| () => `Promise`<`void`\>\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `plugins` | `Plugin`[] |
+
+#### Returns
+
+`Promise`<`undefined` \| () => `Promise`<`void`\>\>
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:33](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L33)
+
+___
+
+### stop
+
+▸ **stop**(): `Promise`<`void`\>
+
+#### Returns
+
+`Promise`<`void`\>
+
+#### Defined in
+
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:57](https://github.com/dxos/dxos/blob/6b1348fed/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L57)

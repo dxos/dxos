@@ -3,9 +3,10 @@
 //
 
 import frontMatter from 'front-matter';
-import { readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { defaultTheme, defineUserConfig, SidebarGroupCollapsible, SidebarItem, UserConfig } from 'vuepress';
+import { typedocPlugin } from 'vuepress-plugin-typedoc/next';
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(join(__dirname, 'docs', path), 'utf-8');
@@ -19,6 +20,9 @@ const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   return [attributes.position, item];
 };
 
+// TODO(wittjosiah): Make recursive and see what it looks like in the UI.
+// TODO(wittjosiah): Match Zhena's desired tree shape for API docs.
+// TODO(wittjosiah): Generate navbar dropdown for API docs.
 const sidebar = () => readdirSync(join(__dirname, '/docs'))
   .filter(area => !area.includes('.'))
   .reduce((sidebar, area) => {
@@ -28,9 +32,8 @@ const sidebar = () => readdirSync(join(__dirname, '/docs'))
           return parseFrontMatter(join(area, section));
         }
 
-        const sectionInfo = JSON.parse(
-          readFileSync(join(__dirname, 'docs', area, section, '_category_.json'), 'utf-8')
-        );
+        const infoPath = join(__dirname, 'docs', area, section, '_category_.json');
+        const sectionInfo = existsSync(infoPath) ? JSON.parse(readFileSync(infoPath, 'utf-8')) : {};
 
         const children = readdirSync(join(__dirname, 'docs', area, section))
           .filter(page => page.endsWith('.md'))
@@ -39,7 +42,7 @@ const sidebar = () => readdirSync(join(__dirname, '/docs'))
           .map(([, page]) => page);
 
         return [sectionInfo.position, {
-          text: sectionInfo.label,
+          text: sectionInfo.label ?? section,
           collapsible: true,
           children
         }];
@@ -73,7 +76,27 @@ const config: UserConfig = defineUserConfig({
       }
     ],
     sidebar: sidebar()
-  })
+  }),
+  plugins: [
+    // TODO(wittjosiah): Can these link to each other?
+    typedocPlugin({
+      entryPoints: ['../../packages/echo/echo-db/src/index.ts'],
+      tsconfig: '../../packages/echo/echo-db/tsconfig.json',
+      out: 'api/echo-db'
+    }),
+    typedocPlugin({
+      entryPoints: ['../../packages/echo/echo-protocol/src/index.ts'],
+      tsconfig: '../../packages/echo/echo-protocol/tsconfig.json',
+      out: 'api/echo-protocol'
+    })
+    // TODO(wittjosiah): This strategy doesn't work because it bunches everything together.
+    //   Might work if we fork the plugin and make it output the md files in a different structure based on the typedoc data?
+    // typedocPlugin({
+    //   entryPoints: ['../../packages/echo/*'],
+    //   tsconfig: '../../tsconfig.json',
+    //   entryPointStrategy: 'packages'
+    // })
+  ]
 });
 
 export default config;
