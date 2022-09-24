@@ -271,7 +271,8 @@ export class Processor {
     {
       const hyperlinks = Array.from(project.descendents.values() ?? []).sort().map(project => {
         const subdir = this.projectsByPackage.get(project)!.subdir;
-        return `click ${safeName(project)} href "${path.join(baseUrl, subdir, docsDir)}";`;
+        // click dxos/crypto "dxos/dxos/tree/main/packages/sdk/client/docs";
+        return `click ${safeName(project)} "${path.join(baseUrl, subdir, docsDir)}";`;
       });
 
       content.push(['%% Hyperlinks', ...hyperlinks]);

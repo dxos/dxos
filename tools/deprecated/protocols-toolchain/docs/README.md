@@ -29,8 +29,8 @@ end
 
 
 %% Hyperlinks
-click dxos/protobuf-compiler href "https:/github.com/dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
-click dxos/toolchain-node-library href "https:/github.com/dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
+click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
+click dxos/toolchain-node-library "dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

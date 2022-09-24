@@ -34,8 +34,8 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/network-generator href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-generator/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/network-generator "dxos/dxos/tree/main/packages/mesh/network-generator/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

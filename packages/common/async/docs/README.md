@@ -26,7 +26,7 @@ end
 
 
 %% Hyperlinks
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
