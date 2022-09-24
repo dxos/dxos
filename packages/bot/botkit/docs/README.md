@@ -89,23 +89,23 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/bot-factory-client href "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocol-plugin-rpc href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

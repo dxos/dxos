@@ -19,6 +19,7 @@ dxos/credentials --> dxos/feed-store;
 dxos/credentials --> dxos/mesh-protocol;
 dxos/crypto --> dxos/protocols;
 dxos/dx-cli --> dxos/client;
+dxos/dx-cli --> dxos/plate;
 dxos/echo-db --> dxos/network-manager;
 dxos/echo-db --> dxos/object-model;
 dxos/echo-db --> dxos/protocol-plugin-replicator;
@@ -30,6 +31,7 @@ dxos/network-manager --> dxos/messaging;
 dxos/network-manager --> dxos/protocol-plugin-presence;
 dxos/object-model --> dxos/echo-protocol;
 dxos/object-model --> dxos/model-factory;
+dxos/plate --> dxos/file;
 dxos/protocol-plugin-presence --> dxos/broadcast;
 dxos/protocol-plugin-presence --> dxos/mesh-protocol;
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol;
@@ -98,20 +100,29 @@ subgraph mesh
   dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator")
 end
 
+subgraph fx
+  style fx fill:#e6b3c3,stroke:#fff;
+
+  dxos/file("@dxos/file")
+  dxos/plate("@dxos/plate")
+end
+
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/model-factory href "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/file "dxos/dxos/tree/main/packages/fx/file/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/plate "dxos/dxos/tree/main/packages/fx/plate/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
@@ -126,8 +137,10 @@ dxos/codec-protobuf:::defaultNode
 dxos/config:::defaultNode
 dxos/debug:::defaultNode
 dxos/echo-db:::defaultNode
+dxos/file:::defaultNode
 dxos/messaging:::defaultNode
 dxos/model-factory:::defaultNode
+dxos/plate:::defaultNode
 dxos/protocols:::defaultNode
 dxos/rpc:::defaultNode
 dxos/rpc-tunnel:::defaultNode
@@ -144,8 +157,10 @@ dxos/util:::defaultNode
 | [`@dxos/config`](../../../packages/sdk/config/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../packages/echo/echo-db/docs/README.md) |  |
+| [`@dxos/file`](../../../packages/fx/file/docs/README.md) |  |
 | [`@dxos/messaging`](../../../packages/mesh/messaging/docs/README.md) |  |
 | [`@dxos/model-factory`](../../../packages/echo/model-factory/docs/README.md) |  |
+| [`@dxos/plate`](../../../packages/fx/plate/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../packages/common/protocols/docs/README.md) | &check; |
 | [`@dxos/rpc`](../../../packages/common/rpc/docs/README.md) | &check; |
 | [`@dxos/rpc-tunnel`](../../../packages/common/rpc-tunnel/docs/README.md) |  |
