@@ -9,6 +9,10 @@ import { join } from 'path';
 import { defaultTheme, defineUserConfig, SidebarGroupCollapsible, SidebarItem, UserConfig } from 'vuepress';
 
 const DOCS_PATH = join(__dirname, '/docs');
+const PINNED_PACKAGES = [
+  '@dxos/client',
+  '@dxos/react-client'
+];
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(path, 'utf-8');
@@ -50,15 +54,80 @@ const sidebarSection = (path: string) => readdirSync(path)
   .sort(([a], [b]) => a - b)
   .map(([, section]) => section);
 
-const sidebar = () => readdirSync(DOCS_PATH)
-  .filter(area => !area.includes('.'))
-  .reduce((sidebar, area) => {
+const groupByModule = (list: string[]) => list.reduce<{ [key: string]: string[] }>((grouped, item) => {
+  const [module, entity] = item.split('.');
 
-    return {
-      ...sidebar,
-      [`/${area}`]: sidebarSection(join(__dirname, 'docs', area))
-    };
-  }, {});
+  return {
+    ...grouped,
+    [module]: [...(grouped[module] ?? []), entity]
+  };
+}, {});
+
+const apiSidebar = () => {
+  const apiPath = join(__dirname, 'docs', 'api');
+
+  const interfaceLookup = groupByModule(
+    readdirSync(join(apiPath, 'interfaces')).filter(interfaceFile => !interfaceFile.includes('defs'))
+  );
+
+  const enumLookup = groupByModule(
+    readdirSync(join(apiPath, 'enums')).filter(enumFile => !enumFile.includes('defs'))
+  );
+
+  const classLookup = groupByModule(
+    readdirSync(join(apiPath, 'classes')).filter(classFile => !classFile.includes('defs'))
+  );
+
+  const createChildren = (dir: string, module: string, entities: string[] | undefined) => entities?.map(entity => ({
+    text: entity,
+    link: `/api/${dir}/${module}.${entity}.md`
+  }));
+
+  const modules = readdirSync(join(apiPath, 'modules'))
+    // TODO(wittjosiah): Don't generate these.
+    .filter(module => !module.includes('defs'))
+    .filter(module => !module.includes('definitions'))
+    .map((module): SidebarGroupCollapsible => {
+      const key = module.split('.md')[0];
+      const packageName = `@dxos/${key.slice(5).replaceAll('_', '-')}`;
+
+      const interfaces = createChildren('interfaces', key, interfaceLookup[key]);
+      const enums = createChildren('enums', key, enumLookup[key]);
+      const classes = createChildren('classes', key, classLookup[key]);
+      const children = [
+        {
+          text: 'Package',
+          link: `/api/modules/${module}`
+        },
+        ...(interfaces ? [{
+          text: 'Interfaces',
+          collapsible: true,
+          children: interfaces
+        }] : []),
+        ...(enums ? [{
+          text: 'Enums',
+          collapsible: true,
+          children: enums
+        }] : []),
+        ...(classes ? [{
+          text: 'Classes',
+          collapsible: true,
+          children: classes
+        }] : [])
+      ];
+
+      return {
+        text: packageName,
+        collapsible: true,
+        children
+      };
+    });
+
+  return [
+    ...PINNED_PACKAGES.map(pinned => modules.find(({ text }) => text === pinned)),
+    ...modules.filter(({ text }) => !PINNED_PACKAGES.includes(text))
+  ].filter((module): module is SidebarGroupCollapsible => !!module);
+};
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
@@ -71,7 +140,6 @@ const config: UserConfig = defineUserConfig({
     docsRepo: 'dxos/dxos',
     docsBranch: 'wittjosiah/09-23-docs_Vuepress',
     docsDir: 'apps/vuepress/docs',
-    // TODO(wittjosiah): Generate navbar dropdown for API docs.
     navbar: [
       {
         text: 'Guide',
@@ -79,46 +147,28 @@ const config: UserConfig = defineUserConfig({
       },
       {
         text: 'Reference',
-        link: '/api'
+        children: PINNED_PACKAGES.map(text => {
+          const [, module] = text.split('/');
+
+          return {
+            text,
+            link: `/api/modules/dxos_${module.replaceAll('-', '_')}.md`
+          };
+        })
       },
       {
         text: 'Github',
         link: 'https://github.com/dxos/dxos'
       }
     ],
-    sidebar: sidebar()
+    sidebar: {
+      '/guide': sidebarSection(join(__dirname, 'docs', 'guide')),
+      '/api': apiSidebar()
+    }
   }),
   plugins: [
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin()
-    // TODO(wittjosiah): Match Zhena's desired tree shape for API docs. See typedoc-plugin-markdown.
-    // TODO(wittjosiah): Can these link to each other?
-    // typedocPlugin({
-    //   entryPoints: ['../../packages/echo/echo-db/src/index.ts'],
-    //   tsconfig: '../../packages/echo/echo-db/tsconfig.json',
-    //   out: 'api/echo-db'
-    // }),
-    // typedocPlugin({
-    //   entryPoints: ['../../packages/echo/echo-protocol/src/index.ts'],
-    //   tsconfig: '../../packages/echo/echo-protocol/tsconfig.json',
-    //   out: 'api/echo-protocol'
-    // })
-    // Typedoc Config: https://typedoc.org/guides/options
-    // Plugin Config: https://github.com/tgreyuk/typedoc-plugin-markdown/tree/master/packages/vuepress-plugin-typedoc#options
-    // TODO(wittjosiah): This strategy doesn't work well because it bunches everything together.
-    //   Might work if we fork the plugin and make it output the md files in a different structure based on the typedoc data?
-    // TODO(wittjosiah): Running typedoc on everything is slooooow (~300s), also runs out of memory sometimes.
-    //   Can we take advantage of Nx cache to skip generation when nothing has changed?
-    // typedocPlugin({
-    //   entryPoints: [
-    //     '../../packages/echo/*',
-    //     '../../packages/halo/*',
-    //     '../../packages/mesh/*',
-    //     '../../packages/sdk/*'
-    //   ],
-    //   tsconfig: '../../tsconfig.json',
-    //   entryPointStrategy: 'packages'
-    // })
   ]
 });
 
