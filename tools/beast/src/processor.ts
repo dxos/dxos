@@ -10,7 +10,7 @@ import path from 'path';
 import { PackageJson, Project, WorkspaceJson } from './types';
 
 const colorHash = new ColorHash({
-  lightness: 0.8,
+  lightness: 0.8
   // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
 });
 
@@ -91,7 +91,7 @@ export class Processor {
           } else {
             const deps = processDeps(dep, nextChain);
             deps.forEach(sub => {
-              project.descendents.add(sub.package.name)
+              project.descendents.add(sub.package.name);
             });
           }
         });
@@ -189,8 +189,8 @@ export class Processor {
         project.dependencies.forEach(sub => {
           // TODO(burdon): Option to show/hide transitive dependencies (light line).
           if (
-            !this.exclude.includes(sub.package.name)
-            && !Array.from(project.dependencies.values()).some(p => p.descendents.has(sub.package.name))
+            !this.exclude.includes(sub.package.name) &&
+            !Array.from(project.dependencies.values()).some(p => p.descendents.has(sub.package.name))
           ) {
             links.push(`${safeName(project.package.name)} --> ${safeName(sub.package.name)};`);
           }
@@ -238,7 +238,7 @@ export class Processor {
           if (this.exclude.includes(pkg)) {
             excluded.push(pkg);
           } else {
-            included.push(pkg)
+            included.push(pkg);
           }
           return [included, excluded];
         }, [[], []]);
@@ -301,7 +301,7 @@ export class Processor {
       flowchart: {
         curve: 'basis'
       }
-    }
+    };
 
     const defs = [
       '```mermaid',
