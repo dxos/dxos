@@ -5,19 +5,33 @@ Gem spore.
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/gem-spore fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/gem-core "https:/github.com/dxos/dxos/tree/main/packages/gem/gem-core/docs";
+%% Links
+dxos/gem-spore --> dxos/gem-core;
 
+%% Sections
 subgraph gem
-  style gem fill:#d6e2f5,stroke:#fff;
-  dxos/gem-spore("@dxos/gem-spore");
-  dxos/gem-core("@dxos/gem-core");
+  style gem fill:#b3c7e6,stroke:#fff;
+
+  dxos/gem-core("@dxos/gem-core")
+  dxos/gem-spore("@dxos/gem-spore")
 end
 
-dxos/gem-spore --> dxos/gem-core;
+
+%% Hyperlinks
+click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/gem-spore:::rootNode
+
+dxos/gem-core:::defaultNode
 ```
 
 ## Dependencies

@@ -26,7 +26,7 @@ end
 
 
 %% Hyperlinks
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

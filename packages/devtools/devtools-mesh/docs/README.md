@@ -15,9 +15,11 @@ dxos/credentials --> dxos/crypto;
 dxos/credentials --> dxos/feed-store;
 dxos/credentials --> dxos/mesh-protocol;
 dxos/crypto --> dxos/protocols;
+dxos/devtools-mesh --> dxos/gem-spore;
 dxos/devtools-mesh --> dxos/network-manager;
 dxos/devtools-mesh --> dxos/react-components;
 dxos/devtools-mesh --> dxos/react-toolkit;
+dxos/gem-spore --> dxos/gem-core;
 dxos/messaging --> dxos/rpc;
 dxos/network-manager --> dxos/credentials;
 dxos/network-manager --> dxos/messaging;
@@ -58,6 +60,13 @@ subgraph common
   end
 end
 
+subgraph gem
+  style gem fill:#b3c7e6,stroke:#fff;
+
+  dxos/gem-core("@dxos/gem-core")
+  dxos/gem-spore("@dxos/gem-spore")
+end
+
 subgraph mesh
   style mesh fill:#b3e6c0,stroke:#fff;
 
@@ -92,24 +101,26 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/broadcast href "https:/github.com/dxos/dxos/tree/main/packages/mesh/broadcast/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-components href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
-click dxos/react-registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
-click dxos/react-toolkit href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
+click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-registry-client "dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/react-toolkit "dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
@@ -124,6 +135,8 @@ dxos/codec-protobuf:::defaultNode
 dxos/credentials:::defaultNode
 dxos/crypto:::defaultNode
 dxos/debug:::defaultNode
+dxos/gem-core:::defaultNode
+dxos/gem-spore:::defaultNode
 dxos/log:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/messaging:::defaultNode
@@ -148,6 +161,8 @@ dxos/util:::defaultNode
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) | &check; |

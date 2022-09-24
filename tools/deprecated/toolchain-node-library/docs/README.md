@@ -27,7 +27,7 @@ end
 
 
 %% Hyperlinks
-click dxos/protobuf-compiler href "https:/github.com/dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
+click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

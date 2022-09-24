@@ -26,6 +26,7 @@ dxos/echo-db --> dxos/protocol-plugin-replicator;
 dxos/echo-db --> dxos/random-access-storage;
 dxos/echo-protocol --> dxos/credentials;
 dxos/echo-testing --> dxos/echo-db;
+dxos/gem-spore --> dxos/gem-core;
 dxos/kitchen-sink --> dxos/client-testing;
 dxos/kitchen-sink --> dxos/echo-testing;
 dxos/kitchen-sink --> dxos/react-client-testing;
@@ -49,6 +50,7 @@ dxos/react-client --> dxos/bot-factory-client;
 dxos/react-client --> dxos/client;
 dxos/react-client --> dxos/react-async;
 dxos/react-components --> dxos/react-async;
+dxos/react-echo-graph --> dxos/gem-spore;
 dxos/react-ipfs --> dxos/react-client;
 dxos/react-registry-client --> dxos/registry-client;
 dxos/react-toolkit --> dxos/react-async;
@@ -130,6 +132,13 @@ subgraph mesh
   dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc")
 end
 
+subgraph gem
+  style gem fill:#b3c7e6,stroke:#fff;
+
+  dxos/gem-core("@dxos/gem-core")
+  dxos/gem-spore("@dxos/gem-spore")
+end
+
 subgraph bot
   style bot fill:#c2b3e6,stroke:#fff;
 
@@ -138,40 +147,42 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/bot-factory-client href "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-click dxos/client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
-click dxos/client-testing href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client-testing/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/echo-protocol href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
-click dxos/echo-testing href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-testing/docs";
-click dxos/feed-store href "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/model-factory href "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/object-model href "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
-click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocol-plugin-replicator href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/random-access-storage href "https:/github.com/dxos/dxos/tree/main/packages/common/random-access-storage/docs";
-click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
-click dxos/react-client-testing href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client-testing/docs";
-click dxos/react-components href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
-click dxos/react-echo-graph href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs";
-click dxos/react-ipfs href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-ipfs/docs";
-click dxos/react-registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
-click dxos/react-toolkit href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/client-testing "dxos/dxos/tree/main/packages/sdk/client-testing/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/echo-testing "dxos/dxos/tree/main/packages/echo/echo-testing/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
+click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
+click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/react-client-testing "dxos/dxos/tree/main/packages/sdk/react-client-testing/docs";
+click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs";
+click dxos/react-ipfs "dxos/dxos/tree/main/packages/sdk/react-ipfs/docs";
+click dxos/react-registry-client "dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/react-toolkit "dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
@@ -193,6 +204,8 @@ dxos/echo-db:::defaultNode
 dxos/echo-protocol:::defaultNode
 dxos/echo-testing:::defaultNode
 dxos/feed-store:::defaultNode
+dxos/gem-core:::defaultNode
+dxos/gem-spore:::defaultNode
 dxos/log:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/messaging:::defaultNode
@@ -233,6 +246,8 @@ dxos/util:::defaultNode
 | [`@dxos/echo-protocol`](../../../../packages/echo/echo-protocol/docs/README.md) | &check; |
 | [`@dxos/echo-testing`](../../../../packages/echo/echo-testing/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../../packages/echo/feed-store/docs/README.md) |  |
+| [`@dxos/gem-core`](../../../../packages/gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../../../packages/gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../../packages/mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../../packages/mesh/messaging/docs/README.md) |  |
