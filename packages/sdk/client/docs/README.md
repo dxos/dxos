@@ -93,7 +93,7 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/async href "../../../../packages/common/async/docs";
 click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
 click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
