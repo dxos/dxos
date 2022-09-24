@@ -44,7 +44,7 @@ Utility class that wraps an `ObjectModel` and implements a linked list via key-v
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L22)
+[packages/echo/object-model/src/ordered-list.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L22)
 
 ## Properties
 
@@ -62,7 +62,7 @@ Utility class that wraps an `ObjectModel` and implements a linked list via key-v
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L20)
+[packages/echo/object-model/src/ordered-list.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L20)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L16)
+[packages/echo/object-model/src/ordered-list.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L16)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L18)
+[packages/echo/object-model/src/ordered-list.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L18)
 
 ## Accessors
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L30)
+[packages/echo/object-model/src/ordered-list.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L30)
 
 ___
 
@@ -112,7 +112,7 @@ Get ordered values.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L37)
+[packages/echo/object-model/src/ordered-list.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L37)
 
 ## Methods
 
@@ -126,7 +126,7 @@ Get ordered values.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L41)
+[packages/echo/object-model/src/ordered-list.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L41)
 
 ___
 
@@ -148,7 +148,7 @@ Clears the ordered set with the optional values.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L79)
+[packages/echo/object-model/src/ordered-list.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L79)
 
 ___
 
@@ -171,7 +171,7 @@ Links the ordered items, possibly linking them to existing items.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:104](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L104)
+[packages/echo/object-model/src/ordered-list.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L104)
 
 ___
 
@@ -187,7 +187,7 @@ Refresh list from properties.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L49)
+[packages/echo/object-model/src/ordered-list.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L49)
 
 ___
 
@@ -209,4 +209,4 @@ Removes the given element, possibly linked currently connected items.
 
 #### Defined in
 
-[packages/echo/object-model/src/ordered-list.ts:134](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/ordered-list.ts#L134)
+[packages/echo/object-model/src/ordered-list.ts:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/ordered-list.ts#L134)

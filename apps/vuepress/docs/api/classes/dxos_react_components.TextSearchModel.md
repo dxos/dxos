@@ -56,7 +56,7 @@ Simple text search model.
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L37)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L37)
 
 ## Properties
 
@@ -66,7 +66,7 @@ Simple text search model.
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L34)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L34)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L35)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L35)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L33)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L33)
 
 ## Accessors
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L42)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L42)
 
 ## Methods
 
@@ -128,7 +128,7 @@ SearchModel.setText
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L50)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L50)
 
 ___
 
@@ -164,4 +164,4 @@ SearchModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46)

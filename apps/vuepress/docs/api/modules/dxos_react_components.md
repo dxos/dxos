@@ -94,7 +94,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L13)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L13)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L25)
+[packages/sdk/react-components/src/VirtualTable.tsx:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L25)
 
 ___
 
@@ -135,7 +135,7 @@ Search result.
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L11)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L11)
 
 ___
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:287](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L287)
+[packages/sdk/react-components/src/VirtualTable.tsx:287](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L287)
 
 ## Variables
 
@@ -171,7 +171,7 @@ Example:
 
 #### Defined in
 
-[packages/sdk/react-components/src/BoxContainer.tsx:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/BoxContainer.tsx#L32)
+[packages/sdk/react-components/src/BoxContainer.tsx:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/BoxContainer.tsx#L32)
 
 ___
 
@@ -181,7 +181,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Icons/DXOS.tsx:9](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Icons/DXOS.tsx#L9)
+[packages/sdk/react-components/src/Icons/DXOS.tsx:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Icons/DXOS.tsx#L9)
 
 ## Functions
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:134](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L134)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L134)
 
 ___
 
@@ -221,7 +221,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyText.tsx:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L20)
+[packages/sdk/react-components/src/Clipboard/CopyText.tsx:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L20)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyToClipboard.tsx:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Clipboard/CopyToClipboard.tsx#L12)
+[packages/sdk/react-components/src/Clipboard/CopyToClipboard.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyToClipboard.tsx#L12)
 
 ___
 
@@ -266,7 +266,7 @@ Click-to-edit text field.
 
 #### Defined in
 
-[packages/sdk/react-components/src/CustomTextField.tsx:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/CustomTextField.tsx#L31)
+[packages/sdk/react-components/src/CustomTextField.tsx:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/CustomTextField.tsx#L31)
 
 ___
 
@@ -289,7 +289,7 @@ NOTE: In Affinity Designer resize (transform) then export with additional proper
 
 #### Defined in
 
-[packages/sdk/react-components/src/Icons/DXOS.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Icons/DXOS.tsx#L15)
+[packages/sdk/react-components/src/Icons/DXOS.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Icons/DXOS.tsx#L15)
 
 ___
 
@@ -310,7 +310,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:112](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L112)
+[packages/sdk/react-components/src/VirtualTable.tsx:112](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L112)
 
 ___
 
@@ -332,7 +332,7 @@ A standard dialog component that implements a non-modal implementation for testi
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:139](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L139)
+[packages/sdk/react-components/src/Dialog.tsx:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L139)
 
 ___
 
@@ -401,7 +401,7 @@ A stable generic icon based on a hash.
 
 #### Defined in
 
-[packages/sdk/react-components/src/HashIcon.tsx:88](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/HashIcon.tsx#L88)
+[packages/sdk/react-components/src/HashIcon.tsx:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/HashIcon.tsx#L88)
 
 ___
 
@@ -424,7 +424,7 @@ Works with JSON and other objects with nested values.
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:142](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L142)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L142)
 
 ___
 
@@ -445,7 +445,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/MemberList/MemberAvatar.tsx:62](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/MemberList/MemberAvatar.tsx#L62)
+[packages/sdk/react-components/src/MemberList/MemberAvatar.tsx:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/MemberList/MemberAvatar.tsx#L62)
 
 ___
 
@@ -468,7 +468,7 @@ List of member avatars.
 
 #### Defined in
 
-[packages/sdk/react-components/src/MemberList/MemberList.tsx:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/MemberList/MemberList.tsx#L16)
+[packages/sdk/react-components/src/MemberList/MemberList.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/MemberList/MemberList.tsx#L16)
 
 ___
 
@@ -488,7 +488,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L43)
+[packages/sdk/react-components/src/Dialog.tsx:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L43)
 
 ___
 
@@ -511,7 +511,7 @@ For example, this enables the testing of multiple dialogs in parallel from diffe
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:98](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L98)
+[packages/sdk/react-components/src/Dialog.tsx:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L98)
 
 ___
 
@@ -531,7 +531,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:155](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L155)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:155](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L155)
 
 ___
 
@@ -553,7 +553,7 @@ Displays a multi-digit passcode, which may optionally be editable.
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:90](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L90)
+[packages/sdk/react-components/src/Passcode.tsx:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L90)
 
 ___
 
@@ -574,7 +574,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/QRCode.tsx:8](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/QRCode.tsx#L8)
+[packages/sdk/react-components/src/QRCode.tsx:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/QRCode.tsx#L8)
 
 ___
 
@@ -596,7 +596,7 @@ Registry search with optional filters.
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L21)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L21)
 
 ___
 
@@ -616,7 +616,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Searchbar.tsx#L16)
+[packages/sdk/react-components/src/Searchbar.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L16)
 
 ___
 
@@ -637,7 +637,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/MemberList/MemberAvatar.tsx:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/MemberList/MemberAvatar.tsx#L43)
+[packages/sdk/react-components/src/MemberList/MemberAvatar.tsx:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/MemberList/MemberAvatar.tsx#L43)
 
 ___
 
@@ -657,7 +657,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Skeleton/Skeleton.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Skeleton/Skeleton.tsx#L15)
+[packages/sdk/react-components/src/Skeleton/Skeleton.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Skeleton/Skeleton.tsx#L15)
 
 ___
 
@@ -767,7 +767,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:313](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L313)
+[packages/sdk/react-components/src/VirtualTable.tsx:313](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L313)
 
 ___
 
@@ -801,4 +801,4 @@ const handleDownload = (data: Blob) => {
 
 #### Defined in
 
-[packages/sdk/react-components/src/Files/useFileDownload.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Files/useFileDownload.ts#L15)
+[packages/sdk/react-components/src/Files/useFileDownload.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Files/useFileDownload.ts#L15)

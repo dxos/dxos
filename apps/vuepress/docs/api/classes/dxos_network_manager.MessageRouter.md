@@ -46,7 +46,7 @@ Adds offer/answer RPC and reliable messaging.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L54)
+[packages/mesh/network-manager/src/signal/message-router.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L54)
 
 ## Properties
 
@@ -56,7 +56,7 @@ Adds offer/answer RPC and reliable messaging.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L51)
+[packages/mesh/network-manager/src/signal/message-router.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L51)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L49)
+[packages/mesh/network-manager/src/signal/message-router.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L49)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L38)
+[packages/mesh/network-manager/src/signal/message-router.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L38)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L39)
+[packages/mesh/network-manager/src/signal/message-router.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L39)
 
 ## Methods
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:142](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L142)
+[packages/mesh/network-manager/src/signal/message-router.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L142)
 
 ___
 
@@ -177,7 +177,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:176](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L176)
+[packages/mesh/network-manager/src/signal/message-router.ts:176](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L176)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:205](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L205)
+[packages/mesh/network-manager/src/signal/message-router.ts:205](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L205)
 
 ___
 
@@ -220,7 +220,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:163](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L163)
+[packages/mesh/network-manager/src/signal/message-router.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L163)
 
 ___
 
@@ -243,7 +243,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:119](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L119)
+[packages/mesh/network-manager/src/signal/message-router.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L119)
 
 ___
 
@@ -269,7 +269,7 @@ Offer/answer RPC.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:104](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L104)
+[packages/mesh/network-manager/src/signal/message-router.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L104)
 
 ___
 
@@ -292,7 +292,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L63)
+[packages/mesh/network-manager/src/signal/message-router.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L63)
 
 ___
 
@@ -318,4 +318,4 @@ Reliably send a signal to a peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/message-router.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/signal/message-router.ts#L95)
+[packages/mesh/network-manager/src/signal/message-router.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/message-router.ts#L95)

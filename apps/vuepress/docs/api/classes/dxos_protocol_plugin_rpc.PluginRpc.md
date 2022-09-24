@@ -35,7 +35,7 @@
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L49)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L49)
 
 ## Properties
 
@@ -45,7 +45,7 @@
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L47)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L47)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L45)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L45)
 
 ## Methods
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L81)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L81)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L58)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L58)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L72)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L72)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:89](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L89)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L89)
 
 ___
 
@@ -144,4 +144,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L51)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L51)

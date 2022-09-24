@@ -54,7 +54,7 @@ Implements Transport for WebRTC. Uses simple-peer under the hood.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L30)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L30)
 
 ## Properties
 
@@ -64,7 +64,7 @@ Implements Transport for WebRTC. Uses simple-peer under the hood.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L22)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L22)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L24)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L24)
 
 ___
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L26)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L26)
 
 ___
 
@@ -106,7 +106,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L28)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L28)
 
 ## Accessors
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L87)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L87)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L79)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L79)
 
 ___
 
@@ -148,7 +148,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L83)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L83)
 
 ## Methods
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:103](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L103)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L103)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:97](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L97)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L97)
 
 ___
 
@@ -204,4 +204,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:91](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L91)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L91)

@@ -22,7 +22,7 @@ Do not return deleted items. Default behaviour.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L47)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L47)
 
 ___
 
@@ -34,7 +34,7 @@ Return deleted and regular items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L51)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L51)
 
 ___
 
@@ -46,4 +46,4 @@ Return only deleted items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L55)
+[packages/echo/echo-db/src/packlets/database/selection/queries.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L55)

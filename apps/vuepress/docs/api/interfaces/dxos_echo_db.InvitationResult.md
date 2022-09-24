@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L40)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L40)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L39)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L39)

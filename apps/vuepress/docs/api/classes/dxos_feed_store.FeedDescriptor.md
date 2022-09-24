@@ -54,7 +54,7 @@ Abstract handler for an Hypercore instance.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L42)
+[packages/echo/feed-store/src/feed-descriptor.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L42)
 
 ## Properties
 
@@ -64,7 +64,7 @@ Abstract handler for an Hypercore instance.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L32)
+[packages/echo/feed-store/src/feed-descriptor.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L32)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L38)
+[packages/echo/feed-store/src/feed-descriptor.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L38)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L40)
+[packages/echo/feed-store/src/feed-descriptor.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L40)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L36)
+[packages/echo/feed-store/src/feed-descriptor.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L36)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L33)
+[packages/echo/feed-store/src/feed-descriptor.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L33)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L37)
+[packages/echo/feed-store/src/feed-descriptor.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L37)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L34)
+[packages/echo/feed-store/src/feed-descriptor.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L34)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L35)
+[packages/echo/feed-store/src/feed-descriptor.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L35)
 
 ## Accessors
 
@@ -148,7 +148,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:64](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L64)
+[packages/echo/feed-store/src/feed-descriptor.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L64)
 
 ___
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L73)
+[packages/echo/feed-store/src/feed-descriptor.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L73)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L69)
+[packages/echo/feed-store/src/feed-descriptor.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L69)
 
 ___
 
@@ -190,7 +190,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L77)
+[packages/echo/feed-store/src/feed-descriptor.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L77)
 
 ___
 
@@ -204,7 +204,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L81)
+[packages/echo/feed-store/src/feed-descriptor.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L81)
 
 ___
 
@@ -218,7 +218,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L85)
+[packages/echo/feed-store/src/feed-descriptor.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L85)
 
 ## Methods
 
@@ -256,7 +256,7 @@ to work with the RandomAccessStorage specified.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:124](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L124)
+[packages/echo/feed-store/src/feed-descriptor.ts:124](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L124)
 
 ___
 
@@ -270,7 +270,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:139](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L139)
+[packages/echo/feed-store/src/feed-descriptor.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L139)
 
 ___
 
@@ -290,7 +290,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:153](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L153)
+[packages/echo/feed-store/src/feed-descriptor.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L153)
 
 ___
 
@@ -306,7 +306,7 @@ Close the Hypercore referenced by the descriptor.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:109](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L109)
+[packages/echo/feed-store/src/feed-descriptor.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L109)
 
 ___
 
@@ -325,4 +325,4 @@ sure that the feed is not going to open again.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-descriptor.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-descriptor.ts#L95)
+[packages/echo/feed-store/src/feed-descriptor.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-descriptor.ts#L95)

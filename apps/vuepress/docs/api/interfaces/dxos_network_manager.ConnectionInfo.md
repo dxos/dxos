@@ -21,7 +21,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L26)
+[packages/mesh/network-manager/src/connection-log.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L26)
 
 ___
 
@@ -31,7 +31,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L25)
+[packages/mesh/network-manager/src/connection-log.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L25)
 
 ___
 
@@ -41,7 +41,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L23)
+[packages/mesh/network-manager/src/connection-log.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L23)
 
 ___
 
@@ -51,7 +51,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L22)
+[packages/mesh/network-manager/src/connection-log.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L22)
 
 ___
 
@@ -61,7 +61,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L21)
+[packages/mesh/network-manager/src/connection-log.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L21)
 
 ___
 
@@ -71,4 +71,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L24)
+[packages/mesh/network-manager/src/connection-log.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L24)

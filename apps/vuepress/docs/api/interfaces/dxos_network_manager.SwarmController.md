@@ -30,7 +30,7 @@ Initiate a connection.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/topology/topology.ts#L16)
+[packages/mesh/network-manager/src/topology/topology.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/topology.ts#L16)
 
 ___
 
@@ -52,7 +52,7 @@ Disconnect from a peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/topology/topology.ts#L21)
+[packages/mesh/network-manager/src/topology/topology.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/topology.ts#L21)
 
 ___
 
@@ -68,4 +68,4 @@ Get current state.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/topology/topology.ts#L11)
+[packages/mesh/network-manager/src/topology/topology.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/topology.ts#L11)

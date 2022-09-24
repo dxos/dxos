@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L15)
+[packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L15)

@@ -38,7 +38,7 @@ https://docs.ipfs.io/concepts/content-addressing
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L33)
+[packages/sdk/registry-client/src/api/cid.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L33)
 
 ## Properties
 
@@ -48,7 +48,7 @@ https://docs.ipfs.io/concepts/content-addressing
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L34)
+[packages/sdk/registry-client/src/api/cid.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L34)
 
 ## Methods
 
@@ -62,7 +62,7 @@ https://docs.ipfs.io/concepts/content-addressing
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L51)
+[packages/sdk/registry-client/src/api/cid.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L51)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L39)
+[packages/sdk/registry-client/src/api/cid.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L39)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L43)
+[packages/sdk/registry-client/src/api/cid.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L43)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L47)
+[packages/sdk/registry-client/src/api/cid.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L47)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L21)
+[packages/sdk/registry-client/src/api/cid.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L21)
 
 ___
 
@@ -150,4 +150,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L16)
+[packages/sdk/registry-client/src/api/cid.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L16)

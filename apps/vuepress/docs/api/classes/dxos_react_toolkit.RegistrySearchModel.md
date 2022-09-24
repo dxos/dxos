@@ -49,7 +49,7 @@ Filterable resource search model.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L46)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L46)
 
 ## Properties
 
@@ -59,7 +59,7 @@ Filterable resource search model.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L42)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L42)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L43)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L43)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L44)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L44)
 
 ___
 
@@ -89,7 +89,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L41)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L41)
 
 ## Accessors
 
@@ -107,7 +107,7 @@ SearchModel.results
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L55)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L55)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L51)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L51)
 
 ## Methods
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L78)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L78)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L63)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L63)
 
 ___
 
@@ -169,7 +169,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L73)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L73)
 
 ___
 
@@ -193,7 +193,7 @@ SearchModel.setText
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:68](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L68)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L68)
 
 ___
 
@@ -229,4 +229,4 @@ SearchModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L59)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L59)

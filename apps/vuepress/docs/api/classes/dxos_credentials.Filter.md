@@ -46,7 +46,7 @@ ANDs all supplied filters.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L32)
+[packages/halo/credentials/src/keys/filter.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L32)
 
 ___
 
@@ -69,7 +69,7 @@ Execute the filter over the supplied values.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L18)
+[packages/halo/credentials/src/keys/filter.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L18)
 
 ___
 
@@ -92,7 +92,7 @@ Filters objects for required key.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L53)
+[packages/halo/credentials/src/keys/filter.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L53)
 
 ___
 
@@ -114,7 +114,7 @@ Filters objects for required property.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L39)
+[packages/halo/credentials/src/keys/filter.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L39)
 
 ___
 
@@ -137,7 +137,7 @@ https://lodash.com/docs/#matches
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L61)
+[packages/halo/credentials/src/keys/filter.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L61)
 
 ___
 
@@ -159,7 +159,7 @@ Negates a filter.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L25)
+[packages/halo/credentials/src/keys/filter.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L25)
 
 ___
 
@@ -182,4 +182,4 @@ Filters objects for given property values.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L46)
+[packages/halo/credentials/src/keys/filter.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L46)

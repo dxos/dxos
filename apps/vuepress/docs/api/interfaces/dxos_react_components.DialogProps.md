@@ -467,7 +467,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L40)
+[packages/sdk/react-components/src/Dialog.tsx:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L40)
 
 ___
 
@@ -1549,7 +1549,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L39)
+[packages/sdk/react-components/src/Dialog.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L39)
 
 ___
 
@@ -1792,7 +1792,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L36)
+[packages/sdk/react-components/src/Dialog.tsx:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L36)
 
 ___
 
@@ -1816,7 +1816,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L37)
+[packages/sdk/react-components/src/Dialog.tsx:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L37)
 
 ___
 
@@ -2112,7 +2112,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L34)
+[packages/sdk/react-components/src/Dialog.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L34)
 
 ___
 
@@ -4461,7 +4461,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L38)
+[packages/sdk/react-components/src/Dialog.tsx:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L38)
 
 ___
 
@@ -4697,7 +4697,7 @@ MuiDialogProps.title
 
 #### Defined in
 
-[packages/sdk/react-components/src/Dialog.tsx:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Dialog.tsx#L35)
+[packages/sdk/react-components/src/Dialog.tsx:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Dialog.tsx#L35)
 
 ___
 

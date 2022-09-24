@@ -19,7 +19,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:6](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/types.ts#L6)
+[packages/echo/echo-db/src/halo/types.ts:6](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/types.ts#L6)
 
 ___
 
@@ -29,7 +29,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/types.ts#L7)
+[packages/echo/echo-db/src/halo/types.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/types.ts#L7)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/types.ts#L9)
+[packages/echo/echo-db/src/halo/types.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/types.ts#L9)
 
 ___
 
@@ -49,4 +49,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/types.ts#L8)
+[packages/echo/echo-db/src/halo/types.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/types.ts#L8)

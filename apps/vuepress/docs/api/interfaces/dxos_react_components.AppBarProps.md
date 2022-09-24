@@ -1418,7 +1418,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:62](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L62)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L62)
 
 ___
 
@@ -1442,7 +1442,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:63](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L63)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L63)
 
 ___
 
@@ -1452,7 +1452,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:64](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L64)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L64)
 
 ___
 

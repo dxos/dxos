@@ -81,7 +81,7 @@ If no KeyStore is supplied, in-memory key storage will be used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:295](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L295)
+[packages/halo/credentials/src/keys/keyring.ts:295](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L295)
 
 ## Properties
 
@@ -91,7 +91,7 @@ If no KeyStore is supplied, in-memory key storage will be used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:285](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L285)
+[packages/halo/credentials/src/keys/keyring.ts:285](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L285)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:284](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L284)
+[packages/halo/credentials/src/keys/keyring.ts:284](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L284)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:283](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L283)
+[packages/halo/credentials/src/keys/keyring.ts:283](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L283)
 
 ___
 
@@ -123,7 +123,7 @@ Event that is called on all key changes with updated array of keys.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:290](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L290)
+[packages/halo/credentials/src/keys/keyring.ts:290](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L290)
 
 ___
 
@@ -133,7 +133,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L79)
+[packages/halo/credentials/src/keys/keyring.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L79)
 
 ## Accessors
 
@@ -149,7 +149,7 @@ All keys as an array.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:302](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L302)
+[packages/halo/credentials/src/keys/keyring.ts:302](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L302)
 
 ## Methods
 
@@ -175,7 +175,7 @@ A copy of the KeyRecord, minus secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:369](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L369)
+[packages/halo/credentials/src/keys/keyring.ts:369](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L369)
 
 ___
 
@@ -201,7 +201,7 @@ A copy of the KeyRecord, minus secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:393](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L393)
+[packages/halo/credentials/src/keys/keyring.ts:393](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L393)
 
 ___
 
@@ -223,7 +223,7 @@ Find one key matching the indicated criteria: 'party', 'type', etc.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:530](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L530)
+[packages/halo/credentials/src/keys/keyring.ts:530](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L530)
 
 ___
 
@@ -245,7 +245,7 @@ Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:512](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L512)
+[packages/halo/credentials/src/keys/keyring.ts:512](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L512)
 
 ___
 
@@ -269,7 +269,7 @@ A copy of the KeyRecord, without secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:341](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L341)
+[packages/halo/credentials/src/keys/keyring.ts:341](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L341)
 
 ___
 
@@ -293,7 +293,7 @@ A copy of the KeyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:353](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L353)
+[packages/halo/credentials/src/keys/keyring.ts:353](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L353)
 
 ___
 
@@ -318,7 +318,7 @@ New KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:627](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L627)
+[packages/halo/credentials/src/keys/keyring.ts:627](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L627)
 
 ___
 
@@ -334,7 +334,7 @@ Delete every keyRecord. Safe to continue to use the object.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:324](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L324)
+[packages/halo/credentials/src/keys/keyring.ts:324](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L324)
 
 ___
 
@@ -356,7 +356,7 @@ Deletes the secretKey from a stored KeyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:438](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L438)
+[packages/halo/credentials/src/keys/keyring.ts:438](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L438)
 
 ___
 
@@ -376,7 +376,7 @@ Export the Keyring contents.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:600](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L600)
+[packages/halo/credentials/src/keys/keyring.ts:600](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L600)
 
 ___
 
@@ -401,7 +401,7 @@ KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:543](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L543)
+[packages/halo/credentials/src/keys/keyring.ts:543](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L543)
 
 ___
 
@@ -426,7 +426,7 @@ KeyRecords, without secretKeys
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:522](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L522)
+[packages/halo/credentials/src/keys/keyring.ts:522](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L522)
 
 ___
 
@@ -450,7 +450,7 @@ C, then C would, and so forth back to the root (A).
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:726](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L726)
+[packages/halo/credentials/src/keys/keyring.ts:726](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L726)
 
 ___
 
@@ -472,7 +472,7 @@ Return the keyRecord from the keyring, if present.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:488](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L488)
+[packages/halo/credentials/src/keys/keyring.ts:488](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L488)
 
 ___
 
@@ -497,7 +497,7 @@ KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:501](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L501)
+[packages/halo/credentials/src/keys/keyring.ts:501](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L501)
 
 ___
 
@@ -519,7 +519,7 @@ Is the publicKey in the keyring?
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:468](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L468)
+[packages/halo/credentials/src/keys/keyring.ts:468](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L468)
 
 ___
 
@@ -541,7 +541,7 @@ Returns true if the stored KeyRecord has a secretKey available.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:455](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L455)
+[packages/halo/credentials/src/keys/keyring.ts:455](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L455)
 
 ___
 
@@ -563,7 +563,7 @@ Import KeyRecords into the KeyRing.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:609](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L609)
+[packages/halo/credentials/src/keys/keyring.ts:609](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L609)
 
 ___
 
@@ -585,7 +585,7 @@ Tests if the given key is trusted.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:478](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L478)
+[packages/halo/credentials/src/keys/keyring.ts:478](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L478)
 
 ___
 
@@ -601,7 +601,7 @@ Load keys from the KeyStore.  This call is required when using a persistent KeyS
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:309](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L309)
+[packages/halo/credentials/src/keys/keyring.ts:309](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L309)
 
 ___
 
@@ -623,7 +623,7 @@ Load keys from supplied JSON into the Keyring.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:576](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L576)
+[packages/halo/credentials/src/keys/keyring.ts:576](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L576)
 
 ___
 
@@ -644,7 +644,7 @@ Application-wide Keyring metrics.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:811](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L811)
+[packages/halo/credentials/src/keys/keyring.ts:811](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L811)
 
 ___
 
@@ -672,7 +672,7 @@ KeyChains are not supported.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:667](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L667)
+[packages/halo/credentials/src/keys/keyring.ts:667](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L667)
 
 ___
 
@@ -705,7 +705,7 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:642](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L642)
+[packages/halo/credentials/src/keys/keyring.ts:642](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L642)
 
 ___
 
@@ -721,7 +721,7 @@ Serialize the Keyring contents to JSON.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:552](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L552)
+[packages/halo/credentials/src/keys/keyring.ts:552](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L552)
 
 ___
 
@@ -746,7 +746,7 @@ A copy of the KeyRecord, without secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:414](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L414)
+[packages/halo/credentials/src/keys/keyring.ts:414](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L414)
 
 ___
 
@@ -773,7 +773,7 @@ If `requireAllKeysBeTrusted` is true, ALL keys must be known and trusted.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:688](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L688)
+[packages/halo/credentials/src/keys/keyring.ts:688](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L688)
 
 ___
 
@@ -798,7 +798,7 @@ by the hexlified PublicKeyLike. If a single message admits more than one key, it
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:157](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L157)
+[packages/halo/credentials/src/keys/keyring.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L157)
 
 ___
 
@@ -819,7 +819,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L88)
+[packages/halo/credentials/src/keys/keyring.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L88)
 
 ___
 
@@ -841,7 +841,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L83)
+[packages/halo/credentials/src/keys/keyring.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L83)
 
 ___
 
@@ -871,7 +871,7 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:100](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L100)
+[packages/halo/credentials/src/keys/keyring.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L100)
 
 ___
 
@@ -893,7 +893,7 @@ Creates a search filter for a key that can be used for signing.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:271](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L271)
+[packages/halo/credentials/src/keys/keyring.ts:271](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L271)
 
 ___
 
@@ -918,7 +918,7 @@ What keys were used to sign this message?
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:201](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L201)
+[packages/halo/credentials/src/keys/keyring.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L201)
 
 ___
 
@@ -943,7 +943,7 @@ This does not check that the key is trusted, only that the signature is valid.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:253](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L253)
+[packages/halo/credentials/src/keys/keyring.ts:253](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L253)
 
 ___
 
@@ -966,4 +966,4 @@ This does not check that the keys are trusted, only that the signatures are vali
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:233](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring.ts#L233)
+[packages/halo/credentials/src/keys/keyring.ts:233](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L233)

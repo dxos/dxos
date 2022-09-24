@@ -30,7 +30,7 @@ Wrapper (e.g., for Party).
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/logging/tree.ts#L14)
+[packages/sdk/client-testing/src/logging/tree.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L14)
 
 ## Properties
 
@@ -40,7 +40,7 @@ Wrapper (e.g., for Party).
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/logging/tree.ts#L16)
+[packages/sdk/client-testing/src/logging/tree.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L16)
 
 ___
 
@@ -50,4 +50,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/logging/tree.ts#L15)
+[packages/sdk/client-testing/src/logging/tree.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L15)

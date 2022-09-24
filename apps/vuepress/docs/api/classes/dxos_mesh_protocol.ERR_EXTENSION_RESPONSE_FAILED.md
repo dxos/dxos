@@ -53,7 +53,7 @@ nanoerror(&#x27;ERR\_EXTENSION\_RESPONSE\_FAILED&#x27;, &#x27;[extension: %s] [r
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L20)
+[packages/mesh/mesh-protocol/src/errors.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L20)
 
 ## Properties
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L21)
+[packages/mesh/mesh-protocol/src/errors.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L21)
 
 ___
 
@@ -91,7 +91,7 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/shims.d.ts#L12)
+[packages/mesh/mesh-protocol/src/shims.d.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L12)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L22)
+[packages/mesh/mesh-protocol/src/errors.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L22)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L23)
+[packages/mesh/mesh-protocol/src/errors.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L23)
 
 ___
 
@@ -253,7 +253,7 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/shims.d.ts#L9)
+[packages/mesh/mesh-protocol/src/shims.d.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L9)
 
 ___
 
@@ -277,4 +277,4 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/shims.d.ts#L10)
+[packages/mesh/mesh-protocol/src/shims.d.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L10)

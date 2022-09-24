@@ -48,7 +48,7 @@ Useful for testing code which relies on the DXNS registry without connecting to 
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L29)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L29)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L31)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L31)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L30)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L30)
 
 ## Methods
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L37)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L37)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L107)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L107)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L76)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L76)
 
 ___
 
@@ -158,7 +158,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L46)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L46)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:111](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L111)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L111)
 
 ___
 
@@ -194,7 +194,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L80)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L80)
 
 ___
 
@@ -218,7 +218,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L50)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L50)
 
 ___
 
@@ -239,7 +239,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L60)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L60)
 
 ___
 
@@ -263,7 +263,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L115)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L115)
 
 ___
 
@@ -289,4 +289,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L84)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L84)

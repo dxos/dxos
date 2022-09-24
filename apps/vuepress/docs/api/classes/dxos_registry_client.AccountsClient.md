@@ -32,7 +32,7 @@ Main API for DXNS account and devices management.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L12)
+[packages/sdk/registry-client/src/api/accounts-client.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L12)
 
 ## Methods
 
@@ -55,7 +55,7 @@ Add a new device to an existing DXNS account.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L40)
+[packages/sdk/registry-client/src/api/accounts-client.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L40)
 
 ___
 
@@ -78,7 +78,7 @@ Is the given device a listed device of this DXNS account?
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L47)
+[packages/sdk/registry-client/src/api/accounts-client.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L47)
 
 ___
 
@@ -94,7 +94,7 @@ Creates a DXNS account on the blockchain.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L33)
+[packages/sdk/registry-client/src/api/accounts-client.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L33)
 
 ___
 
@@ -116,7 +116,7 @@ Get the account details.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L19)
+[packages/sdk/registry-client/src/api/accounts-client.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L19)
 
 ___
 
@@ -132,4 +132,4 @@ List accounts in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts-client.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts-client.ts#L26)
+[packages/sdk/registry-client/src/api/accounts-client.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts-client.ts#L26)

@@ -47,7 +47,7 @@ Example: dxn://example:foo/bar
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L57)
+[packages/sdk/registry-client/src/api/dxn.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L57)
 
 ## Properties
 
@@ -57,7 +57,7 @@ Example: dxn://example:foo/bar
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L58)
+[packages/sdk/registry-client/src/api/dxn.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L58)
 
 ___
 
@@ -67,7 +67,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L59)
+[packages/sdk/registry-client/src/api/dxn.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L59)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L60)
+[packages/sdk/registry-client/src/api/dxn.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L60)
 
 ## Methods
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L78)
+[packages/sdk/registry-client/src/api/dxn.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L78)
 
 ___
 
@@ -116,7 +116,7 @@ Create new DXN overriding specified fields.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L66)
+[packages/sdk/registry-client/src/api/dxn.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L66)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L32)
+[packages/sdk/registry-client/src/api/dxn.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L32)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L38)
+[packages/sdk/registry-client/src/api/dxn.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L38)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L88)
+[packages/sdk/registry-client/src/api/dxn.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L88)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L14)
+[packages/sdk/registry-client/src/api/dxn.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L14)
 
 ___
 
@@ -220,7 +220,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L51)
+[packages/sdk/registry-client/src/api/dxn.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L51)
 
 ___
 
@@ -240,7 +240,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L45)
+[packages/sdk/registry-client/src/api/dxn.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L45)
 
 ___
 
@@ -265,7 +265,7 @@ Must not have multiple hyphens in a row or end with a hyphen.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:99](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L99)
+[packages/sdk/registry-client/src/api/dxn.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L99)
 
 ___
 
@@ -291,7 +291,7 @@ Must not have multiple periods in a row or end with a period or hyphen.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:123](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L123)
+[packages/sdk/registry-client/src/api/dxn.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L123)
 
 ___
 
@@ -313,4 +313,4 @@ Validates DXN tag.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:142](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L142)
+[packages/sdk/registry-client/src/api/dxn.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L142)

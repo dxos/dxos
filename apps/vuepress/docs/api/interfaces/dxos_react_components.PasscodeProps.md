@@ -25,7 +25,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:75](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L75)
+[packages/sdk/react-components/src/Passcode.tsx:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L75)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:76](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L76)
+[packages/sdk/react-components/src/Passcode.tsx:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L76)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:79](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L79)
+[packages/sdk/react-components/src/Passcode.tsx:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L79)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:82](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L82)
+[packages/sdk/react-components/src/Passcode.tsx:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L82)
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:83](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L83)
+[packages/sdk/react-components/src/Passcode.tsx:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L83)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:81](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L81)
+[packages/sdk/react-components/src/Passcode.tsx:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L81)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:77](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L77)
+[packages/sdk/react-components/src/Passcode.tsx:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L77)
 
 ___
 
@@ -123,7 +123,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L78)
+[packages/sdk/react-components/src/Passcode.tsx:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L78)
 
 ___
 
@@ -133,7 +133,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L84)
+[packages/sdk/react-components/src/Passcode.tsx:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L84)
 
 ___
 
@@ -143,4 +143,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Passcode.tsx:80](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Passcode.tsx#L80)
+[packages/sdk/react-components/src/Passcode.tsx:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Passcode.tsx#L80)

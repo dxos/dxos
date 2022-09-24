@@ -48,7 +48,7 @@ Invitation created by sender.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L39)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L39)
 
 ## Properties
 
@@ -58,7 +58,7 @@ Invitation created by sender.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L15)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L15)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L17)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L17)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L37)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L37)
 
 ___
 
@@ -90,7 +90,7 @@ Fired when the remote peer connects.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L24)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L24)
 
 ___
 
@@ -102,7 +102,7 @@ Fired when there's an error in the invitation process.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L35)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L35)
 
 ___
 
@@ -114,7 +114,7 @@ Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L29)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L29)
 
 ## Accessors
 
@@ -128,7 +128,7 @@ Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L54)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L54)
 
 ___
 
@@ -144,7 +144,7 @@ True if the connected event has been fired.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L65)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L65)
 
 ___
 
@@ -158,7 +158,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L58)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L58)
 
 ## Methods
 
@@ -174,7 +174,7 @@ Cancel the invitation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L83)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L83)
 
 ___
 
@@ -188,7 +188,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:89](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L89)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L89)
 
 ___
 
@@ -210,4 +210,4 @@ Wait until connected.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L72)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L72)

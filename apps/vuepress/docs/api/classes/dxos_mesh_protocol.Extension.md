@@ -79,7 +79,7 @@ Nanomessage.constructor
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:96](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L96)
+[packages/mesh/mesh-protocol/src/extension.ts:96](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L96)
 
 ## Properties
 
@@ -89,7 +89,7 @@ Nanomessage.constructor
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L53)
+[packages/mesh/mesh-protocol/src/extension.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L53)
 
 ___
 
@@ -101,7 +101,7 @@ Close handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L76)
+[packages/mesh/mesh-protocol/src/extension.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L76)
 
 ___
 
@@ -113,7 +113,7 @@ Feed handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L87)
+[packages/mesh/mesh-protocol/src/extension.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L87)
 
 ___
 
@@ -125,7 +125,7 @@ Handshake handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:71](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L71)
+[packages/mesh/mesh-protocol/src/extension.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L71)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L66)
+[packages/mesh/mesh-protocol/src/extension.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L66)
 
 ___
 
@@ -147,7 +147,7 @@ Message handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:82](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L82)
+[packages/mesh/mesh-protocol/src/extension.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L82)
 
 ___
 
@@ -157,7 +157,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L52)
+[packages/mesh/mesh-protocol/src/extension.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L52)
 
 ___
 
@@ -167,7 +167,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L62)
+[packages/mesh/mesh-protocol/src/extension.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L62)
 
 ___
 
@@ -177,7 +177,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:64](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L64)
+[packages/mesh/mesh-protocol/src/extension.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L64)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:89](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L89)
+[packages/mesh/mesh-protocol/src/extension.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L89)
 
 ___
 
@@ -197,7 +197,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L57)
+[packages/mesh/mesh-protocol/src/extension.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L57)
 
 ___
 
@@ -207,7 +207,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L58)
+[packages/mesh/mesh-protocol/src/extension.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L58)
 
 ___
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L60)
+[packages/mesh/mesh-protocol/src/extension.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L60)
 
 ___
 
@@ -227,7 +227,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L54)
+[packages/mesh/mesh-protocol/src/extension.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L54)
 
 ___
 
@@ -237,7 +237,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L55)
+[packages/mesh/mesh-protocol/src/extension.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L55)
 
 ___
 
@@ -247,7 +247,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L56)
+[packages/mesh/mesh-protocol/src/extension.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L56)
 
 ___
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L59)
+[packages/mesh/mesh-protocol/src/extension.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L59)
 
 ## Accessors
 
@@ -271,7 +271,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:113](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L113)
+[packages/mesh/mesh-protocol/src/extension.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L113)
 
 ## Methods
 
@@ -293,7 +293,7 @@ Wrap a message in a `dxos.protocol.Buffer` if required to be sent over the wire.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:351](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L351)
+[packages/mesh/mesh-protocol/src/extension.ts:351](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L351)
 
 ___
 
@@ -307,7 +307,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:298](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L298)
+[packages/mesh/mesh-protocol/src/extension.ts:298](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L298)
 
 ___
 
@@ -329,7 +329,7 @@ _onMessage from Nanomessagerpc
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:329](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L329)
+[packages/mesh/mesh-protocol/src/extension.ts:329](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L329)
 
 ___
 
@@ -343,7 +343,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:286](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L286)
+[packages/mesh/mesh-protocol/src/extension.ts:286](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L286)
 
 ___
 
@@ -367,7 +367,7 @@ _send in Nanomessage
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:317](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L317)
+[packages/mesh/mesh-protocol/src/extension.ts:317](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L317)
 
 ___
 
@@ -387,7 +387,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:310](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L310)
+[packages/mesh/mesh-protocol/src/extension.ts:310](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L310)
 
 ___
 
@@ -409,7 +409,7 @@ Feed event.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:230](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L230)
+[packages/mesh/mesh-protocol/src/extension.ts:230](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L230)
 
 ___
 
@@ -425,7 +425,7 @@ Handshake event.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:209](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L209)
+[packages/mesh/mesh-protocol/src/extension.ts:209](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L209)
 
 ___
 
@@ -439,7 +439,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:189](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L189)
+[packages/mesh/mesh-protocol/src/extension.ts:189](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L189)
 
 ___
 
@@ -461,7 +461,7 @@ Initializes the extension.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:171](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L171)
+[packages/mesh/mesh-protocol/src/extension.ts:171](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L171)
 
 ___
 
@@ -487,7 +487,7 @@ Response from peer.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:253](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L253)
+[packages/mesh/mesh-protocol/src/extension.ts:253](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L253)
 
 ___
 
@@ -509,7 +509,7 @@ Sets the close stream handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:138](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L138)
+[packages/mesh/mesh-protocol/src/extension.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L138)
 
 ___
 
@@ -531,7 +531,7 @@ Sets the message handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:160](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L160)
+[packages/mesh/mesh-protocol/src/extension.ts:160](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L160)
 
 ___
 
@@ -553,7 +553,7 @@ Sets the handshake handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:127](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L127)
+[packages/mesh/mesh-protocol/src/extension.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L127)
 
 ___
 
@@ -573,7 +573,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:117](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L117)
+[packages/mesh/mesh-protocol/src/extension.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L117)
 
 ___
 
@@ -595,4 +595,4 @@ Sets the message handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:149](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L149)
+[packages/mesh/mesh-protocol/src/extension.ts:149](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L149)

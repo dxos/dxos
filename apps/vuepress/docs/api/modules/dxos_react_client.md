@@ -51,9 +51,9 @@
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L18)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L18)
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L57)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L57)
 
 ## Variables
 
@@ -63,7 +63,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L12)
+[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L12)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/context.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/client/context.ts#L13)
+[packages/sdk/react-client/src/hooks/client/context.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/client/context.ts#L13)
 
 ## Functions
 
@@ -95,7 +95,7 @@ BotFactoryClientProvider
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L21)
+[packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/BotFactoryClientProvider.tsx#L21)
 
 ___
 
@@ -118,7 +118,7 @@ To be used with the `useClient` hook.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L57)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L57)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L26)
+[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L26)
 
 ___
 
@@ -158,7 +158,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L15)
+[packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/bot-factory/useBotFactoryClient.ts#L15)
 
 ___
 
@@ -175,7 +175,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/useClient.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/client/useClient.ts#L15)
+[packages/sdk/react-client/src/hooks/client/useClient.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/client/useClient.ts#L15)
 
 ___
 
@@ -192,7 +192,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/useConfig.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/client/useConfig.ts#L15)
+[packages/sdk/react-client/src/hooks/client/useConfig.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/client/useConfig.ts#L15)
 
 ___
 
@@ -210,7 +210,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts#L16)
+[packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-queries/useContacts.ts#L16)
 
 ___
 
@@ -224,7 +224,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/useDevtools.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/client/useDevtools.ts#L9)
+[packages/sdk/react-client/src/hooks/client/useDevtools.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/client/useDevtools.ts#L9)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/invitations/useHaloInvitations.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/invitations/useHaloInvitations.ts#L9)
+[packages/sdk/react-client/src/hooks/invitations/useHaloInvitations.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/invitations/useHaloInvitations.ts#L9)
 
 ___
 
@@ -264,7 +264,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx:9](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx#L9)
+[packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-queries/useMembers.tsx#L9)
 
 ___
 
@@ -281,7 +281,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-queries/useParties.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L25)
+[packages/sdk/react-client/src/hooks/echo-queries/useParties.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L25)
 
 ___
 
@@ -304,7 +304,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-queries/useParties.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L16)
+[packages/sdk/react-client/src/hooks/echo-queries/useParties.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-queries/useParties.ts#L16)
 
 ___
 
@@ -324,7 +324,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/invitations/usePartyInvitations.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/invitations/usePartyInvitations.ts#L11)
+[packages/sdk/react-client/src/hooks/invitations/usePartyInvitations.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/invitations/usePartyInvitations.ts#L11)
 
 ___
 
@@ -347,7 +347,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/useProfile.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/client/useProfile.ts#L21)
+[packages/sdk/react-client/src/hooks/client/useProfile.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/client/useProfile.ts#L21)
 
 ___
 
@@ -378,7 +378,7 @@ Hook to process selection reducer.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L54)
+[packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L54)
 
 ___
 
@@ -392,7 +392,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/wns/registryBotFactories.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/wns/registryBotFactories.ts#L24)
+[packages/sdk/react-client/src/hooks/wns/registryBotFactories.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/wns/registryBotFactories.ts#L24)
 
 ___
 
@@ -418,7 +418,7 @@ an array of registered bots
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/wns/registryBots.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L31)
+[packages/sdk/react-client/src/hooks/wns/registryBots.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/wns/registryBots.ts#L31)
 
 ___
 
@@ -451,7 +451,7 @@ Always up-to-date value of the result set
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/util/useResultSet.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/util/useResultSet.ts#L17)
+[packages/sdk/react-client/src/hooks/util/useResultSet.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/util/useResultSet.ts#L17)
 
 ___
 
@@ -474,7 +474,7 @@ A Selector used for finding items based on a search pattern.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-selections/search.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-selections/search.ts#L16)
+[packages/sdk/react-client/src/hooks/echo-selections/search.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-selections/search.ts#L16)
 
 ___
 
@@ -494,7 +494,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/invitations/useSecretProvider.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/invitations/useSecretProvider.ts#L13)
+[packages/sdk/react-client/src/hooks/invitations/useSecretProvider.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/invitations/useSecretProvider.ts#L13)
 
 ___
 
@@ -528,7 +528,7 @@ for updates to work correctly.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L21)
+[packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/echo-selections/useSelection.ts#L21)
 
 ___
 
@@ -558,7 +558,7 @@ Subscribe to service API streams.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/util/useStream.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/util/useStream.ts#L12)
+[packages/sdk/react-client/src/hooks/util/useStream.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/util/useStream.ts#L12)
 
 ___
 
@@ -579,4 +579,4 @@ Use DXNS registry.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/wns/registry.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/hooks/wns/registry.ts#L10)
+[packages/sdk/react-client/src/hooks/wns/registry.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/hooks/wns/registry.ts#L10)

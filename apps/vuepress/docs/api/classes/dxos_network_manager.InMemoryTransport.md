@@ -54,7 +54,7 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L41)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L41)
 
 ## Properties
 
@@ -64,7 +64,7 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L37)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L37)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L36)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L36)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L33)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L33)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L39)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L39)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L34)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L34)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L29)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L29)
 
 ___
 
@@ -132,7 +132,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L30)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L30)
 
 ___
 
@@ -146,7 +146,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L31)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L31)
 
 ___
 
@@ -156,7 +156,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L26)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L26)
 
 ## Accessors
 
@@ -170,7 +170,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L72)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L72)
 
 ___
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L76)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L76)
 
 ## Methods
 
@@ -202,7 +202,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L84)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L84)
 
 ___
 
@@ -226,4 +226,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L80)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L80)

@@ -32,7 +32,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L31)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L31)
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L30)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L30)
 
 ___
 
@@ -52,4 +52,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L29)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L29)

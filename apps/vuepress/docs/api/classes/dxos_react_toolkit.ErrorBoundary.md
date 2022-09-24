@@ -174,7 +174,7 @@ Component.state
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L42)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L42)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L34)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L34)
 
 ## Methods
 
@@ -377,7 +377,7 @@ Component.componentDidCatch
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L48)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L48)
 
 ___
 
@@ -640,7 +640,7 @@ Component.render
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:54](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L54)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L54)
 
 ___
 

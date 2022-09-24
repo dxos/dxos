@@ -58,7 +58,7 @@ Requires initialization after creating by calling `.initialize()`.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L95)
+[packages/sdk/client/src/packlets/proxy/client.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L95)
 
 ## Properties
 
@@ -68,7 +68,7 @@ Requires initialization after creating by calling `.initialize()`.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L79)
+[packages/sdk/client/src/packlets/proxy/client.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L79)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:86](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L86)
+[packages/sdk/client/src/packlets/proxy/client.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L86)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L85)
+[packages/sdk/client/src/packlets/proxy/client.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L85)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L83)
+[packages/sdk/client/src/packlets/proxy/client.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L83)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L81)
+[packages/sdk/client/src/packlets/proxy/client.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L81)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L80)
+[packages/sdk/client/src/packlets/proxy/client.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L80)
 
 ___
 
@@ -128,7 +128,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L84)
+[packages/sdk/client/src/packlets/proxy/client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L84)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L77)
+[packages/sdk/client/src/packlets/proxy/client.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L77)
 
 ## Accessors
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:127](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L127)
+[packages/sdk/client/src/packlets/proxy/client.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L127)
 
 ___
 
@@ -168,7 +168,7 @@ ECHO database.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:142](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L142)
+[packages/sdk/client/src/packlets/proxy/client.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L142)
 
 ___
 
@@ -184,7 +184,7 @@ HALO credentials.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:150](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L150)
+[packages/sdk/client/src/packlets/proxy/client.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L150)
 
 ___
 
@@ -198,7 +198,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:119](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L119)
+[packages/sdk/client/src/packlets/proxy/client.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L119)
 
 ___
 
@@ -215,7 +215,7 @@ Initialize by calling `.initialize()`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:135](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L135)
+[packages/sdk/client/src/packlets/proxy/client.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L135)
 
 ___
 
@@ -231,7 +231,7 @@ Client services that can be proxied.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:161](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L161)
+[packages/sdk/client/src/packlets/proxy/client.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L161)
 
 ## Methods
 
@@ -247,7 +247,7 @@ Cleanup, release resources.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:248](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L248)
+[packages/sdk/client/src/packlets/proxy/client.ts:248](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L248)
 
 ___
 
@@ -270,7 +270,7 @@ Required before using the Client instance.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:169](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L169)
+[packages/sdk/client/src/packlets/proxy/client.ts:169](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L169)
 
 ___
 
@@ -290,7 +290,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:226](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L226)
+[packages/sdk/client/src/packlets/proxy/client.ts:226](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L226)
 
 ___
 
@@ -304,7 +304,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:203](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L203)
+[packages/sdk/client/src/packlets/proxy/client.ts:203](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L203)
 
 ___
 
@@ -324,7 +324,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:220](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L220)
+[packages/sdk/client/src/packlets/proxy/client.ts:220](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L220)
 
 ___
 
@@ -344,7 +344,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:209](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L209)
+[packages/sdk/client/src/packlets/proxy/client.ts:209](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L209)
 
 ___
 
@@ -368,7 +368,7 @@ Registers a new ECHO model.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:279](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L279)
+[packages/sdk/client/src/packlets/proxy/client.ts:279](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L279)
 
 ___
 
@@ -385,7 +385,7 @@ Warning: Inconsistent state after reset, do not continue to use this client inst
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:267](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L267)
+[packages/sdk/client/src/packlets/proxy/client.ts:267](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L267)
 
 ___
 
@@ -399,4 +399,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L115)
+[packages/sdk/client/src/packlets/proxy/client.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L115)

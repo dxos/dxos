@@ -44,7 +44,7 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L27)
+[packages/echo/echo-db/src/halo/preferences.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L27)
 
 ## Accessors
 
@@ -58,7 +58,7 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L32)
+[packages/echo/echo-db/src/halo/preferences.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L32)
 
 ## Methods
 
@@ -80,7 +80,7 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:122](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L122)
+[packages/echo/echo-db/src/halo/preferences.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L122)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:129](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L129)
+[packages/echo/echo-db/src/halo/preferences.ts:129](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L129)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:109](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L109)
+[packages/echo/echo-db/src/halo/preferences.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L109)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L88)
+[packages/echo/echo-db/src/halo/preferences.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L88)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:97](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L97)
+[packages/echo/echo-db/src/halo/preferences.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L97)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L79)
+[packages/echo/echo-db/src/halo/preferences.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L79)
 
 ___
 
@@ -193,7 +193,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L40)
+[packages/echo/echo-db/src/halo/preferences.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L40)
 
 ___
 
@@ -213,7 +213,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:137](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L137)
+[packages/echo/echo-db/src/halo/preferences.ts:137](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L137)
 
 ___
 
@@ -235,7 +235,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L115)
+[packages/echo/echo-db/src/halo/preferences.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L115)
 
 ___
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:103](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L103)
+[packages/echo/echo-db/src/halo/preferences.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L103)
 
 ___
 
@@ -283,7 +283,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:160](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L160)
+[packages/echo/echo-db/src/halo/preferences.ts:160](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L160)
 
 ___
 
@@ -309,4 +309,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/preferences.ts#L45)
+[packages/echo/echo-db/src/halo/preferences.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L45)

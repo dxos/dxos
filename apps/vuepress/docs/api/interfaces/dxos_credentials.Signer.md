@@ -35,7 +35,7 @@ KeyChains are not supported.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/signer.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/signer.ts#L26)
+[packages/halo/credentials/src/keys/signer.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/signer.ts#L26)
 
 ___
 
@@ -64,4 +64,4 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/signer.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/signer.ts#L20)
+[packages/halo/credentials/src/keys/signer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/signer.ts#L20)

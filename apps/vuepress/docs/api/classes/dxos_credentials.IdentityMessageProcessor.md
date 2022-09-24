@@ -73,7 +73,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L28)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L28)
 
 ## Properties
 
@@ -83,7 +83,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L26)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L26)
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L23)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L23)
 
 ___
 
@@ -177,7 +177,7 @@ from the HALO Party to a Party that is being joined.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L42)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L42)
 
 ## Methods
 
@@ -199,7 +199,7 @@ Process an IdentityInfo message.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:86](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L86)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L86)
 
 ___
 
@@ -357,7 +357,7 @@ Get info for the specified key (if available).
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L50)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L50)
 
 ___
 
@@ -693,7 +693,7 @@ Process 'info' message (IdentityInfo, DeviceInfo, etc.)
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message-processor.ts#L63)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L63)
 
 ___
 

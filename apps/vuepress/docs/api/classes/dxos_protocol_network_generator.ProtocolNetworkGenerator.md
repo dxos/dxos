@@ -78,7 +78,7 @@ NetworkGenerator.constructor
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L36)
+[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L36)
 
 ## Properties
 
@@ -88,7 +88,7 @@ NetworkGenerator.constructor
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L34)
+[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L34)
 
 ___
 
@@ -285,7 +285,7 @@ Generate a network based on a ngraph.generator topology
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L56)
+[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L56)
 
 ___
 

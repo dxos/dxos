@@ -29,7 +29,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:302](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L302)
+[packages/sdk/react-components/src/VirtualTable.tsx:302](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L302)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:304](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L304)
+[packages/sdk/react-components/src/VirtualTable.tsx:304](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L304)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:303](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L303)
+[packages/sdk/react-components/src/VirtualTable.tsx:303](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L303)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:305](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L305)
+[packages/sdk/react-components/src/VirtualTable.tsx:305](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L305)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:301](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L301)
+[packages/sdk/react-components/src/VirtualTable.tsx:301](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L301)
 
 ___
 
@@ -150,7 +150,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:306](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L306)
+[packages/sdk/react-components/src/VirtualTable.tsx:306](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L306)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:299](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L299)
+[packages/sdk/react-components/src/VirtualTable.tsx:299](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L299)
 
 ___
 
@@ -170,4 +170,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/VirtualTable.tsx:300](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/VirtualTable.tsx#L300)
+[packages/sdk/react-components/src/VirtualTable.tsx:300](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/VirtualTable.tsx#L300)

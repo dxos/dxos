@@ -103,7 +103,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/client-service.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/client-service.ts#L14)
+[packages/sdk/client/src/packlets/api/client-service.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/client-service.ts#L14)
 
 ___
 
@@ -186,7 +186,7 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:4
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/version.ts:1](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/version.ts#L1)
+[packages/sdk/client/src/packlets/proxy/version.ts:1](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/version.ts#L1)
 
 ___
 
@@ -216,7 +216,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/client-service.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/client-service.ts#L25)
+[packages/sdk/client/src/packlets/api/client-service.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/client-service.ts#L25)
 
 ___
 
@@ -226,7 +226,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L35)
+[packages/sdk/client/src/packlets/proxy/client.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L35)
 
 ___
 
@@ -236,7 +236,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/client.ts#L37)
+[packages/sdk/client/src/packlets/proxy/client.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L37)
 
 ## Functions
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-host.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-host.ts#L25)
+[packages/sdk/client/src/packlets/devtools/devtools-host.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-host.ts#L25)
 
 ___
 
@@ -278,7 +278,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/devtools.ts#L53)
+[packages/sdk/client/src/packlets/proxy/devtools.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/devtools.ts#L53)
 
 ___
 

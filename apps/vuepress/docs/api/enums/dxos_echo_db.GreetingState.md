@@ -24,7 +24,7 @@ GreetingResponder transitions through the following states:
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L36)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L36)
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L39)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L39)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L40)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L40)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L34)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L34)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L35)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L35)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L38)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L38)
 
 ___
 
@@ -84,4 +84,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-responder.ts#L37)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-responder.ts#L37)

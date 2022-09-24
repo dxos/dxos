@@ -19,7 +19,7 @@ A hook bound to window.__DXOS__.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/devtools.ts#L19)
+[packages/sdk/client/src/packlets/proxy/devtools.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/devtools.ts#L19)
 
 ___
 
@@ -37,4 +37,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/devtools.ts#L20)
+[packages/sdk/client/src/packlets/proxy/devtools.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/devtools.ts#L20)

@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L22)
+[packages/sdk/client/src/packlets/api/echo.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L22)

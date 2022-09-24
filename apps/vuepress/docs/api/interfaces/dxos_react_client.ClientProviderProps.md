@@ -21,7 +21,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L21)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L21)
 
 ___
 
@@ -33,7 +33,7 @@ Client object or async provider to enable to caller to do custom initialization.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L34)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L34)
 
 ___
 
@@ -47,7 +47,7 @@ Forward reference to provide client object to outercontainer since it won't have
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L29)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L29)
 
 ___
 
@@ -59,7 +59,7 @@ Config object or async provider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L39)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L39)
 
 ___
 
@@ -85,7 +85,7 @@ Post initialization hook.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L50)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L50)
 
 ___
 
@@ -97,4 +97,4 @@ Runtime objects.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:44](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client/src/containers/ClientProvider.tsx#L44)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L44)

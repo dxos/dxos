@@ -39,4 +39,4 @@ Represents a named property value.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/mutation.ts#L55)
+[packages/echo/object-model/src/mutation.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L55)

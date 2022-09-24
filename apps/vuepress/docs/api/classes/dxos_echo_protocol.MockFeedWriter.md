@@ -48,7 +48,7 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L52)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L52)
 
 ## Properties
 
@@ -58,7 +58,7 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L53)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L53)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L48)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L48)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L50)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L50)
 
 ## Methods
 
@@ -102,4 +102,4 @@ FeedWriter.write
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L56)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L56)

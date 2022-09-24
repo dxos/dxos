@@ -63,7 +63,7 @@
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L42)
+[packages/mesh/mesh-protocol/src/extension.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L42)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L44)
+[packages/mesh/mesh-protocol/src/extension.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L44)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L41)
+[packages/mesh/mesh-protocol/src/extension.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L41)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L40)
+[packages/mesh/mesh-protocol/src/extension.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L40)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/extension.ts#L43)
+[packages/mesh/mesh-protocol/src/extension.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/extension.ts#L43)
 
 ## Variables
 
@@ -171,7 +171,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L16)
+[packages/mesh/mesh-protocol/src/errors.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L16)
 
 ___
 
@@ -181,7 +181,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L15)
+[packages/mesh/mesh-protocol/src/errors.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L15)
 
 ___
 
@@ -191,7 +191,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L14)
+[packages/mesh/mesh-protocol/src/errors.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L14)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L13)
+[packages/mesh/mesh-protocol/src/errors.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L13)
 
 ___
 
@@ -211,7 +211,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L17)
+[packages/mesh/mesh-protocol/src/errors.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L17)
 
 ___
 
@@ -221,7 +221,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L10)
+[packages/mesh/mesh-protocol/src/errors.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L10)
 
 ___
 
@@ -231,7 +231,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L11)
+[packages/mesh/mesh-protocol/src/errors.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L11)
 
 ___
 
@@ -241,7 +241,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L9)
+[packages/mesh/mesh-protocol/src/errors.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L9)
 
 ___
 
@@ -251,7 +251,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L8)
+[packages/mesh/mesh-protocol/src/errors.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L8)
 
 ___
 
@@ -261,7 +261,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/errors.ts#L7)
+[packages/mesh/mesh-protocol/src/errors.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L7)
 
 ## Functions
 
@@ -284,7 +284,7 @@ Returns a pair of connected protocols.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/testing/util.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/testing/util.ts#L23)
+[packages/mesh/mesh-protocol/src/testing/util.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/testing/util.ts#L23)
 
 ___
 
@@ -304,7 +304,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:402](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/protocol.ts#L402)
+[packages/mesh/mesh-protocol/src/protocol.ts:402](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L402)
 
 ___
 
@@ -328,4 +328,4 @@ If protocol is closed because of an error, this error will be propagated through
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/testing/util.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/mesh-protocol/src/testing/util.ts#L17)
+[packages/mesh/mesh-protocol/src/testing/util.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/testing/util.ts#L17)

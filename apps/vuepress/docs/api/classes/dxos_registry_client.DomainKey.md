@@ -37,7 +37,7 @@ Domains must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L24)
+[packages/sdk/registry-client/src/api/domain-key.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L24)
 
 ## Properties
 
@@ -47,7 +47,7 @@ Domains must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L25)
+[packages/sdk/registry-client/src/api/domain-key.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L25)
 
 ## Methods
 
@@ -61,7 +61,7 @@ Domains must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L30)
+[packages/sdk/registry-client/src/api/domain-key.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L30)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L34)
+[packages/sdk/registry-client/src/api/domain-key.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L34)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L16)
+[packages/sdk/registry-client/src/api/domain-key.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L16)
 
 ___
 
@@ -109,4 +109,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L20)
+[packages/sdk/registry-client/src/api/domain-key.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L20)

@@ -43,7 +43,7 @@ authentication check, in order to be admitted to a Party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L59)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L59)
 
 ## Properties
 
@@ -53,7 +53,7 @@ authentication check, in order to be admitted to a Party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L48)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L48)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L51)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L51)
 
 ## Accessors
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:67](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L67)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L67)
 
 ## Methods
 
@@ -99,7 +99,7 @@ Initiate a connection to a greeting responder node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:75](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L75)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L75)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:191](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L191)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:191](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L191)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:185](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L185)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:185](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L185)
 
 ___
 
@@ -149,4 +149,4 @@ Called after connecting to initiate greeting protocol exchange.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:120](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L120)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L120)

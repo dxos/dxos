@@ -49,7 +49,7 @@ Main API for DXNS registry.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L72)
+[packages/sdk/registry-client/src/api/registry-client.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L72)
 
 ## Properties
 
@@ -59,7 +59,7 @@ Main API for DXNS registry.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L69)
+[packages/sdk/registry-client/src/api/registry-client.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L69)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L70)
+[packages/sdk/registry-client/src/api/registry-client.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L70)
 
 ## Methods
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:286](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L286)
+[packages/sdk/registry-client/src/api/registry-client.ts:286](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L286)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:311](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L311)
+[packages/sdk/registry-client/src/api/registry-client.ts:311](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L311)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:280](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L280)
+[packages/sdk/registry-client/src/api/registry-client.ts:280](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L280)
 
 ___
 
@@ -151,7 +151,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:302](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L302)
+[packages/sdk/registry-client/src/api/registry-client.ts:302](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L302)
 
 ___
 
@@ -173,7 +173,7 @@ Resolves a domain key from the domain name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L84)
+[packages/sdk/registry-client/src/api/registry-client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L84)
 
 ___
 
@@ -201,7 +201,7 @@ Gets record details by CID.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:168](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L168)
+[packages/sdk/registry-client/src/api/registry-client.ts:168](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L168)
 
 ___
 
@@ -229,7 +229,7 @@ Gets resource by its registered name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:183](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L183)
+[packages/sdk/registry-client/src/api/registry-client.ts:183](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L183)
 
 ___
 
@@ -251,7 +251,7 @@ Gets resource by its registered name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:111](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L111)
+[packages/sdk/registry-client/src/api/registry-client.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L111)
 
 ___
 
@@ -273,7 +273,7 @@ Gets type records details by CID.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:232](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L232)
+[packages/sdk/registry-client/src/api/registry-client.ts:232](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L232)
 
 ___
 
@@ -289,7 +289,7 @@ Returns a list of authorities created in DXOS system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:91](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L91)
+[packages/sdk/registry-client/src/api/registry-client.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L91)
 
 ___
 
@@ -311,7 +311,7 @@ Lists records in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:197](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L197)
+[packages/sdk/registry-client/src/api/registry-client.ts:197](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L197)
 
 ___
 
@@ -333,7 +333,7 @@ List resources registered in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:120](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L120)
+[packages/sdk/registry-client/src/api/registry-client.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L120)
 
 ___
 
@@ -355,7 +355,7 @@ Lists type records in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:247](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L247)
+[packages/sdk/registry-client/src/api/registry-client.ts:247](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L247)
 
 ___
 
@@ -377,7 +377,7 @@ Creates a new domain in the system under a generated name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:99](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L99)
+[packages/sdk/registry-client/src/api/registry-client.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L99)
 
 ___
 
@@ -401,7 +401,7 @@ Creates a new data record in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:214](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L214)
+[packages/sdk/registry-client/src/api/registry-client.ts:214](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L214)
 
 ___
 
@@ -426,7 +426,7 @@ Undefined CID means that the resource will be deleted.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:152](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L152)
+[packages/sdk/registry-client/src/api/registry-client.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L152)
 
 ___
 
@@ -450,4 +450,4 @@ Creates a new type record in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:263](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L263)
+[packages/sdk/registry-client/src/api/registry-client.ts:263](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L263)

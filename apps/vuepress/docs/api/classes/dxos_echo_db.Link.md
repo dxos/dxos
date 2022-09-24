@@ -75,7 +75,7 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L32)
+[packages/echo/echo-db/src/packlets/database/link.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L32)
 
 ## Properties
 
@@ -89,7 +89,7 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
+[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
+[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
 
 ## Accessors
 
@@ -121,7 +121,7 @@ Entity.id
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
+[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L48)
+[packages/echo/echo-db/src/packlets/database/link.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L48)
 
 ___
 
@@ -153,7 +153,7 @@ Entity.model
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
+[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
 
 ___
 
@@ -171,7 +171,7 @@ Entity.modelMeta
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
+[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
 
 ___
 
@@ -185,7 +185,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L60)
+[packages/echo/echo-db/src/packlets/database/link.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L60)
 
 ___
 
@@ -199,7 +199,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L52)
+[packages/echo/echo-db/src/packlets/database/link.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L52)
 
 ___
 
@@ -213,7 +213,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L65)
+[packages/echo/echo-db/src/packlets/database/link.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L65)
 
 ___
 
@@ -227,7 +227,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L56)
+[packages/echo/echo-db/src/packlets/database/link.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L56)
 
 ___
 
@@ -245,7 +245,7 @@ Entity.type
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
+[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
 
 ## Methods
 
@@ -283,4 +283,4 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
+[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L65)

@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L18)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L18)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L15)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L15)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L19)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L19)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L16)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L16)
 
 ___
 
@@ -75,4 +75,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L17)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L17)

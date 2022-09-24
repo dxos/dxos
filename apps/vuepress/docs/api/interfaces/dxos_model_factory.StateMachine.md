@@ -33,7 +33,7 @@ Manages state and state transitions vis mutations.
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/model-factory/src/types.ts#L48)
+[packages/echo/model-factory/src/types.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L48)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/model-factory/src/types.ts#L50)
+[packages/echo/model-factory/src/types.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L50)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/model-factory/src/types.ts#L49)
+[packages/echo/model-factory/src/types.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L49)
 
 ___
 
@@ -88,4 +88,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/model-factory/src/types.ts#L51)
+[packages/echo/model-factory/src/types.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L51)

@@ -35,7 +35,7 @@ Takes the target Party for checking admitted keys and verifying signatures.
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/authenticator.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/authenticator.ts#L40)
+[packages/halo/credentials/src/auth/authenticator.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/authenticator.ts#L40)
 
 ## Methods
 
@@ -64,4 +64,4 @@ true if authenticated, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/authenticator.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/authenticator.ts#L53)
+[packages/halo/credentials/src/auth/authenticator.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/authenticator.ts#L53)

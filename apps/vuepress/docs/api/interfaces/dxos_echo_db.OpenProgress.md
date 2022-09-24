@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L29)
+[packages/echo/echo-db/src/parties/party-manager.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L29)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L30)
+[packages/echo/echo-db/src/parties/party-manager.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L30)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L31)
+[packages/echo/echo-db/src/parties/party-manager.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L31)

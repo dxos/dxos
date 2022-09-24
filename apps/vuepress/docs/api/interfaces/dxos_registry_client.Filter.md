@@ -21,7 +21,7 @@ Filter by specific string appearing in record's text fields.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/filtering.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/filtering.ts#L21)
+[packages/sdk/registry-client/src/api/filtering.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/filtering.ts#L21)
 
 ___
 
@@ -33,4 +33,4 @@ Filter by record type. Will only return data records.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/filtering.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/filtering.ts#L16)
+[packages/sdk/registry-client/src/api/filtering.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/filtering.ts#L16)

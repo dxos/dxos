@@ -36,7 +36,7 @@ A simple class for keeping track of invocations and processing time.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L12)
+[packages/halo/credentials/src/keys/simple-metrics.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L12)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L11)
+[packages/halo/credentials/src/keys/simple-metrics.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L11)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L13)
+[packages/halo/credentials/src/keys/simple-metrics.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L13)
 
 ## Methods
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L15)
+[packages/halo/credentials/src/keys/simple-metrics.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L15)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L21)
+[packages/halo/credentials/src/keys/simple-metrics.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L21)
 
 ___
 
@@ -116,4 +116,4 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L32)
+[packages/halo/credentials/src/keys/simple-metrics.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L32)

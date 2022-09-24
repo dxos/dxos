@@ -58,7 +58,7 @@ TODO(burdon): Wrapper/Bridge between HALO APIs.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L52)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L52)
 
 ## Properties
 
@@ -70,7 +70,7 @@ Used to generate halo snapshot.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L50)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L50)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L41)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L41)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L43)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L43)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L45)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L45)
 
 ## Accessors
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L78)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L78)
 
 ___
 
@@ -132,7 +132,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L70)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L70)
 
 ___
 
@@ -152,7 +152,7 @@ Whether PartyGenesis was already processed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:86](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L86)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L86)
 
 ___
 
@@ -166,7 +166,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:82](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L82)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L82)
 
 ___
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L74)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L74)
 
 ___
 
@@ -202,7 +202,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L66)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L66)
 
 ___
 
@@ -216,7 +216,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:90](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L90)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L90)
 
 ## Methods
 
@@ -242,7 +242,7 @@ Returns public key of the member that admitted the specified feed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:112](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L112)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:112](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L112)
 
 ___
 
@@ -262,7 +262,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:104](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L104)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L104)
 
 ___
 
@@ -286,7 +286,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:118](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L118)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L118)
 
 ___
 
@@ -310,7 +310,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:94](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L94)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L94)
 
 ___
 
@@ -330,7 +330,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:99](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L99)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L99)
 
 ___
 
@@ -344,7 +344,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:140](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L140)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:140](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L140)
 
 ___
 
@@ -368,7 +368,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:133](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L133)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:133](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L133)
 
 ___
 
@@ -388,7 +388,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:146](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L146)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:146](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L146)
 
 ___
 
@@ -408,4 +408,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:122](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L122)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L122)

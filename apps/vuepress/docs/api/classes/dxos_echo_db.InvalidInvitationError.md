@@ -41,7 +41,7 @@ DXOSError.constructor
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/errors/errors.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/errors/errors.ts#L34)
+[packages/echo/echo-db/src/packlets/errors/errors.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/errors/errors.ts#L34)
 
 ## Properties
 

@@ -75,7 +75,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-plugin.ts#L29)
+[packages/halo/credentials/src/auth/auth-plugin.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L29)
 
 ## Properties
 
@@ -85,7 +85,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-plugin.ts#L27)
+[packages/halo/credentials/src/auth/auth-plugin.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L27)
 
 ___
 
@@ -165,7 +165,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-plugin.ts#L42)
+[packages/halo/credentials/src/auth/auth-plugin.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L42)
 
 ## Methods
 
@@ -192,7 +192,7 @@ AuthPlugin#authenticated
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-plugin.ts#L66)
+[packages/halo/credentials/src/auth/auth-plugin.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L66)
 
 ___
 
@@ -239,7 +239,7 @@ Create protocol extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-plugin.ts#L50)
+[packages/halo/credentials/src/auth/auth-plugin.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L50)
 
 ___
 

@@ -19,7 +19,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L17)
+[packages/echo/echo-db/src/packlets/database/link.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L17)
 
 ___
 
@@ -29,7 +29,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L15)
+[packages/echo/echo-db/src/packlets/database/link.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L15)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L18)
+[packages/echo/echo-db/src/packlets/database/link.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L18)
 
 ___
 
@@ -49,4 +49,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/link.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/link.ts#L16)
+[packages/echo/echo-db/src/packlets/database/link.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/link.ts#L16)

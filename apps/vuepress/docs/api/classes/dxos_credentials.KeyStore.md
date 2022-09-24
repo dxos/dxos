@@ -40,7 +40,7 @@ If none is specified, memdown is used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L33)
+[packages/halo/credentials/src/keys/keystore.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L33)
 
 ## Properties
 
@@ -50,7 +50,7 @@ If none is specified, memdown is used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L27)
+[packages/halo/credentials/src/keys/keystore.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L27)
 
 ## Methods
 
@@ -72,7 +72,7 @@ Deletes a KeyRecord from the KeyStore, indexed by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L50)
+[packages/halo/credentials/src/keys/keystore.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L50)
 
 ___
 
@@ -88,7 +88,7 @@ Returns all lookup key strings.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:68](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L68)
+[packages/halo/credentials/src/keys/keystore.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L68)
 
 ___
 
@@ -110,7 +110,7 @@ Looks up a KeyRecord by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L59)
+[packages/halo/credentials/src/keys/keystore.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L59)
 
 ___
 
@@ -126,7 +126,7 @@ Returns all KeyRecord values.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:75](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L75)
+[packages/halo/credentials/src/keys/keystore.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L75)
 
 ___
 
@@ -142,7 +142,7 @@ Returns all entries as key/value pairs.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L83)
+[packages/halo/credentials/src/keys/keystore.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L83)
 
 ___
 
@@ -165,4 +165,4 @@ Adds a KeyRecord to the KeyStore, indexed by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keystore.ts#L40)
+[packages/halo/credentials/src/keys/keystore.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L40)

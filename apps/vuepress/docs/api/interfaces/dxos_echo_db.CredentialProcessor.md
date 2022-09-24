@@ -30,4 +30,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/pipeline/party-processor.ts#L21)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L21)

@@ -40,7 +40,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L48)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L48)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L42)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L42)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L41)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L41)
 
 ___
 
@@ -70,7 +70,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L39)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L39)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:44](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L44)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L44)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:47](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L47)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L47)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:46](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L46)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L46)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L43)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L43)
 
 ___
 
@@ -172,7 +172,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:45](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L45)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L45)
 
 ___
 
@@ -182,7 +182,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L38)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L38)
 
 ___
 
@@ -192,4 +192,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L40)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L40)

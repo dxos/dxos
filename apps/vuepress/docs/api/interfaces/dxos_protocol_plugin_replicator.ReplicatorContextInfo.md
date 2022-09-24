@@ -19,7 +19,7 @@ Passed from protocol.getContext()
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L26)
+[packages/mesh/protocol-plugin-replicator/src/replicator.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L26)
 
 ___
 
@@ -31,4 +31,4 @@ Peer id, loaded from protocol.getSession()
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L30)
+[packages/mesh/protocol-plugin-replicator/src/replicator.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L30)

@@ -80,7 +80,7 @@ It may also be revoked at anytime.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:71](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L71)
+[packages/halo/credentials/src/greet/invitation.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L71)
 
 ## Properties
 
@@ -90,7 +90,7 @@ It may also be revoked at anytime.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L57)
+[packages/halo/credentials/src/greet/invitation.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L57)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L62)
+[packages/halo/credentials/src/greet/invitation.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L62)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L54)
+[packages/halo/credentials/src/greet/invitation.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L54)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L65)
+[packages/halo/credentials/src/greet/invitation.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L65)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L63)
+[packages/halo/credentials/src/greet/invitation.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L63)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L56)
+[packages/halo/credentials/src/greet/invitation.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L56)
 
 ___
 
@@ -150,7 +150,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L61)
+[packages/halo/credentials/src/greet/invitation.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L61)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L58)
+[packages/halo/credentials/src/greet/invitation.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L58)
 
 ___
 
@@ -170,7 +170,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:64](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L64)
+[packages/halo/credentials/src/greet/invitation.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L64)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L53)
+[packages/halo/credentials/src/greet/invitation.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L53)
 
 ___
 
@@ -190,7 +190,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L50)
+[packages/halo/credentials/src/greet/invitation.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L50)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L66)
+[packages/halo/credentials/src/greet/invitation.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L66)
 
 ___
 
@@ -210,7 +210,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L59)
+[packages/halo/credentials/src/greet/invitation.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L59)
 
 ___
 
@@ -220,7 +220,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L52)
+[packages/halo/credentials/src/greet/invitation.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L52)
 
 ___
 
@@ -230,7 +230,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L51)
+[packages/halo/credentials/src/greet/invitation.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L51)
 
 ## Accessors
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L87)
+[packages/halo/credentials/src/greet/invitation.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L87)
 
 ___
 
@@ -258,7 +258,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L107)
+[packages/halo/credentials/src/greet/invitation.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L107)
 
 ___
 
@@ -272,7 +272,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:127](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L127)
+[packages/halo/credentials/src/greet/invitation.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L127)
 
 ___
 
@@ -286,7 +286,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:123](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L123)
+[packages/halo/credentials/src/greet/invitation.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L123)
 
 ___
 
@@ -300,7 +300,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L115)
+[packages/halo/credentials/src/greet/invitation.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L115)
 
 ___
 
@@ -314,7 +314,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L83)
+[packages/halo/credentials/src/greet/invitation.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L83)
 
 ___
 
@@ -328,7 +328,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:99](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L99)
+[packages/halo/credentials/src/greet/invitation.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L99)
 
 ___
 
@@ -342,7 +342,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:103](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L103)
+[packages/halo/credentials/src/greet/invitation.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L103)
 
 ___
 
@@ -356,7 +356,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:91](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L91)
+[packages/halo/credentials/src/greet/invitation.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L91)
 
 ___
 
@@ -370,7 +370,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:111](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L111)
+[packages/halo/credentials/src/greet/invitation.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L111)
 
 ___
 
@@ -384,7 +384,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L95)
+[packages/halo/credentials/src/greet/invitation.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L95)
 
 ___
 
@@ -398,7 +398,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:119](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L119)
+[packages/halo/credentials/src/greet/invitation.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L119)
 
 ___
 
@@ -412,7 +412,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:134](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L134)
+[packages/halo/credentials/src/greet/invitation.ts:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L134)
 
 ## Methods
 
@@ -431,7 +431,7 @@ true if the invitation was alive, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:157](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L157)
+[packages/halo/credentials/src/greet/invitation.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L157)
 
 ___
 
@@ -450,7 +450,7 @@ true if the invitation was alive, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:207](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L207)
+[packages/halo/credentials/src/greet/invitation.ts:207](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L207)
 
 ___
 
@@ -468,7 +468,7 @@ true if the invitation was alive, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:178](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L178)
+[packages/halo/credentials/src/greet/invitation.ts:178](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L178)
 
 ___
 
@@ -486,7 +486,7 @@ true if the invitation was alive, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:192](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L192)
+[packages/halo/credentials/src/greet/invitation.ts:192](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L192)
 
 ___
 
@@ -504,7 +504,7 @@ true if the invitation was alive, else false
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:142](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L142)
+[packages/halo/credentials/src/greet/invitation.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L142)
 
 ___
 
@@ -526,4 +526,4 @@ Returns `true` if the invitation and secret are valid, else `false`.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:224](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L224)
+[packages/halo/credentials/src/greet/invitation.ts:224](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L224)

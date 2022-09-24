@@ -26,7 +26,7 @@ Defines an id for the current peer.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L56)
+[packages/mesh/broadcast/src/broadcast.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L56)
 
 ___
 
@@ -44,7 +44,7 @@ Default: 10000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L43)
+[packages/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L43)
 
 ___
 
@@ -62,4 +62,4 @@ Default: 1000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L49)
+[packages/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L49)

@@ -31,7 +31,7 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L26)
+[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L26)
 
 ## Properties
 
@@ -41,7 +41,7 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L20)
+[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L20)
 
 ## Methods
 
@@ -69,7 +69,7 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L32)
+[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L32)
 
 ___
 
@@ -93,4 +93,4 @@ Handle a P2P message from the Extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L41)
+[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L41)

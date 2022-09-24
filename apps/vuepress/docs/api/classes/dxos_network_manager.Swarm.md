@@ -61,7 +61,7 @@ Routes signal events and maintains swarm topology.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L60)
+[packages/mesh/network-manager/src/swarm/swarm.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L60)
 
 ## Properties
 
@@ -71,7 +71,7 @@ Routes signal events and maintains swarm topology.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L35)
+[packages/mesh/network-manager/src/swarm/swarm.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L35)
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L36)
+[packages/mesh/network-manager/src/swarm/swarm.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L36)
 
 ___
 
@@ -93,7 +93,7 @@ Connection is established to a new peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L55)
+[packages/mesh/network-manager/src/swarm/swarm.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L55)
 
 ___
 
@@ -105,7 +105,7 @@ New connection to a peer is started.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L45)
+[packages/mesh/network-manager/src/swarm/swarm.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L45)
 
 ___
 
@@ -117,7 +117,7 @@ Connection to a peer is dropped.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L50)
+[packages/mesh/network-manager/src/swarm/swarm.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L50)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L57)
+[packages/mesh/network-manager/src/swarm/swarm.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L57)
 
 ___
 
@@ -139,7 +139,7 @@ Unique id of the swarm, local to the current peer, generated when swarm is joine
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L33)
+[packages/mesh/network-manager/src/swarm/swarm.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L33)
 
 ## Accessors
 
@@ -153,7 +153,7 @@ Unique id of the swarm, local to the current peer, generated when swarm is joine
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L38)
+[packages/mesh/network-manager/src/swarm/swarm.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L38)
 
 ___
 
@@ -169,7 +169,7 @@ Custom label assigned to this swarm. Used in devtools to display human-readable 
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L80)
+[packages/mesh/network-manager/src/swarm/swarm.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L80)
 
 ___
 
@@ -183,7 +183,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L73)
+[packages/mesh/network-manager/src/swarm/swarm.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L73)
 
 ___
 
@@ -197,7 +197,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L84)
+[packages/mesh/network-manager/src/swarm/swarm.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L84)
 
 ## Methods
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:266](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L266)
+[packages/mesh/network-manager/src/swarm/swarm.ts:266](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L266)
 
 ___
 
@@ -239,7 +239,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:213](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L213)
+[packages/mesh/network-manager/src/swarm/swarm.ts:213](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L213)
 
 ___
 
@@ -253,7 +253,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:179](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L179)
+[packages/mesh/network-manager/src/swarm/swarm.ts:179](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L179)
 
 ___
 
@@ -273,7 +273,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:198](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L198)
+[packages/mesh/network-manager/src/swarm/swarm.ts:198](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L198)
 
 ___
 
@@ -287,7 +287,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:173](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L173)
+[packages/mesh/network-manager/src/swarm/swarm.ts:173](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L173)
 
 ___
 
@@ -307,7 +307,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:102](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L102)
+[packages/mesh/network-manager/src/swarm/swarm.ts:102](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L102)
 
 ___
 
@@ -327,7 +327,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:148](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L148)
+[packages/mesh/network-manager/src/swarm/swarm.ts:148](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L148)
 
 ___
 
@@ -347,7 +347,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L88)
+[packages/mesh/network-manager/src/swarm/swarm.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L88)
 
 ___
 
@@ -367,4 +367,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm.ts:162](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm.ts#L162)
+[packages/mesh/network-manager/src/swarm/swarm.ts:162](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm.ts#L162)

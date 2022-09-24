@@ -55,7 +55,7 @@ Polkadot DXNS auctions client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
 
 ## Properties
 
@@ -69,7 +69,7 @@ Polkadot DXNS auctions client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
 
 ## Methods
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L55)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L55)
 
 ___
 
@@ -128,7 +128,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L37)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L37)
 
 ___
 
@@ -153,7 +153,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L49)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L49)
 
 ___
 
@@ -177,7 +177,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L41)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L41)
 
 ___
 
@@ -202,7 +202,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L33)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L33)
 
 ___
 
@@ -227,7 +227,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L45)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L45)
 
 ___
 
@@ -251,7 +251,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L16)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L16)
 
 ___
 
@@ -269,4 +269,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/auctions.ts#L25)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L25)

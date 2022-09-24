@@ -21,7 +21,7 @@ Date.now()-style timestamp of when this invitation should expire.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/common.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/common.ts#L32)
+[packages/echo/echo-db/src/invitations/common.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/common.ts#L32)
 
 ___
 
@@ -48,4 +48,4 @@ A function to be called when the invitation is closed (successfully or not).
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/common.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/common.ts#L27)
+[packages/echo/echo-db/src/invitations/common.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/common.ts#L27)

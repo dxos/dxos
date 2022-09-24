@@ -47,4 +47,4 @@ HaloSigner.sign
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/util/client-signer.ts#L18)
+[packages/sdk/registry-client/src/util/client-signer.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L18)

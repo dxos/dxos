@@ -42,9 +42,9 @@
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L10)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L10)
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L16)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L16)
 
 ## Variables
 
@@ -54,9 +54,9 @@
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L10)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L10)
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L16)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L16)
 
 ## Functions
 
@@ -78,7 +78,7 @@
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx:66](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx#L66)
+[packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx#L66)
 
 ___
 
@@ -101,7 +101,7 @@ To be used with `useRegistry` hook.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx#L26)
+[packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/containers/RegistryProvider.tsx#L26)
 
 ___
 
@@ -119,7 +119,7 @@ Requires `RegistryProvider` component wrapper.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L33)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L33)
 
 ___
 
@@ -135,7 +135,7 @@ Returns the set of authorities.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useDomains.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useDomains.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useDomains.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useDomains.ts#L18)
 
 ___
 
@@ -151,7 +151,7 @@ Returns info about bot records.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L48)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L48)
 
 ___
 
@@ -173,7 +173,7 @@ Returns matching type records.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useRecordTypes.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useRecordTypes.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useRecordTypes.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useRecordTypes.ts#L18)
 
 ___
 
@@ -195,7 +195,7 @@ Returns matching records.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useRecords.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useRecords.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useRecords.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useRecords.ts#L18)
 
 ___
 
@@ -211,7 +211,7 @@ Requires `RegistryProvider` component wrapper.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L21)
+[packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/registry/useRegistry.ts#L21)
 
 ___
 
@@ -233,4 +233,4 @@ Returns matching resources.
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useResources.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useResources.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useResources.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useResources.ts#L18)

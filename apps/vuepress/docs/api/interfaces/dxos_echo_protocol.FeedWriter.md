@@ -40,4 +40,4 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L20)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L20)

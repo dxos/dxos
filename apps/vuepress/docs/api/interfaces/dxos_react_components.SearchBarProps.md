@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Searchbar.tsx#L13)
+[packages/sdk/react-components/src/Searchbar.tsx:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L13)
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Searchbar.tsx#L12)
+[packages/sdk/react-components/src/Searchbar.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L12)
 
 ___
 
@@ -52,4 +52,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/Searchbar.tsx#L11)
+[packages/sdk/react-components/src/Searchbar.tsx:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L11)

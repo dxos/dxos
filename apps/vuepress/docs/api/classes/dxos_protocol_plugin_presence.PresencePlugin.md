@@ -74,7 +74,7 @@ Presence protocol plugin.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L84)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L84)
 
 ## Properties
 
@@ -84,7 +84,7 @@ Presence protocol plugin.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L81)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L81)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L65)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L65)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L70)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L70)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:71](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L71)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L71)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:67](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L67)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L67)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L80)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L80)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:64](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L64)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L64)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L79)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L79)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L74)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L74)
 
 ___
 
@@ -174,7 +174,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:75](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L75)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L75)
 
 ___
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L76)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L76)
 
 ___
 
@@ -194,7 +194,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L66)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L66)
 
 ___
 
@@ -204,7 +204,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:68](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L68)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L68)
 
 ___
 
@@ -214,7 +214,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L69)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L69)
 
 ___
 
@@ -224,7 +224,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L63)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L63)
 
 ___
 
@@ -234,7 +234,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L72)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L72)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L73)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L73)
 
 ___
 
@@ -254,7 +254,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:82](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L82)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L82)
 
 ___
 
@@ -264,7 +264,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L62)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L62)
 
 ___
 
@@ -274,7 +274,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L77)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L77)
 
 ___
 
@@ -284,7 +284,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L60)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L60)
 
 ## Accessors
 
@@ -298,7 +298,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L115)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L115)
 
 ___
 
@@ -312,7 +312,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:119](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L119)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L119)
 
 ___
 
@@ -326,7 +326,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:102](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L102)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:102](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L102)
 
 ___
 
@@ -340,7 +340,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:106](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L106)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L106)
 
 ## Methods
 
@@ -360,7 +360,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:301](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L301)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:301](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L301)
 
 ___
 
@@ -374,7 +374,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:226](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L226)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:226](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L226)
 
 ___
 
@@ -388,7 +388,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:181](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L181)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:181](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L181)
 
 ___
 
@@ -408,7 +408,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:393](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L393)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:393](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L393)
 
 ___
 
@@ -428,7 +428,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:400](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L400)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:400](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L400)
 
 ___
 
@@ -449,7 +449,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:275](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L275)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:275](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L275)
 
 ___
 
@@ -465,7 +465,7 @@ NOTICE: Does not return a Promise cause it could hang if the queue is cleared.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:149](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L149)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:149](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L149)
 
 ___
 
@@ -479,7 +479,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:282](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L282)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:282](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L282)
 
 ___
 
@@ -501,7 +501,7 @@ Remove peer.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:327](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L327)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:327](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L327)
 
 ___
 
@@ -521,7 +521,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:355](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L355)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:355](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L355)
 
 ___
 
@@ -537,7 +537,7 @@ Create protocol extension.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:130](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L130)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:130](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L130)
 
 ___
 
@@ -551,7 +551,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:407](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L407)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:407](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L407)
 
 ___
 
@@ -571,7 +571,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:123](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L123)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L123)
 
 ___
 
@@ -585,7 +585,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:153](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L153)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L153)
 
 ___
 
@@ -599,4 +599,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:170](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L170)
+[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:170](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L170)

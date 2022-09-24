@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/events.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/events.ts#L7)
+[packages/halo/credentials/src/identity/events.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/events.ts#L7)

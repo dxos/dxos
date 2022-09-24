@@ -23,7 +23,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:54](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L54)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L54)
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L51)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L51)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:53](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L53)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L53)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L56)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L56)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L57)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L57)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L55)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L55)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L50)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L50)
 
 ___
 
@@ -130,4 +130,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:52](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L52)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L52)

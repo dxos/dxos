@@ -38,7 +38,7 @@
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L30)
+[packages/mesh/signal/src/test-broker.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L30)
 
 ## Properties
 
@@ -48,7 +48,7 @@
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L23)
+[packages/mesh/signal/src/test-broker.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L23)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L26)
+[packages/mesh/signal/src/test-broker.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L26)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L25)
+[packages/mesh/signal/src/test-broker.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L25)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L28)
+[packages/mesh/signal/src/test-broker.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L28)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L24)
+[packages/mesh/signal/src/test-broker.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L24)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L27)
+[packages/mesh/signal/src/test-broker.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L27)
 
 ## Methods
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L36)
+[packages/mesh/signal/src/test-broker.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L36)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:97](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L97)
+[packages/mesh/signal/src/test-broker.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L97)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:101](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L101)
+[packages/mesh/signal/src/test-broker.ts:101](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L101)
 
 ___
 
@@ -154,4 +154,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/signal/src/test-broker.ts#L73)
+[packages/mesh/signal/src/test-broker.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/signal/src/test-broker.ts#L73)

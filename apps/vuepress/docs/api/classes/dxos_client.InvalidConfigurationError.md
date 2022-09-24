@@ -47,7 +47,7 @@ DXOSError.constructor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/errors.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/errors.ts#L8)
+[packages/sdk/client/src/packlets/api/errors.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/errors.ts#L8)
 
 ## Properties
 

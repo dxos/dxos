@@ -29,7 +29,7 @@
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-generator/src/network-generator.ts#L24)
+[packages/mesh/network-generator/src/network-generator.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L24)
 
 ## Variables
 
@@ -39,4 +39,4 @@
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-generator/src/network-generator.ts#L11)
+[packages/mesh/network-generator/src/network-generator.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L11)

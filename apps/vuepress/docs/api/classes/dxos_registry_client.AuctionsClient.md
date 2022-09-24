@@ -34,7 +34,7 @@ Main API for DXNS auctions management.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L16)
+[packages/sdk/registry-client/src/api/auctions-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L16)
 
 ## Methods
 
@@ -57,7 +57,7 @@ Offers a new amount in the auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L48)
+[packages/sdk/registry-client/src/api/auctions-client.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L48)
 
 ___
 
@@ -80,7 +80,7 @@ Allows for transferring the ownership of the name to the highest bidder.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L76)
+[packages/sdk/registry-client/src/api/auctions-client.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L76)
 
 ___
 
@@ -103,7 +103,7 @@ by invoking separate operation.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L57)
+[packages/sdk/registry-client/src/api/auctions-client.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L57)
 
 ___
 
@@ -126,7 +126,7 @@ Creates a new auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L39)
+[packages/sdk/registry-client/src/api/auctions-client.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L39)
 
 ___
 
@@ -150,7 +150,7 @@ Note! This is reserved to sudo/admin accounts.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:67](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L67)
+[packages/sdk/registry-client/src/api/auctions-client.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L67)
 
 ___
 
@@ -172,7 +172,7 @@ Get an auction by name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L23)
+[packages/sdk/registry-client/src/api/auctions-client.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L23)
 
 ___
 
@@ -188,4 +188,4 @@ Returns a collection of all auctions (ongoing and closed) in DXOS.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions-client.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions-client.ts#L30)
+[packages/sdk/registry-client/src/api/auctions-client.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions-client.ts#L30)

@@ -38,7 +38,7 @@ A class to manage the lifecycle of invitations which are written to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L26)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L26)
 
 ## Properties
 
@@ -48,7 +48,7 @@ A class to manage the lifecycle of invitations which are written to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L23)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L23)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L24)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L24)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L22)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L22)
 
 ## Methods
 
@@ -90,7 +90,7 @@ Verify that the PartyInvitation message is properly formed and validly signed.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L79)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L79)
 
 ___
 
@@ -112,7 +112,7 @@ Return the Message for `invitationID`, if known.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L46)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L46)
 
 ___
 
@@ -134,4 +134,4 @@ Record a new PartyInvitation message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-invitation-manager.ts#L54)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L54)

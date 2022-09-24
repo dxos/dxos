@@ -51,7 +51,7 @@ Manages connection to the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L51)
+[packages/mesh/network-manager/src/network-manager.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L51)
 
 ## Properties
 
@@ -61,7 +61,7 @@ Manages connection to the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L47)
+[packages/mesh/network-manager/src/network-manager.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L47)
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L42)
+[packages/mesh/network-manager/src/network-manager.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L42)
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L40)
+[packages/mesh/network-manager/src/network-manager.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L40)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L45)
+[packages/mesh/network-manager/src/network-manager.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L45)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L44)
+[packages/mesh/network-manager/src/network-manager.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L44)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L46)
+[packages/mesh/network-manager/src/network-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L46)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L43)
+[packages/mesh/network-manager/src/network-manager.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L43)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L39)
+[packages/mesh/network-manager/src/network-manager.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L39)
 
 ___
 
@@ -141,7 +141,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L49)
+[packages/mesh/network-manager/src/network-manager.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L49)
 
 ## Accessors
 
@@ -155,7 +155,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:111](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L111)
+[packages/mesh/network-manager/src/network-manager.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L111)
 
 ___
 
@@ -169,7 +169,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:101](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L101)
+[packages/mesh/network-manager/src/network-manager.ts:101](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L101)
 
 ___
 
@@ -183,7 +183,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:106](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L106)
+[packages/mesh/network-manager/src/network-manager.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L106)
 
 ## Methods
 
@@ -197,7 +197,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:208](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L208)
+[packages/mesh/network-manager/src/network-manager.ts:208](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L208)
 
 ___
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:119](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L119)
+[packages/mesh/network-manager/src/network-manager.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L119)
 
 ___
 
@@ -237,7 +237,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L115)
+[packages/mesh/network-manager/src/network-manager.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L115)
 
 ___
 
@@ -263,7 +263,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:123](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L123)
+[packages/mesh/network-manager/src/network-manager.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L123)
 
 ___
 
@@ -283,7 +283,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:177](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L177)
+[packages/mesh/network-manager/src/network-manager.ts:177](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L177)
 
 ___
 
@@ -299,4 +299,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:204](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L204)
+[packages/mesh/network-manager/src/network-manager.ts:204](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L204)

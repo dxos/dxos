@@ -41,7 +41,7 @@ Creates an immutable instance.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:100](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L100)
+[packages/sdk/config/src/config.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L100)
 
 ## Properties
 
@@ -51,7 +51,7 @@ Creates an immutable instance.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:93](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L93)
+[packages/sdk/config/src/config.ts:93](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L93)
 
 ## Accessors
 
@@ -67,7 +67,7 @@ Returns an immutable config JSON object.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L107)
+[packages/sdk/config/src/config.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L107)
 
 ## Methods
 
@@ -98,7 +98,7 @@ The config value or undefined if the option is not present.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:118](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L118)
+[packages/sdk/config/src/config.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L118)
 
 ___
 
@@ -126,7 +126,7 @@ Returns the given config property or throw if it doesn't exist.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:136](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L136)
+[packages/sdk/config/src/config.ts:136](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L136)
 
 ___
 
@@ -159,4 +159,4 @@ Use the type-checked version.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:127](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L127)
+[packages/sdk/config/src/config.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L127)

@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L34)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L34)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L32)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L32)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L31)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L31)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L33)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L33)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L30)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L30)

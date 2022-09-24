@@ -35,7 +35,7 @@
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts.ts#L19)
+[packages/sdk/registry-client/src/api/accounts.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L19)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts.ts#L20)
+[packages/sdk/registry-client/src/api/accounts.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L20)
 
 ___
 
@@ -70,7 +70,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts.ts#L18)
+[packages/sdk/registry-client/src/api/accounts.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L18)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts.ts#L16)
+[packages/sdk/registry-client/src/api/accounts.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L16)
 
 ___
 
@@ -104,4 +104,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/accounts.ts#L17)
+[packages/sdk/registry-client/src/api/accounts.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L17)

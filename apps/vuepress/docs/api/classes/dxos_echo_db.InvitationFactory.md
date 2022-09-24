@@ -38,7 +38,7 @@ Groups together all invitation-related functionality for a single party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/invitation-factory.ts#L24)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L24)
 
 ## Accessors
 
@@ -52,7 +52,7 @@ Groups together all invitation-related functionality for a single party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/invitation-factory.ts#L32)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L32)
 
 ## Methods
 
@@ -75,7 +75,7 @@ Creates an invitation for a remote peer.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/invitation-factory.ts#L60)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L60)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/invitation-factory.ts#L37)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L37)
 
 ___
 
@@ -115,4 +115,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/invitations/invitation-factory.ts#L85)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L85)

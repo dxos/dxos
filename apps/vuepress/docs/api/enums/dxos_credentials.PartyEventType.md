@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/party/events.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/events.ts#L8)
+[packages/halo/credentials/src/party/events.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/events.ts#L8)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/events.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/events.ts#L7)
+[packages/halo/credentials/src/party/events.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/events.ts#L7)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/events.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/events.ts#L9)
+[packages/halo/credentials/src/party/events.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/events.ts#L9)

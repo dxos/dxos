@@ -39,7 +39,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L14)
+[packages/mesh/messaging/src/signal-manager.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L14)
 
 ___
 
@@ -71,7 +71,7 @@ SignalMethods.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-methods.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-methods.ts#L18)
+[packages/mesh/messaging/src/signal-methods.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-methods.ts#L18)
 
 ___
 
@@ -103,7 +103,7 @@ SignalMethods.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-methods.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-methods.ts#L23)
+[packages/mesh/messaging/src/signal-methods.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-methods.ts#L23)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L16)
+[packages/mesh/messaging/src/signal-manager.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L16)
 
 ___
 
@@ -143,7 +143,7 @@ SignalMethods.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-methods.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-methods.ts#L28)
+[packages/mesh/messaging/src/signal-methods.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-methods.ts#L28)
 
 ___
 
@@ -153,7 +153,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L13)
+[packages/mesh/messaging/src/signal-manager.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L13)
 
 ___
 
@@ -183,7 +183,7 @@ SignalMethods.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-methods.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-methods.ts#L33)
+[packages/mesh/messaging/src/signal-methods.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-methods.ts#L33)
 
 ___
 
@@ -193,7 +193,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L15)
+[packages/mesh/messaging/src/signal-manager.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L15)
 
 ## Methods
 
@@ -207,7 +207,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L19)
+[packages/mesh/messaging/src/signal-manager.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L19)
 
 ___
 
@@ -221,4 +221,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-manager.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-manager.ts#L18)
+[packages/mesh/messaging/src/signal-manager.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-manager.ts#L18)

@@ -32,7 +32,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/useErrors.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L11)
+[packages/sdk/react-toolkit/src/hooks/useErrors.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L11)
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/useErrors.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L10)
+[packages/sdk/react-toolkit/src/hooks/useErrors.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L10)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/useErrors.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L12)
+[packages/sdk/react-toolkit/src/hooks/useErrors.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L12)

@@ -33,7 +33,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L38)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L38)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L39)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L39)
 
 ## Methods
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L88)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L88)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L41)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L41)
 
 ___
 
@@ -103,4 +103,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L94)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L94)

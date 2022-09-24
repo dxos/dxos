@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L12)
+[packages/echo/echo-db/src/parties/party-preferences.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L12)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L11)
+[packages/echo/echo-db/src/parties/party-preferences.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L11)

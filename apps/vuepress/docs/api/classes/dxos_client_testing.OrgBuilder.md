@@ -34,7 +34,7 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L69)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L69)
 
 ## Accessors
 
@@ -48,7 +48,7 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L74)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L74)
 
 ## Methods
 
@@ -68,7 +68,7 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L78)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L78)
 
 ___
 
@@ -89,4 +89,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84)

@@ -31,7 +31,7 @@ Omit.closeOnSuccess
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L35)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L35)
 
 ___
 
@@ -45,7 +45,7 @@ Omit.invitationCode
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L32)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L32)
 
 ___
 
@@ -59,7 +59,7 @@ Omit.modal
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L36)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L36)
 
 ___
 
@@ -81,7 +81,7 @@ Omit.onClose
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L34)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L34)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx#L13)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx#L13)
 
 ___
 
@@ -119,4 +119,4 @@ Omit.open
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L30)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L30)

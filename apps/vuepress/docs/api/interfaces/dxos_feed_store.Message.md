@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/hypercore-types.ts#L7)
+[packages/echo/feed-store/src/hypercore-types.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L7)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:6](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/hypercore-types.ts#L6)
+[packages/echo/feed-store/src/hypercore-types.ts:6](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L6)

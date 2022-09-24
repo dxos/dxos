@@ -22,7 +22,7 @@ Socket was closed.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L33)
+[packages/mesh/messaging/src/signal-client.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L33)
 
 ___
 
@@ -34,7 +34,7 @@ Connected.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L27)
+[packages/mesh/messaging/src/signal-client.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L27)
 
 ___
 
@@ -46,7 +46,7 @@ Connection is being established.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L21)
+[packages/mesh/messaging/src/signal-client.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L21)
 
 ___
 
@@ -58,7 +58,7 @@ Server terminated the connection. Socket will be reconnected.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L30)
+[packages/mesh/messaging/src/signal-client.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L30)
 
 ___
 
@@ -70,4 +70,4 @@ Connection is being re-established.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L24)
+[packages/mesh/messaging/src/signal-client.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L24)

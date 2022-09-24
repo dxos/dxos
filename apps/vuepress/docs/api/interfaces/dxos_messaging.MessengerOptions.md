@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/messenger.ts#L29)
+[packages/mesh/messaging/src/messenger.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L29)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/messenger.ts#L28)
+[packages/mesh/messaging/src/messenger.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L28)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/messenger.ts#L30)
+[packages/mesh/messaging/src/messenger.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L30)

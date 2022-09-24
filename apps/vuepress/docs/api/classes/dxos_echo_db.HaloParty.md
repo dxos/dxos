@@ -61,7 +61,7 @@ Provides all HALO-related functionality.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L53)
+[packages/echo/echo-db/src/halo/halo-party.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L53)
 
 ## Properties
 
@@ -71,7 +71,7 @@ Provides all HALO-related functionality.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L48)
+[packages/echo/echo-db/src/halo/halo-party.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L48)
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L51)
+[packages/echo/echo-db/src/halo/halo-party.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L51)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L45)
+[packages/echo/echo-db/src/halo/halo-party.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L45)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L44)
+[packages/echo/echo-db/src/halo/halo-party.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L44)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L49)
+[packages/echo/echo-db/src/halo/halo-party.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L49)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L46)
+[packages/echo/echo-db/src/halo/halo-party.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L46)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L42)
+[packages/echo/echo-db/src/halo/halo-party.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L42)
 
 ## Accessors
 
@@ -145,7 +145,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:91](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L91)
+[packages/echo/echo-db/src/halo/halo-party.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L91)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:117](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L117)
+[packages/echo/echo-db/src/halo/halo-party.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L117)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:125](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L125)
+[packages/echo/echo-db/src/halo/halo-party.ts:125](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L125)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:100](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L100)
+[packages/echo/echo-db/src/halo/halo-party.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L100)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:121](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L121)
+[packages/echo/echo-db/src/halo/halo-party.ts:121](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L121)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:113](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L113)
+[packages/echo/echo-db/src/halo/halo-party.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L113)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:109](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L109)
+[packages/echo/echo-db/src/halo/halo-party.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L109)
 
 ___
 
@@ -243,7 +243,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L87)
+[packages/echo/echo-db/src/halo/halo-party.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L87)
 
 ___
 
@@ -264,7 +264,7 @@ Should remove.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L83)
+[packages/echo/echo-db/src/halo/halo-party.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L83)
 
 ___
 
@@ -278,7 +278,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L95)
+[packages/echo/echo-db/src/halo/halo-party.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L95)
 
 ___
 
@@ -292,7 +292,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:134](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L134)
+[packages/echo/echo-db/src/halo/halo-party.ts:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L134)
 
 ## Methods
 
@@ -308,7 +308,7 @@ Closes the pipeline and streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:203](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L203)
+[packages/echo/echo-db/src/halo/halo-party.ts:203](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L203)
 
 ___
 
@@ -329,7 +329,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:220](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L220)
+[packages/echo/echo-db/src/halo/halo-party.ts:220](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L220)
 
 ___
 
@@ -343,7 +343,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:129](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L129)
+[packages/echo/echo-db/src/halo/halo-party.ts:129](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L129)
 
 ___
 
@@ -359,4 +359,4 @@ Opens the pipeline and connects the streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-party.ts:148](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/halo-party.ts#L148)
+[packages/echo/echo-db/src/halo/halo-party.ts:148](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-party.ts#L148)

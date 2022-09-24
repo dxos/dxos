@@ -25,7 +25,7 @@ If false - it is an ongoing auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L39)
+[packages/sdk/registry-client/src/api/auctions.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L39)
 
 ___
 
@@ -37,7 +37,7 @@ The number of the blockchain block mined that acts as last update timestamp.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L33)
+[packages/sdk/registry-client/src/api/auctions.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L33)
 
 ___
 
@@ -56,7 +56,7 @@ The highest offer currently winning the auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L25)
+[packages/sdk/registry-client/src/api/auctions.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L25)
 
 ___
 
@@ -68,4 +68,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L20)
+[packages/sdk/registry-client/src/api/auctions.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L20)

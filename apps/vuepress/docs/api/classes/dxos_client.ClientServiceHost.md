@@ -46,7 +46,7 @@ Remote service implementation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L24)
+[packages/sdk/client/src/packlets/services/service-host.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L24)
 
 ## Properties
 
@@ -56,7 +56,7 @@ Remote service implementation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L20)
+[packages/sdk/client/src/packlets/services/service-host.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L20)
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L21)
+[packages/sdk/client/src/packlets/services/service-host.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L21)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L22)
+[packages/sdk/client/src/packlets/services/service-host.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L22)
 
 ## Accessors
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:64](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L64)
+[packages/sdk/client/src/packlets/services/service-host.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L64)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L51)
+[packages/sdk/client/src/packlets/services/service-host.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L51)
 
 ## Methods
 
@@ -125,7 +125,7 @@ Used by the DXOS DevTool Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L72)
+[packages/sdk/client/src/packlets/services/service-host.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L72)
 
 ___
 
@@ -143,7 +143,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L60)
+[packages/sdk/client/src/packlets/services/service-host.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L60)
 
 ___
 
@@ -167,4 +167,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/services/service-host.ts#L55)
+[packages/sdk/client/src/packlets/services/service-host.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L55)

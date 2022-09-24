@@ -63,7 +63,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/connection-log.ts#L29)
+[packages/mesh/network-manager/src/connection-log.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L29)
 
 ___
 
@@ -75,7 +75,7 @@ State of the connection to the remote peer with additional info derived from net
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L17)
+[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L17)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L21)
+[packages/mesh/network-manager/src/network-manager.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L21)
 
 ___
 
@@ -113,7 +113,7 @@ Swarm topic.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/types.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/types.ts#L10)
+[packages/mesh/network-manager/src/types.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/types.ts#L10)
 
 ___
 
@@ -137,7 +137,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L45)
+[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L45)
 
 ## Functions
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/protocol-factory.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/protocol-factory.ts#L61)
+[packages/mesh/network-manager/src/protocol-factory.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L61)
 
 ___
 
@@ -179,7 +179,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:109](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L109)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L109)
 
 ___
 
@@ -199,7 +199,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L45)
+[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L45)
 
 ___
 
@@ -227,7 +227,7 @@ Use `createProtocolFactory`.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/protocol-factory.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/protocol-factory.ts#L29)
+[packages/mesh/network-manager/src/protocol-factory.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L29)
 
 ___
 
@@ -255,4 +255,4 @@ Use `createProtocolFactory`.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/protocol-factory.ts:71](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/protocol-factory.ts#L71)
+[packages/mesh/network-manager/src/protocol-factory.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L71)

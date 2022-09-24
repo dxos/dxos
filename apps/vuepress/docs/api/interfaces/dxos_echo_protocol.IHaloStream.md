@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L70)
+[packages/echo/echo-protocol/src/types.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L70)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L69)
+[packages/echo/echo-protocol/src/types.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L69)

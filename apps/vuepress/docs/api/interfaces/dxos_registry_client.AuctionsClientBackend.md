@@ -39,7 +39,7 @@ Auctions operations supported by DXNS.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L49)
+[packages/sdk/registry-client/src/api/auctions.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L49)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L53)
+[packages/sdk/registry-client/src/api/auctions.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L53)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L50)
+[packages/sdk/registry-client/src/api/auctions.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L50)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L48)
+[packages/sdk/registry-client/src/api/auctions.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L48)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L52)
+[packages/sdk/registry-client/src/api/auctions.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L52)
 
 ___
 
@@ -142,7 +142,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L46)
+[packages/sdk/registry-client/src/api/auctions.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L46)
 
 ___
 
@@ -156,4 +156,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/auctions.ts#L47)
+[packages/sdk/registry-client/src/api/auctions.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L47)

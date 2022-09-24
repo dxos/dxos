@@ -96,7 +96,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L57)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L57)
 
 ## Properties
 
@@ -106,7 +106,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L53)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L53)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L54)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L54)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L55)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L55)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L51)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L51)
 
 ___
 
@@ -216,7 +216,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L73)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L73)
 
 ___
 
@@ -230,7 +230,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L77)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L77)
 
 ## Methods
 
@@ -250,7 +250,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:184](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L184)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:184](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L184)
 
 ___
 
@@ -273,7 +273,7 @@ Receives a message from a remote peer.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:164](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L164)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:164](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L164)
 
 ___
 
@@ -293,7 +293,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:197](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L197)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:197](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L197)
 
 ___
 
@@ -319,7 +319,7 @@ If oneway === true, no response is returned.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:114](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L114)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:114](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L114)
 
 ___
 
@@ -372,7 +372,7 @@ Create protocol extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L85)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L85)
 
 ___
 
@@ -1014,7 +1014,7 @@ Message received from peer in response to our request.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:98](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L98)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L98)
 
 ___
 

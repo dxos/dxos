@@ -40,7 +40,7 @@ Base functionality for derived clients.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
 
 ## Properties
 
@@ -50,7 +50,7 @@ Base functionality for derived clients.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)

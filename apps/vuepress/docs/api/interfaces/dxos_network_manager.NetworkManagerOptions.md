@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L28)
+[packages/mesh/network-manager/src/network-manager.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L28)
 
 ___
 
@@ -30,7 +30,7 @@ Enable connection logging for devtools.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L32)
+[packages/mesh/network-manager/src/network-manager.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L32)
 
 ___
 
@@ -40,4 +40,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/network-manager.ts#L27)
+[packages/mesh/network-manager/src/network-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L27)

@@ -32,7 +32,7 @@ Class helper to generate random buffer ids based on a number.
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-generator/src/network.ts#L46)
+[packages/mesh/network-generator/src/network.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L46)
 
 ## Methods
 
@@ -52,4 +52,4 @@ Class helper to generate random buffer ids based on a number.
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-generator/src/network.ts#L48)
+[packages/mesh/network-generator/src/network.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L48)

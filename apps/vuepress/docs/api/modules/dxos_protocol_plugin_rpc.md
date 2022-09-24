@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L29)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L29)
 
 ___
 
@@ -50,4 +50,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L24)
+[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L24)

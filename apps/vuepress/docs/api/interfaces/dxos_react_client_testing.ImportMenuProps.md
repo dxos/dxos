@@ -30,4 +30,4 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L22)
+[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L22)

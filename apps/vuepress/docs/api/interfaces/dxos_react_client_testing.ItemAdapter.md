@@ -34,7 +34,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L60)
+[packages/sdk/react-client-testing/src/adapter.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L60)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L62)
+[packages/sdk/react-client-testing/src/adapter.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L62)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L61)
+[packages/sdk/react-client-testing/src/adapter.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L61)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L63)
+[packages/sdk/react-client-testing/src/adapter.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L63)
 
 ___
 
@@ -131,4 +131,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L59)
+[packages/sdk/react-client-testing/src/adapter.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L59)

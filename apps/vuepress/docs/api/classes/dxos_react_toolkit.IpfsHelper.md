@@ -36,7 +36,7 @@ Imported from wirelineio/appkit
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L14)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L14)
 
 ## Properties
 
@@ -46,7 +46,7 @@ Imported from wirelineio/appkit
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L12)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L12)
 
 ## Methods
 
@@ -67,7 +67,7 @@ Imported from wirelineio/appkit
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L52)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L52)
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L38)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L38)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L23)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L23)
 
 ___
 
@@ -128,4 +128,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L19)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L19)

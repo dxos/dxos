@@ -60,7 +60,7 @@ Client proxy to local/remote HALO service.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L34)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L34)
 
 ## Properties
 
@@ -70,7 +70,7 @@ Client proxy to local/remote HALO service.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L32)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L28)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L28)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L25)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L25)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L31)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L26)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L26)
 
 ___
 
@@ -120,7 +120,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L29)
 
 ## Accessors
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L42)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L42)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L48)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L48)
 
 ___
 
@@ -172,7 +172,7 @@ Halo.profile
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L55)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L55)
 
 ## Methods
 
@@ -203,7 +203,7 @@ To be used with `client.halo.createHaloInvitation` on the inviter side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:131](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L131)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L131)
 
 ___
 
@@ -227,7 +227,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:157](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L157)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L157)
 
 ___
 
@@ -252,7 +252,7 @@ To be used with `client.halo.joinHaloInvitation` on the invitee side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:118](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L118)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L118)
 
 ___
 
@@ -284,7 +284,7 @@ User profile info.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:75](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L75)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L75)
 
 ___
 
@@ -308,7 +308,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:170](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L170)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:170](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L170)
 
 ___
 
@@ -332,7 +332,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:178](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L178)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:178](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L178)
 
 ___
 
@@ -352,7 +352,7 @@ Query for contacts. Contacts represent member keys across all known Parties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:106](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L106)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L106)
 
 ___
 
@@ -370,7 +370,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:162](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L162)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:162](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L162)
 
 ___
 
@@ -396,7 +396,7 @@ Joins an existing identity HALO from a recovery seed phrase.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:98](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L98)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L98)
 
 ___
 
@@ -421,7 +421,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:166](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L166)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:166](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L166)
 
 ___
 
@@ -446,7 +446,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:174](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L174)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:174](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L174)
 
 ___
 
@@ -470,7 +470,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:153](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L153)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L153)
 
 ___
 
@@ -504,7 +504,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L63)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L63)
 
 ___
 
@@ -518,4 +518,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L38)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L38)

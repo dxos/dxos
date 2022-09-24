@@ -136,7 +136,7 @@
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/filter.ts#L9)
+[packages/halo/credentials/src/keys/filter.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L9)
 
 ___
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-command-plugin.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L28)
+[packages/halo/credentials/src/greet/greeting-command-plugin.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-command-plugin.ts#L28)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L35)
+[packages/halo/credentials/src/greet/invitation.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L35)
 
 ___
 
@@ -206,7 +206,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L17)
+[packages/halo/credentials/src/greet/party-invitation-claim-handler.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/party-invitation-claim-handler.ts#L17)
 
 ___
 
@@ -230,7 +230,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L33)
+[packages/halo/credentials/src/greet/greeter.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L33)
 
 ___
 
@@ -240,7 +240,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keytype.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keytype.ts#L7)
+[packages/halo/credentials/src/keys/keytype.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keytype.ts#L7)
 
 ___
 
@@ -266,7 +266,7 @@ Provides a shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L22)
+[packages/halo/credentials/src/greet/invitation.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L22)
 
 ___
 
@@ -293,7 +293,7 @@ Validates the shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L27)
+[packages/halo/credentials/src/greet/invitation.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L27)
 
 ___
 
@@ -303,7 +303,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/signer.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/signer.ts#L10)
+[packages/halo/credentials/src/keys/signer.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/signer.ts#L10)
 
 ## Variables
 
@@ -315,7 +315,7 @@ Greeter is alreary connected to supplied party.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L57)
+[packages/halo/credentials/src/greet/error-codes.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L57)
 
 ___
 
@@ -327,7 +327,7 @@ The connection to supplied party timed out.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L63)
+[packages/halo/credentials/src/greet/error-codes.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L63)
 
 ___
 
@@ -339,7 +339,7 @@ Any general error condition.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L9)
+[packages/halo/credentials/src/greet/error-codes.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L9)
 
 ___
 
@@ -351,7 +351,7 @@ The Greeting command is unrecognized.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L15)
+[packages/halo/credentials/src/greet/error-codes.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L15)
 
 ___
 
@@ -363,7 +363,7 @@ The invitation does not exist or the attempted access to it was unauthorized.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L27)
+[packages/halo/credentials/src/greet/error-codes.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L27)
 
 ___
 
@@ -375,7 +375,7 @@ The message type of a submitted message is not allowed or invalid.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L33)
+[packages/halo/credentials/src/greet/error-codes.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L33)
 
 ___
 
@@ -387,7 +387,7 @@ The nonce on a submitted message does not match the expected value.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L39)
+[packages/halo/credentials/src/greet/error-codes.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L39)
 
 ___
 
@@ -399,7 +399,7 @@ The supplied party is not one known or serviced by this Greeter.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L45)
+[packages/halo/credentials/src/greet/error-codes.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L45)
 
 ___
 
@@ -411,7 +411,7 @@ The signature on a submitted message cannot be verified.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L51)
+[packages/halo/credentials/src/greet/error-codes.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L51)
 
 ___
 
@@ -423,7 +423,7 @@ The Greeting command has invalid state (eg, commands were re-executed, or execut
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/error-codes.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/error-codes.ts#L21)
+[packages/halo/credentials/src/greet/error-codes.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/error-codes.ts#L21)
 
 ___
 
@@ -433,7 +433,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/events.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/events.ts#L10)
+[packages/halo/credentials/src/identity/events.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/events.ts#L10)
 
 ___
 
@@ -443,7 +443,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/events.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/events.ts#L12)
+[packages/halo/credentials/src/party/events.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/events.ts#L12)
 
 ___
 
@@ -453,7 +453,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L19)
+[packages/halo/credentials/src/party/party-credential.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L19)
 
 ___
 
@@ -463,7 +463,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L21)
+[packages/halo/credentials/src/party/party-credential.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L21)
 
 ___
 
@@ -473,7 +473,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L22)
+[packages/halo/credentials/src/party/party-credential.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L22)
 
 ___
 
@@ -483,7 +483,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L20)
+[packages/halo/credentials/src/party/party-credential.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L20)
 
 ___
 
@@ -493,7 +493,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/proto/codec.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/proto/codec.ts#L7)
+[packages/halo/credentials/src/proto/codec.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/proto/codec.ts#L7)
 
 ## Functions
 
@@ -515,7 +515,7 @@ Provides a list of the publicKeys admitted by this PartyCredentialMessage.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:232](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L232)
+[packages/halo/credentials/src/party/party-credential.ts:232](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L232)
 
 ___
 
@@ -537,7 +537,7 @@ Checks that the KeyRecord contains no secrets (ie, secretKey and seedPhrase).
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L74)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L74)
 
 ___
 
@@ -559,7 +559,7 @@ Checks that there are no unknown attributes on the KeyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L95)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L95)
 
 ___
 
@@ -581,7 +581,7 @@ asserts keyRecord is KeyPair
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L65)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L65)
 
 ___
 
@@ -604,7 +604,7 @@ asserts key is PublicKeyLike
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L43)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L43)
 
 ___
 
@@ -627,7 +627,7 @@ asserts key is Buffer
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L53)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L53)
 
 ___
 
@@ -649,7 +649,7 @@ Utility method to produce stable output for signing/verifying.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:138](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L138)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L138)
 
 ___
 
@@ -673,7 +673,7 @@ A normalized copy of keyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:173](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L173)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:173](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L173)
 
 ___
 
@@ -693,7 +693,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/proto/codec.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/proto/codec.ts#L10)
+[packages/halo/credentials/src/proto/codec.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/proto/codec.ts#L10)
 
 ___
 
@@ -721,7 +721,7 @@ Create `dxos.credentials.auth.Auth` credentials.
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-message.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/auth-message.ts#L19)
+[packages/halo/credentials/src/auth/auth-message.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-message.ts#L19)
 
 ___
 
@@ -737,7 +737,7 @@ Creates a properly formatted RFC-3339 date-time string for "now".
 
 #### Defined in
 
-[packages/halo/credentials/src/proto/datetime.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/proto/datetime.ts#L11)
+[packages/halo/credentials/src/proto/datetime.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/proto/datetime.ts#L11)
 
 ___
 
@@ -761,7 +761,7 @@ Creates a DeviceInfo SignedMessage.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message.ts#L24)
+[packages/halo/credentials/src/identity/identity-message.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message.ts#L24)
 
 ___
 
@@ -791,7 +791,7 @@ Signed message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L115)
+[packages/halo/credentials/src/party/party-credential.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L115)
 
 ___
 
@@ -818,7 +818,7 @@ key which has already been admitted (usually by a device identity key).
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L87)
+[packages/halo/credentials/src/party/party-credential.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L87)
 
 ___
 
@@ -834,7 +834,7 @@ Create a Greeting 'BEGIN' command message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L17)
+[packages/halo/credentials/src/greet/greeting-message.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L17)
 
 ___
 
@@ -856,7 +856,7 @@ Create a Greeting 'CLAIM' command message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L70)
+[packages/halo/credentials/src/greet/greeting-message.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L70)
 
 ___
 
@@ -879,7 +879,7 @@ Crate a Greeting ClaimResponse message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:91](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L91)
+[packages/halo/credentials/src/greet/greeting-message.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L91)
 
 ___
 
@@ -901,7 +901,7 @@ Create a Greeting 'FINISH' command message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L56)
+[packages/halo/credentials/src/greet/greeting-message.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L56)
 
 ___
 
@@ -924,7 +924,7 @@ Create a Greeting 'HANDSHAKE' command message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L26)
+[packages/halo/credentials/src/greet/greeting-message.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L26)
 
 ___
 
@@ -947,7 +947,7 @@ Create a Greeting 'NOTARIZE' command message.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeting-message.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeting-message.ts#L41)
+[packages/halo/credentials/src/greet/greeting-message.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeting-message.ts#L41)
 
 ___
 
@@ -971,7 +971,7 @@ Creates a IdentityInfo SignedMessage.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message.ts#L41)
+[packages/halo/credentials/src/identity/identity-message.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message.ts#L41)
 
 ___
 
@@ -999,7 +999,7 @@ of an Envelope, also by a key which has already been admitted.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L61)
+[packages/halo/credentials/src/party/party-credential.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L61)
 
 ___
 
@@ -1022,7 +1022,7 @@ Create a new KeyRecord with the indicated attributes.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:111](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L111)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L111)
 
 ___
 
@@ -1058,7 +1058,7 @@ A decorator for collecting metrics on methods.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/simple-metrics.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/simple-metrics.ts#L51)
+[packages/halo/credentials/src/keys/simple-metrics.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/simple-metrics.ts#L51)
 
 ___
 
@@ -1087,7 +1087,7 @@ Signed message
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L34)
+[packages/halo/credentials/src/party/party-credential.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L34)
 
 ___
 
@@ -1118,7 +1118,7 @@ Create a `dxos.credentials.party.PartyInvitation` message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:275](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L275)
+[packages/halo/credentials/src/party/party-credential.ts:275](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L275)
 
 ___
 
@@ -1140,7 +1140,7 @@ Provides a shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L22)
+[packages/halo/credentials/src/greet/invitation.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L22)
 
 ___
 
@@ -1163,7 +1163,7 @@ Validates the shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/invitation.ts#L27)
+[packages/halo/credentials/src/greet/invitation.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L27)
 
 ___
 
@@ -1185,7 +1185,7 @@ Extract the contents of a SignedMessage
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:204](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L204)
+[packages/halo/credentials/src/party/party-credential.ts:204](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L204)
 
 ___
 
@@ -1207,7 +1207,7 @@ Generates a numeric passcode.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/passcode.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/passcode.ts#L10)
+[packages/halo/credentials/src/greet/passcode.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/passcode.ts#L10)
 
 ___
 
@@ -1223,7 +1223,7 @@ Generate bip39 seed phrase (aka mnemonic).
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/seedphrase.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/seedphrase.ts#L15)
+[packages/halo/credentials/src/identity/seedphrase.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/seedphrase.ts#L15)
 
 ___
 
@@ -1246,7 +1246,7 @@ Returns the PartyCredential.Type for the message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:218](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L218)
+[packages/halo/credentials/src/party/party-credential.ts:218](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L218)
 
 ___
 
@@ -1268,7 +1268,7 @@ Returns true if the message is a DeviceInfo message, else false.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message.ts#L73)
+[packages/halo/credentials/src/identity/identity-message.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message.ts#L73)
 
 ___
 
@@ -1290,7 +1290,7 @@ Is SignedMessage `message` an Envelope?
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:153](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L153)
+[packages/halo/credentials/src/party/party-credential.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L153)
 
 ___
 
@@ -1312,7 +1312,7 @@ Returns true if the message is a IdentityInfo message, else false.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message.ts#L85)
+[packages/halo/credentials/src/identity/identity-message.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message.ts#L85)
 
 ___
 
@@ -1334,7 +1334,7 @@ Returns true if the message is an Identity-related message, else false.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message.ts:60](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/identity-message.ts#L60)
+[packages/halo/credentials/src/identity/identity-message.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message.ts#L60)
 
 ___
 
@@ -1356,7 +1356,7 @@ key is KeyChain
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:167](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L167)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:167](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L167)
 
 ___
 
@@ -1378,7 +1378,7 @@ Is `message` a PartyCredential message?
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:141](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L141)
+[packages/halo/credentials/src/party/party-credential.ts:141](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L141)
 
 ___
 
@@ -1400,7 +1400,7 @@ Is `message` a PartyInvitation message?
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:311](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L311)
+[packages/halo/credentials/src/party/party-credential.ts:311](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L311)
 
 ___
 
@@ -1422,7 +1422,7 @@ message is SignedMessage
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:166](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L166)
+[packages/halo/credentials/src/party/party-credential.ts:166](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L166)
 
 ___
 
@@ -1445,7 +1445,7 @@ key is PublicKeyLike
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L24)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L24)
 
 ___
 
@@ -1467,7 +1467,7 @@ Generate key pair from seed phrase.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/seedphrase.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/identity/seedphrase.ts#L20)
+[packages/halo/credentials/src/identity/seedphrase.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/seedphrase.ts#L20)
 
 ___
 
@@ -1487,7 +1487,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keytype.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keytype.ts#L9)
+[packages/halo/credentials/src/keys/keytype.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keytype.ts#L9)
 
 ___
 
@@ -1509,7 +1509,7 @@ Obscures the value of secretKey and seedPhrase with a boolean.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring-helpers.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/keys/keyring-helpers.ts#L85)
+[packages/halo/credentials/src/keys/keyring-helpers.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring-helpers.ts#L85)
 
 ___
 
@@ -1531,7 +1531,7 @@ Unwrap a SignedMessage from its Envelopes.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:192](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L192)
+[packages/halo/credentials/src/party/party-credential.ts:192](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L192)
 
 ___
 
@@ -1553,7 +1553,7 @@ Unwraps (if necessary) a Message to its contents.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:180](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L180)
+[packages/halo/credentials/src/party/party-credential.ts:180](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L180)
 
 ___
 
@@ -1575,4 +1575,4 @@ Wraps a SignedMessage with a Message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-credential.ts:172](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-credential.ts#L172)
+[packages/halo/credentials/src/party/party-credential.ts:172](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-credential.ts#L172)

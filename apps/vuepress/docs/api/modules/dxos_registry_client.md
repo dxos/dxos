@@ -90,7 +90,7 @@ Domain names for authorities are auctioned.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L16)
+[packages/sdk/registry-client/src/api/registry.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L16)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/cid.ts#L56)
+[packages/sdk/registry-client/src/api/cid.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L56)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/dxn.ts:7](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/dxn.ts#L7)
+[packages/sdk/registry-client/src/api/dxn.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/dxn.ts#L7)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/encoding/encoding.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/encoding/encoding.ts#L17)
+[packages/sdk/registry-client/src/encoding/encoding.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/encoding/encoding.ts#L17)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L22)
+[packages/sdk/registry-client/src/api/registry.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L22)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L31)
+[packages/sdk/registry-client/src/api/registry-client.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L31)
 
 ___
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L36)
+[packages/sdk/registry-client/src/api/registry-client.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L36)
 
 ___
 
@@ -179,7 +179,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L26)
+[packages/sdk/registry-client/src/api/registry-client.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L26)
 
 ___
 
@@ -203,7 +203,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L14)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L14)
 
 ## Variables
 
@@ -213,7 +213,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L8)
+[packages/sdk/registry-client/src/api/account-key.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L8)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/domain-key.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/domain-key.ts#L8)
+[packages/sdk/registry-client/src/api/domain-key.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/domain-key.ts#L8)
 
 ___
 
@@ -242,7 +242,7 @@ Filtering logic in list methods of the API.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/filtering.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/filtering.ts#L27)
+[packages/sdk/registry-client/src/api/filtering.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/filtering.ts#L27)
 
 ___
 
@@ -252,7 +252,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:66](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L66)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L66)
 
 ___
 
@@ -262,7 +262,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-creation.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-creation.ts#L14)
+[packages/sdk/registry-client/src/polkadot/api-creation.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-creation.ts#L14)
 
 ## Functions
 
@@ -284,7 +284,7 @@ Creates an API primitive that holds the connection, transaction and querying of 
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-creation.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-creation.ts#L29)
+[packages/sdk/registry-client/src/polkadot/api-creation.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-creation.ts#L29)
 
 ___
 
@@ -300,7 +300,7 @@ Generates a random CID.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L17)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L17)
 
 ___
 
@@ -323,7 +323,7 @@ Accepts a custom domain, uses 'example' by default.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L23)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L23)
 
 ___
 
@@ -343,7 +343,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-creation.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-creation.ts#L18)
+[packages/sdk/registry-client/src/polkadot/api-creation.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-creation.ts#L18)
 
 ___
 
@@ -357,7 +357,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:100](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L100)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L100)
 
 ___
 
@@ -378,7 +378,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/encoding/encoding.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/encoding/encoding.ts#L30)
+[packages/sdk/registry-client/src/encoding/encoding.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/encoding/encoding.ts#L30)
 
 ___
 
@@ -399,7 +399,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/encoding/encoding.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/encoding/encoding.ts#L56)
+[packages/sdk/registry-client/src/encoding/encoding.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/encoding/encoding.ts#L56)
 
 ___
 
@@ -419,7 +419,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L61)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L61)
 
 ___
 
@@ -445,7 +445,7 @@ Generates a single random record.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L41)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L41)
 
 ___
 
@@ -471,7 +471,7 @@ Generates a single resource, optionally generating a random name and type if non
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L28)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L28)
 
 ___
 
@@ -497,7 +497,7 @@ Generates a single random type record.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L78)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L78)
 
 ___
 
@@ -519,7 +519,7 @@ Generates a static list of predefined type records.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/fake-data-generator.ts:96](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L96)
+[packages/sdk/registry-client/src/testing/fake-data-generator.ts:96](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/fake-data-generator.ts#L96)
 
 ___
 
@@ -540,4 +540,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/encoding/encoding.ts:80](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/encoding/encoding.ts#L80)
+[packages/sdk/registry-client/src/encoding/encoding.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/encoding/encoding.ts#L80)

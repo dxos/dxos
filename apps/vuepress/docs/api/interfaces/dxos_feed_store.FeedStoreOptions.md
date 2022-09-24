@@ -19,7 +19,7 @@ Hypercore class to use.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L38)
+[packages/echo/feed-store/src/feed-store.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L38)
 
 ___
 
@@ -31,4 +31,4 @@ Encoding type for each feed.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L34)
+[packages/echo/feed-store/src/feed-store.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L34)

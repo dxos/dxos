@@ -21,7 +21,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L17)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L17)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L18)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L18)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L20)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L20)
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L19)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L19)
 
 ___
 
@@ -97,7 +97,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L15)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L15)
 
 ___
 
@@ -107,4 +107,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L16)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L16)

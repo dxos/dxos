@@ -41,4 +41,4 @@
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/interfaces/registry/definitions.ts:5](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/interfaces/registry/definitions.ts#L5)
+[packages/sdk/registry-client/src/polkadot/interfaces/registry/definitions.ts:5](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/interfaces/registry/definitions.ts#L5)

@@ -22,4 +22,4 @@ The credentials (e.g., a serialized AuthMessage) as a bytes.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/authenticator.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/protocol/authenticator.ts#L36)
+[packages/echo/echo-db/src/protocol/authenticator.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/authenticator.ts#L36)

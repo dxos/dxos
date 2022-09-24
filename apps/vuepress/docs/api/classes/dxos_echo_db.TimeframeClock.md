@@ -38,7 +38,7 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L16)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L16)
 
 ## Properties
 
@@ -48,7 +48,7 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L14)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L14)
 
 ## Accessors
 
@@ -62,7 +62,7 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L20)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L20)
 
 ## Methods
 
@@ -82,7 +82,7 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L29)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L29)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L24)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L24)
 
 ___
 
@@ -123,4 +123,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L34)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L34)

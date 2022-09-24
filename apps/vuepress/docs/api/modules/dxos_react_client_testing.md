@@ -55,7 +55,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L50)
+[packages/sdk/react-client-testing/src/adapter.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L50)
 
 ## Variables
 
@@ -65,7 +65,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/selection.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/selection.ts#L30)
+[packages/sdk/react-client-testing/src/selection.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/selection.ts#L30)
 
 ___
 
@@ -77,7 +77,7 @@ Get related data from items.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:70](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L70)
+[packages/sdk/react-client-testing/src/adapter.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L70)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/adapter.ts#L18)
+[packages/sdk/react-client-testing/src/adapter.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L18)
 
 ## Functions
 
@@ -113,7 +113,7 @@ Dialog to create, join, or import party.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L26)
+[packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/CreatePartyDialog.tsx#L26)
 
 ___
 
@@ -133,7 +133,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ExportMenu.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ExportMenu.tsx#L19)
+[packages/sdk/react-client-testing/src/components/ExportMenu.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ExportMenu.tsx#L19)
 
 ___
 
@@ -153,7 +153,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L17)
+[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L17)
 
 ___
 
@@ -175,7 +175,7 @@ Dialog to create, join, or import party.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L28)
+[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L28)
 
 ___
 
@@ -198,7 +198,7 @@ Automatically creates a random DXOS profile.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/containers/ProfileInitializer.tsx:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/containers/ProfileInitializer.tsx#L14)
+[packages/sdk/react-client-testing/src/containers/ProfileInitializer.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/containers/ProfileInitializer.tsx#L14)
 
 ___
 
@@ -220,7 +220,7 @@ Simple editor that evaluates text as method calls against a party object.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/SelectionEditor.tsx:42](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/SelectionEditor.tsx#L42)
+[packages/sdk/react-client-testing/src/components/SelectionEditor.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/SelectionEditor.tsx#L42)
 
 ___
 
@@ -244,7 +244,7 @@ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/selection.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/selection.ts#L15)
+[packages/sdk/react-client-testing/src/selection.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/selection.ts#L15)
 
 ___
 
@@ -268,7 +268,7 @@ Useful for setting up examples or tests which display multiple peers in a single
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/hooks/usePartyBootstrap.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/hooks/usePartyBootstrap.ts#L14)
+[packages/sdk/react-client-testing/src/hooks/usePartyBootstrap.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/hooks/usePartyBootstrap.ts#L14)
 
 ___
 
@@ -288,7 +288,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/hooks/useTestParty.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/hooks/useTestParty.ts#L45)
+[packages/sdk/react-client-testing/src/hooks/useTestParty.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/hooks/useTestParty.ts#L45)
 
 ___
 
@@ -308,7 +308,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/hooks/useSchemaBuilder.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/hooks/useSchemaBuilder.ts#L13)
+[packages/sdk/react-client-testing/src/hooks/useSchemaBuilder.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/hooks/useSchemaBuilder.ts#L13)
 
 ___
 
@@ -330,4 +330,4 @@ Generate test party.
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/hooks/useTestParty.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/hooks/useTestParty.ts#L17)
+[packages/sdk/react-client-testing/src/hooks/useTestParty.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/hooks/useTestParty.ts#L17)

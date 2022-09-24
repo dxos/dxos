@@ -41,7 +41,7 @@ Minimal API for DXNS registry client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L28)
+[packages/sdk/registry-client/src/api/registry.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L28)
 
 ___
 
@@ -61,7 +61,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L38)
+[packages/sdk/registry-client/src/api/registry.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L38)
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L31)
+[packages/sdk/registry-client/src/api/registry.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L31)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L29)
+[packages/sdk/registry-client/src/api/registry.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L29)
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L39)
+[packages/sdk/registry-client/src/api/registry.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L39)
 
 ___
 
@@ -123,7 +123,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L32)
+[packages/sdk/registry-client/src/api/registry.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L32)
 
 ___
 
@@ -143,7 +143,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L30)
+[packages/sdk/registry-client/src/api/registry.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L30)
 
 ___
 
@@ -163,7 +163,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L40)
+[packages/sdk/registry-client/src/api/registry.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L40)
 
 ___
 
@@ -185,4 +185,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry.ts#L33)
+[packages/sdk/registry-client/src/api/registry.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L33)

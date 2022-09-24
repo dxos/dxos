@@ -53,7 +53,7 @@ Top-level class manages the complete life-cycle of parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L48)
+[packages/echo/echo-db/src/parties/party-manager.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L48)
 
 ## Properties
 
@@ -63,7 +63,7 @@ Top-level class manages the complete life-cycle of parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L46)
+[packages/echo/echo-db/src/parties/party-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L46)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L44)
+[packages/echo/echo-db/src/parties/party-manager.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L44)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L41)
+[packages/echo/echo-db/src/parties/party-manager.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L41)
 
 ## Accessors
 
@@ -97,7 +97,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L55)
+[packages/echo/echo-db/src/parties/party-manager.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L55)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:59](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L59)
+[packages/echo/echo-db/src/parties/party-manager.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L59)
 
 ## Methods
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:322](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L322)
+[packages/echo/echo-db/src/parties/party-manager.ts:322](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L322)
 
 ___
 
@@ -151,7 +151,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:233](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L233)
+[packages/echo/echo-db/src/parties/party-manager.ts:233](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L233)
 
 ___
 
@@ -171,7 +171,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:282](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L282)
+[packages/echo/echo-db/src/parties/party-manager.ts:282](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L282)
 
 ___
 
@@ -191,7 +191,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:267](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L267)
+[packages/echo/echo-db/src/parties/party-manager.ts:267](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L267)
 
 ___
 
@@ -214,7 +214,7 @@ Construct a party object and start replicating with the remote peer that created
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:163](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L163)
+[packages/echo/echo-db/src/parties/party-manager.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L163)
 
 ___
 
@@ -234,7 +234,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:211](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L211)
+[packages/echo/echo-db/src/parties/party-manager.ts:211](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L211)
 
 ___
 
@@ -248,7 +248,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:120](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L120)
+[packages/echo/echo-db/src/parties/party-manager.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L120)
 
 ___
 
@@ -264,7 +264,7 @@ Creates a new party, writing its genesis block to the stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:146](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L146)
+[packages/echo/echo-db/src/parties/party-manager.ts:146](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L146)
 
 ___
 
@@ -285,7 +285,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:189](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L189)
+[packages/echo/echo-db/src/parties/party-manager.ts:189](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L189)
 
 ___
 
@@ -305,4 +305,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:63](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-manager.ts#L63)
+[packages/echo/echo-db/src/parties/party-manager.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L63)

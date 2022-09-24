@@ -35,4 +35,4 @@ Return true if the credentials checkout, else false.
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/authenticator.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/auth/authenticator.ts#L29)
+[packages/halo/credentials/src/auth/authenticator.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/authenticator.ts#L29)

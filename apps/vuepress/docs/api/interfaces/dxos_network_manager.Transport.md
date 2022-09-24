@@ -30,7 +30,7 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L16)
+[packages/mesh/network-manager/src/transport/transport.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L16)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L17)
+[packages/mesh/network-manager/src/transport/transport.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L17)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L18)
+[packages/mesh/network-manager/src/transport/transport.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L18)
 
 ## Methods
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L20)
+[packages/mesh/network-manager/src/transport/transport.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L20)
 
 ___
 
@@ -84,4 +84,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/transport/transport.ts#L19)
+[packages/mesh/network-manager/src/transport/transport.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L19)

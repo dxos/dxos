@@ -31,7 +31,7 @@ Record metadata provided by the user.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L57)
+[packages/sdk/registry-client/src/api/registry-client.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L57)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L56)
+[packages/sdk/registry-client/src/api/registry-client.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L56)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L62)
+[packages/sdk/registry-client/src/api/registry-client.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L62)
 
 ___
 
@@ -69,4 +69,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:58](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/registry-client.ts#L58)
+[packages/sdk/registry-client/src/api/registry-client.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L58)

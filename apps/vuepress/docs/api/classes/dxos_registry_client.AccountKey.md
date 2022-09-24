@@ -39,7 +39,7 @@ Account keys must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:30](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L30)
+[packages/sdk/registry-client/src/api/account-key.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L30)
 
 ## Properties
 
@@ -49,7 +49,7 @@ Account keys must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L31)
+[packages/sdk/registry-client/src/api/account-key.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L31)
 
 ## Methods
 
@@ -69,7 +69,7 @@ Account keys must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L44)
+[packages/sdk/registry-client/src/api/account-key.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L44)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L36)
+[packages/sdk/registry-client/src/api/account-key.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L36)
 
 ___
 
@@ -97,7 +97,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L40)
+[packages/sdk/registry-client/src/api/account-key.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L40)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L24)
+[packages/sdk/registry-client/src/api/account-key.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L24)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L16)
+[packages/sdk/registry-client/src/api/account-key.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L16)
 
 ___
 
@@ -152,4 +152,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/api/account-key.ts#L20)
+[packages/sdk/registry-client/src/api/account-key.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L20)

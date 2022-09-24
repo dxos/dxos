@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:134](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L134)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L134)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:133](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L133)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:133](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L133)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:135](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L135)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L135)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:132](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L132)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:132](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L132)
 
 ___
 
@@ -68,4 +68,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:131](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L131)
+[packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/JsonTree/JsonTreeView.tsx#L131)

@@ -26,7 +26,7 @@ Storage used for keys. Defaults to in-memory.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L56)
+[packages/echo/echo-db/src/echo.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L56)
 
 ___
 
@@ -38,7 +38,7 @@ Networking provider. Defaults to in-memory networking.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L62)
+[packages/echo/echo-db/src/echo.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L62)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L76)
+[packages/echo/echo-db/src/echo.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L76)
 
 ___
 
@@ -74,7 +74,7 @@ Number of messages after which snapshot will be created. Defaults to 100.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L73)
+[packages/echo/echo-db/src/echo.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L73)
 
 ___
 
@@ -86,7 +86,7 @@ Whether to save and load snapshots. Defaults to `true`.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:68](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L68)
+[packages/echo/echo-db/src/echo.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L68)
 
 ___
 
@@ -98,7 +98,7 @@ Storage to persist data. Defaults to in-memory.
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L51)
+[packages/echo/echo-db/src/echo.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L51)
 
 ___
 
@@ -122,4 +122,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/echo.ts#L77)
+[packages/echo/echo-db/src/echo.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/echo.ts#L77)

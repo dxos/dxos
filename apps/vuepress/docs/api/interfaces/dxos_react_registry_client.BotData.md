@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L19)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L19)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L18)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L15)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L15)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L16)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L16)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L17)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L17)

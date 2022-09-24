@@ -29,7 +29,7 @@ Manages contacts.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/contact-manager.ts#L23)
+[packages/echo/echo-db/src/halo/contact-manager.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L23)
 
 ## Methods
 
@@ -43,7 +43,7 @@ Manages contacts.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/contact-manager.ts#L27)
+[packages/echo/echo-db/src/halo/contact-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L27)
 
 ___
 
@@ -57,4 +57,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/contact-manager.ts#L32)
+[packages/echo/echo-db/src/halo/contact-manager.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L32)

@@ -30,7 +30,7 @@ Common signaling context that connects multiple MemorySignalManager instances.
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/memory-signal-manager.ts#L27)
+[packages/mesh/messaging/src/memory-signal-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/memory-signal-manager.ts#L27)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/memory-signal-manager.ts#L21)
+[packages/mesh/messaging/src/memory-signal-manager.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/memory-signal-manager.ts#L21)
 
 ___
 
@@ -50,4 +50,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/memory-signal-manager.ts#L24)
+[packages/mesh/messaging/src/memory-signal-manager.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/memory-signal-manager.ts#L24)

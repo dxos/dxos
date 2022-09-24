@@ -22,7 +22,7 @@
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L15)
+[packages/echo/feed-store/src/create-batch-stream.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L15)
 
 ___
 
@@ -32,7 +32,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L12)
+[packages/echo/feed-store/src/create-batch-stream.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L12)
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L13)
+[packages/echo/feed-store/src/create-batch-stream.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L13)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L16)
+[packages/echo/feed-store/src/create-batch-stream.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L16)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L14)
+[packages/echo/feed-store/src/create-batch-stream.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L14)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L11)
+[packages/echo/feed-store/src/create-batch-stream.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L11)
 
 ___
 
@@ -82,4 +82,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/create-batch-stream.ts#L17)
+[packages/echo/feed-store/src/create-batch-stream.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/create-batch-stream.ts#L17)

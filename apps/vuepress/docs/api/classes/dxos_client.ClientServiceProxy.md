@@ -40,7 +40,7 @@ For example, the services can be located in Wallet Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L18)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L18)
 
 ## Properties
 
@@ -50,7 +50,7 @@ For example, the services can be located in Wallet Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L16)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L16)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L29)
 
 ## Methods
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L35)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L35)
 
 ___
 
@@ -106,4 +106,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L31)

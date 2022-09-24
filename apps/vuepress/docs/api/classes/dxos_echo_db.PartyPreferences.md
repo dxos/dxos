@@ -42,7 +42,7 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L22)
+[packages/echo/echo-db/src/parties/party-preferences.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L22)
 
 ## Accessors
 
@@ -56,7 +56,7 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L29)
+[packages/echo/echo-db/src/parties/party-preferences.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L29)
 
 ## Methods
 
@@ -76,7 +76,7 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L49)
+[packages/echo/echo-db/src/parties/party-preferences.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L49)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L61)
+[packages/echo/echo-db/src/parties/party-preferences.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L61)
 
 ___
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L45)
+[packages/echo/echo-db/src/parties/party-preferences.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L45)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L41)
+[packages/echo/echo-db/src/parties/party-preferences.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L41)
 
 ___
 
@@ -150,7 +150,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L74)
+[packages/echo/echo-db/src/parties/party-preferences.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L74)
 
 ___
 
@@ -171,7 +171,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L37)
+[packages/echo/echo-db/src/parties/party-preferences.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L37)
 
 ___
 
@@ -192,7 +192,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L33)
+[packages/echo/echo-db/src/parties/party-preferences.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L33)
 
 ___
 
@@ -212,4 +212,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/parties/party-preferences.ts#L78)
+[packages/echo/echo-db/src/parties/party-preferences.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L78)

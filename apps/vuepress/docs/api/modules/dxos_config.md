@@ -52,7 +52,7 @@ Any nested dot separated key that can be in config.
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L56)
+[packages/sdk/config/src/types.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L56)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L10)
+[packages/sdk/config/src/types.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L10)
 
 ___
 
@@ -84,7 +84,7 @@ Read more: https://stackoverflow.com/a/61648690.
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L48)
+[packages/sdk/config/src/types.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L48)
 
 ___
 
@@ -104,7 +104,7 @@ Example: 'services.signal.server' -> ['services', 'signal', 'server'].
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L36)
+[packages/sdk/config/src/types.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L36)
 
 ## Variables
 
@@ -114,7 +114,7 @@ Example: 'services.signal.server' -> ['services', 'signal', 'server'].
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L12)
+[packages/sdk/config/src/types.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L12)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L14)
+[packages/sdk/config/src/types.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L14)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/config/src/types.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/types.ts#L13)
+[packages/sdk/config/src/types.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/types.ts#L13)
 
 ## Functions
 
@@ -162,7 +162,7 @@ JSON config.
 
 #### Defined in
 
-[packages/sdk/config/src/loaders/index.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/loaders/index.ts#L49)
+[packages/sdk/config/src/loaders/index.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/loaders/index.ts#L49)
 
 ___
 
@@ -184,7 +184,7 @@ Provided dynamically by server.
 
 #### Defined in
 
-[packages/sdk/config/src/loaders/index.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/loaders/index.ts#L36)
+[packages/sdk/config/src/loaders/index.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/loaders/index.ts#L36)
 
 ___
 
@@ -212,7 +212,7 @@ ENV variable (key/value) map
 
 #### Defined in
 
-[packages/sdk/config/src/loaders/index.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/loaders/index.ts#L41)
+[packages/sdk/config/src/loaders/index.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/loaders/index.ts#L41)
 
 ___
 
@@ -234,7 +234,7 @@ File storage.
 
 #### Defined in
 
-[packages/sdk/config/src/loaders/index.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/loaders/index.ts#L31)
+[packages/sdk/config/src/loaders/index.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/loaders/index.ts#L31)
 
 ___
 
@@ -257,7 +257,7 @@ Maps the given objects onto a flattened set of (key x values).
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L23)
+[packages/sdk/config/src/config.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L23)
 
 ___
 
@@ -280,4 +280,4 @@ Maps the given flattend set of (key x values) onto a JSON object.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:69](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/config/src/config.ts#L69)
+[packages/sdk/config/src/config.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L69)

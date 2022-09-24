@@ -25,7 +25,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L13)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L13)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L15)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L15)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L12)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L12)
 
 ___
 
@@ -69,4 +69,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L14)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchAutocomplete.tsx#L14)

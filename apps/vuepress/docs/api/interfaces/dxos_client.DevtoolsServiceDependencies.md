@@ -22,7 +22,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L14)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L14)
 
 ___
 
@@ -32,7 +32,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L13)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L13)
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L18)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L18)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L15)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L15)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L17)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L17)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L19)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L19)
 
 ___
 
@@ -82,4 +82,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-context.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L16)
+[packages/sdk/client/src/packlets/devtools/devtools-context.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-context.ts#L16)

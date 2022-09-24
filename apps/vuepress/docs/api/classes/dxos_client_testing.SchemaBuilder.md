@@ -32,7 +32,7 @@
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/schemaBuilder.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L81)
+[packages/sdk/client-testing/src/builders/schemaBuilder.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L81)
 
 ## Accessors
 
@@ -46,7 +46,7 @@
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/schemaBuilder.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L85)
+[packages/sdk/client-testing/src/builders/schemaBuilder.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L85)
 
 ## Methods
 
@@ -69,7 +69,7 @@ Create data for all schemas.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/schemaBuilder.ts:149](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L149)
+[packages/sdk/client-testing/src/builders/schemaBuilder.ts:149](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L149)
 
 ___
 
@@ -93,7 +93,7 @@ NOTE: Assumes that referenced items have already been constructed.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/schemaBuilder.ts:117](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L117)
+[packages/sdk/client-testing/src/builders/schemaBuilder.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L117)
 
 ___
 
@@ -113,4 +113,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/schemaBuilder.ts:89](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L89)
+[packages/sdk/client-testing/src/builders/schemaBuilder.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/schemaBuilder.ts#L89)

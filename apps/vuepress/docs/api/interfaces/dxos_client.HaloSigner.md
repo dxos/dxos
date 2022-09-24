@@ -33,4 +33,4 @@ Signer plugin.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/halo.ts#L17)
+[packages/sdk/client/src/packlets/api/halo.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L17)

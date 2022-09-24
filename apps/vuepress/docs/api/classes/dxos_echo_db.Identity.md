@@ -55,7 +55,7 @@ Acts as a read-only view into IdentityManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L35)
+[packages/echo/echo-db/src/halo/identity.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L35)
 
 ## Properties
 
@@ -65,7 +65,7 @@ Acts as a read-only view into IdentityManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L28)
+[packages/echo/echo-db/src/halo/identity.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L28)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L29)
+[packages/echo/echo-db/src/halo/identity.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L29)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L27)
+[packages/echo/echo-db/src/halo/identity.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L27)
 
 ## Accessors
 
@@ -103,7 +103,7 @@ IdentityCredentials.contacts
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L85)
+[packages/echo/echo-db/src/halo/identity.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L85)
 
 ___
 
@@ -121,7 +121,7 @@ IdentityCredentials.deviceKey
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L57)
+[packages/echo/echo-db/src/halo/identity.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L57)
 
 ___
 
@@ -139,7 +139,7 @@ IdentityCredentials.deviceKeyChain
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L61)
+[packages/echo/echo-db/src/halo/identity.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L61)
 
 ___
 
@@ -157,7 +157,7 @@ IdentityCredentials.displayName
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:65](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L65)
+[packages/echo/echo-db/src/halo/identity.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L65)
 
 ___
 
@@ -173,7 +173,7 @@ HALO party. Must be open.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:93](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L93)
+[packages/echo/echo-db/src/halo/identity.ts:93](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L93)
 
 ___
 
@@ -191,7 +191,7 @@ IdentityCredentials.identityGenesis
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L77)
+[packages/echo/echo-db/src/halo/identity.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L77)
 
 ___
 
@@ -212,7 +212,7 @@ IdentityCredentials.identityInfo
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L73)
+[packages/echo/echo-db/src/halo/identity.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L73)
 
 ___
 
@@ -230,7 +230,7 @@ IdentityCredentials.identityKey
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:53](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L53)
+[packages/echo/echo-db/src/halo/identity.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L53)
 
 ___
 
@@ -248,7 +248,7 @@ IdentityCredentials.keyring
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L49)
+[packages/echo/echo-db/src/halo/identity.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L49)
 
 ___
 
@@ -266,7 +266,7 @@ IdentityCredentials.preferences
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L81)
+[packages/echo/echo-db/src/halo/identity.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L81)
 
 ___
 
@@ -280,7 +280,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L45)
+[packages/echo/echo-db/src/halo/identity.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L45)
 
 ## Methods
 
@@ -298,4 +298,4 @@ IdentityCredentials.createCredentialsSigner
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:97](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/halo/identity.ts#L97)
+[packages/echo/echo-db/src/halo/identity.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L97)

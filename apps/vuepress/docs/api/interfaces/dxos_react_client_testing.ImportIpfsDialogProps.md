@@ -26,7 +26,7 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L14)
+[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L14)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L13)
+[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L13)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:12](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L12)
+[packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportIpfsDialog.tsx#L12)

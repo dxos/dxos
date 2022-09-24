@@ -78,7 +78,7 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx#L11)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx#L11)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L11)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L11)
 
 ## Variables
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/useErrors.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L15)
+[packages/sdk/react-toolkit/src/hooks/useErrors.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L15)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/util.ts:8](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/util.ts#L8)
+[packages/sdk/react-toolkit/src/helpers/util.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/util.ts#L8)
 
 ## Functions
 
@@ -142,7 +142,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorIndicator.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/ErrorIndicator.tsx#L19)
+[packages/sdk/react-toolkit/src/components/ErrorIndicator.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorIndicator.tsx#L19)
 
 ___
 
@@ -166,7 +166,7 @@ Used in `ErrorBoundary`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:54](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L54)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L54)
 
 ___
 
@@ -192,7 +192,7 @@ Dialog to export keyring to file.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ExportDialog.tsx:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/ExportDialog.tsx#L14)
+[packages/sdk/react-toolkit/src/components/ExportDialog.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ExportDialog.tsx#L14)
 
 ___
 
@@ -217,7 +217,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/GlobalErrorWrapper.tsx:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/ErrorBoundary/GlobalErrorWrapper.tsx#L20)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/GlobalErrorWrapper.tsx:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/GlobalErrorWrapper.tsx#L20)
 
 ___
 
@@ -239,7 +239,7 @@ Manages the workflow for inviting a new device to a HALO party.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx#L16)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/HaloSharingDialog.tsx#L16)
 
 ___
 
@@ -264,7 +264,7 @@ Dialog to import keyring from file.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ImportDialog.tsx:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/ImportDialog.tsx#L15)
+[packages/sdk/react-toolkit/src/components/ImportDialog.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ImportDialog.tsx#L15)
 
 ___
 
@@ -288,7 +288,7 @@ See JoinPartyDialog and JoinHaloDialog.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:44](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L44)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinDialog.tsx#L44)
 
 ___
 
@@ -310,7 +310,7 @@ Manages the workflow of joining a HALO invitation.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinHaloDialog.tsx:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinHaloDialog.tsx#L18)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinHaloDialog.tsx:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinHaloDialog.tsx#L18)
 
 ___
 
@@ -332,7 +332,7 @@ Manages the workflow of joining a Party invitation.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx#L19)
+[packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/JoinDialog/JoinPartyDialog.tsx#L19)
 
 ___
 
@@ -354,7 +354,7 @@ Party member row.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L21)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L21)
 
 ___
 
@@ -376,7 +376,7 @@ Manages the workflow for inviting a user to a party.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/PartySharingDialog.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/PartySharingDialog.tsx#L21)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/PartySharingDialog.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/PartySharingDialog.tsx#L21)
 
 ___
 
@@ -398,7 +398,7 @@ Displays the pending invitation row, invitaion/cancel buttons, etc.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/PendingInvitation.tsx:27](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/PendingInvitation.tsx#L27)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/PendingInvitation.tsx:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/PendingInvitation.tsx#L27)
 
 ___
 
@@ -422,7 +422,7 @@ Replace with RegistrationDialog.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L23)
+[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L23)
 
 ___
 
@@ -444,7 +444,7 @@ Registration and recovery dialog.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:63](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L63)
+[packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/RegistrationDialog.tsx#L63)
 
 ___
 
@@ -466,7 +466,7 @@ Registry search with optional filters.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L26)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchPanel.tsx#L26)
 
 ___
 
@@ -488,7 +488,7 @@ List of selectable types.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L37)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistryTypeFilter.tsx#L37)
 
 ___
 
@@ -512,7 +512,7 @@ See PartySharingDialog and DeviceSharingDialog.
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L56)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L56)
 
 ___
 
@@ -532,7 +532,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SpawnBotPanel.tsx:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/SharingDialog/SpawnBotPanel.tsx#L17)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SpawnBotPanel.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SpawnBotPanel.tsx#L17)
 
 ___
 
@@ -553,7 +553,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/util.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/util.ts#L28)
+[packages/sdk/react-toolkit/src/helpers/util.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/util.ts#L28)
 
 ___
 
@@ -586,7 +586,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:33](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L33)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L33)
 
 ___
 
@@ -606,7 +606,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/Theme.tsx:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/components/Theme.tsx#L39)
+[packages/sdk/react-toolkit/src/components/Theme.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/Theme.tsx#L39)
 
 ___
 
@@ -626,7 +626,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L23)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L23)
 
 ___
 
@@ -660,7 +660,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/events.ts:6](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/events.ts#L6)
+[packages/sdk/react-toolkit/src/helpers/events.ts:6](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/events.ts#L6)
 
 ___
 
@@ -680,7 +680,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/util.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/util.ts#L25)
+[packages/sdk/react-toolkit/src/helpers/util.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/util.ts#L25)
 
 ___
 
@@ -707,7 +707,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/util.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/helpers/util.ts#L11)
+[packages/sdk/react-toolkit/src/helpers/util.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/util.ts#L11)
 
 ___
 
@@ -721,7 +721,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/useErrors.ts:18](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L18)
+[packages/sdk/react-toolkit/src/hooks/useErrors.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/useErrors.ts#L18)
 
 ___
 
@@ -735,7 +735,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/hooks/usePartySerializer.ts:10](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/hooks/usePartySerializer.ts#L10)
+[packages/sdk/react-toolkit/src/hooks/usePartySerializer.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/hooks/usePartySerializer.ts#L10)
 
 ___
 
@@ -757,4 +757,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L14)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L14)

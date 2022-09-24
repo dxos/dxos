@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L22)
+[packages/echo/feed-store/src/feed-store.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L22)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L23)
+[packages/echo/feed-store/src/feed-store.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L23)

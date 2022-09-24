@@ -43,7 +43,7 @@ ECHO adapter for the Graph model.
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L15)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L15)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L13)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L13)
 
 ## Accessors
 
@@ -71,7 +71,7 @@ GraphModel.graph
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L20)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L20)
 
 ## Methods
 
@@ -85,7 +85,7 @@ GraphModel.graph
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L28)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L28)
 
 ___
 
@@ -121,7 +121,7 @@ GraphModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L24)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L24)
 
 ___
 
@@ -141,4 +141,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L32)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L32)

@@ -33,7 +33,7 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/object-model.ts#L52)
+[packages/echo/object-model/src/object-model.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L52)
 
 ## Properties
 
@@ -43,7 +43,7 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/object-model.ts#L50)
+[packages/echo/object-model/src/object-model.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L50)
 
 ## Methods
 
@@ -57,7 +57,7 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:61](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/object-model.ts#L61)
+[packages/echo/object-model/src/object-model.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L61)
 
 ___
 
@@ -78,4 +78,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/object-model/src/object-model.ts#L56)
+[packages/echo/object-model/src/object-model.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L56)

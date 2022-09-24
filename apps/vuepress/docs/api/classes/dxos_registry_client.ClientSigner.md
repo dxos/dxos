@@ -40,7 +40,7 @@ Uses a DXNS key stored in HALO.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/util/client-signer.ts#L43)
+[packages/sdk/registry-client/src/util/client-signer.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L43)
 
 ## Properties
 
@@ -50,7 +50,7 @@ Uses a DXNS key stored in HALO.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/util/client-signer.ts#L39)
+[packages/sdk/registry-client/src/util/client-signer.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L39)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/util/client-signer.ts#L41)
+[packages/sdk/registry-client/src/util/client-signer.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L41)
 
 ## Methods
 
@@ -84,4 +84,4 @@ Partial.signRaw
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/util/client-signer.ts#L51)
+[packages/sdk/registry-client/src/util/client-signer.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L51)

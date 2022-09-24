@@ -29,7 +29,7 @@ https://github.com/hypercore-protocol/hypercore
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:52](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L52)
+[packages/echo/echo-protocol/src/types.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L52)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L48)
+[packages/echo/echo-protocol/src/types.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L48)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L51)
+[packages/echo/echo-protocol/src/types.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L51)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L49)
+[packages/echo/echo-protocol/src/types.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L49)
 
 ___
 
@@ -69,4 +69,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/types.ts#L50)
+[packages/echo/echo-protocol/src/types.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L50)

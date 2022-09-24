@@ -29,7 +29,7 @@ Import/export party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/serializer.ts#L16)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L16)
 
 ## Methods
 
@@ -49,7 +49,7 @@ Import/export party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/serializer.ts#L25)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L25)
 
 ___
 
@@ -69,4 +69,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/proxy/serializer.ts#L20)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L20)

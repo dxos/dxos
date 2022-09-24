@@ -36,7 +36,7 @@ TODO(burdon): Comment.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:27](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L27)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L27)
 
 ## Properties
 
@@ -46,7 +46,7 @@ TODO(burdon): Comment.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L25)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L25)
 
 ## Methods
 
@@ -66,7 +66,7 @@ TODO(burdon): Comment.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:100](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L100)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L100)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L78)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L78)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:71](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L71)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L71)
 
 ___
 
@@ -128,4 +128,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L38)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L38)

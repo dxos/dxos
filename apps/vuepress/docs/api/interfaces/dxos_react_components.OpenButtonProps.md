@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:150](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L150)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L150)
 
 ___
 
@@ -36,7 +36,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:151](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L151)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:151](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L151)
 
 ___
 
@@ -46,4 +46,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:152](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SlidingDrawer.tsx#L152)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L152)

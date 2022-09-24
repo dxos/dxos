@@ -29,7 +29,7 @@
 
 #### Defined in
 
-[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:11](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L11)
+[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L11)
 
 ## Functions
 
@@ -53,7 +53,7 @@ Return URL to IPFS resource on local gateway.
 
 #### Defined in
 
-[packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts#L15)
+[packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts#L15)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:37](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L37)
+[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L37)
 
 ___
 
@@ -101,7 +101,7 @@ Ports
 
 #### Defined in
 
-[packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts:28](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts#L28)
+[packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-ipfs/src/hooks/useIpfsClient.ts#L28)
 
 ___
 
@@ -124,4 +124,4 @@ Returns a list of mapped IPFS files.
 
 #### Defined in
 
-[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L22)
+[packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-ipfs/src/hooks/useIpfsFiles.ts#L22)

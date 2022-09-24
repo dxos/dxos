@@ -104,7 +104,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L55)
+[packages/halo/credentials/src/party/party-state.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L55)
 
 ## Properties
 
@@ -114,7 +114,7 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L48)
+[packages/halo/credentials/src/party/party-state.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L48)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L45)
+[packages/halo/credentials/src/party/party-state.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L45)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:43](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L43)
+[packages/halo/credentials/src/party/party-state.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L43)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:42](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L42)
+[packages/halo/credentials/src/party/party-state.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L42)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L41)
+[packages/halo/credentials/src/party/party-state.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L41)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:47](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L47)
+[packages/halo/credentials/src/party/party-state.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L47)
 
 ___
 
@@ -174,7 +174,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:46](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L46)
+[packages/halo/credentials/src/party/party-state.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L46)
 
 ___
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L40)
+[packages/halo/credentials/src/party/party-state.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L40)
 
 ___
 
@@ -194,7 +194,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L49)
+[packages/halo/credentials/src/party/party-state.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L49)
 
 ___
 
@@ -277,7 +277,7 @@ This is necessary information for demonstrating the trust relationship between k
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:125](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L125)
+[packages/halo/credentials/src/party/party-state.ts:125](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L125)
 
 ___
 
@@ -293,7 +293,7 @@ The Party's discovery key.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L95)
+[packages/halo/credentials/src/party/party-state.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L95)
 
 ___
 
@@ -311,7 +311,7 @@ from the HALO Party to a Party that is being joined.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:134](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L134)
+[packages/halo/credentials/src/party/party-state.ts:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L134)
 
 ___
 
@@ -327,7 +327,7 @@ public keys for the feeds admitted to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:110](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L110)
+[packages/halo/credentials/src/party/party-state.ts:110](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L110)
 
 ___
 
@@ -343,7 +343,7 @@ public keys admitted to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:117](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L117)
+[packages/halo/credentials/src/party/party-state.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L117)
 
 ___
 
@@ -359,7 +359,7 @@ The Party's public key.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L87)
+[packages/halo/credentials/src/party/party-state.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L87)
 
 ___
 
@@ -377,7 +377,7 @@ topic for this party
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:103](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L103)
+[packages/halo/credentials/src/party/party-state.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L103)
 
 ## Methods
 
@@ -402,7 +402,7 @@ true if added, false if already present
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:519](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L519)
+[packages/halo/credentials/src/party/party-state.ts:519](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L519)
 
 ___
 
@@ -425,7 +425,7 @@ Determine which Party member is admitting a particular credential message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:558](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L558)
+[packages/halo/credentials/src/party/party-state.ts:558](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L558)
 
 ___
 
@@ -447,7 +447,7 @@ Process a replicated Party credential message, admitting keys or feeds to the Pa
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:294](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L294)
+[packages/halo/credentials/src/party/party-state.ts:294](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L294)
 
 ___
 
@@ -470,7 +470,7 @@ Processes an AdmitFeed message, admitting a single feed to participate in the Pa
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:408](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L408)
+[packages/halo/credentials/src/party/party-state.ts:408](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L408)
 
 ___
 
@@ -492,7 +492,7 @@ Processes a PartyGenesis message, the start-of-authority for the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:363](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L363)
+[packages/halo/credentials/src/party/party-state.ts:363](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L363)
 
 ___
 
@@ -516,7 +516,7 @@ Processes an AdmitKey message, admitting a single key as a member of the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:389](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L389)
+[packages/halo/credentials/src/party/party-state.ts:389](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L389)
 
 ___
 
@@ -538,7 +538,7 @@ Process a Party message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:275](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L275)
+[packages/halo/credentials/src/party/party-state.ts:275](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L275)
 
 ___
 
@@ -560,7 +560,7 @@ Verifies the ENVELOPE message signature and extracts the inner message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:236](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L236)
+[packages/halo/credentials/src/party/party-state.ts:236](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L236)
 
 ___
 
@@ -587,7 +587,7 @@ requireSignatureFromTrustedKey should be set to false when testing the inner mes
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:440](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L440)
+[packages/halo/credentials/src/party/party-state.ts:440](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L440)
 
 ___
 
@@ -745,7 +745,7 @@ Lookup the PublicKey for the Party member associated with this KeyChain.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:170](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L170)
+[packages/halo/credentials/src/party/party-state.ts:170](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L170)
 
 ___
 
@@ -767,7 +767,7 @@ What member admitted the specified feed or member key?
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:150](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L150)
+[packages/halo/credentials/src/party/party-state.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L150)
 
 ___
 
@@ -789,7 +789,7 @@ Get info for the specified key (if available).
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:160](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L160)
+[packages/halo/credentials/src/party/party-state.ts:160](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L160)
 
 ___
 
@@ -811,7 +811,7 @@ Retrieve an PartyInvitation by its ID.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:141](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L141)
+[packages/halo/credentials/src/party/party-state.ts:141](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L141)
 
 ___
 
@@ -858,7 +858,7 @@ Is the indicated key a trusted feed associated with this party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:190](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L190)
+[packages/halo/credentials/src/party/party-state.ts:190](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L190)
 
 ___
 
@@ -880,7 +880,7 @@ Is the indicated key a trusted key associated with this party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:180](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L180)
+[packages/halo/credentials/src/party/party-state.ts:180](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L180)
 
 ___
 
@@ -1191,7 +1191,7 @@ Process an ordered array of messages, for compatibility with Model.processMessag
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:201](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L201)
+[packages/halo/credentials/src/party/party-state.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L201)
 
 ___
 
@@ -1446,7 +1446,7 @@ See `proto/greet.proto` for details on the purpose and use of hints.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:215](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L215)
+[packages/halo/credentials/src/party/party-state.ts:215](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L215)
 
 ___
 
@@ -1468,7 +1468,7 @@ Verify that the signatures on this message are present, correct, and from truste
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:426](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/party/party-state.ts#L426)
+[packages/halo/credentials/src/party/party-state.ts:426](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L426)
 
 ___
 

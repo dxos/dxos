@@ -47,7 +47,7 @@ into a persist repository storage.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:62](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L62)
+[packages/echo/feed-store/src/feed-store.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L62)
 
 ## Properties
 
@@ -57,7 +57,7 @@ into a persist repository storage.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L51)
+[packages/echo/feed-store/src/feed-store.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L51)
 
 ___
 
@@ -67,7 +67,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:48](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L48)
+[packages/echo/feed-store/src/feed-store.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L48)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:50](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L50)
+[packages/echo/feed-store/src/feed-store.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L50)
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L49)
+[packages/echo/feed-store/src/feed-store.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L49)
 
 ___
 
@@ -99,7 +99,7 @@ Is emitted when a new feed represented by FeedDescriptor is opened.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L56)
+[packages/echo/feed-store/src/feed-store.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L56)
 
 ## Accessors
 
@@ -113,7 +113,7 @@ Is emitted when a new feed represented by FeedDescriptor is opened.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L81)
+[packages/echo/feed-store/src/feed-store.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L81)
 
 ## Methods
 
@@ -135,7 +135,7 @@ Factory to create a new FeedDescriptor.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:113](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L113)
+[packages/echo/feed-store/src/feed-store.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L113)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L85)
+[packages/echo/feed-store/src/feed-store.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L85)
 
 ___
 
@@ -171,7 +171,7 @@ Create a readonly feed to Feedstore
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:105](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L105)
+[packages/echo/feed-store/src/feed-store.ts:105](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L105)
 
 ___
 
@@ -194,4 +194,4 @@ Create a feed to Feedstore
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:94](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/feed-store/src/feed-store.ts#L94)
+[packages/echo/feed-store/src/feed-store.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L94)

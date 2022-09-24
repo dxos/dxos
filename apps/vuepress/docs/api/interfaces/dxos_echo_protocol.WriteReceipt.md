@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L15)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L15)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L16)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L16)

@@ -59,7 +59,7 @@ Represents a live-query (subscription) that can notify about future updates to t
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L36)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L36)
 
 ## Properties
 
@@ -69,7 +69,7 @@ Represents a live-query (subscription) that can notify about future updates to t
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L34)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L34)
 
 ___
 
@@ -82,7 +82,7 @@ Only update that are relevant to the selection cause the update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:32](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L32)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L32)
 
 ## Accessors
 
@@ -98,7 +98,7 @@ Get the result of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L83)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L83)
 
 ___
 
@@ -114,7 +114,7 @@ The root of the selection. Either a database or an item. Must be a stable refere
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L76)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L76)
 
 ___
 
@@ -130,7 +130,7 @@ Returns the selection or reducer result.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:95](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L95)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L95)
 
 ## Methods
 
@@ -146,7 +146,7 @@ Return the first element if the set has exactly one element.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L107)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L107)
 
 ___
 
@@ -162,7 +162,7 @@ Re-run query.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:67](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L67)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L67)
 
 ___
 
@@ -176,4 +176,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:57](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/selection/result.ts#L57)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L57)

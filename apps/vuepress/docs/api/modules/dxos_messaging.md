@@ -47,7 +47,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L45)
+[packages/mesh/messaging/src/signal-client.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L45)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:21](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/messenger.ts#L21)
+[packages/mesh/messaging/src/messenger.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L21)
 
 ___
 
@@ -95,4 +95,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:36](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/signal-client.ts#L36)
+[packages/mesh/messaging/src/signal-client.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L36)

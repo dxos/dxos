@@ -64,7 +64,7 @@ Abstract module to send broadcast messages.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:90](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L90)
+[packages/mesh/broadcast/src/broadcast.ts:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L90)
 
 ## Properties
 
@@ -74,7 +74,7 @@ Abstract module to send broadcast messages.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L74)
+[packages/mesh/broadcast/src/broadcast.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L74)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:73](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L73)
+[packages/mesh/broadcast/src/broadcast.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L73)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:81](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L81)
+[packages/mesh/broadcast/src/broadcast.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L81)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:78](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L78)
+[packages/mesh/broadcast/src/broadcast.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L78)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:82](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L82)
+[packages/mesh/broadcast/src/broadcast.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L82)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:79](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L79)
+[packages/mesh/broadcast/src/broadcast.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L79)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:76](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L76)
+[packages/mesh/broadcast/src/broadcast.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L76)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:77](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L77)
+[packages/mesh/broadcast/src/broadcast.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L77)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L83)
+[packages/mesh/broadcast/src/broadcast.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L83)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L87)
+[packages/mesh/broadcast/src/broadcast.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L87)
 
 ___
 
@@ -174,7 +174,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L85)
+[packages/mesh/broadcast/src/broadcast.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L85)
 
 ___
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:86](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L86)
+[packages/mesh/broadcast/src/broadcast.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L86)
 
 ___
 
@@ -194,7 +194,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L88)
+[packages/mesh/broadcast/src/broadcast.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L88)
 
 ## Methods
 
@@ -218,7 +218,7 @@ Returns the packet if the decoding was successful.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:221](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L221)
+[packages/mesh/broadcast/src/broadcast.ts:221](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L221)
 
 ___
 
@@ -241,7 +241,7 @@ Publish and/or Forward a packet message to each peer neighbor.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:187](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L187)
+[packages/mesh/broadcast/src/broadcast.ts:187](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L187)
 
 ___
 
@@ -255,7 +255,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:169](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L169)
+[packages/mesh/broadcast/src/broadcast.ts:169](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L169)
 
 ___
 
@@ -269,7 +269,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:158](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L158)
+[packages/mesh/broadcast/src/broadcast.ts:158](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L158)
 
 ___
 
@@ -285,7 +285,7 @@ Prune the internal cache items in timeout
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:149](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L149)
+[packages/mesh/broadcast/src/broadcast.ts:149](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L149)
 
 ___
 
@@ -308,7 +308,7 @@ Broadcast a flooding message to the peers neighbors.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:112](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L112)
+[packages/mesh/broadcast/src/broadcast.ts:112](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L112)
 
 ___
 
@@ -330,7 +330,7 @@ Update internal cache options
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:136](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L136)
+[packages/mesh/broadcast/src/broadcast.ts:136](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L136)
 
 ___
 
@@ -352,4 +352,4 @@ Update internal list of peers.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:128](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/broadcast/src/broadcast.ts#L128)
+[packages/mesh/broadcast/src/broadcast.ts:128](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L128)

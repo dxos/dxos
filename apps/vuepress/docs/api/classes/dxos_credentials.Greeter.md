@@ -46,7 +46,7 @@ TODO(telackey): Does it make sense to separate out the Invitee functionality?
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L49)
+[packages/halo/credentials/src/greet/greeter.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L49)
 
 ## Properties
 
@@ -56,7 +56,7 @@ TODO(telackey): Does it make sense to separate out the Invitee functionality?
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:41](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L41)
+[packages/halo/credentials/src/greet/greeter.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L41)
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L39)
+[packages/halo/credentials/src/greet/greeter.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L39)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L40)
+[packages/halo/credentials/src/greet/greeter.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L40)
 
 ## Methods
 
@@ -99,7 +99,7 @@ Retrieves a valid invitation.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:153](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L153)
+[packages/halo/credentials/src/greet/greeter.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L153)
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:186](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L186)
+[packages/halo/credentials/src/greet/greeter.ts:186](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L186)
 
 ___
 
@@ -141,7 +141,7 @@ Finish and remove the invitation.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:181](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L181)
+[packages/halo/credentials/src/greet/greeter.ts:181](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L181)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:212](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L212)
+[packages/halo/credentials/src/greet/greeter.ts:212](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L212)
 
 ___
 
@@ -182,7 +182,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:225](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L225)
+[packages/halo/credentials/src/greet/greeter.ts:225](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L225)
 
 ___
 
@@ -214,7 +214,7 @@ expiration should be a Date.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:74](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L74)
+[packages/halo/credentials/src/greet/greeter.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L74)
 
 ___
 
@@ -242,7 +242,7 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:94](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L94)
+[packages/halo/credentials/src/greet/greeter.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L94)
 
 ___
 
@@ -266,4 +266,4 @@ Handle a P2P message from the Extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/halo/credentials/src/greet/greeter.ts#L107)
+[packages/halo/credentials/src/greet/greeter.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L107)

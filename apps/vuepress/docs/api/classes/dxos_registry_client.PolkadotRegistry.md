@@ -59,7 +59,7 @@ Polkadot DXNS registry client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
 
 ## Properties
 
@@ -73,7 +73,7 @@ Polkadot DXNS registry client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
 
 ## Methods
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:200](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L200)
+[packages/sdk/registry-client/src/polkadot/registry.ts:200](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L200)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:139](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L139)
+[packages/sdk/registry-client/src/polkadot/registry.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L139)
 
 ___
 
@@ -151,7 +151,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L34)
+[packages/sdk/registry-client/src/polkadot/registry.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L34)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:152](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L152)
+[packages/sdk/registry-client/src/polkadot/registry.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L152)
 
 ___
 
@@ -199,7 +199,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:67](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L67)
+[packages/sdk/registry-client/src/polkadot/registry.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L67)
 
 ___
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L40)
+[packages/sdk/registry-client/src/polkadot/registry.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L40)
 
 ___
 
@@ -235,7 +235,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:161](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L161)
+[packages/sdk/registry-client/src/polkadot/registry.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L161)
 
 ___
 
@@ -253,7 +253,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L84)
+[packages/sdk/registry-client/src/polkadot/registry.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L84)
 
 ___
 
@@ -277,7 +277,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:56](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L56)
+[packages/sdk/registry-client/src/polkadot/registry.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L56)
 
 ___
 
@@ -301,7 +301,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:180](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L180)
+[packages/sdk/registry-client/src/polkadot/registry.ts:180](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L180)
 
 ___
 
@@ -321,7 +321,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:189](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L189)
+[packages/sdk/registry-client/src/polkadot/registry.ts:189](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L189)
 
 ___
 
@@ -347,4 +347,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/registry.ts:108](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/registry-client/src/polkadot/registry.ts#L108)
+[packages/sdk/registry-client/src/polkadot/registry.ts:108](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/registry.ts#L108)

@@ -30,7 +30,7 @@ Text search interface.
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L20)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L20)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:26](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L26)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L26)
 
 ___
 
@@ -78,4 +78,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L23)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L23)

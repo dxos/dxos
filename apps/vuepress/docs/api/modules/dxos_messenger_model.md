@@ -22,7 +22,7 @@ Includes metadata for a message channel (e.g., title).
 
 #### Defined in
 
-[packages/echo/messenger-model/src/types.ts:9](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/messenger-model/src/types.ts#L9)
+[packages/echo/messenger-model/src/types.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/messenger-model/src/types.ts#L9)
 
 ___
 
@@ -34,4 +34,4 @@ Standard type of a set of messages as defined by the MessengerModel.
 
 #### Defined in
 
-[packages/echo/messenger-model/src/types.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/messenger-model/src/types.ts#L14)
+[packages/echo/messenger-model/src/types.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/messenger-model/src/types.ts#L14)

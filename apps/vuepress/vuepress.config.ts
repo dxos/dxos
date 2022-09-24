@@ -7,7 +7,6 @@ import frontMatter from 'front-matter';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { defaultTheme, defineUserConfig, SidebarGroupCollapsible, SidebarItem, UserConfig } from 'vuepress';
-import { typedocPlugin } from 'vuepress-plugin-typedoc/next';
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(join(__dirname, 'docs', path), 'utf-8');
@@ -57,9 +56,11 @@ const sidebar = () => readdirSync(join(__dirname, '/docs'))
     };
   }, {});
 
+// Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
   description: 'DXOS is an Operating System for Decentralized Software',
+  // Config: https://vuepress.github.io/reference/default-theme/config.html
   theme: defaultTheme({
     logo: '/images/dxos.svg',
     logoDark: '/images/dxos-white.svg',
@@ -83,7 +84,8 @@ const config: UserConfig = defineUserConfig({
     sidebar: sidebar()
   }),
   plugins: [
-    searchPlugin(),
+    // Config: https://vuepress.github.io/reference/plugin/search.html
+    searchPlugin()
     // TODO(wittjosiah): Can these link to each other?
     // typedocPlugin({
     //   entryPoints: ['../../packages/echo/echo-db/src/index.ts'],
@@ -95,20 +97,22 @@ const config: UserConfig = defineUserConfig({
     //   tsconfig: '../../packages/echo/echo-protocol/tsconfig.json',
     //   out: 'api/echo-protocol'
     // })
+    // Typedoc Config: https://typedoc.org/guides/options
+    // Plugin Config: https://github.com/tgreyuk/typedoc-plugin-markdown/tree/master/packages/vuepress-plugin-typedoc#options
     // TODO(wittjosiah): This strategy doesn't work well because it bunches everything together.
     //   Might work if we fork the plugin and make it output the md files in a different structure based on the typedoc data?
     // TODO(wittjosiah): Running typedoc on everything is slooooow (~300s), also runs out of memory sometimes.
     //   Can we take advantage of Nx cache to skip generation when nothing has changed?
-    typedocPlugin({
-      entryPoints: [
-        '../../packages/echo/*',
-        '../../packages/halo/*',
-        '../../packages/mesh/*',
-        '../../packages/sdk/*'
-      ],
-      tsconfig: '../../tsconfig.json',
-      entryPointStrategy: 'packages'
-    })
+    // typedocPlugin({
+    //   entryPoints: [
+    //     '../../packages/echo/*',
+    //     '../../packages/halo/*',
+    //     '../../packages/mesh/*',
+    //     '../../packages/sdk/*'
+    //   ],
+    //   tsconfig: '../../tsconfig.json',
+    //   entryPointStrategy: 'packages'
+    // })
   ]
 });
 

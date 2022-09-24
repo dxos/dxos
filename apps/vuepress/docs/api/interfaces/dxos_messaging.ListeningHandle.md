@@ -24,4 +24,4 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:247](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/messaging/src/messenger.ts#L247)
+[packages/mesh/messaging/src/messenger.ts:247](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L247)

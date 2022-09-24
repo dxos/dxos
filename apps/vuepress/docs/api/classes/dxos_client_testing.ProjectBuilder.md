@@ -34,7 +34,7 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:45](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L45)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L45)
 
 ## Accessors
 
@@ -48,7 +48,7 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:51](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L51)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L51)
 
 ## Methods
 
@@ -69,4 +69,4 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:55](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L55)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L55)

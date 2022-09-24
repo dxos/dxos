@@ -26,7 +26,7 @@ Peer rejected offer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L39)
+[packages/mesh/network-manager/src/swarm/connection.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L39)
 
 ___
 
@@ -38,7 +38,7 @@ Connection closed.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:54](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L54)
+[packages/mesh/network-manager/src/swarm/connection.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L54)
 
 ___
 
@@ -50,7 +50,7 @@ Connection is established.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:49](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L49)
+[packages/mesh/network-manager/src/swarm/connection.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L49)
 
 ___
 
@@ -62,7 +62,7 @@ Initial state. Connection is registered but no attempt to connect to the remote 
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L24)
+[packages/mesh/network-manager/src/swarm/connection.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L24)
 
 ___
 
@@ -74,7 +74,7 @@ Originating a connection.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:29](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L29)
+[packages/mesh/network-manager/src/swarm/connection.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L29)
 
 ___
 
@@ -86,7 +86,7 @@ Peer rejected offer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:44](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L44)
+[packages/mesh/network-manager/src/swarm/connection.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L44)
 
 ___
 
@@ -98,4 +98,4 @@ Waiting for a connection to be originated from the remote peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:34](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/connection.ts#L34)
+[packages/mesh/network-manager/src/swarm/connection.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/connection.ts#L34)

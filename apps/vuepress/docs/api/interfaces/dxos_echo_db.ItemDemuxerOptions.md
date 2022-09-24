@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/e3b936721/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)

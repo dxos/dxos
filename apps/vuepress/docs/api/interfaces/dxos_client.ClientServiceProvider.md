@@ -26,7 +26,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/client-service.ts:38](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/client-service.ts#L38)
+[packages/sdk/client/src/packlets/api/client-service.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/client-service.ts#L38)
 
 ## Methods
 
@@ -40,7 +40,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/client-service.ts:40](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/client-service.ts#L40)
+[packages/sdk/client/src/packlets/api/client-service.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/client-service.ts#L40)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/client-service.ts:39](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/client-service.ts#L39)
+[packages/sdk/client/src/packlets/api/client-service.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/client-service.ts#L39)

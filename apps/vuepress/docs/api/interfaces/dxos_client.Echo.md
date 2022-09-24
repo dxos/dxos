@@ -37,7 +37,7 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L82)
+[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L82)
 
 ## Methods
 
@@ -57,7 +57,7 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:88](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L88)
+[packages/sdk/client/src/packlets/api/echo.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L88)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:85](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L85)
+[packages/sdk/client/src/packlets/api/echo.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L85)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L84)
+[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L84)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:86](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L86)
+[packages/sdk/client/src/packlets/api/echo.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L86)
 
 ___
 
@@ -125,7 +125,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:87](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L87)
+[packages/sdk/client/src/packlets/api/echo.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L87)
 
 ___
 
@@ -145,4 +145,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L83)
+[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L83)

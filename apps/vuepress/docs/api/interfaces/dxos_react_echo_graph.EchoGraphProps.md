@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:21](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L21)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L21)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L19)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L19)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:23](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L23)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L23)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:20](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L20)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L20)
 
 ___
 
@@ -66,4 +66,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:22](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L22)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/EchoGraph.tsx#L22)

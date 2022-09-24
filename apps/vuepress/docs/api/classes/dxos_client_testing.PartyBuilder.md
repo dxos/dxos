@@ -39,7 +39,7 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:99](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L99)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L99)
 
 ## Accessors
 
@@ -53,7 +53,7 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:103](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L103)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L103)
 
 ## Methods
 
@@ -74,7 +74,7 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:214](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L214)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:214](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L214)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:115](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L115)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L115)
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:107](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L107)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L107)
 
 ___
 
@@ -123,7 +123,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:163](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L163)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L163)
 
 ___
 
@@ -143,7 +143,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:126](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L126)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:126](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L126)
 
 ___
 
@@ -163,7 +163,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:138](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L138)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L138)
 
 ___
 
@@ -183,7 +183,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:165](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L165)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:165](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L165)
 
 ___
 
@@ -203,4 +203,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:150](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client-testing/src/builders/partyBuilder.ts#L150)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L150)

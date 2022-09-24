@@ -54,7 +54,7 @@ It works in non-interactive mode and requires no authentication.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
 
 ## Properties
 
@@ -68,7 +68,7 @@ It works in non-interactive mode and requires no authentication.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
 
 ## Accessors
 
@@ -128,7 +128,7 @@ Invitation.descriptor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
 
 ## Methods
 
@@ -152,7 +152,7 @@ Invitation.descriptor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
 
 ___
 
@@ -168,7 +168,7 @@ Wait for the invitation flow to complete and return the target party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:72](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/echo.ts#L72)
+[packages/sdk/client/src/packlets/api/echo.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L72)
 
 ___
 
@@ -186,7 +186,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
 
 ___
 
@@ -206,4 +206,4 @@ Wait for the invitation flow to complete.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/e3b936721/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)

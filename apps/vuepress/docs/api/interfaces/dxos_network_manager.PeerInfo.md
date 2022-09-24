@@ -20,7 +20,7 @@ Information about remote peer, directly or indirectly connected.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:25](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L25)
+[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L25)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:23](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L23)
+[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L23)
 
 ___
 
@@ -40,4 +40,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:24](https://github.com/dxos/dxos/blob/e3b936721/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L24)
+[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L24)
