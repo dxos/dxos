@@ -40,12 +40,12 @@ end
 
 
 %% Hyperlinks
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

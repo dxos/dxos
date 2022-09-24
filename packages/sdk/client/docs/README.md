@@ -93,28 +93,28 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/echo-protocol href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
-click dxos/feed-store href "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/model-factory href "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/object-model href "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
-click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocol-plugin-replicator href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/random-access-storage href "https:/github.com/dxos/dxos/tree/main/packages/common/random-access-storage/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

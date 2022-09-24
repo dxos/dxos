@@ -5,19 +5,33 @@
 ## Dependency Graph
 
 ```mermaid
-flowchart LR;
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
 
-style dxos/plate fill:#fff,stroke-width:4px;
+flowchart LR
 
-click dxos/file "https:/github.com/dxos/dxos/tree/main/packages/fx/file/docs";
+%% Links
+dxos/plate --> dxos/file;
 
+%% Sections
 subgraph fx
-  style fx fill:#f5d6e0,stroke:#fff;
-  dxos/plate("@dxos/plate");
-  dxos/file("@dxos/file");
+  style fx fill:#e6b3c3,stroke:#fff;
+
+  dxos/file("@dxos/file")
+  dxos/plate("@dxos/plate")
 end
 
-dxos/plate --> dxos/file;
+
+%% Hyperlinks
+click dxos/file "dxos/dxos/tree/main/packages/fx/file/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/plate:::rootNode
+
+dxos/file:::defaultNode
 ```
 
 ## Dependencies

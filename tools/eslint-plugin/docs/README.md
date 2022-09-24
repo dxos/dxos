@@ -22,7 +22,7 @@ end
 
 
 %% Hyperlinks
-click dxos/eslint-plugin-rules href "https:/github.com/dxos/dxos/tree/main/tools/eslint-rules/docs";
+click dxos/eslint-plugin-rules "dxos/dxos/tree/main/tools/eslint-rules/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px

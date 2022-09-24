@@ -23,6 +23,7 @@ dxos/devtools --> dxos/devtools-mesh;
 dxos/devtools --> dxos/messenger-model;
 dxos/devtools --> dxos/react-client;
 dxos/devtools --> dxos/text-model;
+dxos/devtools-mesh --> dxos/gem-spore;
 dxos/devtools-mesh --> dxos/network-manager;
 dxos/devtools-mesh --> dxos/react-components;
 dxos/devtools-mesh --> dxos/react-toolkit;
@@ -31,6 +32,7 @@ dxos/echo-db --> dxos/object-model;
 dxos/echo-db --> dxos/protocol-plugin-replicator;
 dxos/echo-db --> dxos/random-access-storage;
 dxos/echo-protocol --> dxos/credentials;
+dxos/gem-spore --> dxos/gem-core;
 dxos/messaging --> dxos/rpc;
 dxos/messenger-model --> dxos/echo-protocol;
 dxos/messenger-model --> dxos/model-factory;
@@ -128,6 +130,13 @@ subgraph mesh
   dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc")
 end
 
+subgraph gem
+  style gem fill:#b3c7e6,stroke:#fff;
+
+  dxos/gem-core("@dxos/gem-core")
+  dxos/gem-spore("@dxos/gem-spore")
+end
+
 subgraph bot
   style bot fill:#c2b3e6,stroke:#fff;
 
@@ -136,37 +145,39 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/bot-factory-client href "https:/github.com/dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-click dxos/client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/client/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/devtools-mesh href "https:/github.com/dxos/dxos/tree/main/packages/devtools/devtools-mesh/docs";
-click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/echo-protocol href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
-click dxos/feed-store href "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
-click dxos/log href "https:/github.com/dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging href "https:/github.com/dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/messenger-model href "https:/github.com/dxos/dxos/tree/main/packages/echo/messenger-model/docs";
-click dxos/model-factory href "https:/github.com/dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/network-manager href "https:/github.com/dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/object-model href "https:/github.com/dxos/dxos/tree/main/packages/echo/object-model/docs";
-click dxos/protocol-plugin-presence href "https:/github.com/dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/react-async href "https:/github.com/dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-client/docs";
-click dxos/react-components href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-components/docs";
-click dxos/react-registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
-click dxos/react-toolkit href "https:/github.com/dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
-click dxos/registry-client href "https:/github.com/dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-click dxos/rpc href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel href "https:/github.com/dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/text-model href "https:/github.com/dxos/dxos/tree/main/packages/echo/text-model/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
+click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/devtools-mesh "dxos/dxos/tree/main/packages/devtools/devtools-mesh/docs";
+click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs";
+click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
+click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
+click dxos/messenger-model "dxos/dxos/tree/main/packages/echo/messenger-model/docs";
+click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
+click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
+click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs";
+click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
+click dxos/react-client "dxos/dxos/tree/main/packages/sdk/react-client/docs";
+click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs";
+click dxos/react-registry-client "dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
+click dxos/react-toolkit "dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
+click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
+click dxos/text-model "dxos/dxos/tree/main/packages/echo/text-model/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
@@ -187,6 +198,8 @@ dxos/devtools-mesh:::defaultNode
 dxos/echo-db:::defaultNode
 dxos/echo-protocol:::defaultNode
 dxos/feed-store:::defaultNode
+dxos/gem-core:::defaultNode
+dxos/gem-spore:::defaultNode
 dxos/log:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/messaging:::defaultNode
@@ -224,6 +237,8 @@ dxos/util:::defaultNode
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) |  |
 | [`@dxos/echo-protocol`](../../../echo/echo-protocol/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../echo/feed-store/docs/README.md) |  |
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) |  |
+| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) |  |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) | &check; |

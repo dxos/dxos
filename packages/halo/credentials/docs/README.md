@@ -54,14 +54,14 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "https:/github.com/dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/feed-store href "https:/github.com/dxos/dxos/tree/main/packages/echo/feed-store/docs";
-click dxos/mesh-protocol href "https:/github.com/dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/protocols href "https:/github.com/dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util href "https:/github.com/dxos/dxos/tree/main/packages/common/util/docs";
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
 classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
