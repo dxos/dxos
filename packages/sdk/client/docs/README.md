@@ -93,11 +93,11 @@ end
 
 
 %% Hyperlinks
-click dxos/async href "../../../packages/common/async/docs";
-click dxos/codec-protobuf href "https:/github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config href "https:/github.com/dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials href "https:/github.com/dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto href "https:/github.com/dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/async href "packages/common/async/docs";
+click dxos/codec-protobuf href "https://github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "https://github.com/dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/credentials href "dxos/dxos/tree/main/packages/sdk/client/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/sdk/client/docs";
 click dxos/debug href "https:/github.com/dxos/dxos/tree/main/packages/common/debug/docs";
 click dxos/echo-db href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-db/docs";
 click dxos/echo-protocol href "https:/github.com/dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
