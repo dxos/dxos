@@ -1,0 +1,22 @@
+version: 1
+
+package:
+  modules:
+    - name: example:app/bare
+      type: dxos:type/app
+      build:
+        command: npm run bundle
+        outdir: out/bare
+
+runtime:
+  client:
+    mode: local
+    storage:
+      persistent: true
+  services:
+    signal:
+      server: ws://localhost:8888/.well-known/dx/signal
+    ice:
+      - urls: turn:demo.kube.dxos.network:3478
+        username: dxos
+        credential: dxos
