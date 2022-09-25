@@ -101,7 +101,7 @@ export class ModuleProcessor {
         }
       });
     }
-  };
+  }
 
   /**
    * Create docs page.

@@ -16,7 +16,6 @@ import { log } from '@dxos/log';
 
 import { ModuleProcessor } from './module-processor';
 
-
 const main = () => {
   log.info('Started');
   const rootDir = path.join(__dirname, '../../..');
@@ -37,7 +36,7 @@ const main = () => {
         json,
         verbose
       }: {
-        json: boolean,
+        json: boolean
         verbose?: boolean
       }) => {
         const processor = new ModuleProcessor(rootDir, { verbose }).init();
