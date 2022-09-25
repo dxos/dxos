@@ -117,7 +117,9 @@ const main = () => {
           default: [
             '@dxos/async',
             '@dxos/debug',
+            '@dxos/keys',
             '@dxos/log',
+            '@dxos/testutils',
             '@dxos/util'
           ].join(',')
         }),

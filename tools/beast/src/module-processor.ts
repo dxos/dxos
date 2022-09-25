@@ -9,6 +9,9 @@ import path from 'path';
 
 import { PackageJson, Project, WorkspaceJson } from './types';
 
+// TODO(burdon): Factor out.
+const array = <T> (collection: Set<T> | Map<any, T>): T[] => Array.from(collection.values() ?? []);
+
 const colorHash = new ColorHash({
   lightness: 0.8
   // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
@@ -33,7 +36,7 @@ export class ModuleProcessor {
   ) {}
 
   get projects (): Project[] {
-    return Array.from(this.projectsByPackage.values());
+    return array(this.projectsByPackage);
   }
 
   match (filter?: string): Project[] {
@@ -62,7 +65,7 @@ export class ModuleProcessor {
 
     // Process all projects.
     const visited = new Set<string>();
-    for (const project of Array.from(this.projectsByName.values())) {
+    for (const project of array(this.projectsByName)) {
       this.processProject(project, visited);
     }
 
@@ -74,18 +77,25 @@ export class ModuleProcessor {
    * @return Array of descendents.
    */
   private processProject (project: Project, visited: Set<string>, chain: string[] = [project.package.name]): void {
-    // console.log('Processing:', project.package.name);
     const { package: { dependencies: dependencyMap = {} } } = project;
-
-    // TODO(burdon): Support filtering outside of workspace (e.g., crypto) without recursion.
-    const dependencies: Project[] = Object.keys(dependencyMap)
-      .filter(minimatch.filter(this.options.include ?? '*'))
-      .map(dep => this.projectsByPackage.get(dep))
-      .filter(Boolean) as Project[]; // Ignore @dxos packages outside of monorepo.
+    if (this.options.verbose) {
+      console.log('Processing:', project.package.name);
+    }
 
     // Check if already processed (since depth first).
     if (!visited.has(project.package.name)) {
       visited.add(project.package.name);
+
+      // TODO(burdon): Extra validations?
+      if (dependencyMap[project.package.name]) {
+        console.warn(`Invalid dependency on itself: ${project.package.name}`);
+      }
+
+      // TODO(burdon): Support filtering outside of workspace (e.g., crypto) without recursion.
+      const dependencies: Project[] = Object.keys(dependencyMap)
+        .filter(minimatch.filter(this.options.include ?? '*'))
+        .map(dep => this.projectsByPackage.get(dep))
+        .filter(Boolean) as Project[]; // Ignore @dxos packages outside of monorepo.
 
       dependencies.forEach(dep => {
         project.dependencies.add(dep);
@@ -97,7 +107,7 @@ export class ModuleProcessor {
           console.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
         } else {
           this.processProject(dep, visited, nextChain);
-          Array.from(dep.descendents.values()).forEach(pkg => project.descendents.add(pkg));
+          array(dep.descendents).forEach(pkg => project.descendents.add(pkg));
         }
       });
     }
@@ -148,13 +158,13 @@ export class ModuleProcessor {
       '|---|---|'
     ];
 
-    Array.from(project.descendents.values()).sort().forEach(name => {
+    array(project.descendents).sort().forEach(name => {
       const sub = this.projectsByPackage.get(name)!;
       const link = createLink(sub);
       // TODO(burdon): Test ":heavy_check_mark:"
       //  https://github.com/StylishThemes/GitHub-Dark/wiki/Emoji
       // content.push(`| ${link} | ${project.dependencies.has(sub) ? '&check;' : ''} |`);
-      content.push(`| ${link} | ${Array.from(project.dependencies.values()).some(sub => sub.package.name === name) ? '&check;' : ''} |`);
+      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === name) ? '&check;' : ''} |`);
     });
 
     return content.join('\n');
@@ -180,15 +190,14 @@ export class ModuleProcessor {
         '%% Links'
       ];
 
-      const addLinks = (project: Project) => {
-        visited.add(project);
-        project.dependencies.forEach(sub => {
-          // TODO(burdon): Option to show/hide transitive dependencies (light line).
+      const addLinks = (current: Project) => {
+        visited.add(current);
+        current.dependencies.forEach(sub => {
           if (
             !this.options.exclude?.includes(sub.package.name) &&
-            !Array.from(project.dependencies.values()).some(p => p.descendents.has(sub.package.name))
+            !array(current.dependencies).some(p => p.descendents.has(sub.package.name))
           ) {
-            links.push(`${safeName(project.package.name)} --> ${safeName(sub.package.name)};`);
+            links.push(`${safeName(current.package.name)} --> ${safeName(sub.package.name)};`);
           }
 
           if (!visited.has(sub)) {
@@ -213,7 +222,7 @@ export class ModuleProcessor {
       };
 
       // Reduce packages into folders.
-      const sectionDefs: Map<string, string[]> = Array.from(visited.values()).reduce((result, project) => {
+      const sectionDefs: Map<string, string[]> = array(visited).reduce((result, project) => {
         const name = project.package.name;
 
         // Group by folders.
@@ -265,7 +274,7 @@ export class ModuleProcessor {
     // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
     //
     {
-      const hyperlinks = Array.from(project.descendents.values()).sort().map(project => {
+      const hyperlinks = array(project.descendents).sort().map(project => {
         const subdir = this.projectsByPackage.get(project)!.subdir;
         // click dxos/crypto "dxos/dxos/tree/main/packages/sdk/client/docs";
         return `click ${safeName(project)} "${path.join(baseUrl, subdir, docsDir)}";`;
@@ -287,7 +296,7 @@ export class ModuleProcessor {
         '',
         `${safeName(project.package.name)}:::rootNode`,
         '',
-        ...Array.from(project.descendents.values() ?? []).sort().map(name => `${safeName(name)}:::defaultNode`)
+        ...array(project.descendents).sort().map(name => `${safeName(name)}:::defaultNode`)
       ];
 
       content.push(styles);
