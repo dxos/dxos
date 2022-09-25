@@ -10,6 +10,7 @@ import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey, schema } from '@dxos/protocols';
+import { WebRTCService } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
@@ -17,16 +18,15 @@ import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
-import { WebRTCService } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 
-describe.only('WebRTCTransportProxy', () => {
+describe('WebRTCTransportProxy', () => {
   const setup = async ({
     initiator = true,
     ownId = PublicKey.random(),
     remoteId = PublicKey.random(),
     sessionId = PublicKey.random(),
     topic = PublicKey.random(),
-    stream = new Duplex(),
+    stream = new Duplex({ write: () => { }, read: () => { } }),
     sendSignal = () => { }
   }: {
     initiator?: boolean
@@ -70,7 +70,7 @@ describe.only('WebRTCTransportProxy', () => {
     await webRTCTransportProxy.init();
     afterTest(async () => await webRTCTransportProxy.close());
 
-    return { webRTCService: webRTCService, webRTCTransportProxy };
+    return { webRTCService, webRTCTransportProxy };
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.

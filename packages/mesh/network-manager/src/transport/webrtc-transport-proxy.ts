@@ -30,6 +30,7 @@ export interface WebRTCTransportProxyParams {
 
 export class WebRTCTransportProxy implements Transport {
   readonly closed = new Event();
+  private _closed = false;
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
@@ -52,9 +53,11 @@ export class WebRTCTransportProxy implements Transport {
     });
   }
 
-  async init(): Promise<void> {
+  async init (): Promise<void> {
     await this._rpc.open();
     this._openedRpc.wake();
+
+    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.WebRTCService.sendData({ payload: data }));
 
     this._serviceStream = this._rpc.rpc.WebRTCService.open({ initiator: this._params.initiator });
     this._serviceStream.subscribe(async (msg: WebRTCEvent) => {
@@ -75,7 +78,6 @@ export class WebRTCTransportProxy implements Transport {
 
     switch (connectionEvent.state) {
       case ConnectionState.CONNECTED: {
-        // TODO(mykola): pipe serviceStream into this._params.stream
         this.connected.emit();
         break;
       }
@@ -84,11 +86,10 @@ export class WebRTCTransportProxy implements Transport {
         break;
       }
     }
-
   }
 
   private _handleData (dataEvent: WebRTCEvent.DataEvent) {
-    throw new Error('Not implemented');
+    this._params.stream.write(dataEvent.payload);
   }
 
   private async _handleSignal (signalEvent: WebRTCEvent.SignalEvent) {
@@ -107,9 +108,13 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   async close (): Promise<void> {
+    if (this._closed) {
+      return;
+    }
     this._serviceStream.close();
     await this._rpc.rpc.WebRTCService.close({});
     this._rpc.close();
     this.closed.emit();
+    this._closed = true;
   }
 }

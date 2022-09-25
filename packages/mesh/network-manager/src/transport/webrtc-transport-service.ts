@@ -34,6 +34,14 @@ export class WebRTCTransportService implements WebRTCService {
         }
       });
 
+      this.peer.on('data', async (payload) => {
+        next({
+          data: {
+            payload
+          }
+        });
+      });
+
       this.peer.on('signal', async data => {
         next({
           signal: {
@@ -80,7 +88,8 @@ export class WebRTCTransportService implements WebRTCService {
   }
 
   async sendData (request: DataRequest): Promise<void> {
-    throw new Error('Not implemented yet');
+    assert(this.peer);
+    this.peer.write(request.payload);
   }
 
   async close () {
