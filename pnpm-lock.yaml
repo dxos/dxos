@@ -2505,7 +2505,6 @@ importers:
   packages/sdk/client-services:
     specifiers:
       '@dxos/async': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/credentials': workspace:*
@@ -2539,7 +2538,6 @@ importers:
       memdown: ^5.1.0
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/client-services': 'link:'
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/credentials': link:../../halo/credentials
@@ -27467,7 +27465,7 @@ packages:
     dev: true
 
   /memdown/1.4.1:
-    resolution: {integrity: sha512-iVrGHZB8i4OQfM155xx8akvG9FIj+ht14DX5CQkCTG4EHzZ3d3sgckIf/Lm9ivZalEsFuEVnWv2B2WZvbrro2w==}
+    resolution: {integrity: sha1-tOThkhdGZP+65BNhqlAPMRnv4hU=}
     dependencies:
       abstract-leveldown: 2.7.2
       functional-red-black-tree: 1.0.1
