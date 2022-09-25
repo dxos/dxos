@@ -1,16 +1,36 @@
 # @dxos/gravity-dashboard
 
 Gravity dashboard.
-## Dependency Graph
-```mermaid
-flowchart LR;
 
+## Dependency Graph
+
+```mermaid
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
+
+flowchart LR
+
+%% Links
+
+%% Sections
 subgraph gravity
-  style gravity fill:#f5d6d7,stroke:#fff;
-  dxos/gravity-dashboard("@dxos/gravity-dashboard");
+  style gravity fill:#edabad,stroke:#fff;
+
+  dxos/gravity-dashboard("@dxos/gravity-dashboard")
 end
 
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/gravity-dashboard:::rootNode
+
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|

@@ -1,16 +1,36 @@
 # @dxos/protobuf-test
 
 
-## Dependency Graph
-```mermaid
-flowchart LR;
 
+## Dependency Graph
+
+```mermaid
+%%{ init: {'flowchart':{'curve':'basis'}} }%%
+
+flowchart LR
+
+%% Links
+
+%% Sections
 subgraph tools
-  style tools fill:#ded6f5,stroke:#fff;
-  dxos/protobuf-test("@dxos/protobuf-test");
+  style tools fill:#bbabed,stroke:#fff;
+
+  dxos/protobuf-test("@dxos/protobuf-test")
 end
 
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+linkStyle default stroke:#333,stroke-width:1px
+
+dxos/protobuf-test:::rootNode
+
 ```
+
 ## Dependencies
+
 | Module | Direct |
 |---|---|
