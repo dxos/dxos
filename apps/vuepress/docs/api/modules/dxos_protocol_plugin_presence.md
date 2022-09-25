@@ -1,11 +1,9 @@
 # Module: @dxos/protocol-plugin-presence
 
-## Table of contents
-
-### Classes
+## Classes
 
 - [PresencePlugin](../classes/dxos_protocol_plugin_presence.PresencePlugin.md)
 
-### Interfaces
+## Interfaces
 
 - [PresenceOptions](../interfaces/dxos_protocol_plugin_presence.PresenceOptions.md)

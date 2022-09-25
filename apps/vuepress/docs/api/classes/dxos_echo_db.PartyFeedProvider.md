@@ -2,31 +2,11 @@
 
 [@dxos/echo-db](../modules/dxos_echo_db.md).PartyFeedProvider
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyFeedProvider.md#constructor)
-
-### Properties
-
-- [\_feeds](dxos_echo_db.PartyFeedProvider.md#_feeds)
-- [feedOpened](dxos_echo_db.PartyFeedProvider.md#feedopened)
-
-### Methods
-
-- [\_createReadWriteFeed](dxos_echo_db.PartyFeedProvider.md#_createreadwritefeed)
-- [\_trackFeed](dxos_echo_db.PartyFeedProvider.md#_trackfeed)
-- [createIterator](dxos_echo_db.PartyFeedProvider.md#createiterator)
-- [createOrOpenReadOnlyFeed](dxos_echo_db.PartyFeedProvider.md#createoropenreadonlyfeed)
-- [createOrOpenWritableFeed](dxos_echo_db.PartyFeedProvider.md#createoropenwritablefeed)
-- [getFeeds](dxos_echo_db.PartyFeedProvider.md#getfeeds)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyFeedProvider**(`_metadataStore`, `_keyring`, `_feedStore`, `_partyKey`)
+**new PartyFeedProvider**(`_metadataStore`, `_keyring`, `_feedStore`, `_partyKey`)
 
 #### Parameters
 
@@ -39,33 +19,33 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L26)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L26)
 
 ## Properties
 
 ### \_feeds
 
-• `Private` `Readonly` **\_feeds**: `ComplexMap`<`PublicKey`, `FeedDescriptor`\>
+ `Private` `Readonly` **\_feeds**: `ComplexMap`<`PublicKey`, `FeedDescriptor`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L23)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L23)
 
 ___
 
 ### feedOpened
 
-• `Readonly` **feedOpened**: `Event`<`FeedDescriptor`\>
+ `Readonly` **feedOpened**: `Event`<`FeedDescriptor`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L24)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L24)
 
 ## Methods
 
 ### \_createReadWriteFeed
 
-▸ `Private` **_createReadWriteFeed**(): `Promise`<`FeedDescriptor`\>
+`Private` **_createReadWriteFeed**(): `Promise`<`FeedDescriptor`\>
 
 #### Returns
 
@@ -73,13 +53,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L84)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L84)
 
 ___
 
 ### \_trackFeed
 
-▸ `Private` **_trackFeed**(`feed`): `void`
+`Private` **_trackFeed**(`feed`): `void`
 
 #### Parameters
 
@@ -93,13 +73,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L73)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:73](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L73)
 
 ___
 
 ### createIterator
 
-▸ **createIterator**(`messageSelector`, `feedSelector`, `initialTimeframe?`): `Promise`<`FeedStoreIterator`\>
+**createIterator**(`messageSelector`, `feedSelector`, `initialTimeframe?`): `Promise`<`FeedStoreIterator`\>
 
 #### Parameters
 
@@ -115,13 +95,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L94)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L94)
 
 ___
 
 ### createOrOpenReadOnlyFeed
 
-▸ **createOrOpenReadOnlyFeed**(`feedKey`): `Promise`<`FeedDescriptor`\>
+**createOrOpenReadOnlyFeed**(`feedKey`): `Promise`<`FeedDescriptor`\>
 
 #### Parameters
 
@@ -135,13 +115,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L58)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L58)
 
 ___
 
 ### createOrOpenWritableFeed
 
-▸ **createOrOpenWritableFeed**(): `Promise`<`FeedDescriptor`\>
+**createOrOpenWritableFeed**(): `Promise`<`FeedDescriptor`\>
 
 #### Returns
 
@@ -149,13 +129,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L37)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L37)
 
 ___
 
 ### getFeeds
 
-▸ **getFeeds**(): `FeedDescriptor`[]
+**getFeeds**(): `FeedDescriptor`[]
 
 #### Returns
 
@@ -163,4 +143,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L33)
+[packages/echo/echo-db/src/pipeline/party-feed-provider.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-feed-provider.ts#L33)

@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [license](dxos_config.defs.Package.md#license)
-- [modules](dxos_config.defs.Package.md#modules)
-- [repos](dxos_config.defs.Package.md#repos)
-
 ## Properties
 
 ### license
 
-• `Optional` **license**: `string`
+ `Optional` **license**: `string`
 
 Options:
   - proto3_optional = true
@@ -30,7 +22,7 @@ ___
 
 ### modules
 
-• `Optional` **modules**: [`Module`](dxos_config.defs.Module-1.md)[]
+ `Optional` **modules**: [`Module`](dxos_config.defs.Module-1.md)[]
 
 #### Defined in
 
@@ -40,7 +32,7 @@ ___
 
 ### repos
 
-• `Optional` **repos**: [`Repo`](dxos_config.defs.Repo.md)[]
+ `Optional` **repos**: [`Repo`](dxos_config.defs.Repo.md)[]
 
 #### Defined in
 

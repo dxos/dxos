@@ -2,22 +2,15 @@
 
 [@dxos/client](../modules/dxos_client.md).HandleInvitationRedemptionResult
 
-## Table of contents
-
-### Properties
-
-- [authenticate](dxos_client.HandleInvitationRedemptionResult.md#authenticate)
-- [waitForFinish](dxos_client.HandleInvitationRedemptionResult.md#waitforfinish)
-
 ## Properties
 
 ### authenticate
 
-• **authenticate**: (`secret`: `Uint8Array`) => `void`
+ **authenticate**: (`secret`: `Uint8Array`) => `void`
 
 #### Type declaration
 
-▸ (`secret`): `void`
+(`secret`): `void`
 
 ##### Parameters
 
@@ -31,17 +24,17 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L34)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L34)
 
 ___
 
 ### waitForFinish
 
-• **waitForFinish**: () => `Promise`<`RedeemedInvitation`\>
+ **waitForFinish**: () => `Promise`<`RedeemedInvitation`\>
 
 #### Type declaration
 
-▸ (): `Promise`<`RedeemedInvitation`\>
+(): `Promise`<`RedeemedInvitation`\>
 
 ##### Returns
 
@@ -49,4 +42,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L33)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L33)

@@ -2,24 +2,15 @@
 
 [@dxos/react-toolkit](../modules/dxos_react_toolkit.md).ProfileDialogProps
 
-## Table of contents
-
-### Properties
-
-- [onCancel](dxos_react_toolkit.ProfileDialogProps.md#oncancel)
-- [onCreate](dxos_react_toolkit.ProfileDialogProps.md#oncreate)
-- [onJoinHalo](dxos_react_toolkit.ProfileDialogProps.md#onjoinhalo)
-- [open](dxos_react_toolkit.ProfileDialogProps.md#open)
-
 ## Properties
 
 ### onCancel
 
-• `Optional` **onCancel**: () => `void`
+ `Optional` **onCancel**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -27,17 +18,17 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L16)
+[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L16)
 
 ___
 
 ### onCreate
 
-• **onCreate**: (`__namedParameters`: { `username`: `string`  }) => `void`
+ **onCreate**: (`__namedParameters`: { `username`: `string`  }) => `void`
 
 #### Type declaration
 
-▸ (`__namedParameters`): `void`
+(`__namedParameters`): `void`
 
 ##### Parameters
 
@@ -52,17 +43,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L15)
+[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L15)
 
 ___
 
 ### onJoinHalo
 
-• `Optional` **onJoinHalo**: () => `void`
+ `Optional` **onJoinHalo**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -70,14 +61,14 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L17)
+[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L17)
 
 ___
 
 ### open
 
-• **open**: `boolean`
+ **open**: `boolean`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L14)
+[packages/sdk/react-toolkit/src/components/ProfileDialog.tsx:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ProfileDialog.tsx#L14)

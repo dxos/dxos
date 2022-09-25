@@ -4,22 +4,11 @@
 
 Manages contacts.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.ContactManager.md#constructor)
-
-### Methods
-
-- [getContactListItem](dxos_echo_db.ContactManager.md#getcontactlistitem)
-- [queryContacts](dxos_echo_db.ContactManager.md#querycontacts)
-
 ## Constructors
 
 ### constructor
 
-• **new ContactManager**(`_getDatabase`)
+**new ContactManager**(`_getDatabase`)
 
 #### Parameters
 
@@ -29,13 +18,13 @@ Manages contacts.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L23)
+[packages/echo/echo-db/src/halo/contact-manager.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/contact-manager.ts#L23)
 
 ## Methods
 
 ### getContactListItem
 
-▸ **getContactListItem**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`ObjectModel`\>
+**getContactListItem**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`ObjectModel`\>
 
 #### Returns
 
@@ -43,13 +32,13 @@ Manages contacts.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L27)
+[packages/echo/echo-db/src/halo/contact-manager.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/contact-manager.ts#L27)
 
 ___
 
 ### queryContacts
 
-▸ **queryContacts**(): [`ResultSet`](dxos_echo_db.ResultSet.md)<[`PartyMember`](../interfaces/dxos_echo_db.PartyMember.md)\>
+**queryContacts**(): [`ResultSet`](dxos_echo_db.ResultSet.md)<[`PartyMember`](../interfaces/dxos_echo_db.PartyMember.md)\>
 
 #### Returns
 
@@ -57,4 +46,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/contact-manager.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/contact-manager.ts#L32)
+[packages/echo/echo-db/src/halo/contact-manager.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/contact-manager.ts#L32)

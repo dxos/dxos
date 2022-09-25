@@ -5,22 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [autoupdate](dxos_config.defs.Runtime.Kube-1.md#autoupdate)
-- [confhost](dxos_config.defs.Runtime.Kube-1.md#confhost)
-- [host](dxos_config.defs.Runtime.Kube-1.md#host)
-- [https](dxos_config.defs.Runtime.Kube-1.md#https)
-- [p2p](dxos_config.defs.Runtime.Kube-1.md#p2p)
-- [port](dxos_config.defs.Runtime.Kube-1.md#port)
-
 ## Properties
 
 ### autoupdate
 
-• `Optional` **autoupdate**: [`Autoupdate`](dxos_config.defs.Runtime.Kube.Autoupdate.md)
+ `Optional` **autoupdate**: [`Autoupdate`](dxos_config.defs.Runtime.Kube.Autoupdate.md)
 
 Options:
   - proto3_optional = true
@@ -33,7 +22,7 @@ ___
 
 ### confhost
 
-• `Optional` **confhost**: `string`
+ `Optional` **confhost**: `string`
 
 Options:
   - proto3_optional = true
@@ -46,7 +35,7 @@ ___
 
 ### host
 
-• `Optional` **host**: `string`
+ `Optional` **host**: `string`
 
 Options:
   - proto3_optional = true
@@ -59,7 +48,7 @@ ___
 
 ### https
 
-• `Optional` **https**: [`Https`](dxos_config.defs.Runtime.Kube.Https.md)
+ `Optional` **https**: [`Https`](dxos_config.defs.Runtime.Kube.Https.md)
 
 Options:
   - proto3_optional = true
@@ -72,7 +61,7 @@ ___
 
 ### p2p
 
-• `Optional` **p2p**: [`P2P`](dxos_config.defs.Runtime.Kube.P2P.md)
+ `Optional` **p2p**: [`P2P`](dxos_config.defs.Runtime.Kube.P2P.md)
 
 Options:
   - proto3_optional = true
@@ -85,7 +74,7 @@ ___
 
 ### port
 
-• `Optional` **port**: `string`
+ `Optional` **port**: `string`
 
 Options:
   - proto3_optional = true

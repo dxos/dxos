@@ -17,42 +17,11 @@ Each Selection contains a visitor
 | `T` | extends [`Entity`](dxos_client.Entity.md)<`any`\> |
 | `R` | `void` |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Selection.md#constructor)
-
-### Properties
-
-- [\_createSubSelection](dxos_client.Selection.md#_createsubselection)
-- [\_reducer](dxos_client.Selection.md#_reducer)
-- [\_root](dxos_client.Selection.md#_root)
-- [\_update](dxos_client.Selection.md#_update)
-- [\_visitor](dxos_client.Selection.md#_visitor)
-
-### Accessors
-
-- [root](dxos_client.Selection.md#root)
-
-### Methods
-
-- [call](dxos_client.Selection.md#call)
-- [children](dxos_client.Selection.md#children)
-- [exec](dxos_client.Selection.md#exec)
-- [filter](dxos_client.Selection.md#filter)
-- [links](dxos_client.Selection.md#links)
-- [parent](dxos_client.Selection.md#parent)
-- [query](dxos_client.Selection.md#query)
-- [refs](dxos_client.Selection.md#refs)
-- [source](dxos_client.Selection.md#source)
-- [target](dxos_client.Selection.md#target)
-
 ## Constructors
 
 ### constructor
 
-• **new Selection**<`T`, `R`\>(`_visitor`, `_update`, `_root`, `_reducer?`)
+**new Selection**<`T`, `R`\>(`_visitor`, `_update`, `_root`, `_reducer?`)
 
 #### Type parameters
 
@@ -78,7 +47,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:43
 
 ### \_createSubSelection
 
-• `Private` **\_createSubSelection**: `any`
+ `Private` **\_createSubSelection**: `any`
 
 Creates a derrived selection by aplying a mapping function to the result of the current selection.
 
@@ -90,7 +59,7 @@ ___
 
 ### \_reducer
 
-• `Private` `Readonly` **\_reducer**: `any`
+ `Private` `Readonly` **\_reducer**: `any`
 
 #### Defined in
 
@@ -100,7 +69,7 @@ ___
 
 ### \_root
 
-• `Private` `Readonly` **\_root**: `any`
+ `Private` `Readonly` **\_root**: `any`
 
 #### Defined in
 
@@ -110,7 +79,7 @@ ___
 
 ### \_update
 
-• `Private` `Readonly` **\_update**: `any`
+ `Private` `Readonly` **\_update**: `any`
 
 #### Defined in
 
@@ -120,7 +89,7 @@ ___
 
 ### \_visitor
 
-• `Private` `Readonly` **\_visitor**: `any`
+ `Private` `Readonly` **\_visitor**: `any`
 
 #### Defined in
 
@@ -130,7 +99,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:33
 
 ### root
 
-• `get` **root**(): `SelectionRoot`
+`get` **root**(): `SelectionRoot`
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 
@@ -146,7 +115,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:59
 
 ### call
 
-▸ **call**(`visitor`): [`Selection`](dxos_client.Selection.md)<`T`, `R`\>
+**call**(`visitor`): [`Selection`](dxos_client.Selection.md)<`T`, `R`\>
 
 Visitor.
 
@@ -168,7 +137,7 @@ ___
 
 ### children
 
-▸ **children**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**children**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Select children of the items in this selection.
 
@@ -191,7 +160,7 @@ ___
 
 ### exec
 
-▸ **exec**(`options?`): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
+**exec**(`options?`): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
 
 Finish the selection and return the result.
 
@@ -213,7 +182,7 @@ ___
 
 ### filter
 
-▸ **filter**(`this`, `filter`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**filter**(`this`, `filter`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Filter entities of this selection.
 
@@ -232,7 +201,7 @@ Filter entities of this selection.
 
 packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:69
 
-▸ **filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_client.Selection.md)<`U`, `R`\>
+**filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_client.Selection.md)<`U`, `R`\>
 
 #### Type parameters
 
@@ -259,7 +228,7 @@ ___
 
 ### links
 
-▸ **links**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Link`](dxos_client.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
+**links**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Link`](dxos_client.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
 
 Select links sourcing from the items in this selection.
 
@@ -282,7 +251,7 @@ ___
 
 ### parent
 
-▸ **parent**(`this`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**parent**(`this`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Select parent of the items in this selection.
 
@@ -304,7 +273,7 @@ ___
 
 ### query
 
-▸ **query**(`options?`): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
+**query**(`options?`): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
 
 **`Deprecated`**
 
@@ -326,7 +295,7 @@ ___
 
 ### refs
 
-▸ **refs**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Link`](dxos_client.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
+**refs**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Link`](dxos_client.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
 
 Select links pointing to items in this selection.
 
@@ -349,7 +318,7 @@ ___
 
 ### source
 
-▸ **source**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**source**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Select sources of links in this selection.
 
@@ -372,7 +341,7 @@ ___
 
 ### target
 
-▸ **target**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**target**(`this`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Select targets of links in this selection.
 

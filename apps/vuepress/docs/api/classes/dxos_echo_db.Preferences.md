@@ -4,36 +4,11 @@
 
 Manage settings.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Preferences.md#constructor)
-
-### Accessors
-
-- [values](dxos_echo_db.Preferences.md#values)
-
-### Methods
-
-- [\_getPartyPreference](dxos_echo_db.Preferences.md#_getpartypreference)
-- [\_setPartyPreference](dxos_echo_db.Preferences.md#_setpartypreference)
-- [getDevicePartyPreference](dxos_echo_db.Preferences.md#getdevicepartypreference)
-- [getDevicePreferences](dxos_echo_db.Preferences.md#getdevicepreferences)
-- [getGlobalPartyPreference](dxos_echo_db.Preferences.md#getglobalpartypreference)
-- [getGlobalPreferences](dxos_echo_db.Preferences.md#getglobalpreferences)
-- [isPartyActive](dxos_echo_db.Preferences.md#ispartyactive)
-- [recordPartyJoining](dxos_echo_db.Preferences.md#recordpartyjoining)
-- [setDevicePartyPreference](dxos_echo_db.Preferences.md#setdevicepartypreference)
-- [setGlobalPartyPreference](dxos_echo_db.Preferences.md#setglobalpartypreference)
-- [subscribeToJoinedPartyList](dxos_echo_db.Preferences.md#subscribetojoinedpartylist)
-- [subscribeToPreferences](dxos_echo_db.Preferences.md#subscribetopreferences)
-
 ## Constructors
 
 ### constructor
 
-• **new Preferences**(`_getDatabase`, `_deviceKey`)
+**new Preferences**(`_getDatabase`, `_deviceKey`)
 
 #### Parameters
 
@@ -44,13 +19,13 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L27)
+[packages/echo/echo-db/src/halo/preferences.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L27)
 
 ## Accessors
 
 ### values
 
-• `get` **values**(): `any`
+`get` **values**(): `any`
 
 #### Returns
 
@@ -58,13 +33,13 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L32)
+[packages/echo/echo-db/src/halo/preferences.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L32)
 
 ## Methods
 
 ### \_getPartyPreference
 
-▸ **_getPartyPreference**(`preferences`, `partyKey`, `key`): `any`
+**_getPartyPreference**(`preferences`, `partyKey`, `key`): `any`
 
 #### Parameters
 
@@ -80,13 +55,13 @@ Manage settings.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L122)
+[packages/echo/echo-db/src/halo/preferences.ts:122](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L122)
 
 ___
 
 ### \_setPartyPreference
 
-▸ **_setPartyPreference**(`preferences`, `party`, `key`, `value`): `Promise`<`void`\>
+**_setPartyPreference**(`preferences`, `party`, `key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -103,13 +78,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:129](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L129)
+[packages/echo/echo-db/src/halo/preferences.ts:129](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L129)
 
 ___
 
 ### getDevicePartyPreference
 
-▸ **getDevicePartyPreference**(`partyKey`, `key`): `any`
+**getDevicePartyPreference**(`partyKey`, `key`): `any`
 
 #### Parameters
 
@@ -124,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L109)
+[packages/echo/echo-db/src/halo/preferences.ts:109](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L109)
 
 ___
 
 ### getDevicePreferences
 
-▸ **getDevicePreferences**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
+**getDevicePreferences**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
 
 #### Returns
 
@@ -138,13 +113,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L88)
+[packages/echo/echo-db/src/halo/preferences.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L88)
 
 ___
 
 ### getGlobalPartyPreference
 
-▸ **getGlobalPartyPreference**(`partyKey`, `key`): `any`
+**getGlobalPartyPreference**(`partyKey`, `key`): `any`
 
 #### Parameters
 
@@ -159,13 +134,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L97)
+[packages/echo/echo-db/src/halo/preferences.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L97)
 
 ___
 
 ### getGlobalPreferences
 
-▸ **getGlobalPreferences**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
+**getGlobalPreferences**(): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
 
 #### Returns
 
@@ -173,13 +148,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L79)
+[packages/echo/echo-db/src/halo/preferences.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L79)
 
 ___
 
 ### isPartyActive
 
-▸ **isPartyActive**(`partyKey`): `any`
+**isPartyActive**(`partyKey`): `any`
 
 #### Parameters
 
@@ -193,19 +168,19 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L40)
+[packages/echo/echo-db/src/halo/preferences.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L40)
 
 ___
 
 ### recordPartyJoining
 
-▸ **recordPartyJoining**(`joinedParty`): `Promise`<`void`\>
+**recordPartyJoining**(`joinedParty`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `joinedParty` | [`JoinedParty`](../modules/dxos_echo_db.md#joinedparty) |
+| `joinedParty` | [`JoinedParty`](../types/dxos_echo_db.JoinedParty.md) |
 
 #### Returns
 
@@ -213,13 +188,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:137](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L137)
+[packages/echo/echo-db/src/halo/preferences.ts:137](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L137)
 
 ___
 
 ### setDevicePartyPreference
 
-▸ **setDevicePartyPreference**(`party`, `key`, `value`): `Promise`<`void`\>
+**setDevicePartyPreference**(`party`, `key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -235,13 +210,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L115)
+[packages/echo/echo-db/src/halo/preferences.ts:115](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L115)
 
 ___
 
 ### setGlobalPartyPreference
 
-▸ **setGlobalPartyPreference**(`party`, `key`, `value`): `Promise`<`void`\>
+**setGlobalPartyPreference**(`party`, `key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -257,25 +232,25 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L103)
+[packages/echo/echo-db/src/halo/preferences.ts:103](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L103)
 
 ___
 
 ### subscribeToJoinedPartyList
 
-▸ **subscribeToJoinedPartyList**(`callback`): () => `void`
+**subscribeToJoinedPartyList**(`callback`): () => `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | (`parties`: [`JoinedParty`](../modules/dxos_echo_db.md#joinedparty)[]) => `void` |
+| `callback` | (`parties`: [`JoinedParty`](../types/dxos_echo_db.JoinedParty.md)[]) => `void` |
 
 #### Returns
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -283,13 +258,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:160](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L160)
+[packages/echo/echo-db/src/halo/preferences.ts:160](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L160)
 
 ___
 
 ### subscribeToPreferences
 
-▸ **subscribeToPreferences**(`callback`): () => `void`
+**subscribeToPreferences**(`callback`): () => `void`
 
 #### Parameters
 
@@ -301,7 +276,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -309,4 +284,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/preferences.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/preferences.ts#L45)
+[packages/echo/echo-db/src/halo/preferences.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/preferences.ts#L45)

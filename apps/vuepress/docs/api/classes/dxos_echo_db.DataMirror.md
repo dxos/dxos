@@ -8,22 +8,11 @@ Entities are updated using snapshots and mutations sourced from the DataService.
 Entity and model mutations are forwarded to the DataService.
 This class is analogous to ItemDemuxer but for databases running in remote mode.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.DataMirror.md#constructor)
-
-### Methods
-
-- [\_subscribeToUpdates](dxos_echo_db.DataMirror.md#_subscribetoupdates)
-- [open](dxos_echo_db.DataMirror.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new DataMirror**(`_itemManager`, `_dataService`, `_partyKey`)
+**new DataMirror**(`_itemManager`, `_dataService`, `_partyKey`)
 
 #### Parameters
 
@@ -35,13 +24,13 @@ This class is analogous to ItemDemuxer but for databases running in remote mode.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L28)
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L28)
 
 ## Methods
 
 ### \_subscribeToUpdates
 
-▸ `Private` **_subscribeToUpdates**(`entity`): `void`
+`Private` **_subscribeToUpdates**(`entity`): `void`
 
 #### Parameters
 
@@ -55,13 +44,13 @@ This class is analogous to ItemDemuxer but for databases running in remote mode.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L77)
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:77](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L77)
 
 ___
 
 ### open
 
-▸ **open**(): `void`
+**open**(): `void`
 
 #### Returns
 
@@ -69,4 +58,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L34)
+[packages/echo/echo-db/src/packlets/database/data-mirror.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L34)

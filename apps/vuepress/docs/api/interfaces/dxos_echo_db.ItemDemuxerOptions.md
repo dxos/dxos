@@ -2,18 +2,12 @@
 
 [@dxos/echo-db](../modules/dxos_echo_db.md).ItemDemuxerOptions
 
-## Table of contents
-
-### Properties
-
-- [snapshots](dxos_echo_db.ItemDemuxerOptions.md#snapshots)
-
 ## Properties
 
 ### snapshots
 
-• `Optional` **snapshots**: `boolean`
+ `Optional` **snapshots**: `boolean`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)

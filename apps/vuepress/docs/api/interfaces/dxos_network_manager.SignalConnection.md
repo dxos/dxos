@@ -4,18 +4,11 @@
 
 Signal peer discovery interface.
 
-## Table of contents
-
-### Methods
-
-- [join](dxos_network_manager.SignalConnection.md#join)
-- [leave](dxos_network_manager.SignalConnection.md#leave)
-
 ## Methods
 
 ### join
 
-▸ **join**(`params`): `Promise`<`void`\>
+**join**(`params`): `Promise`<`void`\>
 
 Join topic on signal network, to be discoverable by other peers.
 
@@ -33,13 +26,13 @@ Join topic on signal network, to be discoverable by other peers.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-connection.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/signal-connection.ts#L14)
+[packages/mesh/network-manager/src/signal/signal-connection.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/signal/signal-connection.ts#L14)
 
 ___
 
 ### leave
 
-▸ **leave**(`params`): `Promise`<`void`\>
+**leave**(`params`): `Promise`<`void`\>
 
 Leave topic on signal network, to stop being discoverable by other peers.
 
@@ -57,4 +50,4 @@ Leave topic on signal network, to stop being discoverable by other peers.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-connection.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/signal-connection.ts#L19)
+[packages/mesh/network-manager/src/signal/signal-connection.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/signal/signal-connection.ts#L19)

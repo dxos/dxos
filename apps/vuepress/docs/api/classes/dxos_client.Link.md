@@ -18,38 +18,11 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 
   ↳ **`Link`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Link.md#constructor)
-
-### Properties
-
-- [\_itemManager](dxos_client.Link.md#_itemmanager)
-- [\_onUpdate](dxos_client.Link.md#_onupdate)
-
-### Accessors
-
-- [id](dxos_client.Link.md#id)
-- [isLink](dxos_client.Link.md#islink)
-- [model](dxos_client.Link.md#model)
-- [modelMeta](dxos_client.Link.md#modelmeta)
-- [source](dxos_client.Link.md#source)
-- [sourceId](dxos_client.Link.md#sourceid)
-- [target](dxos_client.Link.md#target)
-- [targetId](dxos_client.Link.md#targetid)
-- [type](dxos_client.Link.md#type)
-
-### Methods
-
-- [subscribe](dxos_client.Link.md#subscribe)
-
 ## Constructors
 
 ### constructor
 
-• **new Link**<`M`, `L`, `R`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `link`)
+**new Link**<`M`, `L`, `R`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `link`)
 
 #### Type parameters
 
@@ -81,7 +54,7 @@ packages/echo/echo-db/dist/src/packlets/database/link.d.ts:16
 
 ### \_itemManager
 
-• `Protected` `Readonly` **\_itemManager**: `ItemManager`
+ `Protected` `Readonly` **\_itemManager**: `ItemManager`
 
 #### Inherited from
 
@@ -95,7 +68,7 @@ ___
 
 ### \_onUpdate
 
-• `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
+ `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
 
 #### Inherited from
 
@@ -109,7 +82,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -127,7 +100,7 @@ ___
 
 ### isLink
 
-• `get` **isLink**(): ``true``
+`get` **isLink**(): ``true``
 
 #### Returns
 
@@ -141,7 +114,7 @@ ___
 
 ### model
 
-• `get` **model**(): `M`
+`get` **model**(): `M`
 
 #### Returns
 
@@ -159,7 +132,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -177,7 +150,7 @@ ___
 
 ### source
 
-• `get` **source**(): [`Item`](dxos_client.Item.md)<`L`\>
+`get` **source**(): [`Item`](dxos_client.Item.md)<`L`\>
 
 #### Returns
 
@@ -191,7 +164,7 @@ ___
 
 ### sourceId
 
-• `get` **sourceId**(): `string`
+`get` **sourceId**(): `string`
 
 #### Returns
 
@@ -205,7 +178,7 @@ ___
 
 ### target
 
-• `get` **target**(): [`Item`](dxos_client.Item.md)<`R`\>
+`get` **target**(): [`Item`](dxos_client.Item.md)<`R`\>
 
 #### Returns
 
@@ -219,7 +192,7 @@ ___
 
 ### targetId
 
-• `get` **targetId**(): `string`
+`get` **targetId**(): `string`
 
 #### Returns
 
@@ -233,7 +206,7 @@ ___
 
 ### type
 
-• `get` **type**(): `undefined` \| `string`
+`get` **type**(): `undefined` \| `string`
 
 #### Returns
 
@@ -251,7 +224,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -265,7 +238,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Subscribe for updates.
 

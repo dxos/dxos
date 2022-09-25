@@ -5,18 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [prefix](dxos_config.defs.Runtime.Services.AppServer.md#prefix)
-- [server](dxos_config.defs.Runtime.Services.AppServer.md#server)
-
 ## Properties
 
 ### prefix
 
-• `Optional` **prefix**: `string`
+ `Optional` **prefix**: `string`
 
 Options:
   - proto3_optional = true
@@ -29,7 +22,7 @@ ___
 
 ### server
 
-• `Optional` **server**: `string`
+ `Optional` **server**: `string`
 
 Options:
   - proto3_optional = true

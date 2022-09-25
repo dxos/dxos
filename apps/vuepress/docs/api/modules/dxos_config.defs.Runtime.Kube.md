@@ -2,9 +2,7 @@
 
 [defs](dxos_config.defs.md).[Runtime](dxos_config.defs.Runtime.md).Kube
 
-## Table of contents
-
-### Interfaces
+## Interfaces
 
 - [Autoupdate](../interfaces/dxos_config.defs.Runtime.Kube.Autoupdate.md)
 - [Https](../interfaces/dxos_config.defs.Runtime.Kube.Https.md)

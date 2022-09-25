@@ -4,34 +4,27 @@
 
 Additional set of callbacks and options used in the invitation process.
 
-## Table of contents
-
-### Properties
-
-- [expiration](dxos_echo_db.InvitationOptions.md#expiration)
-- [onFinish](dxos_echo_db.InvitationOptions.md#onfinish)
-
 ## Properties
 
 ### expiration
 
-• `Optional` **expiration**: `number`
+ `Optional` **expiration**: `number`
 
 Date.now()-style timestamp of when this invitation should expire.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/common.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/common.ts#L32)
+[packages/echo/echo-db/src/invitations/common.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/common.ts#L32)
 
 ___
 
 ### onFinish
 
-• `Optional` **onFinish**: (`__namedParameters`: { `expired?`: `boolean`  }) => `void`
+ `Optional` **onFinish**: (`__namedParameters`: { `expired?`: `boolean`  }) => `void`
 
 #### Type declaration
 
-▸ (`__namedParameters`): `void`
+(`__namedParameters`): `void`
 
 A function to be called when the invitation is closed (successfully or not).
 
@@ -48,4 +41,4 @@ A function to be called when the invitation is closed (successfully or not).
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/common.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/common.ts#L27)
+[packages/echo/echo-db/src/invitations/common.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/common.ts#L27)

@@ -8,21 +8,11 @@
 
   ↳ **`ItemConstructionOptions`**
 
-## Table of contents
-
-### Properties
-
-- [itemId](dxos_echo_db.ItemConstructionOptions.md#itemid)
-- [itemType](dxos_echo_db.ItemConstructionOptions.md#itemtype)
-- [modelType](dxos_echo_db.ItemConstructionOptions.md#modeltype)
-- [parentId](dxos_echo_db.ItemConstructionOptions.md#parentid)
-- [snapshot](dxos_echo_db.ItemConstructionOptions.md#snapshot)
-
 ## Properties
 
 ### itemId
 
-• **itemId**: `string`
+ **itemId**: `string`
 
 #### Inherited from
 
@@ -30,23 +20,23 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
 
 ___
 
 ### itemType
 
-• **itemType**: `undefined` \| `string`
+ **itemType**: `undefined` \| `string`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L31)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L31)
 
 ___
 
 ### modelType
 
-• **modelType**: `string`
+ **modelType**: `string`
 
 #### Inherited from
 
@@ -54,23 +44,23 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
 
 ___
 
 ### parentId
 
-• `Optional` **parentId**: `string`
+ `Optional` **parentId**: `string`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L32)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L32)
 
 ___
 
 ### snapshot
 
-• **snapshot**: `ModelSnapshot`
+ **snapshot**: `ModelSnapshot`
 
 #### Inherited from
 
@@ -78,4 +68,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)

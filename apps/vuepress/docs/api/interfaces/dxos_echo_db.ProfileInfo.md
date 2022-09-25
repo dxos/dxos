@@ -2,29 +2,22 @@
 
 [@dxos/echo-db](../modules/dxos_echo_db.md).ProfileInfo
 
-## Table of contents
-
-### Properties
-
-- [publicKey](dxos_echo_db.ProfileInfo.md#publickey)
-- [username](dxos_echo_db.ProfileInfo.md#username)
-
 ## Properties
 
 ### publicKey
 
-• **publicKey**: `PublicKey`
+ **publicKey**: `PublicKey`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L31)
+[packages/echo/echo-db/src/halo/halo.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L31)
 
 ___
 
 ### username
 
-• **username**: `undefined` \| `string`
+ **username**: `undefined` \| `string`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L32)
+[packages/echo/echo-db/src/halo/halo.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L32)

@@ -2,18 +2,12 @@
 
 [@dxos/broadcast](../modules/dxos_broadcast.md).Peer
 
-## Table of contents
-
-### Properties
-
-- [id](dxos_broadcast.Peer.md#id)
-
 ## Properties
 
 ### id
 
-• **id**: `Buffer`
+ **id**: `Buffer`
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L64)
+[packages/mesh/broadcast/src/broadcast.ts:64](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L64)

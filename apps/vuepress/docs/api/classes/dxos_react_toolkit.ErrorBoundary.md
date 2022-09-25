@@ -13,44 +13,11 @@ https://reactjs.org/docs/hooks-faq.html#do-hooks-cover-all-use-cases-for-classes
 
   ↳ **`ErrorBoundary`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_react_toolkit.ErrorBoundary.md#constructor)
-
-### Properties
-
-- [context](dxos_react_toolkit.ErrorBoundary.md#context)
-- [props](dxos_react_toolkit.ErrorBoundary.md#props)
-- [refs](dxos_react_toolkit.ErrorBoundary.md#refs)
-- [state](dxos_react_toolkit.ErrorBoundary.md#state)
-- [contextType](dxos_react_toolkit.ErrorBoundary.md#contexttype)
-- [defaultProps](dxos_react_toolkit.ErrorBoundary.md#defaultprops)
-
-### Methods
-
-- [UNSAFE\_componentWillMount](dxos_react_toolkit.ErrorBoundary.md#unsafe_componentwillmount)
-- [UNSAFE\_componentWillReceiveProps](dxos_react_toolkit.ErrorBoundary.md#unsafe_componentwillreceiveprops)
-- [UNSAFE\_componentWillUpdate](dxos_react_toolkit.ErrorBoundary.md#unsafe_componentwillupdate)
-- [componentDidCatch](dxos_react_toolkit.ErrorBoundary.md#componentdidcatch)
-- [componentDidMount](dxos_react_toolkit.ErrorBoundary.md#componentdidmount)
-- [componentDidUpdate](dxos_react_toolkit.ErrorBoundary.md#componentdidupdate)
-- [componentWillMount](dxos_react_toolkit.ErrorBoundary.md#componentwillmount)
-- [componentWillReceiveProps](dxos_react_toolkit.ErrorBoundary.md#componentwillreceiveprops)
-- [componentWillUnmount](dxos_react_toolkit.ErrorBoundary.md#componentwillunmount)
-- [componentWillUpdate](dxos_react_toolkit.ErrorBoundary.md#componentwillupdate)
-- [forceUpdate](dxos_react_toolkit.ErrorBoundary.md#forceupdate)
-- [getSnapshotBeforeUpdate](dxos_react_toolkit.ErrorBoundary.md#getsnapshotbeforeupdate)
-- [render](dxos_react_toolkit.ErrorBoundary.md#render)
-- [setState](dxos_react_toolkit.ErrorBoundary.md#setstate)
-- [shouldComponentUpdate](dxos_react_toolkit.ErrorBoundary.md#shouldcomponentupdate)
-
 ## Constructors
 
 ### constructor
 
-• **new ErrorBoundary**(`props`)
+**new ErrorBoundary**(`props`)
 
 #### Parameters
 
@@ -66,7 +33,7 @@ Component<PropsWithChildren<ErrorBoundaryProps\>, ErrorBoundaryState\>.construct
 
 node_modules/.pnpm/@types+react@17.0.50/node_modules/@types/react/index.d.ts:474
 
-• **new ErrorBoundary**(`props`, `context`)
+**new ErrorBoundary**(`props`, `context`)
 
 **`Deprecated`**
 
@@ -93,7 +60,7 @@ node_modules/.pnpm/@types+react@17.0.50/node_modules/@types/react/index.d.ts:479
 
 ### context
 
-• **context**: `any`
+ **context**: `any`
 
 If using the new style context, re-declare this in your class to be the
 `React.ContextType` of your `static contextType`.
@@ -123,7 +90,7 @@ ___
 
 ### props
 
-• `Readonly` **props**: `Readonly`<`PropsWithChildren`<`ErrorBoundaryProps`\>\> & `Readonly`<{ `children?`: `ReactNode`  }\>
+ `Readonly` **props**: `Readonly`<`PropsWithChildren`<`ErrorBoundaryProps`\>\> & `Readonly`<{ `children?`: `ReactNode`  }\>
 
 #### Inherited from
 
@@ -137,7 +104,7 @@ ___
 
 ### refs
 
-• **refs**: `Object`
+ **refs**: `Object`
 
 **`Deprecated`**
 
@@ -159,7 +126,7 @@ ___
 
 ### state
 
-• **state**: `Object`
+ **state**: `Object`
 
 #### Type declaration
 
@@ -174,13 +141,13 @@ Component.state
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L42)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L42)
 
 ___
 
 ### contextType
 
-▪ `Static` `Optional` **contextType**: `Context`<`any`\>
+ `Static` `Optional` **contextType**: `Context`<`any`\>
 
 If set, `this.context` will be set at runtime to the current value of the given Context.
 
@@ -215,7 +182,7 @@ ___
 
 ### defaultProps
 
-▪ `Static` **defaultProps**: `Object`
+ `Static` **defaultProps**: `Object`
 
 #### Type declaration
 
@@ -229,13 +196,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L34)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L34)
 
 ## Methods
 
 ### UNSAFE\_componentWillMount
 
-▸ `Optional` **UNSAFE_componentWillMount**(): `void`
+`Optional` **UNSAFE_componentWillMount**(): `void`
 
 Called immediately before mounting occurs, and before `Component#render`.
 Avoid introducing any side-effects or subscriptions in this method.
@@ -270,7 +237,7 @@ ___
 
 ### UNSAFE\_componentWillReceiveProps
 
-▸ `Optional` **UNSAFE_componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
+`Optional` **UNSAFE_componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
 
 Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
@@ -315,7 +282,7 @@ ___
 
 ### UNSAFE\_componentWillUpdate
 
-▸ `Optional` **UNSAFE_componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
+`Optional` **UNSAFE_componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
@@ -359,7 +326,7 @@ ___
 
 ### componentDidCatch
 
-▸ **componentDidCatch**(`err`): `void`
+**componentDidCatch**(`err`): `void`
 
 #### Parameters
 
@@ -377,13 +344,13 @@ Component.componentDidCatch
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L48)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L48)
 
 ___
 
 ### componentDidMount
 
-▸ `Optional` **componentDidMount**(): `void`
+`Optional` **componentDidMount**(): `void`
 
 Called immediately after a component is mounted. Setting state here will trigger re-rendering.
 
@@ -403,7 +370,7 @@ ___
 
 ### componentDidUpdate
 
-▸ `Optional` **componentDidUpdate**(`prevProps`, `prevState`, `snapshot?`): `void`
+`Optional` **componentDidUpdate**(`prevProps`, `prevState`, `snapshot?`): `void`
 
 Called immediately after updating occurs. Not called for the initial render.
 
@@ -433,7 +400,7 @@ ___
 
 ### componentWillMount
 
-▸ `Optional` **componentWillMount**(): `void`
+`Optional` **componentWillMount**(): `void`
 
 Called immediately before mounting occurs, and before `Component#render`.
 Avoid introducing any side-effects or subscriptions in this method.
@@ -466,7 +433,7 @@ ___
 
 ### componentWillReceiveProps
 
-▸ `Optional` **componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
+`Optional` **componentWillReceiveProps**(`nextProps`, `nextContext`): `void`
 
 Called when the component may be receiving new props.
 React may call this even if props have not changed, so be sure to compare new and existing
@@ -509,7 +476,7 @@ ___
 
 ### componentWillUnmount
 
-▸ `Optional` **componentWillUnmount**(): `void`
+`Optional` **componentWillUnmount**(): `void`
 
 Called immediately before a component is destroyed. Perform any necessary cleanup in this method, such as
 cancelled network requests, or cleaning up any DOM elements created in `componentDidMount`.
@@ -530,7 +497,7 @@ ___
 
 ### componentWillUpdate
 
-▸ `Optional` **componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
+`Optional` **componentWillUpdate**(`nextProps`, `nextState`, `nextContext`): `void`
 
 Called immediately before rendering when new props or state is received. Not called for the initial render.
 
@@ -572,7 +539,7 @@ ___
 
 ### forceUpdate
 
-▸ **forceUpdate**(`callback?`): `void`
+**forceUpdate**(`callback?`): `void`
 
 #### Parameters
 
@@ -596,7 +563,7 @@ ___
 
 ### getSnapshotBeforeUpdate
 
-▸ `Optional` **getSnapshotBeforeUpdate**(`prevProps`, `prevState`): `any`
+`Optional` **getSnapshotBeforeUpdate**(`prevProps`, `prevState`): `any`
 
 Runs before React applies the result of `render` to the document, and
 returns an object to be given to componentDidUpdate. Useful for saving
@@ -628,7 +595,7 @@ ___
 
 ### render
 
-▸ **render**(): `Element`
+**render**(): `Element`
 
 #### Returns
 
@@ -640,13 +607,13 @@ Component.render
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L54)
+[packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx:54](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/ErrorBoundary/ErrorBoundary.tsx#L54)
 
 ___
 
 ### setState
 
-▸ **setState**<`K`\>(`state`, `callback?`): `void`
+**setState**<`K`\>(`state`, `callback?`): `void`
 
 #### Type parameters
 
@@ -677,7 +644,7 @@ ___
 
 ### shouldComponentUpdate
 
-▸ `Optional` **shouldComponentUpdate**(`nextProps`, `nextState`, `nextContext`): `boolean`
+`Optional` **shouldComponentUpdate**(`nextProps`, `nextState`, `nextContext`): `boolean`
 
 Called to determine whether the change in props and state should trigger a re-render.
 

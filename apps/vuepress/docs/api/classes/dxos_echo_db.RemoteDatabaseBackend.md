@@ -10,33 +10,11 @@ Uses DataMirror to populate entities in ItemManager.
 
 - [`DatabaseBackend`](../interfaces/dxos_echo_db.DatabaseBackend.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.RemoteDatabaseBackend.md#constructor)
-
-### Properties
-
-- [\_itemManager](dxos_echo_db.RemoteDatabaseBackend.md#_itemmanager)
-
-### Accessors
-
-- [isReadOnly](dxos_echo_db.RemoteDatabaseBackend.md#isreadonly)
-
-### Methods
-
-- [close](dxos_echo_db.RemoteDatabaseBackend.md#close)
-- [createDataServiceHost](dxos_echo_db.RemoteDatabaseBackend.md#createdataservicehost)
-- [createSnapshot](dxos_echo_db.RemoteDatabaseBackend.md#createsnapshot)
-- [getWriteStream](dxos_echo_db.RemoteDatabaseBackend.md#getwritestream)
-- [open](dxos_echo_db.RemoteDatabaseBackend.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new RemoteDatabaseBackend**(`_service`, `_partyKey`)
+**new RemoteDatabaseBackend**(`_service`, `_partyKey`)
 
 #### Parameters
 
@@ -47,23 +25,23 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:101](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L101)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:101](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L101)
 
 ## Properties
 
 ### \_itemManager
 
-• `Private` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
+ `Private` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L99)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L99)
 
 ## Accessors
 
 ### isReadOnly
 
-• `get` **isReadOnly**(): `boolean`
+`get` **isReadOnly**(): `boolean`
 
 #### Returns
 
@@ -75,13 +53,13 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L118)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:118](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L118)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -93,13 +71,13 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:114](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L114)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:114](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L114)
 
 ___
 
 ### createDataServiceHost
 
-▸ **createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
+**createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
 
 #### Returns
 
@@ -111,13 +89,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:141](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L141)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:141](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L141)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -129,13 +107,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:137](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L137)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:137](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L137)
 
 ___
 
 ### getWriteStream
 
-▸ **getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
+**getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
 
 #### Returns
 
@@ -147,13 +125,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L122)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:122](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L122)
 
 ___
 
 ### open
 
-▸ **open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
+**open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -172,4 +150,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L106)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:106](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L106)

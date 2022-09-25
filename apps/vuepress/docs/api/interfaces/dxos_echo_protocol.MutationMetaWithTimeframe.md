@@ -8,20 +8,11 @@
 
   ↳ **`MutationMetaWithTimeframe`**
 
-## Table of contents
-
-### Properties
-
-- [feedKey](dxos_echo_protocol.MutationMetaWithTimeframe.md#feedkey)
-- [memberKey](dxos_echo_protocol.MutationMetaWithTimeframe.md#memberkey)
-- [seq](dxos_echo_protocol.MutationMetaWithTimeframe.md#seq)
-- [timeframe](dxos_echo_protocol.MutationMetaWithTimeframe.md#timeframe)
-
 ## Properties
 
 ### feedKey
 
-• **feedKey**: `PublicKey`
+ **feedKey**: `PublicKey`
 
 #### Inherited from
 
@@ -29,13 +20,13 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L29)
+[packages/echo/echo-protocol/src/types.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/types.ts#L29)
 
 ___
 
 ### memberKey
 
-• **memberKey**: `PublicKey`
+ **memberKey**: `PublicKey`
 
 #### Inherited from
 
@@ -43,13 +34,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L34)
+[packages/echo/echo-protocol/src/types.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/types.ts#L34)
 
 ___
 
 ### seq
 
-• **seq**: `number`
+ **seq**: `number`
 
 #### Inherited from
 
@@ -57,14 +48,14 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L30)
+[packages/echo/echo-protocol/src/types.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/types.ts#L30)
 
 ___
 
 ### timeframe
 
-• **timeframe**: `Timeframe`
+ **timeframe**: `Timeframe`
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/types.ts#L38)
+[packages/echo/echo-protocol/src/types.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/types.ts#L38)

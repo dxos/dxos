@@ -4,30 +4,17 @@
 
 Represents mutations on objects.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.MutationUtil.md#constructor)
-
-### Methods
-
-- [applyMutation](dxos_object_model.MutationUtil.md#applymutation)
-- [applyMutationSet](dxos_object_model.MutationUtil.md#applymutationset)
-- [createFieldMutation](dxos_object_model.MutationUtil.md#createfieldmutation)
-- [createMultiFieldMutation](dxos_object_model.MutationUtil.md#createmultifieldmutation)
-
 ## Constructors
 
 ### constructor
 
-• **new MutationUtil**()
+**new MutationUtil**()
 
 ## Methods
 
 ### applyMutation
 
-▸ `Static` **applyMutation**(`object`, `mutation`): `any`
+`Static` **applyMutation**(`object`, `mutation`): `any`
 
 #### Parameters
 
@@ -42,13 +29,13 @@ Represents mutations on objects.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:217](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L217)
+[packages/echo/object-model/src/mutation.ts:217](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L217)
 
 ___
 
 ### applyMutationSet
 
-▸ `Static` **applyMutationSet**(`object`, `message`): `any`
+`Static` **applyMutationSet**(`object`, `message`): `any`
 
 #### Parameters
 
@@ -63,13 +50,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:210](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L210)
+[packages/echo/object-model/src/mutation.ts:210](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L210)
 
 ___
 
 ### createFieldMutation
 
-▸ `Static` **createFieldMutation**(`key`, `value`): `ObjectMutation`
+`Static` **createFieldMutation**(`key`, `value`): `ObjectMutation`
 
 Create single field mutation.
 
@@ -86,13 +73,13 @@ Create single field mutation.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:264](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L264)
+[packages/echo/object-model/src/mutation.ts:264](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L264)
 
 ___
 
 ### createMultiFieldMutation
 
-▸ `Static` **createMultiFieldMutation**(`object`): `ObjectMutation`[]
+`Static` **createMultiFieldMutation**(`object`): `ObjectMutation`[]
 
 Create field mutations.
 
@@ -108,4 +95,4 @@ Create field mutations.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:279](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L279)
+[packages/echo/object-model/src/mutation.ts:279](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L279)

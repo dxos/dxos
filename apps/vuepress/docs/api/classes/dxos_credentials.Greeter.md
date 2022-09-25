@@ -4,34 +4,11 @@
 
 Reference Greeter that uses useable, single-use "invitations" to authenticate the invitee.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.Greeter.md#constructor)
-
-### Properties
-
-- [\_invitations](dxos_credentials.Greeter.md#_invitations)
-- [\_partyKey](dxos_credentials.Greeter.md#_partykey)
-- [\_partyWriter](dxos_credentials.Greeter.md#_partywriter)
-
-### Methods
-
-- [\_getInvitation](dxos_credentials.Greeter.md#_getinvitation)
-- [\_handleBegin](dxos_credentials.Greeter.md#_handlebegin)
-- [\_handleFinish](dxos_credentials.Greeter.md#_handlefinish)
-- [\_handleHandshake](dxos_credentials.Greeter.md#_handlehandshake)
-- [\_handleNotarize](dxos_credentials.Greeter.md#_handlenotarize)
-- [createInvitation](dxos_credentials.Greeter.md#createinvitation)
-- [createMessageHandler](dxos_credentials.Greeter.md#createmessagehandler)
-- [handleMessage](dxos_credentials.Greeter.md#handlemessage)
-
 ## Constructors
 
 ### constructor
 
-• **new Greeter**(`partyKey?`, `_genesisFeedKey?`, `partyWriter?`)
+**new Greeter**(`partyKey?`, `_genesisFeedKey?`, `partyWriter?`)
 
 For a Greeter, all parameters must be properly set, but for the Invitee, they can be omitted.
 TODO(telackey): Does it make sense to separate out the Invitee functionality?
@@ -42,47 +19,47 @@ TODO(telackey): Does it make sense to separate out the Invitee functionality?
 | :------ | :------ | :------ |
 | `partyKey?` | `PublicKeyLike` | The publicKey of the target Party. |
 | `_genesisFeedKey?` | `PublicKey` | - |
-| `partyWriter?` | [`PartyWriter`](../modules/dxos_credentials.md#partywriter) | Callback function to write messages to the Party. |
+| `partyWriter?` | [`PartyWriter`](../types/dxos_credentials.PartyWriter.md) | Callback function to write messages to the Party. |
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L49)
+[packages/halo/credentials/src/greet/greeter.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L49)
 
 ## Properties
 
 ### \_invitations
 
-• **\_invitations**: `Map`<`string`, [`Invitation`](dxos_credentials.Invitation.md)\>
+ **\_invitations**: `Map`<`string`, [`Invitation`](dxos_credentials.Invitation.md)\>
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L41)
+[packages/halo/credentials/src/greet/greeter.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L41)
 
 ___
 
 ### \_partyKey
 
-• `Optional` **\_partyKey**: `PublicKey`
+ `Optional` **\_partyKey**: `PublicKey`
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L39)
+[packages/halo/credentials/src/greet/greeter.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L39)
 
 ___
 
 ### \_partyWriter
 
-• `Optional` **\_partyWriter**: [`PartyWriter`](../modules/dxos_credentials.md#partywriter)
+ `Optional` **\_partyWriter**: [`PartyWriter`](../types/dxos_credentials.PartyWriter.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L40)
+[packages/halo/credentials/src/greet/greeter.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L40)
 
 ## Methods
 
 ### \_getInvitation
 
-▸ `Private` **_getInvitation**(`invitationId`, `secret`): `Promise`<[`Invitation`](dxos_credentials.Invitation.md)\>
+`Private` **_getInvitation**(`invitationId`, `secret`): `Promise`<[`Invitation`](dxos_credentials.Invitation.md)\>
 
 Retrieves a valid invitation.
 
@@ -99,13 +76,13 @@ Retrieves a valid invitation.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L153)
+[packages/halo/credentials/src/greet/greeter.ts:153](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L153)
 
 ___
 
 ### \_handleBegin
 
-▸ **_handleBegin**(`invitationId`): `Promise`<{ `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  }\>
+**_handleBegin**(`invitationId`): `Promise`<{ `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  }\>
 
 #### Parameters
 
@@ -119,13 +96,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:186](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L186)
+[packages/halo/credentials/src/greet/greeter.ts:186](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L186)
 
 ___
 
 ### \_handleFinish
 
-▸ `Private` **_handleFinish**(`invitation`): `Promise`<`void`\>
+`Private` **_handleFinish**(`invitation`): `Promise`<`void`\>
 
 Finish and remove the invitation.
 
@@ -141,13 +118,13 @@ Finish and remove the invitation.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:181](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L181)
+[packages/halo/credentials/src/greet/greeter.ts:181](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L181)
 
 ___
 
 ### \_handleHandshake
 
-▸ **_handleHandshake**(`invitation`): `Promise`<{ `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
+**_handleHandshake**(`invitation`): `Promise`<{ `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
 
 #### Parameters
 
@@ -161,13 +138,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:212](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L212)
+[packages/halo/credentials/src/greet/greeter.ts:212](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L212)
 
 ___
 
 ### \_handleNotarize
 
-▸ **_handleNotarize**(`invitation`, `params`): `Promise`<`WithTypeUrl`<`NotarizeResponse`\>\>
+**_handleNotarize**(`invitation`, `params`): `Promise`<`WithTypeUrl`<`NotarizeResponse`\>\>
 
 #### Parameters
 
@@ -182,13 +159,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:225](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L225)
+[packages/halo/credentials/src/greet/greeter.ts:225](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L225)
 
 ___
 
 ### createInvitation
 
-▸ **createInvitation**(`partyKey`, `secretValidator`, `secretProvider?`, `onFinish?`, `expiration?`): `Object`
+**createInvitation**(`partyKey`, `secretValidator`, `secretProvider?`, `onFinish?`, `expiration?`): `Object`
 
 Issues a new invitation for the indicated Party.  The secretProvider is a function
 for obtaining a secret that the invitee must provide for verification.  If present,
@@ -199,9 +176,9 @@ expiration should be a Date.
 | Name | Type |
 | :------ | :------ |
 | `partyKey` | `PublicKeyLike` |
-| `secretValidator` | [`SecretValidator`](../modules/dxos_credentials.md#secretvalidator) |
-| `secretProvider?` | [`SecretProvider`](../modules/dxos_credentials.md#secretprovider) |
-| `onFinish?` | [`InvitationOnFinish`](../modules/dxos_credentials.md#invitationonfinish) |
+| `secretValidator` | [`SecretValidator`](../types/dxos_credentials.SecretValidator.md) |
+| `secretProvider?` | [`SecretProvider`](../types/dxos_credentials.SecretProvider.md) |
+| `onFinish?` | [`InvitationOnFinish`](../types/dxos_credentials.InvitationOnFinish.md) |
 | `expiration?` | `number` |
 
 #### Returns
@@ -214,19 +191,19 @@ expiration should be a Date.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L74)
+[packages/halo/credentials/src/greet/greeter.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L74)
 
 ___
 
 ### createMessageHandler
 
-▸ **createMessageHandler**(): (`message`: `Command`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
+**createMessageHandler**(): (`message`: `Command`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
 
 #### Returns
 
 `fn`
 
-▸ (`message`, `remotePeerId`, `peerId`): `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
+(`message`, `remotePeerId`, `peerId`): `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
 
 ##### Parameters
 
@@ -242,13 +219,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L94)
+[packages/halo/credentials/src/greet/greeter.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L94)
 
 ___
 
 ### handleMessage
 
-▸ **handleMessage**(`message`, `remotePeerId`, `peerId`): `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
+**handleMessage**(`message`, `remotePeerId`, `peerId`): `Promise`<`void` \| `WithTypeUrl`<`NotarizeResponse`\> \| { `@type`: `string` = 'dxos.halo.credentials.greet.BeginResponse'; `info`: { `authNonce`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.authNonce } ; `id`: { `@type`: `string` = 'google.protobuf.BytesValue'; `value`: `Buffer` = invitation.id }  }  } \| { `@type`: `string` = 'dxos.halo.credentials.greet.HandshakeResponse'; `nonce`: `Buffer` = invitation.nonce; `partyKey`: `PublicKey` = invitation.partyKey }\>
 
 Handle a P2P message from the Extension.
 
@@ -266,4 +243,4 @@ Handle a P2P message from the Extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/greeter.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/greeter.ts#L107)
+[packages/halo/credentials/src/greet/greeter.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/greeter.ts#L107)

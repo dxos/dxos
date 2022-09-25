@@ -8,279 +8,11 @@
 
   ↳ **`SkeletonProps`**
 
-## Table of contents
-
-### Properties
-
-- [about](dxos_react_components.SkeletonProps.md#about)
-- [accessKey](dxos_react_components.SkeletonProps.md#accesskey)
-- [animation](dxos_react_components.SkeletonProps.md#animation)
-- [aria-activedescendant](dxos_react_components.SkeletonProps.md#aria-activedescendant)
-- [aria-atomic](dxos_react_components.SkeletonProps.md#aria-atomic)
-- [aria-autocomplete](dxos_react_components.SkeletonProps.md#aria-autocomplete)
-- [aria-busy](dxos_react_components.SkeletonProps.md#aria-busy)
-- [aria-checked](dxos_react_components.SkeletonProps.md#aria-checked)
-- [aria-colcount](dxos_react_components.SkeletonProps.md#aria-colcount)
-- [aria-colindex](dxos_react_components.SkeletonProps.md#aria-colindex)
-- [aria-colspan](dxos_react_components.SkeletonProps.md#aria-colspan)
-- [aria-controls](dxos_react_components.SkeletonProps.md#aria-controls)
-- [aria-current](dxos_react_components.SkeletonProps.md#aria-current)
-- [aria-describedby](dxos_react_components.SkeletonProps.md#aria-describedby)
-- [aria-details](dxos_react_components.SkeletonProps.md#aria-details)
-- [aria-disabled](dxos_react_components.SkeletonProps.md#aria-disabled)
-- [aria-dropeffect](dxos_react_components.SkeletonProps.md#aria-dropeffect)
-- [aria-errormessage](dxos_react_components.SkeletonProps.md#aria-errormessage)
-- [aria-expanded](dxos_react_components.SkeletonProps.md#aria-expanded)
-- [aria-flowto](dxos_react_components.SkeletonProps.md#aria-flowto)
-- [aria-grabbed](dxos_react_components.SkeletonProps.md#aria-grabbed)
-- [aria-haspopup](dxos_react_components.SkeletonProps.md#aria-haspopup)
-- [aria-hidden](dxos_react_components.SkeletonProps.md#aria-hidden)
-- [aria-invalid](dxos_react_components.SkeletonProps.md#aria-invalid)
-- [aria-keyshortcuts](dxos_react_components.SkeletonProps.md#aria-keyshortcuts)
-- [aria-label](dxos_react_components.SkeletonProps.md#aria-label)
-- [aria-labelledby](dxos_react_components.SkeletonProps.md#aria-labelledby)
-- [aria-level](dxos_react_components.SkeletonProps.md#aria-level)
-- [aria-live](dxos_react_components.SkeletonProps.md#aria-live)
-- [aria-modal](dxos_react_components.SkeletonProps.md#aria-modal)
-- [aria-multiline](dxos_react_components.SkeletonProps.md#aria-multiline)
-- [aria-multiselectable](dxos_react_components.SkeletonProps.md#aria-multiselectable)
-- [aria-orientation](dxos_react_components.SkeletonProps.md#aria-orientation)
-- [aria-owns](dxos_react_components.SkeletonProps.md#aria-owns)
-- [aria-placeholder](dxos_react_components.SkeletonProps.md#aria-placeholder)
-- [aria-posinset](dxos_react_components.SkeletonProps.md#aria-posinset)
-- [aria-pressed](dxos_react_components.SkeletonProps.md#aria-pressed)
-- [aria-readonly](dxos_react_components.SkeletonProps.md#aria-readonly)
-- [aria-relevant](dxos_react_components.SkeletonProps.md#aria-relevant)
-- [aria-required](dxos_react_components.SkeletonProps.md#aria-required)
-- [aria-roledescription](dxos_react_components.SkeletonProps.md#aria-roledescription)
-- [aria-rowcount](dxos_react_components.SkeletonProps.md#aria-rowcount)
-- [aria-rowindex](dxos_react_components.SkeletonProps.md#aria-rowindex)
-- [aria-rowspan](dxos_react_components.SkeletonProps.md#aria-rowspan)
-- [aria-selected](dxos_react_components.SkeletonProps.md#aria-selected)
-- [aria-setsize](dxos_react_components.SkeletonProps.md#aria-setsize)
-- [aria-sort](dxos_react_components.SkeletonProps.md#aria-sort)
-- [aria-valuemax](dxos_react_components.SkeletonProps.md#aria-valuemax)
-- [aria-valuemin](dxos_react_components.SkeletonProps.md#aria-valuemin)
-- [aria-valuenow](dxos_react_components.SkeletonProps.md#aria-valuenow)
-- [aria-valuetext](dxos_react_components.SkeletonProps.md#aria-valuetext)
-- [autoCapitalize](dxos_react_components.SkeletonProps.md#autocapitalize)
-- [autoCorrect](dxos_react_components.SkeletonProps.md#autocorrect)
-- [autoSave](dxos_react_components.SkeletonProps.md#autosave)
-- [children](dxos_react_components.SkeletonProps.md#children)
-- [className](dxos_react_components.SkeletonProps.md#classname)
-- [classes](dxos_react_components.SkeletonProps.md#classes)
-- [color](dxos_react_components.SkeletonProps.md#color)
-- [contentEditable](dxos_react_components.SkeletonProps.md#contenteditable)
-- [contextMenu](dxos_react_components.SkeletonProps.md#contextmenu)
-- [dangerouslySetInnerHTML](dxos_react_components.SkeletonProps.md#dangerouslysetinnerhtml)
-- [datatype](dxos_react_components.SkeletonProps.md#datatype)
-- [defaultChecked](dxos_react_components.SkeletonProps.md#defaultchecked)
-- [defaultValue](dxos_react_components.SkeletonProps.md#defaultvalue)
-- [delay](dxos_react_components.SkeletonProps.md#delay)
-- [dir](dxos_react_components.SkeletonProps.md#dir)
-- [draggable](dxos_react_components.SkeletonProps.md#draggable)
-- [height](dxos_react_components.SkeletonProps.md#height)
-- [hidden](dxos_react_components.SkeletonProps.md#hidden)
-- [id](dxos_react_components.SkeletonProps.md#id)
-- [inlist](dxos_react_components.SkeletonProps.md#inlist)
-- [inputMode](dxos_react_components.SkeletonProps.md#inputmode)
-- [is](dxos_react_components.SkeletonProps.md#is)
-- [itemID](dxos_react_components.SkeletonProps.md#itemid)
-- [itemProp](dxos_react_components.SkeletonProps.md#itemprop)
-- [itemRef](dxos_react_components.SkeletonProps.md#itemref)
-- [itemScope](dxos_react_components.SkeletonProps.md#itemscope)
-- [itemType](dxos_react_components.SkeletonProps.md#itemtype)
-- [key](dxos_react_components.SkeletonProps.md#key)
-- [lang](dxos_react_components.SkeletonProps.md#lang)
-- [onAbort](dxos_react_components.SkeletonProps.md#onabort)
-- [onAbortCapture](dxos_react_components.SkeletonProps.md#onabortcapture)
-- [onAnimationEnd](dxos_react_components.SkeletonProps.md#onanimationend)
-- [onAnimationEndCapture](dxos_react_components.SkeletonProps.md#onanimationendcapture)
-- [onAnimationIteration](dxos_react_components.SkeletonProps.md#onanimationiteration)
-- [onAnimationIterationCapture](dxos_react_components.SkeletonProps.md#onanimationiterationcapture)
-- [onAnimationStart](dxos_react_components.SkeletonProps.md#onanimationstart)
-- [onAnimationStartCapture](dxos_react_components.SkeletonProps.md#onanimationstartcapture)
-- [onAuxClick](dxos_react_components.SkeletonProps.md#onauxclick)
-- [onAuxClickCapture](dxos_react_components.SkeletonProps.md#onauxclickcapture)
-- [onBeforeInput](dxos_react_components.SkeletonProps.md#onbeforeinput)
-- [onBeforeInputCapture](dxos_react_components.SkeletonProps.md#onbeforeinputcapture)
-- [onBlur](dxos_react_components.SkeletonProps.md#onblur)
-- [onBlurCapture](dxos_react_components.SkeletonProps.md#onblurcapture)
-- [onCanPlay](dxos_react_components.SkeletonProps.md#oncanplay)
-- [onCanPlayCapture](dxos_react_components.SkeletonProps.md#oncanplaycapture)
-- [onCanPlayThrough](dxos_react_components.SkeletonProps.md#oncanplaythrough)
-- [onCanPlayThroughCapture](dxos_react_components.SkeletonProps.md#oncanplaythroughcapture)
-- [onChange](dxos_react_components.SkeletonProps.md#onchange)
-- [onChangeCapture](dxos_react_components.SkeletonProps.md#onchangecapture)
-- [onClick](dxos_react_components.SkeletonProps.md#onclick)
-- [onClickCapture](dxos_react_components.SkeletonProps.md#onclickcapture)
-- [onCompositionEnd](dxos_react_components.SkeletonProps.md#oncompositionend)
-- [onCompositionEndCapture](dxos_react_components.SkeletonProps.md#oncompositionendcapture)
-- [onCompositionStart](dxos_react_components.SkeletonProps.md#oncompositionstart)
-- [onCompositionStartCapture](dxos_react_components.SkeletonProps.md#oncompositionstartcapture)
-- [onCompositionUpdate](dxos_react_components.SkeletonProps.md#oncompositionupdate)
-- [onCompositionUpdateCapture](dxos_react_components.SkeletonProps.md#oncompositionupdatecapture)
-- [onContextMenu](dxos_react_components.SkeletonProps.md#oncontextmenu)
-- [onContextMenuCapture](dxos_react_components.SkeletonProps.md#oncontextmenucapture)
-- [onCopy](dxos_react_components.SkeletonProps.md#oncopy)
-- [onCopyCapture](dxos_react_components.SkeletonProps.md#oncopycapture)
-- [onCut](dxos_react_components.SkeletonProps.md#oncut)
-- [onCutCapture](dxos_react_components.SkeletonProps.md#oncutcapture)
-- [onDoubleClick](dxos_react_components.SkeletonProps.md#ondoubleclick)
-- [onDoubleClickCapture](dxos_react_components.SkeletonProps.md#ondoubleclickcapture)
-- [onDrag](dxos_react_components.SkeletonProps.md#ondrag)
-- [onDragCapture](dxos_react_components.SkeletonProps.md#ondragcapture)
-- [onDragEnd](dxos_react_components.SkeletonProps.md#ondragend)
-- [onDragEndCapture](dxos_react_components.SkeletonProps.md#ondragendcapture)
-- [onDragEnter](dxos_react_components.SkeletonProps.md#ondragenter)
-- [onDragEnterCapture](dxos_react_components.SkeletonProps.md#ondragentercapture)
-- [onDragExit](dxos_react_components.SkeletonProps.md#ondragexit)
-- [onDragExitCapture](dxos_react_components.SkeletonProps.md#ondragexitcapture)
-- [onDragLeave](dxos_react_components.SkeletonProps.md#ondragleave)
-- [onDragLeaveCapture](dxos_react_components.SkeletonProps.md#ondragleavecapture)
-- [onDragOver](dxos_react_components.SkeletonProps.md#ondragover)
-- [onDragOverCapture](dxos_react_components.SkeletonProps.md#ondragovercapture)
-- [onDragStart](dxos_react_components.SkeletonProps.md#ondragstart)
-- [onDragStartCapture](dxos_react_components.SkeletonProps.md#ondragstartcapture)
-- [onDrop](dxos_react_components.SkeletonProps.md#ondrop)
-- [onDropCapture](dxos_react_components.SkeletonProps.md#ondropcapture)
-- [onDurationChange](dxos_react_components.SkeletonProps.md#ondurationchange)
-- [onDurationChangeCapture](dxos_react_components.SkeletonProps.md#ondurationchangecapture)
-- [onEmptied](dxos_react_components.SkeletonProps.md#onemptied)
-- [onEmptiedCapture](dxos_react_components.SkeletonProps.md#onemptiedcapture)
-- [onEncrypted](dxos_react_components.SkeletonProps.md#onencrypted)
-- [onEncryptedCapture](dxos_react_components.SkeletonProps.md#onencryptedcapture)
-- [onEnded](dxos_react_components.SkeletonProps.md#onended)
-- [onEndedCapture](dxos_react_components.SkeletonProps.md#onendedcapture)
-- [onError](dxos_react_components.SkeletonProps.md#onerror)
-- [onErrorCapture](dxos_react_components.SkeletonProps.md#onerrorcapture)
-- [onFocus](dxos_react_components.SkeletonProps.md#onfocus)
-- [onFocusCapture](dxos_react_components.SkeletonProps.md#onfocuscapture)
-- [onGotPointerCapture](dxos_react_components.SkeletonProps.md#ongotpointercapture)
-- [onGotPointerCaptureCapture](dxos_react_components.SkeletonProps.md#ongotpointercapturecapture)
-- [onInput](dxos_react_components.SkeletonProps.md#oninput)
-- [onInputCapture](dxos_react_components.SkeletonProps.md#oninputcapture)
-- [onInvalid](dxos_react_components.SkeletonProps.md#oninvalid)
-- [onInvalidCapture](dxos_react_components.SkeletonProps.md#oninvalidcapture)
-- [onKeyDown](dxos_react_components.SkeletonProps.md#onkeydown)
-- [onKeyDownCapture](dxos_react_components.SkeletonProps.md#onkeydowncapture)
-- [onKeyPress](dxos_react_components.SkeletonProps.md#onkeypress)
-- [onKeyPressCapture](dxos_react_components.SkeletonProps.md#onkeypresscapture)
-- [onKeyUp](dxos_react_components.SkeletonProps.md#onkeyup)
-- [onKeyUpCapture](dxos_react_components.SkeletonProps.md#onkeyupcapture)
-- [onLoad](dxos_react_components.SkeletonProps.md#onload)
-- [onLoadCapture](dxos_react_components.SkeletonProps.md#onloadcapture)
-- [onLoadStart](dxos_react_components.SkeletonProps.md#onloadstart)
-- [onLoadStartCapture](dxos_react_components.SkeletonProps.md#onloadstartcapture)
-- [onLoadedData](dxos_react_components.SkeletonProps.md#onloadeddata)
-- [onLoadedDataCapture](dxos_react_components.SkeletonProps.md#onloadeddatacapture)
-- [onLoadedMetadata](dxos_react_components.SkeletonProps.md#onloadedmetadata)
-- [onLoadedMetadataCapture](dxos_react_components.SkeletonProps.md#onloadedmetadatacapture)
-- [onLostPointerCapture](dxos_react_components.SkeletonProps.md#onlostpointercapture)
-- [onLostPointerCaptureCapture](dxos_react_components.SkeletonProps.md#onlostpointercapturecapture)
-- [onMouseDown](dxos_react_components.SkeletonProps.md#onmousedown)
-- [onMouseDownCapture](dxos_react_components.SkeletonProps.md#onmousedowncapture)
-- [onMouseEnter](dxos_react_components.SkeletonProps.md#onmouseenter)
-- [onMouseLeave](dxos_react_components.SkeletonProps.md#onmouseleave)
-- [onMouseMove](dxos_react_components.SkeletonProps.md#onmousemove)
-- [onMouseMoveCapture](dxos_react_components.SkeletonProps.md#onmousemovecapture)
-- [onMouseOut](dxos_react_components.SkeletonProps.md#onmouseout)
-- [onMouseOutCapture](dxos_react_components.SkeletonProps.md#onmouseoutcapture)
-- [onMouseOver](dxos_react_components.SkeletonProps.md#onmouseover)
-- [onMouseOverCapture](dxos_react_components.SkeletonProps.md#onmouseovercapture)
-- [onMouseUp](dxos_react_components.SkeletonProps.md#onmouseup)
-- [onMouseUpCapture](dxos_react_components.SkeletonProps.md#onmouseupcapture)
-- [onPaste](dxos_react_components.SkeletonProps.md#onpaste)
-- [onPasteCapture](dxos_react_components.SkeletonProps.md#onpastecapture)
-- [onPause](dxos_react_components.SkeletonProps.md#onpause)
-- [onPauseCapture](dxos_react_components.SkeletonProps.md#onpausecapture)
-- [onPlay](dxos_react_components.SkeletonProps.md#onplay)
-- [onPlayCapture](dxos_react_components.SkeletonProps.md#onplaycapture)
-- [onPlaying](dxos_react_components.SkeletonProps.md#onplaying)
-- [onPlayingCapture](dxos_react_components.SkeletonProps.md#onplayingcapture)
-- [onPointerCancel](dxos_react_components.SkeletonProps.md#onpointercancel)
-- [onPointerCancelCapture](dxos_react_components.SkeletonProps.md#onpointercancelcapture)
-- [onPointerDown](dxos_react_components.SkeletonProps.md#onpointerdown)
-- [onPointerDownCapture](dxos_react_components.SkeletonProps.md#onpointerdowncapture)
-- [onPointerEnter](dxos_react_components.SkeletonProps.md#onpointerenter)
-- [onPointerEnterCapture](dxos_react_components.SkeletonProps.md#onpointerentercapture)
-- [onPointerLeave](dxos_react_components.SkeletonProps.md#onpointerleave)
-- [onPointerLeaveCapture](dxos_react_components.SkeletonProps.md#onpointerleavecapture)
-- [onPointerMove](dxos_react_components.SkeletonProps.md#onpointermove)
-- [onPointerMoveCapture](dxos_react_components.SkeletonProps.md#onpointermovecapture)
-- [onPointerOut](dxos_react_components.SkeletonProps.md#onpointerout)
-- [onPointerOutCapture](dxos_react_components.SkeletonProps.md#onpointeroutcapture)
-- [onPointerOver](dxos_react_components.SkeletonProps.md#onpointerover)
-- [onPointerOverCapture](dxos_react_components.SkeletonProps.md#onpointerovercapture)
-- [onPointerUp](dxos_react_components.SkeletonProps.md#onpointerup)
-- [onPointerUpCapture](dxos_react_components.SkeletonProps.md#onpointerupcapture)
-- [onProgress](dxos_react_components.SkeletonProps.md#onprogress)
-- [onProgressCapture](dxos_react_components.SkeletonProps.md#onprogresscapture)
-- [onRateChange](dxos_react_components.SkeletonProps.md#onratechange)
-- [onRateChangeCapture](dxos_react_components.SkeletonProps.md#onratechangecapture)
-- [onReset](dxos_react_components.SkeletonProps.md#onreset)
-- [onResetCapture](dxos_react_components.SkeletonProps.md#onresetcapture)
-- [onScroll](dxos_react_components.SkeletonProps.md#onscroll)
-- [onScrollCapture](dxos_react_components.SkeletonProps.md#onscrollcapture)
-- [onSeeked](dxos_react_components.SkeletonProps.md#onseeked)
-- [onSeekedCapture](dxos_react_components.SkeletonProps.md#onseekedcapture)
-- [onSeeking](dxos_react_components.SkeletonProps.md#onseeking)
-- [onSeekingCapture](dxos_react_components.SkeletonProps.md#onseekingcapture)
-- [onSelect](dxos_react_components.SkeletonProps.md#onselect)
-- [onSelectCapture](dxos_react_components.SkeletonProps.md#onselectcapture)
-- [onStalled](dxos_react_components.SkeletonProps.md#onstalled)
-- [onStalledCapture](dxos_react_components.SkeletonProps.md#onstalledcapture)
-- [onSubmit](dxos_react_components.SkeletonProps.md#onsubmit)
-- [onSubmitCapture](dxos_react_components.SkeletonProps.md#onsubmitcapture)
-- [onSuspend](dxos_react_components.SkeletonProps.md#onsuspend)
-- [onSuspendCapture](dxos_react_components.SkeletonProps.md#onsuspendcapture)
-- [onTimeUpdate](dxos_react_components.SkeletonProps.md#ontimeupdate)
-- [onTimeUpdateCapture](dxos_react_components.SkeletonProps.md#ontimeupdatecapture)
-- [onTouchCancel](dxos_react_components.SkeletonProps.md#ontouchcancel)
-- [onTouchCancelCapture](dxos_react_components.SkeletonProps.md#ontouchcancelcapture)
-- [onTouchEnd](dxos_react_components.SkeletonProps.md#ontouchend)
-- [onTouchEndCapture](dxos_react_components.SkeletonProps.md#ontouchendcapture)
-- [onTouchMove](dxos_react_components.SkeletonProps.md#ontouchmove)
-- [onTouchMoveCapture](dxos_react_components.SkeletonProps.md#ontouchmovecapture)
-- [onTouchStart](dxos_react_components.SkeletonProps.md#ontouchstart)
-- [onTouchStartCapture](dxos_react_components.SkeletonProps.md#ontouchstartcapture)
-- [onTransitionEnd](dxos_react_components.SkeletonProps.md#ontransitionend)
-- [onTransitionEndCapture](dxos_react_components.SkeletonProps.md#ontransitionendcapture)
-- [onVolumeChange](dxos_react_components.SkeletonProps.md#onvolumechange)
-- [onVolumeChangeCapture](dxos_react_components.SkeletonProps.md#onvolumechangecapture)
-- [onWaiting](dxos_react_components.SkeletonProps.md#onwaiting)
-- [onWaitingCapture](dxos_react_components.SkeletonProps.md#onwaitingcapture)
-- [onWheel](dxos_react_components.SkeletonProps.md#onwheel)
-- [onWheelCapture](dxos_react_components.SkeletonProps.md#onwheelcapture)
-- [placeholder](dxos_react_components.SkeletonProps.md#placeholder)
-- [prefix](dxos_react_components.SkeletonProps.md#prefix)
-- [property](dxos_react_components.SkeletonProps.md#property)
-- [radioGroup](dxos_react_components.SkeletonProps.md#radiogroup)
-- [ref](dxos_react_components.SkeletonProps.md#ref)
-- [resource](dxos_react_components.SkeletonProps.md#resource)
-- [results](dxos_react_components.SkeletonProps.md#results)
-- [role](dxos_react_components.SkeletonProps.md#role)
-- [security](dxos_react_components.SkeletonProps.md#security)
-- [slot](dxos_react_components.SkeletonProps.md#slot)
-- [spellCheck](dxos_react_components.SkeletonProps.md#spellcheck)
-- [style](dxos_react_components.SkeletonProps.md#style)
-- [suppressContentEditableWarning](dxos_react_components.SkeletonProps.md#suppresscontenteditablewarning)
-- [suppressHydrationWarning](dxos_react_components.SkeletonProps.md#suppresshydrationwarning)
-- [sx](dxos_react_components.SkeletonProps.md#sx)
-- [tabIndex](dxos_react_components.SkeletonProps.md#tabindex)
-- [title](dxos_react_components.SkeletonProps.md#title)
-- [translate](dxos_react_components.SkeletonProps.md#translate)
-- [typeof](dxos_react_components.SkeletonProps.md#typeof)
-- [unselectable](dxos_react_components.SkeletonProps.md#unselectable)
-- [variant](dxos_react_components.SkeletonProps.md#variant)
-- [vocab](dxos_react_components.SkeletonProps.md#vocab)
-- [width](dxos_react_components.SkeletonProps.md#width)
-
 ## Properties
 
 ### about
 
-• `Optional` **about**: `string`
+ `Optional` **about**: `string`
 
 #### Inherited from
 
@@ -294,7 +26,7 @@ ___
 
 ### accessKey
 
-• `Optional` **accessKey**: `string`
+ `Optional` **accessKey**: `string`
 
 #### Inherited from
 
@@ -308,7 +40,7 @@ ___
 
 ### animation
 
-• `Optional` **animation**: ``false`` \| ``"pulse"`` \| ``"wave"``
+ `Optional` **animation**: ``false`` \| ``"pulse"`` \| ``"wave"``
 
 The animation.
 If `false` the animation effect is disabled.
@@ -329,7 +61,7 @@ ___
 
 ### aria-activedescendant
 
-• `Optional` **aria-activedescendant**: `string`
+ `Optional` **aria-activedescendant**: `string`
 
 Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application.
 
@@ -345,7 +77,7 @@ ___
 
 ### aria-atomic
 
-• `Optional` **aria-atomic**: `Booleanish`
+ `Optional` **aria-atomic**: `Booleanish`
 
 Indicates whether assistive technologies will present all, or only parts of, the changed region based on the change notifications defined by the aria-relevant attribute.
 
@@ -361,7 +93,7 @@ ___
 
 ### aria-autocomplete
 
-• `Optional` **aria-autocomplete**: ``"list"`` \| ``"none"`` \| ``"inline"`` \| ``"both"``
+ `Optional` **aria-autocomplete**: ``"list"`` \| ``"none"`` \| ``"inline"`` \| ``"both"``
 
 Indicates whether inputting text could trigger display of one or more predictions of the user's intended value for an input and specifies how predictions would be
 presented if they are made.
@@ -378,7 +110,7 @@ ___
 
 ### aria-busy
 
-• `Optional` **aria-busy**: `Booleanish`
+ `Optional` **aria-busy**: `Booleanish`
 
 Indicates an element is being modified and that assistive technologies MAY want to wait until the modifications are complete before exposing them to the user.
 
@@ -394,7 +126,7 @@ ___
 
 ### aria-checked
 
-• `Optional` **aria-checked**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
+ `Optional` **aria-checked**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
 
 Indicates the current "checked" state of checkboxes, radio buttons, and other widgets.
 
@@ -415,7 +147,7 @@ ___
 
 ### aria-colcount
 
-• `Optional` **aria-colcount**: `number`
+ `Optional` **aria-colcount**: `number`
 
 Defines the total number of columns in a table, grid, or treegrid.
 
@@ -435,7 +167,7 @@ ___
 
 ### aria-colindex
 
-• `Optional` **aria-colindex**: `number`
+ `Optional` **aria-colindex**: `number`
 
 Defines an element's column index or position with respect to the total number of columns within a table, grid, or treegrid.
 
@@ -456,7 +188,7 @@ ___
 
 ### aria-colspan
 
-• `Optional` **aria-colspan**: `number`
+ `Optional` **aria-colspan**: `number`
 
 Defines the number of columns spanned by a cell or gridcell within a table, grid, or treegrid.
 
@@ -477,7 +209,7 @@ ___
 
 ### aria-controls
 
-• `Optional` **aria-controls**: `string`
+ `Optional` **aria-controls**: `string`
 
 Identifies the element (or elements) whose contents or presence are controlled by the current element.
 
@@ -497,7 +229,7 @@ ___
 
 ### aria-current
 
-• `Optional` **aria-current**: `boolean` \| ``"time"`` \| ``"true"`` \| ``"false"`` \| ``"date"`` \| ``"page"`` \| ``"step"`` \| ``"location"``
+ `Optional` **aria-current**: `boolean` \| ``"time"`` \| ``"true"`` \| ``"false"`` \| ``"date"`` \| ``"page"`` \| ``"step"`` \| ``"location"``
 
 Indicates the element that represents the current item within a container or set of related elements.
 
@@ -513,7 +245,7 @@ ___
 
 ### aria-describedby
 
-• `Optional` **aria-describedby**: `string`
+ `Optional` **aria-describedby**: `string`
 
 Identifies the element (or elements) that describes the object.
 
@@ -533,7 +265,7 @@ ___
 
 ### aria-details
 
-• `Optional` **aria-details**: `string`
+ `Optional` **aria-details**: `string`
 
 Identifies the element that provides a detailed, extended description for the object.
 
@@ -553,7 +285,7 @@ ___
 
 ### aria-disabled
 
-• `Optional` **aria-disabled**: `Booleanish`
+ `Optional` **aria-disabled**: `Booleanish`
 
 Indicates that the element is perceivable but disabled, so it is not editable or otherwise operable.
 
@@ -574,7 +306,7 @@ ___
 
 ### aria-dropeffect
 
-• `Optional` **aria-dropeffect**: ``"link"`` \| ``"none"`` \| ``"copy"`` \| ``"execute"`` \| ``"move"`` \| ``"popup"``
+ `Optional` **aria-dropeffect**: ``"link"`` \| ``"none"`` \| ``"copy"`` \| ``"execute"`` \| ``"move"`` \| ``"popup"``
 
 Indicates what functions can be performed when a dragged object is released on the drop target.
 
@@ -594,7 +326,7 @@ ___
 
 ### aria-errormessage
 
-• `Optional` **aria-errormessage**: `string`
+ `Optional` **aria-errormessage**: `string`
 
 Identifies the element that provides an error message for the object.
 
@@ -615,7 +347,7 @@ ___
 
 ### aria-expanded
 
-• `Optional` **aria-expanded**: `Booleanish`
+ `Optional` **aria-expanded**: `Booleanish`
 
 Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed.
 
@@ -631,7 +363,7 @@ ___
 
 ### aria-flowto
 
-• `Optional` **aria-flowto**: `string`
+ `Optional` **aria-flowto**: `string`
 
 Identifies the next element (or elements) in an alternate reading order of content which, at the user's discretion,
 allows assistive technology to override the general default of reading in document source order.
@@ -648,7 +380,7 @@ ___
 
 ### aria-grabbed
 
-• `Optional` **aria-grabbed**: `Booleanish`
+ `Optional` **aria-grabbed**: `Booleanish`
 
 Indicates an element's "grabbed" state in a drag-and-drop operation.
 
@@ -668,7 +400,7 @@ ___
 
 ### aria-haspopup
 
-• `Optional` **aria-haspopup**: `boolean` \| ``"grid"`` \| ``"dialog"`` \| ``"menu"`` \| ``"true"`` \| ``"false"`` \| ``"listbox"`` \| ``"tree"``
+ `Optional` **aria-haspopup**: `boolean` \| ``"grid"`` \| ``"dialog"`` \| ``"menu"`` \| ``"true"`` \| ``"false"`` \| ``"listbox"`` \| ``"tree"``
 
 Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.
 
@@ -684,7 +416,7 @@ ___
 
 ### aria-hidden
 
-• `Optional` **aria-hidden**: `Booleanish`
+ `Optional` **aria-hidden**: `Booleanish`
 
 Indicates whether the element is exposed to an accessibility API.
 
@@ -704,7 +436,7 @@ ___
 
 ### aria-invalid
 
-• `Optional` **aria-invalid**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"grammar"`` \| ``"spelling"``
+ `Optional` **aria-invalid**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"grammar"`` \| ``"spelling"``
 
 Indicates the entered value does not conform to the format expected by the application.
 
@@ -724,7 +456,7 @@ ___
 
 ### aria-keyshortcuts
 
-• `Optional` **aria-keyshortcuts**: `string`
+ `Optional` **aria-keyshortcuts**: `string`
 
 Indicates keyboard shortcuts that an author has implemented to activate or give focus to an element.
 
@@ -740,7 +472,7 @@ ___
 
 ### aria-label
 
-• `Optional` **aria-label**: `string`
+ `Optional` **aria-label**: `string`
 
 Defines a string value that labels the current element.
 
@@ -760,7 +492,7 @@ ___
 
 ### aria-labelledby
 
-• `Optional` **aria-labelledby**: `string`
+ `Optional` **aria-labelledby**: `string`
 
 Identifies the element (or elements) that labels the current element.
 
@@ -780,7 +512,7 @@ ___
 
 ### aria-level
 
-• `Optional` **aria-level**: `number`
+ `Optional` **aria-level**: `number`
 
 Defines the hierarchical level of an element within a structure.
 
@@ -796,7 +528,7 @@ ___
 
 ### aria-live
 
-• `Optional` **aria-live**: ``"off"`` \| ``"assertive"`` \| ``"polite"``
+ `Optional` **aria-live**: ``"off"`` \| ``"assertive"`` \| ``"polite"``
 
 Indicates that an element will be updated, and describes the types of updates the user agents, assistive technologies, and user can expect from the live region.
 
@@ -812,7 +544,7 @@ ___
 
 ### aria-modal
 
-• `Optional` **aria-modal**: `Booleanish`
+ `Optional` **aria-modal**: `Booleanish`
 
 Indicates whether an element is modal when displayed.
 
@@ -828,7 +560,7 @@ ___
 
 ### aria-multiline
 
-• `Optional` **aria-multiline**: `Booleanish`
+ `Optional` **aria-multiline**: `Booleanish`
 
 Indicates whether a text box accepts multiple lines of input or only a single line.
 
@@ -844,7 +576,7 @@ ___
 
 ### aria-multiselectable
 
-• `Optional` **aria-multiselectable**: `Booleanish`
+ `Optional` **aria-multiselectable**: `Booleanish`
 
 Indicates that the user may select more than one item from the current selectable descendants.
 
@@ -860,7 +592,7 @@ ___
 
 ### aria-orientation
 
-• `Optional` **aria-orientation**: ``"horizontal"`` \| ``"vertical"``
+ `Optional` **aria-orientation**: ``"horizontal"`` \| ``"vertical"``
 
 Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.
 
@@ -876,7 +608,7 @@ ___
 
 ### aria-owns
 
-• `Optional` **aria-owns**: `string`
+ `Optional` **aria-owns**: `string`
 
 Identifies an element (or elements) in order to define a visual, functional, or contextual parent/child relationship
 between DOM elements where the DOM hierarchy cannot be used to represent the relationship.
@@ -897,7 +629,7 @@ ___
 
 ### aria-placeholder
 
-• `Optional` **aria-placeholder**: `string`
+ `Optional` **aria-placeholder**: `string`
 
 Defines a short hint (a word or short phrase) intended to aid the user with data entry when the control has no value.
 A hint could be a sample value or a brief description of the expected format.
@@ -914,7 +646,7 @@ ___
 
 ### aria-posinset
 
-• `Optional` **aria-posinset**: `number`
+ `Optional` **aria-posinset**: `number`
 
 Defines an element's number or position in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.
 
@@ -934,7 +666,7 @@ ___
 
 ### aria-pressed
 
-• `Optional` **aria-pressed**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
+ `Optional` **aria-pressed**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
 
 Indicates the current "pressed" state of toggle buttons.
 
@@ -955,7 +687,7 @@ ___
 
 ### aria-readonly
 
-• `Optional` **aria-readonly**: `Booleanish`
+ `Optional` **aria-readonly**: `Booleanish`
 
 Indicates that the element is not editable, but is otherwise operable.
 
@@ -975,7 +707,7 @@ ___
 
 ### aria-relevant
 
-• `Optional` **aria-relevant**: ``"all"`` \| ``"text"`` \| ``"additions"`` \| ``"additions removals"`` \| ``"additions text"`` \| ``"removals"`` \| ``"removals additions"`` \| ``"removals text"`` \| ``"text additions"`` \| ``"text removals"``
+ `Optional` **aria-relevant**: ``"all"`` \| ``"text"`` \| ``"additions"`` \| ``"additions removals"`` \| ``"additions text"`` \| ``"removals"`` \| ``"removals additions"`` \| ``"removals text"`` \| ``"text additions"`` \| ``"text removals"``
 
 Indicates what notifications the user agent will trigger when the accessibility tree within a live region is modified.
 
@@ -995,7 +727,7 @@ ___
 
 ### aria-required
 
-• `Optional` **aria-required**: `Booleanish`
+ `Optional` **aria-required**: `Booleanish`
 
 Indicates that user input is required on the element before a form may be submitted.
 
@@ -1011,7 +743,7 @@ ___
 
 ### aria-roledescription
 
-• `Optional` **aria-roledescription**: `string`
+ `Optional` **aria-roledescription**: `string`
 
 Defines a human-readable, author-localized description for the role of an element.
 
@@ -1027,7 +759,7 @@ ___
 
 ### aria-rowcount
 
-• `Optional` **aria-rowcount**: `number`
+ `Optional` **aria-rowcount**: `number`
 
 Defines the total number of rows in a table, grid, or treegrid.
 
@@ -1047,7 +779,7 @@ ___
 
 ### aria-rowindex
 
-• `Optional` **aria-rowindex**: `number`
+ `Optional` **aria-rowindex**: `number`
 
 Defines an element's row index or position with respect to the total number of rows within a table, grid, or treegrid.
 
@@ -1068,7 +800,7 @@ ___
 
 ### aria-rowspan
 
-• `Optional` **aria-rowspan**: `number`
+ `Optional` **aria-rowspan**: `number`
 
 Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.
 
@@ -1089,7 +821,7 @@ ___
 
 ### aria-selected
 
-• `Optional` **aria-selected**: `Booleanish`
+ `Optional` **aria-selected**: `Booleanish`
 
 Indicates the current "selected" state of various widgets.
 
@@ -1110,7 +842,7 @@ ___
 
 ### aria-setsize
 
-• `Optional` **aria-setsize**: `number`
+ `Optional` **aria-setsize**: `number`
 
 Defines the number of items in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.
 
@@ -1130,7 +862,7 @@ ___
 
 ### aria-sort
 
-• `Optional` **aria-sort**: ``"none"`` \| ``"ascending"`` \| ``"descending"`` \| ``"other"``
+ `Optional` **aria-sort**: ``"none"`` \| ``"ascending"`` \| ``"descending"`` \| ``"other"``
 
 Indicates if items in a table or grid are sorted in ascending or descending order.
 
@@ -1146,7 +878,7 @@ ___
 
 ### aria-valuemax
 
-• `Optional` **aria-valuemax**: `number`
+ `Optional` **aria-valuemax**: `number`
 
 Defines the maximum allowed value for a range widget.
 
@@ -1162,7 +894,7 @@ ___
 
 ### aria-valuemin
 
-• `Optional` **aria-valuemin**: `number`
+ `Optional` **aria-valuemin**: `number`
 
 Defines the minimum allowed value for a range widget.
 
@@ -1178,7 +910,7 @@ ___
 
 ### aria-valuenow
 
-• `Optional` **aria-valuenow**: `number`
+ `Optional` **aria-valuenow**: `number`
 
 Defines the current value for a range widget.
 
@@ -1198,7 +930,7 @@ ___
 
 ### aria-valuetext
 
-• `Optional` **aria-valuetext**: `string`
+ `Optional` **aria-valuetext**: `string`
 
 Defines the human readable text alternative of aria-valuenow for a range widget.
 
@@ -1214,7 +946,7 @@ ___
 
 ### autoCapitalize
 
-• `Optional` **autoCapitalize**: `string`
+ `Optional` **autoCapitalize**: `string`
 
 #### Inherited from
 
@@ -1228,7 +960,7 @@ ___
 
 ### autoCorrect
 
-• `Optional` **autoCorrect**: `string`
+ `Optional` **autoCorrect**: `string`
 
 #### Inherited from
 
@@ -1242,7 +974,7 @@ ___
 
 ### autoSave
 
-• `Optional` **autoSave**: `string`
+ `Optional` **autoSave**: `string`
 
 #### Inherited from
 
@@ -1256,7 +988,7 @@ ___
 
 ### children
 
-• `Optional` **children**: `ReactNode`
+ `Optional` **children**: `ReactNode`
 
 Optional children to infer width and height from.
 
@@ -1272,7 +1004,7 @@ ___
 
 ### className
 
-• `Optional` **className**: `string`
+ `Optional` **className**: `string`
 
 #### Inherited from
 
@@ -1286,7 +1018,7 @@ ___
 
 ### classes
 
-• `Optional` **classes**: `Partial`<`SkeletonClasses`\> & `Partial`<`ClassNameMap`<`never`\>\>
+ `Optional` **classes**: `Partial`<`SkeletonClasses`\> & `Partial`<`ClassNameMap`<`never`\>\>
 
 Override or extend the styles applied to the component.
 
@@ -1304,7 +1036,7 @@ ___
 
 ### color
 
-• `Optional` **color**: `string`
+ `Optional` **color**: `string`
 
 #### Inherited from
 
@@ -1318,7 +1050,7 @@ ___
 
 ### contentEditable
 
-• `Optional` **contentEditable**: `Booleanish` \| ``"inherit"``
+ `Optional` **contentEditable**: `Booleanish` \| ``"inherit"``
 
 #### Inherited from
 
@@ -1332,7 +1064,7 @@ ___
 
 ### contextMenu
 
-• `Optional` **contextMenu**: `string`
+ `Optional` **contextMenu**: `string`
 
 #### Inherited from
 
@@ -1346,7 +1078,7 @@ ___
 
 ### dangerouslySetInnerHTML
 
-• `Optional` **dangerouslySetInnerHTML**: `Object`
+ `Optional` **dangerouslySetInnerHTML**: `Object`
 
 #### Type declaration
 
@@ -1366,7 +1098,7 @@ ___
 
 ### datatype
 
-• `Optional` **datatype**: `string`
+ `Optional` **datatype**: `string`
 
 #### Inherited from
 
@@ -1380,7 +1112,7 @@ ___
 
 ### defaultChecked
 
-• `Optional` **defaultChecked**: `boolean`
+ `Optional` **defaultChecked**: `boolean`
 
 #### Inherited from
 
@@ -1394,7 +1126,7 @@ ___
 
 ### defaultValue
 
-• `Optional` **defaultValue**: `string` \| `number` \| readonly `string`[]
+ `Optional` **defaultValue**: `string` \| `number` \| readonly `string`[]
 
 #### Inherited from
 
@@ -1408,17 +1140,17 @@ ___
 
 ### delay
 
-• `Optional` **delay**: `number`
+ `Optional` **delay**: `number`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Skeleton/Skeleton.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Skeleton/Skeleton.tsx#L12)
+[packages/sdk/react-components/src/Skeleton/Skeleton.tsx:12](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Skeleton/Skeleton.tsx#L12)
 
 ___
 
 ### dir
 
-• `Optional` **dir**: `string`
+ `Optional` **dir**: `string`
 
 #### Inherited from
 
@@ -1432,7 +1164,7 @@ ___
 
 ### draggable
 
-• `Optional` **draggable**: `Booleanish`
+ `Optional` **draggable**: `Booleanish`
 
 #### Inherited from
 
@@ -1446,7 +1178,7 @@ ___
 
 ### height
 
-• `Optional` **height**: `string` \| `number`
+ `Optional` **height**: `string` \| `number`
 
 Height of the skeleton.
 Useful when you don't want to adapt the skeleton to a text element but for instance a card.
@@ -1463,7 +1195,7 @@ ___
 
 ### hidden
 
-• `Optional` **hidden**: `boolean`
+ `Optional` **hidden**: `boolean`
 
 #### Inherited from
 
@@ -1477,7 +1209,7 @@ ___
 
 ### id
 
-• `Optional` **id**: `string`
+ `Optional` **id**: `string`
 
 #### Inherited from
 
@@ -1491,7 +1223,7 @@ ___
 
 ### inlist
 
-• `Optional` **inlist**: `any`
+ `Optional` **inlist**: `any`
 
 #### Inherited from
 
@@ -1505,7 +1237,7 @@ ___
 
 ### inputMode
 
-• `Optional` **inputMode**: ``"text"`` \| ``"none"`` \| ``"search"`` \| ``"tel"`` \| ``"url"`` \| ``"email"`` \| ``"numeric"`` \| ``"decimal"``
+ `Optional` **inputMode**: ``"text"`` \| ``"none"`` \| ``"search"`` \| ``"tel"`` \| ``"url"`` \| ``"email"`` \| ``"numeric"`` \| ``"decimal"``
 
 Hints at the type of data that might be entered by the user while editing the element or its contents
 
@@ -1525,7 +1257,7 @@ ___
 
 ### is
 
-• `Optional` **is**: `string`
+ `Optional` **is**: `string`
 
 Specify that a standard HTML element should behave like a defined custom built-in element
 
@@ -1545,7 +1277,7 @@ ___
 
 ### itemID
 
-• `Optional` **itemID**: `string`
+ `Optional` **itemID**: `string`
 
 #### Inherited from
 
@@ -1559,7 +1291,7 @@ ___
 
 ### itemProp
 
-• `Optional` **itemProp**: `string`
+ `Optional` **itemProp**: `string`
 
 #### Inherited from
 
@@ -1573,7 +1305,7 @@ ___
 
 ### itemRef
 
-• `Optional` **itemRef**: `string`
+ `Optional` **itemRef**: `string`
 
 #### Inherited from
 
@@ -1587,7 +1319,7 @@ ___
 
 ### itemScope
 
-• `Optional` **itemScope**: `boolean`
+ `Optional` **itemScope**: `boolean`
 
 #### Inherited from
 
@@ -1601,7 +1333,7 @@ ___
 
 ### itemType
 
-• `Optional` **itemType**: `string`
+ `Optional` **itemType**: `string`
 
 #### Inherited from
 
@@ -1615,7 +1347,7 @@ ___
 
 ### key
 
-• `Optional` **key**: ``null`` \| `Key`
+ `Optional` **key**: ``null`` \| `Key`
 
 #### Inherited from
 
@@ -1629,7 +1361,7 @@ ___
 
 ### lang
 
-• `Optional` **lang**: `string`
+ `Optional` **lang**: `string`
 
 #### Inherited from
 
@@ -1643,7 +1375,7 @@ ___
 
 ### onAbort
 
-• `Optional` **onAbort**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAbort**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1657,7 +1389,7 @@ ___
 
 ### onAbortCapture
 
-• `Optional` **onAbortCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAbortCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1671,7 +1403,7 @@ ___
 
 ### onAnimationEnd
 
-• `Optional` **onAnimationEnd**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationEnd**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1685,7 +1417,7 @@ ___
 
 ### onAnimationEndCapture
 
-• `Optional` **onAnimationEndCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationEndCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1699,7 +1431,7 @@ ___
 
 ### onAnimationIteration
 
-• `Optional` **onAnimationIteration**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationIteration**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1713,7 +1445,7 @@ ___
 
 ### onAnimationIterationCapture
 
-• `Optional` **onAnimationIterationCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationIterationCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1727,7 +1459,7 @@ ___
 
 ### onAnimationStart
 
-• `Optional` **onAnimationStart**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationStart**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1741,7 +1473,7 @@ ___
 
 ### onAnimationStartCapture
 
-• `Optional` **onAnimationStartCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationStartCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1755,7 +1487,7 @@ ___
 
 ### onAuxClick
 
-• `Optional` **onAuxClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAuxClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1769,7 +1501,7 @@ ___
 
 ### onAuxClickCapture
 
-• `Optional` **onAuxClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAuxClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1783,7 +1515,7 @@ ___
 
 ### onBeforeInput
 
-• `Optional` **onBeforeInput**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBeforeInput**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1797,7 +1529,7 @@ ___
 
 ### onBeforeInputCapture
 
-• `Optional` **onBeforeInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBeforeInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1811,7 +1543,7 @@ ___
 
 ### onBlur
 
-• `Optional` **onBlur**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBlur**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1825,7 +1557,7 @@ ___
 
 ### onBlurCapture
 
-• `Optional` **onBlurCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBlurCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1839,7 +1571,7 @@ ___
 
 ### onCanPlay
 
-• `Optional` **onCanPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1853,7 +1585,7 @@ ___
 
 ### onCanPlayCapture
 
-• `Optional` **onCanPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1867,7 +1599,7 @@ ___
 
 ### onCanPlayThrough
 
-• `Optional` **onCanPlayThrough**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayThrough**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1881,7 +1613,7 @@ ___
 
 ### onCanPlayThroughCapture
 
-• `Optional` **onCanPlayThroughCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayThroughCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1895,7 +1627,7 @@ ___
 
 ### onChange
 
-• `Optional` **onChange**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onChange**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1909,7 +1641,7 @@ ___
 
 ### onChangeCapture
 
-• `Optional` **onChangeCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onChangeCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1923,7 +1655,7 @@ ___
 
 ### onClick
 
-• `Optional` **onClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1937,7 +1669,7 @@ ___
 
 ### onClickCapture
 
-• `Optional` **onClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1951,7 +1683,7 @@ ___
 
 ### onCompositionEnd
 
-• `Optional` **onCompositionEnd**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionEnd**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1965,7 +1697,7 @@ ___
 
 ### onCompositionEndCapture
 
-• `Optional` **onCompositionEndCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionEndCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1979,7 +1711,7 @@ ___
 
 ### onCompositionStart
 
-• `Optional` **onCompositionStart**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionStart**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -1993,7 +1725,7 @@ ___
 
 ### onCompositionStartCapture
 
-• `Optional` **onCompositionStartCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionStartCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2007,7 +1739,7 @@ ___
 
 ### onCompositionUpdate
 
-• `Optional` **onCompositionUpdate**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionUpdate**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2021,7 +1753,7 @@ ___
 
 ### onCompositionUpdateCapture
 
-• `Optional` **onCompositionUpdateCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionUpdateCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2035,7 +1767,7 @@ ___
 
 ### onContextMenu
 
-• `Optional` **onContextMenu**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onContextMenu**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2049,7 +1781,7 @@ ___
 
 ### onContextMenuCapture
 
-• `Optional` **onContextMenuCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onContextMenuCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2063,7 +1795,7 @@ ___
 
 ### onCopy
 
-• `Optional` **onCopy**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCopy**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2077,7 +1809,7 @@ ___
 
 ### onCopyCapture
 
-• `Optional` **onCopyCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCopyCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2091,7 +1823,7 @@ ___
 
 ### onCut
 
-• `Optional` **onCut**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCut**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2105,7 +1837,7 @@ ___
 
 ### onCutCapture
 
-• `Optional` **onCutCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCutCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2119,7 +1851,7 @@ ___
 
 ### onDoubleClick
 
-• `Optional` **onDoubleClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDoubleClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2133,7 +1865,7 @@ ___
 
 ### onDoubleClickCapture
 
-• `Optional` **onDoubleClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDoubleClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2147,7 +1879,7 @@ ___
 
 ### onDrag
 
-• `Optional` **onDrag**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDrag**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2161,7 +1893,7 @@ ___
 
 ### onDragCapture
 
-• `Optional` **onDragCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2175,7 +1907,7 @@ ___
 
 ### onDragEnd
 
-• `Optional` **onDragEnd**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnd**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2189,7 +1921,7 @@ ___
 
 ### onDragEndCapture
 
-• `Optional` **onDragEndCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEndCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2203,7 +1935,7 @@ ___
 
 ### onDragEnter
 
-• `Optional` **onDragEnter**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnter**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2217,7 +1949,7 @@ ___
 
 ### onDragEnterCapture
 
-• `Optional` **onDragEnterCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnterCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2231,7 +1963,7 @@ ___
 
 ### onDragExit
 
-• `Optional` **onDragExit**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragExit**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2245,7 +1977,7 @@ ___
 
 ### onDragExitCapture
 
-• `Optional` **onDragExitCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragExitCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2259,7 +1991,7 @@ ___
 
 ### onDragLeave
 
-• `Optional` **onDragLeave**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragLeave**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2273,7 +2005,7 @@ ___
 
 ### onDragLeaveCapture
 
-• `Optional` **onDragLeaveCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragLeaveCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2287,7 +2019,7 @@ ___
 
 ### onDragOver
 
-• `Optional` **onDragOver**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragOver**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2301,7 +2033,7 @@ ___
 
 ### onDragOverCapture
 
-• `Optional` **onDragOverCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragOverCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2315,7 +2047,7 @@ ___
 
 ### onDragStart
 
-• `Optional` **onDragStart**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragStart**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2329,7 +2061,7 @@ ___
 
 ### onDragStartCapture
 
-• `Optional` **onDragStartCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragStartCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2343,7 +2075,7 @@ ___
 
 ### onDrop
 
-• `Optional` **onDrop**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDrop**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2357,7 +2089,7 @@ ___
 
 ### onDropCapture
 
-• `Optional` **onDropCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDropCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2371,7 +2103,7 @@ ___
 
 ### onDurationChange
 
-• `Optional` **onDurationChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDurationChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2385,7 +2117,7 @@ ___
 
 ### onDurationChangeCapture
 
-• `Optional` **onDurationChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDurationChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2399,7 +2131,7 @@ ___
 
 ### onEmptied
 
-• `Optional` **onEmptied**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEmptied**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2413,7 +2145,7 @@ ___
 
 ### onEmptiedCapture
 
-• `Optional` **onEmptiedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEmptiedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2427,7 +2159,7 @@ ___
 
 ### onEncrypted
 
-• `Optional` **onEncrypted**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEncrypted**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2441,7 +2173,7 @@ ___
 
 ### onEncryptedCapture
 
-• `Optional` **onEncryptedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEncryptedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2455,7 +2187,7 @@ ___
 
 ### onEnded
 
-• `Optional` **onEnded**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEnded**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2469,7 +2201,7 @@ ___
 
 ### onEndedCapture
 
-• `Optional` **onEndedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEndedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2483,7 +2215,7 @@ ___
 
 ### onError
 
-• `Optional` **onError**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onError**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2497,7 +2229,7 @@ ___
 
 ### onErrorCapture
 
-• `Optional` **onErrorCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onErrorCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2511,7 +2243,7 @@ ___
 
 ### onFocus
 
-• `Optional` **onFocus**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onFocus**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2525,7 +2257,7 @@ ___
 
 ### onFocusCapture
 
-• `Optional` **onFocusCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onFocusCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2539,7 +2271,7 @@ ___
 
 ### onGotPointerCapture
 
-• `Optional` **onGotPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onGotPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2553,7 +2285,7 @@ ___
 
 ### onGotPointerCaptureCapture
 
-• `Optional` **onGotPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onGotPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2567,7 +2299,7 @@ ___
 
 ### onInput
 
-• `Optional` **onInput**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInput**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2581,7 +2313,7 @@ ___
 
 ### onInputCapture
 
-• `Optional` **onInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2595,7 +2327,7 @@ ___
 
 ### onInvalid
 
-• `Optional` **onInvalid**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInvalid**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2609,7 +2341,7 @@ ___
 
 ### onInvalidCapture
 
-• `Optional` **onInvalidCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInvalidCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2623,7 +2355,7 @@ ___
 
 ### onKeyDown
 
-• `Optional` **onKeyDown**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyDown**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2637,7 +2369,7 @@ ___
 
 ### onKeyDownCapture
 
-• `Optional` **onKeyDownCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyDownCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2651,7 +2383,7 @@ ___
 
 ### onKeyPress
 
-• `Optional` **onKeyPress**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyPress**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 **`Deprecated`**
 
@@ -2667,7 +2399,7 @@ ___
 
 ### onKeyPressCapture
 
-• `Optional` **onKeyPressCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyPressCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 **`Deprecated`**
 
@@ -2683,7 +2415,7 @@ ___
 
 ### onKeyUp
 
-• `Optional` **onKeyUp**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyUp**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2697,7 +2429,7 @@ ___
 
 ### onKeyUpCapture
 
-• `Optional` **onKeyUpCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyUpCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2711,7 +2443,7 @@ ___
 
 ### onLoad
 
-• `Optional` **onLoad**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoad**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2725,7 +2457,7 @@ ___
 
 ### onLoadCapture
 
-• `Optional` **onLoadCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2739,7 +2471,7 @@ ___
 
 ### onLoadStart
 
-• `Optional` **onLoadStart**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadStart**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2753,7 +2485,7 @@ ___
 
 ### onLoadStartCapture
 
-• `Optional` **onLoadStartCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadStartCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2767,7 +2499,7 @@ ___
 
 ### onLoadedData
 
-• `Optional` **onLoadedData**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedData**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2781,7 +2513,7 @@ ___
 
 ### onLoadedDataCapture
 
-• `Optional` **onLoadedDataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedDataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2795,7 +2527,7 @@ ___
 
 ### onLoadedMetadata
 
-• `Optional` **onLoadedMetadata**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedMetadata**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2809,7 +2541,7 @@ ___
 
 ### onLoadedMetadataCapture
 
-• `Optional` **onLoadedMetadataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedMetadataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2823,7 +2555,7 @@ ___
 
 ### onLostPointerCapture
 
-• `Optional` **onLostPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLostPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2837,7 +2569,7 @@ ___
 
 ### onLostPointerCaptureCapture
 
-• `Optional` **onLostPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLostPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2851,7 +2583,7 @@ ___
 
 ### onMouseDown
 
-• `Optional` **onMouseDown**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseDown**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2865,7 +2597,7 @@ ___
 
 ### onMouseDownCapture
 
-• `Optional` **onMouseDownCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseDownCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2879,7 +2611,7 @@ ___
 
 ### onMouseEnter
 
-• `Optional` **onMouseEnter**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseEnter**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2893,7 +2625,7 @@ ___
 
 ### onMouseLeave
 
-• `Optional` **onMouseLeave**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseLeave**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2907,7 +2639,7 @@ ___
 
 ### onMouseMove
 
-• `Optional` **onMouseMove**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseMove**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2921,7 +2653,7 @@ ___
 
 ### onMouseMoveCapture
 
-• `Optional` **onMouseMoveCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseMoveCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2935,7 +2667,7 @@ ___
 
 ### onMouseOut
 
-• `Optional` **onMouseOut**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOut**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2949,7 +2681,7 @@ ___
 
 ### onMouseOutCapture
 
-• `Optional` **onMouseOutCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOutCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2963,7 +2695,7 @@ ___
 
 ### onMouseOver
 
-• `Optional` **onMouseOver**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOver**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2977,7 +2709,7 @@ ___
 
 ### onMouseOverCapture
 
-• `Optional` **onMouseOverCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOverCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2991,7 +2723,7 @@ ___
 
 ### onMouseUp
 
-• `Optional` **onMouseUp**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseUp**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3005,7 +2737,7 @@ ___
 
 ### onMouseUpCapture
 
-• `Optional` **onMouseUpCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseUpCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3019,7 +2751,7 @@ ___
 
 ### onPaste
 
-• `Optional` **onPaste**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPaste**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3033,7 +2765,7 @@ ___
 
 ### onPasteCapture
 
-• `Optional` **onPasteCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPasteCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3047,7 +2779,7 @@ ___
 
 ### onPause
 
-• `Optional` **onPause**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPause**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3061,7 +2793,7 @@ ___
 
 ### onPauseCapture
 
-• `Optional` **onPauseCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPauseCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3075,7 +2807,7 @@ ___
 
 ### onPlay
 
-• `Optional` **onPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3089,7 +2821,7 @@ ___
 
 ### onPlayCapture
 
-• `Optional` **onPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3103,7 +2835,7 @@ ___
 
 ### onPlaying
 
-• `Optional` **onPlaying**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlaying**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3117,7 +2849,7 @@ ___
 
 ### onPlayingCapture
 
-• `Optional` **onPlayingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlayingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3131,7 +2863,7 @@ ___
 
 ### onPointerCancel
 
-• `Optional` **onPointerCancel**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerCancel**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3145,7 +2877,7 @@ ___
 
 ### onPointerCancelCapture
 
-• `Optional` **onPointerCancelCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerCancelCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3159,7 +2891,7 @@ ___
 
 ### onPointerDown
 
-• `Optional` **onPointerDown**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerDown**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3173,7 +2905,7 @@ ___
 
 ### onPointerDownCapture
 
-• `Optional` **onPointerDownCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerDownCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3187,7 +2919,7 @@ ___
 
 ### onPointerEnter
 
-• `Optional` **onPointerEnter**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerEnter**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3201,7 +2933,7 @@ ___
 
 ### onPointerEnterCapture
 
-• `Optional` **onPointerEnterCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerEnterCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3215,7 +2947,7 @@ ___
 
 ### onPointerLeave
 
-• `Optional` **onPointerLeave**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerLeave**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3229,7 +2961,7 @@ ___
 
 ### onPointerLeaveCapture
 
-• `Optional` **onPointerLeaveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerLeaveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3243,7 +2975,7 @@ ___
 
 ### onPointerMove
 
-• `Optional` **onPointerMove**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerMove**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3257,7 +2989,7 @@ ___
 
 ### onPointerMoveCapture
 
-• `Optional` **onPointerMoveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerMoveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3271,7 +3003,7 @@ ___
 
 ### onPointerOut
 
-• `Optional` **onPointerOut**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOut**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3285,7 +3017,7 @@ ___
 
 ### onPointerOutCapture
 
-• `Optional` **onPointerOutCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOutCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3299,7 +3031,7 @@ ___
 
 ### onPointerOver
 
-• `Optional` **onPointerOver**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOver**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3313,7 +3045,7 @@ ___
 
 ### onPointerOverCapture
 
-• `Optional` **onPointerOverCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOverCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3327,7 +3059,7 @@ ___
 
 ### onPointerUp
 
-• `Optional` **onPointerUp**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerUp**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3341,7 +3073,7 @@ ___
 
 ### onPointerUpCapture
 
-• `Optional` **onPointerUpCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerUpCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3355,7 +3087,7 @@ ___
 
 ### onProgress
 
-• `Optional` **onProgress**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onProgress**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3369,7 +3101,7 @@ ___
 
 ### onProgressCapture
 
-• `Optional` **onProgressCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onProgressCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3383,7 +3115,7 @@ ___
 
 ### onRateChange
 
-• `Optional` **onRateChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onRateChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3397,7 +3129,7 @@ ___
 
 ### onRateChangeCapture
 
-• `Optional` **onRateChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onRateChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3411,7 +3143,7 @@ ___
 
 ### onReset
 
-• `Optional` **onReset**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onReset**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3425,7 +3157,7 @@ ___
 
 ### onResetCapture
 
-• `Optional` **onResetCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onResetCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3439,7 +3171,7 @@ ___
 
 ### onScroll
 
-• `Optional` **onScroll**: `UIEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onScroll**: `UIEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3453,7 +3185,7 @@ ___
 
 ### onScrollCapture
 
-• `Optional` **onScrollCapture**: `UIEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onScrollCapture**: `UIEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3467,7 +3199,7 @@ ___
 
 ### onSeeked
 
-• `Optional` **onSeeked**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeeked**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3481,7 +3213,7 @@ ___
 
 ### onSeekedCapture
 
-• `Optional` **onSeekedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeekedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3495,7 +3227,7 @@ ___
 
 ### onSeeking
 
-• `Optional` **onSeeking**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeeking**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3509,7 +3241,7 @@ ___
 
 ### onSeekingCapture
 
-• `Optional` **onSeekingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeekingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3523,7 +3255,7 @@ ___
 
 ### onSelect
 
-• `Optional` **onSelect**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSelect**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3537,7 +3269,7 @@ ___
 
 ### onSelectCapture
 
-• `Optional` **onSelectCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSelectCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3551,7 +3283,7 @@ ___
 
 ### onStalled
 
-• `Optional` **onStalled**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onStalled**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3565,7 +3297,7 @@ ___
 
 ### onStalledCapture
 
-• `Optional` **onStalledCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onStalledCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3579,7 +3311,7 @@ ___
 
 ### onSubmit
 
-• `Optional` **onSubmit**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSubmit**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3593,7 +3325,7 @@ ___
 
 ### onSubmitCapture
 
-• `Optional` **onSubmitCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSubmitCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3607,7 +3339,7 @@ ___
 
 ### onSuspend
 
-• `Optional` **onSuspend**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSuspend**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3621,7 +3353,7 @@ ___
 
 ### onSuspendCapture
 
-• `Optional` **onSuspendCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSuspendCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3635,7 +3367,7 @@ ___
 
 ### onTimeUpdate
 
-• `Optional` **onTimeUpdate**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTimeUpdate**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3649,7 +3381,7 @@ ___
 
 ### onTimeUpdateCapture
 
-• `Optional` **onTimeUpdateCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTimeUpdateCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3663,7 +3395,7 @@ ___
 
 ### onTouchCancel
 
-• `Optional` **onTouchCancel**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchCancel**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3677,7 +3409,7 @@ ___
 
 ### onTouchCancelCapture
 
-• `Optional` **onTouchCancelCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchCancelCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3691,7 +3423,7 @@ ___
 
 ### onTouchEnd
 
-• `Optional` **onTouchEnd**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchEnd**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3705,7 +3437,7 @@ ___
 
 ### onTouchEndCapture
 
-• `Optional` **onTouchEndCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchEndCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3719,7 +3451,7 @@ ___
 
 ### onTouchMove
 
-• `Optional` **onTouchMove**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchMove**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3733,7 +3465,7 @@ ___
 
 ### onTouchMoveCapture
 
-• `Optional` **onTouchMoveCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchMoveCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3747,7 +3479,7 @@ ___
 
 ### onTouchStart
 
-• `Optional` **onTouchStart**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchStart**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3761,7 +3493,7 @@ ___
 
 ### onTouchStartCapture
 
-• `Optional` **onTouchStartCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchStartCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3775,7 +3507,7 @@ ___
 
 ### onTransitionEnd
 
-• `Optional` **onTransitionEnd**: `TransitionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTransitionEnd**: `TransitionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3789,7 +3521,7 @@ ___
 
 ### onTransitionEndCapture
 
-• `Optional` **onTransitionEndCapture**: `TransitionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTransitionEndCapture**: `TransitionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3803,7 +3535,7 @@ ___
 
 ### onVolumeChange
 
-• `Optional` **onVolumeChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onVolumeChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3817,7 +3549,7 @@ ___
 
 ### onVolumeChangeCapture
 
-• `Optional` **onVolumeChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onVolumeChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3831,7 +3563,7 @@ ___
 
 ### onWaiting
 
-• `Optional` **onWaiting**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWaiting**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3845,7 +3577,7 @@ ___
 
 ### onWaitingCapture
 
-• `Optional` **onWaitingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWaitingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3859,7 +3591,7 @@ ___
 
 ### onWheel
 
-• `Optional` **onWheel**: `WheelEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWheel**: `WheelEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3873,7 +3605,7 @@ ___
 
 ### onWheelCapture
 
-• `Optional` **onWheelCapture**: `WheelEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWheelCapture**: `WheelEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3887,7 +3619,7 @@ ___
 
 ### placeholder
 
-• `Optional` **placeholder**: `string`
+ `Optional` **placeholder**: `string`
 
 #### Inherited from
 
@@ -3901,7 +3633,7 @@ ___
 
 ### prefix
 
-• `Optional` **prefix**: `string`
+ `Optional` **prefix**: `string`
 
 #### Inherited from
 
@@ -3915,7 +3647,7 @@ ___
 
 ### property
 
-• `Optional` **property**: `string`
+ `Optional` **property**: `string`
 
 #### Inherited from
 
@@ -3929,7 +3661,7 @@ ___
 
 ### radioGroup
 
-• `Optional` **radioGroup**: `string`
+ `Optional` **radioGroup**: `string`
 
 #### Inherited from
 
@@ -3943,7 +3675,7 @@ ___
 
 ### ref
 
-• `Optional` **ref**: ``null`` \| (`instance`: ``null`` \| `HTMLSpanElement`) => `void` \| `RefObject`<`HTMLSpanElement`\>
+ `Optional` **ref**: ``null`` \| (`instance`: ``null`` \| `HTMLSpanElement`) => `void` \| `RefObject`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3957,7 +3689,7 @@ ___
 
 ### resource
 
-• `Optional` **resource**: `string`
+ `Optional` **resource**: `string`
 
 #### Inherited from
 
@@ -3971,7 +3703,7 @@ ___
 
 ### results
 
-• `Optional` **results**: `number`
+ `Optional` **results**: `number`
 
 #### Inherited from
 
@@ -3985,7 +3717,7 @@ ___
 
 ### role
 
-• `Optional` **role**: `AriaRole`
+ `Optional` **role**: `AriaRole`
 
 #### Inherited from
 
@@ -3999,7 +3731,7 @@ ___
 
 ### security
 
-• `Optional` **security**: `string`
+ `Optional` **security**: `string`
 
 #### Inherited from
 
@@ -4013,7 +3745,7 @@ ___
 
 ### slot
 
-• `Optional` **slot**: `string`
+ `Optional` **slot**: `string`
 
 #### Inherited from
 
@@ -4027,7 +3759,7 @@ ___
 
 ### spellCheck
 
-• `Optional` **spellCheck**: `Booleanish`
+ `Optional` **spellCheck**: `Booleanish`
 
 #### Inherited from
 
@@ -4041,7 +3773,7 @@ ___
 
 ### style
 
-• `Optional` **style**: `CSSProperties`
+ `Optional` **style**: `CSSProperties`
 
 #### Inherited from
 
@@ -4055,7 +3787,7 @@ ___
 
 ### suppressContentEditableWarning
 
-• `Optional` **suppressContentEditableWarning**: `boolean`
+ `Optional` **suppressContentEditableWarning**: `boolean`
 
 #### Inherited from
 
@@ -4069,7 +3801,7 @@ ___
 
 ### suppressHydrationWarning
 
-• `Optional` **suppressHydrationWarning**: `boolean`
+ `Optional` **suppressHydrationWarning**: `boolean`
 
 #### Inherited from
 
@@ -4083,7 +3815,7 @@ ___
 
 ### sx
 
-• `Optional` **sx**: `SxProps`<`Theme`\>
+ `Optional` **sx**: `SxProps`<`Theme`\>
 
 The system prop that allows defining system overrides as well as additional CSS styles.
 
@@ -4099,7 +3831,7 @@ ___
 
 ### tabIndex
 
-• `Optional` **tabIndex**: `number`
+ `Optional` **tabIndex**: `number`
 
 #### Inherited from
 
@@ -4113,7 +3845,7 @@ ___
 
 ### title
 
-• `Optional` **title**: `string`
+ `Optional` **title**: `string`
 
 #### Inherited from
 
@@ -4127,7 +3859,7 @@ ___
 
 ### translate
 
-• `Optional` **translate**: ``"yes"`` \| ``"no"``
+ `Optional` **translate**: ``"yes"`` \| ``"no"``
 
 #### Inherited from
 
@@ -4141,7 +3873,7 @@ ___
 
 ### typeof
 
-• `Optional` **typeof**: `string`
+ `Optional` **typeof**: `string`
 
 #### Inherited from
 
@@ -4155,7 +3887,7 @@ ___
 
 ### unselectable
 
-• `Optional` **unselectable**: ``"on"`` \| ``"off"``
+ `Optional` **unselectable**: ``"on"`` \| ``"off"``
 
 #### Inherited from
 
@@ -4169,7 +3901,7 @@ ___
 
 ### variant
 
-• `Optional` **variant**: ``"text"`` \| ``"rectangular"`` \| ``"circular"``
+ `Optional` **variant**: ``"text"`` \| ``"rectangular"`` \| ``"circular"``
 
 The type of content that will be rendered.
 
@@ -4189,7 +3921,7 @@ ___
 
 ### vocab
 
-• `Optional` **vocab**: `string`
+ `Optional` **vocab**: `string`
 
 #### Inherited from
 
@@ -4203,7 +3935,7 @@ ___
 
 ### width
 
-• `Optional` **width**: `string` \| `number`
+ `Optional` **width**: `string` \| `number`
 
 Width of the skeleton.
 Useful when the skeleton is inside an inline element with no width of its own.

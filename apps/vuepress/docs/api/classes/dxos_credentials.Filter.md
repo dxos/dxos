@@ -4,33 +4,17 @@
 
 Utility to create simple filtering predicates.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.Filter.md#constructor)
-
-### Methods
-
-- [and](dxos_credentials.Filter.md#and)
-- [filter](dxos_credentials.Filter.md#filter)
-- [hasKey](dxos_credentials.Filter.md#haskey)
-- [hasProperty](dxos_credentials.Filter.md#hasproperty)
-- [matches](dxos_credentials.Filter.md#matches)
-- [not](dxos_credentials.Filter.md#not)
-- [propertyIn](dxos_credentials.Filter.md#propertyin)
-
 ## Constructors
 
 ### constructor
 
-• **new Filter**()
+**new Filter**()
 
 ## Methods
 
 ### and
 
-▸ `Static` **and**(...`filters`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **and**(...`filters`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 ANDs all supplied filters.
 
@@ -38,21 +22,21 @@ ANDs all supplied filters.
 
 | Name | Type |
 | :------ | :------ |
-| `...filters` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)[] |
+| `...filters` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)[] |
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L32)
+[packages/halo/credentials/src/keys/filter.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L32)
 
 ___
 
 ### filter
 
-▸ `Static` **filter**(`values`, `filter`): `any`[]
+`Static` **filter**(`values`, `filter`): `any`[]
 
 Execute the filter over the supplied values.
 
@@ -61,7 +45,7 @@ Execute the filter over the supplied values.
 | Name | Type |
 | :------ | :------ |
 | `values` | `IterableIterator`<`any`\> |
-| `filter` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction) |
+| `filter` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md) |
 
 #### Returns
 
@@ -69,13 +53,13 @@ Execute the filter over the supplied values.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L18)
+[packages/halo/credentials/src/keys/filter.ts:18](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L18)
 
 ___
 
 ### hasKey
 
-▸ `Static` **hasKey**(`property`, `key`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **hasKey**(`property`, `key`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Filters objects for required key.
 
@@ -88,17 +72,17 @@ Filters objects for required key.
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L53)
+[packages/halo/credentials/src/keys/filter.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L53)
 
 ___
 
 ### hasProperty
 
-▸ `Static` **hasProperty**(`property`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **hasProperty**(`property`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Filters objects for required property.
 
@@ -110,17 +94,17 @@ Filters objects for required property.
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L39)
+[packages/halo/credentials/src/keys/filter.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L39)
 
 ___
 
 ### matches
 
-▸ `Static` **matches**(`attributes`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **matches**(`attributes`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Filters objects for exact object.
 https://lodash.com/docs/#matches
@@ -133,17 +117,17 @@ https://lodash.com/docs/#matches
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L61)
+[packages/halo/credentials/src/keys/filter.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L61)
 
 ___
 
 ### not
 
-▸ `Static` **not**(`filter`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **not**(`filter`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Negates a filter.
 
@@ -151,21 +135,21 @@ Negates a filter.
 
 | Name | Type |
 | :------ | :------ |
-| `filter` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction) |
+| `filter` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md) |
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L25)
+[packages/halo/credentials/src/keys/filter.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L25)
 
 ___
 
 ### propertyIn
 
-▸ `Static` **propertyIn**(`property`, `values`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **propertyIn**(`property`, `values`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Filters objects for given property values.
 
@@ -178,8 +162,8 @@ Filters objects for given property values.
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/filter.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/filter.ts#L46)
+[packages/halo/credentials/src/keys/filter.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/filter.ts#L46)

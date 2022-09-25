@@ -5,17 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [serve](dxos_config.defs.Runtime.CLI.AppServe-1.md#serve)
-
 ## Properties
 
 ### serve
 
-• `Optional` **serve**: [`Serve`](dxos_config.defs.Runtime.CLI.AppServe.Serve.md)
+ `Optional` **serve**: [`Serve`](dxos_config.defs.Runtime.CLI.AppServe.Serve.md)
 
 Options:
   - proto3_optional = true

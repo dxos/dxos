@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [api](dxos_config.defs.Runtime.Services.Signal.md#api)
-- [server](dxos_config.defs.Runtime.Services.Signal.md#server)
-- [status](dxos_config.defs.Runtime.Services.Signal.md#status)
-
 ## Properties
 
 ### api
 
-• `Optional` **api**: `string`
+ `Optional` **api**: `string`
 
 Options:
   - proto3_optional = true
@@ -30,7 +22,7 @@ ___
 
 ### server
 
-• `Optional` **server**: `string`
+ `Optional` **server**: `string`
 
 Options:
   - proto3_optional = true
@@ -43,7 +35,7 @@ ___
 
 ### status
 
-• `Optional` **status**: `string`
+ `Optional` **status**: `string`
 
 Options:
   - proto3_optional = true

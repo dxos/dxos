@@ -8,42 +8,34 @@
 | :------ | :------ |
 | `P` | extends [`Peer`](dxos_broadcast.Peer.md) = [`Peer`](dxos_broadcast.Peer.md) |
 
-## Table of contents
-
-### Properties
-
-- [lookup](dxos_broadcast.Middleware.md#lookup)
-- [send](dxos_broadcast.Middleware.md#send)
-- [subscribe](dxos_broadcast.Middleware.md#subscribe)
-
 ## Properties
 
 ### lookup
 
-• `Optional` `Readonly` **lookup**: [`LookupFn`](../modules/dxos_broadcast.md#lookupfn)<`P`\>
+ `Optional` `Readonly` **lookup**: [`LookupFn`](../types/dxos_broadcast.LookupFn.md)<`P`\>
 
 **`Deprecated`**
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L34)
+[packages/mesh/broadcast/src/broadcast.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L34)
 
 ___
 
 ### send
 
-• `Readonly` **send**: [`SendFn`](../modules/dxos_broadcast.md#sendfn)<`P`\>
+ `Readonly` **send**: [`SendFn`](../types/dxos_broadcast.SendFn.md)<`P`\>
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L29)
+[packages/mesh/broadcast/src/broadcast.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L29)
 
 ___
 
 ### subscribe
 
-• `Readonly` **subscribe**: [`SubscribeFn`](../modules/dxos_broadcast.md#subscribefn)<`P`\>
+ `Readonly` **subscribe**: [`SubscribeFn`](../types/dxos_broadcast.SubscribeFn.md)<`P`\>
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L30)
+[packages/mesh/broadcast/src/broadcast.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L30)

@@ -2,46 +2,38 @@
 
 [@dxos/protocol-plugin-replicator](../modules/dxos_protocol_plugin_replicator.md).ReplicatorMiddleware
 
-## Table of contents
-
-### Properties
-
-- [load](dxos_protocol_plugin_replicator.ReplicatorMiddleware.md#load)
-- [replicate](dxos_protocol_plugin_replicator.ReplicatorMiddleware.md#replicate)
-- [subscribe](dxos_protocol_plugin_replicator.ReplicatorMiddleware.md#subscribe)
-
 ## Properties
 
 ### load
 
-• **load**: `LoadFunction`
+ **load**: `LoadFunction`
 
 Returns a list of local feeds to replicate.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L41)
+[packages/mesh/protocol-plugin-replicator/src/replicator.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L41)
 
 ___
 
 ### replicate
 
-• `Optional` **replicate**: `ReplicateFunction`
+ `Optional` **replicate**: `ReplicateFunction`
 
 Maps feed replication requests to a set of feed descriptors to be replicated.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L51)
+[packages/mesh/protocol-plugin-replicator/src/replicator.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L51)
 
 ___
 
 ### subscribe
 
-• `Optional` **subscribe**: `SubscribeFunction`
+ `Optional` **subscribe**: `SubscribeFunction`
 
 Subscribe to new local feeds being opened.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L46)
+[packages/mesh/protocol-plugin-replicator/src/replicator.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L46)

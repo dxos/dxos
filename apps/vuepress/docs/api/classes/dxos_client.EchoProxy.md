@@ -8,40 +8,11 @@ Client proxy to local/remote ECHO service.
 
 - [`Echo`](../interfaces/dxos_client.Echo.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.EchoProxy.md#constructor)
-
-### Properties
-
-- [\_modelFactory](dxos_client.EchoProxy.md#_modelfactory)
-- [\_parties](dxos_client.EchoProxy.md#_parties)
-- [\_partiesChanged](dxos_client.EchoProxy.md#_partieschanged)
-- [\_subscriptions](dxos_client.EchoProxy.md#_subscriptions)
-
-### Accessors
-
-- [info](dxos_client.EchoProxy.md#info)
-- [modelFactory](dxos_client.EchoProxy.md#modelfactory)
-- [networkManager](dxos_client.EchoProxy.md#networkmanager)
-
-### Methods
-
-- [acceptInvitation](dxos_client.EchoProxy.md#acceptinvitation)
-- [cloneParty](dxos_client.EchoProxy.md#cloneparty)
-- [createParty](dxos_client.EchoProxy.md#createparty)
-- [getParty](dxos_client.EchoProxy.md#getparty)
-- [queryParties](dxos_client.EchoProxy.md#queryparties)
-- [registerModel](dxos_client.EchoProxy.md#registermodel)
-- [toString](dxos_client.EchoProxy.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new EchoProxy**(`_serviceProvider`, `_haloProxy`)
+**new EchoProxy**(`_serviceProvider`, `_haloProxy`)
 
 #### Parameters
 
@@ -52,53 +23,53 @@ Client proxy to local/remote ECHO service.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L32)
 
 ## Properties
 
 ### \_modelFactory
 
-• `Private` `Readonly` **\_modelFactory**: `ModelFactory`
+ `Private` `Readonly` **\_modelFactory**: `ModelFactory`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L30)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L30)
 
 ___
 
 ### \_parties
 
-• `Private` `Readonly` **\_parties**: `ComplexMap`<`PublicKey`, [`PartyProxy`](dxos_client.PartyProxy.md)\>
+ `Private` `Readonly` **\_parties**: `ComplexMap`<`PublicKey`, [`PartyProxy`](dxos_client.PartyProxy.md)\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L27)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L27)
 
 ___
 
 ### \_partiesChanged
 
-• `Private` `Readonly` **\_partiesChanged**: `Event`<`void`\>
+ `Private` `Readonly` **\_partiesChanged**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L28)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L28)
 
 ___
 
 ### \_subscriptions
 
-• `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
+ `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L29)
 
 ## Accessors
 
 ### info
 
-• `get` **info**(): `Object`
+`get` **info**(): `Object`
 
 #### Returns
 
@@ -114,13 +85,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L61)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L61)
 
 ___
 
 ### modelFactory
 
-• `get` **modelFactory**(): `ModelFactory`
+`get` **modelFactory**(): `ModelFactory`
 
 #### Returns
 
@@ -128,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L47)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L47)
 
 ___
 
 ### networkManager
 
-• `get` **networkManager**(): `any`
+`get` **networkManager**(): `any`
 
 #### Returns
 
@@ -142,13 +113,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L51)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L51)
 
 ## Methods
 
 ### acceptInvitation
 
-▸ **acceptInvitation**(`invitationDescriptor`): [`PartyInvitation`](dxos_client.PartyInvitation.md)
+**acceptInvitation**(`invitationDescriptor`): [`PartyInvitation`](dxos_client.PartyInvitation.md)
 
 Joins an existing Party by invitation.
 
@@ -170,13 +141,13 @@ To be used with `party.createInvitation` on the inviter side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:197](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L197)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:197](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L197)
 
 ___
 
 ### cloneParty
 
-▸ **cloneParty**(`snapshot`): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+**cloneParty**(`snapshot`): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 Clones the party from a snapshot.
 
@@ -196,13 +167,13 @@ Clones the party from a snapshot.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:158](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L158)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:158](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L158)
 
 ___
 
 ### createParty
 
-▸ **createParty**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+**createParty**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 Creates a new party.
 
@@ -216,13 +187,13 @@ Creates a new party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L135)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:135](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L135)
 
 ___
 
 ### getParty
 
-▸ **getParty**(`partyKey`): `undefined` \| [`Party`](../interfaces/dxos_client.Party.md)
+**getParty**(`partyKey`): `undefined` \| [`Party`](../interfaces/dxos_client.Party.md)
 
 Returns an individual party by its key.
 
@@ -242,13 +213,13 @@ Returns an individual party by its key.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:181](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L181)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:181](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L181)
 
 ___
 
 ### queryParties
 
-▸ **queryParties**(): [`ResultSet`](dxos_client.ResultSet.md)<[`Party`](../interfaces/dxos_client.Party.md)\>
+**queryParties**(): [`ResultSet`](dxos_client.ResultSet.md)<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 #### Returns
 
@@ -260,13 +231,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:188](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L188)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:188](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L188)
 
 ___
 
 ### registerModel
 
-▸ **registerModel**(`constructor`): [`EchoProxy`](dxos_client.EchoProxy.md)
+**registerModel**(`constructor`): [`EchoProxy`](dxos_client.EchoProxy.md)
 
 #### Parameters
 
@@ -284,13 +255,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L67)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L67)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -298,4 +269,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L43)
+[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L43)

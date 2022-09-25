@@ -2,19 +2,11 @@
 
 [@dxos/client](../modules/dxos_client.md).OpenProgress
 
-## Table of contents
-
-### Properties
-
-- [haloOpened](dxos_client.OpenProgress.md#haloopened)
-- [partiesOpened](dxos_client.OpenProgress.md#partiesopened)
-- [totalParties](dxos_client.OpenProgress.md#totalparties)
-
 ## Properties
 
 ### haloOpened
 
-• **haloOpened**: `boolean`
+ **haloOpened**: `boolean`
 
 #### Defined in
 
@@ -24,7 +16,7 @@ ___
 
 ### partiesOpened
 
-• `Optional` **partiesOpened**: `number`
+ `Optional` **partiesOpened**: `number`
 
 #### Defined in
 
@@ -34,7 +26,7 @@ ___
 
 ### totalParties
 
-• `Optional` **totalParties**: `number`
+ `Optional` **totalParties**: `number`
 
 #### Defined in
 

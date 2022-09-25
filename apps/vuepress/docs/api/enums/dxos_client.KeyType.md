@@ -5,22 +5,11 @@
 Defined in:
   file://./../../../dxos/halo/keys.proto
 
-## Table of contents
-
-### Enumeration Members
-
-- [DEVICE](dxos_client.KeyType.md#device)
-- [DXNS\_ADDRESS](dxos_client.KeyType.md#dxns_address)
-- [FEED](dxos_client.KeyType.md#feed)
-- [IDENTITY](dxos_client.KeyType.md#identity)
-- [PARTY](dxos_client.KeyType.md#party)
-- [UNKNOWN](dxos_client.KeyType.md#unknown)
-
 ## Enumeration Members
 
 ### DEVICE
 
-• **DEVICE** = ``2``
+ **DEVICE** = ``2``
 
 #### Defined in
 
@@ -30,7 +19,7 @@ ___
 
 ### DXNS\_ADDRESS
 
-• **DXNS\_ADDRESS** = ``5``
+ **DXNS\_ADDRESS** = ``5``
 
 #### Defined in
 
@@ -40,7 +29,7 @@ ___
 
 ### FEED
 
-• **FEED** = ``4``
+ **FEED** = ``4``
 
 #### Defined in
 
@@ -50,7 +39,7 @@ ___
 
 ### IDENTITY
 
-• **IDENTITY** = ``1``
+ **IDENTITY** = ``1``
 
 #### Defined in
 
@@ -60,7 +49,7 @@ ___
 
 ### PARTY
 
-• **PARTY** = ``3``
+ **PARTY** = ``3``
 
 #### Defined in
 
@@ -70,7 +59,7 @@ ___
 
 ### UNKNOWN
 
-• **UNKNOWN** = ``0``
+ **UNKNOWN** = ``0``
 
 #### Defined in
 

@@ -14,33 +14,25 @@ Text search interface.
 
 - [`TextSearchModel`](../classes/dxos_react_components.TextSearchModel.md)
 
-## Table of contents
-
-### Properties
-
-- [results](dxos_react_components.SearchModel.md#results)
-- [setText](dxos_react_components.SearchModel.md#settext)
-- [subscribe](dxos_react_components.SearchModel.md#subscribe)
-
 ## Properties
 
 ### results
 
-• **results**: [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]
+ **results**: [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L20)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L20)
 
 ___
 
 ### setText
 
-• **setText**: (`text`: `string`) => `void`
+ **setText**: (`text`: `string`) => `void`
 
 #### Type declaration
 
-▸ (`text`): `void`
+(`text`): `void`
 
 ##### Parameters
 
@@ -54,23 +46,23 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L26)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L26)
 
 ___
 
 ### subscribe
 
-• **subscribe**: (`callback`: (`results`: [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]) => `void`) => `void`
+ **subscribe**: (`callback`: (`results`: [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]) => `void`) => `void`
 
 #### Type declaration
 
-▸ (`callback`): `void`
+(`callback`): `void`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | (`results`: [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]) => `void` |
+| `callback` | (`results`: [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]) => `void` |
 
 ##### Returns
 
@@ -78,4 +70,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L23)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L23)

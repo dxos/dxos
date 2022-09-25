@@ -8,66 +8,11 @@
 
   ↳ **`Network`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_generator.Network.md#constructor)
-
-### Properties
-
-- [\_connectionsOpening](dxos_network_generator.Network.md#_connectionsopening)
-- [\_createConnection](dxos_network_generator.Network.md#_createconnection)
-- [\_createPeer](dxos_network_generator.Network.md#_createpeer)
-- [\_graph](dxos_network_generator.Network.md#_graph)
-- [captureRejectionSymbol](dxos_network_generator.Network.md#capturerejectionsymbol)
-- [captureRejections](dxos_network_generator.Network.md#capturerejections)
-- [defaultMaxListeners](dxos_network_generator.Network.md#defaultmaxlisteners)
-- [errorMonitor](dxos_network_generator.Network.md#errormonitor)
-
-### Accessors
-
-- [connections](dxos_network_generator.Network.md#connections)
-- [connectionsOpening](dxos_network_generator.Network.md#connectionsopening)
-- [graph](dxos_network_generator.Network.md#graph)
-- [peers](dxos_network_generator.Network.md#peers)
-
-### Methods
-
-- [\_addConnection](dxos_network_generator.Network.md#_addconnection)
-- [\_destroyLink](dxos_network_generator.Network.md#_destroylink)
-- [\_getPeerOrCreate](dxos_network_generator.Network.md#_getpeerorcreate)
-- [addConnection](dxos_network_generator.Network.md#addconnection)
-- [addListener](dxos_network_generator.Network.md#addlistener)
-- [addPeer](dxos_network_generator.Network.md#addpeer)
-- [deleteConnection](dxos_network_generator.Network.md#deleteconnection)
-- [deletePeer](dxos_network_generator.Network.md#deletepeer)
-- [destroy](dxos_network_generator.Network.md#destroy)
-- [emit](dxos_network_generator.Network.md#emit)
-- [eventNames](dxos_network_generator.Network.md#eventnames)
-- [getMaxListeners](dxos_network_generator.Network.md#getmaxlisteners)
-- [insertPeer](dxos_network_generator.Network.md#insertpeer)
-- [listenerCount](dxos_network_generator.Network.md#listenercount)
-- [listeners](dxos_network_generator.Network.md#listeners)
-- [off](dxos_network_generator.Network.md#off)
-- [on](dxos_network_generator.Network.md#on)
-- [once](dxos_network_generator.Network.md#once)
-- [prependListener](dxos_network_generator.Network.md#prependlistener)
-- [prependOnceListener](dxos_network_generator.Network.md#prependoncelistener)
-- [rawListeners](dxos_network_generator.Network.md#rawlisteners)
-- [removeAllListeners](dxos_network_generator.Network.md#removealllisteners)
-- [removeListener](dxos_network_generator.Network.md#removelistener)
-- [setMaxListeners](dxos_network_generator.Network.md#setmaxlisteners)
-- [getEventListeners](dxos_network_generator.Network.md#geteventlisteners)
-- [listenerCount](dxos_network_generator.Network.md#listenercount-1)
-- [on](dxos_network_generator.Network.md#on-1)
-- [once](dxos_network_generator.Network.md#once-1)
-
 ## Constructors
 
 ### constructor
 
-• **new Network**(`options?`)
+**new Network**(`options?`)
 
 #### Parameters
 
@@ -81,53 +26,53 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L70)
+[packages/mesh/network-generator/src/network.ts:70](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L70)
 
 ## Properties
 
 ### \_connectionsOpening
 
-• `Private` **\_connectionsOpening**: `Map`<`any`, `any`\>
+ `Private` **\_connectionsOpening**: `Map`<`any`, `any`\>
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L67)
+[packages/mesh/network-generator/src/network.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L67)
 
 ___
 
 ### \_createConnection
 
-• `Private` **\_createConnection**: `CreateConnectionCallback`
+ `Private` **\_createConnection**: `CreateConnectionCallback`
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L66)
+[packages/mesh/network-generator/src/network.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L66)
 
 ___
 
 ### \_createPeer
 
-• `Private` **\_createPeer**: `CreatePeerCallback`
+ `Private` **\_createPeer**: `CreatePeerCallback`
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L65)
+[packages/mesh/network-generator/src/network.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L65)
 
 ___
 
 ### \_graph
 
-• `Private` **\_graph**: `Graph`<`any`, `any`\> & `EventedType`
+ `Private` **\_graph**: `Graph`<`any`, `any`\> & `EventedType`
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L68)
+[packages/mesh/network-generator/src/network.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L68)
 
 ___
 
 ### captureRejectionSymbol
 
-▪ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_network_generator.Network.md#capturerejectionsymbol)
+ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_network_generator.Network.md#capturerejectionsymbol)
 
 #### Inherited from
 
@@ -141,7 +86,7 @@ ___
 
 ### captureRejections
 
-▪ `Static` **captureRejections**: `boolean`
+ `Static` **captureRejections**: `boolean`
 
 Sets or gets the default captureRejection value for all emitters.
 
@@ -157,7 +102,7 @@ ___
 
 ### defaultMaxListeners
 
-▪ `Static` **defaultMaxListeners**: `number`
+ `Static` **defaultMaxListeners**: `number`
 
 #### Inherited from
 
@@ -171,7 +116,7 @@ ___
 
 ### errorMonitor
 
-▪ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_network_generator.Network.md#errormonitor)
+ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_network_generator.Network.md#errormonitor)
 
 This symbol shall be used to install a listener for only monitoring `'error'`
 events. Listeners installed using this symbol are called before the regular
@@ -193,7 +138,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 ### connections
 
-• `get` **connections**(): `Connection`[]
+`get` **connections**(): `Connection`[]
 
 #### Returns
 
@@ -201,13 +146,13 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L103)
+[packages/mesh/network-generator/src/network.ts:103](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L103)
 
 ___
 
 ### connectionsOpening
 
-• `get` **connectionsOpening**(): `Promise`<`any`\>[]
+`get` **connectionsOpening**(): `Promise`<`any`\>[]
 
 #### Returns
 
@@ -215,13 +160,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L113)
+[packages/mesh/network-generator/src/network.ts:113](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L113)
 
 ___
 
 ### graph
 
-• `get` **graph**(): `Graph`<`any`, `any`\> & `EventedType`
+`get` **graph**(): `Graph`<`any`, `any`\> & `EventedType`
 
 #### Returns
 
@@ -229,13 +174,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L91)
+[packages/mesh/network-generator/src/network.ts:91](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L91)
 
 ___
 
 ### peers
 
-• `get` **peers**(): [`Peer`](../interfaces/dxos_network_generator.Peer.md)[]
+`get` **peers**(): [`Peer`](../interfaces/dxos_network_generator.Peer.md)[]
 
 #### Returns
 
@@ -243,13 +188,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L95)
+[packages/mesh/network-generator/src/network.ts:95](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L95)
 
 ## Methods
 
 ### \_addConnection
 
-▸ **_addConnection**(`from`, `to`, `conn?`): `Promise`<{ `fromPeer`: `any` ; `stream`: `Stream` ; `toPeer`: `any`  }\>
+**_addConnection**(`from`, `to`, `conn?`): `Promise`<{ `fromPeer`: `any` ; `stream`: `Stream` ; `toPeer`: `any`  }\>
 
 #### Parameters
 
@@ -265,13 +210,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:212](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L212)
+[packages/mesh/network-generator/src/network.ts:212](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L212)
 
 ___
 
 ### \_destroyLink
 
-▸ **_destroyLink**(`link`): `Promise`<`void`\>
+**_destroyLink**(`link`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -285,13 +230,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:262](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L262)
+[packages/mesh/network-generator/src/network.ts:262](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L262)
 
 ___
 
 ### \_getPeerOrCreate
 
-▸ **_getPeerOrCreate**(`id`): `Promise`<`any`\>
+**_getPeerOrCreate**(`id`): `Promise`<`any`\>
 
 #### Parameters
 
@@ -305,13 +250,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:243](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L243)
+[packages/mesh/network-generator/src/network.ts:243](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L243)
 
 ___
 
 ### addConnection
 
-▸ **addConnection**(`from`, `to`, `conn?`): `Promise`<`Connection`\>
+**addConnection**(`from`, `to`, `conn?`): `Promise`<`Connection`\>
 
 Add a new connection to the network
 
@@ -329,13 +274,13 @@ Add a new connection to the network
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L153)
+[packages/mesh/network-generator/src/network.ts:153](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L153)
 
 ___
 
 ### addListener
 
-▸ **addListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**addListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Alias for `emitter.on(eventName, listener)`.
 
@@ -366,7 +311,7 @@ ___
 
 ### addPeer
 
-▸ **addPeer**(`id`): `Promise`<[`Peer`](../interfaces/dxos_network_generator.Peer.md)\>
+**addPeer**(`id`): `Promise`<[`Peer`](../interfaces/dxos_network_generator.Peer.md)\>
 
 Add a new peer to the network
 
@@ -382,13 +327,13 @@ Add a new peer to the network
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:130](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L130)
+[packages/mesh/network-generator/src/network.ts:130](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L130)
 
 ___
 
 ### deleteConnection
 
-▸ **deleteConnection**(`from`, `to`): `Promise`<`any`[]\>
+**deleteConnection**(`from`, `to`): `Promise`<`any`[]\>
 
 Delete a connection
 
@@ -405,13 +350,13 @@ Delete a connection
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:191](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L191)
+[packages/mesh/network-generator/src/network.ts:191](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L191)
 
 ___
 
 ### deletePeer
 
-▸ **deletePeer**(`id`): `Promise`<`any`[]\>
+**deletePeer**(`id`): `Promise`<`any`[]\>
 
 Delete a peer
 
@@ -427,13 +372,13 @@ Delete a peer
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:171](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L171)
+[packages/mesh/network-generator/src/network.ts:171](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L171)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`any`[][]\>
+**destroy**(): `Promise`<`any`[][]\>
 
 Destroy all the peers and connections related
 
@@ -443,13 +388,13 @@ Destroy all the peers and connections related
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:208](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L208)
+[packages/mesh/network-generator/src/network.ts:208](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L208)
 
 ___
 
 ### emit
 
-▸ **emit**(`eventName`, ...`args`): `boolean`
+**emit**(`eventName`, ...`args`): `boolean`
 
 Synchronously calls each of the listeners registered for the event named`eventName`, in the order they were registered, passing the supplied arguments
 to each.
@@ -516,7 +461,7 @@ ___
 
 ### eventNames
 
-▸ **eventNames**(): (`string` \| `symbol`)[]
+**eventNames**(): (`string` \| `symbol`)[]
 
 Returns an array listing the events for which the emitter has registered
 listeners. The values in the array are strings or `Symbol`s.
@@ -554,7 +499,7 @@ ___
 
 ### getMaxListeners
 
-▸ **getMaxListeners**(): `number`
+**getMaxListeners**(): `number`
 
 Returns the current max listener value for the `EventEmitter` which is either
 set by `emitter.setMaxListeners(n)` or defaults to [defaultMaxListeners](dxos_network_generator.Network.md#defaultmaxlisteners).
@@ -579,7 +524,7 @@ ___
 
 ### insertPeer
 
-▸ **insertPeer**(`peer`): `void`
+**insertPeer**(`peer`): `void`
 
 Add a new peer supplied by the caller to the network
 
@@ -595,13 +540,13 @@ Add a new peer supplied by the caller to the network
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:121](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L121)
+[packages/mesh/network-generator/src/network.ts:121](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L121)
 
 ___
 
 ### listenerCount
 
-▸ **listenerCount**(`eventName`): `number`
+**listenerCount**(`eventName`): `number`
 
 Returns the number of listeners listening to the event named `eventName`.
 
@@ -631,7 +576,7 @@ ___
 
 ### listeners
 
-▸ **listeners**(`eventName`): `Function`[]
+**listeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -669,7 +614,7 @@ ___
 
 ### off
 
-▸ **off**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**off**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Alias for `emitter.removeListener()`.
 
@@ -700,7 +645,7 @@ ___
 
 ### on
 
-▸ **on**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**on**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Adds the `listener` function to the end of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -755,7 +700,7 @@ ___
 
 ### once
 
-▸ **once**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**once**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Adds a **one-time**`listener` function for the event named `eventName`. The
 next time `eventName` is triggered, this listener is removed and then invoked.
@@ -808,7 +753,7 @@ ___
 
 ### prependListener
 
-▸ **prependListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**prependListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Adds the `listener` function to the _beginning_ of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -850,7 +795,7 @@ ___
 
 ### prependOnceListener
 
-▸ **prependOnceListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**prependOnceListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Adds a **one-time**`listener` function for the event named `eventName` to the_beginning_ of the listeners array. The next time `eventName` is triggered, this
 listener is removed, and then invoked.
@@ -890,7 +835,7 @@ ___
 
 ### rawListeners
 
-▸ **rawListeners**(`eventName`): `Function`[]
+**rawListeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`,
 including any wrappers (such as those created by `.once()`).
@@ -945,7 +890,7 @@ ___
 
 ### removeAllListeners
 
-▸ **removeAllListeners**(`event?`): [`Network`](dxos_network_generator.Network.md)
+**removeAllListeners**(`event?`): [`Network`](dxos_network_generator.Network.md)
 
 Removes all listeners, or those of the specified `eventName`.
 
@@ -981,7 +926,7 @@ ___
 
 ### removeListener
 
-▸ **removeListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
+**removeListener**(`eventName`, `listener`): [`Network`](dxos_network_generator.Network.md)
 
 Removes the specified `listener` from the listener array for the event named`eventName`.
 
@@ -1087,7 +1032,7 @@ ___
 
 ### setMaxListeners
 
-▸ **setMaxListeners**(`n`): [`Network`](dxos_network_generator.Network.md)
+**setMaxListeners**(`n`): [`Network`](dxos_network_generator.Network.md)
 
 By default `EventEmitter`s will print a warning if more than `10` listeners are
 added for a particular event. This is a useful default that helps finding
@@ -1122,7 +1067,7 @@ ___
 
 ### getEventListeners
 
-▸ `Static` **getEventListeners**(`emitter`, `name`): `Function`[]
+`Static` **getEventListeners**(`emitter`, `name`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -1176,7 +1121,7 @@ ___
 
 ### listenerCount
 
-▸ `Static` **listenerCount**(`emitter`, `eventName`): `number`
+`Static` **listenerCount**(`emitter`, `eventName`): `number`
 
 A class method that returns the number of listeners for the given `eventName`registered on the given `emitter`.
 
@@ -1220,7 +1165,7 @@ ___
 
 ### on
 
-▸ `Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
+`Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
 
 ```js
 const { on, EventEmitter } = require('events');
@@ -1306,7 +1251,7 @@ ___
 
 ### once
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 Creates a `Promise` that is fulfilled when the `EventEmitter` emits the given
 event or that is rejected if the `EventEmitter` emits `'error'` while waiting.
@@ -1412,7 +1357,7 @@ EventEmitter.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 #### Parameters
 

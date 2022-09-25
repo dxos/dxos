@@ -6,21 +6,11 @@
 
 - [`PolkadotAccounts`](../classes/dxos_registry_client.PolkadotAccounts.md)
 
-## Table of contents
-
-### Methods
-
-- [addDevice](dxos_registry_client.AccountsClientBackend.md#adddevice)
-- [belongsToAccount](dxos_registry_client.AccountsClientBackend.md#belongstoaccount)
-- [createAccount](dxos_registry_client.AccountsClientBackend.md#createaccount)
-- [getAccount](dxos_registry_client.AccountsClientBackend.md#getaccount)
-- [listAccounts](dxos_registry_client.AccountsClientBackend.md#listaccounts)
-
 ## Methods
 
 ### addDevice
 
-▸ **addDevice**(`account`, `device`): `Promise`<`void`\>
+**addDevice**(`account`, `device`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -35,13 +25,13 @@
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L19)
+[packages/sdk/registry-client/src/api/accounts.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/accounts.ts#L19)
 
 ___
 
 ### belongsToAccount
 
-▸ **belongsToAccount**(`account`, `device`): `Promise`<`boolean`\>
+**belongsToAccount**(`account`, `device`): `Promise`<`boolean`\>
 
 #### Parameters
 
@@ -56,13 +46,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L20)
+[packages/sdk/registry-client/src/api/accounts.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/accounts.ts#L20)
 
 ___
 
 ### createAccount
 
-▸ **createAccount**(): `Promise`<[`AccountKey`](../classes/dxos_registry_client.AccountKey.md)\>
+**createAccount**(): `Promise`<[`AccountKey`](../classes/dxos_registry_client.AccountKey.md)\>
 
 #### Returns
 
@@ -70,13 +60,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L18)
+[packages/sdk/registry-client/src/api/accounts.ts:18](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/accounts.ts#L18)
 
 ___
 
 ### getAccount
 
-▸ **getAccount**(`account`): `Promise`<`undefined` \| [`Account`](dxos_registry_client.Account.md)\>
+**getAccount**(`account`): `Promise`<`undefined` \| [`Account`](dxos_registry_client.Account.md)\>
 
 #### Parameters
 
@@ -90,13 +80,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L16)
+[packages/sdk/registry-client/src/api/accounts.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/accounts.ts#L16)
 
 ___
 
 ### listAccounts
 
-▸ **listAccounts**(): `Promise`<[`Account`](dxos_registry_client.Account.md)[]\>
+**listAccounts**(): `Promise`<[`Account`](dxos_registry_client.Account.md)[]\>
 
 #### Returns
 
@@ -104,4 +94,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/accounts.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/accounts.ts#L17)
+[packages/sdk/registry-client/src/api/accounts.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/accounts.ts#L17)

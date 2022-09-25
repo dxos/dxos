@@ -8,39 +8,11 @@ Party API.
 
 - [`PartyProxy`](../classes/dxos_client.PartyProxy.md)
 
-## Table of contents
-
-### Accessors
-
-- [database](dxos_client.Party.md#database)
-- [isActive](dxos_client.Party.md#isactive)
-- [isOpen](dxos_client.Party.md#isopen)
-- [key](dxos_client.Party.md#key)
-- [properties](dxos_client.Party.md#properties)
-- [reduce](dxos_client.Party.md#reduce)
-- [select](dxos_client.Party.md#select)
-
-### Methods
-
-- [close](dxos_client.Party.md#close)
-- [createInvitation](dxos_client.Party.md#createinvitation)
-- [createSnapshot](dxos_client.Party.md#createsnapshot)
-- [destroy](dxos_client.Party.md#destroy)
-- [getDetails](dxos_client.Party.md#getdetails)
-- [getProperty](dxos_client.Party.md#getproperty)
-- [getTitle](dxos_client.Party.md#gettitle)
-- [initialize](dxos_client.Party.md#initialize)
-- [open](dxos_client.Party.md#open)
-- [queryMembers](dxos_client.Party.md#querymembers)
-- [setActive](dxos_client.Party.md#setactive)
-- [setProperty](dxos_client.Party.md#setproperty)
-- [setTitle](dxos_client.Party.md#settitle)
-
 ## Accessors
 
 ### database
 
-• `get` **database**(): [`Database`](../classes/dxos_client.Database.md)
+`get` **database**(): [`Database`](../classes/dxos_client.Database.md)
 
 #### Returns
 
@@ -48,13 +20,13 @@ Party API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L35)
+[packages/sdk/client/src/packlets/api/echo.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L35)
 
 ___
 
 ### isActive
 
-• `get` **isActive**(): `boolean`
+`get` **isActive**(): `boolean`
 
 #### Returns
 
@@ -62,13 +34,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L32)
+[packages/sdk/client/src/packlets/api/echo.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L32)
 
 ___
 
 ### isOpen
 
-• `get` **isOpen**(): `boolean`
+`get` **isOpen**(): `boolean`
 
 #### Returns
 
@@ -76,13 +48,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L31)
+[packages/sdk/client/src/packlets/api/echo.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L31)
 
 ___
 
 ### key
 
-• `get` **key**(): `PublicKey`
+`get` **key**(): `PublicKey`
 
 #### Returns
 
@@ -90,13 +62,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L30)
+[packages/sdk/client/src/packlets/api/echo.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L30)
 
 ___
 
 ### properties
 
-• `get` **properties**(): `ObjectProperties`
+`get` **properties**(): `ObjectProperties`
 
 #### Returns
 
@@ -104,19 +76,19 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L52)
+[packages/sdk/client/src/packlets/api/echo.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L52)
 
 ___
 
 ### reduce
 
-• `get` **reduce**(): <R\>(`result`: `R`, `filter?`: `RootFilter`) => [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `R`\>
+`get` **reduce**(): <R\>(`result`: `R`, `filter?`: `RootFilter`) => [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `R`\>
 
 #### Returns
 
 `fn`
 
-▸ <`R`\>(`result`, `filter?`): [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `R`\>
+<`R`\>(`result`, `filter?`): [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `R`\>
 
 Returns a reducer selection context.
 
@@ -139,19 +111,19 @@ Returns a reducer selection context.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L37)
+[packages/sdk/client/src/packlets/api/echo.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L37)
 
 ___
 
 ### select
 
-• `get` **select**(): (`filter?`: `RootFilter`) => [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `void`\>
+`get` **select**(): (`filter?`: `RootFilter`) => [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `void`\>
 
 #### Returns
 
 `fn`
 
-▸ (`filter?`): [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `void`\>
+(`filter?`): [`Selection`](../classes/dxos_client.Selection.md)<[`Item`](../classes/dxos_client.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -167,13 +139,13 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L36)
+[packages/sdk/client/src/packlets/api/echo.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L36)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -181,13 +153,13 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L43)
+[packages/sdk/client/src/packlets/api/echo.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L43)
 
 ___
 
 ### createInvitation
 
-▸ **createInvitation**(`options?`): `Promise`<[`InvitationRequest`](../classes/dxos_client.InvitationRequest.md)\>
+**createInvitation**(`options?`): `Promise`<[`InvitationRequest`](../classes/dxos_client.InvitationRequest.md)\>
 
 #### Parameters
 
@@ -201,13 +173,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L63)
+[packages/sdk/client/src/packlets/api/echo.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L63)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `Promise`<`PartySnapshot`\>
+**createSnapshot**(): `Promise`<`PartySnapshot`\>
 
 #### Returns
 
@@ -215,13 +187,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L65)
+[packages/sdk/client/src/packlets/api/echo.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L65)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -229,13 +201,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L40)
+[packages/sdk/client/src/packlets/api/echo.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L40)
 
 ___
 
 ### getDetails
 
-▸ **getDetails**(): `Promise`<`PartyDetails`\>
+**getDetails**(): `Promise`<`PartyDetails`\>
 
 #### Returns
 
@@ -243,13 +215,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L50)
+[packages/sdk/client/src/packlets/api/echo.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L50)
 
 ___
 
 ### getProperty
 
-▸ **getProperty**(`key`, `defaultValue?`): `any`
+**getProperty**(`key`, `defaultValue?`): `any`
 
 **`Deprecated`**
 
@@ -266,13 +238,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L60)
+[packages/sdk/client/src/packlets/api/echo.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L60)
 
 ___
 
 ### getTitle
 
-▸ **getTitle**(): `string`
+**getTitle**(): `string`
 
 #### Returns
 
@@ -280,13 +252,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L47)
+[packages/sdk/client/src/packlets/api/echo.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L47)
 
 ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`void`\>
+**initialize**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -294,13 +266,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L39)
+[packages/sdk/client/src/packlets/api/echo.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L39)
 
 ___
 
 ### open
 
-▸ **open**(): `Promise`<`void`\>
+**open**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -308,13 +280,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L42)
+[packages/sdk/client/src/packlets/api/echo.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L42)
 
 ___
 
 ### queryMembers
 
-▸ **queryMembers**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+**queryMembers**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
 
 #### Returns
 
@@ -322,13 +294,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L62)
+[packages/sdk/client/src/packlets/api/echo.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L62)
 
 ___
 
 ### setActive
 
-▸ **setActive**(`active`, `options`): `Promise`<`void`\>
+**setActive**(`active`, `options`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -343,13 +315,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L44)
+[packages/sdk/client/src/packlets/api/echo.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L44)
 
 ___
 
 ### setProperty
 
-▸ **setProperty**(`key`, `value?`): `Promise`<`void`\>
+**setProperty**(`key`, `value?`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -366,13 +338,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L56)
+[packages/sdk/client/src/packlets/api/echo.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L56)
 
 ___
 
 ### setTitle
 
-▸ **setTitle**(`title`): `Promise`<`void`\>
+**setTitle**(`title`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -386,4 +358,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L46)
+[packages/sdk/client/src/packlets/api/echo.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L46)

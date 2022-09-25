@@ -13,6 +13,14 @@ const PINNED_PACKAGES = [
   '@dxos/client',
   '@dxos/react-client'
 ];
+const API_SECTIONS = [
+  ['interfaces', 'Interfaces'],
+  ['types', 'Types'],
+  ['enums', 'Enums'],
+  ['classes', 'Classes'],
+  ['functions', 'Functions'],
+  ['variables', 'Constants']
+];
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(path, 'utf-8');
@@ -66,17 +74,14 @@ const groupByModule = (list: string[]) => list.reduce<{ [key: string]: string[] 
 const apiSidebar = () => {
   const apiPath = join(__dirname, 'docs', 'api');
 
-  const interfaceLookup = groupByModule(
-    readdirSync(join(apiPath, 'interfaces')).filter(interfaceFile => !interfaceFile.includes('defs'))
-  );
-
-  const enumLookup = groupByModule(
-    readdirSync(join(apiPath, 'enums')).filter(enumFile => !enumFile.includes('defs'))
-  );
-
-  const classLookup = groupByModule(
-    readdirSync(join(apiPath, 'classes')).filter(classFile => !classFile.includes('defs'))
-  );
+  const lookupTable: { [key: string]: { [key: string]: string[] } } =
+    API_SECTIONS.reduce((lookup, [folder]) => ({
+      ...lookup,
+      [folder]: groupByModule(
+        readdirSync(join(apiPath, folder))
+          .filter(interfaceFile => !interfaceFile.includes('defs'))
+      )
+    }), {});
 
   const createChildren = (dir: string, module: string, entities: string[] | undefined) => entities?.map(entity => ({
     text: entity,
@@ -91,29 +96,18 @@ const apiSidebar = () => {
       const key = module.split('.md')[0];
       const packageName = `@dxos/${key.slice(5).replaceAll('_', '-')}`;
 
-      const interfaces = createChildren('interfaces', key, interfaceLookup[key]);
-      const enums = createChildren('enums', key, enumLookup[key]);
-      const classes = createChildren('classes', key, classLookup[key]);
       const children = [
         {
           text: 'Package',
           link: `/api/modules/${module}`
         },
-        ...(interfaces ? [{
-          text: 'Interfaces',
-          collapsible: true,
-          children: interfaces
-        }] : []),
-        ...(enums ? [{
-          text: 'Enums',
-          collapsible: true,
-          children: enums
-        }] : []),
-        ...(classes ? [{
-          text: 'Classes',
-          collapsible: true,
-          children: classes
-        }] : [])
+        ...API_SECTIONS
+          .map(([folder, text]) => ({
+            text,
+            collapsible: true,
+            children: createChildren(folder, key, lookupTable[folder][key])
+          }))
+          .filter(({ children }) => Boolean(children))
       ];
 
       return {

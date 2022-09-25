@@ -8,36 +8,11 @@
 
   ↳ **`ERR_EXTENSION_RESPONSE_FAILED`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#constructor)
-
-### Properties
-
-- [cause](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#cause)
-- [extension](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#extension)
-- [isNanoerror](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#isnanoerror)
-- [message](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#message)
-- [name](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#name)
-- [responseCode](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#responsecode)
-- [responseMessage](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#responsemessage)
-- [stack](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#stack)
-- [prepareStackTrace](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#preparestacktrace)
-- [stackTraceLimit](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#stacktracelimit)
-
-### Methods
-
-- [captureStackTrace](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#capturestacktrace)
-- [equals](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#equals)
-- [from](dxos_mesh_protocol.ERR_EXTENSION_RESPONSE_FAILED.md#from)
-
 ## Constructors
 
 ### constructor
 
-• **new ERR_EXTENSION_RESPONSE_FAILED**(`extension`, `responseCode`, `responseMessage`)
+**new ERR_EXTENSION_RESPONSE_FAILED**(`extension`, `responseCode`, `responseMessage`)
 
 #### Parameters
 
@@ -53,13 +28,13 @@ nanoerror(&#x27;ERR\_EXTENSION\_RESPONSE\_FAILED&#x27;, &#x27;[extension: %s] [r
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L20)
+[packages/mesh/mesh-protocol/src/errors.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/errors.ts#L20)
 
 ## Properties
 
 ### cause
 
-• `Optional` **cause**: `Error`
+ `Optional` **cause**: `Error`
 
 #### Inherited from
 
@@ -73,17 +48,17 @@ ___
 
 ### extension
 
-• `Readonly` **extension**: `string`
+ `Readonly` **extension**: `string`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L21)
+[packages/mesh/mesh-protocol/src/errors.ts:21](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/errors.ts#L21)
 
 ___
 
 ### isNanoerror
 
-• **isNanoerror**: ``true``
+ **isNanoerror**: ``true``
 
 #### Inherited from
 
@@ -91,13 +66,13 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L12)
+[packages/mesh/mesh-protocol/src/shims.d.ts:12](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/shims.d.ts#L12)
 
 ___
 
 ### message
 
-• **message**: `string`
+ **message**: `string`
 
 #### Inherited from
 
@@ -111,7 +86,7 @@ ___
 
 ### name
 
-• **name**: `string`
+ **name**: `string`
 
 #### Inherited from
 
@@ -125,27 +100,27 @@ ___
 
 ### responseCode
 
-• `Readonly` **responseCode**: `string`
+ `Readonly` **responseCode**: `string`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L22)
+[packages/mesh/mesh-protocol/src/errors.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/errors.ts#L22)
 
 ___
 
 ### responseMessage
 
-• `Readonly` **responseMessage**: `string`
+ `Readonly` **responseMessage**: `string`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/errors.ts#L23)
+[packages/mesh/mesh-protocol/src/errors.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/errors.ts#L23)
 
 ___
 
 ### stack
 
-• `Optional` **stack**: `string`
+ `Optional` **stack**: `string`
 
 #### Inherited from
 
@@ -159,11 +134,11 @@ ___
 
 ### prepareStackTrace
 
-▪ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
+ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
 
 #### Type declaration
 
-▸ (`err`, `stackTraces`): `any`
+(`err`, `stackTraces`): `any`
 
 Optional override for formatting stack traces
 
@@ -194,7 +169,7 @@ ___
 
 ### stackTraceLimit
 
-▪ `Static` **stackTraceLimit**: `number`
+ `Static` **stackTraceLimit**: `number`
 
 #### Inherited from
 
@@ -208,7 +183,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:13
 
 ### captureStackTrace
 
-▸ `Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
+`Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
 Create .stack property on a target object
 
@@ -235,7 +210,7 @@ ___
 
 ### equals
 
-▸ `Static` **equals**(`error`): `boolean`
+`Static` **equals**(`error`): `boolean`
 
 #### Parameters
 
@@ -253,13 +228,13 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:9](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L9)
+[packages/mesh/mesh-protocol/src/shims.d.ts:9](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/shims.d.ts#L9)
 
 ___
 
 ### from
 
-▸ `Static` **from**(`error`): `any`
+`Static` **from**(`error`): `any`
 
 #### Parameters
 
@@ -277,4 +252,4 @@ nanoerror('ERR\_EXTENSION\_RESPONSE\_FAILED', '[extension: %s] [responseCode: %s
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/shims.d.ts#L10)
+[packages/mesh/mesh-protocol/src/shims.d.ts:10](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/shims.d.ts#L10)

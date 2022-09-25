@@ -8,23 +8,11 @@ Auctions operations supported by DXNS.
 
 - [`PolkadotAuctions`](../classes/dxos_registry_client.PolkadotAuctions.md)
 
-## Table of contents
-
-### Methods
-
-- [bidAuction](dxos_registry_client.AuctionsClientBackend.md#bidauction)
-- [claimAuction](dxos_registry_client.AuctionsClientBackend.md#claimauction)
-- [closeAuction](dxos_registry_client.AuctionsClientBackend.md#closeauction)
-- [createAuction](dxos_registry_client.AuctionsClientBackend.md#createauction)
-- [forceCloseAuction](dxos_registry_client.AuctionsClientBackend.md#forcecloseauction)
-- [getAuction](dxos_registry_client.AuctionsClientBackend.md#getauction)
-- [listAuctions](dxos_registry_client.AuctionsClientBackend.md#listauctions)
-
 ## Methods
 
 ### bidAuction
 
-▸ **bidAuction**(`name`, `amount`): `Promise`<`void`\>
+**bidAuction**(`name`, `amount`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -39,13 +27,13 @@ Auctions operations supported by DXNS.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L49)
+[packages/sdk/registry-client/src/api/auctions.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L49)
 
 ___
 
 ### claimAuction
 
-▸ **claimAuction**(`name`, `account`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
+**claimAuction**(`name`, `account`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -60,13 +48,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L53)
+[packages/sdk/registry-client/src/api/auctions.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L53)
 
 ___
 
 ### closeAuction
 
-▸ **closeAuction**(`name`): `Promise`<`void`\>
+**closeAuction**(`name`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -80,13 +68,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L50)
+[packages/sdk/registry-client/src/api/auctions.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L50)
 
 ___
 
 ### createAuction
 
-▸ **createAuction**(`name`, `startAmount`): `Promise`<`void`\>
+**createAuction**(`name`, `startAmount`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -101,20 +89,20 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L48)
+[packages/sdk/registry-client/src/api/auctions.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L48)
 
 ___
 
 ### forceCloseAuction
 
-▸ **forceCloseAuction**(`name`, `sudoSignFn`): `Promise`<`void`\>
+**forceCloseAuction**(`name`, `sudoSignFn`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `name` | `string` |
-| `sudoSignFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `sudoSignFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Returns
 
@@ -122,13 +110,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L52)
+[packages/sdk/registry-client/src/api/auctions.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L52)
 
 ___
 
 ### getAuction
 
-▸ **getAuction**(`name`): `Promise`<`undefined` \| [`Auction`](dxos_registry_client.Auction.md)\>
+**getAuction**(`name`): `Promise`<`undefined` \| [`Auction`](dxos_registry_client.Auction.md)\>
 
 #### Parameters
 
@@ -142,13 +130,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L46)
+[packages/sdk/registry-client/src/api/auctions.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L46)
 
 ___
 
 ### listAuctions
 
-▸ **listAuctions**(): `Promise`<[`Auction`](dxos_registry_client.Auction.md)[]\>
+**listAuctions**(): `Promise`<[`Auction`](dxos_registry_client.Auction.md)[]\>
 
 #### Returns
 
@@ -156,4 +144,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L47)
+[packages/sdk/registry-client/src/api/auctions.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L47)

@@ -4,38 +4,11 @@
 
 Invitation created by sender.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.InvitationRequest.md#constructor)
-
-### Properties
-
-- [\_hasConnected](dxos_client.InvitationRequest.md#_hasconnected)
-- [\_isCanceled](dxos_client.InvitationRequest.md#_iscanceled)
-- [canceled](dxos_client.InvitationRequest.md#canceled)
-- [connected](dxos_client.InvitationRequest.md#connected)
-- [error](dxos_client.InvitationRequest.md#error)
-- [finished](dxos_client.InvitationRequest.md#finished)
-
-### Accessors
-
-- [descriptor](dxos_client.InvitationRequest.md#descriptor)
-- [hasConnected](dxos_client.InvitationRequest.md#hasconnected)
-- [secret](dxos_client.InvitationRequest.md#secret)
-
-### Methods
-
-- [cancel](dxos_client.InvitationRequest.md#cancel)
-- [toString](dxos_client.InvitationRequest.md#tostring)
-- [wait](dxos_client.InvitationRequest.md#wait)
-
 ## Constructors
 
 ### constructor
 
-• **new InvitationRequest**(`_descriptor`, `connected`, `finished`, `error`)
+**new InvitationRequest**(`_descriptor`, `connected`, `finished`, `error`)
 
 #### Parameters
 
@@ -48,79 +21,79 @@ Invitation created by sender.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L39)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L39)
 
 ## Properties
 
 ### \_hasConnected
 
-• `Private` **\_hasConnected**: `boolean` = `false`
+ `Private` **\_hasConnected**: `boolean` = `false`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L15)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L15)
 
 ___
 
 ### \_isCanceled
 
-• `Private` **\_isCanceled**: `boolean` = `false`
+ `Private` **\_isCanceled**: `boolean` = `false`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L17)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L17)
 
 ___
 
 ### canceled
 
-• `Readonly` **canceled**: `Event`<`void`\>
+ `Readonly` **canceled**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L37)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L37)
 
 ___
 
 ### connected
 
-• `Readonly` **connected**: `Event`<`void`\>
+ `Readonly` **connected**: `Event`<`void`\>
 
 Fired when the remote peer connects.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L24)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L24)
 
 ___
 
 ### error
 
-• `Readonly` **error**: `Event`<`Error`\>
+ `Readonly` **error**: `Event`<`Error`\>
 
 Fired when there's an error in the invitation process.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L35)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L35)
 
 ___
 
 ### finished
 
-• `Readonly` **finished**: `Event`<`void`\>
+ `Readonly` **finished**: `Event`<`void`\>
 
 Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L29)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L29)
 
 ## Accessors
 
 ### descriptor
 
-• `get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Returns
 
@@ -128,13 +101,13 @@ Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L54)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L54)
 
 ___
 
 ### hasConnected
 
-• `get` **hasConnected**(): `boolean`
+`get` **hasConnected**(): `boolean`
 
 True if the connected event has been fired.
 
@@ -144,13 +117,13 @@ True if the connected event has been fired.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L65)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L65)
 
 ___
 
 ### secret
 
-• `get` **secret**(): `Uint8Array`
+`get` **secret**(): `Uint8Array`
 
 #### Returns
 
@@ -158,13 +131,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L58)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L58)
 
 ## Methods
 
 ### cancel
 
-▸ **cancel**(): `void`
+**cancel**(): `void`
 
 Cancel the invitation.
 
@@ -174,13 +147,13 @@ Cancel the invitation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L83)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L83)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -188,13 +161,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L89)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:89](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L89)
 
 ___
 
 ### wait
 
-▸ **wait**(`timeout?`): `Promise`<`void`\>
+**wait**(`timeout?`): `Promise`<`void`\>
 
 Wait until connected.
 
@@ -210,4 +183,4 @@ Wait until connected.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L72)
+[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L72)

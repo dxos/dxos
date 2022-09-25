@@ -17,33 +17,11 @@ It works in non-interactive mode and requires no authentication.
 
   ↳ [`PartyInvitation`](dxos_client.PartyInvitation.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Invitation.md#constructor)
-
-### Properties
-
-- [\_descriptor](dxos_client.Invitation.md#_descriptor)
-- [\_invitationPromise](dxos_client.Invitation.md#_invitationpromise)
-- [\_onAuthenticate](dxos_client.Invitation.md#_onauthenticate)
-
-### Accessors
-
-- [descriptor](dxos_client.Invitation.md#descriptor)
-
-### Methods
-
-- [authenticate](dxos_client.Invitation.md#authenticate)
-- [toJSON](dxos_client.Invitation.md#tojson)
-- [wait](dxos_client.Invitation.md#wait)
-
 ## Constructors
 
 ### constructor
 
-• **new Invitation**<`T`\>(`_descriptor`, `_invitationPromise`, `_onAuthenticate`)
+**new Invitation**<`T`\>(`_descriptor`, `_invitationPromise`, `_onAuthenticate`)
 
 #### Type parameters
 
@@ -61,37 +39,37 @@ It works in non-interactive mode and requires no authentication.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
 
 ## Properties
 
 ### \_descriptor
 
-• `Protected` `Readonly` **\_descriptor**: [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+ `Protected` `Readonly` **\_descriptor**: [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
 
 ___
 
 ### \_invitationPromise
 
-• `Protected` `Readonly` **\_invitationPromise**: `Promise`<`T`\>
+ `Protected` `Readonly` **\_invitationPromise**: `Promise`<`T`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
 
 ___
 
 ### \_onAuthenticate
 
-• `Protected` `Readonly` **\_onAuthenticate**: (`secret`: `Uint8Array`) => `void`
+ `Protected` `Readonly` **\_onAuthenticate**: (`secret`: `Uint8Array`) => `void`
 
 #### Type declaration
 
-▸ (`secret`): `void`
+(`secret`): `void`
 
 ##### Parameters
 
@@ -105,13 +83,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
 
 ## Accessors
 
 ### descriptor
 
-• `get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Returns
 
@@ -119,13 +97,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
 
 ## Methods
 
 ### authenticate
 
-▸ **authenticate**(`secret`): `void`
+**authenticate**(`secret`): `void`
 
 #### Parameters
 
@@ -139,13 +117,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
 
 ___
 
 ### toJSON
 
-▸ **toJSON**(): `InvitationDescriptor`
+**toJSON**(): `InvitationDescriptor`
 
 #### Returns
 
@@ -153,13 +131,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
 
 ___
 
 ### wait
 
-▸ **wait**(): `Promise`<`T`\>
+**wait**(): `Promise`<`T`\>
 
 Wait for the invitation flow to complete.
 
@@ -169,4 +147,4 @@ Wait for the invitation flow to complete.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)

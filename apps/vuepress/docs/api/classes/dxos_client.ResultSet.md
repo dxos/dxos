@@ -12,34 +12,11 @@ Reactive query results.
 | :------ |
 | `T` |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.ResultSet.md#constructor)
-
-### Properties
-
-- [\_getter](dxos_client.ResultSet.md#_getter)
-- [\_itemUpdate](dxos_client.ResultSet.md#_itemupdate)
-- [\_resultsUpdate](dxos_client.ResultSet.md#_resultsupdate)
-- [update](dxos_client.ResultSet.md#update)
-
-### Accessors
-
-- [first](dxos_client.ResultSet.md#first)
-- [value](dxos_client.ResultSet.md#value)
-
-### Methods
-
-- [subscribe](dxos_client.ResultSet.md#subscribe)
-- [waitFor](dxos_client.ResultSet.md#waitfor)
-
 ## Constructors
 
 ### constructor
 
-• **new ResultSet**<`T`\>(`itemUpdate`, `getter`)
+**new ResultSet**<`T`\>(`itemUpdate`, `getter`)
 
 #### Type parameters
 
@@ -62,7 +39,7 @@ packages/echo/echo-db/dist/src/api/result-set.d.ts:14
 
 ### \_getter
 
-• `Private` `Readonly` **\_getter**: `any`
+ `Private` `Readonly` **\_getter**: `any`
 
 #### Defined in
 
@@ -72,7 +49,7 @@ ___
 
 ### \_itemUpdate
 
-• `Private` `Readonly` **\_itemUpdate**: `any`
+ `Private` `Readonly` **\_itemUpdate**: `any`
 
 #### Defined in
 
@@ -82,7 +59,7 @@ ___
 
 ### \_resultsUpdate
 
-• `Private` `Readonly` **\_resultsUpdate**: `any`
+ `Private` `Readonly` **\_resultsUpdate**: `any`
 
 #### Defined in
 
@@ -92,7 +69,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `ReadOnlyEvent`<`T`[]\>
+ `Readonly` **update**: `ReadOnlyEvent`<`T`[]\>
 
 Triggered when `value` updates.
 
@@ -104,7 +81,7 @@ packages/echo/echo-db/dist/src/api/result-set.d.ts:13
 
 ### first
 
-• `get` **first**(): `T`
+`get` **first**(): `T`
 
 #### Returns
 
@@ -118,7 +95,7 @@ ___
 
 ### value
 
-• `get` **value**(): `T`[]
+`get` **value**(): `T`[]
 
 #### Returns
 
@@ -132,7 +109,7 @@ packages/echo/echo-db/dist/src/api/result-set.d.ts:15
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -146,7 +123,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Subscribe for updates.
 
@@ -162,7 +139,7 @@ ___
 
 ### waitFor
 
-▸ **waitFor**(`condition`): `Promise`<`T`[]\>
+**waitFor**(`condition`): `Promise`<`T`[]\>
 
 Waits for condition to be true and then returns the value that passed the condition first.
 

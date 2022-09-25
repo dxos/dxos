@@ -8,32 +8,11 @@
 
   ↳ **`InvalidConfigurationError`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.InvalidConfigurationError.md#constructor)
-
-### Properties
-
-- [cause](dxos_client.InvalidConfigurationError.md#cause)
-- [code](dxos_client.InvalidConfigurationError.md#code)
-- [dxosErrorMessage](dxos_client.InvalidConfigurationError.md#dxoserrormessage)
-- [message](dxos_client.InvalidConfigurationError.md#message)
-- [name](dxos_client.InvalidConfigurationError.md#name)
-- [stack](dxos_client.InvalidConfigurationError.md#stack)
-- [prepareStackTrace](dxos_client.InvalidConfigurationError.md#preparestacktrace)
-- [stackTraceLimit](dxos_client.InvalidConfigurationError.md#stacktracelimit)
-
-### Methods
-
-- [captureStackTrace](dxos_client.InvalidConfigurationError.md#capturestacktrace)
-
 ## Constructors
 
 ### constructor
 
-• **new InvalidConfigurationError**(`message`)
+**new InvalidConfigurationError**(`message`)
 
 #### Parameters
 
@@ -47,13 +26,13 @@ DXOSError.constructor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/errors.ts:8](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/errors.ts#L8)
+[packages/sdk/client/src/packlets/api/errors.ts:8](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/errors.ts#L8)
 
 ## Properties
 
 ### cause
 
-• `Optional` **cause**: `Error`
+ `Optional` **cause**: `Error`
 
 #### Inherited from
 
@@ -67,7 +46,7 @@ ___
 
 ### code
 
-• `Readonly` **code**: `string`
+ `Readonly` **code**: `string`
 
 #### Inherited from
 
@@ -81,7 +60,7 @@ ___
 
 ### dxosErrorMessage
 
-• `Optional` `Readonly` **dxosErrorMessage**: `string`
+ `Optional` `Readonly` **dxosErrorMessage**: `string`
 
 #### Inherited from
 
@@ -95,7 +74,7 @@ ___
 
 ### message
 
-• **message**: `string`
+ **message**: `string`
 
 #### Inherited from
 
@@ -109,7 +88,7 @@ ___
 
 ### name
 
-• **name**: `string`
+ **name**: `string`
 
 #### Inherited from
 
@@ -123,7 +102,7 @@ ___
 
 ### stack
 
-• `Optional` **stack**: `string`
+ `Optional` **stack**: `string`
 
 #### Inherited from
 
@@ -137,11 +116,11 @@ ___
 
 ### prepareStackTrace
 
-▪ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
+ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
 
 #### Type declaration
 
-▸ (`err`, `stackTraces`): `any`
+(`err`, `stackTraces`): `any`
 
 Optional override for formatting stack traces
 
@@ -172,7 +151,7 @@ ___
 
 ### stackTraceLimit
 
-▪ `Static` **stackTraceLimit**: `number`
+ `Static` **stackTraceLimit**: `number`
 
 #### Inherited from
 
@@ -186,7 +165,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:13
 
 ### captureStackTrace
 
-▸ `Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
+`Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
 Create .stack property on a target object
 

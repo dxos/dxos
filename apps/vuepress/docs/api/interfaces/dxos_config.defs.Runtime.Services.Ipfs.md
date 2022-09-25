@@ -5,18 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [gateway](dxos_config.defs.Runtime.Services.Ipfs.md#gateway)
-- [server](dxos_config.defs.Runtime.Services.Ipfs.md#server)
-
 ## Properties
 
 ### gateway
 
-• `Optional` **gateway**: `string`
+ `Optional` **gateway**: `string`
 
 Options:
   - proto3_optional = true
@@ -29,7 +22,7 @@ ___
 
 ### server
 
-• `Optional` **server**: `string`
+ `Optional` **server**: `string`
 
 Options:
   - proto3_optional = true

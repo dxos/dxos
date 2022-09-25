@@ -2,43 +2,15 @@
 
 [@dxos/feed-store](../modules/dxos_feed_store.md).HypercoreFeed
 
-## Table of contents
-
-### Properties
-
-- [close](dxos_feed_store.HypercoreFeed.md#close)
-- [closed](dxos_feed_store.HypercoreFeed.md#closed)
-- [discoveryKey](dxos_feed_store.HypercoreFeed.md#discoverykey)
-- [download](dxos_feed_store.HypercoreFeed.md#download)
-- [downloaded](dxos_feed_store.HypercoreFeed.md#downloaded)
-- [getBatch](dxos_feed_store.HypercoreFeed.md#getbatch)
-- [head](dxos_feed_store.HypercoreFeed.md#head)
-- [key](dxos_feed_store.HypercoreFeed.md#key)
-- [length](dxos_feed_store.HypercoreFeed.md#length)
-- [on](dxos_feed_store.HypercoreFeed.md#on)
-- [opened](dxos_feed_store.HypercoreFeed.md#opened)
-- [readable](dxos_feed_store.HypercoreFeed.md#readable)
-- [ready](dxos_feed_store.HypercoreFeed.md#ready)
-- [removeListener](dxos_feed_store.HypercoreFeed.md#removelistener)
-- [secretKey](dxos_feed_store.HypercoreFeed.md#secretkey)
-- [undownload](dxos_feed_store.HypercoreFeed.md#undownload)
-
-### Methods
-
-- [append](dxos_feed_store.HypercoreFeed.md#append)
-- [createReadStream](dxos_feed_store.HypercoreFeed.md#createreadstream)
-- [get](dxos_feed_store.HypercoreFeed.md#get)
-- [replicate](dxos_feed_store.HypercoreFeed.md#replicate)
-
 ## Properties
 
 ### close
 
-• **close**: (`arg`: `any`) => `any`
+ **close**: (`arg`: `any`) => `any`
 
 #### Type declaration
 
-▸ (`arg`): `any`
+(`arg`): `any`
 
 ##### Parameters
 
@@ -52,37 +24,37 @@
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L54)
+[packages/echo/feed-store/src/hypercore-types.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L54)
 
 ___
 
 ### closed
 
-• **closed**: `boolean`
+ **closed**: `boolean`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L17)
+[packages/echo/feed-store/src/hypercore-types.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L17)
 
 ___
 
 ### discoveryKey
 
-• **discoveryKey**: `Buffer`
+ **discoveryKey**: `Buffer`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L14)
+[packages/echo/feed-store/src/hypercore-types.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L14)
 
 ___
 
 ### download
 
-• **download**: (`options`: `any`) => `any`
+ **download**: (`options`: `any`) => `any`
 
 #### Type declaration
 
-▸ (`options`): `any`
+(`options`): `any`
 
 ##### Parameters
 
@@ -96,17 +68,17 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L49)
+[packages/echo/feed-store/src/hypercore-types.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L49)
 
 ___
 
 ### downloaded
 
-• **downloaded**: (`start`: `number`, `batchEnd`: `number`) => `boolean`
+ **downloaded**: (`start`: `number`, `batchEnd`: `number`) => `boolean`
 
 #### Type declaration
 
-▸ (`start`, `batchEnd`): `boolean`
+(`start`, `batchEnd`): `boolean`
 
 ##### Parameters
 
@@ -121,17 +93,17 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L50)
+[packages/echo/feed-store/src/hypercore-types.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L50)
 
 ___
 
 ### getBatch
 
-• **getBatch**: (`n`: `number`, `maxMessages`: `number`, ...`args`: `any`[]) => `any`
+ **getBatch**: (`n`: `number`, `maxMessages`: `number`, ...`args`: `any`[]) => `any`
 
 #### Type declaration
 
-▸ (`n`, `maxMessages`, ...`args`): `any`
+(`n`, `maxMessages`, ...`args`): `any`
 
 ##### Parameters
 
@@ -147,47 +119,47 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L48)
+[packages/echo/feed-store/src/hypercore-types.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L48)
 
 ___
 
 ### head
 
-• **head**: `any`
+ **head**: `any`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L45)
+[packages/echo/feed-store/src/hypercore-types.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L45)
 
 ___
 
 ### key
 
-• **key**: `Buffer`
+ **key**: `Buffer`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L12)
+[packages/echo/feed-store/src/hypercore-types.ts:12](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L12)
 
 ___
 
 ### length
 
-• **length**: `number`
+ **length**: `number`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L15)
+[packages/echo/feed-store/src/hypercore-types.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L15)
 
 ___
 
 ### on
 
-• **on**: (`s`: `string`, `cb`: () => `any`) => `any`
+ **on**: (`s`: `string`, `cb`: () => `any`) => `any`
 
 #### Type declaration
 
-▸ (`s`, `cb`): `any`
+(`s`, `cb`): `any`
 
 ##### Parameters
 
@@ -202,47 +174,47 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L46)
+[packages/echo/feed-store/src/hypercore-types.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L46)
 
 ___
 
 ### opened
 
-• **opened**: `boolean`
+ **opened**: `boolean`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L16)
+[packages/echo/feed-store/src/hypercore-types.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L16)
 
 ___
 
 ### readable
 
-• **readable**: `boolean`
+ **readable**: `boolean`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L18)
+[packages/echo/feed-store/src/hypercore-types.ts:18](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L18)
 
 ___
 
 ### ready
 
-• **ready**: `any`
+ **ready**: `any`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L11)
+[packages/echo/feed-store/src/hypercore-types.ts:11](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L11)
 
 ___
 
 ### removeListener
 
-• **removeListener**: (`s`: `string`, `cb`: () => `any`) => `any`
+ **removeListener**: (`s`: `string`, `cb`: () => `any`) => `any`
 
 #### Type declaration
 
-▸ (`s`, `cb`): `any`
+(`s`, `cb`): `any`
 
 ##### Parameters
 
@@ -257,27 +229,27 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L47)
+[packages/echo/feed-store/src/hypercore-types.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L47)
 
 ___
 
 ### secretKey
 
-• **secretKey**: `Buffer`
+ **secretKey**: `Buffer`
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L13)
+[packages/echo/feed-store/src/hypercore-types.ts:13](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L13)
 
 ___
 
 ### undownload
 
-• **undownload**: (`args`: `any`) => `void`
+ **undownload**: (`args`: `any`) => `void`
 
 #### Type declaration
 
-▸ (`args`): `void`
+(`args`): `void`
 
 ##### Parameters
 
@@ -291,13 +263,13 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L51)
+[packages/echo/feed-store/src/hypercore-types.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L51)
 
 ## Methods
 
 ### append
 
-▸ **append**(`data`, `callback?`): `void`
+**append**(`data`, `callback?`): `void`
 
 Appends a block of data to the feed.
 Callback is called with (err, seq) when all data has been written at the returned seq number or error will be not null.
@@ -315,13 +287,13 @@ Callback is called with (err, seq) when all data has been written at the returne
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L26)
+[packages/echo/feed-store/src/hypercore-types.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L26)
 
 ___
 
 ### createReadStream
 
-▸ **createReadStream**(`options?`): `ReadableStream`
+**createReadStream**(`options?`): `ReadableStream`
 
 #### Parameters
 
@@ -335,13 +307,13 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L43)
+[packages/echo/feed-store/src/hypercore-types.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L43)
 
 ___
 
 ### get
 
-▸ **get**(`index`, `callback`): `void`
+**get**(`index`, `callback`): `void`
 
 Gets a block of data. If the data is not available locally this method will prioritize and wait for the data to be downloaded before calling the callback.
 
@@ -358,9 +330,9 @@ Gets a block of data. If the data is not available locally this method will prio
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L33)
+[packages/echo/feed-store/src/hypercore-types.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L33)
 
-▸ **get**(`index`, `options`, `callback`): `void`
+**get**(`index`, `options`, `callback`): `void`
 
 Get a block of data. If the data is not available locally this method will prioritize and wait for the data to be downloaded before calling the callback.
 
@@ -378,13 +350,13 @@ Get a block of data. If the data is not available locally this method will prior
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L41)
+[packages/echo/feed-store/src/hypercore-types.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L41)
 
 ___
 
 ### replicate
 
-▸ **replicate**(`options`): `void`
+**replicate**(`options`): `void`
 
 #### Parameters
 
@@ -398,4 +370,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/hypercore-types.ts#L53)
+[packages/echo/feed-store/src/hypercore-types.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/hypercore-types.ts#L53)

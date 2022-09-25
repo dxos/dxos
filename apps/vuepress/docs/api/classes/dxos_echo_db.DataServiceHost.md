@@ -6,23 +6,11 @@ Provides methods for DataService for a single party.
 
 A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.DataServiceHost.md#constructor)
-
-### Methods
-
-- [subscribeEntitySet](dxos_echo_db.DataServiceHost.md#subscribeentityset)
-- [subscribeEntityStream](dxos_echo_db.DataServiceHost.md#subscribeentitystream)
-- [write](dxos_echo_db.DataServiceHost.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new DataServiceHost**(`_itemManager`, `_itemDemuxer`, `_writeStream?`)
+**new DataServiceHost**(`_itemManager`, `_itemDemuxer`, `_writeStream?`)
 
 #### Parameters
 
@@ -34,13 +22,13 @@ A DataServiceRouter must be placed before it to route requests to different Data
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L34)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L34)
 
 ## Methods
 
 ### subscribeEntitySet
 
-▸ **subscribeEntitySet**(): `Stream`<`SubscribeEntitySetResponse`\>
+**subscribeEntitySet**(): `Stream`<`SubscribeEntitySetResponse`\>
 
 Returns a stream with a list of active entities in the party.
 
@@ -50,13 +38,13 @@ Returns a stream with a list of active entities in the party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L43)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L43)
 
 ___
 
 ### subscribeEntityStream
 
-▸ **subscribeEntityStream**(`request`): `Stream`<`SubscribeEntityStreamResponse`\>
+**subscribeEntityStream**(`request`): `Stream`<`SubscribeEntityStreamResponse`\>
 
 Returns a stream of uppdates for a single entity.
 
@@ -75,13 +63,13 @@ Subsequent messages are updates.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L100)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:100](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L100)
 
 ___
 
 ### write
 
-▸ **write**(`request`): `Promise`<`MutationReceipt`\>
+**write**(`request`): `Promise`<`MutationReceipt`\>
 
 #### Parameters
 
@@ -95,4 +83,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-host.ts:140](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L140)
+[packages/echo/echo-db/src/packlets/database/data-service-host.ts:140](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-host.ts#L140)

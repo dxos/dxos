@@ -4,44 +4,11 @@
 
 Manages connection to the swarm.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.NetworkManager.md#constructor)
-
-### Properties
-
-- [\_connectionLog](dxos_client.NetworkManager.md#_connectionlog)
-- [\_ice](dxos_client.NetworkManager.md#_ice)
-- [\_maps](dxos_client.NetworkManager.md#_maps)
-- [\_messageRouter](dxos_client.NetworkManager.md#_messagerouter)
-- [\_messenger](dxos_client.NetworkManager.md#_messenger)
-- [\_signalConnection](dxos_client.NetworkManager.md#_signalconnection)
-- [\_signalManager](dxos_client.NetworkManager.md#_signalmanager)
-- [\_swarms](dxos_client.NetworkManager.md#_swarms)
-- [topicsUpdated](dxos_client.NetworkManager.md#topicsupdated)
-
-### Accessors
-
-- [connectionLog](dxos_client.NetworkManager.md#connectionlog)
-- [signal](dxos_client.NetworkManager.md#signal)
-- [topics](dxos_client.NetworkManager.md#topics)
-
-### Methods
-
-- [destroy](dxos_client.NetworkManager.md#destroy)
-- [getSwarm](dxos_client.NetworkManager.md#getswarm)
-- [getSwarmMap](dxos_client.NetworkManager.md#getswarmmap)
-- [joinProtocolSwarm](dxos_client.NetworkManager.md#joinprotocolswarm)
-- [leaveProtocolSwarm](dxos_client.NetworkManager.md#leaveprotocolswarm)
-- [start](dxos_client.NetworkManager.md#start)
-
 ## Constructors
 
 ### constructor
 
-• **new NetworkManager**(`__namedParameters`)
+**new NetworkManager**(`__namedParameters`)
 
 #### Parameters
 
@@ -57,7 +24,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:34
 
 ### \_connectionLog
 
-• `Private` `Optional` `Readonly` **\_connectionLog**: `any`
+ `Private` `Optional` `Readonly` **\_connectionLog**: `any`
 
 #### Defined in
 
@@ -67,7 +34,7 @@ ___
 
 ### \_ice
 
-• `Private` `Optional` `Readonly` **\_ice**: `any`
+ `Private` `Optional` `Readonly` **\_ice**: `any`
 
 #### Defined in
 
@@ -77,7 +44,7 @@ ___
 
 ### \_maps
 
-• `Private` `Readonly` **\_maps**: `any`
+ `Private` `Readonly` **\_maps**: `any`
 
 #### Defined in
 
@@ -87,7 +54,7 @@ ___
 
 ### \_messageRouter
 
-• `Private` `Readonly` **\_messageRouter**: `any`
+ `Private` `Readonly` **\_messageRouter**: `any`
 
 #### Defined in
 
@@ -97,7 +64,7 @@ ___
 
 ### \_messenger
 
-• `Private` `Readonly` **\_messenger**: `any`
+ `Private` `Readonly` **\_messenger**: `any`
 
 #### Defined in
 
@@ -107,7 +74,7 @@ ___
 
 ### \_signalConnection
 
-• `Private` `Readonly` **\_signalConnection**: `any`
+ `Private` `Readonly` **\_signalConnection**: `any`
 
 #### Defined in
 
@@ -117,7 +84,7 @@ ___
 
 ### \_signalManager
 
-• `Private` `Readonly` **\_signalManager**: `any`
+ `Private` `Readonly` **\_signalManager**: `any`
 
 #### Defined in
 
@@ -127,7 +94,7 @@ ___
 
 ### \_swarms
 
-• `Private` `Readonly` **\_swarms**: `any`
+ `Private` `Readonly` **\_swarms**: `any`
 
 #### Defined in
 
@@ -137,7 +104,7 @@ ___
 
 ### topicsUpdated
 
-• `Readonly` **topicsUpdated**: `Event`<`void`\>
+ `Readonly` **topicsUpdated**: `Event`<`void`\>
 
 #### Defined in
 
@@ -147,7 +114,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:33
 
 ### connectionLog
 
-• `get` **connectionLog**(): `undefined` \| `ConnectionLog`
+`get` **connectionLog**(): `undefined` \| `ConnectionLog`
 
 #### Returns
 
@@ -161,7 +128,7 @@ ___
 
 ### signal
 
-• `get` **signal**(): `SignalManager`
+`get` **signal**(): `SignalManager`
 
 #### Returns
 
@@ -175,7 +142,7 @@ ___
 
 ### topics
 
-• `get` **topics**(): `PublicKey`[]
+`get` **topics**(): `PublicKey`[]
 
 #### Returns
 
@@ -189,7 +156,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:36
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -203,7 +170,7 @@ ___
 
 ### getSwarm
 
-▸ **getSwarm**(`topic`): `undefined` \| `Swarm`
+**getSwarm**(`topic`): `undefined` \| `Swarm`
 
 #### Parameters
 
@@ -223,7 +190,7 @@ ___
 
 ### getSwarmMap
 
-▸ **getSwarmMap**(`topic`): `undefined` \| `SwarmMapper`
+**getSwarmMap**(`topic`): `undefined` \| `SwarmMapper`
 
 #### Parameters
 
@@ -243,7 +210,7 @@ ___
 
 ### joinProtocolSwarm
 
-▸ **joinProtocolSwarm**(`options`): () => `Promise`<`void`\>
+**joinProtocolSwarm**(`options`): () => `Promise`<`void`\>
 
 #### Parameters
 
@@ -255,7 +222,7 @@ ___
 
 `fn`
 
-▸ (): `Promise`<`void`\>
+(): `Promise`<`void`\>
 
 ##### Returns
 
@@ -269,7 +236,7 @@ ___
 
 ### leaveProtocolSwarm
 
-▸ **leaveProtocolSwarm**(`topic`): `Promise`<`void`\>
+**leaveProtocolSwarm**(`topic`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -289,7 +256,7 @@ ___
 
 ### start
 
-▸ **start**(): `Promise`<`void`\>
+**start**(): `Promise`<`void`\>
 
 **`Deprecated`**
 

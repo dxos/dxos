@@ -4,34 +4,11 @@
 
 Wrapper for ECHO Item that represents an `ObjectModel` schema.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Schema.md#constructor)
-
-### Properties
-
-- [\_schema](dxos_client.Schema.md#_schema)
-
-### Accessors
-
-- [fields](dxos_client.Schema.md#fields)
-- [name](dxos_client.Schema.md#name)
-
-### Methods
-
-- [addField](dxos_client.Schema.md#addfield)
-- [deleteField](dxos_client.Schema.md#deletefield)
-- [editField](dxos_client.Schema.md#editfield)
-- [getField](dxos_client.Schema.md#getfield)
-- [validate](dxos_client.Schema.md#validate)
-
 ## Constructors
 
 ### constructor
 
-• **new Schema**(`_schema`)
+**new Schema**(`_schema`)
 
 #### Parameters
 
@@ -47,7 +24,7 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:23
 
 ### \_schema
 
-• `Private` `Readonly` **\_schema**: `any`
+ `Private` `Readonly` **\_schema**: `any`
 
 #### Defined in
 
@@ -57,11 +34,11 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:22
 
 ### fields
 
-• `get` **fields**(): [`SchemaField`](../modules/dxos_client.md#schemafield)[]
+`get` **fields**(): [`SchemaField`](../types/dxos_client.SchemaField.md)[]
 
 #### Returns
 
-[`SchemaField`](../modules/dxos_client.md#schemafield)[]
+[`SchemaField`](../types/dxos_client.SchemaField.md)[]
 
 #### Defined in
 
@@ -71,7 +48,7 @@ ___
 
 ### name
 
-• `get` **name**(): `string`
+`get` **name**(): `string`
 
 #### Returns
 
@@ -85,13 +62,13 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:24
 
 ### addField
 
-▸ **addField**(`newField`): `Promise`<`void`\>
+**addField**(`newField`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `newField` | [`SchemaField`](../modules/dxos_client.md#schemafield) |
+| `newField` | [`SchemaField`](../types/dxos_client.SchemaField.md) |
 
 #### Returns
 
@@ -105,7 +82,7 @@ ___
 
 ### deleteField
 
-▸ **deleteField**(`key`): `Promise`<`void`\>
+**deleteField**(`key`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -125,14 +102,14 @@ ___
 
 ### editField
 
-▸ **editField**(`currentKey`, `editedField`): `Promise`<`void`\>
+**editField**(`currentKey`, `editedField`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `currentKey` | `string` |
-| `editedField` | [`SchemaField`](../modules/dxos_client.md#schemafield) |
+| `editedField` | [`SchemaField`](../types/dxos_client.SchemaField.md) |
 
 #### Returns
 
@@ -146,7 +123,7 @@ ___
 
 ### getField
 
-▸ **getField**(`key`): `undefined` \| [`SchemaField`](../modules/dxos_client.md#schemafield)
+**getField**(`key`): `undefined` \| [`SchemaField`](../types/dxos_client.SchemaField.md)
 
 #### Parameters
 
@@ -156,7 +133,7 @@ ___
 
 #### Returns
 
-`undefined` \| [`SchemaField`](../modules/dxos_client.md#schemafield)
+`undefined` \| [`SchemaField`](../types/dxos_client.SchemaField.md)
 
 #### Defined in
 
@@ -166,7 +143,7 @@ ___
 
 ### validate
 
-▸ **validate**(`model`): `boolean`
+**validate**(`model`): `boolean`
 
 #### Parameters
 

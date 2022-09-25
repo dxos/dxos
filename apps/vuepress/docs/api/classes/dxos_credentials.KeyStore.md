@@ -4,30 +4,11 @@
 
 LevelDB key storage.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.KeyStore.md#constructor)
-
-### Properties
-
-- [\_db](dxos_credentials.KeyStore.md#_db)
-
-### Methods
-
-- [deleteRecord](dxos_credentials.KeyStore.md#deleterecord)
-- [getKeys](dxos_credentials.KeyStore.md#getkeys)
-- [getRecord](dxos_credentials.KeyStore.md#getrecord)
-- [getRecords](dxos_credentials.KeyStore.md#getrecords)
-- [getRecordsWithKey](dxos_credentials.KeyStore.md#getrecordswithkey)
-- [setRecord](dxos_credentials.KeyStore.md#setrecord)
-
 ## Constructors
 
 ### constructor
 
-• **new KeyStore**(`db?`)
+**new KeyStore**(`db?`)
 
 Takes the underlying to DB to use (eg, a leveldown, memdown, etc. instance).
 If none is specified, memdown is used.
@@ -40,23 +21,23 @@ If none is specified, memdown is used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L33)
+[packages/halo/credentials/src/keys/keystore.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L33)
 
 ## Properties
 
 ### \_db
 
-• `Private` `Readonly` **\_db**: `LevelUp`<`AbstractLevelDOWN`<`any`, `any`\>, `AbstractIterator`<`any`, `any`\>\>
+ `Private` `Readonly` **\_db**: `LevelUp`<`AbstractLevelDOWN`<`any`, `any`\>, `AbstractIterator`<`any`, `any`\>\>
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L27)
+[packages/halo/credentials/src/keys/keystore.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L27)
 
 ## Methods
 
 ### deleteRecord
 
-▸ **deleteRecord**(`key`): `Promise`<`void`\>
+**deleteRecord**(`key`): `Promise`<`void`\>
 
 Deletes a KeyRecord from the KeyStore, indexed by `key`.
 
@@ -72,13 +53,13 @@ Deletes a KeyRecord from the KeyStore, indexed by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L50)
+[packages/halo/credentials/src/keys/keystore.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L50)
 
 ___
 
 ### getKeys
 
-▸ **getKeys**(): `Promise`<`string`[]\>
+**getKeys**(): `Promise`<`string`[]\>
 
 Returns all lookup key strings.
 
@@ -88,13 +69,13 @@ Returns all lookup key strings.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L68)
+[packages/halo/credentials/src/keys/keystore.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L68)
 
 ___
 
 ### getRecord
 
-▸ **getRecord**(`key`): `Promise`<`KeyRecord`\>
+**getRecord**(`key`): `Promise`<`KeyRecord`\>
 
 Looks up a KeyRecord by `key`.
 
@@ -110,13 +91,13 @@ Looks up a KeyRecord by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L59)
+[packages/halo/credentials/src/keys/keystore.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L59)
 
 ___
 
 ### getRecords
 
-▸ **getRecords**(): `Promise`<`KeyRecord`[]\>
+**getRecords**(): `Promise`<`KeyRecord`[]\>
 
 Returns all KeyRecord values.
 
@@ -126,13 +107,13 @@ Returns all KeyRecord values.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L75)
+[packages/halo/credentials/src/keys/keystore.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L75)
 
 ___
 
 ### getRecordsWithKey
 
-▸ **getRecordsWithKey**(): `Promise`<[`string`, `KeyRecord`][]\>
+**getRecordsWithKey**(): `Promise`<[`string`, `KeyRecord`][]\>
 
 Returns all entries as key/value pairs.
 
@@ -142,13 +123,13 @@ Returns all entries as key/value pairs.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L83)
+[packages/halo/credentials/src/keys/keystore.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L83)
 
 ___
 
 ### setRecord
 
-▸ **setRecord**(`key`, `record`): `Promise`<`void`\>
+**setRecord**(`key`, `record`): `Promise`<`void`\>
 
 Adds a KeyRecord to the KeyStore, indexed by `key`.
 
@@ -165,4 +146,4 @@ Adds a KeyRecord to the KeyStore, indexed by `key`.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keystore.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keystore.ts#L40)
+[packages/halo/credentials/src/keys/keystore.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keystore.ts#L40)

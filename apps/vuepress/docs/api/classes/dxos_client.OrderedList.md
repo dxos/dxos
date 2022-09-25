@@ -4,38 +4,11 @@
 
 Utility class that wraps an `ObjectModel` and implements a linked list via key-values on a given property.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.OrderedList.md#constructor)
-
-### Properties
-
-- [\_model](dxos_client.OrderedList.md#_model)
-- [\_property](dxos_client.OrderedList.md#_property)
-- [\_unsubscribe](dxos_client.OrderedList.md#_unsubscribe)
-- [\_values](dxos_client.OrderedList.md#_values)
-- [update](dxos_client.OrderedList.md#update)
-
-### Accessors
-
-- [id](dxos_client.OrderedList.md#id)
-- [values](dxos_client.OrderedList.md#values)
-
-### Methods
-
-- [destroy](dxos_client.OrderedList.md#destroy)
-- [init](dxos_client.OrderedList.md#init)
-- [insert](dxos_client.OrderedList.md#insert)
-- [refresh](dxos_client.OrderedList.md#refresh)
-- [remove](dxos_client.OrderedList.md#remove)
-
 ## Constructors
 
 ### constructor
 
-• **new OrderedList**(`_model`, `_property?`)
+**new OrderedList**(`_model`, `_property?`)
 
 #### Parameters
 
@@ -52,7 +25,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:13
 
 ### \_model
 
-• `Private` `Readonly` **\_model**: `any`
+ `Private` `Readonly` **\_model**: `any`
 
 #### Defined in
 
@@ -62,7 +35,7 @@ ___
 
 ### \_property
 
-• `Private` `Readonly` **\_property**: `any`
+ `Private` `Readonly` **\_property**: `any`
 
 #### Defined in
 
@@ -72,7 +45,7 @@ ___
 
 ### \_unsubscribe
 
-• `Private` **\_unsubscribe**: `any`
+ `Private` **\_unsubscribe**: `any`
 
 #### Defined in
 
@@ -82,7 +55,7 @@ ___
 
 ### \_values
 
-• `Private` **\_values**: `any`
+ `Private` **\_values**: `any`
 
 #### Defined in
 
@@ -92,7 +65,7 @@ ___
 
 ### update
 
-• **update**: `Event`<`string`[]\>
+ **update**: `Event`<`string`[]\>
 
 #### Defined in
 
@@ -102,7 +75,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:11
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -116,7 +89,7 @@ ___
 
 ### values
 
-• `get` **values**(): `string`[]
+`get` **values**(): `string`[]
 
 Get ordered values.
 
@@ -132,7 +105,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:18
 
 ### destroy
 
-▸ **destroy**(): `void`
+**destroy**(): `void`
 
 #### Returns
 
@@ -146,7 +119,7 @@ ___
 
 ### init
 
-▸ **init**(`values?`): `Promise`<`string`[]\>
+**init**(`values?`): `Promise`<`string`[]\>
 
 Clears the ordered set with the optional values.
 
@@ -168,7 +141,7 @@ ___
 
 ### insert
 
-▸ **insert**(`left`, `right`): `Promise`<`string`[]\>
+**insert**(`left`, `right`): `Promise`<`string`[]\>
 
 Links the ordered items, possibly linking them to existing items.
 
@@ -191,7 +164,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(): [`OrderedList`](dxos_client.OrderedList.md)
+**refresh**(): [`OrderedList`](dxos_client.OrderedList.md)
 
 Refresh list from properties.
 
@@ -207,7 +180,7 @@ ___
 
 ### remove
 
-▸ **remove**(`values`): `Promise`<`string`[]\>
+**remove**(`values`): `Promise`<`string`[]\>
 
 Removes the given element, possibly linked currently connected items.
 

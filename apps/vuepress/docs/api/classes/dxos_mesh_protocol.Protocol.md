@@ -4,69 +4,11 @@
 
 Wraps a hypercore-protocol object.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_mesh_protocol.Protocol.md#constructor)
-
-### Properties
-
-- [\_channel](dxos_mesh_protocol.Protocol.md#_channel)
-- [\_connected](dxos_mesh_protocol.Protocol.md#_connected)
-- [\_context](dxos_mesh_protocol.Protocol.md#_context)
-- [\_discoveryKey](dxos_mesh_protocol.Protocol.md#_discoverykey)
-- [\_discoveryToPublicKey](dxos_mesh_protocol.Protocol.md#_discoverytopublickey)
-- [\_extensionInit](dxos_mesh_protocol.Protocol.md#_extensioninit)
-- [\_extensionMap](dxos_mesh_protocol.Protocol.md#_extensionmap)
-- [\_handshakes](dxos_mesh_protocol.Protocol.md#_handshakes)
-- [\_init](dxos_mesh_protocol.Protocol.md#_init)
-- [\_initTimeout](dxos_mesh_protocol.Protocol.md#_inittimeout)
-- [\_initiator](dxos_mesh_protocol.Protocol.md#_initiator)
-- [\_isOpen](dxos_mesh_protocol.Protocol.md#_isopen)
-- [\_stream](dxos_mesh_protocol.Protocol.md#_stream)
-- [\_streamOptions](dxos_mesh_protocol.Protocol.md#_streamoptions)
-- [error](dxos_mesh_protocol.Protocol.md#error)
-- [extensionsHandshake](dxos_mesh_protocol.Protocol.md#extensionshandshake)
-- [extensionsInitialized](dxos_mesh_protocol.Protocol.md#extensionsinitialized)
-- [handshake](dxos_mesh_protocol.Protocol.md#handshake)
-
-### Accessors
-
-- [channel](dxos_mesh_protocol.Protocol.md#channel)
-- [connected](dxos_mesh_protocol.Protocol.md#connected)
-- [extensionNames](dxos_mesh_protocol.Protocol.md#extensionnames)
-- [extensions](dxos_mesh_protocol.Protocol.md#extensions)
-- [id](dxos_mesh_protocol.Protocol.md#id)
-- [initiator](dxos_mesh_protocol.Protocol.md#initiator)
-- [stream](dxos_mesh_protocol.Protocol.md#stream)
-- [streamOptions](dxos_mesh_protocol.Protocol.md#streamoptions)
-
-### Methods
-
-- [\_extensionHandler](dxos_mesh_protocol.Protocol.md#_extensionhandler)
-- [\_handshakeExtensions](dxos_mesh_protocol.Protocol.md#_handshakeextensions)
-- [\_initExtensions](dxos_mesh_protocol.Protocol.md#_initextensions)
-- [\_openConnection](dxos_mesh_protocol.Protocol.md#_openconnection)
-- [\_openExtensions](dxos_mesh_protocol.Protocol.md#_openextensions)
-- [close](dxos_mesh_protocol.Protocol.md#close)
-- [getContext](dxos_mesh_protocol.Protocol.md#getcontext)
-- [getExtension](dxos_mesh_protocol.Protocol.md#getextension)
-- [getSession](dxos_mesh_protocol.Protocol.md#getsession)
-- [init](dxos_mesh_protocol.Protocol.md#init)
-- [open](dxos_mesh_protocol.Protocol.md#open)
-- [setContext](dxos_mesh_protocol.Protocol.md#setcontext)
-- [setExtension](dxos_mesh_protocol.Protocol.md#setextension)
-- [setExtensions](dxos_mesh_protocol.Protocol.md#setextensions)
-- [setHandshakeHandler](dxos_mesh_protocol.Protocol.md#sethandshakehandler)
-- [toString](dxos_mesh_protocol.Protocol.md#tostring)
-- [waitForHandshake](dxos_mesh_protocol.Protocol.md#waitforhandshake)
-
 ## Constructors
 
 ### constructor
 
-• **new Protocol**(`options?`)
+**new Protocol**(`options?`)
 
 #### Parameters
 
@@ -76,201 +18,201 @@ Wraps a hypercore-protocol object.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L104)
+[packages/mesh/mesh-protocol/src/protocol.ts:104](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L104)
 
 ## Properties
 
 ### \_channel
 
-• `Private` `Optional` **\_channel**: `any` = `undefined`
+ `Private` `Optional` **\_channel**: `any` = `undefined`
 
 https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L97)
+[packages/mesh/mesh-protocol/src/protocol.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L97)
 
 ___
 
 ### \_connected
 
-• `Private` **\_connected**: `boolean` = `false`
+ `Private` **\_connected**: `boolean` = `false`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L78)
+[packages/mesh/mesh-protocol/src/protocol.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L78)
 
 ___
 
 ### \_context
 
-• `Private` **\_context**: `Record`<`string`, `any`\> = `{}`
+ `Private` **\_context**: `Record`<`string`, `any`\> = `{}`
 
 Local object to store data for extensions.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:102](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L102)
+[packages/mesh/mesh-protocol/src/protocol.ts:102](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L102)
 
 ___
 
 ### \_discoveryKey
 
-• `Private` `Optional` **\_discoveryKey**: `Buffer`
+ `Private` `Optional` **\_discoveryKey**: `Buffer`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L81)
+[packages/mesh/mesh-protocol/src/protocol.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L81)
 
 ___
 
 ### \_discoveryToPublicKey
 
-• `Private` **\_discoveryToPublicKey**: `undefined` \| (`discoveryKey`: `Buffer`) => `undefined` \| `Buffer`
+ `Private` **\_discoveryToPublicKey**: `undefined` \| (`discoveryKey`: `Buffer`) => `undefined` \| `Buffer`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L73)
+[packages/mesh/mesh-protocol/src/protocol.ts:73](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L73)
 
 ___
 
 ### \_extensionInit
 
-• `Private` **\_extensionInit**: `ExtensionInit`
+ `Private` **\_extensionInit**: `ExtensionInit`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L76)
+[packages/mesh/mesh-protocol/src/protocol.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L76)
 
 ___
 
 ### \_extensionMap
 
-• `Private` **\_extensionMap**: `Map`<`string`, [`Extension`](dxos_mesh_protocol.Extension.md)\>
+ `Private` **\_extensionMap**: `Map`<`string`, [`Extension`](dxos_mesh_protocol.Extension.md)\>
 
 Protocol extensions.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L86)
+[packages/mesh/mesh-protocol/src/protocol.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L86)
 
 ___
 
 ### \_handshakes
 
-• `Private` **\_handshakes**: (`protocol`: [`Protocol`](dxos_mesh_protocol.Protocol.md)) => `Promise`<`void`\>[] = `[]`
+ `Private` **\_handshakes**: (`protocol`: [`Protocol`](dxos_mesh_protocol.Protocol.md)) => `Promise`<`void`\>[] = `[]`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L79)
+[packages/mesh/mesh-protocol/src/protocol.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L79)
 
 ___
 
 ### \_init
 
-• `Private` **\_init**: `boolean` = `false`
+ `Private` **\_init**: `boolean` = `false`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L77)
+[packages/mesh/mesh-protocol/src/protocol.ts:77](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L77)
 
 ___
 
 ### \_initTimeout
 
-• `Private` **\_initTimeout**: `number`
+ `Private` **\_initTimeout**: `number`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L75)
+[packages/mesh/mesh-protocol/src/protocol.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L75)
 
 ___
 
 ### \_initiator
 
-• `Private` **\_initiator**: `boolean`
+ `Private` **\_initiator**: `boolean`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L80)
+[packages/mesh/mesh-protocol/src/protocol.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L80)
 
 ___
 
 ### \_isOpen
 
-• `Private` **\_isOpen**: `boolean` = `false`
+ `Private` **\_isOpen**: `boolean` = `false`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L66)
+[packages/mesh/mesh-protocol/src/protocol.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L66)
 
 ___
 
 ### \_stream
 
-• `Private` **\_stream**: `ProtocolStream`
+ `Private` **\_stream**: `ProtocolStream`
 
 https://github.com/mafintosh/hypercore-protocol
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L91)
+[packages/mesh/mesh-protocol/src/protocol.ts:91](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L91)
 
 ___
 
 ### \_streamOptions
 
-• `Private` **\_streamOptions**: `undefined` \| `ProtocolStreamCtorOpts`
+ `Private` **\_streamOptions**: `undefined` \| `ProtocolStreamCtorOpts`
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L74)
+[packages/mesh/mesh-protocol/src/protocol.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L74)
 
 ___
 
 ### error
 
-• `Readonly` **error**: `Event`<`Error`\>
+ `Readonly` **error**: `Event`<`Error`\>
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L68)
+[packages/mesh/mesh-protocol/src/protocol.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L68)
 
 ___
 
 ### extensionsHandshake
 
-• `Readonly` **extensionsHandshake**: `Event`<`void`\>
+ `Readonly` **extensionsHandshake**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L70)
+[packages/mesh/mesh-protocol/src/protocol.ts:70](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L70)
 
 ___
 
 ### extensionsInitialized
 
-• `Readonly` **extensionsInitialized**: `Event`<`void`\>
+ `Readonly` **extensionsInitialized**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L69)
+[packages/mesh/mesh-protocol/src/protocol.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L69)
 
 ___
 
 ### handshake
 
-• `Readonly` **handshake**: `Event`<[`Protocol`](dxos_mesh_protocol.Protocol.md)\>
+ `Readonly` **handshake**: `Event`<[`Protocol`](dxos_mesh_protocol.Protocol.md)\>
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L71)
+[packages/mesh/mesh-protocol/src/protocol.ts:71](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L71)
 
 ## Accessors
 
 ### channel
 
-• `get` **channel**(): `any`
+`get` **channel**(): `any`
 
 #### Returns
 
@@ -278,13 +220,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:155](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L155)
+[packages/mesh/mesh-protocol/src/protocol.ts:155](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L155)
 
 ___
 
 ### connected
 
-• `get` **connected**(): `boolean`
+`get` **connected**(): `boolean`
 
 #### Returns
 
@@ -292,13 +234,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:171](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L171)
+[packages/mesh/mesh-protocol/src/protocol.ts:171](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L171)
 
 ___
 
 ### extensionNames
 
-• `get` **extensionNames**(): `string`[]
+`get` **extensionNames**(): `string`[]
 
 #### Returns
 
@@ -306,13 +248,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L163)
+[packages/mesh/mesh-protocol/src/protocol.ts:163](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L163)
 
 ___
 
 ### extensions
 
-• `get` **extensions**(): [`Extension`](dxos_mesh_protocol.Extension.md)[]
+`get` **extensions**(): [`Extension`](dxos_mesh_protocol.Extension.md)[]
 
 #### Returns
 
@@ -320,13 +262,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:159](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L159)
+[packages/mesh/mesh-protocol/src/protocol.ts:159](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L159)
 
 ___
 
 ### id
 
-• `get` **id**(): `any`
+`get` **id**(): `any`
 
 #### Returns
 
@@ -334,13 +276,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:147](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L147)
+[packages/mesh/mesh-protocol/src/protocol.ts:147](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L147)
 
 ___
 
 ### initiator
 
-• `get` **initiator**(): `boolean`
+`get` **initiator**(): `boolean`
 
 #### Returns
 
@@ -348,13 +290,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:175](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L175)
+[packages/mesh/mesh-protocol/src/protocol.ts:175](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L175)
 
 ___
 
 ### stream
 
-• `get` **stream**(): `ProtocolStream`
+`get` **stream**(): `ProtocolStream`
 
 #### Returns
 
@@ -362,13 +304,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:151](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L151)
+[packages/mesh/mesh-protocol/src/protocol.ts:151](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L151)
 
 ___
 
 ### streamOptions
 
-• `get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamCtorOpts`
+`get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamCtorOpts`
 
 #### Returns
 
@@ -376,13 +318,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:167](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L167)
+[packages/mesh/mesh-protocol/src/protocol.ts:167](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L167)
 
 ## Methods
 
 ### \_extensionHandler
 
-▸ `Private` **_extensionHandler**(`name`, `message`): `void`
+`Private` **_extensionHandler**(`name`, `message`): `void`
 
 Handles extension messages.
 
@@ -399,13 +341,13 @@ Handles extension messages.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:386](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L386)
+[packages/mesh/mesh-protocol/src/protocol.ts:386](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L386)
 
 ___
 
 ### \_handshakeExtensions
 
-▸ `Private` **_handshakeExtensions**(): `Promise`<`void`\>
+`Private` **_handshakeExtensions**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -413,13 +355,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:321](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L321)
+[packages/mesh/mesh-protocol/src/protocol.ts:321](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L321)
 
 ___
 
 ### \_initExtensions
 
-▸ `Private` **_initExtensions**(`userSession?`): `Promise`<`void`\>
+`Private` **_initExtensions**(`userSession?`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -433,13 +375,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:304](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L304)
+[packages/mesh/mesh-protocol/src/protocol.ts:304](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L304)
 
 ___
 
 ### \_openConnection
 
-▸ `Private` **_openConnection**(): `void`
+`Private` **_openConnection**(): `void`
 
 #### Returns
 
@@ -447,13 +389,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:348](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L348)
+[packages/mesh/mesh-protocol/src/protocol.ts:348](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L348)
 
 ___
 
 ### \_openExtensions
 
-▸ `Private` **_openExtensions**(): `Promise`<`void`\>
+`Private` **_openExtensions**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -461,13 +403,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:295](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L295)
+[packages/mesh/mesh-protocol/src/protocol.ts:295](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L295)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -475,13 +417,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:271](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L271)
+[packages/mesh/mesh-protocol/src/protocol.ts:271](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L271)
 
 ___
 
 ### getContext
 
-▸ **getContext**(): `any`
+**getContext**(): `any`
 
 Get local context.
 
@@ -491,13 +433,13 @@ Get local context.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:202](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L202)
+[packages/mesh/mesh-protocol/src/protocol.ts:202](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L202)
 
 ___
 
 ### getExtension
 
-▸ **getExtension**(`name`): `undefined` \| [`Extension`](dxos_mesh_protocol.Extension.md)
+**getExtension**(`name`): `undefined` \| [`Extension`](dxos_mesh_protocol.Extension.md)
 
 Returns the extension by name.
 
@@ -513,13 +455,13 @@ Returns the extension by name.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:228](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L228)
+[packages/mesh/mesh-protocol/src/protocol.ts:228](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L228)
 
 ___
 
 ### getSession
 
-▸ **getSession**(): ``null`` \| `Record`<`string`, `any`\>
+**getSession**(): ``null`` \| `Record`<`string`, `any`\>
 
 Get remote session data.
 
@@ -529,13 +471,13 @@ Get remote session data.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:182](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L182)
+[packages/mesh/mesh-protocol/src/protocol.ts:182](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L182)
 
 ___
 
 ### init
 
-▸ **init**(): [`Protocol`](dxos_mesh_protocol.Protocol.md)
+**init**(): [`Protocol`](dxos_mesh_protocol.Protocol.md)
 
 #### Returns
 
@@ -543,13 +485,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:246](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L246)
+[packages/mesh/mesh-protocol/src/protocol.ts:246](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L246)
 
 ___
 
 ### open
 
-▸ **open**(): `Promise`<`void`\>
+**open**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -557,13 +499,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:255](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L255)
+[packages/mesh/mesh-protocol/src/protocol.ts:255](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L255)
 
 ___
 
 ### setContext
 
-▸ **setContext**(`context`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
+**setContext**(`context`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
 
 Set local context.
 
@@ -579,13 +521,13 @@ Set local context.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:193](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L193)
+[packages/mesh/mesh-protocol/src/protocol.ts:193](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L193)
 
 ___
 
 ### setExtension
 
-▸ **setExtension**(`extension`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
+**setExtension**(`extension`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
 
 Sets the named extension.
 
@@ -601,13 +543,13 @@ Sets the named extension.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:209](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L209)
+[packages/mesh/mesh-protocol/src/protocol.ts:209](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L209)
 
 ___
 
 ### setExtensions
 
-▸ **setExtensions**(`extensions`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
+**setExtensions**(`extensions`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
 
 Sets the set of extensions.
 
@@ -623,13 +565,13 @@ Sets the set of extensions.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:219](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L219)
+[packages/mesh/mesh-protocol/src/protocol.ts:219](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L219)
 
 ___
 
 ### setHandshakeHandler
 
-▸ **setHandshakeHandler**(`handler`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
+**setHandshakeHandler**(`handler`): [`Protocol`](dxos_mesh_protocol.Protocol.md)
 
 Set protocol handshake handler.
 
@@ -645,13 +587,13 @@ Set protocol handshake handler.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:235](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L235)
+[packages/mesh/mesh-protocol/src/protocol.ts:235](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L235)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -659,13 +601,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L138)
+[packages/mesh/mesh-protocol/src/protocol.ts:138](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L138)
 
 ___
 
 ### waitForHandshake
 
-▸ **waitForHandshake**(): `Promise`<`void`\>
+**waitForHandshake**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -673,4 +615,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:288](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/mesh-protocol/src/protocol.ts#L288)
+[packages/mesh/mesh-protocol/src/protocol.ts:288](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/mesh-protocol/src/protocol.ts#L288)

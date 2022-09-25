@@ -12,20 +12,11 @@ Manages state and state transitions vis mutations.
 | `TMutation` |
 | `TSnapshot` |
 
-## Table of contents
-
-### Methods
-
-- [getState](dxos_model_factory.StateMachine.md#getstate)
-- [process](dxos_model_factory.StateMachine.md#process)
-- [reset](dxos_model_factory.StateMachine.md#reset)
-- [snapshot](dxos_model_factory.StateMachine.md#snapshot)
-
 ## Methods
 
 ### getState
 
-▸ **getState**(): `TState`
+**getState**(): `TState`
 
 #### Returns
 
@@ -33,13 +24,13 @@ Manages state and state transitions vis mutations.
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L48)
+[packages/echo/model-factory/src/types.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/types.ts#L48)
 
 ___
 
 ### process
 
-▸ **process**(`mutation`, `meta`): `void`
+**process**(`mutation`, `meta`): `void`
 
 #### Parameters
 
@@ -54,13 +45,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L50)
+[packages/echo/model-factory/src/types.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/types.ts#L50)
 
 ___
 
 ### reset
 
-▸ **reset**(`snapshot`): `void`
+**reset**(`snapshot`): `void`
 
 #### Parameters
 
@@ -74,13 +65,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L49)
+[packages/echo/model-factory/src/types.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/types.ts#L49)
 
 ___
 
 ### snapshot
 
-▸ **snapshot**(): `TSnapshot`
+**snapshot**(): `TSnapshot`
 
 #### Returns
 
@@ -88,4 +79,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L51)
+[packages/echo/model-factory/src/types.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/types.ts#L51)

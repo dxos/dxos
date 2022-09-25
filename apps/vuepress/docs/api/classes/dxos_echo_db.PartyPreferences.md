@@ -6,32 +6,11 @@ Wrapper for party preferences. Preferences can be global or device specific.
 
 Includes party activation state.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyPreferences.md#constructor)
-
-### Accessors
-
-- [isActive](dxos_echo_db.PartyPreferences.md#isactive)
-
-### Methods
-
-- [activate](dxos_echo_db.PartyPreferences.md#activate)
-- [deactivate](dxos_echo_db.PartyPreferences.md#deactivate)
-- [getDevicePreference](dxos_echo_db.PartyPreferences.md#getdevicepreference)
-- [getGlobalPreference](dxos_echo_db.PartyPreferences.md#getglobalpreference)
-- [getLastKnownTitle](dxos_echo_db.PartyPreferences.md#getlastknowntitle)
-- [setDevicePreference](dxos_echo_db.PartyPreferences.md#setdevicepreference)
-- [setGlobalPreference](dxos_echo_db.PartyPreferences.md#setglobalpreference)
-- [setLastKnownTitle](dxos_echo_db.PartyPreferences.md#setlastknowntitle)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyPreferences**(`_preferences`, `_party`)
+**new PartyPreferences**(`_preferences`, `_party`)
 
 #### Parameters
 
@@ -42,13 +21,13 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L22)
+[packages/echo/echo-db/src/parties/party-preferences.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L22)
 
 ## Accessors
 
 ### isActive
 
-• `get` **isActive**(): `boolean`
+`get` **isActive**(): `boolean`
 
 #### Returns
 
@@ -56,13 +35,13 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L29)
+[packages/echo/echo-db/src/parties/party-preferences.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L29)
 
 ## Methods
 
 ### activate
 
-▸ **activate**(`options`): `Promise`<`void`\>
+**activate**(`options`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -76,13 +55,13 @@ Includes party activation state.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L49)
+[packages/echo/echo-db/src/parties/party-preferences.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L49)
 
 ___
 
 ### deactivate
 
-▸ **deactivate**(`options`): `Promise`<`void`\>
+**deactivate**(`options`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -96,13 +75,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L61)
+[packages/echo/echo-db/src/parties/party-preferences.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L61)
 
 ___
 
 ### getDevicePreference
 
-▸ **getDevicePreference**(`property`): `any`
+**getDevicePreference**(`property`): `any`
 
 #### Parameters
 
@@ -116,13 +95,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L45)
+[packages/echo/echo-db/src/parties/party-preferences.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L45)
 
 ___
 
 ### getGlobalPreference
 
-▸ **getGlobalPreference**(`property`): `any`
+**getGlobalPreference**(`property`): `any`
 
 #### Parameters
 
@@ -136,13 +115,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L41)
+[packages/echo/echo-db/src/parties/party-preferences.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L41)
 
 ___
 
 ### getLastKnownTitle
 
-▸ **getLastKnownTitle**(): `any`
+**getLastKnownTitle**(): `any`
 
 #### Returns
 
@@ -150,13 +129,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L74)
+[packages/echo/echo-db/src/parties/party-preferences.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L74)
 
 ___
 
 ### setDevicePreference
 
-▸ **setDevicePreference**(`property`, `value`): `Promise`<`void`\>
+**setDevicePreference**(`property`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -171,13 +150,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L37)
+[packages/echo/echo-db/src/parties/party-preferences.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L37)
 
 ___
 
 ### setGlobalPreference
 
-▸ **setGlobalPreference**(`property`, `value`): `Promise`<`void`\>
+**setGlobalPreference**(`property`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -192,13 +171,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L33)
+[packages/echo/echo-db/src/parties/party-preferences.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L33)
 
 ___
 
 ### setLastKnownTitle
 
-▸ **setLastKnownTitle**(`title`): `Promise`<`void`\>
+**setLastKnownTitle**(`title`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -212,4 +191,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-preferences.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-preferences.ts#L78)
+[packages/echo/echo-db/src/parties/party-preferences.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-preferences.ts#L78)

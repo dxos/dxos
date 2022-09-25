@@ -11,55 +11,11 @@ Process and manage IdentityInfo, DeviceInfo, and other "identity" Party messages
 
   ↳ **`IdentityMessageProcessor`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.IdentityMessageProcessor.md#constructor)
-
-### Properties
-
-- [\_infoMessages](dxos_credentials.IdentityMessageProcessor.md#_infomessages)
-- [\_party](dxos_credentials.IdentityMessageProcessor.md#_party)
-- [captureRejectionSymbol](dxos_credentials.IdentityMessageProcessor.md#capturerejectionsymbol)
-- [captureRejections](dxos_credentials.IdentityMessageProcessor.md#capturerejections)
-- [defaultMaxListeners](dxos_credentials.IdentityMessageProcessor.md#defaultmaxlisteners)
-- [errorMonitor](dxos_credentials.IdentityMessageProcessor.md#errormonitor)
-
-### Accessors
-
-- [infoMessages](dxos_credentials.IdentityMessageProcessor.md#infomessages)
-
-### Methods
-
-- [\_processIdentityInfoMessage](dxos_credentials.IdentityMessageProcessor.md#_processidentityinfomessage)
-- [addListener](dxos_credentials.IdentityMessageProcessor.md#addlistener)
-- [emit](dxos_credentials.IdentityMessageProcessor.md#emit)
-- [eventNames](dxos_credentials.IdentityMessageProcessor.md#eventnames)
-- [getInfo](dxos_credentials.IdentityMessageProcessor.md#getinfo)
-- [getMaxListeners](dxos_credentials.IdentityMessageProcessor.md#getmaxlisteners)
-- [listenerCount](dxos_credentials.IdentityMessageProcessor.md#listenercount)
-- [listeners](dxos_credentials.IdentityMessageProcessor.md#listeners)
-- [off](dxos_credentials.IdentityMessageProcessor.md#off)
-- [on](dxos_credentials.IdentityMessageProcessor.md#on)
-- [once](dxos_credentials.IdentityMessageProcessor.md#once)
-- [prependListener](dxos_credentials.IdentityMessageProcessor.md#prependlistener)
-- [prependOnceListener](dxos_credentials.IdentityMessageProcessor.md#prependoncelistener)
-- [processMessage](dxos_credentials.IdentityMessageProcessor.md#processmessage)
-- [rawListeners](dxos_credentials.IdentityMessageProcessor.md#rawlisteners)
-- [removeAllListeners](dxos_credentials.IdentityMessageProcessor.md#removealllisteners)
-- [removeListener](dxos_credentials.IdentityMessageProcessor.md#removelistener)
-- [setMaxListeners](dxos_credentials.IdentityMessageProcessor.md#setmaxlisteners)
-- [getEventListeners](dxos_credentials.IdentityMessageProcessor.md#geteventlisteners)
-- [listenerCount](dxos_credentials.IdentityMessageProcessor.md#listenercount-1)
-- [on](dxos_credentials.IdentityMessageProcessor.md#on-1)
-- [once](dxos_credentials.IdentityMessageProcessor.md#once-1)
-
 ## Constructors
 
 ### constructor
 
-• **new IdentityMessageProcessor**(`party`)
+**new IdentityMessageProcessor**(`party`)
 
 #### Parameters
 
@@ -73,33 +29,33 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L28)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L28)
 
 ## Properties
 
 ### \_infoMessages
 
-• **\_infoMessages**: `Map`<`string`, `SignedMessage`\>
+ **\_infoMessages**: `Map`<`string`, `SignedMessage`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L26)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L26)
 
 ___
 
 ### \_party
 
-• **\_party**: [`PartyState`](dxos_credentials.PartyState.md)
+ **\_party**: [`PartyState`](dxos_credentials.PartyState.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L23)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L23)
 
 ___
 
 ### captureRejectionSymbol
 
-▪ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
+ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
 
 #### Inherited from
 
@@ -113,7 +69,7 @@ ___
 
 ### captureRejections
 
-▪ `Static` **captureRejections**: `boolean`
+ `Static` **captureRejections**: `boolean`
 
 Sets or gets the default captureRejection value for all emitters.
 
@@ -129,7 +85,7 @@ ___
 
 ### defaultMaxListeners
 
-▪ `Static` **defaultMaxListeners**: `number`
+ `Static` **defaultMaxListeners**: `number`
 
 #### Inherited from
 
@@ -143,7 +99,7 @@ ___
 
 ### errorMonitor
 
-▪ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
+ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
 
 This symbol shall be used to install a listener for only monitoring `'error'`
 events. Listeners installed using this symbol are called before the regular
@@ -165,7 +121,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 ### infoMessages
 
-• `get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
+`get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
 
 Returns a map of SignedMessages used to describe keys. In many cases the contents are enough (see: getInfo)
 but the original message is needed for copying into a new Party, as when an IdentityInfo message is copied
@@ -177,13 +133,13 @@ from the HALO Party to a Party that is being joined.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L42)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L42)
 
 ## Methods
 
 ### \_processIdentityInfoMessage
 
-▸ `Private` **_processIdentityInfoMessage**(`message`): `Promise`<`void`\>
+`Private` **_processIdentityInfoMessage**(`message`): `Promise`<`void`\>
 
 Process an IdentityInfo message.
 
@@ -199,13 +155,13 @@ Process an IdentityInfo message.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L86)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L86)
 
 ___
 
 ### addListener
 
-▸ **addListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**addListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Alias for `emitter.on(eventName, listener)`.
 
@@ -236,7 +192,7 @@ ___
 
 ### emit
 
-▸ **emit**(`eventName`, ...`args`): `boolean`
+**emit**(`eventName`, ...`args`): `boolean`
 
 Synchronously calls each of the listeners registered for the event named`eventName`, in the order they were registered, passing the supplied arguments
 to each.
@@ -303,7 +259,7 @@ ___
 
 ### eventNames
 
-▸ **eventNames**(): (`string` \| `symbol`)[]
+**eventNames**(): (`string` \| `symbol`)[]
 
 Returns an array listing the events for which the emitter has registered
 listeners. The values in the array are strings or `Symbol`s.
@@ -341,7 +297,7 @@ ___
 
 ### getInfo
 
-▸ **getInfo**(`publicKey`): `any`
+**getInfo**(`publicKey`): `any`
 
 Get info for the specified key (if available).
 
@@ -357,13 +313,13 @@ Get info for the specified key (if available).
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L50)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L50)
 
 ___
 
 ### getMaxListeners
 
-▸ **getMaxListeners**(): `number`
+**getMaxListeners**(): `number`
 
 Returns the current max listener value for the `EventEmitter` which is either
 set by `emitter.setMaxListeners(n)` or defaults to [defaultMaxListeners](dxos_credentials.IdentityMessageProcessor.md#defaultmaxlisteners).
@@ -388,7 +344,7 @@ ___
 
 ### listenerCount
 
-▸ **listenerCount**(`eventName`): `number`
+**listenerCount**(`eventName`): `number`
 
 Returns the number of listeners listening to the event named `eventName`.
 
@@ -418,7 +374,7 @@ ___
 
 ### listeners
 
-▸ **listeners**(`eventName`): `Function`[]
+**listeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -456,7 +412,7 @@ ___
 
 ### off
 
-▸ **off**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**off**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Alias for `emitter.removeListener()`.
 
@@ -487,7 +443,7 @@ ___
 
 ### on
 
-▸ **on**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**on**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Adds the `listener` function to the end of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -542,7 +498,7 @@ ___
 
 ### once
 
-▸ **once**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**once**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Adds a **one-time**`listener` function for the event named `eventName`. The
 next time `eventName` is triggered, this listener is removed and then invoked.
@@ -595,7 +551,7 @@ ___
 
 ### prependListener
 
-▸ **prependListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**prependListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Adds the `listener` function to the _beginning_ of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -637,7 +593,7 @@ ___
 
 ### prependOnceListener
 
-▸ **prependOnceListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**prependOnceListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Adds a **one-time**`listener` function for the event named `eventName` to the_beginning_ of the listeners array. The next time `eventName` is triggered, this
 listener is removed, and then invoked.
@@ -677,7 +633,7 @@ ___
 
 ### processMessage
 
-▸ **processMessage**(`message`): `Promise`<`void`\>
+**processMessage**(`message`): `Promise`<`void`\>
 
 Process 'info' message (IdentityInfo, DeviceInfo, etc.)
 
@@ -693,13 +649,13 @@ Process 'info' message (IdentityInfo, DeviceInfo, etc.)
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/identity-message-processor.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/identity/identity-message-processor.ts#L63)
+[packages/halo/credentials/src/identity/identity-message-processor.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/identity/identity-message-processor.ts#L63)
 
 ___
 
 ### rawListeners
 
-▸ **rawListeners**(`eventName`): `Function`[]
+**rawListeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`,
 including any wrappers (such as those created by `.once()`).
@@ -754,7 +710,7 @@ ___
 
 ### removeAllListeners
 
-▸ **removeAllListeners**(`event?`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**removeAllListeners**(`event?`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Removes all listeners, or those of the specified `eventName`.
 
@@ -790,7 +746,7 @@ ___
 
 ### removeListener
 
-▸ **removeListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**removeListener**(`eventName`, `listener`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 Removes the specified `listener` from the listener array for the event named`eventName`.
 
@@ -896,7 +852,7 @@ ___
 
 ### setMaxListeners
 
-▸ **setMaxListeners**(`n`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+**setMaxListeners**(`n`): [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 By default `EventEmitter`s will print a warning if more than `10` listeners are
 added for a particular event. This is a useful default that helps finding
@@ -931,7 +887,7 @@ ___
 
 ### getEventListeners
 
-▸ `Static` **getEventListeners**(`emitter`, `name`): `Function`[]
+`Static` **getEventListeners**(`emitter`, `name`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -985,7 +941,7 @@ ___
 
 ### listenerCount
 
-▸ `Static` **listenerCount**(`emitter`, `eventName`): `number`
+`Static` **listenerCount**(`emitter`, `eventName`): `number`
 
 A class method that returns the number of listeners for the given `eventName`registered on the given `emitter`.
 
@@ -1029,7 +985,7 @@ ___
 
 ### on
 
-▸ `Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
+`Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
 
 ```js
 const { on, EventEmitter } = require('events');
@@ -1115,7 +1071,7 @@ ___
 
 ### once
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 Creates a `Promise` that is fulfilled when the `EventEmitter` emits the given
 event or that is rejected if the `EventEmitter` emits `'error'` while waiting.
@@ -1221,7 +1177,7 @@ EventEmitter.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 #### Parameters
 

@@ -16,72 +16,11 @@ Wriable stream that collects objects (e.g., for testing).
 
   ↳ **`WritableArray`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_feed_store.WritableArray.md#constructor)
-
-### Properties
-
-- [\_objects](dxos_feed_store.WritableArray.md#_objects)
-- [destroyed](dxos_feed_store.WritableArray.md#destroyed)
-- [writable](dxos_feed_store.WritableArray.md#writable)
-- [writableCorked](dxos_feed_store.WritableArray.md#writablecorked)
-- [writableEnded](dxos_feed_store.WritableArray.md#writableended)
-- [writableFinished](dxos_feed_store.WritableArray.md#writablefinished)
-- [writableHighWaterMark](dxos_feed_store.WritableArray.md#writablehighwatermark)
-- [writableLength](dxos_feed_store.WritableArray.md#writablelength)
-- [writableObjectMode](dxos_feed_store.WritableArray.md#writableobjectmode)
-- [captureRejectionSymbol](dxos_feed_store.WritableArray.md#capturerejectionsymbol)
-- [captureRejections](dxos_feed_store.WritableArray.md#capturerejections)
-- [defaultMaxListeners](dxos_feed_store.WritableArray.md#defaultmaxlisteners)
-- [errorMonitor](dxos_feed_store.WritableArray.md#errormonitor)
-
-### Accessors
-
-- [objects](dxos_feed_store.WritableArray.md#objects)
-
-### Methods
-
-- [\_construct](dxos_feed_store.WritableArray.md#_construct)
-- [\_destroy](dxos_feed_store.WritableArray.md#_destroy)
-- [\_final](dxos_feed_store.WritableArray.md#_final)
-- [\_write](dxos_feed_store.WritableArray.md#_write)
-- [\_writev](dxos_feed_store.WritableArray.md#_writev)
-- [addListener](dxos_feed_store.WritableArray.md#addlistener)
-- [clear](dxos_feed_store.WritableArray.md#clear)
-- [cork](dxos_feed_store.WritableArray.md#cork)
-- [destroy](dxos_feed_store.WritableArray.md#destroy)
-- [emit](dxos_feed_store.WritableArray.md#emit)
-- [end](dxos_feed_store.WritableArray.md#end)
-- [eventNames](dxos_feed_store.WritableArray.md#eventnames)
-- [getMaxListeners](dxos_feed_store.WritableArray.md#getmaxlisteners)
-- [listenerCount](dxos_feed_store.WritableArray.md#listenercount)
-- [listeners](dxos_feed_store.WritableArray.md#listeners)
-- [off](dxos_feed_store.WritableArray.md#off)
-- [on](dxos_feed_store.WritableArray.md#on)
-- [once](dxos_feed_store.WritableArray.md#once)
-- [pipe](dxos_feed_store.WritableArray.md#pipe)
-- [prependListener](dxos_feed_store.WritableArray.md#prependlistener)
-- [prependOnceListener](dxos_feed_store.WritableArray.md#prependoncelistener)
-- [rawListeners](dxos_feed_store.WritableArray.md#rawlisteners)
-- [removeAllListeners](dxos_feed_store.WritableArray.md#removealllisteners)
-- [removeListener](dxos_feed_store.WritableArray.md#removelistener)
-- [setDefaultEncoding](dxos_feed_store.WritableArray.md#setdefaultencoding)
-- [setMaxListeners](dxos_feed_store.WritableArray.md#setmaxlisteners)
-- [uncork](dxos_feed_store.WritableArray.md#uncork)
-- [write](dxos_feed_store.WritableArray.md#write)
-- [getEventListeners](dxos_feed_store.WritableArray.md#geteventlisteners)
-- [listenerCount](dxos_feed_store.WritableArray.md#listenercount-1)
-- [on](dxos_feed_store.WritableArray.md#on-1)
-- [once](dxos_feed_store.WritableArray.md#once-1)
-
 ## Constructors
 
 ### constructor
 
-• **new WritableArray**<`T`\>()
+**new WritableArray**<`T`\>()
 
 #### Type parameters
 
@@ -95,23 +34,23 @@ Writable.constructor
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/stream.ts#L78)
+[packages/echo/feed-store/src/stream.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/stream.ts#L78)
 
 ## Properties
 
 ### \_objects
 
-• **\_objects**: `T`[] = `[]`
+ **\_objects**: `T`[] = `[]`
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/stream.ts#L76)
+[packages/echo/feed-store/src/stream.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/stream.ts#L76)
 
 ___
 
 ### destroyed
 
-• **destroyed**: `boolean`
+ **destroyed**: `boolean`
 
 Is `true` after `writable.destroy()` has been called.
 
@@ -131,7 +70,7 @@ ___
 
 ### writable
 
-• `Readonly` **writable**: `boolean`
+ `Readonly` **writable**: `boolean`
 
 Is `true` if it is safe to call `writable.write()`, which means
 the stream has not been destroyed, errored or ended.
@@ -152,7 +91,7 @@ ___
 
 ### writableCorked
 
-• `Readonly` **writableCorked**: `number`
+ `Readonly` **writableCorked**: `number`
 
 Number of times `writable.uncork()` needs to be
 called in order to fully uncork the stream.
@@ -173,7 +112,7 @@ ___
 
 ### writableEnded
 
-• `Readonly` **writableEnded**: `boolean`
+ `Readonly` **writableEnded**: `boolean`
 
 Is `true` after `writable.end()` has been called. This property
 does not indicate whether the data has been flushed, for this use `writable.writableFinished` instead.
@@ -194,7 +133,7 @@ ___
 
 ### writableFinished
 
-• `Readonly` **writableFinished**: `boolean`
+ `Readonly` **writableFinished**: `boolean`
 
 Is set to `true` immediately before the `'finish'` event is emitted.
 
@@ -214,7 +153,7 @@ ___
 
 ### writableHighWaterMark
 
-• `Readonly` **writableHighWaterMark**: `number`
+ `Readonly` **writableHighWaterMark**: `number`
 
 Return the value of `highWaterMark` passed when creating this `Writable`.
 
@@ -234,7 +173,7 @@ ___
 
 ### writableLength
 
-• `Readonly` **writableLength**: `number`
+ `Readonly` **writableLength**: `number`
 
 This property contains the number of bytes (or objects) in the queue
 ready to be written. The value provides introspection data regarding
@@ -256,7 +195,7 @@ ___
 
 ### writableObjectMode
 
-• `Readonly` **writableObjectMode**: `boolean`
+ `Readonly` **writableObjectMode**: `boolean`
 
 Getter for the property `objectMode` of a given `Writable` stream.
 
@@ -276,7 +215,7 @@ ___
 
 ### captureRejectionSymbol
 
-▪ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_feed_store.WritableArray.md#capturerejectionsymbol)
+ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_feed_store.WritableArray.md#capturerejectionsymbol)
 
 #### Inherited from
 
@@ -290,7 +229,7 @@ ___
 
 ### captureRejections
 
-▪ `Static` **captureRejections**: `boolean`
+ `Static` **captureRejections**: `boolean`
 
 Sets or gets the default captureRejection value for all emitters.
 
@@ -306,7 +245,7 @@ ___
 
 ### defaultMaxListeners
 
-▪ `Static` **defaultMaxListeners**: `number`
+ `Static` **defaultMaxListeners**: `number`
 
 #### Inherited from
 
@@ -320,7 +259,7 @@ ___
 
 ### errorMonitor
 
-▪ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_feed_store.WritableArray.md#errormonitor)
+ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_feed_store.WritableArray.md#errormonitor)
 
 This symbol shall be used to install a listener for only monitoring `'error'`
 events. Listeners installed using this symbol are called before the regular
@@ -342,7 +281,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 ### objects
 
-• `get` **objects**(): `T`[]
+`get` **objects**(): `T`[]
 
 #### Returns
 
@@ -350,13 +289,13 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/stream.ts#L86)
+[packages/echo/feed-store/src/stream.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/stream.ts#L86)
 
 ## Methods
 
 ### \_construct
 
-▸ `Optional` **_construct**(`callback`): `void`
+`Optional` **_construct**(`callback`): `void`
 
 #### Parameters
 
@@ -380,7 +319,7 @@ ___
 
 ### \_destroy
 
-▸ **_destroy**(`error`, `callback`): `void`
+**_destroy**(`error`, `callback`): `void`
 
 #### Parameters
 
@@ -405,7 +344,7 @@ ___
 
 ### \_final
 
-▸ **_final**(`callback`): `void`
+**_final**(`callback`): `void`
 
 #### Parameters
 
@@ -429,7 +368,7 @@ ___
 
 ### \_write
 
-▸ **_write**(`object`, `_`, `next`): `void`
+**_write**(`object`, `_`, `next`): `void`
 
 #### Parameters
 
@@ -449,13 +388,13 @@ Writable.\_write
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/stream.ts#L90)
+[packages/echo/feed-store/src/stream.ts:90](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/stream.ts#L90)
 
 ___
 
 ### \_writev
 
-▸ `Optional` **_writev**(`chunks`, `callback`): `void`
+`Optional` **_writev**(`chunks`, `callback`): `void`
 
 #### Parameters
 
@@ -480,7 +419,7 @@ ___
 
 ### addListener
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 Event emitter
 The defined events on documents including:
@@ -510,7 +449,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:721
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -531,7 +470,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:722
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -552,7 +491,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:723
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -573,7 +512,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:724
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -594,7 +533,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:725
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -615,7 +554,7 @@ Writable.addListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:726
 
-▸ **addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**addListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -640,7 +579,7 @@ ___
 
 ### clear
 
-▸ **clear**(): `void`
+**clear**(): `void`
 
 #### Returns
 
@@ -648,13 +587,13 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/stream.ts#L82)
+[packages/echo/feed-store/src/stream.ts:82](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/stream.ts#L82)
 
 ___
 
 ### cork
 
-▸ **cork**(): `void`
+**cork**(): `void`
 
 The `writable.cork()` method forces all written data to be buffered in memory.
 The buffered data will be flushed when either the [uncork](dxos_feed_store.WritableArray.md#uncork) or [end](dxos_feed_store.WritableArray.md#end) methods are called.
@@ -688,7 +627,7 @@ ___
 
 ### destroy
 
-▸ **destroy**(`error?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**destroy**(`error?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 Destroy the stream. Optionally emit an `'error'` event, and emit a `'close'`event (unless `emitClose` is set to `false`). After this call, the writable
 stream has ended and subsequent calls to `write()` or `end()` will result in
@@ -729,7 +668,7 @@ ___
 
 ### emit
 
-▸ **emit**(`event`): `boolean`
+**emit**(`event`): `boolean`
 
 #### Parameters
 
@@ -749,7 +688,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:728
 
-▸ **emit**(`event`): `boolean`
+**emit**(`event`): `boolean`
 
 #### Parameters
 
@@ -769,7 +708,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:729
 
-▸ **emit**(`event`, `err`): `boolean`
+**emit**(`event`, `err`): `boolean`
 
 #### Parameters
 
@@ -790,7 +729,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:730
 
-▸ **emit**(`event`): `boolean`
+**emit**(`event`): `boolean`
 
 #### Parameters
 
@@ -810,7 +749,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:731
 
-▸ **emit**(`event`, `src`): `boolean`
+**emit**(`event`, `src`): `boolean`
 
 #### Parameters
 
@@ -831,7 +770,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:732
 
-▸ **emit**(`event`, `src`): `boolean`
+**emit**(`event`, `src`): `boolean`
 
 #### Parameters
 
@@ -852,7 +791,7 @@ Writable.emit
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:733
 
-▸ **emit**(`event`, ...`args`): `boolean`
+**emit**(`event`, ...`args`): `boolean`
 
 #### Parameters
 
@@ -877,7 +816,7 @@ ___
 
 ### end
 
-▸ **end**(`cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**end**(`cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 Calling the `writable.end()` method signals that no more data will be written
 to the `Writable`. The optional `chunk` and `encoding` arguments allow one
@@ -917,7 +856,7 @@ Writable.end
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:642
 
-▸ **end**(`chunk`, `cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**end**(`chunk`, `cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -938,7 +877,7 @@ Writable.end
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:643
 
-▸ **end**(`chunk`, `encoding`, `cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**end**(`chunk`, `encoding`, `cb?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -964,7 +903,7 @@ ___
 
 ### eventNames
 
-▸ **eventNames**(): (`string` \| `symbol`)[]
+**eventNames**(): (`string` \| `symbol`)[]
 
 Returns an array listing the events for which the emitter has registered
 listeners. The values in the array are strings or `Symbol`s.
@@ -1002,7 +941,7 @@ ___
 
 ### getMaxListeners
 
-▸ **getMaxListeners**(): `number`
+**getMaxListeners**(): `number`
 
 Returns the current max listener value for the `EventEmitter` which is either
 set by `emitter.setMaxListeners(n)` or defaults to [defaultMaxListeners](dxos_feed_store.WritableArray.md#defaultmaxlisteners).
@@ -1027,7 +966,7 @@ ___
 
 ### listenerCount
 
-▸ **listenerCount**(`eventName`): `number`
+**listenerCount**(`eventName`): `number`
 
 Returns the number of listeners listening to the event named `eventName`.
 
@@ -1057,7 +996,7 @@ ___
 
 ### listeners
 
-▸ **listeners**(`eventName`): `Function`[]
+**listeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -1095,7 +1034,7 @@ ___
 
 ### off
 
-▸ **off**(`eventName`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**off**(`eventName`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 Alias for `emitter.removeListener()`.
 
@@ -1126,7 +1065,7 @@ ___
 
 ### on
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1147,7 +1086,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:735
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1168,7 +1107,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:736
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1189,7 +1128,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:737
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1210,7 +1149,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:738
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1231,7 +1170,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:739
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1252,7 +1191,7 @@ Writable.on
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:740
 
-▸ **on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**on**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1277,7 +1216,7 @@ ___
 
 ### once
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1298,7 +1237,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:742
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1319,7 +1258,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:743
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1340,7 +1279,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:744
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1361,7 +1300,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:745
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1382,7 +1321,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:746
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1403,7 +1342,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:747
 
-▸ **once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**once**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1428,7 +1367,7 @@ ___
 
 ### pipe
 
-▸ **pipe**<`T`\>(`destination`, `options?`): `T`
+**pipe**<`T`\>(`destination`, `options?`): `T`
 
 #### Type parameters
 
@@ -1460,7 +1399,7 @@ ___
 
 ### prependListener
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1481,7 +1420,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:749
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1502,7 +1441,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:750
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1523,7 +1462,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:751
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1544,7 +1483,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:752
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1565,7 +1504,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:753
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1586,7 +1525,7 @@ Writable.prependListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:754
 
-▸ **prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1611,7 +1550,7 @@ ___
 
 ### prependOnceListener
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1632,7 +1571,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:756
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1653,7 +1592,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:757
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1674,7 +1613,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:758
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1695,7 +1634,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:759
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1716,7 +1655,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:760
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1737,7 +1676,7 @@ Writable.prependOnceListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:761
 
-▸ **prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**prependOnceListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1762,7 +1701,7 @@ ___
 
 ### rawListeners
 
-▸ **rawListeners**(`eventName`): `Function`[]
+**rawListeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`,
 including any wrappers (such as those created by `.once()`).
@@ -1817,7 +1756,7 @@ ___
 
 ### removeAllListeners
 
-▸ **removeAllListeners**(`event?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeAllListeners**(`event?`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 Removes all listeners, or those of the specified `eventName`.
 
@@ -1853,7 +1792,7 @@ ___
 
 ### removeListener
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1874,7 +1813,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:763
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1895,7 +1834,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:764
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1916,7 +1855,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:765
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1937,7 +1876,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:766
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1958,7 +1897,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:767
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -1979,7 +1918,7 @@ Writable.removeListener
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:768
 
-▸ **removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**removeListener**(`event`, `listener`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 #### Parameters
 
@@ -2004,7 +1943,7 @@ ___
 
 ### setDefaultEncoding
 
-▸ **setDefaultEncoding**(`encoding`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**setDefaultEncoding**(`encoding`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 The `writable.setDefaultEncoding()` method sets the default `encoding` for a `Writable` stream.
 
@@ -2034,7 +1973,7 @@ ___
 
 ### setMaxListeners
 
-▸ **setMaxListeners**(`n`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
+**setMaxListeners**(`n`): [`WritableArray`](dxos_feed_store.WritableArray.md)<`T`\>
 
 By default `EventEmitter`s will print a warning if more than `10` listeners are
 added for a particular event. This is a useful default that helps finding
@@ -2069,7 +2008,7 @@ ___
 
 ### uncork
 
-▸ **uncork**(): `void`
+**uncork**(): `void`
 
 The `writable.uncork()` method flushes all data buffered since [cork](dxos_feed_store.WritableArray.md#cork) was called.
 
@@ -2122,7 +2061,7 @@ ___
 
 ### write
 
-▸ **write**(`chunk`, `callback?`): `boolean`
+**write**(`chunk`, `callback?`): `boolean`
 
 The `writable.write()` method writes some data to the stream, and calls the
 supplied `callback` once the data has been fully handled. If an error
@@ -2198,7 +2137,7 @@ Writable.write
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/stream.d.ts:612
 
-▸ **write**(`chunk`, `encoding`, `callback?`): `boolean`
+**write**(`chunk`, `encoding`, `callback?`): `boolean`
 
 #### Parameters
 
@@ -2224,7 +2163,7 @@ ___
 
 ### getEventListeners
 
-▸ `Static` **getEventListeners**(`emitter`, `name`): `Function`[]
+`Static` **getEventListeners**(`emitter`, `name`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -2278,7 +2217,7 @@ ___
 
 ### listenerCount
 
-▸ `Static` **listenerCount**(`emitter`, `eventName`): `number`
+`Static` **listenerCount**(`emitter`, `eventName`): `number`
 
 A class method that returns the number of listeners for the given `eventName`registered on the given `emitter`.
 
@@ -2322,7 +2261,7 @@ ___
 
 ### on
 
-▸ `Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
+`Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
 
 ```js
 const { on, EventEmitter } = require('events');
@@ -2408,7 +2347,7 @@ ___
 
 ### once
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 Creates a `Promise` that is fulfilled when the `EventEmitter` emits the given
 event or that is rejected if the `EventEmitter` emits `'error'` while waiting.
@@ -2514,7 +2453,7 @@ Writable.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 #### Parameters
 

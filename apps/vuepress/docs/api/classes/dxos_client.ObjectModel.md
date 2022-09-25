@@ -14,46 +14,11 @@ Object mutation model.
 
 - `ObjectProperties`
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.ObjectModel.md#constructor)
-
-### Properties
-
-- [\_getState](dxos_client.ObjectModel.md#_getstate)
-- [update](dxos_client.ObjectModel.md#update)
-- [meta](dxos_client.ObjectModel.md#meta)
-
-### Accessors
-
-- [itemId](dxos_client.ObjectModel.md#itemid)
-- [modelMeta](dxos_client.ObjectModel.md#modelmeta)
-- [readOnly](dxos_client.ObjectModel.md#readonly)
-
-### Methods
-
-- [addToSet](dxos_client.ObjectModel.md#addtoset)
-- [builder](dxos_client.ObjectModel.md#builder)
-- [get](dxos_client.ObjectModel.md#get)
-- [getProperty](dxos_client.ObjectModel.md#getproperty)
-- [pushToArray](dxos_client.ObjectModel.md#pushtoarray)
-- [removeFromSet](dxos_client.ObjectModel.md#removefromset)
-- [set](dxos_client.ObjectModel.md#set)
-- [setProperties](dxos_client.ObjectModel.md#setproperties)
-- [setProperty](dxos_client.ObjectModel.md#setproperty)
-- [subscribe](dxos_client.ObjectModel.md#subscribe)
-- [toJSON](dxos_client.ObjectModel.md#tojson)
-- [toObject](dxos_client.ObjectModel.md#toobject)
-- [toString](dxos_client.ObjectModel.md#tostring)
-- [write](dxos_client.ObjectModel.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new ObjectModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
+**new ObjectModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
 
 #### Parameters
 
@@ -76,11 +41,11 @@ packages/echo/model-factory/dist/src/model.d.ts:20
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => `ObjectModelState`
+ `Protected` `Readonly` **\_getState**: () => `ObjectModelState`
 
 #### Type declaration
 
-▸ (): `ObjectModelState`
+(): `ObjectModelState`
 
 ##### Returns
 
@@ -98,7 +63,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<`ObjectModelState`, `ObjectMutationSet`\>\>
+ `Readonly` **update**: `Event`<`Model`<`ObjectModelState`, `ObjectMutationSet`\>\>
 
 #### Inherited from
 
@@ -112,7 +77,7 @@ ___
 
 ### meta
 
-▪ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
+ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
 
 #### Defined in
 
@@ -122,7 +87,7 @@ packages/echo/object-model/dist/src/object-model.d.ts:25
 
 ### itemId
 
-• `get` **itemId**(): `string`
+`get` **itemId**(): `string`
 
 #### Returns
 
@@ -140,7 +105,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -158,7 +123,7 @@ ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -176,7 +141,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 ### addToSet
 
-▸ **addToSet**(`key`, `value`): `Promise`<`void`\>
+**addToSet**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -197,7 +162,7 @@ ___
 
 ### builder
 
-▸ **builder**(): `MutationBuilder`
+**builder**(): `MutationBuilder`
 
 #### Returns
 
@@ -211,7 +176,7 @@ ___
 
 ### get
 
-▸ **get**(`key`, `defaultValue?`): `any`
+**get**(`key`, `defaultValue?`): `any`
 
 #### Parameters
 
@@ -236,7 +201,7 @@ ___
 
 ### getProperty
 
-▸ **getProperty**(`key`, `defaultValue?`): `any`
+**getProperty**(`key`, `defaultValue?`): `any`
 
 **`Deprecated`**
 
@@ -259,7 +224,7 @@ ___
 
 ### pushToArray
 
-▸ **pushToArray**(`key`, `value`): `Promise`<`void`\>
+**pushToArray**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -280,7 +245,7 @@ ___
 
 ### removeFromSet
 
-▸ **removeFromSet**(`key`, `value`): `Promise`<`void`\>
+**removeFromSet**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -301,7 +266,7 @@ ___
 
 ### set
 
-▸ **set**(`key`, `value`): `Promise`<`void`\>
+**set**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -326,7 +291,7 @@ ___
 
 ### setProperties
 
-▸ **setProperties**(`properties`): `Promise`<`void`\>
+**setProperties**(`properties`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -348,7 +313,7 @@ ___
 
 ### setProperty
 
-▸ **setProperty**(`key`, `value`): `Promise`<`void`\>
+**setProperty**(`key`, `value`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -371,7 +336,7 @@ ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 #### Parameters
 
@@ -383,7 +348,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -401,7 +366,7 @@ ___
 
 ### toJSON
 
-▸ **toJSON**(): `Object`
+**toJSON**(): `Object`
 
 #### Returns
 
@@ -424,7 +389,7 @@ ___
 
 ### toObject
 
-▸ **toObject**(): `ObjectModelState`
+**toObject**(): `ObjectModelState`
 
 Returns an immutable object.
 
@@ -440,7 +405,7 @@ ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -458,7 +423,7 @@ ___
 
 ### write
 
-▸ `Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
+`Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
 
 Writes the raw mutation to the output stream.
 

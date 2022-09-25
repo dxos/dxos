@@ -6,41 +6,11 @@ Top-level class manages the complete life-cycle of parties.
 
 `ECHO` => `PartyManager` => `DataParty` => `PartyCore`
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyManager.md#constructor)
-
-### Properties
-
-- [\_open](dxos_echo_db.PartyManager.md#_open)
-- [\_parties](dxos_echo_db.PartyManager.md#_parties)
-- [update](dxos_echo_db.PartyManager.md#update)
-
-### Accessors
-
-- [isOpen](dxos_echo_db.PartyManager.md#isopen)
-- [parties](dxos_echo_db.PartyManager.md#parties)
-
-### Methods
-
-- [\_recordPartyJoining](dxos_echo_db.PartyManager.md#_recordpartyjoining)
-- [\_setParty](dxos_echo_db.PartyManager.md#_setparty)
-- [\_updateContactList](dxos_echo_db.PartyManager.md#_updatecontactlist)
-- [\_updatePartyTitle](dxos_echo_db.PartyManager.md#_updatepartytitle)
-- [addParty](dxos_echo_db.PartyManager.md#addparty)
-- [cloneParty](dxos_echo_db.PartyManager.md#cloneparty)
-- [close](dxos_echo_db.PartyManager.md#close)
-- [createParty](dxos_echo_db.PartyManager.md#createparty)
-- [joinParty](dxos_echo_db.PartyManager.md#joinparty)
-- [open](dxos_echo_db.PartyManager.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyManager**(`_metadataStore`, `_snapshotStore`, `_identityProvider`, `_partyFactory`)
+**new PartyManager**(`_metadataStore`, `_snapshotStore`, `_identityProvider`, `_partyFactory`)
 
 #### Parameters
 
@@ -53,43 +23,43 @@ Top-level class manages the complete life-cycle of parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L48)
+[packages/echo/echo-db/src/parties/party-manager.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L48)
 
 ## Properties
 
 ### \_open
 
-• `Private` **\_open**: `boolean` = `false`
+ `Private` **\_open**: `boolean` = `false`
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L46)
+[packages/echo/echo-db/src/parties/party-manager.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L46)
 
 ___
 
 ### \_parties
 
-• `Private` `Readonly` **\_parties**: `ComplexMap`<`PublicKey`, [`DataParty`](dxos_echo_db.DataParty.md)\>
+ `Private` `Readonly` **\_parties**: `ComplexMap`<`PublicKey`, [`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L44)
+[packages/echo/echo-db/src/parties/party-manager.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L44)
 
 ___
 
 ### update
 
-• `Readonly` **update**: `Event`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+ `Readonly` **update**: `Event`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L41)
+[packages/echo/echo-db/src/parties/party-manager.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L41)
 
 ## Accessors
 
 ### isOpen
 
-• `get` **isOpen**(): `boolean`
+`get` **isOpen**(): `boolean`
 
 #### Returns
 
@@ -97,13 +67,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L55)
+[packages/echo/echo-db/src/parties/party-manager.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L55)
 
 ___
 
 ### parties
 
-• `get` **parties**(): [`DataParty`](dxos_echo_db.DataParty.md)[]
+`get` **parties**(): [`DataParty`](dxos_echo_db.DataParty.md)[]
 
 #### Returns
 
@@ -111,13 +81,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L59)
+[packages/echo/echo-db/src/parties/party-manager.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L59)
 
 ## Methods
 
 ### \_recordPartyJoining
 
-▸ `Private` **_recordPartyJoining**(`party`): `Promise`<`void`\>
+`Private` **_recordPartyJoining**(`party`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -131,13 +101,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:322](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L322)
+[packages/echo/echo-db/src/parties/party-manager.ts:322](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L322)
 
 ___
 
 ### \_setParty
 
-▸ `Private` **_setParty**(`party`): `void`
+`Private` **_setParty**(`party`): `void`
 
 #### Parameters
 
@@ -151,13 +121,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:233](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L233)
+[packages/echo/echo-db/src/parties/party-manager.ts:233](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L233)
 
 ___
 
 ### \_updateContactList
 
-▸ `Private` **_updateContactList**(`party`): `Promise`<`void`\>
+`Private` **_updateContactList**(`party`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -171,13 +141,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:282](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L282)
+[packages/echo/echo-db/src/parties/party-manager.ts:282](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L282)
 
 ___
 
 ### \_updatePartyTitle
 
-▸ `Private` **_updatePartyTitle**(`party`): `Promise`<`void`\>
+`Private` **_updatePartyTitle**(`party`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -191,13 +161,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:267](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L267)
+[packages/echo/echo-db/src/parties/party-manager.ts:267](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L267)
 
 ___
 
 ### addParty
 
-▸ **addParty**(`partyKey`, `genesisFeedKey`): `Promise`<`undefined` \| [`DataParty`](dxos_echo_db.DataParty.md)\>
+**addParty**(`partyKey`, `genesisFeedKey`): `Promise`<`undefined` \| [`DataParty`](dxos_echo_db.DataParty.md)\>
 
 Construct a party object and start replicating with the remote peer that created that party.
 
@@ -214,13 +184,13 @@ Construct a party object and start replicating with the remote peer that created
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L163)
+[packages/echo/echo-db/src/parties/party-manager.ts:163](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L163)
 
 ___
 
 ### cloneParty
 
-▸ **cloneParty**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**cloneParty**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Parameters
 
@@ -234,13 +204,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:211](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L211)
+[packages/echo/echo-db/src/parties/party-manager.ts:211](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L211)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -248,13 +218,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L120)
+[packages/echo/echo-db/src/parties/party-manager.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L120)
 
 ___
 
 ### createParty
 
-▸ **createParty**(): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**createParty**(): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 Creates a new party, writing its genesis block to the stream.
 
@@ -264,13 +234,13 @@ Creates a new party, writing its genesis block to the stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:146](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L146)
+[packages/echo/echo-db/src/parties/party-manager.ts:146](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L146)
 
 ___
 
 ### joinParty
 
-▸ **joinParty**(`invitationDescriptor`, `secretProvider`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**joinParty**(`invitationDescriptor`, `secretProvider`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Parameters
 
@@ -285,13 +255,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:189](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L189)
+[packages/echo/echo-db/src/parties/party-manager.ts:189](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L189)
 
 ___
 
 ### open
 
-▸ **open**(`onProgressCallback?`): `Promise`<`void`\>
+**open**(`onProgressCallback?`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -305,4 +275,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-manager.ts#L63)
+[packages/echo/echo-db/src/parties/party-manager.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-manager.ts#L63)

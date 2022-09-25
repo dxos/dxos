@@ -4,27 +4,11 @@
 
 Groups together all invitation-related functionality for a single party.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.InvitationFactory.md#constructor)
-
-### Accessors
-
-- [isHalo](dxos_echo_db.InvitationFactory.md#ishalo)
-
-### Methods
-
-- [createInvitation](dxos_echo_db.InvitationFactory.md#createinvitation)
-- [createOfflineInvitation](dxos_echo_db.InvitationFactory.md#createofflineinvitation)
-- [getOfflineInvitation](dxos_echo_db.InvitationFactory.md#getofflineinvitation)
-
 ## Constructors
 
 ### constructor
 
-• **new InvitationFactory**(`_partyProcessor`, `_genesisFeedKey`, `_credentialsSigner`, `_credentialsWriter`, `_networkManager`)
+**new InvitationFactory**(`_partyProcessor`, `_genesisFeedKey`, `_credentialsSigner`, `_credentialsWriter`, `_networkManager`)
 
 #### Parameters
 
@@ -38,13 +22,13 @@ Groups together all invitation-related functionality for a single party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L24)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/invitation-factory.ts#L24)
 
 ## Accessors
 
 ### isHalo
 
-• `get` **isHalo**(): `boolean`
+`get` **isHalo**(): `boolean`
 
 #### Returns
 
@@ -52,13 +36,13 @@ Groups together all invitation-related functionality for a single party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L32)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/invitation-factory.ts#L32)
 
 ## Methods
 
 ### createInvitation
 
-▸ **createInvitation**(`authenticationDetails?`, `options?`): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
+**createInvitation**(`authenticationDetails?`, `options?`): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
 
 Creates an invitation for a remote peer.
 
@@ -75,13 +59,13 @@ Creates an invitation for a remote peer.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L60)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/invitation-factory.ts#L60)
 
 ___
 
 ### createOfflineInvitation
 
-▸ **createOfflineInvitation**(`publicKey`): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
+**createOfflineInvitation**(`publicKey`): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
 
 #### Parameters
 
@@ -95,13 +79,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L37)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/invitation-factory.ts#L37)
 
 ___
 
 ### getOfflineInvitation
 
-▸ **getOfflineInvitation**(`invitationId`): `undefined` \| `SignedMessage`
+**getOfflineInvitation**(`invitationId`): `undefined` \| `SignedMessage`
 
 #### Parameters
 
@@ -115,4 +99,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-factory.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/invitation-factory.ts#L85)
+[packages/echo/echo-db/src/invitations/invitation-factory.ts:85](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/invitation-factory.ts#L85)

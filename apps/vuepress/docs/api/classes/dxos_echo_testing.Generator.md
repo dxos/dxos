@@ -4,28 +4,11 @@
 
 Data generator.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_testing.Generator.md#constructor)
-
-### Accessors
-
-- [database](dxos_echo_testing.Generator.md#database)
-- [labels](dxos_echo_testing.Generator.md#labels)
-
-### Methods
-
-- [createItem](dxos_echo_testing.Generator.md#createitem)
-- [generate](dxos_echo_testing.Generator.md#generate)
-- [linkItem](dxos_echo_testing.Generator.md#linkitem)
-
 ## Constructors
 
 ### constructor
 
-• **new Generator**(`_database`, `_options?`)
+**new Generator**(`_database`, `_options?`)
 
 #### Parameters
 
@@ -36,13 +19,13 @@ Data generator.
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L69)
+[packages/echo/echo-testing/src/generator.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L69)
 
 ## Accessors
 
 ### database
 
-• `get` **database**(): `Database`
+`get` **database**(): `Database`
 
 #### Returns
 
@@ -50,13 +33,13 @@ Data generator.
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L80)
+[packages/echo/echo-testing/src/generator.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L80)
 
 ___
 
 ### labels
 
-• `get` **labels**(): `string`[]
+`get` **labels**(): `string`[]
 
 #### Returns
 
@@ -64,13 +47,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L84)
+[packages/echo/echo-testing/src/generator.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L84)
 
 ## Methods
 
 ### createItem
 
-▸ **createItem**(`sourceId`): `Promise`<`void`\>
+**createItem**(`sourceId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -84,13 +67,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:89](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L89)
+[packages/echo/echo-testing/src/generator.ts:89](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L89)
 
 ___
 
 ### generate
 
-▸ **generate**(`config`): `Promise`<`void`\>
+**generate**(`config`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -104,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L107)
+[packages/echo/echo-testing/src/generator.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L107)
 
 ___
 
 ### linkItem
 
-▸ **linkItem**(`sourceId`, `targetId`): `Promise`<`void`\>
+**linkItem**(`sourceId`, `targetId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -125,4 +108,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-testing/src/generator.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-testing/src/generator.ts#L99)
+[packages/echo/echo-testing/src/generator.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-testing/src/generator.ts#L99)

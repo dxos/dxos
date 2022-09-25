@@ -12,83 +12,11 @@ The party state is constructed via signed messages on the feeds.
 
   ↳ **`PartyState`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.PartyState.md#constructor)
-
-### Properties
-
-- [\_admittedBy](dxos_credentials.PartyState.md#_admittedby)
-- [\_credentialMessages](dxos_credentials.PartyState.md#_credentialmessages)
-- [\_identityMessageProcessor](dxos_credentials.PartyState.md#_identitymessageprocessor)
-- [\_invitationManager](dxos_credentials.PartyState.md#_invitationmanager)
-- [\_keyring](dxos_credentials.PartyState.md#_keyring)
-- [\_memberFeeds](dxos_credentials.PartyState.md#_memberfeeds)
-- [\_memberKeys](dxos_credentials.PartyState.md#_memberkeys)
-- [\_publicKey](dxos_credentials.PartyState.md#_publickey)
-- [\_readyToProcess](dxos_credentials.PartyState.md#_readytoprocess)
-- [captureRejectionSymbol](dxos_credentials.PartyState.md#capturerejectionsymbol)
-- [captureRejections](dxos_credentials.PartyState.md#capturerejections)
-- [defaultMaxListeners](dxos_credentials.PartyState.md#defaultmaxlisteners)
-- [errorMonitor](dxos_credentials.PartyState.md#errormonitor)
-
-### Accessors
-
-- [credentialMessages](dxos_credentials.PartyState.md#credentialmessages)
-- [discoveryKey](dxos_credentials.PartyState.md#discoverykey)
-- [infoMessages](dxos_credentials.PartyState.md#infomessages)
-- [memberFeeds](dxos_credentials.PartyState.md#memberfeeds)
-- [memberKeys](dxos_credentials.PartyState.md#memberkeys)
-- [publicKey](dxos_credentials.PartyState.md#publickey)
-- [topic](dxos_credentials.PartyState.md#topic)
-
-### Methods
-
-- [\_admitKey](dxos_credentials.PartyState.md#_admitkey)
-- [\_determineAdmittingMember](dxos_credentials.PartyState.md#_determineadmittingmember)
-- [\_processCredentialMessage](dxos_credentials.PartyState.md#_processcredentialmessage)
-- [\_processFeedAdmitMessage](dxos_credentials.PartyState.md#_processfeedadmitmessage)
-- [\_processGenesisMessage](dxos_credentials.PartyState.md#_processgenesismessage)
-- [\_processKeyAdmitMessage](dxos_credentials.PartyState.md#_processkeyadmitmessage)
-- [\_processMessage](dxos_credentials.PartyState.md#_processmessage)
-- [\_unpackEnvelope](dxos_credentials.PartyState.md#_unpackenvelope)
-- [\_verifyMessage](dxos_credentials.PartyState.md#_verifymessage)
-- [addListener](dxos_credentials.PartyState.md#addlistener)
-- [emit](dxos_credentials.PartyState.md#emit)
-- [eventNames](dxos_credentials.PartyState.md#eventnames)
-- [findMemberKeyFromChain](dxos_credentials.PartyState.md#findmemberkeyfromchain)
-- [getAdmittedBy](dxos_credentials.PartyState.md#getadmittedby)
-- [getInfo](dxos_credentials.PartyState.md#getinfo)
-- [getInvitation](dxos_credentials.PartyState.md#getinvitation)
-- [getMaxListeners](dxos_credentials.PartyState.md#getmaxlisteners)
-- [isMemberFeed](dxos_credentials.PartyState.md#ismemberfeed)
-- [isMemberKey](dxos_credentials.PartyState.md#ismemberkey)
-- [listenerCount](dxos_credentials.PartyState.md#listenercount)
-- [listeners](dxos_credentials.PartyState.md#listeners)
-- [off](dxos_credentials.PartyState.md#off)
-- [on](dxos_credentials.PartyState.md#on)
-- [once](dxos_credentials.PartyState.md#once)
-- [prependListener](dxos_credentials.PartyState.md#prependlistener)
-- [prependOnceListener](dxos_credentials.PartyState.md#prependoncelistener)
-- [processMessages](dxos_credentials.PartyState.md#processmessages)
-- [rawListeners](dxos_credentials.PartyState.md#rawlisteners)
-- [removeAllListeners](dxos_credentials.PartyState.md#removealllisteners)
-- [removeListener](dxos_credentials.PartyState.md#removelistener)
-- [setMaxListeners](dxos_credentials.PartyState.md#setmaxlisteners)
-- [takeHints](dxos_credentials.PartyState.md#takehints)
-- [verifySignatures](dxos_credentials.PartyState.md#verifysignatures)
-- [getEventListeners](dxos_credentials.PartyState.md#geteventlisteners)
-- [listenerCount](dxos_credentials.PartyState.md#listenercount-1)
-- [on](dxos_credentials.PartyState.md#on-1)
-- [once](dxos_credentials.PartyState.md#once-1)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyState**(`publicKey`)
+**new PartyState**(`publicKey`)
 
 Initialize with party public key
 
@@ -104,103 +32,103 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L55)
+[packages/halo/credentials/src/party/party-state.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L55)
 
 ## Properties
 
 ### \_admittedBy
 
-• **\_admittedBy**: `Map`<`string`, `PublicKey`\>
+ **\_admittedBy**: `Map`<`string`, `PublicKey`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L48)
+[packages/halo/credentials/src/party/party-state.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L48)
 
 ___
 
 ### \_credentialMessages
 
-• **\_credentialMessages**: `Map`<`string`, `SignedMessage`\>
+ **\_credentialMessages**: `Map`<`string`, `SignedMessage`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L45)
+[packages/halo/credentials/src/party/party-state.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L45)
 
 ___
 
 ### \_identityMessageProcessor
 
-• **\_identityMessageProcessor**: [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
+ **\_identityMessageProcessor**: [`IdentityMessageProcessor`](dxos_credentials.IdentityMessageProcessor.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L43)
+[packages/halo/credentials/src/party/party-state.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L43)
 
 ___
 
 ### \_invitationManager
 
-• **\_invitationManager**: [`PartyInvitationManager`](dxos_credentials.PartyInvitationManager.md)
+ **\_invitationManager**: [`PartyInvitationManager`](dxos_credentials.PartyInvitationManager.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L42)
+[packages/halo/credentials/src/party/party-state.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L42)
 
 ___
 
 ### \_keyring
 
-• **\_keyring**: [`Keyring`](dxos_credentials.Keyring.md)
+ **\_keyring**: [`Keyring`](dxos_credentials.Keyring.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L41)
+[packages/halo/credentials/src/party/party-state.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L41)
 
 ___
 
 ### \_memberFeeds
 
-• **\_memberFeeds**: `Map`<`string`, `PublicKey`\>
+ **\_memberFeeds**: `Map`<`string`, `PublicKey`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L47)
+[packages/halo/credentials/src/party/party-state.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L47)
 
 ___
 
 ### \_memberKeys
 
-• **\_memberKeys**: `Map`<`string`, `PublicKey`\>
+ **\_memberKeys**: `Map`<`string`, `PublicKey`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L46)
+[packages/halo/credentials/src/party/party-state.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L46)
 
 ___
 
 ### \_publicKey
 
-• **\_publicKey**: `PublicKey`
+ **\_publicKey**: `PublicKey`
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L40)
+[packages/halo/credentials/src/party/party-state.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L40)
 
 ___
 
 ### \_readyToProcess
 
-• **\_readyToProcess**: `Promise`<`KeyRecord`\>
+ **\_readyToProcess**: `Promise`<`KeyRecord`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L49)
+[packages/halo/credentials/src/party/party-state.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L49)
 
 ___
 
 ### captureRejectionSymbol
 
-▪ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
+ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
 
 #### Inherited from
 
@@ -214,7 +142,7 @@ ___
 
 ### captureRejections
 
-▪ `Static` **captureRejections**: `boolean`
+ `Static` **captureRejections**: `boolean`
 
 Sets or gets the default captureRejection value for all emitters.
 
@@ -230,7 +158,7 @@ ___
 
 ### defaultMaxListeners
 
-▪ `Static` **defaultMaxListeners**: `number`
+ `Static` **defaultMaxListeners**: `number`
 
 #### Inherited from
 
@@ -244,7 +172,7 @@ ___
 
 ### errorMonitor
 
-▪ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
+ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
 
 This symbol shall be used to install a listener for only monitoring `'error'`
 events. Listeners installed using this symbol are called before the regular
@@ -266,7 +194,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 ### credentialMessages
 
-• `get` **credentialMessages**(): `Map`<`string`, `SignedMessage`\>
+`get` **credentialMessages**(): `Map`<`string`, `SignedMessage`\>
 
 Returns a map of the credential messages used to construct the Party membership, indexed by the key admitted.
 This is necessary information for demonstrating the trust relationship between keys.
@@ -277,13 +205,13 @@ This is necessary information for demonstrating the trust relationship between k
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:125](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L125)
+[packages/halo/credentials/src/party/party-state.ts:125](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L125)
 
 ___
 
 ### discoveryKey
 
-• `get` **discoveryKey**(): `Buffer`
+`get` **discoveryKey**(): `Buffer`
 
 The Party's discovery key.
 
@@ -293,13 +221,13 @@ The Party's discovery key.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L95)
+[packages/halo/credentials/src/party/party-state.ts:95](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L95)
 
 ___
 
 ### infoMessages
 
-• `get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
+`get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
 
 Returns a map of SignedMessages used to describe keys. In many cases the contents are enough (see: getInfo)
 but the original message is needed for copying into a new Party, as when an IdentityInfo message is copied
@@ -311,13 +239,13 @@ from the HALO Party to a Party that is being joined.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:134](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L134)
+[packages/halo/credentials/src/party/party-state.ts:134](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L134)
 
 ___
 
 ### memberFeeds
 
-• `get` **memberFeeds**(): `PublicKey`[]
+`get` **memberFeeds**(): `PublicKey`[]
 
 #### Returns
 
@@ -327,13 +255,13 @@ public keys for the feeds admitted to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:110](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L110)
+[packages/halo/credentials/src/party/party-state.ts:110](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L110)
 
 ___
 
 ### memberKeys
 
-• `get` **memberKeys**(): `PublicKey`[]
+`get` **memberKeys**(): `PublicKey`[]
 
 #### Returns
 
@@ -343,13 +271,13 @@ public keys admitted to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L117)
+[packages/halo/credentials/src/party/party-state.ts:117](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L117)
 
 ___
 
 ### publicKey
 
-• `get` **publicKey**(): `PublicKey`
+`get` **publicKey**(): `PublicKey`
 
 The Party's public key.
 
@@ -359,13 +287,13 @@ The Party's public key.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L87)
+[packages/halo/credentials/src/party/party-state.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L87)
 
 ___
 
 ### topic
 
-• `get` **topic**(): `string`
+`get` **topic**(): `string`
 
 The Party's topic (hexified public key).
 
@@ -377,13 +305,13 @@ topic for this party
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L103)
+[packages/halo/credentials/src/party/party-state.ts:103](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L103)
 
 ## Methods
 
 ### \_admitKey
 
-▸ `Private` **_admitKey**(`publicKey`, `attributes?`): `Promise`<`KeyRecord`\>
+`Private` **_admitKey**(`publicKey`, `attributes?`): `Promise`<`KeyRecord`\>
 
 Admit the key to the allowed list.
 
@@ -402,13 +330,13 @@ true if added, false if already present
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:519](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L519)
+[packages/halo/credentials/src/party/party-state.ts:519](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L519)
 
 ___
 
 ### \_determineAdmittingMember
 
-▸ `Private` **_determineAdmittingMember**(`publicKey`, `message`): `undefined` \| `PublicKey`
+`Private` **_determineAdmittingMember**(`publicKey`, `message`): `undefined` \| `PublicKey`
 
 Determine which Party member is admitting a particular credential message.
 
@@ -425,13 +353,13 @@ Determine which Party member is admitting a particular credential message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:558](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L558)
+[packages/halo/credentials/src/party/party-state.ts:558](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L558)
 
 ___
 
 ### \_processCredentialMessage
 
-▸ `Private` **_processCredentialMessage**(`message`): `Promise`<`void`\>
+`Private` **_processCredentialMessage**(`message`): `Promise`<`void`\>
 
 Process a replicated Party credential message, admitting keys or feeds to the Party.
 
@@ -447,13 +375,13 @@ Process a replicated Party credential message, admitting keys or feeds to the Pa
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:294](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L294)
+[packages/halo/credentials/src/party/party-state.ts:294](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L294)
 
 ___
 
 ### \_processFeedAdmitMessage
 
-▸ `Private` **_processFeedAdmitMessage**(`message`, `requireSignatureFromTrustedKey`): `Promise`<`KeyRecord`\>
+`Private` **_processFeedAdmitMessage**(`message`, `requireSignatureFromTrustedKey`): `Promise`<`KeyRecord`\>
 
 Processes an AdmitFeed message, admitting a single feed to participate in the Party.
 
@@ -470,13 +398,13 @@ Processes an AdmitFeed message, admitting a single feed to participate in the Pa
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:408](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L408)
+[packages/halo/credentials/src/party/party-state.ts:408](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L408)
 
 ___
 
 ### \_processGenesisMessage
 
-▸ `Private` **_processGenesisMessage**(`message`): `Promise`<{ `admitKey`: `KeyRecord` = admitRecord; `feedKey`: `KeyRecord` = feedRecord }\>
+`Private` **_processGenesisMessage**(`message`): `Promise`<{ `admitKey`: `KeyRecord` = admitRecord; `feedKey`: `KeyRecord` = feedRecord }\>
 
 Processes a PartyGenesis message, the start-of-authority for the Party.
 
@@ -492,13 +420,13 @@ Processes a PartyGenesis message, the start-of-authority for the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:363](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L363)
+[packages/halo/credentials/src/party/party-state.ts:363](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L363)
 
 ___
 
 ### \_processKeyAdmitMessage
 
-▸ `Private` **_processKeyAdmitMessage**(`message`, `requireSignatureFromTrustedKey`, `requirePartyMatch`): `Promise`<`KeyRecord`\>
+`Private` **_processKeyAdmitMessage**(`message`, `requireSignatureFromTrustedKey`, `requirePartyMatch`): `Promise`<`KeyRecord`\>
 
 Processes an AdmitKey message, admitting a single key as a member of the Party.
 
@@ -516,13 +444,13 @@ Processes an AdmitKey message, admitting a single key as a member of the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:389](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L389)
+[packages/halo/credentials/src/party/party-state.ts:389](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L389)
 
 ___
 
 ### \_processMessage
 
-▸ `Private` **_processMessage**(`message`): `Promise`<`void`\>
+`Private` **_processMessage**(`message`): `Promise`<`void`\>
 
 Process a Party message.
 
@@ -538,13 +466,13 @@ Process a Party message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:275](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L275)
+[packages/halo/credentials/src/party/party-state.ts:275](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L275)
 
 ___
 
 ### \_unpackEnvelope
 
-▸ `Private` **_unpackEnvelope**(`message`): `SignedMessage`
+`Private` **_unpackEnvelope**(`message`): `SignedMessage`
 
 Verifies the ENVELOPE message signature and extracts the inner message.
 
@@ -560,13 +488,13 @@ Verifies the ENVELOPE message signature and extracts the inner message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:236](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L236)
+[packages/halo/credentials/src/party/party-state.ts:236](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L236)
 
 ___
 
 ### \_verifyMessage
 
-▸ `Private` **_verifyMessage**(`message`, `requireSignatureFromTrustedKey?`, `requirePartyMatch?`): `void`
+`Private` **_verifyMessage**(`message`, `requireSignatureFromTrustedKey?`, `requirePartyMatch?`): `void`
 
 Verify the signatures and basic structure common to all messages.
 By default, a signature from a known, trusted key is required. In the case of an ENVELOPE, the outer message
@@ -587,13 +515,13 @@ requireSignatureFromTrustedKey should be set to false when testing the inner mes
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:440](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L440)
+[packages/halo/credentials/src/party/party-state.ts:440](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L440)
 
 ___
 
 ### addListener
 
-▸ **addListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**addListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Alias for `emitter.on(eventName, listener)`.
 
@@ -624,7 +552,7 @@ ___
 
 ### emit
 
-▸ **emit**(`eventName`, ...`args`): `boolean`
+**emit**(`eventName`, ...`args`): `boolean`
 
 Synchronously calls each of the listeners registered for the event named`eventName`, in the order they were registered, passing the supplied arguments
 to each.
@@ -691,7 +619,7 @@ ___
 
 ### eventNames
 
-▸ **eventNames**(): (`string` \| `symbol`)[]
+**eventNames**(): (`string` \| `symbol`)[]
 
 Returns an array listing the events for which the emitter has registered
 listeners. The values in the array are strings or `Symbol`s.
@@ -729,7 +657,7 @@ ___
 
 ### findMemberKeyFromChain
 
-▸ **findMemberKeyFromChain**(`chain`): `undefined` \| `PublicKey`
+**findMemberKeyFromChain**(`chain`): `undefined` \| `PublicKey`
 
 Lookup the PublicKey for the Party member associated with this KeyChain.
 
@@ -745,13 +673,13 @@ Lookup the PublicKey for the Party member associated with this KeyChain.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:170](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L170)
+[packages/halo/credentials/src/party/party-state.ts:170](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L170)
 
 ___
 
 ### getAdmittedBy
 
-▸ **getAdmittedBy**(`publicKey`): `undefined` \| `PublicKey`
+**getAdmittedBy**(`publicKey`): `undefined` \| `PublicKey`
 
 What member admitted the specified feed or member key?
 
@@ -767,13 +695,13 @@ What member admitted the specified feed or member key?
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L150)
+[packages/halo/credentials/src/party/party-state.ts:150](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L150)
 
 ___
 
 ### getInfo
 
-▸ **getInfo**(`publicKey`): `any`
+**getInfo**(`publicKey`): `any`
 
 Get info for the specified key (if available).
 
@@ -789,13 +717,13 @@ Get info for the specified key (if available).
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:160](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L160)
+[packages/halo/credentials/src/party/party-state.ts:160](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L160)
 
 ___
 
 ### getInvitation
 
-▸ **getInvitation**(`invitationID`): `undefined` \| `SignedMessage`
+**getInvitation**(`invitationID`): `undefined` \| `SignedMessage`
 
 Retrieve an PartyInvitation by its ID.
 
@@ -811,13 +739,13 @@ Retrieve an PartyInvitation by its ID.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:141](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L141)
+[packages/halo/credentials/src/party/party-state.ts:141](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L141)
 
 ___
 
 ### getMaxListeners
 
-▸ **getMaxListeners**(): `number`
+**getMaxListeners**(): `number`
 
 Returns the current max listener value for the `EventEmitter` which is either
 set by `emitter.setMaxListeners(n)` or defaults to [defaultMaxListeners](dxos_credentials.PartyState.md#defaultmaxlisteners).
@@ -842,7 +770,7 @@ ___
 
 ### isMemberFeed
 
-▸ **isMemberFeed**(`publicKey`): `boolean`
+**isMemberFeed**(`publicKey`): `boolean`
 
 Is the indicated key a trusted feed associated with this party.
 
@@ -858,13 +786,13 @@ Is the indicated key a trusted feed associated with this party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:190](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L190)
+[packages/halo/credentials/src/party/party-state.ts:190](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L190)
 
 ___
 
 ### isMemberKey
 
-▸ **isMemberKey**(`publicKey`): `boolean`
+**isMemberKey**(`publicKey`): `boolean`
 
 Is the indicated key a trusted key associated with this party.
 
@@ -880,13 +808,13 @@ Is the indicated key a trusted key associated with this party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:180](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L180)
+[packages/halo/credentials/src/party/party-state.ts:180](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L180)
 
 ___
 
 ### listenerCount
 
-▸ **listenerCount**(`eventName`): `number`
+**listenerCount**(`eventName`): `number`
 
 Returns the number of listeners listening to the event named `eventName`.
 
@@ -916,7 +844,7 @@ ___
 
 ### listeners
 
-▸ **listeners**(`eventName`): `Function`[]
+**listeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -954,7 +882,7 @@ ___
 
 ### off
 
-▸ **off**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**off**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Alias for `emitter.removeListener()`.
 
@@ -985,7 +913,7 @@ ___
 
 ### on
 
-▸ **on**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**on**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Adds the `listener` function to the end of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -1040,7 +968,7 @@ ___
 
 ### once
 
-▸ **once**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**once**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Adds a **one-time**`listener` function for the event named `eventName`. The
 next time `eventName` is triggered, this listener is removed and then invoked.
@@ -1093,7 +1021,7 @@ ___
 
 ### prependListener
 
-▸ **prependListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**prependListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Adds the `listener` function to the _beginning_ of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -1135,7 +1063,7 @@ ___
 
 ### prependOnceListener
 
-▸ **prependOnceListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**prependOnceListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Adds a **one-time**`listener` function for the event named `eventName` to the_beginning_ of the listeners array. The next time `eventName` is triggered, this
 listener is removed, and then invoked.
@@ -1175,7 +1103,7 @@ ___
 
 ### processMessages
 
-▸ **processMessages**(`messages`): `Promise`<`void`\>
+**processMessages**(`messages`): `Promise`<`void`\>
 
 Process an ordered array of messages, for compatibility with Model.processMessages().
 
@@ -1191,13 +1119,13 @@ Process an ordered array of messages, for compatibility with Model.processMessag
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L201)
+[packages/halo/credentials/src/party/party-state.ts:201](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L201)
 
 ___
 
 ### rawListeners
 
-▸ **rawListeners**(`eventName`): `Function`[]
+**rawListeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`,
 including any wrappers (such as those created by `.once()`).
@@ -1252,7 +1180,7 @@ ___
 
 ### removeAllListeners
 
-▸ **removeAllListeners**(`event?`): [`PartyState`](dxos_credentials.PartyState.md)
+**removeAllListeners**(`event?`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Removes all listeners, or those of the specified `eventName`.
 
@@ -1288,7 +1216,7 @@ ___
 
 ### removeListener
 
-▸ **removeListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
+**removeListener**(`eventName`, `listener`): [`PartyState`](dxos_credentials.PartyState.md)
 
 Removes the specified `listener` from the listener array for the event named`eventName`.
 
@@ -1394,7 +1322,7 @@ ___
 
 ### setMaxListeners
 
-▸ **setMaxListeners**(`n`): [`PartyState`](dxos_credentials.PartyState.md)
+**setMaxListeners**(`n`): [`PartyState`](dxos_credentials.PartyState.md)
 
 By default `EventEmitter`s will print a warning if more than `10` listeners are
 added for a particular event. This is a useful default that helps finding
@@ -1429,7 +1357,7 @@ ___
 
 ### takeHints
 
-▸ **takeHints**(`hints?`): `Promise`<`void`\>
+**takeHints**(`hints?`): `Promise`<`void`\>
 
 Receive hints for keys and feeds.
 See `proto/greet.proto` for details on the purpose and use of hints.
@@ -1446,13 +1374,13 @@ See `proto/greet.proto` for details on the purpose and use of hints.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:215](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L215)
+[packages/halo/credentials/src/party/party-state.ts:215](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L215)
 
 ___
 
 ### verifySignatures
 
-▸ **verifySignatures**(`message`): `boolean`
+**verifySignatures**(`message`): `boolean`
 
 Verify that the signatures on this message are present, correct, and from trusted members of this Party.
 
@@ -1468,13 +1396,13 @@ Verify that the signatures on this message are present, correct, and from truste
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-state.ts:426](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-state.ts#L426)
+[packages/halo/credentials/src/party/party-state.ts:426](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-state.ts#L426)
 
 ___
 
 ### getEventListeners
 
-▸ `Static` **getEventListeners**(`emitter`, `name`): `Function`[]
+`Static` **getEventListeners**(`emitter`, `name`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -1528,7 +1456,7 @@ ___
 
 ### listenerCount
 
-▸ `Static` **listenerCount**(`emitter`, `eventName`): `number`
+`Static` **listenerCount**(`emitter`, `eventName`): `number`
 
 A class method that returns the number of listeners for the given `eventName`registered on the given `emitter`.
 
@@ -1572,7 +1500,7 @@ ___
 
 ### on
 
-▸ `Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
+`Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
 
 ```js
 const { on, EventEmitter } = require('events');
@@ -1658,7 +1586,7 @@ ___
 
 ### once
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 Creates a `Promise` that is fulfilled when the `EventEmitter` emits the given
 event or that is rejected if the `EventEmitter` emits `'error'` while waiting.
@@ -1764,7 +1692,7 @@ EventEmitter.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 #### Parameters
 

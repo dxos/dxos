@@ -10,62 +10,52 @@
 | `L` | extends `Model` |
 | `R` | extends `Model` |
 
-## Table of contents
-
-### Properties
-
-- [model](dxos_echo_db.CreateLinkOptions.md#model)
-- [props](dxos_echo_db.CreateLinkOptions.md#props)
-- [source](dxos_echo_db.CreateLinkOptions.md#source)
-- [target](dxos_echo_db.CreateLinkOptions.md#target)
-- [type](dxos_echo_db.CreateLinkOptions.md#type)
-
 ## Properties
 
 ### model
 
-• `Optional` **model**: `ModelConstructor`<`M`\>
+ `Optional` **model**: `ModelConstructor`<`M`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L30)
+[packages/echo/echo-db/src/packlets/database/database.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L30)
 
 ___
 
 ### props
 
-• `Optional` **props**: `any`
+ `Optional` **props**: `any`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L34)
+[packages/echo/echo-db/src/packlets/database/database.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L34)
 
 ___
 
 ### source
 
-• **source**: [`Item`](../classes/dxos_echo_db.Item.md)<`L`\>
+ **source**: [`Item`](../classes/dxos_echo_db.Item.md)<`L`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L32)
+[packages/echo/echo-db/src/packlets/database/database.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L32)
 
 ___
 
 ### target
 
-• **target**: [`Item`](../classes/dxos_echo_db.Item.md)<`R`\>
+ **target**: [`Item`](../classes/dxos_echo_db.Item.md)<`R`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L33)
+[packages/echo/echo-db/src/packlets/database/database.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L33)
 
 ___
 
 ### type
 
-• `Optional` **type**: `string`
+ `Optional` **type**: `string`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L31)
+[packages/echo/echo-db/src/packlets/database/database.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L31)

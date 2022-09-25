@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [bootstrap](dxos_config.defs.Runtime.Kube.P2P.md#bootstrap)
-- [port](dxos_config.defs.Runtime.Kube.P2P.md#port)
-- [privatekey](dxos_config.defs.Runtime.Kube.P2P.md#privatekey)
-
 ## Properties
 
 ### bootstrap
 
-• `Optional` **bootstrap**: `string`[]
+ `Optional` **bootstrap**: `string`[]
 
 #### Defined in
 
@@ -27,7 +19,7 @@ ___
 
 ### port
 
-• `Optional` **port**: `string`
+ `Optional` **port**: `string`
 
 Options:
   - proto3_optional = true
@@ -40,7 +32,7 @@ ___
 
 ### privatekey
 
-• `Optional` **privatekey**: `string`
+ `Optional` **privatekey**: `string`
 
 Options:
   - proto3_optional = true

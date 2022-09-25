@@ -4,50 +4,39 @@
 
 Wrapper (e.g., for Party).
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client_testing.TreeRoot.md#constructor)
-
-### Properties
-
-- [children](dxos_client_testing.TreeRoot.md#children)
-- [id](dxos_client_testing.TreeRoot.md#id)
-
 ## Constructors
 
 ### constructor
 
-• **new TreeRoot**(`id`, `children`)
+**new TreeRoot**(`id`, `children`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `id` | `string` |
-| `children` | [`TreeNode`](../modules/dxos_client_testing.md#treenode)[] |
+| `children` | [`TreeNode`](../types/dxos_client_testing.TreeNode.md)[] |
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L14)
+[packages/sdk/client-testing/src/logging/tree.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/logging/tree.ts#L14)
 
 ## Properties
 
 ### children
 
-• `Readonly` **children**: [`TreeNode`](../modules/dxos_client_testing.md#treenode)[]
+ `Readonly` **children**: [`TreeNode`](../types/dxos_client_testing.TreeNode.md)[]
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L16)
+[packages/sdk/client-testing/src/logging/tree.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/logging/tree.ts#L16)
 
 ___
 
 ### id
 
-• **id**: `string`
+ **id**: `string`
 
 #### Defined in
 
-[packages/sdk/client-testing/src/logging/tree.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/logging/tree.ts#L15)
+[packages/sdk/client-testing/src/logging/tree.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/logging/tree.ts#L15)

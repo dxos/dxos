@@ -5,21 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [dnsDomain](dxos_config.defs.Runtime.Services.Machine.md#dnsdomain)
-- [doAccessToken](dxos_config.defs.Runtime.Services.Machine.md#doaccesstoken)
-- [githubAccessToken](dxos_config.defs.Runtime.Services.Machine.md#githubaccesstoken)
-- [githubUsername](dxos_config.defs.Runtime.Services.Machine.md#githubusername)
-- [npmAccessToken](dxos_config.defs.Runtime.Services.Machine.md#npmaccesstoken)
-
 ## Properties
 
 ### dnsDomain
 
-• `Optional` **dnsDomain**: `string`
+ `Optional` **dnsDomain**: `string`
 
 Options:
   - proto3_optional = true
@@ -32,7 +22,7 @@ ___
 
 ### doAccessToken
 
-• `Optional` **doAccessToken**: `string`
+ `Optional` **doAccessToken**: `string`
 
 Options:
   - proto3_optional = true
@@ -45,7 +35,7 @@ ___
 
 ### githubAccessToken
 
-• `Optional` **githubAccessToken**: `string`
+ `Optional` **githubAccessToken**: `string`
 
 Options:
   - proto3_optional = true
@@ -58,7 +48,7 @@ ___
 
 ### githubUsername
 
-• `Optional` **githubUsername**: `string`
+ `Optional` **githubUsername**: `string`
 
 Options:
   - proto3_optional = true
@@ -71,7 +61,7 @@ ___
 
 ### npmAccessToken
 
-• `Optional` **npmAccessToken**: `string`
+ `Optional` **npmAccessToken**: `string`
 
 Options:
   - proto3_optional = true

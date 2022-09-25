@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [credential](dxos_config.defs.Runtime.Services.Ice.md#credential)
-- [urls](dxos_config.defs.Runtime.Services.Ice.md#urls)
-- [username](dxos_config.defs.Runtime.Services.Ice.md#username)
-
 ## Properties
 
 ### credential
 
-• `Optional` **credential**: `string`
+ `Optional` **credential**: `string`
 
 Options:
   - proto3_optional = true
@@ -30,7 +22,7 @@ ___
 
 ### urls
 
-• `Optional` **urls**: `string`
+ `Optional` **urls**: `string`
 
 Options:
   - proto3_optional = true
@@ -43,7 +35,7 @@ ___
 
 ### username
 
-• `Optional` **username**: `string`
+ `Optional` **username**: `string`
 
 Options:
   - proto3_optional = true

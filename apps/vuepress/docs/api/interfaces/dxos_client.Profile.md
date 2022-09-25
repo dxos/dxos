@@ -5,18 +5,11 @@
 Defined in:
   file://./../../dxos/client.proto
 
-## Table of contents
-
-### Properties
-
-- [publicKey](dxos_client.Profile.md#publickey)
-- [username](dxos_client.Profile.md#username)
-
 ## Properties
 
 ### publicKey
 
-• **publicKey**: `PublicKey`
+ **publicKey**: `PublicKey`
 
 #### Defined in
 
@@ -26,7 +19,7 @@ ___
 
 ### username
 
-• `Optional` **username**: `string`
+ `Optional` **username**: `string`
 
 Options:
   - proto3_optional = true

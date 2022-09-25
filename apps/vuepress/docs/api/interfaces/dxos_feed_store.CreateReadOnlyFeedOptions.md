@@ -2,18 +2,12 @@
 
 [@dxos/feed-store](../modules/dxos_feed_store.md).CreateReadOnlyFeedOptions
 
-## Table of contents
-
-### Properties
-
-- [key](dxos_feed_store.CreateReadOnlyFeedOptions.md#key)
-
 ## Properties
 
 ### key
 
-• **key**: `PublicKey`
+ **key**: `PublicKey`
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L27)
+[packages/echo/feed-store/src/feed-store.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L27)

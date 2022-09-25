@@ -2,44 +2,33 @@
 
 [@dxos/react-client](../modules/dxos_react_client.md).ClientProviderProps
 
-## Table of contents
-
-### Properties
-
-- [children](dxos_react_client.ClientProviderProps.md#children)
-- [client](dxos_react_client.ClientProviderProps.md#client)
-- [clientRef](dxos_react_client.ClientProviderProps.md#clientref)
-- [config](dxos_react_client.ClientProviderProps.md#config)
-- [onInitialize](dxos_react_client.ClientProviderProps.md#oninitialize)
-- [options](dxos_react_client.ClientProviderProps.md#options)
-
 ## Properties
 
 ### children
 
-• `Optional` **children**: `ReactNode`
+ `Optional` **children**: `ReactNode`
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L21)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:21](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L21)
 
 ___
 
 ### client
 
-• `Optional` **client**: [`ClientProvider`](../modules/dxos_react_client.md#clientprovider-1)
+ `Optional` **client**: [`ClientProvider`](../functions/dxos_react_client.ClientProvider-1.md)
 
 Client object or async provider to enable to caller to do custom initialization.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L34)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L34)
 
 ___
 
 ### clientRef
 
-• `Optional` **clientRef**: `MutableRefObject`<`undefined` \| `Client`\>
+ `Optional` **clientRef**: `MutableRefObject`<`undefined` \| `Client`\>
 
 Forward reference to provide client object to outercontainer since it won't have access to the context.
 
@@ -47,29 +36,29 @@ Forward reference to provide client object to outercontainer since it won't have
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L29)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L29)
 
 ___
 
 ### config
 
-• `Optional` **config**: `ConfigProvider`
+ `Optional` **config**: `ConfigProvider`
 
 Config object or async provider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L39)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L39)
 
 ___
 
 ### onInitialize
 
-• `Optional` **onInitialize**: (`client`: `Client`) => `Promise`<`void`\>
+ `Optional` **onInitialize**: (`client`: `Client`) => `Promise`<`void`\>
 
 #### Type declaration
 
-▸ (`client`): `Promise`<`void`\>
+(`client`): `Promise`<`void`\>
 
 Post initialization hook.
 
@@ -85,16 +74,16 @@ Post initialization hook.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L50)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:50](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L50)
 
 ___
 
 ### options
 
-• `Optional` **options**: `ClientOptions`
+ `Optional` **options**: `ClientOptions`
 
 Runtime objects.
 
 #### Defined in
 
-[packages/sdk/react-client/src/containers/ClientProvider.tsx:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client/src/containers/ClientProvider.tsx#L44)
+[packages/sdk/react-client/src/containers/ClientProvider.tsx:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client/src/containers/ClientProvider.tsx#L44)

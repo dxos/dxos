@@ -2,32 +2,25 @@
 
 [@dxos/react-toolkit](../modules/dxos_react_toolkit.md).MemberRowProps
 
-## Table of contents
-
-### Properties
-
-- [member](dxos_react_toolkit.MemberRowProps.md#member)
-- [onRemove](dxos_react_toolkit.MemberRowProps.md#onremove)
-
 ## Properties
 
 ### member
 
-• **member**: `PartyMember`
+ **member**: `PartyMember`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L14)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L14)
 
 ___
 
 ### onRemove
 
-• `Optional` **onRemove**: () => `void`
+ `Optional` **onRemove**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -35,4 +28,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L15)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/MemberRow.tsx#L15)

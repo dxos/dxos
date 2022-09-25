@@ -5,24 +5,11 @@
 Defined in:
   file://./../../../dxos/halo/keys.proto
 
-## Table of contents
-
-### Properties
-
-- [added](dxos_client.KeyRecord.md#added)
-- [created](dxos_client.KeyRecord.md#created)
-- [hint](dxos_client.KeyRecord.md#hint)
-- [own](dxos_client.KeyRecord.md#own)
-- [publicKey](dxos_client.KeyRecord.md#publickey)
-- [secretKey](dxos_client.KeyRecord.md#secretkey)
-- [trusted](dxos_client.KeyRecord.md#trusted)
-- [type](dxos_client.KeyRecord.md#type)
-
 ## Properties
 
 ### added
 
-• `Optional` **added**: `string`
+ `Optional` **added**: `string`
 
 An RFC-3339 date/time string for when the key was added to the Keyring.
 
@@ -37,7 +24,7 @@ ___
 
 ### created
 
-• `Optional` **created**: `string`
+ `Optional` **created**: `string`
 
 An RFC-3339 date/time string for when the key was created.
 
@@ -52,7 +39,7 @@ ___
 
 ### hint
 
-• `Optional` **hint**: `boolean`
+ `Optional` **hint**: `boolean`
 
 Is this key from a Greeting "hint"?
 
@@ -67,7 +54,7 @@ ___
 
 ### own
 
-• `Optional` **own**: `boolean`
+ `Optional` **own**: `boolean`
 
 Determines if this is our key?
 Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
@@ -83,7 +70,7 @@ ___
 
 ### publicKey
 
-• **publicKey**: `PublicKey`
+ **publicKey**: `PublicKey`
 
 The public key as a Buffer (required).
 
@@ -95,7 +82,7 @@ ___
 
 ### secretKey
 
-• `Optional` **secretKey**: `Buffer`
+ `Optional` **secretKey**: `Buffer`
 
 The secret key as a Buffer (this will never be visible outside the Keyring).
 
@@ -110,7 +97,7 @@ ___
 
 ### trusted
 
-• `Optional` **trusted**: `boolean`
+ `Optional` **trusted**: `boolean`
 
 Is this key to be trusted?
 
@@ -125,7 +112,7 @@ ___
 
 ### type
 
-• **type**: [`KeyType`](../enums/dxos_client.KeyType.md)
+ **type**: [`KeyType`](../enums/dxos_client.KeyType.md)
 
 The `KeyType` type of the key. This is often unknown for keys from other sources.
 

@@ -5,25 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [build](dxos_config.defs.Module-1.md#build)
-- [bundle](dxos_config.defs.Module-1.md#bundle)
-- [description](dxos_config.defs.Module-1.md#description)
-- [displayName](dxos_config.defs.Module-1.md#displayname)
-- [name](dxos_config.defs.Module-1.md#name)
-- [record](dxos_config.defs.Module-1.md#record)
-- [repos](dxos_config.defs.Module-1.md#repos)
-- [tags](dxos_config.defs.Module-1.md#tags)
-- [type](dxos_config.defs.Module-1.md#type)
-
 ## Properties
 
 ### build
 
-• `Optional` **build**: [`Build`](dxos_config.defs.Module.Build.md)
+ `Optional` **build**: [`Build`](dxos_config.defs.Module.Build.md)
 
 Options:
   - proto3_optional = true
@@ -36,7 +22,7 @@ ___
 
 ### bundle
 
-• `Optional` **bundle**: `Uint8Array`
+ `Optional` **bundle**: `Uint8Array`
 
 Options:
   - proto3_optional = true
@@ -49,7 +35,7 @@ ___
 
 ### description
 
-• `Optional` **description**: `string`
+ `Optional` **description**: `string`
 
 Options:
   - proto3_optional = true
@@ -62,7 +48,7 @@ ___
 
 ### displayName
 
-• `Optional` **displayName**: `string`
+ `Optional` **displayName**: `string`
 
 Options:
   - proto3_optional = true
@@ -75,7 +61,7 @@ ___
 
 ### name
 
-• `Optional` **name**: `string`
+ `Optional` **name**: `string`
 
 Options:
   - proto3_optional = true
@@ -88,7 +74,7 @@ ___
 
 ### record
 
-• `Optional` **record**: `any`
+ `Optional` **record**: `any`
 
 The data will be validated based on the type when being published.
 
@@ -103,7 +89,7 @@ ___
 
 ### repos
 
-• `Optional` **repos**: [`Repo`](dxos_config.defs.Repo.md)[]
+ `Optional` **repos**: [`Repo`](dxos_config.defs.Repo.md)[]
 
 #### Defined in
 
@@ -113,7 +99,7 @@ ___
 
 ### tags
 
-• `Optional` **tags**: `string`[]
+ `Optional` **tags**: `string`[]
 
 #### Defined in
 
@@ -123,7 +109,7 @@ ___
 
 ### type
 
-• `Optional` **type**: `string`
+ `Optional` **type**: `string`
 
 Options:
   - proto3_optional = true

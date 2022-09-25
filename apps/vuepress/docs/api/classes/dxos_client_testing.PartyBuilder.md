@@ -4,32 +4,11 @@
 
 Party builder.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client_testing.PartyBuilder.md#constructor)
-
-### Accessors
-
-- [party](dxos_client_testing.PartyBuilder.md#party)
-
-### Methods
-
-- [createLink](dxos_client_testing.PartyBuilder.md#createlink)
-- [createOrg](dxos_client_testing.PartyBuilder.md#createorg)
-- [createOrgs](dxos_client_testing.PartyBuilder.md#createorgs)
-- [createParty](dxos_client_testing.PartyBuilder.md#createparty)
-- [createPerson](dxos_client_testing.PartyBuilder.md#createperson)
-- [createProject](dxos_client_testing.PartyBuilder.md#createproject)
-- [createRandomItem](dxos_client_testing.PartyBuilder.md#createrandomitem)
-- [createTask](dxos_client_testing.PartyBuilder.md#createtask)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyBuilder**(`_party`)
+**new PartyBuilder**(`_party`)
 
 #### Parameters
 
@@ -39,13 +18,13 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L99)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L99)
 
 ## Accessors
 
 ### party
 
-• `get` **party**(): `Party`
+`get` **party**(): `Party`
 
 #### Returns
 
@@ -53,13 +32,13 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L103)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:103](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L103)
 
 ## Methods
 
 ### createLink
 
-▸ **createLink**(`source`, `target`): `Promise`<`void`\>
+**createLink**(`source`, `target`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -74,13 +53,13 @@ Party builder.
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:214](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L214)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:214](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L214)
 
 ___
 
 ### createOrg
 
-▸ **createOrg**(): `Promise`<`Item`<`ObjectModel`\>\>
+**createOrg**(): `Promise`<`Item`<`ObjectModel`\>\>
 
 #### Returns
 
@@ -88,19 +67,19 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L115)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:115](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L115)
 
 ___
 
 ### createOrgs
 
-▸ **createOrgs**(`n?`, `callback?`): `Promise`<`Item`<`ObjectModel`\>[]\>
+**createOrgs**(`n?`, `callback?`): `Promise`<`Item`<`ObjectModel`\>[]\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `n` | [`NumberRange`](../modules/dxos_client_testing.md#numberrange) | `1` |
+| `n` | [`NumberRange`](../types/dxos_client_testing.NumberRange.md) | `1` |
 | `callback?` | (`buidler`: [`OrgBuilder`](dxos_client_testing.OrgBuilder.md)) => `Promise`<`void`\> | `undefined` |
 
 #### Returns
@@ -109,13 +88,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L107)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L107)
 
 ___
 
 ### createParty
 
-▸ **createParty**(): `Promise`<`void`\>
+**createParty**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -123,13 +102,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:163](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L163)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:163](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L163)
 
 ___
 
 ### createPerson
 
-▸ **createPerson**(`org`): `Promise`<`Item`<`ObjectModel`\>\>
+**createPerson**(`org`): `Promise`<`Item`<`ObjectModel`\>\>
 
 #### Parameters
 
@@ -143,13 +122,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:126](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L126)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:126](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L126)
 
 ___
 
 ### createProject
 
-▸ **createProject**(`org`): `Promise`<`Item`<`ObjectModel`\>\>
+**createProject**(`org`): `Promise`<`Item`<`ObjectModel`\>\>
 
 #### Parameters
 
@@ -163,13 +142,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L138)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:138](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L138)
 
 ___
 
 ### createRandomItem
 
-▸ **createRandomItem**(`parent?`): `Promise`<`void`\>
+**createRandomItem**(`parent?`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -183,13 +162,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:165](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L165)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:165](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L165)
 
 ___
 
 ### createTask
 
-▸ **createTask**(`project`): `Promise`<`Item`<`ObjectModel`\>\>
+**createTask**(`project`): `Promise`<`Item`<`ObjectModel`\>\>
 
 #### Parameters
 
@@ -203,4 +182,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L150)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:150](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L150)

@@ -5,20 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [bin](dxos_config.defs.Runtime.CLI.Package.md#bin)
-- [channel](dxos_config.defs.Runtime.CLI.Package.md#channel)
-- [config](dxos_config.defs.Runtime.CLI.Package.md#config)
-- [package](dxos_config.defs.Runtime.CLI.Package.md#package)
-
 ## Properties
 
 ### bin
 
-• `Optional` **bin**: `string`
+ `Optional` **bin**: `string`
 
 Options:
   - proto3_optional = true
@@ -31,7 +22,7 @@ ___
 
 ### channel
 
-• `Optional` **channel**: `string`
+ `Optional` **channel**: `string`
 
 Options:
   - proto3_optional = true
@@ -44,7 +35,7 @@ ___
 
 ### config
 
-• `Optional` **config**: `string`
+ `Optional` **config**: `string`
 
 Options:
   - proto3_optional = true
@@ -57,7 +48,7 @@ ___
 
 ### package
 
-• `Optional` **package**: `string`
+ `Optional` **package**: `string`
 
 Options:
   - proto3_optional = true

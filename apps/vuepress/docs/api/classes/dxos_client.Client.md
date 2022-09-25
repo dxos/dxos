@@ -2,49 +2,11 @@
 
 [@dxos/client](../modules/dxos_client.md).Client
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Client.md#constructor)
-
-### Properties
-
-- [\_config](dxos_client.Client.md#_config)
-- [\_echo](dxos_client.Client.md#_echo)
-- [\_halo](dxos_client.Client.md#_halo)
-- [\_initialized](dxos_client.Client.md#_initialized)
-- [\_mode](dxos_client.Client.md#_mode)
-- [\_options](dxos_client.Client.md#_options)
-- [\_serviceProvider](dxos_client.Client.md#_serviceprovider)
-- [version](dxos_client.Client.md#version)
-
-### Accessors
-
-- [config](dxos_client.Client.md#config)
-- [echo](dxos_client.Client.md#echo)
-- [halo](dxos_client.Client.md#halo)
-- [info](dxos_client.Client.md#info)
-- [initialized](dxos_client.Client.md#initialized)
-- [services](dxos_client.Client.md#services)
-
-### Methods
-
-- [destroy](dxos_client.Client.md#destroy)
-- [initialize](dxos_client.Client.md#initialize)
-- [initializeAuto](dxos_client.Client.md#initializeauto)
-- [initializeIFramePort](dxos_client.Client.md#initializeiframeport)
-- [initializeLocal](dxos_client.Client.md#initializelocal)
-- [initializeRemote](dxos_client.Client.md#initializeremote)
-- [registerModel](dxos_client.Client.md#registermodel)
-- [reset](dxos_client.Client.md#reset)
-- [toString](dxos_client.Client.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new Client**(`config?`, `options?`)
+**new Client**(`config?`, `options?`)
 
 Creates the client object based on supplied configuration.
 Requires initialization after creating by calling `.initialize()`.
@@ -58,93 +20,93 @@ Requires initialization after creating by calling `.initialize()`.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L95)
+[packages/sdk/client/src/packlets/proxy/client.ts:95](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L95)
 
 ## Properties
 
 ### \_config
 
-• `Private` `Readonly` **\_config**: `Config`
+ `Private` `Readonly` **\_config**: `Config`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L79)
+[packages/sdk/client/src/packlets/proxy/client.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L79)
 
 ___
 
 ### \_echo
 
-• `Private` **\_echo**: [`EchoProxy`](dxos_client.EchoProxy.md)
+ `Private` **\_echo**: [`EchoProxy`](dxos_client.EchoProxy.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L86)
+[packages/sdk/client/src/packlets/proxy/client.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L86)
 
 ___
 
 ### \_halo
 
-• `Private` **\_halo**: [`HaloProxy`](dxos_client.HaloProxy.md)
+ `Private` **\_halo**: [`HaloProxy`](dxos_client.HaloProxy.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L85)
+[packages/sdk/client/src/packlets/proxy/client.ts:85](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L85)
 
 ___
 
 ### \_initialized
 
-• `Private` **\_initialized**: `boolean` = `false`
+ `Private` **\_initialized**: `boolean` = `false`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L83)
+[packages/sdk/client/src/packlets/proxy/client.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L83)
 
 ___
 
 ### \_mode
 
-• `Private` `Readonly` **\_mode**: `Mode`
+ `Private` `Readonly` **\_mode**: `Mode`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L81)
+[packages/sdk/client/src/packlets/proxy/client.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L81)
 
 ___
 
 ### \_options
 
-• `Private` `Readonly` **\_options**: [`ClientOptions`](../interfaces/dxos_client.ClientOptions.md)
+ `Private` `Readonly` **\_options**: [`ClientOptions`](../interfaces/dxos_client.ClientOptions.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L80)
+[packages/sdk/client/src/packlets/proxy/client.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L80)
 
 ___
 
 ### \_serviceProvider
 
-• `Private` **\_serviceProvider**: [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md)
+ `Private` **\_serviceProvider**: [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L84)
+[packages/sdk/client/src/packlets/proxy/client.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L84)
 
 ___
 
 ### version
 
-• `Readonly` **version**: ``"2.33.8"``
+ `Readonly` **version**: ``"2.33.8"``
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L77)
+[packages/sdk/client/src/packlets/proxy/client.ts:77](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L77)
 
 ## Accessors
 
 ### config
 
-• `get` **config**(): `Config`
+`get` **config**(): `Config`
 
 #### Returns
 
@@ -152,13 +114,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L127)
+[packages/sdk/client/src/packlets/proxy/client.ts:127](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L127)
 
 ___
 
 ### echo
 
-• `get` **echo**(): [`EchoProxy`](dxos_client.EchoProxy.md)
+`get` **echo**(): [`EchoProxy`](dxos_client.EchoProxy.md)
 
 ECHO database.
 
@@ -168,13 +130,13 @@ ECHO database.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L142)
+[packages/sdk/client/src/packlets/proxy/client.ts:142](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L142)
 
 ___
 
 ### halo
 
-• `get` **halo**(): [`HaloProxy`](dxos_client.HaloProxy.md)
+`get` **halo**(): [`HaloProxy`](dxos_client.HaloProxy.md)
 
 HALO credentials.
 
@@ -184,13 +146,13 @@ HALO credentials.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L150)
+[packages/sdk/client/src/packlets/proxy/client.ts:150](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L150)
 
 ___
 
 ### info
 
-• `get` **info**(): [`ClientInfo`](../interfaces/dxos_client.ClientInfo.md)
+`get` **info**(): [`ClientInfo`](../interfaces/dxos_client.ClientInfo.md)
 
 #### Returns
 
@@ -198,13 +160,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L119)
+[packages/sdk/client/src/packlets/proxy/client.ts:119](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L119)
 
 ___
 
 ### initialized
 
-• `get` **initialized**(): `boolean`
+`get` **initialized**(): `boolean`
 
 Has the Client been initialized?
 Initialize by calling `.initialize()`
@@ -215,29 +177,29 @@ Initialize by calling `.initialize()`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L135)
+[packages/sdk/client/src/packlets/proxy/client.ts:135](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L135)
 
 ___
 
 ### services
 
-• `get` **services**(): [`ClientServices`](../modules/dxos_client.md#clientservices)
+`get` **services**(): [`ClientServices`](../types/dxos_client.ClientServices.md)
 
 Client services that can be proxied.
 
 #### Returns
 
-[`ClientServices`](../modules/dxos_client.md#clientservices)
+[`ClientServices`](../types/dxos_client.ClientServices.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L161)
+[packages/sdk/client/src/packlets/proxy/client.ts:161](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L161)
 
 ## Methods
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 Cleanup, release resources.
 
@@ -247,13 +209,13 @@ Cleanup, release resources.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:248](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L248)
+[packages/sdk/client/src/packlets/proxy/client.ts:248](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L248)
 
 ___
 
 ### initialize
 
-▸ **initialize**(`onProgressCallback?`): `Promise`<`void`\>
+**initialize**(`onProgressCallback?`): `Promise`<`void`\>
 
 Initializes internal resources in an idempotent way.
 Required before using the Client instance.
@@ -270,13 +232,13 @@ Required before using the Client instance.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:169](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L169)
+[packages/sdk/client/src/packlets/proxy/client.ts:169](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L169)
 
 ___
 
 ### initializeAuto
 
-▸ `Private` **initializeAuto**(`onProgressCallback`): `Promise`<`void`\>
+`Private` **initializeAuto**(`onProgressCallback`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -290,13 +252,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:226](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L226)
+[packages/sdk/client/src/packlets/proxy/client.ts:226](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L226)
 
 ___
 
 ### initializeIFramePort
 
-▸ `Private` **initializeIFramePort**(): `RpcPort`
+`Private` **initializeIFramePort**(): `RpcPort`
 
 #### Returns
 
@@ -304,13 +266,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:203](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L203)
+[packages/sdk/client/src/packlets/proxy/client.ts:203](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L203)
 
 ___
 
 ### initializeLocal
 
-▸ `Private` **initializeLocal**(`onProgressCallback`): `Promise`<`void`\>
+`Private` **initializeLocal**(`onProgressCallback`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -324,13 +286,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:220](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L220)
+[packages/sdk/client/src/packlets/proxy/client.ts:220](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L220)
 
 ___
 
 ### initializeRemote
 
-▸ `Private` **initializeRemote**(`onProgressCallback`): `Promise`<`void`\>
+`Private` **initializeRemote**(`onProgressCallback`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -344,13 +306,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:209](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L209)
+[packages/sdk/client/src/packlets/proxy/client.ts:209](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L209)
 
 ___
 
 ### registerModel
 
-▸ **registerModel**(`constructor`): [`Client`](dxos_client.Client.md)
+**registerModel**(`constructor`): [`Client`](dxos_client.Client.md)
 
 Registers a new ECHO model.
 
@@ -368,13 +330,13 @@ Registers a new ECHO model.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:279](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L279)
+[packages/sdk/client/src/packlets/proxy/client.ts:279](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L279)
 
 ___
 
 ### reset
 
-▸ **reset**(): `Promise`<`void`\>
+**reset**(): `Promise`<`void`\>
 
 Resets and destroys client storage.
 Warning: Inconsistent state after reset, do not continue to use this client instance.
@@ -385,13 +347,13 @@ Warning: Inconsistent state after reset, do not continue to use this client inst
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:267](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L267)
+[packages/sdk/client/src/packlets/proxy/client.ts:267](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L267)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -399,4 +361,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L115)
+[packages/sdk/client/src/packlets/proxy/client.ts:115](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L115)

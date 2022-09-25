@@ -5,23 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Enumeration Members
-
-- [CHROME](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#chrome)
-- [FIREFOX](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#firefox)
-- [IDB](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#idb)
-- [JSONDOWN](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#jsondown)
-- [LEVELJS](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#leveljs)
-- [NODE](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#node)
-- [RAM](dxos_config.defs.Runtime.Client.Storage.StorageDriver.md#ram)
-
 ## Enumeration Members
 
 ### CHROME
 
-• **CHROME** = ``2``
+ **CHROME** = ``2``
 
 #### Defined in
 
@@ -31,7 +19,7 @@ ___
 
 ### FIREFOX
 
-• **FIREFOX** = ``3``
+ **FIREFOX** = ``3``
 
 #### Defined in
 
@@ -41,7 +29,7 @@ ___
 
 ### IDB
 
-• **IDB** = ``1``
+ **IDB** = ``1``
 
 #### Defined in
 
@@ -51,7 +39,7 @@ ___
 
 ### JSONDOWN
 
-• **JSONDOWN** = ``12``
+ **JSONDOWN** = ``12``
 
 #### Defined in
 
@@ -61,7 +49,7 @@ ___
 
 ### LEVELJS
 
-• **LEVELJS** = ``11``
+ **LEVELJS** = ``11``
 
 #### Defined in
 
@@ -71,7 +59,7 @@ ___
 
 ### NODE
 
-• **NODE** = ``4``
+ **NODE** = ``4``
 
 #### Defined in
 
@@ -81,7 +69,7 @@ ___
 
 ### RAM
 
-• **RAM** = ``0``
+ **RAM** = ``0``
 
 #### Defined in
 

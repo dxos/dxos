@@ -20,34 +20,11 @@ Subclassed by Item and Link.
 
   ↳ [`Link`](dxos_echo_db.Link.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Entity.md#constructor)
-
-### Properties
-
-- [\_itemManager](dxos_echo_db.Entity.md#_itemmanager)
-- [\_onUpdate](dxos_echo_db.Entity.md#_onupdate)
-- [\_subscriptions](dxos_echo_db.Entity.md#_subscriptions)
-
-### Accessors
-
-- [id](dxos_echo_db.Entity.md#id)
-- [model](dxos_echo_db.Entity.md#model)
-- [modelMeta](dxos_echo_db.Entity.md#modelmeta)
-- [type](dxos_echo_db.Entity.md#type)
-
-### Methods
-
-- [subscribe](dxos_echo_db.Entity.md#subscribe)
-
 ## Constructors
 
 ### constructor
 
-• **new Entity**<`M`\>(`_itemManager`, `_id`, `_type`, `stateManager`)
+**new Entity**<`M`\>(`_itemManager`, `_id`, `_type`, `stateManager`)
 
 #### Type parameters
 
@@ -66,43 +43,43 @@ Subclassed by Item and Link.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L28)
+[packages/echo/echo-db/src/packlets/database/entity.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L28)
 
 ## Properties
 
 ### \_itemManager
 
-• `Protected` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
+ `Protected` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
+[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
 
 ___
 
 ### \_onUpdate
 
-• `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
+ `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
+[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
 
 ___
 
 ### \_subscriptions
 
-• `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
+ `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L21)
+[packages/echo/echo-db/src/packlets/database/entity.ts:21](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L21)
 
 ## Accessors
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -110,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
+[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
 
 ___
 
 ### model
 
-• `get` **model**(): `M`
+`get` **model**(): `M`
 
 #### Returns
 
@@ -124,13 +101,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
+[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
 
 ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -138,13 +115,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
+[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
 
 ___
 
 ### type
 
-• `get` **type**(): `undefined` \| `string`
+`get` **type**(): `undefined` \| `string`
 
 #### Returns
 
@@ -152,13 +129,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
+[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
 
 ## Methods
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -172,7 +149,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -186,4 +163,4 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
+[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L65)

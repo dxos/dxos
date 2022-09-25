@@ -2,33 +2,25 @@
 
 [@dxos/react-components](../modules/dxos_react_components.md).OpenButtonProps
 
-## Table of contents
-
-### Properties
-
-- [direction](dxos_react_components.OpenButtonProps.md#direction)
-- [onOpen](dxos_react_components.OpenButtonProps.md#onopen)
-- [sx](dxos_react_components.OpenButtonProps.md#sx)
-
 ## Properties
 
 ### direction
 
-• `Optional` **direction**: `Direction`
+ `Optional` **direction**: `Direction`
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L150)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:150](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SlidingDrawer.tsx#L150)
 
 ___
 
 ### onOpen
 
-• **onOpen**: () => `void`
+ **onOpen**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -36,14 +28,14 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:151](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L151)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:151](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SlidingDrawer.tsx#L151)
 
 ___
 
 ### sx
 
-• `Optional` **sx**: `any`
+ `Optional` **sx**: `any`
 
 #### Defined in
 
-[packages/sdk/react-components/src/SlidingDrawer.tsx:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SlidingDrawer.tsx#L152)
+[packages/sdk/react-components/src/SlidingDrawer.tsx:152](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SlidingDrawer.tsx#L152)

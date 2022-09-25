@@ -4,19 +4,11 @@
 
 Controls how deleted items are filtered.
 
-## Table of contents
-
-### Enumeration Members
-
-- [HIDE\_DELETED](dxos_client.ItemFilterDeleted.md#hide_deleted)
-- [SHOW\_DELETED](dxos_client.ItemFilterDeleted.md#show_deleted)
-- [SHOW\_DELETED\_ONLY](dxos_client.ItemFilterDeleted.md#show_deleted_only)
-
 ## Enumeration Members
 
 ### HIDE\_DELETED
 
-• **HIDE\_DELETED** = ``0``
+ **HIDE\_DELETED** = ``0``
 
 Do not return deleted items. Default behaviour.
 
@@ -28,7 +20,7 @@ ___
 
 ### SHOW\_DELETED
 
-• **SHOW\_DELETED** = ``1``
+ **SHOW\_DELETED** = ``1``
 
 Return deleted and regular items.
 
@@ -40,7 +32,7 @@ ___
 
 ### SHOW\_DELETED\_ONLY
 
-• **SHOW\_DELETED\_ONLY** = ``2``
+ **SHOW\_DELETED\_ONLY** = ``2``
 
 Return only deleted items.
 

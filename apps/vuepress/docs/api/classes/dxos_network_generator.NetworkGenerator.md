@@ -4,41 +4,15 @@
 
 ## Hierarchy
 
-- `Record`<[`Topology`](../modules/dxos_network_generator.md#topology), `Generator`\>
+- `Record`<[`Topology`](../types/dxos_network_generator.Topology.md), `Generator`\>
 
   ↳ **`NetworkGenerator`**
-
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_generator.NetworkGenerator.md#constructor)
-
-### Properties
-
-- [balancedBinTree](dxos_network_generator.NetworkGenerator.md#balancedbintree)
-- [circularLadder](dxos_network_generator.NetworkGenerator.md#circularladder)
-- [cliqueCircle](dxos_network_generator.NetworkGenerator.md#cliquecircle)
-- [complete](dxos_network_generator.NetworkGenerator.md#complete)
-- [completeBipartite](dxos_network_generator.NetworkGenerator.md#completebipartite)
-- [error](dxos_network_generator.NetworkGenerator.md#error)
-- [generator](dxos_network_generator.NetworkGenerator.md#generator)
-- [grid](dxos_network_generator.NetworkGenerator.md#grid)
-- [grid3](dxos_network_generator.NetworkGenerator.md#grid3)
-- [ladder](dxos_network_generator.NetworkGenerator.md#ladder)
-- [noLinks](dxos_network_generator.NetworkGenerator.md#nolinks)
-- [path](dxos_network_generator.NetworkGenerator.md#path)
-- [wattsStrogatz](dxos_network_generator.NetworkGenerator.md#wattsstrogatz)
-
-### Methods
-
-- [createTopology](dxos_network_generator.NetworkGenerator.md#createtopology)
 
 ## Constructors
 
 ### constructor
 
-• **new NetworkGenerator**(`options?`)
+**new NetworkGenerator**(`options?`)
 
 #### Parameters
 
@@ -52,13 +26,13 @@ Record<Topology, Generator\>.constructor
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L35)
+[packages/mesh/network-generator/src/network-generator.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network-generator.ts#L35)
 
 ## Properties
 
 ### balancedBinTree
 
-• **balancedBinTree**: `Generator`
+ **balancedBinTree**: `Generator`
 
 #### Inherited from
 
@@ -68,7 +42,7 @@ ___
 
 ### circularLadder
 
-• **circularLadder**: `Generator`
+ **circularLadder**: `Generator`
 
 #### Inherited from
 
@@ -78,7 +52,7 @@ ___
 
 ### cliqueCircle
 
-• **cliqueCircle**: `Generator`
+ **cliqueCircle**: `Generator`
 
 #### Inherited from
 
@@ -88,7 +62,7 @@ ___
 
 ### complete
 
-• **complete**: `Generator`
+ **complete**: `Generator`
 
 #### Inherited from
 
@@ -98,7 +72,7 @@ ___
 
 ### completeBipartite
 
-• **completeBipartite**: `Generator`
+ **completeBipartite**: `Generator`
 
 #### Inherited from
 
@@ -108,27 +82,27 @@ ___
 
 ### error
 
-• `Readonly` **error**: `Event`<`Error`\>
+ `Readonly` **error**: `Event`<`Error`\>
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L32)
+[packages/mesh/network-generator/src/network-generator.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network-generator.ts#L32)
 
 ___
 
 ### generator
 
-• `Private` `Readonly` **generator**: `any`
+ `Private` `Readonly` **generator**: `any`
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L33)
+[packages/mesh/network-generator/src/network-generator.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network-generator.ts#L33)
 
 ___
 
 ### grid
 
-• **grid**: `Generator`
+ **grid**: `Generator`
 
 #### Inherited from
 
@@ -138,7 +112,7 @@ ___
 
 ### grid3
 
-• **grid3**: `Generator`
+ **grid3**: `Generator`
 
 #### Inherited from
 
@@ -148,7 +122,7 @@ ___
 
 ### ladder
 
-• **ladder**: `Generator`
+ **ladder**: `Generator`
 
 #### Inherited from
 
@@ -158,7 +132,7 @@ ___
 
 ### noLinks
 
-• **noLinks**: `Generator`
+ **noLinks**: `Generator`
 
 #### Inherited from
 
@@ -168,7 +142,7 @@ ___
 
 ### path
 
-• **path**: `Generator`
+ **path**: `Generator`
 
 #### Inherited from
 
@@ -178,7 +152,7 @@ ___
 
 ### wattsStrogatz
 
-• **wattsStrogatz**: `Generator`
+ **wattsStrogatz**: `Generator`
 
 #### Inherited from
 
@@ -188,7 +162,7 @@ Record.wattsStrogatz
 
 ### createTopology
 
-▸ **createTopology**(`topology`, ...`args`): `Promise`<[`Network`](dxos_network_generator.Network.md)\>
+**createTopology**(`topology`, ...`args`): `Promise`<[`Network`](dxos_network_generator.Network.md)\>
 
 #### Parameters
 
@@ -203,4 +177,4 @@ Record.wattsStrogatz
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L62)
+[packages/mesh/network-generator/src/network-generator.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network-generator.ts#L62)

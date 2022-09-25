@@ -2,21 +2,15 @@
 
 [@dxos/react-client-testing](../modules/dxos_react_client_testing.md).ImportMenuProps
 
-## Table of contents
-
-### Properties
-
-- [onImport](dxos_react_client_testing.ImportMenuProps.md#onimport)
-
 ## Properties
 
 ### onImport
 
-• `Optional` **onImport**: (`file`: `string` \| `File`) => `void`
+ `Optional` **onImport**: (`file`: `string` \| `File`) => `void`
 
 #### Type declaration
 
-▸ (`file`): `void`
+(`file`): `void`
 
 ##### Parameters
 
@@ -30,4 +24,4 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L22)
+[packages/sdk/react-client-testing/src/components/ImportMenu.tsx:22](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/components/ImportMenu.tsx#L22)

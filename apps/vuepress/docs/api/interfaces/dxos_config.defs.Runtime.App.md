@@ -5,20 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [org](dxos_config.defs.Runtime.App.md#org)
-- [publicUrl](dxos_config.defs.Runtime.App.md#publicurl)
-- [theme](dxos_config.defs.Runtime.App.md#theme)
-- [website](dxos_config.defs.Runtime.App.md#website)
-
 ## Properties
 
 ### org
 
-• `Optional` **org**: `string`
+ `Optional` **org**: `string`
 
 Options:
   - proto3_optional = true
@@ -31,7 +22,7 @@ ___
 
 ### publicUrl
 
-• `Optional` **publicUrl**: `string`
+ `Optional` **publicUrl**: `string`
 
 Options:
   - (env) = "PUBLIC_URL"
@@ -45,7 +36,7 @@ ___
 
 ### theme
 
-• `Optional` **theme**: `string`
+ `Optional` **theme**: `string`
 
 Options:
   - proto3_optional = true
@@ -58,7 +49,7 @@ ___
 
 ### website
 
-• `Optional` **website**: `string`
+ `Optional` **website**: `string`
 
 Options:
   - proto3_optional = true

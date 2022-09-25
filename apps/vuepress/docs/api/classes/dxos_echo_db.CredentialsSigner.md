@@ -4,28 +4,11 @@
 
 Contains a signer (keyring), provides signing keys to create signed credential messages.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.CredentialsSigner.md#constructor)
-
-### Accessors
-
-- [signer](dxos_echo_db.CredentialsSigner.md#signer)
-
-### Methods
-
-- [getDeviceKey](dxos_echo_db.CredentialsSigner.md#getdevicekey)
-- [getDeviceSigningKeys](dxos_echo_db.CredentialsSigner.md#getdevicesigningkeys)
-- [getIdentityKey](dxos_echo_db.CredentialsSigner.md#getidentitykey)
-- [createDirectDeviceSigner](dxos_echo_db.CredentialsSigner.md#createdirectdevicesigner)
-
 ## Constructors
 
 ### constructor
 
-• **new CredentialsSigner**(`_signer`, `_identityKey`, `_deviceKey`, `_signingKeys`)
+**new CredentialsSigner**(`_signer`, `_identityKey`, `_deviceKey`, `_signingKeys`)
 
 #### Parameters
 
@@ -38,13 +21,13 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L29)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L29)
 
 ## Accessors
 
 ### signer
 
-• `get` **signer**(): `Signer`
+`get` **signer**(): `Signer`
 
 #### Returns
 
@@ -52,13 +35,13 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L36)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L36)
 
 ## Methods
 
 ### getDeviceKey
 
-▸ **getDeviceKey**(): `KeyRecord`
+**getDeviceKey**(): `KeyRecord`
 
 #### Returns
 
@@ -66,13 +49,13 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L44)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L44)
 
 ___
 
 ### getDeviceSigningKeys
 
-▸ **getDeviceSigningKeys**(): `KeyRecord` \| `KeyChain`
+**getDeviceSigningKeys**(): `KeyRecord` \| `KeyChain`
 
 #### Returns
 
@@ -89,13 +72,13 @@ Devices need to sign with their keyChain including the device key admission cred
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L58)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L58)
 
 ___
 
 ### getIdentityKey
 
-▸ **getIdentityKey**(): `KeyRecord`
+**getIdentityKey**(): `KeyRecord`
 
 #### Returns
 
@@ -103,13 +86,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L40)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L40)
 
 ___
 
 ### createDirectDeviceSigner
 
-▸ `Static` **createDirectDeviceSigner**(`keyring`): [`CredentialsSigner`](dxos_echo_db.CredentialsSigner.md)
+`Static` **createDirectDeviceSigner**(`keyring`): [`CredentialsSigner`](dxos_echo_db.CredentialsSigner.md)
 
 Queries IDENTITY and DEVICE keys from the keyring.
 Uses the device key without keychain for signing.
@@ -126,4 +109,4 @@ Uses the device key without keychain for signing.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/credentials-signer.ts#L17)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/credentials-signer.ts#L17)

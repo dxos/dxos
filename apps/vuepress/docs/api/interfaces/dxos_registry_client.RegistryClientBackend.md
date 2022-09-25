@@ -9,25 +9,11 @@ Minimal API for DXNS registry client backend.
 - [`MemoryRegistryClientBackend`](../classes/dxos_registry_client.MemoryRegistryClientBackend.md)
 - [`PolkadotRegistry`](../classes/dxos_registry_client.PolkadotRegistry.md)
 
-## Table of contents
-
-### Methods
-
-- [getDomainKey](dxos_registry_client.RegistryClientBackend.md#getdomainkey)
-- [getRecord](dxos_registry_client.RegistryClientBackend.md#getrecord)
-- [getResource](dxos_registry_client.RegistryClientBackend.md#getresource)
-- [listAuthorities](dxos_registry_client.RegistryClientBackend.md#listauthorities)
-- [listRecords](dxos_registry_client.RegistryClientBackend.md#listrecords)
-- [listResources](dxos_registry_client.RegistryClientBackend.md#listresources)
-- [registerAuthority](dxos_registry_client.RegistryClientBackend.md#registerauthority)
-- [registerRecord](dxos_registry_client.RegistryClientBackend.md#registerrecord)
-- [registerResource](dxos_registry_client.RegistryClientBackend.md#registerresource)
-
 ## Methods
 
 ### getDomainKey
 
-▸ **getDomainKey**(`domain`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
+**getDomainKey**(`domain`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -41,13 +27,13 @@ Minimal API for DXNS registry client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L28)
+[packages/sdk/registry-client/src/api/registry.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L28)
 
 ___
 
 ### getRecord
 
-▸ **getRecord**(`cid`): `Promise`<`undefined` \| [`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)\>
+**getRecord**(`cid`): `Promise`<`undefined` \| [`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)\>
 
 #### Parameters
 
@@ -57,17 +43,17 @@ ___
 
 #### Returns
 
-`Promise`<`undefined` \| [`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)\>
+`Promise`<`undefined` \| [`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L38)
+[packages/sdk/registry-client/src/api/registry.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L38)
 
 ___
 
 ### getResource
 
-▸ **getResource**(`name`): `Promise`<`undefined` \| [`CID`](../classes/dxos_registry_client.CID.md)\>
+**getResource**(`name`): `Promise`<`undefined` \| [`CID`](../classes/dxos_registry_client.CID.md)\>
 
 #### Parameters
 
@@ -81,41 +67,41 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L31)
+[packages/sdk/registry-client/src/api/registry.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L31)
 
 ___
 
 ### listAuthorities
 
-▸ **listAuthorities**(): `Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+**listAuthorities**(): `Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 #### Returns
 
-`Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+`Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L29)
+[packages/sdk/registry-client/src/api/registry.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L29)
 
 ___
 
 ### listRecords
 
-▸ **listRecords**(): `Promise`<[`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)[]\>
+**listRecords**(): `Promise`<[`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)[]\>
 
 #### Returns
 
-`Promise`<[`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)[]\>
+`Promise`<[`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L39)
+[packages/sdk/registry-client/src/api/registry.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L39)
 
 ___
 
 ### listResources
 
-▸ **listResources**(): `Promise`<[[`DXN`](../classes/dxos_registry_client.DXN.md), [`CID`](../classes/dxos_registry_client.CID.md)][]\>
+**listResources**(): `Promise`<[[`DXN`](../classes/dxos_registry_client.DXN.md), [`CID`](../classes/dxos_registry_client.CID.md)][]\>
 
 #### Returns
 
@@ -123,13 +109,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L32)
+[packages/sdk/registry-client/src/api/registry.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L32)
 
 ___
 
 ### registerAuthority
 
-▸ **registerAuthority**(`owner`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
+**registerAuthority**(`owner`): `Promise`<[`DomainKey`](../classes/dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -143,13 +129,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L30)
+[packages/sdk/registry-client/src/api/registry.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L30)
 
 ___
 
 ### registerRecord
 
-▸ **registerRecord**(`record`): `Promise`<[`CID`](../classes/dxos_registry_client.CID.md)\>
+**registerRecord**(`record`): `Promise`<[`CID`](../classes/dxos_registry_client.CID.md)\>
 
 #### Parameters
 
@@ -163,13 +149,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L40)
+[packages/sdk/registry-client/src/api/registry.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L40)
 
 ___
 
 ### registerResource
 
-▸ **registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
+**registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -185,4 +171,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry.ts#L33)
+[packages/sdk/registry-client/src/api/registry.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry.ts#L33)

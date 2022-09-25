@@ -5,31 +5,11 @@
 Global configuration object.
 NOTE: Config objects are immutable.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_config.Config.md#constructor)
-
-### Properties
-
-- [\_config](dxos_config.Config.md#_config)
-
-### Accessors
-
-- [values](dxos_config.Config.md#values)
-
-### Methods
-
-- [get](dxos_config.Config.md#get)
-- [getOrThrow](dxos_config.Config.md#getorthrow)
-- [getUnchecked](dxos_config.Config.md#getunchecked)
-
 ## Constructors
 
 ### constructor
 
-• **new Config**(...`objects`)
+**new Config**(...`objects`)
 
 Creates an immutable instance.
 
@@ -41,23 +21,23 @@ Creates an immutable instance.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L100)
+[packages/sdk/config/src/config.ts:100](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L100)
 
 ## Properties
 
 ### \_config
 
-• `Private` `Readonly` **\_config**: `any`
+ `Private` `Readonly` **\_config**: `any`
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:93](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L93)
+[packages/sdk/config/src/config.ts:93](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L93)
 
 ## Accessors
 
 ### values
 
-• `get` **values**(): [`Config`](../interfaces/dxos_config.defs.Config.md)
+`get` **values**(): [`Config`](../interfaces/dxos_config.defs.Config.md)
 
 Returns an immutable config JSON object.
 
@@ -67,13 +47,13 @@ Returns an immutable config JSON object.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L107)
+[packages/sdk/config/src/config.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L107)
 
 ## Methods
 
 ### get
 
-▸ **get**<`K`\>(`key`, `defaultValue?`): [`DeepIndex`](../modules/dxos_config.md#deepindex)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../modules/dxos_config.md#parsekey)<`K`\>, `undefined`\>
+**get**<`K`\>(`key`, `defaultValue?`): [`DeepIndex`](../types/dxos_config.DeepIndex.md)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../types/dxos_config.ParseKey.md)<`K`\>, `undefined`\>
 
 Returns the given config property.
 
@@ -88,23 +68,23 @@ Returns the given config property.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `key` | `K` | A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'. |
-| `defaultValue?` | [`DeepIndex`](../modules/dxos_config.md#deepindex)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../modules/dxos_config.md#parsekey)<`K`\>, `undefined`\> | Default value to return if option is not present in the config. |
+| `defaultValue?` | [`DeepIndex`](../types/dxos_config.DeepIndex.md)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../types/dxos_config.ParseKey.md)<`K`\>, `undefined`\> | Default value to return if option is not present in the config. |
 
 #### Returns
 
-[`DeepIndex`](../modules/dxos_config.md#deepindex)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../modules/dxos_config.md#parsekey)<`K`\>, `undefined`\>
+[`DeepIndex`](../types/dxos_config.DeepIndex.md)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../types/dxos_config.ParseKey.md)<`K`\>, `undefined`\>
 
 The config value or undefined if the option is not present.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L118)
+[packages/sdk/config/src/config.ts:118](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L118)
 
 ___
 
 ### getOrThrow
 
-▸ **getOrThrow**<`K`\>(`key`): `Exclude`<[`DeepIndex`](../modules/dxos_config.md#deepindex)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../modules/dxos_config.md#parsekey)<`K`\>, `undefined`\>, `undefined`\>
+**getOrThrow**<`K`\>(`key`): `Exclude`<[`DeepIndex`](../types/dxos_config.DeepIndex.md)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../types/dxos_config.ParseKey.md)<`K`\>, `undefined`\>, `undefined`\>
 
 Returns the given config property or throw if it doesn't exist.
 
@@ -122,17 +102,17 @@ Returns the given config property or throw if it doesn't exist.
 
 #### Returns
 
-`Exclude`<[`DeepIndex`](../modules/dxos_config.md#deepindex)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../modules/dxos_config.md#parsekey)<`K`\>, `undefined`\>, `undefined`\>
+`Exclude`<[`DeepIndex`](../types/dxos_config.DeepIndex.md)<[`Config`](../interfaces/dxos_config.defs.Config.md), [`ParseKey`](../types/dxos_config.ParseKey.md)<`K`\>, `undefined`\>, `undefined`\>
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:136](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L136)
+[packages/sdk/config/src/config.ts:136](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L136)
 
 ___
 
 ### getUnchecked
 
-▸ **getUnchecked**<`T`\>(`key`, `defaultValue?`): `T`
+**getUnchecked**<`T`\>(`key`, `defaultValue?`): `T`
 
 Returns config key without type checking.
 
@@ -159,4 +139,4 @@ Use the type-checked version.
 
 #### Defined in
 
-[packages/sdk/config/src/config.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/config/src/config.ts#L127)
+[packages/sdk/config/src/config.ts:127](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/config/src/config.ts#L127)

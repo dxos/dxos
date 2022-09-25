@@ -5,39 +5,11 @@
 Manages the inbound and outbound message streams for an individual party.
 Reads messages from individual feeds and splits them into ECHO and HALO streams.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.FeedMuxer.md#constructor)
-
-### Properties
-
-- [\_echoProcessor](dxos_echo_db.FeedMuxer.md#_echoprocessor)
-- [\_errors](dxos_echo_db.FeedMuxer.md#_errors)
-- [\_isOpen](dxos_echo_db.FeedMuxer.md#_isopen)
-- [\_outboundEchoStream](dxos_echo_db.FeedMuxer.md#_outboundechostream)
-- [\_outboundHaloStream](dxos_echo_db.FeedMuxer.md#_outboundhalostream)
-
-### Accessors
-
-- [errors](dxos_echo_db.FeedMuxer.md#errors)
-- [isOpen](dxos_echo_db.FeedMuxer.md#isopen)
-- [outboundEchoStream](dxos_echo_db.FeedMuxer.md#outboundechostream)
-- [outboundHaloStream](dxos_echo_db.FeedMuxer.md#outboundhalostream)
-- [readOnly](dxos_echo_db.FeedMuxer.md#readonly)
-
-### Methods
-
-- [close](dxos_echo_db.FeedMuxer.md#close)
-- [open](dxos_echo_db.FeedMuxer.md#open)
-- [setEchoProcessor](dxos_echo_db.FeedMuxer.md#setechoprocessor)
-
 ## Constructors
 
 ### constructor
 
-• **new FeedMuxer**(`_partyProcessor`, `_feedStorIterator`, `_timeframeClock`, `_feedWriter?`, `_options?`)
+**new FeedMuxer**(`_partyProcessor`, `_feedStorIterator`, `_timeframeClock`, `_feedWriter?`, `_options?`)
 
 #### Parameters
 
@@ -51,67 +23,67 @@ Reads messages from individual feeds and splits them into ECHO and HALO streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L54)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L54)
 
 ## Properties
 
 ### \_echoProcessor
 
-• `Private` **\_echoProcessor**: `undefined` \| [`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+ `Private` **\_echoProcessor**: `undefined` \| [`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L45)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L45)
 
 ___
 
 ### \_errors
 
-• `Private` `Readonly` **\_errors**: `Event`<`Error`\>
+ `Private` `Readonly` **\_errors**: `Event`<`Error`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L31)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L31)
 
 ___
 
 ### \_isOpen
 
-• `Private` **\_isOpen**: `boolean` = `false`
+ `Private` **\_isOpen**: `boolean` = `false`
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L33)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L33)
 
 ___
 
 ### \_outboundEchoStream
 
-• `Private` **\_outboundEchoStream**: `undefined` \| `FeedWriter`<`EchoEnvelope`\>
+ `Private` **\_outboundEchoStream**: `undefined` \| `FeedWriter`<`EchoEnvelope`\>
 
 Messages to write into pipeline (e.g., mutations from model).
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L38)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L38)
 
 ___
 
 ### \_outboundHaloStream
 
-• `Private` **\_outboundHaloStream**: `undefined` \| `FeedWriter`<`Message`\>
+ `Private` **\_outboundHaloStream**: `undefined` \| `FeedWriter`<`Message`\>
 
 Halo message stream to write into pipeline.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L43)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L43)
 
 ## Accessors
 
 ### errors
 
-• `get` **errors**(): `Event`<`Error`\>
+`get` **errors**(): `Event`<`Error`\>
 
 #### Returns
 
@@ -119,13 +91,13 @@ Halo message stream to write into pipeline.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L95)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:95](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L95)
 
 ___
 
 ### isOpen
 
-• `get` **isOpen**(): `boolean`
+`get` **isOpen**(): `boolean`
 
 #### Returns
 
@@ -133,13 +105,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L79)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L79)
 
 ___
 
 ### outboundEchoStream
 
-• `get` **outboundEchoStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
+`get` **outboundEchoStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
 
 #### Returns
 
@@ -147,13 +119,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L87)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L87)
 
 ___
 
 ### outboundHaloStream
 
-• `get` **outboundHaloStream**(): `undefined` \| `FeedWriter`<`Message`\>
+`get` **outboundHaloStream**(): `undefined` \| `FeedWriter`<`Message`\>
 
 #### Returns
 
@@ -161,13 +133,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L91)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:91](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L91)
 
 ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -175,13 +147,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L83)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L83)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 Close all streams.
 
@@ -191,13 +163,13 @@ Close all streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:180](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L180)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:180](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L180)
 
 ___
 
 ### open
 
-▸ **open**(): `Promise`<`undefined` \| `FeedWriter`<`EchoEnvelope`\>\>
+**open**(): `Promise`<`undefined` \| `FeedWriter`<`EchoEnvelope`\>\>
 
 Create inbound and outbound pipielines.
 https://nodejs.org/api/stream.html#stream_stream_pipeline_source_transforms_destination_callback
@@ -214,19 +186,19 @@ Feed
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L113)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:113](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L113)
 
 ___
 
 ### setEchoProcessor
 
-▸ **setEchoProcessor**(`processor`): `void`
+**setEchoProcessor**(`processor`): `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `processor` | [`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor) |
+| `processor` | [`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md) |
 
 #### Returns
 
@@ -234,4 +206,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L99)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L99)

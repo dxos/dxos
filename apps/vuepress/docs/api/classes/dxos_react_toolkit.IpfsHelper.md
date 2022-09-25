@@ -5,28 +5,11 @@
 IPFS gateway HTTP methods.
 Imported from wirelineio/appkit
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_react_toolkit.IpfsHelper.md#constructor)
-
-### Properties
-
-- [\_ipfsGateway](dxos_react_toolkit.IpfsHelper.md#_ipfsgateway)
-
-### Methods
-
-- [\_fetch](dxos_react_toolkit.IpfsHelper.md#_fetch)
-- [download](dxos_react_toolkit.IpfsHelper.md#download)
-- [upload](dxos_react_toolkit.IpfsHelper.md#upload)
-- [url](dxos_react_toolkit.IpfsHelper.md#url)
-
 ## Constructors
 
 ### constructor
 
-• **new IpfsHelper**(`ipfsGateway`)
+**new IpfsHelper**(`ipfsGateway`)
 
 #### Parameters
 
@@ -36,23 +19,23 @@ Imported from wirelineio/appkit
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L14)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L14)
 
 ## Properties
 
 ### \_ipfsGateway
 
-• **\_ipfsGateway**: `string`
+ **\_ipfsGateway**: `string`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L12)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:12](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L12)
 
 ## Methods
 
 ### \_fetch
 
-▸ **_fetch**(`request`, `cid?`): `Promise`<{}\>
+**_fetch**(`request`, `cid?`): `Promise`<{}\>
 
 #### Parameters
 
@@ -67,13 +50,13 @@ Imported from wirelineio/appkit
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L52)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L52)
 
 ___
 
 ### download
 
-▸ **download**(`cid`): `Promise`<`string`\>
+**download**(`cid`): `Promise`<`string`\>
 
 #### Parameters
 
@@ -87,13 +70,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L38)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L38)
 
 ___
 
 ### upload
 
-▸ **upload**(`body`, `contentType?`): `Promise`<`string`\>
+**upload**(`body`, `contentType?`): `Promise`<`string`\>
 
 #### Parameters
 
@@ -108,13 +91,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L23)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L23)
 
 ___
 
 ### url
 
-▸ **url**(`cid`): `string`
+**url**(`cid`): `string`
 
 #### Parameters
 
@@ -128,4 +111,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L19)
+[packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/helpers/ipfs-helper.ts#L19)

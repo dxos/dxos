@@ -7,36 +7,11 @@ FeedStore
 Management of multiple feeds to create, update, load, find and delete feeds
 into a persist repository storage.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_feed_store.FeedStore.md#constructor)
-
-### Properties
-
-- [\_descriptors](dxos_feed_store.FeedStore.md#_descriptors)
-- [\_directory](dxos_feed_store.FeedStore.md#_directory)
-- [\_hypercore](dxos_feed_store.FeedStore.md#_hypercore)
-- [\_valueEncoding](dxos_feed_store.FeedStore.md#_valueencoding)
-- [feedOpenedEvent](dxos_feed_store.FeedStore.md#feedopenedevent)
-
-### Accessors
-
-- [storage](dxos_feed_store.FeedStore.md#storage)
-
-### Methods
-
-- [\_createDescriptor](dxos_feed_store.FeedStore.md#_createdescriptor)
-- [close](dxos_feed_store.FeedStore.md#close)
-- [openReadOnlyFeed](dxos_feed_store.FeedStore.md#openreadonlyfeed)
-- [openReadWriteFeed](dxos_feed_store.FeedStore.md#openreadwritefeed)
-
 ## Constructors
 
 ### constructor
 
-• **new FeedStore**(`directory`, `options?`)
+**new FeedStore**(`directory`, `options?`)
 
 #### Parameters
 
@@ -47,65 +22,65 @@ into a persist repository storage.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L62)
+[packages/echo/feed-store/src/feed-store.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L62)
 
 ## Properties
 
 ### \_descriptors
 
-• `Private` **\_descriptors**: `Map`<`string`, [`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
+ `Private` **\_descriptors**: `Map`<`string`, [`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L51)
+[packages/echo/feed-store/src/feed-store.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L51)
 
 ___
 
 ### \_directory
 
-• `Private` **\_directory**: `Directory`
+ `Private` **\_directory**: `Directory`
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L48)
+[packages/echo/feed-store/src/feed-store.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L48)
 
 ___
 
 ### \_hypercore
 
-• `Private` **\_hypercore**: [`Hypercore`](../modules/dxos_feed_store.md#hypercore)
+ `Private` **\_hypercore**: [`Hypercore`](../types/dxos_feed_store.Hypercore.md)
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L50)
+[packages/echo/feed-store/src/feed-store.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L50)
 
 ___
 
 ### \_valueEncoding
 
-• `Private` **\_valueEncoding**: `undefined` \| `ValueEncoding`
+ `Private` **\_valueEncoding**: `undefined` \| `ValueEncoding`
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L49)
+[packages/echo/feed-store/src/feed-store.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L49)
 
 ___
 
 ### feedOpenedEvent
 
-• `Readonly` **feedOpenedEvent**: `Event`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
+ `Readonly` **feedOpenedEvent**: `Event`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
 
 Is emitted when a new feed represented by FeedDescriptor is opened.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L56)
+[packages/echo/feed-store/src/feed-store.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L56)
 
 ## Accessors
 
 ### storage
 
-• `get` **storage**(): `Directory`
+`get` **storage**(): `Directory`
 
 #### Returns
 
@@ -113,13 +88,13 @@ Is emitted when a new feed represented by FeedDescriptor is opened.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L81)
+[packages/echo/feed-store/src/feed-store.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L81)
 
 ## Methods
 
 ### \_createDescriptor
 
-▸ `Private` **_createDescriptor**(`options`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
+`Private` **_createDescriptor**(`options`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
 
 Factory to create a new FeedDescriptor.
 
@@ -135,13 +110,13 @@ Factory to create a new FeedDescriptor.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L113)
+[packages/echo/feed-store/src/feed-store.ts:113](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L113)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -149,13 +124,13 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L85)
+[packages/echo/feed-store/src/feed-store.ts:85](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L85)
 
 ___
 
 ### openReadOnlyFeed
 
-▸ **openReadOnlyFeed**(`key`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
+**openReadOnlyFeed**(`key`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
 
 Create a readonly feed to Feedstore
 
@@ -171,13 +146,13 @@ Create a readonly feed to Feedstore
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:105](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L105)
+[packages/echo/feed-store/src/feed-store.ts:105](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L105)
 
 ___
 
 ### openReadWriteFeed
 
-▸ **openReadWriteFeed**(`key`, `secretKey`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
+**openReadWriteFeed**(`key`, `secretKey`): `Promise`<[`FeedDescriptor`](dxos_feed_store.FeedDescriptor.md)\>
 
 Create a feed to Feedstore
 
@@ -194,4 +169,4 @@ Create a feed to Feedstore
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L94)
+[packages/echo/feed-store/src/feed-store.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L94)

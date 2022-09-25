@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [cert](dxos_config.defs.Runtime.Services.Kube.Endpoints.md#cert)
-- [logs](dxos_config.defs.Runtime.Services.Kube.Endpoints.md#logs)
-- [services](dxos_config.defs.Runtime.Services.Kube.Endpoints.md#services)
-
 ## Properties
 
 ### cert
 
-• `Optional` **cert**: `string`
+ `Optional` **cert**: `string`
 
 Options:
   - proto3_optional = true
@@ -30,7 +22,7 @@ ___
 
 ### logs
 
-• `Optional` **logs**: `string`
+ `Optional` **logs**: `string`
 
 Options:
   - proto3_optional = true
@@ -43,7 +35,7 @@ ___
 
 ### services
 
-• `Optional` **services**: `string`
+ `Optional` **services**: `string`
 
 Options:
   - proto3_optional = true

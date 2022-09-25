@@ -5,25 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [app](dxos_config.defs.Runtime.Services-1.md#app)
-- [bot](dxos_config.defs.Runtime.Services-1.md#bot)
-- [dxns](dxos_config.defs.Runtime.Services-1.md#dxns)
-- [ice](dxos_config.defs.Runtime.Services-1.md#ice)
-- [ipfs](dxos_config.defs.Runtime.Services-1.md#ipfs)
-- [kube](dxos_config.defs.Runtime.Services-1.md#kube)
-- [machine](dxos_config.defs.Runtime.Services-1.md#machine)
-- [publisher](dxos_config.defs.Runtime.Services-1.md#publisher)
-- [signal](dxos_config.defs.Runtime.Services-1.md#signal)
-
 ## Properties
 
 ### app
 
-• `Optional` **app**: [`AppServer`](dxos_config.defs.Runtime.Services.AppServer.md)
+ `Optional` **app**: [`AppServer`](dxos_config.defs.Runtime.Services.AppServer.md)
 
 Options:
   - proto3_optional = true
@@ -36,7 +22,7 @@ ___
 
 ### bot
 
-• `Optional` **bot**: [`BotFactory`](dxos_config.defs.Runtime.Services.BotFactory.md)
+ `Optional` **bot**: [`BotFactory`](dxos_config.defs.Runtime.Services.BotFactory.md)
 
 Options:
   - proto3_optional = true
@@ -49,7 +35,7 @@ ___
 
 ### dxns
 
-• `Optional` **dxns**: [`Dxns`](dxos_config.defs.Runtime.Services.Dxns.md)
+ `Optional` **dxns**: [`Dxns`](dxos_config.defs.Runtime.Services.Dxns.md)
 
 Options:
   - proto3_optional = true
@@ -62,7 +48,7 @@ ___
 
 ### ice
 
-• `Optional` **ice**: [`Ice`](dxos_config.defs.Runtime.Services.Ice.md)[]
+ `Optional` **ice**: [`Ice`](dxos_config.defs.Runtime.Services.Ice.md)[]
 
 #### Defined in
 
@@ -72,7 +58,7 @@ ___
 
 ### ipfs
 
-• `Optional` **ipfs**: [`Ipfs`](dxos_config.defs.Runtime.Services.Ipfs.md)
+ `Optional` **ipfs**: [`Ipfs`](dxos_config.defs.Runtime.Services.Ipfs.md)
 
 Options:
   - proto3_optional = true
@@ -85,7 +71,7 @@ ___
 
 ### kube
 
-• `Optional` **kube**: [`Kube`](dxos_config.defs.Runtime.Services.Kube-1.md)
+ `Optional` **kube**: [`Kube`](dxos_config.defs.Runtime.Services.Kube-1.md)
 
 Options:
   - proto3_optional = true
@@ -98,7 +84,7 @@ ___
 
 ### machine
 
-• `Optional` **machine**: [`Machine`](dxos_config.defs.Runtime.Services.Machine.md)
+ `Optional` **machine**: [`Machine`](dxos_config.defs.Runtime.Services.Machine.md)
 
 Options:
   - proto3_optional = true
@@ -111,7 +97,7 @@ ___
 
 ### publisher
 
-• `Optional` **publisher**: [`Publisher`](dxos_config.defs.Runtime.Services.Publisher.md)
+ `Optional` **publisher**: [`Publisher`](dxos_config.defs.Runtime.Services.Publisher.md)
 
 Options:
   - proto3_optional = true
@@ -124,7 +110,7 @@ ___
 
 ### signal
 
-• `Optional` **signal**: [`Signal`](dxos_config.defs.Runtime.Services.Signal.md)
+ `Optional` **signal**: [`Signal`](dxos_config.defs.Runtime.Services.Signal.md)
 
 Options:
   - proto3_optional = true

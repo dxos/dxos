@@ -4,26 +4,11 @@
 
 Batch mutation builder.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.MutationBuilder.md#constructor)
-
-### Properties
-
-- [\_mutations](dxos_object_model.MutationBuilder.md#_mutations)
-
-### Methods
-
-- [commit](dxos_object_model.MutationBuilder.md#commit)
-- [set](dxos_object_model.MutationBuilder.md#set)
-
 ## Constructors
 
 ### constructor
 
-• **new MutationBuilder**(`_model`)
+**new MutationBuilder**(`_model`)
 
 #### Parameters
 
@@ -33,23 +18,23 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L52)
+[packages/echo/object-model/src/object-model.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L52)
 
 ## Properties
 
 ### \_mutations
 
-• **\_mutations**: `ObjectMutation`[] = `[]`
+ **\_mutations**: `ObjectMutation`[] = `[]`
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L50)
+[packages/echo/object-model/src/object-model.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L50)
 
 ## Methods
 
 ### commit
 
-▸ **commit**(): `Promise`<`void`\>
+**commit**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -57,13 +42,13 @@ Batch mutation builder.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L61)
+[packages/echo/object-model/src/object-model.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L61)
 
 ___
 
 ### set
 
-▸ **set**(`key`, `value`): [`MutationBuilder`](dxos_object_model.MutationBuilder.md)
+**set**(`key`, `value`): [`MutationBuilder`](dxos_object_model.MutationBuilder.md)
 
 #### Parameters
 
@@ -78,4 +63,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L56)
+[packages/echo/object-model/src/object-model.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L56)

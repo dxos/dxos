@@ -7,19 +7,11 @@ Whether the client services are local with ClientServiceHost or remote and need 
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Enumeration Members
-
-- [AUTOMATIC](dxos_config.defs.Runtime.Client.Mode.md#automatic)
-- [LOCAL](dxos_config.defs.Runtime.Client.Mode.md#local)
-- [REMOTE](dxos_config.defs.Runtime.Client.Mode.md#remote)
-
 ## Enumeration Members
 
 ### AUTOMATIC
 
-• **AUTOMATIC** = ``0``
+ **AUTOMATIC** = ``0``
 
 #### Defined in
 
@@ -29,7 +21,7 @@ ___
 
 ### LOCAL
 
-• **LOCAL** = ``1``
+ **LOCAL** = ``1``
 
 #### Defined in
 
@@ -39,7 +31,7 @@ ___
 
 ### REMOTE
 
-• **REMOTE** = ``2``
+ **REMOTE** = ``2``
 
 #### Defined in
 

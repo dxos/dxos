@@ -12,34 +12,11 @@ Represents a live-query (subscription) that can notify about future updates to t
 | `T` | extends [`Entity`](dxos_echo_db.Entity.md) |
 | `R` | `any` |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.SelectionResult.md#constructor)
-
-### Properties
-
-- [\_lastResult](dxos_echo_db.SelectionResult.md#_lastresult)
-- [update](dxos_echo_db.SelectionResult.md#update)
-
-### Accessors
-
-- [entities](dxos_echo_db.SelectionResult.md#entities)
-- [root](dxos_echo_db.SelectionResult.md#root)
-- [value](dxos_echo_db.SelectionResult.md#value)
-
-### Methods
-
-- [expectOne](dxos_echo_db.SelectionResult.md#expectone)
-- [refresh](dxos_echo_db.SelectionResult.md#refresh)
-- [toString](dxos_echo_db.SelectionResult.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new SelectionResult**<`T`, `R`\>(`_execute`, `_update`, `_root`, `_reducer`)
+**new SelectionResult**<`T`, `R`\>(`_execute`, `_update`, `_root`, `_reducer`)
 
 #### Type parameters
 
@@ -52,43 +29,43 @@ Represents a live-query (subscription) that can notify about future updates to t
 
 | Name | Type |
 | :------ | :------ |
-| `_execute` | () => [`SelectionContext`](../modules/dxos_echo_db.md#selectioncontext)<`T`, `R`\> |
+| `_execute` | () => [`SelectionContext`](../types/dxos_echo_db.SelectionContext.md)<`T`, `R`\> |
 | `_update` | `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]\> |
-| `_root` | [`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot) |
+| `_root` | [`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md) |
 | `_reducer` | `boolean` |
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L36)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L36)
 
 ## Properties
 
 ### \_lastResult
 
-• `Private` **\_lastResult**: [`SelectionContext`](../modules/dxos_echo_db.md#selectioncontext)<`T`, `R`\>
+ `Private` **\_lastResult**: [`SelectionContext`](../types/dxos_echo_db.SelectionContext.md)<`T`, `R`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L34)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L34)
 
 ___
 
 ### update
 
-• `Readonly` **update**: `Event`<[`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `any`\>\>
+ `Readonly` **update**: `Event`<[`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `any`\>\>
 
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L32)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L32)
 
 ## Accessors
 
 ### entities
 
-• `get` **entities**(): `T`[]
+`get` **entities**(): `T`[]
 
 Get the result of this selection.
 
@@ -98,29 +75,29 @@ Get the result of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L83)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L83)
 
 ___
 
 ### root
 
-• `get` **root**(): [`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot)
+`get` **root**(): [`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md)
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 
 #### Returns
 
-[`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot)
+[`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L76)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L76)
 
 ___
 
 ### value
 
-• `get` **value**(): `R` extends `void` ? `T`[] : `R`
+`get` **value**(): `R` extends `void` ? `T`[] : `R`
 
 Returns the selection or reducer result.
 
@@ -130,13 +107,13 @@ Returns the selection or reducer result.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:95](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L95)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:95](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L95)
 
 ## Methods
 
 ### expectOne
 
-▸ **expectOne**(): `T`
+**expectOne**(): `T`
 
 Return the first element if the set has exactly one element.
 
@@ -146,13 +123,13 @@ Return the first element if the set has exactly one element.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L107)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L107)
 
 ___
 
 ### refresh
 
-▸ **refresh**(): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
+**refresh**(): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
 
 Re-run query.
 
@@ -162,13 +139,13 @@ Re-run query.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L67)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L67)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -176,4 +153,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/result.ts#L57)
+[packages/echo/echo-db/src/packlets/database/selection/result.ts:57](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/result.ts#L57)

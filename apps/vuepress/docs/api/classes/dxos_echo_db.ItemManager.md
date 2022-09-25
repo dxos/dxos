@@ -4,44 +4,11 @@
 
 Manages the creation and indexing of items.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.ItemManager.md#constructor)
-
-### Properties
-
-- [\_entities](dxos_echo_db.ItemManager.md#_entities)
-- [\_pendingItems](dxos_echo_db.ItemManager.md#_pendingitems)
-- [debouncedUpdate](dxos_echo_db.ItemManager.md#debouncedupdate)
-- [update](dxos_echo_db.ItemManager.md#update)
-
-### Accessors
-
-- [entities](dxos_echo_db.ItemManager.md#entities)
-- [items](dxos_echo_db.ItemManager.md#items)
-- [links](dxos_echo_db.ItemManager.md#links)
-
-### Methods
-
-- [\_addEntity](dxos_echo_db.ItemManager.md#_addentity)
-- [\_constructModel](dxos_echo_db.ItemManager.md#_constructmodel)
-- [constructItem](dxos_echo_db.ItemManager.md#constructitem)
-- [constructLink](dxos_echo_db.ItemManager.md#constructlink)
-- [createItem](dxos_echo_db.ItemManager.md#createitem)
-- [createLink](dxos_echo_db.ItemManager.md#createlink)
-- [deconstructItem](dxos_echo_db.ItemManager.md#deconstructitem)
-- [getItem](dxos_echo_db.ItemManager.md#getitem)
-- [getUninitializedEntities](dxos_echo_db.ItemManager.md#getuninitializedentities)
-- [initializeModel](dxos_echo_db.ItemManager.md#initializemodel)
-- [processModelMessage](dxos_echo_db.ItemManager.md#processmodelmessage)
-
 ## Constructors
 
 ### constructor
 
-• **new ItemManager**(`_modelFactory`, `_memberKey`, `_writeStream?`)
+**new ItemManager**(`_modelFactory`, `_memberKey`, `_writeStream?`)
 
 #### Parameters
 
@@ -53,50 +20,50 @@ Manages the creation and indexing of items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L74)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L74)
 
 ## Properties
 
 ### \_entities
 
-• `Private` `Readonly` **\_entities**: `Map`<`string`, [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
+ `Private` `Readonly` **\_entities**: `Map`<`string`, [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
 
 Map of active items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L62)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L62)
 
 ___
 
 ### \_pendingItems
 
-• `Private` `Readonly` **\_pendingItems**: `Map`<`string`, (`item`: [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>) => `void`\>
+ `Private` `Readonly` **\_pendingItems**: `Map`<`string`, (`item`: [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>) => `void`\>
 
 Map of item promises (waiting for item construction after genesis message has been written).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L68)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L68)
 
 ___
 
 ### debouncedUpdate
 
-• `Readonly` **debouncedUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]\>
+ `Readonly` **debouncedUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]\>
 
 Update event.
 Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L56)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L56)
 
 ___
 
 ### update
 
-• `Readonly` **update**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
+ `Readonly` **update**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
 
 Fired immediately after any update in the entities.
 
@@ -104,13 +71,13 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L50)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L50)
 
 ## Accessors
 
 ### entities
 
-• `get` **entities**(): `Map`<`string`, [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
+`get` **entities**(): `Map`<`string`, [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>\>
 
 #### Returns
 
@@ -118,13 +85,13 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L80)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L80)
 
 ___
 
 ### items
 
-• `get` **items**(): [`Item`](dxos_echo_db.Item.md)<`any`\>[]
+`get` **items**(): [`Item`](dxos_echo_db.Item.md)<`any`\>[]
 
 #### Returns
 
@@ -132,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L84)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L84)
 
 ___
 
 ### links
 
-• `get` **links**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
+`get` **links**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
 
 #### Returns
 
@@ -146,13 +113,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L88)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L88)
 
 ## Methods
 
 ### \_addEntity
 
-▸ `Private` **_addEntity**(`entity`, `parent?`): `void`
+`Private` **_addEntity**(`entity`, `parent?`): `void`
 
 Adds new entity to the tracked set. Sets up events and notifies any listeners waiting for this entity to be constructed.
 
@@ -169,13 +136,13 @@ Adds new entity to the tracked set. Sets up events and notifies any listeners wa
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:207](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L207)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:207](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L207)
 
 ___
 
 ### \_constructModel
 
-▸ `Private` **_constructModel**(`__namedParameters`): `Promise`<`StateManager`<`Model`<`any`, `any`\>\>\>
+`Private` **_constructModel**(`__namedParameters`): `Promise`<`StateManager`<`Model`<`any`, `any`\>\>\>
 
 #### Parameters
 
@@ -189,13 +156,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:192](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L192)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:192](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L192)
 
 ___
 
 ### constructItem
 
-▸ **constructItem**(`__namedParameters`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`any`\>\>
+**constructItem**(`__namedParameters`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`any`\>\>
 
 Constructs an item with the appropriate model.
 
@@ -211,13 +178,13 @@ Constructs an item with the appropriate model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:228](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L228)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:228](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L228)
 
 ___
 
 ### constructLink
 
-▸ **constructLink**(`__namedParameters`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
+**constructLink**(`__namedParameters`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
 
 Constructs an item with the appropriate model.
 
@@ -233,13 +200,13 @@ Constructs an item with the appropriate model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:263](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L263)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:263](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L263)
 
 ___
 
 ### createItem
 
-▸ **createItem**(`modelType`, `itemType?`, `parentId?`, `initProps?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`Model`<`unknown`, `any`\>\>\>
+**createItem**(`modelType`, `itemType?`, `parentId?`, `initProps?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`Model`<`unknown`, `any`\>\>\>
 
 Creates an item and writes the genesis message.
 
@@ -258,13 +225,13 @@ Creates an item and writes the genesis message.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L99)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L99)
 
 ___
 
 ### createLink
 
-▸ **createLink**(`modelType`, `itemType`, `source`, `target`, `initProps?`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
+**createLink**(`modelType`, `itemType`, `source`, `target`, `initProps?`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
 
 #### Parameters
 
@@ -282,13 +249,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:147](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L147)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:147](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L147)
 
 ___
 
 ### deconstructItem
 
-▸ **deconstructItem**(`itemId`): `void`
+**deconstructItem**(`itemId`): `void`
 
 Recursive method to unlink and remove items from the active set.
 
@@ -304,13 +271,13 @@ Recursive method to unlink and remove items from the active set.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:338](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L338)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:338](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L338)
 
 ___
 
 ### getItem
 
-▸ **getItem**<`M`\>(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`M`\>
+**getItem**<`M`\>(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`M`\>
 
 Retrieves a item from the index.
 
@@ -332,13 +299,13 @@ Retrieves a item from the index.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:322](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L322)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:322](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L322)
 
 ___
 
 ### getUninitializedEntities
 
-▸ **getUninitializedEntities**(): [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]
+**getUninitializedEntities**(): [`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]
 
 #### Returns
 
@@ -346,13 +313,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:330](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L330)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:330](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L330)
 
 ___
 
 ### initializeModel
 
-▸ **initializeModel**(`itemId`): `Promise`<`void`\>
+**initializeModel**(`itemId`): `Promise`<`void`\>
 
 Reconstruct an item with a default model when that model becomes registered.
 New model instance is created and streams are reconnected.
@@ -369,13 +336,13 @@ New model instance is created and streams are reconnected.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:367](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L367)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:367](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L367)
 
 ___
 
 ### processModelMessage
 
-▸ **processModelMessage**(`itemId`, `message`): `Promise`<`void`\>
+**processModelMessage**(`itemId`, `message`): `Promise`<`void`\>
 
 Process a message directed to a specific model.
 
@@ -392,4 +359,4 @@ Process a message directed to a specific model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:310](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-manager.ts#L310)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:310](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-manager.ts#L310)

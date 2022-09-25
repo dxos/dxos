@@ -14,32 +14,11 @@ Simple text search model.
 
 - [`SearchModel`](../interfaces/dxos_react_components.SearchModel.md)<`T`\>
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_react_components.TextSearchModel.md#constructor)
-
-### Properties
-
-- [\_results](dxos_react_components.TextSearchModel.md#_results)
-- [\_timeout](dxos_react_components.TextSearchModel.md#_timeout)
-- [\_update](dxos_react_components.TextSearchModel.md#_update)
-
-### Accessors
-
-- [results](dxos_react_components.TextSearchModel.md#results)
-
-### Methods
-
-- [setText](dxos_react_components.TextSearchModel.md#settext)
-- [subscribe](dxos_react_components.TextSearchModel.md#subscribe)
-
 ## Constructors
 
 ### constructor
 
-• **new TextSearchModel**<`T`\>(`_values`, `_delay?`)
+**new TextSearchModel**<`T`\>(`_values`, `_delay?`)
 
 #### Type parameters
 
@@ -51,52 +30,52 @@ Simple text search model.
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `_values` | [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[] | `undefined` |
+| `_values` | [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[] | `undefined` |
 | `_delay` | `number` | `500` |
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L37)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L37)
 
 ## Properties
 
 ### \_results
 
-• **\_results**: [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[] = `[]`
+ **\_results**: [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[] = `[]`
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L34)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L34)
 
 ___
 
 ### \_timeout
 
-• `Optional` **\_timeout**: `Timeout`
+ `Optional` **\_timeout**: `Timeout`
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L35)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L35)
 
 ___
 
 ### \_update
 
-• **\_update**: `Event`<[`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]\>
+ **\_update**: `Event`<[`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]\>
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L33)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L33)
 
 ## Accessors
 
 ### results
 
-• `get` **results**(): [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]
+`get` **results**(): [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]
 
 #### Returns
 
-[`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]
+[`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]
 
 #### Implementation of
 
@@ -104,13 +83,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L42)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L42)
 
 ## Methods
 
 ### setText
 
-▸ **setText**(`text`): `void`
+**setText**(`text`): `void`
 
 #### Parameters
 
@@ -128,25 +107,25 @@ SearchModel.setText
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L50)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L50)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`callback`): () => `void`
+**subscribe**(`callback`): () => `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | (`results`: [`SearchResult`](../modules/dxos_react_components.md#searchresult)<`T`\>[]) => `void` |
+| `callback` | (`results`: [`SearchResult`](../types/dxos_react_components.SearchResult.md)<`T`\>[]) => `void` |
 
 #### Returns
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -164,4 +143,4 @@ SearchModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46)
+[packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/SearchAutocomplete/SearchModel.ts#L46)

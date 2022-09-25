@@ -13,53 +13,11 @@ Authentication success event
 
   ↳ **`AuthPlugin`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.AuthPlugin.md#constructor)
-
-### Properties
-
-- [\_requiredForExtensions](dxos_credentials.AuthPlugin.md#_requiredforextensions)
-- [captureRejectionSymbol](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
-- [captureRejections](dxos_credentials.AuthPlugin.md#capturerejections)
-- [defaultMaxListeners](dxos_credentials.AuthPlugin.md#defaultmaxlisteners)
-- [errorMonitor](dxos_credentials.AuthPlugin.md#errormonitor)
-
-### Accessors
-
-- [authenticator](dxos_credentials.AuthPlugin.md#authenticator)
-
-### Methods
-
-- [\_onHandshake](dxos_credentials.AuthPlugin.md#_onhandshake)
-- [addListener](dxos_credentials.AuthPlugin.md#addlistener)
-- [createExtension](dxos_credentials.AuthPlugin.md#createextension)
-- [emit](dxos_credentials.AuthPlugin.md#emit)
-- [eventNames](dxos_credentials.AuthPlugin.md#eventnames)
-- [getMaxListeners](dxos_credentials.AuthPlugin.md#getmaxlisteners)
-- [listenerCount](dxos_credentials.AuthPlugin.md#listenercount)
-- [listeners](dxos_credentials.AuthPlugin.md#listeners)
-- [off](dxos_credentials.AuthPlugin.md#off)
-- [on](dxos_credentials.AuthPlugin.md#on)
-- [once](dxos_credentials.AuthPlugin.md#once)
-- [prependListener](dxos_credentials.AuthPlugin.md#prependlistener)
-- [prependOnceListener](dxos_credentials.AuthPlugin.md#prependoncelistener)
-- [rawListeners](dxos_credentials.AuthPlugin.md#rawlisteners)
-- [removeAllListeners](dxos_credentials.AuthPlugin.md#removealllisteners)
-- [removeListener](dxos_credentials.AuthPlugin.md#removelistener)
-- [setMaxListeners](dxos_credentials.AuthPlugin.md#setmaxlisteners)
-- [getEventListeners](dxos_credentials.AuthPlugin.md#geteventlisteners)
-- [listenerCount](dxos_credentials.AuthPlugin.md#listenercount-1)
-- [on](dxos_credentials.AuthPlugin.md#on-1)
-- [once](dxos_credentials.AuthPlugin.md#once-1)
-
 ## Constructors
 
 ### constructor
 
-• **new AuthPlugin**(`_peerId`, `_authenticator`, `requireAuthForExtensions?`)
+**new AuthPlugin**(`_peerId`, `_authenticator`, `requireAuthForExtensions?`)
 
 #### Parameters
 
@@ -75,23 +33,23 @@ EventEmitter.constructor
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L29)
+[packages/halo/credentials/src/auth/auth-plugin.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/auth/auth-plugin.ts#L29)
 
 ## Properties
 
 ### \_requiredForExtensions
 
-• **\_requiredForExtensions**: `Set`<`string`\>
+ **\_requiredForExtensions**: `Set`<`string`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L27)
+[packages/halo/credentials/src/auth/auth-plugin.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/auth/auth-plugin.ts#L27)
 
 ___
 
 ### captureRejectionSymbol
 
-▪ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
+ `Static` `Readonly` **captureRejectionSymbol**: typeof [`captureRejectionSymbol`](dxos_credentials.AuthPlugin.md#capturerejectionsymbol)
 
 #### Inherited from
 
@@ -105,7 +63,7 @@ ___
 
 ### captureRejections
 
-▪ `Static` **captureRejections**: `boolean`
+ `Static` **captureRejections**: `boolean`
 
 Sets or gets the default captureRejection value for all emitters.
 
@@ -121,7 +79,7 @@ ___
 
 ### defaultMaxListeners
 
-▪ `Static` **defaultMaxListeners**: `number`
+ `Static` **defaultMaxListeners**: `number`
 
 #### Inherited from
 
@@ -135,7 +93,7 @@ ___
 
 ### errorMonitor
 
-▪ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
+ `Static` `Readonly` **errorMonitor**: typeof [`errorMonitor`](dxos_credentials.AuthPlugin.md#errormonitor)
 
 This symbol shall be used to install a listener for only monitoring `'error'`
 events. Listeners installed using this symbol are called before the regular
@@ -157,7 +115,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 ### authenticator
 
-• `get` **authenticator**(): [`Authenticator`](../interfaces/dxos_credentials.Authenticator.md)
+`get` **authenticator**(): [`Authenticator`](../interfaces/dxos_credentials.Authenticator.md)
 
 #### Returns
 
@@ -165,13 +123,13 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L42)
+[packages/halo/credentials/src/auth/auth-plugin.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/auth/auth-plugin.ts#L42)
 
 ## Methods
 
 ### \_onHandshake
 
-▸ `Private` **_onHandshake**(`protocol`): `Promise`<`void`\>
+`Private` **_onHandshake**(`protocol`): `Promise`<`void`\>
 
 Handler to be called when the 'handshake' event is emitted.
 If the session can not be authenticated, a ERR_EXTENSION_RESPONSE_FAILED will be thrown.
@@ -192,13 +150,13 @@ AuthPlugin#authenticated
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L66)
+[packages/halo/credentials/src/auth/auth-plugin.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/auth/auth-plugin.ts#L66)
 
 ___
 
 ### addListener
 
-▸ **addListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**addListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Alias for `emitter.on(eventName, listener)`.
 
@@ -229,7 +187,7 @@ ___
 
 ### createExtension
 
-▸ **createExtension**(): `Extension`
+**createExtension**(): `Extension`
 
 Create protocol extension.
 
@@ -239,13 +197,13 @@ Create protocol extension.
 
 #### Defined in
 
-[packages/halo/credentials/src/auth/auth-plugin.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/auth/auth-plugin.ts#L50)
+[packages/halo/credentials/src/auth/auth-plugin.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/auth/auth-plugin.ts#L50)
 
 ___
 
 ### emit
 
-▸ **emit**(`eventName`, ...`args`): `boolean`
+**emit**(`eventName`, ...`args`): `boolean`
 
 Synchronously calls each of the listeners registered for the event named`eventName`, in the order they were registered, passing the supplied arguments
 to each.
@@ -312,7 +270,7 @@ ___
 
 ### eventNames
 
-▸ **eventNames**(): (`string` \| `symbol`)[]
+**eventNames**(): (`string` \| `symbol`)[]
 
 Returns an array listing the events for which the emitter has registered
 listeners. The values in the array are strings or `Symbol`s.
@@ -350,7 +308,7 @@ ___
 
 ### getMaxListeners
 
-▸ **getMaxListeners**(): `number`
+**getMaxListeners**(): `number`
 
 Returns the current max listener value for the `EventEmitter` which is either
 set by `emitter.setMaxListeners(n)` or defaults to [defaultMaxListeners](dxos_credentials.AuthPlugin.md#defaultmaxlisteners).
@@ -375,7 +333,7 @@ ___
 
 ### listenerCount
 
-▸ **listenerCount**(`eventName`): `number`
+**listenerCount**(`eventName`): `number`
 
 Returns the number of listeners listening to the event named `eventName`.
 
@@ -405,7 +363,7 @@ ___
 
 ### listeners
 
-▸ **listeners**(`eventName`): `Function`[]
+**listeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -443,7 +401,7 @@ ___
 
 ### off
 
-▸ **off**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**off**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Alias for `emitter.removeListener()`.
 
@@ -474,7 +432,7 @@ ___
 
 ### on
 
-▸ **on**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**on**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Adds the `listener` function to the end of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -529,7 +487,7 @@ ___
 
 ### once
 
-▸ **once**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**once**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Adds a **one-time**`listener` function for the event named `eventName`. The
 next time `eventName` is triggered, this listener is removed and then invoked.
@@ -582,7 +540,7 @@ ___
 
 ### prependListener
 
-▸ **prependListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**prependListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Adds the `listener` function to the _beginning_ of the listeners array for the
 event named `eventName`. No checks are made to see if the `listener` has
@@ -624,7 +582,7 @@ ___
 
 ### prependOnceListener
 
-▸ **prependOnceListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**prependOnceListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Adds a **one-time**`listener` function for the event named `eventName` to the_beginning_ of the listeners array. The next time `eventName` is triggered, this
 listener is removed, and then invoked.
@@ -664,7 +622,7 @@ ___
 
 ### rawListeners
 
-▸ **rawListeners**(`eventName`): `Function`[]
+**rawListeners**(`eventName`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`,
 including any wrappers (such as those created by `.once()`).
@@ -719,7 +677,7 @@ ___
 
 ### removeAllListeners
 
-▸ **removeAllListeners**(`event?`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**removeAllListeners**(`event?`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Removes all listeners, or those of the specified `eventName`.
 
@@ -755,7 +713,7 @@ ___
 
 ### removeListener
 
-▸ **removeListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**removeListener**(`eventName`, `listener`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 Removes the specified `listener` from the listener array for the event named`eventName`.
 
@@ -861,7 +819,7 @@ ___
 
 ### setMaxListeners
 
-▸ **setMaxListeners**(`n`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
+**setMaxListeners**(`n`): [`AuthPlugin`](dxos_credentials.AuthPlugin.md)
 
 By default `EventEmitter`s will print a warning if more than `10` listeners are
 added for a particular event. This is a useful default that helps finding
@@ -896,7 +854,7 @@ ___
 
 ### getEventListeners
 
-▸ `Static` **getEventListeners**(`emitter`, `name`): `Function`[]
+`Static` **getEventListeners**(`emitter`, `name`): `Function`[]
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
@@ -950,7 +908,7 @@ ___
 
 ### listenerCount
 
-▸ `Static` **listenerCount**(`emitter`, `eventName`): `number`
+`Static` **listenerCount**(`emitter`, `eventName`): `number`
 
 A class method that returns the number of listeners for the given `eventName`registered on the given `emitter`.
 
@@ -994,7 +952,7 @@ ___
 
 ### on
 
-▸ `Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
+`Static` **on**(`emitter`, `eventName`, `options?`): `AsyncIterableIterator`<`any`\>
 
 ```js
 const { on, EventEmitter } = require('events');
@@ -1080,7 +1038,7 @@ ___
 
 ### once
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 Creates a `Promise` that is fulfilled when the `EventEmitter` emits the given
 event or that is rejected if the `EventEmitter` emits `'error'` while waiting.
@@ -1186,7 +1144,7 @@ EventEmitter.once
 
 node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
-▸ `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
+`Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
 #### Parameters
 

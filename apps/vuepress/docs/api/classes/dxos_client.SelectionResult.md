@@ -12,38 +12,11 @@ Represents a live-query (subscription) that can notify about future updates to t
 | `T` | extends [`Entity`](dxos_client.Entity.md) |
 | `R` | `any` |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.SelectionResult.md#constructor)
-
-### Properties
-
-- [\_execute](dxos_client.SelectionResult.md#_execute)
-- [\_lastResult](dxos_client.SelectionResult.md#_lastresult)
-- [\_reducer](dxos_client.SelectionResult.md#_reducer)
-- [\_root](dxos_client.SelectionResult.md#_root)
-- [\_update](dxos_client.SelectionResult.md#_update)
-- [update](dxos_client.SelectionResult.md#update)
-
-### Accessors
-
-- [entities](dxos_client.SelectionResult.md#entities)
-- [root](dxos_client.SelectionResult.md#root)
-- [value](dxos_client.SelectionResult.md#value)
-
-### Methods
-
-- [expectOne](dxos_client.SelectionResult.md#expectone)
-- [refresh](dxos_client.SelectionResult.md#refresh)
-- [toString](dxos_client.SelectionResult.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new SelectionResult**<`T`, `R`\>(`_execute`, `_update`, `_root`, `_reducer`)
+**new SelectionResult**<`T`, `R`\>(`_execute`, `_update`, `_root`, `_reducer`)
 
 #### Type parameters
 
@@ -69,7 +42,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:27
 
 ### \_execute
 
-• `Private` `Readonly` **\_execute**: `any`
+ `Private` `Readonly` **\_execute**: `any`
 
 #### Defined in
 
@@ -79,7 +52,7 @@ ___
 
 ### \_lastResult
 
-• `Private` **\_lastResult**: `any`
+ `Private` **\_lastResult**: `any`
 
 #### Defined in
 
@@ -89,7 +62,7 @@ ___
 
 ### \_reducer
 
-• `Private` `Readonly` **\_reducer**: `any`
+ `Private` `Readonly` **\_reducer**: `any`
 
 #### Defined in
 
@@ -99,7 +72,7 @@ ___
 
 ### \_root
 
-• `Private` `Readonly` **\_root**: `any`
+ `Private` `Readonly` **\_root**: `any`
 
 #### Defined in
 
@@ -109,7 +82,7 @@ ___
 
 ### \_update
 
-• `Private` `Readonly` **\_update**: `any`
+ `Private` `Readonly` **\_update**: `any`
 
 #### Defined in
 
@@ -119,7 +92,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<[`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `any`\>\>
+ `Readonly` **update**: `Event`<[`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `any`\>\>
 
 Fired when there are updates in the selection.
 Only update that are relevant to the selection cause the update.
@@ -132,7 +105,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:25
 
 ### entities
 
-• `get` **entities**(): `T`[]
+`get` **entities**(): `T`[]
 
 Get the result of this selection.
 
@@ -148,7 +121,7 @@ ___
 
 ### root
 
-• `get` **root**(): `SelectionRoot`
+`get` **root**(): `SelectionRoot`
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 
@@ -164,7 +137,7 @@ ___
 
 ### value
 
-• `get` **value**(): `R` extends `void` ? `T`[] : `R`
+`get` **value**(): `R` extends `void` ? `T`[] : `R`
 
 Returns the selection or reducer result.
 
@@ -180,7 +153,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:44
 
 ### expectOne
 
-▸ **expectOne**(): `T`
+**expectOne**(): `T`
 
 Return the first element if the set has exactly one element.
 
@@ -196,7 +169,7 @@ ___
 
 ### refresh
 
-▸ **refresh**(): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
+**refresh**(): [`SelectionResult`](dxos_client.SelectionResult.md)<`T`, `R`\>
 
 Re-run query.
 
@@ -212,7 +185,7 @@ ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 

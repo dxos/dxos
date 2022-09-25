@@ -6,30 +6,11 @@ Represents an account key.
 
 Account keys must conform to regex: /^[a-z0-9_]+$/.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.AccountKey.md#constructor)
-
-### Properties
-
-- [value](dxos_registry_client.AccountKey.md#value)
-
-### Methods
-
-- [equals](dxos_registry_client.AccountKey.md#equals)
-- [toHex](dxos_registry_client.AccountKey.md#tohex)
-- [toString](dxos_registry_client.AccountKey.md#tostring)
-- [equals](dxos_registry_client.AccountKey.md#equals-1)
-- [fromHex](dxos_registry_client.AccountKey.md#fromhex)
-- [random](dxos_registry_client.AccountKey.md#random)
-
 ## Constructors
 
 ### constructor
 
-• **new AccountKey**(`value`)
+**new AccountKey**(`value`)
 
 #### Parameters
 
@@ -39,23 +20,23 @@ Account keys must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L30)
+[packages/sdk/registry-client/src/api/account-key.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L30)
 
 ## Properties
 
 ### value
 
-• `Readonly` **value**: `Uint8Array`
+ `Readonly` **value**: `Uint8Array`
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L31)
+[packages/sdk/registry-client/src/api/account-key.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L31)
 
 ## Methods
 
 ### equals
 
-▸ **equals**(`other`): `boolean`
+**equals**(`other`): `boolean`
 
 #### Parameters
 
@@ -69,13 +50,13 @@ Account keys must conform to regex: /^[a-z0-9_]+$/.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L44)
+[packages/sdk/registry-client/src/api/account-key.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L44)
 
 ___
 
 ### toHex
 
-▸ **toHex**(): `string`
+**toHex**(): `string`
 
 #### Returns
 
@@ -83,13 +64,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L36)
+[packages/sdk/registry-client/src/api/account-key.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L36)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -97,13 +78,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L40)
+[packages/sdk/registry-client/src/api/account-key.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L40)
 
 ___
 
 ### equals
 
-▸ `Static` **equals**(`left`, `right`): `boolean`
+`Static` **equals**(`left`, `right`): `boolean`
 
 #### Parameters
 
@@ -118,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L24)
+[packages/sdk/registry-client/src/api/account-key.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L24)
 
 ___
 
 ### fromHex
 
-▸ `Static` **fromHex**(`hexString`): [`AccountKey`](dxos_registry_client.AccountKey.md)
+`Static` **fromHex**(`hexString`): [`AccountKey`](dxos_registry_client.AccountKey.md)
 
 #### Parameters
 
@@ -138,13 +119,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L16)
+[packages/sdk/registry-client/src/api/account-key.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L16)
 
 ___
 
 ### random
 
-▸ `Static` **random**(): [`AccountKey`](dxos_registry_client.AccountKey.md)
+`Static` **random**(): [`AccountKey`](dxos_registry_client.AccountKey.md)
 
 #### Returns
 
@@ -152,4 +133,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/account-key.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/account-key.ts#L20)
+[packages/sdk/registry-client/src/api/account-key.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/account-key.ts#L20)

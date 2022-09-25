@@ -2,14 +2,12 @@
 
 [@dxos/config](dxos_config.md).defs
 
-## Table of contents
-
-### Namespaces
+## Namespaces
 
 - [Module](dxos_config.defs.Module.md)
 - [Runtime](dxos_config.defs.Runtime.md)
 
-### Interfaces
+## Interfaces
 
 - [Config](../interfaces/dxos_config.defs.Config.md)
 - [Module](../interfaces/dxos_config.defs.Module-1.md)

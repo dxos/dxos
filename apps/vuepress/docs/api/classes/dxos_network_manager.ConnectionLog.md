@@ -2,60 +2,39 @@
 
 [@dxos/network-manager](../modules/dxos_network_manager.md).ConnectionLog
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_manager.ConnectionLog.md#constructor)
-
-### Properties
-
-- [\_swarms](dxos_network_manager.ConnectionLog.md#_swarms)
-- [update](dxos_network_manager.ConnectionLog.md#update)
-
-### Accessors
-
-- [swarms](dxos_network_manager.ConnectionLog.md#swarms)
-
-### Methods
-
-- [getSwarmInfo](dxos_network_manager.ConnectionLog.md#getswarminfo)
-- [swarmJoined](dxos_network_manager.ConnectionLog.md#swarmjoined)
-- [swarmLeft](dxos_network_manager.ConnectionLog.md#swarmleft)
-
 ## Constructors
 
 ### constructor
 
-• **new ConnectionLog**()
+**new ConnectionLog**()
 
 ## Properties
 
 ### \_swarms
 
-• `Private` `Readonly` **\_swarms**: `ComplexMap`<`PublicKey`, [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)\>
+ `Private` `Readonly` **\_swarms**: `ComplexMap`<`PublicKey`, [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)\>
 
 SwarmId => info
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L47)
+[packages/mesh/network-manager/src/connection-log.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L47)
 
 ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`void`\>
+ `Readonly` **update**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L49)
+[packages/mesh/network-manager/src/connection-log.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L49)
 
 ## Accessors
 
 ### swarms
 
-• `get` **swarms**(): [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)[]
+`get` **swarms**(): [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)[]
 
 #### Returns
 
@@ -63,13 +42,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L55)
+[packages/mesh/network-manager/src/connection-log.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L55)
 
 ## Methods
 
 ### getSwarmInfo
 
-▸ **getSwarmInfo**(`swarmId`): [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)
+**getSwarmInfo**(`swarmId`): [`SwarmInfo`](../interfaces/dxos_network_manager.SwarmInfo.md)
 
 #### Parameters
 
@@ -83,13 +62,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L51)
+[packages/mesh/network-manager/src/connection-log.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L51)
 
 ___
 
 ### swarmJoined
 
-▸ **swarmJoined**(`swarm`): `void`
+**swarmJoined**(`swarm`): `void`
 
 #### Parameters
 
@@ -103,13 +82,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L59)
+[packages/mesh/network-manager/src/connection-log.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L59)
 
 ___
 
 ### swarmLeft
 
-▸ **swarmLeft**(`swarm`): `void`
+**swarmLeft**(`swarm`): `void`
 
 #### Parameters
 
@@ -123,4 +102,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L120)
+[packages/mesh/network-manager/src/connection-log.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/connection-log.ts#L120)

@@ -1,12 +1,10 @@
 # Module: @dxos/network-manager
 
-## Table of contents
-
-### Enumerations
+## Enumerations
 
 - [ConnectionState](../enums/dxos_network_manager.ConnectionState.md)
 
-### Classes
+## Classes
 
 - [Connection](../classes/dxos_network_manager.Connection.md)
 - [ConnectionLog](../classes/dxos_network_manager.ConnectionLog.md)
@@ -20,7 +18,7 @@
 - [SwarmMapper](../classes/dxos_network_manager.SwarmMapper.md)
 - [WebRTCTransport](../classes/dxos_network_manager.WebRTCTransport.md)
 
-### Interfaces
+## Interfaces
 
 - [ConnectionInfo](../interfaces/dxos_network_manager.ConnectionInfo.md)
 - [MMSTTopologyOptions](../interfaces/dxos_network_manager.MMSTTopologyOptions.md)
@@ -39,220 +37,18 @@
 - [Transport](../interfaces/dxos_network_manager.Transport.md)
 - [TransportOptions](../interfaces/dxos_network_manager.TransportOptions.md)
 
-### Type Aliases
-
-- [ConnectionEvent](dxos_network_manager.md#connectionevent)
-- [PeerState](dxos_network_manager.md#peerstate)
-- [ProtocolProvider](dxos_network_manager.md#protocolprovider)
-- [Topic](dxos_network_manager.md#topic)
-- [TransportFactory](dxos_network_manager.md#transportfactory)
-
-### Functions
-
-- [createProtocolFactory](dxos_network_manager.md#createprotocolfactory)
-- [createWebRTCTransportFactory](dxos_network_manager.md#createwebrtctransportfactory)
-- [inMemoryTransportFactory](dxos_network_manager.md#inmemorytransportfactory)
-- [protocolFactory](dxos_network_manager.md#protocolfactory)
-- [transportProtocolProvider](dxos_network_manager.md#transportprotocolprovider)
-
 ## Type Aliases
 
-### ConnectionEvent
-
-Ƭ **ConnectionEvent**: { `newState`: [`ConnectionState`](../enums/dxos_network_manager.ConnectionState.md) ; `type`: ``"CONNECTION_STATE_CHANGED"``  } \| { `error`: `string` ; `type`: ``"PROTOCOL_ERROR"``  } \| { `type`: ``"PROTOCOL_EXTENSIONS_INITIALIZED"``  } \| { `type`: ``"PROTOCOL_EXTENSIONS_HANDSHAKE"``  } \| { `type`: ``"PROTOCOL_HANDSHAKE"``  }
-
-#### Defined in
-
-[packages/mesh/network-manager/src/connection-log.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/connection-log.ts#L29)
-
-___
-
-### PeerState
-
-Ƭ **PeerState**: [`ConnectionState`](../enums/dxos_network_manager.ConnectionState.md) \| ``"INDIRECTLY_CONNECTED"`` \| ``"ME"``
-
-State of the connection to the remote peer with additional info derived from network mapping.
-
-#### Defined in
-
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L17)
-
-___
-
-### ProtocolProvider
-
-Ƭ **ProtocolProvider**: (`opts`: { `channel`: `Buffer` ; `initiator`: `boolean`  }) => `Protocol`
-
-#### Type declaration
-
-▸ (`opts`): `Protocol`
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `opts` | `Object` |
-| `opts.channel` | `Buffer` |
-| `opts.initiator` | `boolean` |
-
-##### Returns
-
-`Protocol`
-
-#### Defined in
-
-[packages/mesh/network-manager/src/network-manager.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/network-manager.ts#L21)
-
-___
-
-### Topic
-
-Ƭ **Topic**: `PublicKey`
-
-Swarm topic.
-
-#### Defined in
-
-[packages/mesh/network-manager/src/types.ts:10](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/types.ts#L10)
-
-___
-
-### TransportFactory
-
-Ƭ **TransportFactory**: (`options`: [`TransportOptions`](../interfaces/dxos_network_manager.TransportOptions.md)) => [`Transport`](../interfaces/dxos_network_manager.Transport.md)
-
-#### Type declaration
-
-▸ (`options`): [`Transport`](../interfaces/dxos_network_manager.Transport.md)
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | [`TransportOptions`](../interfaces/dxos_network_manager.TransportOptions.md) |
-
-##### Returns
-
-[`Transport`](../interfaces/dxos_network_manager.Transport.md)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L45)
+- [ConnectionEvent](../types/dxos_network_manager.ConnectionEvent.md)
+- [PeerState](../types/dxos_network_manager.PeerState.md)
+- [ProtocolProvider](../types/dxos_network_manager.ProtocolProvider.md)
+- [Topic](../types/dxos_network_manager.Topic.md)
+- [TransportFactory](../types/dxos_network_manager.TransportFactory.md)
 
 ## Functions
 
-### createProtocolFactory
-
-▸ **createProtocolFactory**(`topic`, `peerId`, `plugins`): [`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `topic` | `PublicKey` |
-| `peerId` | `PublicKey` |
-| `plugins` | [`Plugin`](../interfaces/dxos_network_manager.Plugin.md)[] |
-
-#### Returns
-
-[`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/protocol-factory.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L61)
-
-___
-
-### createWebRTCTransportFactory
-
-▸ **createWebRTCTransportFactory**(`webrtcConfig?`): [`TransportFactory`](dxos_network_manager.md#transportfactory)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `webrtcConfig?` | `any` |
-
-#### Returns
-
-[`TransportFactory`](dxos_network_manager.md#transportfactory)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:109](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L109)
-
-___
-
-### inMemoryTransportFactory
-
-▸ **inMemoryTransportFactory**(`options`): [`Transport`](../interfaces/dxos_network_manager.Transport.md)
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options` | [`TransportOptions`](../interfaces/dxos_network_manager.TransportOptions.md) |
-
-#### Returns
-
-[`Transport`](../interfaces/dxos_network_manager.Transport.md)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/transport.ts#L45)
-
-___
-
-### protocolFactory
-
-▸ **protocolFactory**(`__namedParameters`): [`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-Returns a function that takes a channel parameter, returns a Protocol object
-with its context set to channel, plugins from plugins parameter and session
-set to session parameter.
-
-**`Deprecated`**
-
-Use `createProtocolFactory`.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `__namedParameters` | `ProtocolFactoryOptions` |
-
-#### Returns
-
-[`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/protocol-factory.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L29)
-
-___
-
-### transportProtocolProvider
-
-▸ **transportProtocolProvider**(`rendezvousKey`, `peerId`, `protocolPlugin`): [`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
-
-**`Deprecated`**
-
-Use `createProtocolFactory`.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `rendezvousKey` | `Buffer` |
-| `peerId` | `Buffer` |
-| `protocolPlugin` | `any` |
-
-#### Returns
-
-[`ProtocolProvider`](dxos_network_manager.md#protocolprovider)
-
-#### Defined in
-
-[packages/mesh/network-manager/src/protocol-factory.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/protocol-factory.ts#L71)
+- [createProtocolFactory](../functions/dxos_network_manager.createProtocolFactory.md)
+- [createWebRTCTransportFactory](../functions/dxos_network_manager.createWebRTCTransportFactory.md)
+- [inMemoryTransportFactory](../functions/dxos_network_manager.inMemoryTransportFactory.md)
+- [protocolFactory](../functions/dxos_network_manager.protocolFactory.md)
+- [transportProtocolProvider](../functions/dxos_network_manager.transportProtocolProvider.md)

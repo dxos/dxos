@@ -2,27 +2,15 @@
 
 [@dxos/echo-db](../modules/dxos_echo_db.md).HaloConfiguration
 
-## Table of contents
-
-### Properties
-
-- [feedProviderFactory](dxos_echo_db.HaloConfiguration.md#feedproviderfactory)
-- [keyring](dxos_echo_db.HaloConfiguration.md#keyring)
-- [metadataStore](dxos_echo_db.HaloConfiguration.md#metadatastore)
-- [modelFactory](dxos_echo_db.HaloConfiguration.md#modelfactory)
-- [networkManager](dxos_echo_db.HaloConfiguration.md#networkmanager)
-- [options](dxos_echo_db.HaloConfiguration.md#options)
-- [snapshotStore](dxos_echo_db.HaloConfiguration.md#snapshotstore)
-
 ## Properties
 
 ### feedProviderFactory
 
-• **feedProviderFactory**: (`partyKey`: `PublicKey`) => [`PartyFeedProvider`](../classes/dxos_echo_db.PartyFeedProvider.md)
+ **feedProviderFactory**: (`partyKey`: `PublicKey`) => [`PartyFeedProvider`](../classes/dxos_echo_db.PartyFeedProvider.md)
 
 #### Type declaration
 
-▸ (`partyKey`): [`PartyFeedProvider`](../classes/dxos_echo_db.PartyFeedProvider.md)
+(`partyKey`): [`PartyFeedProvider`](../classes/dxos_echo_db.PartyFeedProvider.md)
 
 ##### Parameters
 
@@ -36,64 +24,64 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L41)
+[packages/echo/echo-db/src/halo/halo.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L41)
 
 ___
 
 ### keyring
 
-• **keyring**: `Keyring`
+ **keyring**: `Keyring`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L36)
+[packages/echo/echo-db/src/halo/halo.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L36)
 
 ___
 
 ### metadataStore
 
-• **metadataStore**: [`MetadataStore`](../classes/dxos_echo_db.MetadataStore.md)
+ **metadataStore**: [`MetadataStore`](../classes/dxos_echo_db.MetadataStore.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L38)
+[packages/echo/echo-db/src/halo/halo.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L38)
 
 ___
 
 ### modelFactory
 
-• **modelFactory**: `ModelFactory`
+ **modelFactory**: `ModelFactory`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L39)
+[packages/echo/echo-db/src/halo/halo.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L39)
 
 ___
 
 ### networkManager
 
-• **networkManager**: `NetworkManager`
+ **networkManager**: `NetworkManager`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L37)
+[packages/echo/echo-db/src/halo/halo.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L37)
 
 ___
 
 ### options
 
-• **options**: [`PipelineOptions`](dxos_echo_db.PipelineOptions.md)
+ **options**: [`PipelineOptions`](dxos_echo_db.PipelineOptions.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L42)
+[packages/echo/echo-db/src/halo/halo.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L42)
 
 ___
 
 ### snapshotStore
 
-• **snapshotStore**: [`SnapshotStore`](../classes/dxos_echo_db.SnapshotStore.md)
+ **snapshotStore**: [`SnapshotStore`](../classes/dxos_echo_db.SnapshotStore.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo.ts#L40)
+[packages/echo/echo-db/src/halo/halo.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo.ts#L40)

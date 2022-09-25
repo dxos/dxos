@@ -2,33 +2,25 @@
 
 [@dxos/react-components](../modules/dxos_react_components.md).SearchBarProps
 
-## Table of contents
-
-### Properties
-
-- [delay](dxos_react_components.SearchBarProps.md#delay)
-- [onSearch](dxos_react_components.SearchBarProps.md#onsearch)
-- [placeholder](dxos_react_components.SearchBarProps.md#placeholder)
-
 ## Properties
 
 ### delay
 
-• `Optional` **delay**: `number`
+ `Optional` **delay**: `number`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L13)
+[packages/sdk/react-components/src/Searchbar.tsx:13](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Searchbar.tsx#L13)
 
 ___
 
 ### onSearch
 
-• `Optional` **onSearch**: (`text?`: `string`) => `void`
+ `Optional` **onSearch**: (`text?`: `string`) => `void`
 
 #### Type declaration
 
-▸ (`text?`): `void`
+(`text?`): `void`
 
 ##### Parameters
 
@@ -42,14 +34,14 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L12)
+[packages/sdk/react-components/src/Searchbar.tsx:12](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Searchbar.tsx#L12)
 
 ___
 
 ### placeholder
 
-• `Optional` **placeholder**: `string`
+ `Optional` **placeholder**: `string`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Searchbar.tsx:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Searchbar.tsx#L11)
+[packages/sdk/react-components/src/Searchbar.tsx:11](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Searchbar.tsx#L11)

@@ -10,20 +10,11 @@ Record metadata provided by the user.
 
   ↳ **`TypeRecordMetadata`**
 
-## Table of contents
-
-### Properties
-
-- [description](dxos_registry_client.TypeRecordMetadata.md#description)
-- [displayName](dxos_registry_client.TypeRecordMetadata.md#displayname)
-- [protobufIpfsCid](dxos_registry_client.TypeRecordMetadata.md#protobufipfscid)
-- [tags](dxos_registry_client.TypeRecordMetadata.md#tags)
-
 ## Properties
 
 ### description
 
-• `Optional` **description**: `string`
+ `Optional` **description**: `string`
 
 #### Inherited from
 
@@ -31,13 +22,13 @@ Record metadata provided by the user.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L57)
+[packages/sdk/registry-client/src/api/registry-client.ts:57](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L57)
 
 ___
 
 ### displayName
 
-• `Optional` **displayName**: `string`
+ `Optional` **displayName**: `string`
 
 #### Inherited from
 
@@ -45,23 +36,23 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L56)
+[packages/sdk/registry-client/src/api/registry-client.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L56)
 
 ___
 
 ### protobufIpfsCid
 
-• `Optional` **protobufIpfsCid**: `string`
+ `Optional` **protobufIpfsCid**: `string`
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L62)
+[packages/sdk/registry-client/src/api/registry-client.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L62)
 
 ___
 
 ### tags
 
-• `Optional` **tags**: `string`[]
+ `Optional` **tags**: `string`[]
 
 #### Inherited from
 
@@ -69,4 +60,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L58)
+[packages/sdk/registry-client/src/api/registry-client.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L58)

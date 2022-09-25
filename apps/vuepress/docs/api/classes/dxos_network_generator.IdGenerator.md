@@ -4,41 +4,27 @@
 
 Class helper to generate random buffer ids based on a number.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_generator.IdGenerator.md#constructor)
-
-### Properties
-
-- [\_ids](dxos_network_generator.IdGenerator.md#_ids)
-
-### Methods
-
-- [get](dxos_network_generator.IdGenerator.md#get)
-
 ## Constructors
 
 ### constructor
 
-• **new IdGenerator**()
+**new IdGenerator**()
 
 ## Properties
 
 ### \_ids
 
-• `Private` **\_ids**: `Map`<`any`, `any`\>
+ `Private` **\_ids**: `Map`<`any`, `any`\>
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L46)
+[packages/mesh/network-generator/src/network.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L46)
 
 ## Methods
 
 ### get
 
-▸ **get**(`id`): `any`
+**get**(`id`): `any`
 
 #### Parameters
 
@@ -52,4 +38,4 @@ Class helper to generate random buffer ids based on a number.
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network.ts#L48)
+[packages/mesh/network-generator/src/network.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-generator/src/network.ts#L48)

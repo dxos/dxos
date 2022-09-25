@@ -8,34 +8,11 @@ Remote service implementation.
 
 - [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.ClientServiceHost.md#constructor)
-
-### Properties
-
-- [\_devtoolsEvents](dxos_client.ClientServiceHost.md#_devtoolsevents)
-- [\_echo](dxos_client.ClientServiceHost.md#_echo)
-- [\_services](dxos_client.ClientServiceHost.md#_services)
-
-### Accessors
-
-- [echo](dxos_client.ClientServiceHost.md#echo)
-- [services](dxos_client.ClientServiceHost.md#services)
-
-### Methods
-
-- [\_createDevtoolsService](dxos_client.ClientServiceHost.md#_createdevtoolsservice)
-- [close](dxos_client.ClientServiceHost.md#close)
-- [open](dxos_client.ClientServiceHost.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new ClientServiceHost**(`_config`, `_signer?`)
+**new ClientServiceHost**(`_config`, `_signer?`)
 
 #### Parameters
 
@@ -46,43 +23,43 @@ Remote service implementation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L24)
+[packages/sdk/client/src/packlets/services/service-host.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L24)
 
 ## Properties
 
 ### \_devtoolsEvents
 
-• `Private` `Readonly` **\_devtoolsEvents**: [`DevtoolsHostEvents`](dxos_client.DevtoolsHostEvents.md)
+ `Private` `Readonly` **\_devtoolsEvents**: [`DevtoolsHostEvents`](dxos_client.DevtoolsHostEvents.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L20)
+[packages/sdk/client/src/packlets/services/service-host.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L20)
 
 ___
 
 ### \_echo
 
-• `Private` `Readonly` **\_echo**: `ECHO`
+ `Private` `Readonly` **\_echo**: `ECHO`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L21)
+[packages/sdk/client/src/packlets/services/service-host.ts:21](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L21)
 
 ___
 
 ### \_services
 
-• `Private` `Readonly` **\_services**: [`ClientServices`](../modules/dxos_client.md#clientservices)
+ `Private` `Readonly` **\_services**: [`ClientServices`](../types/dxos_client.ClientServices.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L22)
+[packages/sdk/client/src/packlets/services/service-host.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L22)
 
 ## Accessors
 
 ### echo
 
-• `get` **echo**(): `ECHO`
+`get` **echo**(): `ECHO`
 
 #### Returns
 
@@ -90,17 +67,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L64)
+[packages/sdk/client/src/packlets/services/service-host.ts:64](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L64)
 
 ___
 
 ### services
 
-• `get` **services**(): [`ClientServices`](../modules/dxos_client.md#clientservices)
+`get` **services**(): [`ClientServices`](../types/dxos_client.ClientServices.md)
 
 #### Returns
 
-[`ClientServices`](../modules/dxos_client.md#clientservices)
+[`ClientServices`](../types/dxos_client.ClientServices.md)
 
 #### Implementation of
 
@@ -108,13 +85,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L51)
+[packages/sdk/client/src/packlets/services/service-host.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L51)
 
 ## Methods
 
 ### \_createDevtoolsService
 
-▸ `Private` **_createDevtoolsService**(): `DevtoolsHost`
+`Private` **_createDevtoolsService**(): `DevtoolsHost`
 
 Returns devtools context.
 Used by the DXOS DevTool Extension.
@@ -125,13 +102,13 @@ Used by the DXOS DevTool Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L72)
+[packages/sdk/client/src/packlets/services/service-host.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L72)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -143,13 +120,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L60)
+[packages/sdk/client/src/packlets/services/service-host.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L60)
 
 ___
 
 ### open
 
-▸ **open**(`onProgressCallback?`): `Promise`<`void`\>
+**open**(`onProgressCallback?`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -167,4 +144,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/services/service-host.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/services/service-host.ts#L55)
+[packages/sdk/client/src/packlets/services/service-host.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/services/service-host.ts#L55)

@@ -6,7 +6,7 @@ Object mutation model.
 
 ## Hierarchy
 
-- `Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), `ObjectMutationSet`\>
+- `Model`<[`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md), `ObjectMutationSet`\>
 
   ↳ **`ObjectModel`**
 
@@ -14,46 +14,11 @@ Object mutation model.
 
 - [`ObjectProperties`](../interfaces/dxos_object_model.ObjectProperties.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.ObjectModel.md#constructor)
-
-### Properties
-
-- [\_getState](dxos_object_model.ObjectModel.md#_getstate)
-- [update](dxos_object_model.ObjectModel.md#update)
-- [meta](dxos_object_model.ObjectModel.md#meta)
-
-### Accessors
-
-- [itemId](dxos_object_model.ObjectModel.md#itemid)
-- [modelMeta](dxos_object_model.ObjectModel.md#modelmeta)
-- [readOnly](dxos_object_model.ObjectModel.md#readonly)
-
-### Methods
-
-- [addToSet](dxos_object_model.ObjectModel.md#addtoset)
-- [builder](dxos_object_model.ObjectModel.md#builder)
-- [get](dxos_object_model.ObjectModel.md#get)
-- [getProperty](dxos_object_model.ObjectModel.md#getproperty)
-- [pushToArray](dxos_object_model.ObjectModel.md#pushtoarray)
-- [removeFromSet](dxos_object_model.ObjectModel.md#removefromset)
-- [set](dxos_object_model.ObjectModel.md#set)
-- [setProperties](dxos_object_model.ObjectModel.md#setproperties)
-- [setProperty](dxos_object_model.ObjectModel.md#setproperty)
-- [subscribe](dxos_object_model.ObjectModel.md#subscribe)
-- [toJSON](dxos_object_model.ObjectModel.md#tojson)
-- [toObject](dxos_object_model.ObjectModel.md#toobject)
-- [toString](dxos_object_model.ObjectModel.md#tostring)
-- [write](dxos_object_model.ObjectModel.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new ObjectModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
+**new ObjectModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
 
 #### Parameters
 
@@ -61,7 +26,7 @@ Object mutation model.
 | :------ | :------ | :------ |
 | `_meta` | `ModelMeta`<`any`, `any`, `any`\> | Metadata definitions. |
 | `_itemId` | `string` | Parent item. |
-| `_getState` | () => [`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate) | Retrieves the underlying state object. |
+| `_getState` | () => [`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md) | Retrieves the underlying state object. |
 | `_mutationWriter?` | `MutationWriter`<`ObjectMutationSet`\> | Output mutation stream (unless read-only). |
 
 #### Inherited from
@@ -76,15 +41,15 @@ packages/echo/model-factory/dist/src/model.d.ts:20
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => [`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate)
+ `Protected` `Readonly` **\_getState**: () => [`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md)
 
 #### Type declaration
 
-▸ (): [`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate)
+(): [`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md)
 
 ##### Returns
 
-[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate)
+[`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md)
 
 #### Inherited from
 
@@ -98,7 +63,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate), `ObjectMutationSet`\>\>
+ `Readonly` **update**: `Event`<`Model`<[`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md), `ObjectMutationSet`\>\>
 
 #### Inherited from
 
@@ -112,17 +77,17 @@ ___
 
 ### meta
 
-▪ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
+ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L79)
+[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L79)
 
 ## Accessors
 
 ### itemId
 
-• `get` **itemId**(): `string`
+`get` **itemId**(): `string`
 
 #### Returns
 
@@ -140,7 +105,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -158,7 +123,7 @@ ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -176,7 +141,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 ### addToSet
 
-▸ **addToSet**(`key`, `value`): `Promise`<`void`\>
+**addToSet**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -191,13 +156,13 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L145)
+[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L145)
 
 ___
 
 ### builder
 
-▸ **builder**(): [`MutationBuilder`](dxos_object_model.MutationBuilder.md)
+**builder**(): [`MutationBuilder`](dxos_object_model.MutationBuilder.md)
 
 #### Returns
 
@@ -205,13 +170,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L101)
+[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L101)
 
 ___
 
 ### get
 
-▸ **get**(`key`, `defaultValue?`): `any`
+**get**(`key`, `defaultValue?`): `any`
 
 #### Parameters
 
@@ -230,13 +195,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L105)
+[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L105)
 
 ___
 
 ### getProperty
 
-▸ **getProperty**(`key`, `defaultValue?`): `any`
+**getProperty**(`key`, `defaultValue?`): `any`
 
 **`Deprecated`**
 
@@ -253,13 +218,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L123)
+[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L123)
 
 ___
 
 ### pushToArray
 
-▸ **pushToArray**(`key`, `value`): `Promise`<`void`\>
+**pushToArray**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -274,13 +239,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L169)
+[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L169)
 
 ___
 
 ### removeFromSet
 
-▸ **removeFromSet**(`key`, `value`): `Promise`<`void`\>
+**removeFromSet**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -295,13 +260,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L157)
+[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L157)
 
 ___
 
 ### set
 
-▸ **set**(`key`, `value`): `Promise`<`void`\>
+**set**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -320,13 +285,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L110)
+[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L110)
 
 ___
 
 ### setProperties
 
-▸ **setProperties**(`properties`): `Promise`<`void`\>
+**setProperties**(`properties`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -342,13 +307,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L139)
+[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L139)
 
 ___
 
 ### setProperty
 
-▸ **setProperty**(`key`, `value`): `Promise`<`void`\>
+**setProperty**(`key`, `value`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -365,13 +330,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L131)
+[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L131)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 #### Parameters
 
@@ -383,7 +348,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -401,7 +366,7 @@ ___
 
 ### toJSON
 
-▸ **toJSON**(): `Object`
+**toJSON**(): `Object`
 
 #### Returns
 
@@ -424,23 +389,23 @@ ___
 
 ### toObject
 
-▸ **toObject**(): [`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate)
+**toObject**(): [`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md)
 
 Returns an immutable object.
 
 #### Returns
 
-[`ObjectModelState`](../modules/dxos_object_model.md#objectmodelstate)
+[`ObjectModelState`](../types/dxos_object_model.ObjectModelState.md)
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/object-model.ts#L97)
+[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/object-model.ts#L97)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -458,7 +423,7 @@ ___
 
 ### write
 
-▸ `Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
+`Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
 
 Writes the raw mutation to the output stream.
 

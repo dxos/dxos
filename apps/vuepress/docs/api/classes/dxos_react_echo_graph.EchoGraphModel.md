@@ -8,58 +8,37 @@ ECHO adapter for the Graph model.
 
 - `GraphModel`<`Item`<`any`\>\>
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_react_echo_graph.EchoGraphModel.md#constructor)
-
-### Properties
-
-- [\_graph](dxos_react_echo_graph.EchoGraphModel.md#_graph)
-- [updated](dxos_react_echo_graph.EchoGraphModel.md#updated)
-
-### Accessors
-
-- [graph](dxos_react_echo_graph.EchoGraphModel.md#graph)
-
-### Methods
-
-- [refresh](dxos_react_echo_graph.EchoGraphModel.md#refresh)
-- [subscribe](dxos_react_echo_graph.EchoGraphModel.md#subscribe)
-- [update](dxos_react_echo_graph.EchoGraphModel.md#update)
-
 ## Constructors
 
 ### constructor
 
-• **new EchoGraphModel**()
+**new EchoGraphModel**()
 
 ## Properties
 
 ### \_graph
 
-• `Private` `Readonly` **\_graph**: `GraphData`<`Item`<`any`\>\>
+ `Private` `Readonly` **\_graph**: `GraphData`<`Item`<`any`\>\>
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L15)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L15)
 
 ___
 
 ### updated
 
-• `Readonly` **updated**: `Event`<`GraphData`<`Item`<`any`\>\>\>
+ `Readonly` **updated**: `Event`<`GraphData`<`Item`<`any`\>\>\>
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L13)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:13](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L13)
 
 ## Accessors
 
 ### graph
 
-• `get` **graph**(): `GraphData`<`Item`<`any`\>\>
+`get` **graph**(): `GraphData`<`Item`<`any`\>\>
 
 #### Returns
 
@@ -71,13 +50,13 @@ GraphModel.graph
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L20)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L20)
 
 ## Methods
 
 ### refresh
 
-▸ **refresh**(): `void`
+**refresh**(): `void`
 
 #### Returns
 
@@ -85,13 +64,13 @@ GraphModel.graph
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L28)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L28)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`callback`): () => `void`
+**subscribe**(`callback`): () => `void`
 
 #### Parameters
 
@@ -103,7 +82,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -121,13 +100,13 @@ GraphModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L24)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L24)
 
 ___
 
 ### update
 
-▸ **update**(`items`): `void`
+**update**(`items`): `void`
 
 #### Parameters
 
@@ -141,4 +120,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L32)
+[packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-echo-graph/src/components/EchoGraph/model.ts#L32)

@@ -2,31 +2,15 @@
 
 [@dxos/react-toolkit](../modules/dxos_react_toolkit.md).SharingDialogProps
 
-## Table of contents
-
-### Properties
-
-- [createUrl](dxos_react_toolkit.SharingDialogProps.md#createurl)
-- [invitations](dxos_react_toolkit.SharingDialogProps.md#invitations)
-- [members](dxos_react_toolkit.SharingDialogProps.md#members)
-- [modal](dxos_react_toolkit.SharingDialogProps.md#modal)
-- [onCancelInvitation](dxos_react_toolkit.SharingDialogProps.md#oncancelinvitation)
-- [onClose](dxos_react_toolkit.SharingDialogProps.md#onclose)
-- [onCreateBotInvitation](dxos_react_toolkit.SharingDialogProps.md#oncreatebotinvitation)
-- [onCreateInvitation](dxos_react_toolkit.SharingDialogProps.md#oncreateinvitation)
-- [onCreateOfflineInvitation](dxos_react_toolkit.SharingDialogProps.md#oncreateofflineinvitation)
-- [open](dxos_react_toolkit.SharingDialogProps.md#open)
-- [title](dxos_react_toolkit.SharingDialogProps.md#title)
-
 ## Properties
 
 ### createUrl
 
-• `Optional` **createUrl**: (`invitationCode`: `string`) => `string`
+ `Optional` **createUrl**: (`invitationCode`: `string`) => `string`
 
 #### Type declaration
 
-▸ (`invitationCode`): `string`
+(`invitationCode`): `string`
 
 ##### Parameters
 
@@ -40,47 +24,47 @@
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L48)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L48)
 
 ___
 
 ### invitations
 
-• `Optional` **invitations**: `InvitationRequest`[]
+ `Optional` **invitations**: `InvitationRequest`[]
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L42)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L42)
 
 ___
 
 ### members
 
-• `Optional` **members**: `PartyMember`[]
+ `Optional` **members**: `PartyMember`[]
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L41)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L41)
 
 ___
 
 ### modal
 
-• `Optional` **modal**: `boolean`
+ `Optional` **modal**: `boolean`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L39)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L39)
 
 ___
 
 ### onCancelInvitation
 
-• **onCancelInvitation**: (`invitation`: `InvitationRequest`) => `void`
+ **onCancelInvitation**: (`invitation`: `InvitationRequest`) => `void`
 
 #### Type declaration
 
-▸ (`invitation`): `void`
+(`invitation`): `void`
 
 ##### Parameters
 
@@ -94,17 +78,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L44)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L44)
 
 ___
 
 ### onClose
 
-• `Optional` **onClose**: () => `void`
+ `Optional` **onClose**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -112,17 +96,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L47)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L47)
 
 ___
 
 ### onCreateBotInvitation
 
-• `Optional` **onCreateBotInvitation**: (`resource`: `ResourceSet`) => `void`
+ `Optional` **onCreateBotInvitation**: (`resource`: `ResourceSet`) => `void`
 
 #### Type declaration
 
-▸ (`resource`): `void`
+(`resource`): `void`
 
 ##### Parameters
 
@@ -136,17 +120,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L46)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L46)
 
 ___
 
 ### onCreateInvitation
 
-• **onCreateInvitation**: () => `void`
+ **onCreateInvitation**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -154,17 +138,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L43)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L43)
 
 ___
 
 ### onCreateOfflineInvitation
 
-• `Optional` **onCreateOfflineInvitation**: () => `void`
+ `Optional` **onCreateOfflineInvitation**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -172,24 +156,24 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L45)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:45](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L45)
 
 ___
 
 ### open
 
-• **open**: `boolean`
+ **open**: `boolean`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L38)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L38)
 
 ___
 
 ### title
 
-• **title**: `string`
+ **title**: `string`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L40)
+[packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/SharingDialog/SharingDialog.tsx#L40)

@@ -12,21 +12,15 @@
 
 - [`MockFeedWriter`](../classes/dxos_echo_protocol.MockFeedWriter.md)
 
-## Table of contents
-
-### Properties
-
-- [write](dxos_echo_protocol.FeedWriter.md#write)
-
 ## Properties
 
 ### write
 
-• **write**: (`message`: `T`) => `Promise`<[`WriteReceipt`](dxos_echo_protocol.WriteReceipt.md)\>
+ **write**: (`message`: `T`) => `Promise`<[`WriteReceipt`](dxos_echo_protocol.WriteReceipt.md)\>
 
 #### Type declaration
 
-▸ (`message`): `Promise`<[`WriteReceipt`](dxos_echo_protocol.WriteReceipt.md)\>
+(`message`): `Promise`<[`WriteReceipt`](dxos_echo_protocol.WriteReceipt.md)\>
 
 ##### Parameters
 
@@ -40,4 +34,4 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L20)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L20)

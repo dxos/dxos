@@ -8,45 +8,11 @@
 
   ↳ **`TextModel`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_text_model.TextModel.md#constructor)
-
-### Properties
-
-- [\_getState](dxos_text_model.TextModel.md#_getstate)
-- [update](dxos_text_model.TextModel.md#update)
-- [meta](dxos_text_model.TextModel.md#meta)
-
-### Accessors
-
-- [content](dxos_text_model.TextModel.md#content)
-- [doc](dxos_text_model.TextModel.md#doc)
-- [itemId](dxos_text_model.TextModel.md#itemid)
-- [modelMeta](dxos_text_model.TextModel.md#modelmeta)
-- [readOnly](dxos_text_model.TextModel.md#readonly)
-- [textContent](dxos_text_model.TextModel.md#textcontent)
-
-### Methods
-
-- [\_handleDocUpdated](dxos_text_model.TextModel.md#_handledocupdated)
-- [\_insertInner](dxos_text_model.TextModel.md#_insertinner)
-- [\_textContentInner](dxos_text_model.TextModel.md#_textcontentinner)
-- [\_transact](dxos_text_model.TextModel.md#_transact)
-- [insert](dxos_text_model.TextModel.md#insert)
-- [insertTextNode](dxos_text_model.TextModel.md#inserttextnode)
-- [subscribe](dxos_text_model.TextModel.md#subscribe)
-- [toJSON](dxos_text_model.TextModel.md#tojson)
-- [toString](dxos_text_model.TextModel.md#tostring)
-- [write](dxos_text_model.TextModel.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new TextModel**(`meta`, `itemId`, `getState`, `writeStream?`)
+**new TextModel**(`meta`, `itemId`, `getState`, `writeStream?`)
 
 #### Parameters
 
@@ -63,17 +29,17 @@ Model&lt;Doc, Mutation\&gt;.constructor
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L50)
+[packages/echo/text-model/src/text-model.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L50)
 
 ## Properties
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => `Doc`
+ `Protected` `Readonly` **\_getState**: () => `Doc`
 
 #### Type declaration
 
-▸ (): `Doc`
+(): `Doc`
 
 ##### Returns
 
@@ -91,7 +57,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<`Doc`, `Mutation`\>\>
+ `Readonly` **update**: `Event`<`Model`<`Doc`, `Mutation`\>\>
 
 #### Inherited from
 
@@ -105,17 +71,17 @@ ___
 
 ### meta
 
-▪ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
+ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L43)
+[packages/echo/text-model/src/text-model.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L43)
 
 ## Accessors
 
 ### content
 
-• `get` **content**(): `YXmlFragment`
+`get` **content**(): `YXmlFragment`
 
 #### Returns
 
@@ -123,13 +89,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L60)
+[packages/echo/text-model/src/text-model.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L60)
 
 ___
 
 ### doc
 
-• `get` **doc**(): `Doc`
+`get` **doc**(): `Doc`
 
 #### Returns
 
@@ -137,13 +103,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L56)
+[packages/echo/text-model/src/text-model.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L56)
 
 ___
 
 ### itemId
 
-• `get` **itemId**(): `string`
+`get` **itemId**(): `string`
 
 #### Returns
 
@@ -161,7 +127,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -179,7 +145,7 @@ ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -197,7 +163,7 @@ ___
 
 ### textContent
 
-• `get` **textContent**(): `string`
+`get` **textContent**(): `string`
 
 #### Returns
 
@@ -205,13 +171,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L65)
+[packages/echo/text-model/src/text-model.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L65)
 
 ## Methods
 
 ### \_handleDocUpdated
 
-▸ `Private` **_handleDocUpdated**(`update`, `origin`): `Promise`<`void`\>
+`Private` **_handleDocUpdated**(`update`, `origin`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -226,13 +192,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L69)
+[packages/echo/text-model/src/text-model.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L69)
 
 ___
 
 ### \_insertInner
 
-▸ `Private` **_insertInner**(`node`, `index`, `text`): `number` \| ``true``
+`Private` **_insertInner**(`node`, `index`, `text`): `number` \| ``true``
 
 #### Parameters
 
@@ -248,13 +214,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:101](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L101)
+[packages/echo/text-model/src/text-model.ts:101](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L101)
 
 ___
 
 ### \_textContentInner
 
-▸ `Private` **_textContentInner**(`node`): `string`
+`Private` **_textContentInner**(`node`): `string`
 
 #### Parameters
 
@@ -268,13 +234,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L83)
+[packages/echo/text-model/src/text-model.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L83)
 
 ___
 
 ### \_transact
 
-▸ `Private` **_transact**(`fn`): `void`
+`Private` **_transact**(`fn`): `void`
 
 #### Parameters
 
@@ -288,13 +254,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L79)
+[packages/echo/text-model/src/text-model.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L79)
 
 ___
 
 ### insert
 
-▸ **insert**(`text`, `index`): `void`
+**insert**(`text`, `index`): `void`
 
 #### Parameters
 
@@ -309,13 +275,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L138)
+[packages/echo/text-model/src/text-model.ts:138](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L138)
 
 ___
 
 ### insertTextNode
 
-▸ **insertTextNode**(`text`, `index?`): `void`
+**insertTextNode**(`text`, `index?`): `void`
 
 #### Parameters
 
@@ -330,13 +296,13 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:142](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/text-model/src/text-model.ts#L142)
+[packages/echo/text-model/src/text-model.ts:142](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/text-model/src/text-model.ts#L142)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 #### Parameters
 
@@ -348,7 +314,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -366,7 +332,7 @@ ___
 
 ### toJSON
 
-▸ **toJSON**(): `Object`
+**toJSON**(): `Object`
 
 #### Returns
 
@@ -389,7 +355,7 @@ ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -407,7 +373,7 @@ ___
 
 ### write
 
-▸ `Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
+`Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
 
 Writes the raw mutation to the output stream.
 

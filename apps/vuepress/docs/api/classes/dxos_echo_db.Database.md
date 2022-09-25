@@ -4,43 +4,11 @@
 
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Database.md#constructor)
-
-### Properties
-
-- [\_itemManager](dxos_echo_db.Database.md#_itemmanager)
-- [\_state](dxos_echo_db.Database.md#_state)
-
-### Accessors
-
-- [entityUpdate](dxos_echo_db.Database.md#entityupdate)
-- [isReadOnly](dxos_echo_db.Database.md#isreadonly)
-- [state](dxos_echo_db.Database.md#state)
-- [update](dxos_echo_db.Database.md#update)
-
-### Methods
-
-- [\_assertInitialized](dxos_echo_db.Database.md#_assertinitialized)
-- [createDataServiceHost](dxos_echo_db.Database.md#createdataservicehost)
-- [createItem](dxos_echo_db.Database.md#createitem)
-- [createLink](dxos_echo_db.Database.md#createlink)
-- [createSnapshot](dxos_echo_db.Database.md#createsnapshot)
-- [destroy](dxos_echo_db.Database.md#destroy)
-- [getItem](dxos_echo_db.Database.md#getitem)
-- [initialize](dxos_echo_db.Database.md#initialize)
-- [reduce](dxos_echo_db.Database.md#reduce)
-- [select](dxos_echo_db.Database.md#select)
-- [waitForItem](dxos_echo_db.Database.md#waitforitem)
-
 ## Constructors
 
 ### constructor
 
-• **new Database**(`_modelFactory`, `_backend`, `memberKey`)
+**new Database**(`_modelFactory`, `_backend`, `memberKey`)
 
 Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
 
@@ -54,33 +22,33 @@ Creates a new database instance. `database.initialize()` must be called afterwar
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L54)
+[packages/echo/echo-db/src/packlets/database/database.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L54)
 
 ## Properties
 
 ### \_itemManager
 
-• `Private` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
+ `Private` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L47)
+[packages/echo/echo-db/src/packlets/database/database.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L47)
 
 ___
 
 ### \_state
 
-• `Private` **\_state**: [`State`](../enums/dxos_echo_db.State.md) = `State.NULL`
+ `Private` **\_state**: [`State`](../enums/dxos_echo_db.State.md) = `State.NULL`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L49)
+[packages/echo/echo-db/src/packlets/database/database.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L49)
 
 ## Accessors
 
 ### entityUpdate
 
-• `get` **entityUpdate**(): `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
+`get` **entityUpdate**(): `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
 
 Fired immediately after any update in the entities.
 If the information about which entity got updated is not required prefer using `update`.
@@ -91,13 +59,13 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L83)
+[packages/echo/echo-db/src/packlets/database/database.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L83)
 
 ___
 
 ### isReadOnly
 
-• `get` **isReadOnly**(): `boolean`
+`get` **isReadOnly**(): `boolean`
 
 #### Returns
 
@@ -105,13 +73,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L66)
+[packages/echo/echo-db/src/packlets/database/database.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L66)
 
 ___
 
 ### state
 
-• `get` **state**(): [`State`](../enums/dxos_echo_db.State.md)
+`get` **state**(): [`State`](../enums/dxos_echo_db.State.md)
 
 #### Returns
 
@@ -119,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L62)
+[packages/echo/echo-db/src/packlets/database/database.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L62)
 
 ___
 
 ### update
 
-• `get` **update**(): `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>[]\>
+`get` **update**(): `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>[]\>
 
 Fired when any item is updated.
 Contains a list of all entities changed from the last update.
@@ -136,13 +104,13 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L74)
+[packages/echo/echo-db/src/packlets/database/database.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L74)
 
 ## Methods
 
 ### \_assertInitialized
 
-▸ `Private` **_assertInitialized**(): `void`
+`Private` **_assertInitialized**(): `void`
 
 #### Returns
 
@@ -150,13 +118,13 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:210](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L210)
+[packages/echo/echo-db/src/packlets/database/database.ts:210](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L210)
 
 ___
 
 ### createDataServiceHost
 
-▸ **createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
+**createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
 
 #### Returns
 
@@ -164,13 +132,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:206](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L206)
+[packages/echo/echo-db/src/packlets/database/database.ts:206](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L206)
 
 ___
 
 ### createItem
 
-▸ **createItem**<`M`\>(`options?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`M`\>\>
+**createItem**<`M`\>(`options?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`M`\>\>
 
 Creates a new item with the given queryable type and model.
 
@@ -192,13 +160,13 @@ Creates a new item with the given queryable type and model.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:110](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L110)
+[packages/echo/echo-db/src/packlets/database/database.ts:110](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L110)
 
 ___
 
 ### createLink
 
-▸ **createLink**<`M`, `S`, `T`\>(`options`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`M`, `S`, `T`\>\>
+**createLink**<`M`, `S`, `T`\>(`options`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`M`, `S`, `T`\>\>
 
 #### Type parameters
 
@@ -220,13 +188,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L131)
+[packages/echo/echo-db/src/packlets/database/database.ts:131](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L131)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -234,13 +202,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L201)
+[packages/echo/echo-db/src/packlets/database/database.ts:201](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L201)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -248,13 +216,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L97)
+[packages/echo/echo-db/src/packlets/database/database.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L97)
 
 ___
 
 ### getItem
 
-▸ **getItem**(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
+**getItem**(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
 
 Retrieves a item from the index.
 
@@ -270,13 +238,13 @@ Retrieves a item from the index.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:155](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L155)
+[packages/echo/echo-db/src/packlets/database/database.ts:155](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L155)
 
 ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`void`\>
+**initialize**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -284,13 +252,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L87)
+[packages/echo/echo-db/src/packlets/database/database.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L87)
 
 ___
 
 ### reduce
 
-▸ **reduce**<`R`\>(`result`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**reduce**<`R`\>(`result`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Returns a reducer selection context.
 
@@ -305,7 +273,7 @@ Returns a reducer selection context.
 | Name | Type |
 | :------ | :------ |
 | `result` | `R` |
-| `filter?` | [`RootFilter`](../modules/dxos_echo_db.md#rootfilter) |
+| `filter?` | [`RootFilter`](../types/dxos_echo_db.RootFilter.md) |
 
 #### Returns
 
@@ -313,13 +281,13 @@ Returns a reducer selection context.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:191](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L191)
+[packages/echo/echo-db/src/packlets/database/database.ts:191](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L191)
 
 ___
 
 ### select
 
-▸ **select**(`filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `void`\>
+**select**(`filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -327,7 +295,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 | Name | Type |
 | :------ | :------ |
-| `filter?` | [`RootFilter`](../modules/dxos_echo_db.md#rootfilter) |
+| `filter?` | [`RootFilter`](../types/dxos_echo_db.RootFilter.md) |
 
 #### Returns
 
@@ -335,13 +303,13 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:176](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L176)
+[packages/echo/echo-db/src/packlets/database/database.ts:176](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L176)
 
 ___
 
 ### waitForItem
 
-▸ **waitForItem**<`T`\>(`filter`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`T`\>\>
+**waitForItem**<`T`\>(`filter`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`T`\>\>
 
 Waits for item matching the filter to be present and returns it.
 
@@ -355,7 +323,7 @@ Waits for item matching the filter to be present and returns it.
 
 | Name | Type |
 | :------ | :------ |
-| `filter` | [`RootFilter`](../modules/dxos_echo_db.md#rootfilter) |
+| `filter` | [`RootFilter`](../types/dxos_echo_db.RootFilter.md) |
 
 #### Returns
 
@@ -363,4 +331,4 @@ Waits for item matching the filter to be present and returns it.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:164](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database.ts#L164)
+[packages/echo/echo-db/src/packlets/database/database.ts:164](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database.ts#L164)

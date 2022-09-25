@@ -4,25 +4,11 @@
 
 Creates and constructs party instances.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyFactory.md#constructor)
-
-### Methods
-
-- [cloneParty](dxos_echo_db.PartyFactory.md#cloneparty)
-- [constructParty](dxos_echo_db.PartyFactory.md#constructparty)
-- [constructPartyFromSnapshot](dxos_echo_db.PartyFactory.md#constructpartyfromsnapshot)
-- [createParty](dxos_echo_db.PartyFactory.md#createparty)
-- [joinParty](dxos_echo_db.PartyFactory.md#joinparty)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyFactory**(`_identityProvider`, `_networkManager`, `_modelFactory`, `_snapshotStore`, `_feedProviderFactory`, `_metadataStore`, `_options?`)
+**new PartyFactory**(`_identityProvider`, `_networkManager`, `_modelFactory`, `_snapshotStore`, `_feedProviderFactory`, `_metadataStore`, `_options?`)
 
 #### Parameters
 
@@ -38,13 +24,13 @@ Creates and constructs party instances.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L42)
+[packages/echo/echo-db/src/parties/party-factory.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L42)
 
 ## Methods
 
 ### cloneParty
 
-▸ **cloneParty**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**cloneParty**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Parameters
 
@@ -58,13 +44,13 @@ Creates and constructs party instances.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L201)
+[packages/echo/echo-db/src/parties/party-factory.ts:201](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L201)
 
 ___
 
 ### constructParty
 
-▸ **constructParty**(`partyKey`, `initialTimeframe?`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**constructParty**(`partyKey`, `initialTimeframe?`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 Constructs a party object from an existing set of feeds.
 
@@ -81,13 +67,13 @@ Constructs a party object from an existing set of feeds.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L119)
+[packages/echo/echo-db/src/parties/party-factory.ts:119](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L119)
 
 ___
 
 ### constructPartyFromSnapshot
 
-▸ **constructPartyFromSnapshot**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**constructPartyFromSnapshot**(`snapshot`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Parameters
 
@@ -101,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:141](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L141)
+[packages/echo/echo-db/src/parties/party-factory.ts:141](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L141)
 
 ___
 
 ### createParty
 
-▸ **createParty**(): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**createParty**(): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 Create a new party with a new feed for it. Writes a party genensis message to this feed.
 
@@ -117,13 +103,13 @@ Create a new party with a new feed for it. Writes a party genensis message to th
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L55)
+[packages/echo/echo-db/src/parties/party-factory.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L55)
 
 ___
 
 ### joinParty
 
-▸ **joinParty**(`invitationDescriptor`, `secretProvider`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
+**joinParty**(`invitationDescriptor`, `secretProvider`): `Promise`<[`DataParty`](dxos_echo_db.DataParty.md)\>
 
 #### Parameters
 
@@ -138,4 +124,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:150](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/parties/party-factory.ts#L150)
+[packages/echo/echo-db/src/parties/party-factory.ts:150](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/parties/party-factory.ts#L150)

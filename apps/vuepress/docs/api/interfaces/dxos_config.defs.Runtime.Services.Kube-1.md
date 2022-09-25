@@ -5,18 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [endpoints](dxos_config.defs.Runtime.Services.Kube-1.md#endpoints)
-- [publicUrl](dxos_config.defs.Runtime.Services.Kube-1.md#publicurl)
-
 ## Properties
 
 ### endpoints
 
-• `Optional` **endpoints**: [`Endpoints`](dxos_config.defs.Runtime.Services.Kube.Endpoints.md)
+ `Optional` **endpoints**: [`Endpoints`](dxos_config.defs.Runtime.Services.Kube.Endpoints.md)
 
 Options:
   - proto3_optional = true
@@ -29,7 +22,7 @@ ___
 
 ### publicUrl
 
-• `Optional` **publicUrl**: `string`
+ `Optional` **publicUrl**: `string`
 
 Options:
   - proto3_optional = true

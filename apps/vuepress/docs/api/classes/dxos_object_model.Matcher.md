@@ -5,23 +5,11 @@
 Predicate matcher.
 NOTE: The approach here is to match items against the DNF predicate tree.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.Matcher.md#constructor)
-
-### Methods
-
-- [\_matchItem](dxos_object_model.Matcher.md#_matchitem)
-- [getFilter](dxos_object_model.Matcher.md#getfilter)
-- [matchItems](dxos_object_model.Matcher.md#matchitems)
-
 ## Constructors
 
 ### constructor
 
-• **new Matcher**(`_options`)
+**new Matcher**(`_options`)
 
 #### Parameters
 
@@ -31,13 +19,13 @@ NOTE: The approach here is to match items against the DNF predicate tree.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/matcher.ts#L22)
+[packages/echo/object-model/src/matcher.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/matcher.ts#L22)
 
 ## Methods
 
 ### \_matchItem
 
-▸ **_matchItem**(`item`, `predicate`): `boolean`
+**_matchItem**(`item`, `predicate`): `boolean`
 
 Recursively match predicate tree against current item.
 
@@ -54,13 +42,13 @@ Recursively match predicate tree against current item.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/matcher.ts#L41)
+[packages/echo/object-model/src/matcher.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/matcher.ts#L41)
 
 ___
 
 ### getFilter
 
-▸ **getFilter**(`query`): (`item`: `any`) => `boolean`
+**getFilter**(`query`): (`item`: `any`) => `boolean`
 
 #### Parameters
 
@@ -72,7 +60,7 @@ ___
 
 `fn`
 
-▸ (`item`): `boolean`
+(`item`): `boolean`
 
 ##### Parameters
 
@@ -86,13 +74,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/matcher.ts#L26)
+[packages/echo/object-model/src/matcher.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/matcher.ts#L26)
 
 ___
 
 ### matchItems
 
-▸ **matchItems**(`query`, `items`): `any`[]
+**matchItems**(`query`, `items`): `any`[]
 
 Returns list of matched items.
 
@@ -109,4 +97,4 @@ Returns list of matched items.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/matcher.ts#L34)
+[packages/echo/object-model/src/matcher.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/matcher.ts#L34)

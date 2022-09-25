@@ -5,39 +5,17 @@
 Represents scalar, array, and hierarchical values.
 { null, boolean, number, string }
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.ValueUtil.md#constructor)
-
-### Methods
-
-- [applyKeyValue](dxos_object_model.ValueUtil.md#applykeyvalue)
-- [applyValue](dxos_object_model.ValueUtil.md#applyvalue)
-- [bool](dxos_object_model.ValueUtil.md#bool)
-- [bytes](dxos_object_model.ValueUtil.md#bytes)
-- [createMessage](dxos_object_model.ValueUtil.md#createmessage)
-- [datetime](dxos_object_model.ValueUtil.md#datetime)
-- [float](dxos_object_model.ValueUtil.md#float)
-- [getObjectValue](dxos_object_model.ValueUtil.md#getobjectvalue)
-- [getScalarValue](dxos_object_model.ValueUtil.md#getscalarvalue)
-- [integer](dxos_object_model.ValueUtil.md#integer)
-- [object](dxos_object_model.ValueUtil.md#object)
-- [string](dxos_object_model.ValueUtil.md#string)
-- [valueOf](dxos_object_model.ValueUtil.md#valueof)
-
 ## Constructors
 
 ### constructor
 
-• **new ValueUtil**()
+**new ValueUtil**()
 
 ## Methods
 
 ### applyKeyValue
 
-▸ `Static` **applyKeyValue**(`object`, `keyValue`): `any`
+`Static` **applyKeyValue**(`object`, `keyValue`): `any`
 
 #### Parameters
 
@@ -52,13 +30,13 @@ Represents scalar, array, and hierarchical values.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:162](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L162)
+[packages/echo/object-model/src/mutation.ts:162](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L162)
 
 ___
 
 ### applyValue
 
-▸ `Static` **applyValue**(`object`, `key`, `value?`): `any`
+`Static` **applyValue**(`object`, `key`, `value?`): `any`
 
 #### Parameters
 
@@ -74,13 +52,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:167](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L167)
+[packages/echo/object-model/src/mutation.ts:167](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L167)
 
 ___
 
 ### bool
 
-▸ `Static` **bool**(`value`): `Value`
+`Static` **bool**(`value`): `Value`
 
 #### Parameters
 
@@ -94,13 +72,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L119)
+[packages/echo/object-model/src/mutation.ts:119](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L119)
 
 ___
 
 ### bytes
 
-▸ `Static` **bytes**(`value`): `Value`
+`Static` **bytes**(`value`): `Value`
 
 #### Parameters
 
@@ -114,13 +92,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L115)
+[packages/echo/object-model/src/mutation.ts:115](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L115)
 
 ___
 
 ### createMessage
 
-▸ `Static` **createMessage**(`value`): `Value`
+`Static` **createMessage**(`value`): `Value`
 
 #### Parameters
 
@@ -134,13 +112,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L75)
+[packages/echo/object-model/src/mutation.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L75)
 
 ___
 
 ### datetime
 
-▸ `Static` **datetime**(`value`): `Value`
+`Static` **datetime**(`value`): `Value`
 
 #### Parameters
 
@@ -154,13 +132,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L135)
+[packages/echo/object-model/src/mutation.ts:135](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L135)
 
 ___
 
 ### float
 
-▸ `Static` **float**(`value`): `Value`
+`Static` **float**(`value`): `Value`
 
 #### Parameters
 
@@ -174,13 +152,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L127)
+[packages/echo/object-model/src/mutation.ts:127](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L127)
 
 ___
 
 ### getObjectValue
 
-▸ `Static` **getObjectValue**(`value`): `Object`
+`Static` **getObjectValue**(`value`): `Object`
 
 #### Parameters
 
@@ -194,13 +172,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:148](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L148)
+[packages/echo/object-model/src/mutation.ts:148](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L148)
 
 ___
 
 ### getScalarValue
 
-▸ `Static` **getScalarValue**(`value`): `undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| `KeyValueObject`
+`Static` **getScalarValue**(`value`): `undefined` \| `string` \| `number` \| `boolean` \| `Uint8Array` \| `KeyValueObject`
 
 #### Parameters
 
@@ -214,13 +192,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:155](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L155)
+[packages/echo/object-model/src/mutation.ts:155](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L155)
 
 ___
 
 ### integer
 
-▸ `Static` **integer**(`value`): `Value`
+`Static` **integer**(`value`): `Value`
 
 #### Parameters
 
@@ -234,13 +212,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L123)
+[packages/echo/object-model/src/mutation.ts:123](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L123)
 
 ___
 
 ### object
 
-▸ `Static` **object**(`value`): `Value`
+`Static` **object**(`value`): `Value`
 
 #### Parameters
 
@@ -254,13 +232,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L139)
+[packages/echo/object-model/src/mutation.ts:139](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L139)
 
 ___
 
 ### string
 
-▸ `Static` **string**(`value`): `Value`
+`Static` **string**(`value`): `Value`
 
 #### Parameters
 
@@ -274,13 +252,13 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L131)
+[packages/echo/object-model/src/mutation.ts:131](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L131)
 
 ___
 
 ### valueOf
 
-▸ `Static` **valueOf**(`value`): `any`
+`Static` **valueOf**(`value`): `any`
 
 #### Parameters
 
@@ -294,4 +272,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L94)
+[packages/echo/object-model/src/mutation.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L94)

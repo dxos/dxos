@@ -4,27 +4,17 @@
 
 Represents a named property value.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_object_model.KeyValueUtil.md#constructor)
-
-### Methods
-
-- [createMessage](dxos_object_model.KeyValueUtil.md#createmessage)
-
 ## Constructors
 
 ### constructor
 
-• **new KeyValueUtil**()
+**new KeyValueUtil**()
 
 ## Methods
 
 ### createMessage
 
-▸ `Static` **createMessage**(`key`, `value`): `KeyValue`
+`Static` **createMessage**(`key`, `value`): `KeyValue`
 
 #### Parameters
 
@@ -39,4 +29,4 @@ Represents a named property value.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/object-model/src/mutation.ts#L55)
+[packages/echo/object-model/src/mutation.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/object-model/src/mutation.ts#L55)

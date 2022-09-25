@@ -8,18 +8,11 @@ Signal peer messaging interface.
 
 - [`MessageRouter`](../classes/dxos_network_manager.MessageRouter.md)
 
-## Table of contents
-
-### Methods
-
-- [offer](dxos_network_manager.SignalMessaging.md#offer)
-- [signal](dxos_network_manager.SignalMessaging.md#signal)
-
 ## Methods
 
 ### offer
 
-▸ **offer**(`msg`): `Promise`<`Answer`\>
+**offer**(`msg`): `Promise`<`Answer`\>
 
 Offer/answer RPC.
 
@@ -35,13 +28,13 @@ Offer/answer RPC.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/signal-messaging.ts#L32)
+[packages/mesh/network-manager/src/signal/signal-messaging.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/signal/signal-messaging.ts#L32)
 
 ___
 
 ### signal
 
-▸ **signal**(`msg`): `Promise`<`void`\>
+**signal**(`msg`): `Promise`<`void`\>
 
 Reliably send a signal to a peer.
 
@@ -57,4 +50,4 @@ Reliably send a signal to a peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/signal/signal-messaging.ts#L37)
+[packages/mesh/network-manager/src/signal/signal-messaging.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/signal/signal-messaging.ts#L37)

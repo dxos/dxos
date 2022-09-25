@@ -1,42 +1,20 @@
 # Module: @dxos/network-generator
 
-## Table of contents
-
-### Classes
+## Classes
 
 - [IdGenerator](../classes/dxos_network_generator.IdGenerator.md)
 - [Network](../classes/dxos_network_generator.Network.md)
 - [NetworkGenerator](../classes/dxos_network_generator.NetworkGenerator.md)
 
-### Interfaces
+## Interfaces
 
 - [NetworkOptions](../interfaces/dxos_network_generator.NetworkOptions.md)
 - [Peer](../interfaces/dxos_network_generator.Peer.md)
 
-### Type Aliases
-
-- [Topology](dxos_network_generator.md#topology)
-
-### Variables
-
-- [TOPOLOGIES](dxos_network_generator.md#topologies)
-
 ## Type Aliases
 
-### Topology
-
-Ƭ **Topology**: typeof [`TOPOLOGIES`](dxos_network_generator.md#topologies)[`number`]
-
-#### Defined in
-
-[packages/mesh/network-generator/src/network-generator.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L24)
+- [Topology](../types/dxos_network_generator.Topology.md)
 
 ## Variables
 
-### TOPOLOGIES
-
-• `Const` **TOPOLOGIES**: readonly [``"ladder"``, ``"complete"``, ``"completeBipartite"``, ``"balancedBinTree"``, ``"path"``, ``"circularLadder"``, ``"grid"``, ``"grid3"``, ``"noLinks"``, ``"cliqueCircle"``, ``"wattsStrogatz"``]
-
-#### Defined in
-
-[packages/mesh/network-generator/src/network-generator.ts:11](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-generator/src/network-generator.ts#L11)
+- [TOPOLOGIES](../variables/dxos_network_generator.TOPOLOGIES.md)

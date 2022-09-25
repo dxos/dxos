@@ -8,37 +8,11 @@ HALO API.
 
 - [`HaloProxy`](../classes/dxos_client.HaloProxy.md)
 
-## Table of contents
-
-### Properties
-
-- [info](dxos_client.Halo.md#info)
-
-### Accessors
-
-- [profile](dxos_client.Halo.md#profile)
-
-### Methods
-
-- [acceptInvitation](dxos_client.Halo.md#acceptinvitation)
-- [addKeyRecord](dxos_client.Halo.md#addkeyrecord)
-- [createInvitation](dxos_client.Halo.md#createinvitation)
-- [createProfile](dxos_client.Halo.md#createprofile)
-- [getDevicePreference](dxos_client.Halo.md#getdevicepreference)
-- [getGlobalPreference](dxos_client.Halo.md#getglobalpreference)
-- [queryContacts](dxos_client.Halo.md#querycontacts)
-- [queryDevices](dxos_client.Halo.md#querydevices)
-- [recoverProfile](dxos_client.Halo.md#recoverprofile)
-- [setDevicePreference](dxos_client.Halo.md#setdevicepreference)
-- [setGlobalPreference](dxos_client.Halo.md#setglobalpreference)
-- [sign](dxos_client.Halo.md#sign)
-- [subscribeToProfile](dxos_client.Halo.md#subscribetoprofile)
-
 ## Properties
 
 ### info
 
-• **info**: `Object`
+ **info**: `Object`
 
 #### Type declaration
 
@@ -48,13 +22,13 @@ HALO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L25)
+[packages/sdk/client/src/packlets/api/halo.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L25)
 
 ## Accessors
 
 ### profile
 
-• `get` **profile**(): `undefined` \| [`Profile`](dxos_client.Profile.md)
+`get` **profile**(): `undefined` \| [`Profile`](dxos_client.Profile.md)
 
 #### Returns
 
@@ -62,13 +36,13 @@ HALO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L27)
+[packages/sdk/client/src/packlets/api/halo.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L27)
 
 ## Methods
 
 ### acceptInvitation
 
-▸ **acceptInvitation**(`invitationDescriptor`): [`Invitation`](../classes/dxos_client.Invitation.md)<`void`\>
+**acceptInvitation**(`invitationDescriptor`): [`Invitation`](../classes/dxos_client.Invitation.md)<`void`\>
 
 #### Parameters
 
@@ -82,13 +56,13 @@ HALO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L41)
+[packages/sdk/client/src/packlets/api/halo.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L41)
 
 ___
 
 ### addKeyRecord
 
-▸ **addKeyRecord**(`keyRecord`): `Promise`<`void`\>
+**addKeyRecord**(`keyRecord`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -102,13 +76,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L32)
+[packages/sdk/client/src/packlets/api/halo.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L32)
 
 ___
 
 ### createInvitation
 
-▸ **createInvitation**(): `Promise`<[`InvitationRequest`](../classes/dxos_client.InvitationRequest.md)\>
+**createInvitation**(): `Promise`<[`InvitationRequest`](../classes/dxos_client.InvitationRequest.md)\>
 
 #### Returns
 
@@ -116,13 +90,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L40)
+[packages/sdk/client/src/packlets/api/halo.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L40)
 
 ___
 
 ### createProfile
 
-▸ **createProfile**(`options?`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
+**createProfile**(`options?`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
 
 #### Parameters
 
@@ -136,13 +110,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L28)
+[packages/sdk/client/src/packlets/api/halo.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L28)
 
 ___
 
 ### getDevicePreference
 
-▸ **getDevicePreference**(`key`): `Promise`<`undefined` \| `string`\>
+**getDevicePreference**(`key`): `Promise`<`undefined` \| `string`\>
 
 #### Parameters
 
@@ -156,13 +130,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L45)
+[packages/sdk/client/src/packlets/api/halo.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L45)
 
 ___
 
 ### getGlobalPreference
 
-▸ **getGlobalPreference**(`key`): `Promise`<`undefined` \| `string`\>
+**getGlobalPreference**(`key`): `Promise`<`undefined` \| `string`\>
 
 #### Parameters
 
@@ -176,13 +150,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L48)
+[packages/sdk/client/src/packlets/api/halo.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L48)
 
 ___
 
 ### queryContacts
 
-▸ **queryContacts**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+**queryContacts**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
 
 #### Returns
 
@@ -190,13 +164,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L39)
+[packages/sdk/client/src/packlets/api/halo.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L39)
 
 ___
 
 ### queryDevices
 
-▸ **queryDevices**(): `Promise`<`DeviceInfo`[]\>
+**queryDevices**(): `Promise`<`DeviceInfo`[]\>
 
 #### Returns
 
@@ -204,13 +178,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L43)
+[packages/sdk/client/src/packlets/api/halo.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L43)
 
 ___
 
 ### recoverProfile
 
-▸ **recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
+**recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
 
 #### Parameters
 
@@ -224,13 +198,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L29)
+[packages/sdk/client/src/packlets/api/halo.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L29)
 
 ___
 
 ### setDevicePreference
 
-▸ **setDevicePreference**(`key`, `value`): `Promise`<`void`\>
+**setDevicePreference**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -245,13 +219,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L44)
+[packages/sdk/client/src/packlets/api/halo.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L44)
 
 ___
 
 ### setGlobalPreference
 
-▸ **setGlobalPreference**(`key`, `value`): `Promise`<`void`\>
+**setGlobalPreference**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -266,13 +240,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L47)
+[packages/sdk/client/src/packlets/api/halo.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L47)
 
 ___
 
 ### sign
 
-▸ **sign**(`request`): `Promise`<[`SignResponse`](dxos_client.SignResponse.md)\>
+**sign**(`request`): `Promise`<[`SignResponse`](dxos_client.SignResponse.md)\>
 
 #### Parameters
 
@@ -286,13 +260,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L31)
+[packages/sdk/client/src/packlets/api/halo.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L31)
 
 ___
 
 ### subscribeToProfile
 
-▸ **subscribeToProfile**(`callback`): `void`
+**subscribeToProfile**(`callback`): `void`
 
 **`Deprecated`**
 
@@ -308,4 +282,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/halo.ts#L37)
+[packages/sdk/client/src/packlets/api/halo.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/halo.ts#L37)

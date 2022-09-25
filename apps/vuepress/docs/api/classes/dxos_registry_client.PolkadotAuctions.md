@@ -14,40 +14,18 @@ Polkadot DXNS auctions client backend.
 
 - [`AuctionsClientBackend`](../interfaces/dxos_registry_client.AuctionsClientBackend.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.PolkadotAuctions.md#constructor)
-
-### Properties
-
-- [api](dxos_registry_client.PolkadotAuctions.md#api)
-- [transactionsHandler](dxos_registry_client.PolkadotAuctions.md#transactionshandler)
-
-### Methods
-
-- [\_decodeAuction](dxos_registry_client.PolkadotAuctions.md#_decodeauction)
-- [bidAuction](dxos_registry_client.PolkadotAuctions.md#bidauction)
-- [claimAuction](dxos_registry_client.PolkadotAuctions.md#claimauction)
-- [closeAuction](dxos_registry_client.PolkadotAuctions.md#closeauction)
-- [createAuction](dxos_registry_client.PolkadotAuctions.md#createauction)
-- [forceCloseAuction](dxos_registry_client.PolkadotAuctions.md#forcecloseauction)
-- [getAuction](dxos_registry_client.PolkadotAuctions.md#getauction)
-- [listAuctions](dxos_registry_client.PolkadotAuctions.md#listauctions)
-
 ## Constructors
 
 ### constructor
 
-• **new PolkadotAuctions**(`api`, `signFn?`)
+**new PolkadotAuctions**(`api`, `signFn?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `api` | `ApiPromise` |
-| `signFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `signFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Inherited from
 
@@ -55,13 +33,13 @@ Polkadot DXNS auctions client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
 
 ## Properties
 
 ### api
 
-• `Protected` **api**: `ApiPromise`
+ `Protected` **api**: `ApiPromise`
 
 #### Inherited from
 
@@ -69,13 +47,13 @@ Polkadot DXNS auctions client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
 
 ___
 
 ### transactionsHandler
 
-• `Protected` **transactionsHandler**: [`ApiTransactionHandler`](dxos_registry_client.ApiTransactionHandler.md)
+ `Protected` **transactionsHandler**: [`ApiTransactionHandler`](dxos_registry_client.ApiTransactionHandler.md)
 
 #### Inherited from
 
@@ -83,13 +61,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
 
 ## Methods
 
 ### \_decodeAuction
 
-▸ `Private` **_decodeAuction**(`auction`): [`Auction`](../interfaces/dxos_registry_client.Auction.md)
+`Private` **_decodeAuction**(`auction`): [`Auction`](../interfaces/dxos_registry_client.Auction.md)
 
 #### Parameters
 
@@ -103,13 +81,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L55)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L55)
 
 ___
 
 ### bidAuction
 
-▸ **bidAuction**(`name`, `amount`): `Promise`<`void`\>
+**bidAuction**(`name`, `amount`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -128,13 +106,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L37)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L37)
 
 ___
 
 ### claimAuction
 
-▸ **claimAuction**(`domainName`, `account`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
+**claimAuction**(`domainName`, `account`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -153,13 +131,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L49)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L49)
 
 ___
 
 ### closeAuction
 
-▸ **closeAuction**(`name`): `Promise`<`void`\>
+**closeAuction**(`name`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -177,13 +155,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L41)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L41)
 
 ___
 
 ### createAuction
 
-▸ **createAuction**(`name`, `startAmount`): `Promise`<`void`\>
+**createAuction**(`name`, `startAmount`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -202,20 +180,20 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L33)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L33)
 
 ___
 
 ### forceCloseAuction
 
-▸ **forceCloseAuction**(`name`, `sudoSignFn`): `Promise`<`void`\>
+**forceCloseAuction**(`name`, `sudoSignFn`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `name` | `string` |
-| `sudoSignFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `sudoSignFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Returns
 
@@ -227,13 +205,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L45)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L45)
 
 ___
 
 ### getAuction
 
-▸ **getAuction**(`name`): `Promise`<`undefined` \| [`Auction`](../interfaces/dxos_registry_client.Auction.md)\>
+**getAuction**(`name`): `Promise`<`undefined` \| [`Auction`](../interfaces/dxos_registry_client.Auction.md)\>
 
 #### Parameters
 
@@ -251,13 +229,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L16)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L16)
 
 ___
 
 ### listAuctions
 
-▸ **listAuctions**(): `Promise`<[`Auction`](../interfaces/dxos_registry_client.Auction.md)[]\>
+**listAuctions**(): `Promise`<[`Auction`](../interfaces/dxos_registry_client.Auction.md)[]\>
 
 #### Returns
 
@@ -269,4 +247,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/auctions.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/auctions.ts#L25)
+[packages/sdk/registry-client/src/polkadot/auctions.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/auctions.ts#L25)

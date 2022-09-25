@@ -4,22 +4,11 @@
 
 Import/export party.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.PartySerializer.md#constructor)
-
-### Methods
-
-- [deserializeParty](dxos_client.PartySerializer.md#deserializeparty)
-- [serializeParty](dxos_client.PartySerializer.md#serializeparty)
-
 ## Constructors
 
 ### constructor
 
-• **new PartySerializer**(`_client`)
+**new PartySerializer**(`_client`)
 
 #### Parameters
 
@@ -29,13 +18,13 @@ Import/export party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L16)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/serializer.ts#L16)
 
 ## Methods
 
 ### deserializeParty
 
-▸ **deserializeParty**(`data`): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+**deserializeParty**(`data`): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 #### Parameters
 
@@ -49,13 +38,13 @@ Import/export party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L25)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/serializer.ts#L25)
 
 ___
 
 ### serializeParty
 
-▸ **serializeParty**(`party`): `Promise`<`Blob`\>
+**serializeParty**(`party`): `Promise`<`Blob`\>
 
 #### Parameters
 
@@ -69,4 +58,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/serializer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/serializer.ts#L20)
+[packages/sdk/client/src/packlets/proxy/serializer.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/serializer.ts#L20)

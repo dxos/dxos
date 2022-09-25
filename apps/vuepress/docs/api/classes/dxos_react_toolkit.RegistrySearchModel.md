@@ -8,94 +8,68 @@ Filterable resource search model.
 
 - `SearchModel`<`ResourceSet`\>
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_react_toolkit.RegistrySearchModel.md#constructor)
-
-### Properties
-
-- [\_results](dxos_react_toolkit.RegistrySearchModel.md#_results)
-- [\_text](dxos_react_toolkit.RegistrySearchModel.md#_text)
-- [\_types](dxos_react_toolkit.RegistrySearchModel.md#_types)
-- [\_update](dxos_react_toolkit.RegistrySearchModel.md#_update)
-
-### Accessors
-
-- [results](dxos_react_toolkit.RegistrySearchModel.md#results)
-- [types](dxos_react_toolkit.RegistrySearchModel.md#types)
-
-### Methods
-
-- [doUpdate](dxos_react_toolkit.RegistrySearchModel.md#doupdate)
-- [initialize](dxos_react_toolkit.RegistrySearchModel.md#initialize)
-- [setFilters](dxos_react_toolkit.RegistrySearchModel.md#setfilters)
-- [setText](dxos_react_toolkit.RegistrySearchModel.md#settext)
-- [subscribe](dxos_react_toolkit.RegistrySearchModel.md#subscribe)
-
 ## Constructors
 
 ### constructor
 
-• **new RegistrySearchModel**(`_registry`, `_filters?`)
+**new RegistrySearchModel**(`_registry`, `_filters?`)
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
 | `_registry` | `RegistryClient` | `undefined` |
-| `_filters` | [`SearchFilter`](../modules/dxos_react_toolkit.md#searchfilter)[] | `[]` |
+| `_filters` | [`SearchFilter`](../types/dxos_react_toolkit.SearchFilter.md)[] | `[]` |
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L46)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L46)
 
 ## Properties
 
 ### \_results
 
-• `Private` **\_results**: `SearchResult`<`ResourceSet`\>[] = `[]`
+ `Private` **\_results**: `SearchResult`<`ResourceSet`\>[] = `[]`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L42)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L42)
 
 ___
 
 ### \_text
 
-• `Private` `Optional` **\_text**: `string` = `undefined`
+ `Private` `Optional` **\_text**: `string` = `undefined`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L43)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L43)
 
 ___
 
 ### \_types
 
-• `Private` **\_types**: `RegistryType`[] = `[]`
+ `Private` **\_types**: `RegistryType`[] = `[]`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L44)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L44)
 
 ___
 
 ### \_update
 
-• `Private` `Readonly` **\_update**: `Event`<`SearchResult`<`ResourceSet`\>[]\>
+ `Private` `Readonly` **\_update**: `Event`<`SearchResult`<`ResourceSet`\>[]\>
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L41)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L41)
 
 ## Accessors
 
 ### results
 
-• `get` **results**(): `SearchResult`<`ResourceSet`\>[]
+`get` **results**(): `SearchResult`<`ResourceSet`\>[]
 
 #### Returns
 
@@ -107,13 +81,13 @@ SearchModel.results
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L55)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L55)
 
 ___
 
 ### types
 
-• `get` **types**(): `RegistryType`[]
+`get` **types**(): `RegistryType`[]
 
 #### Returns
 
@@ -121,13 +95,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L51)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L51)
 
 ## Methods
 
 ### doUpdate
 
-▸ **doUpdate**(): `void`
+**doUpdate**(): `void`
 
 #### Returns
 
@@ -135,13 +109,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L78)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L78)
 
 ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`void`\>
+**initialize**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -149,19 +123,19 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L63)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L63)
 
 ___
 
 ### setFilters
 
-▸ **setFilters**(`filters`): `void`
+**setFilters**(`filters`): `void`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `filters` | [`SearchFilter`](../modules/dxos_react_toolkit.md#searchfilter)[] |
+| `filters` | [`SearchFilter`](../types/dxos_react_toolkit.SearchFilter.md)[] |
 
 #### Returns
 
@@ -169,13 +143,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L73)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:73](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L73)
 
 ___
 
 ### setText
 
-▸ **setText**(`text?`): `void`
+**setText**(`text?`): `void`
 
 #### Parameters
 
@@ -193,13 +167,13 @@ SearchModel.setText
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L68)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L68)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`callback`): () => `void`
+**subscribe**(`callback`): () => `void`
 
 #### Parameters
 
@@ -211,7 +185,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -229,4 +203,4 @@ SearchModel.subscribe
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L59)
+[packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/containers/RegistrySearch/RegistrySearchModel.ts#L59)

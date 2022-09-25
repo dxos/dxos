@@ -4,28 +4,11 @@
 
 Manages the party's connection to the network swarm.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyProtocolFactory.md#constructor)
-
-### Properties
-
-- [\_presencePlugin](dxos_echo_db.PartyProtocolFactory.md#_presenceplugin)
-- [\_started](dxos_echo_db.PartyProtocolFactory.md#_started)
-
-### Methods
-
-- [\_createProtocol](dxos_echo_db.PartyProtocolFactory.md#_createprotocol)
-- [start](dxos_echo_db.PartyProtocolFactory.md#start)
-- [stop](dxos_echo_db.PartyProtocolFactory.md#stop)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyProtocolFactory**(`_partyKey`, `_networkManager`, `_peerId`, `_credentials`)
+**new PartyProtocolFactory**(`_partyKey`, `_networkManager`, `_peerId`, `_credentials`)
 
 #### Parameters
 
@@ -38,33 +21,33 @@ Manages the party's connection to the network swarm.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L26)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L26)
 
 ## Properties
 
 ### \_presencePlugin
 
-• `Private` `Readonly` **\_presencePlugin**: `PresencePlugin`
+ `Private` `Readonly` **\_presencePlugin**: `PresencePlugin`
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L22)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L22)
 
 ___
 
 ### \_started
 
-• `Private` **\_started**: `boolean` = `false`
+ `Private` **\_started**: `boolean` = `false`
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L24)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L24)
 
 ## Methods
 
 ### \_createProtocol
 
-▸ `Private` **_createProtocol**(`channel`, `opts`, `extraPlugins`): `Protocol`
+`Private` **_createProtocol**(`channel`, `opts`, `extraPlugins`): `Protocol`
 
 #### Parameters
 
@@ -81,13 +64,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L67)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L67)
 
 ___
 
 ### start
 
-▸ **start**(`plugins`): `Promise`<`undefined` \| () => `Promise`<`void`\>\>
+**start**(`plugins`): `Promise`<`undefined` \| () => `Promise`<`void`\>\>
 
 #### Parameters
 
@@ -101,13 +84,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L33)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L33)
 
 ___
 
 ### stop
 
-▸ **stop**(): `Promise`<`void`\>
+**stop**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -115,4 +98,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L57)
+[packages/echo/echo-db/src/protocol/party-protocol-factory.ts:57](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/protocol/party-protocol-factory.ts#L57)

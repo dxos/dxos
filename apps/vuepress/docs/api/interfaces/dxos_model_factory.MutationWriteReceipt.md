@@ -8,22 +8,11 @@
 
   ↳ **`MutationWriteReceipt`**
 
-## Table of contents
-
-### Properties
-
-- [feedKey](dxos_model_factory.MutationWriteReceipt.md#feedkey)
-- [seq](dxos_model_factory.MutationWriteReceipt.md#seq)
-
-### Methods
-
-- [waitToBeProcessed](dxos_model_factory.MutationWriteReceipt.md#waittobeprocessed)
-
 ## Properties
 
 ### feedKey
 
-• **feedKey**: `PublicKey`
+ **feedKey**: `PublicKey`
 
 #### Inherited from
 
@@ -37,7 +26,7 @@ ___
 
 ### seq
 
-• **seq**: `number`
+ **seq**: `number`
 
 #### Inherited from
 
@@ -51,7 +40,7 @@ packages/echo/echo-protocol/dist/src/feeds/feed-writer.d.ts:8
 
 ### waitToBeProcessed
 
-▸ **waitToBeProcessed**(): `Promise`<`void`\>
+**waitToBeProcessed**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -59,4 +48,4 @@ packages/echo/echo-protocol/dist/src/feeds/feed-writer.d.ts:8
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/types.ts#L31)
+[packages/echo/model-factory/src/types.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/types.ts#L31)

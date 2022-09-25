@@ -8,18 +8,11 @@
 
   ↳ [`Options`](dxos_broadcast.Options.md)
 
-## Table of contents
-
-### Properties
-
-- [maxAge](dxos_broadcast.CacheOptions.md#maxage)
-- [maxSize](dxos_broadcast.CacheOptions.md#maxsize)
-
 ## Properties
 
 ### maxAge
 
-• `Optional` **maxAge**: `number`
+ `Optional` **maxAge**: `number`
 
 Defines the max live time for the cache messages.
 
@@ -27,13 +20,13 @@ Default: 10000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L43)
+[packages/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L43)
 
 ___
 
 ### maxSize
 
-• `Optional` **maxSize**: `number`
+ `Optional` **maxSize**: `number`
 
 Defines the max size for the cache messages.
 
@@ -41,4 +34,4 @@ Default: 1000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/broadcast/src/broadcast.ts#L49)
+[packages/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/broadcast/src/broadcast.ts#L49)

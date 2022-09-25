@@ -4,42 +4,11 @@
 
 Main API for DXNS registry.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.RegistryClient.md#constructor)
-
-### Properties
-
-- [\_recordCache](dxos_registry_client.RegistryClient.md#_recordcache)
-- [\_typeCache](dxos_registry_client.RegistryClient.md#_typecache)
-
-### Methods
-
-- [\_decodeRecord](dxos_registry_client.RegistryClient.md#_decoderecord)
-- [\_decodeType](dxos_registry_client.RegistryClient.md#_decodetype)
-- [\_fetchRecord](dxos_registry_client.RegistryClient.md#_fetchrecord)
-- [\_fetchType](dxos_registry_client.RegistryClient.md#_fetchtype)
-- [getDomainKey](dxos_registry_client.RegistryClient.md#getdomainkey)
-- [getRecord](dxos_registry_client.RegistryClient.md#getrecord)
-- [getRecordByName](dxos_registry_client.RegistryClient.md#getrecordbyname)
-- [getResource](dxos_registry_client.RegistryClient.md#getresource)
-- [getTypeRecord](dxos_registry_client.RegistryClient.md#gettyperecord)
-- [listAuthorities](dxos_registry_client.RegistryClient.md#listauthorities)
-- [listRecords](dxos_registry_client.RegistryClient.md#listrecords)
-- [listResources](dxos_registry_client.RegistryClient.md#listresources)
-- [listTypeRecords](dxos_registry_client.RegistryClient.md#listtyperecords)
-- [registerAuthority](dxos_registry_client.RegistryClient.md#registerauthority)
-- [registerRecord](dxos_registry_client.RegistryClient.md#registerrecord)
-- [registerResource](dxos_registry_client.RegistryClient.md#registerresource)
-- [registerTypeRecord](dxos_registry_client.RegistryClient.md#registertyperecord)
-
 ## Constructors
 
 ### constructor
 
-• **new RegistryClient**(`_backend`)
+**new RegistryClient**(`_backend`)
 
 #### Parameters
 
@@ -49,33 +18,33 @@ Main API for DXNS registry.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L72)
+[packages/sdk/registry-client/src/api/registry-client.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L72)
 
 ## Properties
 
 ### \_recordCache
 
-• `Private` `Readonly` **\_recordCache**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>\>\>
+ `Private` `Readonly` **\_recordCache**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L69)
+[packages/sdk/registry-client/src/api/registry-client.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L69)
 
 ___
 
 ### \_typeCache
 
-• `Private` `Readonly` **\_typeCache**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Promise`<`undefined` \| [`RegistryType`](../modules/dxos_registry_client.md#registrytype)\>\>
+ `Private` `Readonly` **\_typeCache**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Promise`<`undefined` \| [`RegistryType`](../types/dxos_registry_client.RegistryType.md)\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L70)
+[packages/sdk/registry-client/src/api/registry-client.ts:70](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L70)
 
 ## Methods
 
 ### \_decodeRecord
 
-▸ `Private` **_decodeRecord**(`cid`, `rawRecord`): `Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>\>
+`Private` **_decodeRecord**(`cid`, `rawRecord`): `Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>\>
 
 #### Parameters
 
@@ -86,17 +55,17 @@ ___
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>\>
+`Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:286](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L286)
+[packages/sdk/registry-client/src/api/registry-client.ts:286](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L286)
 
 ___
 
 ### \_decodeType
 
-▸ `Private` **_decodeType**(`cid`, `rawRecord`): [`RegistryType`](../modules/dxos_registry_client.md#registrytype)
+`Private` **_decodeType**(`cid`, `rawRecord`): [`RegistryType`](../types/dxos_registry_client.RegistryType.md)
 
 #### Parameters
 
@@ -107,17 +76,17 @@ ___
 
 #### Returns
 
-[`RegistryType`](../modules/dxos_registry_client.md#registrytype)
+[`RegistryType`](../types/dxos_registry_client.RegistryType.md)
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:311](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L311)
+[packages/sdk/registry-client/src/api/registry-client.ts:311](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L311)
 
 ___
 
 ### \_fetchRecord
 
-▸ `Private` **_fetchRecord**(`cid`): `Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>\>
+`Private` **_fetchRecord**(`cid`): `Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>\>
 
 #### Parameters
 
@@ -127,17 +96,17 @@ ___
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>\>
+`Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:280](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L280)
+[packages/sdk/registry-client/src/api/registry-client.ts:280](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L280)
 
 ___
 
 ### \_fetchType
 
-▸ `Private` **_fetchType**(`cid`): `Promise`<`undefined` \| [`RegistryType`](../modules/dxos_registry_client.md#registrytype)\>
+`Private` **_fetchType**(`cid`): `Promise`<`undefined` \| [`RegistryType`](../types/dxos_registry_client.RegistryType.md)\>
 
 #### Parameters
 
@@ -147,17 +116,17 @@ ___
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryType`](../modules/dxos_registry_client.md#registrytype)\>
+`Promise`<`undefined` \| [`RegistryType`](../types/dxos_registry_client.RegistryType.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:302](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L302)
+[packages/sdk/registry-client/src/api/registry-client.ts:302](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L302)
 
 ___
 
 ### getDomainKey
 
-▸ **getDomainKey**(`domainName`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
+**getDomainKey**(`domainName`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
 
 Resolves a domain key from the domain name.
 
@@ -173,13 +142,13 @@ Resolves a domain key from the domain name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L84)
+[packages/sdk/registry-client/src/api/registry-client.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L84)
 
 ___
 
 ### getRecord
 
-▸ **getRecord**<`T`\>(`cid`): `Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`T`\>\>
+**getRecord**<`T`\>(`cid`): `Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`T`\>\>
 
 Gets record details by CID.
 
@@ -197,17 +166,17 @@ Gets record details by CID.
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`T`\>\>
+`Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`T`\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:168](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L168)
+[packages/sdk/registry-client/src/api/registry-client.ts:168](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L168)
 
 ___
 
 ### getRecordByName
 
-▸ **getRecordByName**<`T`\>(`name`): `Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`T`\>\>
+**getRecordByName**<`T`\>(`name`): `Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`T`\>\>
 
 Gets resource by its registered name.
 
@@ -225,17 +194,17 @@ Gets resource by its registered name.
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`T`\>\>
+`Promise`<`undefined` \| [`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`T`\>\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:183](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L183)
+[packages/sdk/registry-client/src/api/registry-client.ts:183](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L183)
 
 ___
 
 ### getResource
 
-▸ **getResource**(`name`): `Promise`<`undefined` \| [`CID`](dxos_registry_client.CID.md)\>
+**getResource**(`name`): `Promise`<`undefined` \| [`CID`](dxos_registry_client.CID.md)\>
 
 Gets resource by its registered name.
 
@@ -251,13 +220,13 @@ Gets resource by its registered name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L111)
+[packages/sdk/registry-client/src/api/registry-client.ts:111](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L111)
 
 ___
 
 ### getTypeRecord
 
-▸ **getTypeRecord**(`cid`): `Promise`<`undefined` \| [`RegistryType`](../modules/dxos_registry_client.md#registrytype)\>
+**getTypeRecord**(`cid`): `Promise`<`undefined` \| [`RegistryType`](../types/dxos_registry_client.RegistryType.md)\>
 
 Gets type records details by CID.
 
@@ -269,33 +238,33 @@ Gets type records details by CID.
 
 #### Returns
 
-`Promise`<`undefined` \| [`RegistryType`](../modules/dxos_registry_client.md#registrytype)\>
+`Promise`<`undefined` \| [`RegistryType`](../types/dxos_registry_client.RegistryType.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:232](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L232)
+[packages/sdk/registry-client/src/api/registry-client.ts:232](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L232)
 
 ___
 
 ### listAuthorities
 
-▸ **listAuthorities**(): `Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+**listAuthorities**(): `Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 Returns a list of authorities created in DXOS system.
 
 #### Returns
 
-`Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+`Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L91)
+[packages/sdk/registry-client/src/api/registry-client.ts:91](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L91)
 
 ___
 
 ### listRecords
 
-▸ **listRecords**(`filter?`): `Promise`<[`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>[]\>
+**listRecords**(`filter?`): `Promise`<[`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>[]\>
 
 Lists records in the system.
 
@@ -307,17 +276,17 @@ Lists records in the system.
 
 #### Returns
 
-`Promise`<[`RegistryRecord`](../modules/dxos_registry_client.md#registryrecord)<`any`\>[]\>
+`Promise`<[`RegistryRecord`](../types/dxos_registry_client.RegistryRecord.md)<`any`\>[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:197](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L197)
+[packages/sdk/registry-client/src/api/registry-client.ts:197](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L197)
 
 ___
 
 ### listResources
 
-▸ **listResources**(`filter?`): `Promise`<[`ResourceSet`](../modules/dxos_registry_client.md#resourceset)[]\>
+**listResources**(`filter?`): `Promise`<[`ResourceSet`](../types/dxos_registry_client.ResourceSet.md)[]\>
 
 List resources registered in the system.
 
@@ -329,17 +298,17 @@ List resources registered in the system.
 
 #### Returns
 
-`Promise`<[`ResourceSet`](../modules/dxos_registry_client.md#resourceset)[]\>
+`Promise`<[`ResourceSet`](../types/dxos_registry_client.ResourceSet.md)[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L120)
+[packages/sdk/registry-client/src/api/registry-client.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L120)
 
 ___
 
 ### listTypeRecords
 
-▸ **listTypeRecords**(`filter?`): `Promise`<[`RegistryType`](../modules/dxos_registry_client.md#registrytype)[]\>
+**listTypeRecords**(`filter?`): `Promise`<[`RegistryType`](../types/dxos_registry_client.RegistryType.md)[]\>
 
 Lists type records in the system.
 
@@ -351,17 +320,17 @@ Lists type records in the system.
 
 #### Returns
 
-`Promise`<[`RegistryType`](../modules/dxos_registry_client.md#registrytype)[]\>
+`Promise`<[`RegistryType`](../types/dxos_registry_client.RegistryType.md)[]\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:247](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L247)
+[packages/sdk/registry-client/src/api/registry-client.ts:247](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L247)
 
 ___
 
 ### registerAuthority
 
-▸ **registerAuthority**(`account`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
+**registerAuthority**(`account`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
 
 Creates a new domain in the system under a generated name.
 
@@ -377,13 +346,13 @@ Creates a new domain in the system under a generated name.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L99)
+[packages/sdk/registry-client/src/api/registry-client.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L99)
 
 ___
 
 ### registerRecord
 
-▸ **registerRecord**(`data`, `typeId`, `meta?`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
+**registerRecord**(`data`, `typeId`, `meta?`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
 
 Creates a new data record in the system.
 
@@ -401,13 +370,13 @@ Creates a new data record in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:214](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L214)
+[packages/sdk/registry-client/src/api/registry-client.ts:214](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L214)
 
 ___
 
 ### registerResource
 
-▸ **registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
+**registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
 
 Registers or updates a resource in the system.
 Undefined CID means that the resource will be deleted.
@@ -426,13 +395,13 @@ Undefined CID means that the resource will be deleted.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L152)
+[packages/sdk/registry-client/src/api/registry-client.ts:152](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L152)
 
 ___
 
 ### registerTypeRecord
 
-▸ **registerTypeRecord**(`messageName`, `schema`, `meta?`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
+**registerTypeRecord**(`messageName`, `schema`, `meta?`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
 
 Creates a new type record in the system.
 
@@ -450,4 +419,4 @@ Creates a new type record in the system.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/registry-client.ts:263](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/registry-client.ts#L263)
+[packages/sdk/registry-client/src/api/registry-client.ts:263](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/registry-client.ts#L263)

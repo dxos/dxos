@@ -12,27 +12,11 @@
 
 - [`FeedWriter`](../interfaces/dxos_echo_protocol.FeedWriter.md)<`T`\>
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_protocol.MockFeedWriter.md#constructor)
-
-### Properties
-
-- [feedKey](dxos_echo_protocol.MockFeedWriter.md#feedkey)
-- [messages](dxos_echo_protocol.MockFeedWriter.md#messages)
-- [written](dxos_echo_protocol.MockFeedWriter.md#written)
-
-### Methods
-
-- [write](dxos_echo_protocol.MockFeedWriter.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new MockFeedWriter**<`T`\>(`feedKey?`)
+**new MockFeedWriter**<`T`\>(`feedKey?`)
 
 #### Type parameters
 
@@ -48,43 +32,43 @@
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L52)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L52)
 
 ## Properties
 
 ### feedKey
 
-• `Readonly` **feedKey**: `PublicKey`
+ `Readonly` **feedKey**: `PublicKey`
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L53)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L53)
 
 ___
 
 ### messages
 
-• `Readonly` **messages**: `T`[] = `[]`
+ `Readonly` **messages**: `T`[] = `[]`
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L48)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L48)
 
 ___
 
 ### written
 
-• `Readonly` **written**: `Event`<[`T`, [`WriteReceipt`](../interfaces/dxos_echo_protocol.WriteReceipt.md)]\>
+ `Readonly` **written**: `Event`<[`T`, [`WriteReceipt`](../interfaces/dxos_echo_protocol.WriteReceipt.md)]\>
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L50)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L50)
 
 ## Methods
 
 ### write
 
-▸ **write**(`message`): `Promise`<[`WriteReceipt`](../interfaces/dxos_echo_protocol.WriteReceipt.md)\>
+**write**(`message`): `Promise`<[`WriteReceipt`](../interfaces/dxos_echo_protocol.WriteReceipt.md)\>
 
 #### Parameters
 
@@ -102,4 +86,4 @@ FeedWriter.write
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L56)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L56)

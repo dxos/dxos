@@ -8,35 +8,11 @@
 | :------ | :------ |
 | `M` | extends [`Model`](dxos_model_factory.Model.md)<`any`\> |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_model_factory.TestRig.md#constructor)
-
-### Properties
-
-- [\_peers](dxos_model_factory.TestRig.md#_peers)
-- [\_replicating](dxos_model_factory.TestRig.md#_replicating)
-- [\_replicationFinished](dxos_model_factory.TestRig.md#_replicationfinished)
-
-### Accessors
-
-- [replicating](dxos_model_factory.TestRig.md#replicating)
-
-### Methods
-
-- [\_replicate](dxos_model_factory.TestRig.md#_replicate)
-- [\_writeMessage](dxos_model_factory.TestRig.md#_writemessage)
-- [configureReplication](dxos_model_factory.TestRig.md#configurereplication)
-- [createPeer](dxos_model_factory.TestRig.md#createpeer)
-- [waitForReplication](dxos_model_factory.TestRig.md#waitforreplication)
-
 ## Constructors
 
 ### constructor
 
-• **new TestRig**<`M`\>(`_modelFactory`, `_modelConstructor`)
+**new TestRig**<`M`\>(`_modelFactory`, `_modelConstructor`)
 
 #### Type parameters
 
@@ -49,47 +25,47 @@
 | Name | Type |
 | :------ | :------ |
 | `_modelFactory` | [`ModelFactory`](dxos_model_factory.ModelFactory.md) |
-| `_modelConstructor` | [`ModelConstructor`](../modules/dxos_model_factory.md#modelconstructor)<`M`\> |
+| `_modelConstructor` | [`ModelConstructor`](../types/dxos_model_factory.ModelConstructor.md)<`M`\> |
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L27)
+[packages/echo/model-factory/src/testing/test-rig.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L27)
 
 ## Properties
 
 ### \_peers
 
-• `Private` `Readonly` **\_peers**: `ComplexMap`<`PublicKey`, [`TestPeer`](dxos_model_factory.TestPeer.md)<`M`\>\>
+ `Private` `Readonly` **\_peers**: `ComplexMap`<`PublicKey`, [`TestPeer`](dxos_model_factory.TestPeer.md)<`M`\>\>
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L21)
+[packages/echo/model-factory/src/testing/test-rig.ts:21](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L21)
 
 ___
 
 ### \_replicating
 
-• `Private` **\_replicating**: `boolean` = `true`
+ `Private` **\_replicating**: `boolean` = `true`
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L25)
+[packages/echo/model-factory/src/testing/test-rig.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L25)
 
 ___
 
 ### \_replicationFinished
 
-• `Private` `Readonly` **\_replicationFinished**: `Trigger`
+ `Private` `Readonly` **\_replicationFinished**: `Trigger`
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L23)
+[packages/echo/model-factory/src/testing/test-rig.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L23)
 
 ## Accessors
 
 ### replicating
 
-• `get` **replicating**(): `boolean`
+`get` **replicating**(): `boolean`
 
 #### Returns
 
@@ -97,13 +73,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L34)
+[packages/echo/model-factory/src/testing/test-rig.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L34)
 
 ## Methods
 
 ### \_replicate
 
-▸ `Private` **_replicate**(): `void`
+`Private` **_replicate**(): `void`
 
 #### Returns
 
@@ -111,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:102](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L102)
+[packages/echo/model-factory/src/testing/test-rig.ts:102](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L102)
 
 ___
 
 ### \_writeMessage
 
-▸ `Private` **_writeMessage**(`peerKey`, `mutation`): `WriteReceipt`
+`Private` **_writeMessage**(`peerKey`, `mutation`): `WriteReceipt`
 
 #### Parameters
 
@@ -132,13 +108,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L67)
+[packages/echo/model-factory/src/testing/test-rig.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L67)
 
 ___
 
 ### configureReplication
 
-▸ **configureReplication**(`value`): `void`
+**configureReplication**(`value`): `void`
 
 #### Parameters
 
@@ -152,13 +128,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L38)
+[packages/echo/model-factory/src/testing/test-rig.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L38)
 
 ___
 
 ### createPeer
 
-▸ **createPeer**(): [`TestPeer`](dxos_model_factory.TestPeer.md)<`M`\>
+**createPeer**(): [`TestPeer`](dxos_model_factory.TestPeer.md)<`M`\>
 
 #### Returns
 
@@ -166,13 +142,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L49)
+[packages/echo/model-factory/src/testing/test-rig.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L49)
 
 ___
 
 ### waitForReplication
 
-▸ **waitForReplication**(): `Promise`<`void`\>
+**waitForReplication**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -180,4 +156,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-rig.ts#L43)
+[packages/echo/model-factory/src/testing/test-rig.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-rig.ts#L43)

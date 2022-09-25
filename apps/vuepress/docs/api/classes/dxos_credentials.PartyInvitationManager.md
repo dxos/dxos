@@ -6,29 +6,11 @@ A class to manage the lifecycle of invitations which are written to the Party.
 
 **`Package`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.PartyInvitationManager.md#constructor)
-
-### Properties
-
-- [\_activeInvitations](dxos_credentials.PartyInvitationManager.md#_activeinvitations)
-- [\_invitationsByKey](dxos_credentials.PartyInvitationManager.md#_invitationsbykey)
-- [\_party](dxos_credentials.PartyInvitationManager.md#_party)
-
-### Methods
-
-- [\_verifyAndParse](dxos_credentials.PartyInvitationManager.md#_verifyandparse)
-- [getInvitation](dxos_credentials.PartyInvitationManager.md#getinvitation)
-- [recordInvitation](dxos_credentials.PartyInvitationManager.md#recordinvitation)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyInvitationManager**(`party`)
+**new PartyInvitationManager**(`party`)
 
 #### Parameters
 
@@ -38,43 +20,43 @@ A class to manage the lifecycle of invitations which are written to the Party.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L26)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L26)
 
 ## Properties
 
 ### \_activeInvitations
 
-• **\_activeInvitations**: `Map`<`string`, `SignedMessage`\>
+ **\_activeInvitations**: `Map`<`string`, `SignedMessage`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L23)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L23)
 
 ___
 
 ### \_invitationsByKey
 
-• **\_invitationsByKey**: `Map`<`string`, `Set`<`string`\>\>
+ **\_invitationsByKey**: `Map`<`string`, `Set`<`string`\>\>
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L24)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L24)
 
 ___
 
 ### \_party
 
-• **\_party**: [`PartyState`](dxos_credentials.PartyState.md)
+ **\_party**: [`PartyState`](dxos_credentials.PartyState.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L22)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L22)
 
 ## Methods
 
 ### \_verifyAndParse
 
-▸ `Private` **_verifyAndParse**(`invitationMessage`): `any`
+`Private` **_verifyAndParse**(`invitationMessage`): `any`
 
 Verify that the PartyInvitation message is properly formed and validly signed.
 
@@ -90,13 +72,13 @@ Verify that the PartyInvitation message is properly formed and validly signed.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L79)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L79)
 
 ___
 
 ### getInvitation
 
-▸ **getInvitation**(`invitationID`): `undefined` \| `SignedMessage`
+**getInvitation**(`invitationID`): `undefined` \| `SignedMessage`
 
 Return the Message for `invitationID`, if known.
 
@@ -112,13 +94,13 @@ Return the Message for `invitationID`, if known.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L46)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L46)
 
 ___
 
 ### recordInvitation
 
-▸ **recordInvitation**(`invitationMessage`): `void`
+**recordInvitation**(`invitationMessage`): `void`
 
 Record a new PartyInvitation message.
 
@@ -134,4 +116,4 @@ Record a new PartyInvitation message.
 
 #### Defined in
 
-[packages/halo/credentials/src/party/party-invitation-manager.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/party/party-invitation-manager.ts#L54)
+[packages/halo/credentials/src/party/party-invitation-manager.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/party/party-invitation-manager.ts#L54)

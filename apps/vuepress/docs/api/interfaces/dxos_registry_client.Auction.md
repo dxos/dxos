@@ -5,45 +5,36 @@
 Auction allows assigning names to identities.
 It facilitates domain names registration and ownership.
 
-## Table of contents
-
-### Properties
-
-- [closed](dxos_registry_client.Auction.md#closed)
-- [endBlock](dxos_registry_client.Auction.md#endblock)
-- [highestBid](dxos_registry_client.Auction.md#highestbid)
-- [name](dxos_registry_client.Auction.md#name)
-
 ## Properties
 
 ### closed
 
-• **closed**: `boolean`
+ **closed**: `boolean`
 
 If true - auction is closed and the name is owned by the highest bidder.
 If false - it is an ongoing auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L39)
+[packages/sdk/registry-client/src/api/auctions.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L39)
 
 ___
 
 ### endBlock
 
-• **endBlock**: `BigNumber`
+ **endBlock**: `BigNumber`
 
 The number of the blockchain block mined that acts as last update timestamp.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L33)
+[packages/sdk/registry-client/src/api/auctions.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L33)
 
 ___
 
 ### highestBid
 
-• **highestBid**: `Object`
+ **highestBid**: `Object`
 
 The highest offer currently winning the auction.
 
@@ -56,16 +47,16 @@ The highest offer currently winning the auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L25)
+[packages/sdk/registry-client/src/api/auctions.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L25)
 
 ___
 
 ### name
 
-• **name**: `string`
+ **name**: `string`
 
 `Name` which is an object and purpose of the auction.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/auctions.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/auctions.ts#L20)
+[packages/sdk/registry-client/src/api/auctions.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/auctions.ts#L20)

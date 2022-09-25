@@ -2,33 +2,26 @@
 
 [@dxos/feed-store](../modules/dxos_feed_store.md).FeedStoreOptions
 
-## Table of contents
-
-### Properties
-
-- [hypercore](dxos_feed_store.FeedStoreOptions.md#hypercore)
-- [valueEncoding](dxos_feed_store.FeedStoreOptions.md#valueencoding)
-
 ## Properties
 
 ### hypercore
 
-• `Optional` **hypercore**: [`Hypercore`](../modules/dxos_feed_store.md#hypercore)
+ `Optional` **hypercore**: [`Hypercore`](../types/dxos_feed_store.Hypercore.md)
 
 Hypercore class to use.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L38)
+[packages/echo/feed-store/src/feed-store.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L38)
 
 ___
 
 ### valueEncoding
 
-• `Optional` **valueEncoding**: `ValueEncoding`
+ `Optional` **valueEncoding**: `ValueEncoding`
 
 Encoding type for each feed.
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/feed-store/src/feed-store.ts#L34)
+[packages/echo/feed-store/src/feed-store.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/feed-store/src/feed-store.ts#L34)

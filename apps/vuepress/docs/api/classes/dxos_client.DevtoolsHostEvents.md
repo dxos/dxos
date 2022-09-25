@@ -2,28 +2,18 @@
 
 [@dxos/client](../modules/dxos_client.md).DevtoolsHostEvents
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.DevtoolsHostEvents.md#constructor)
-
-### Properties
-
-- [ready](dxos_client.DevtoolsHostEvents.md#ready)
-
 ## Constructors
 
 ### constructor
 
-• **new DevtoolsHostEvents**()
+**new DevtoolsHostEvents**()
 
 ## Properties
 
 ### ready
 
-• `Readonly` **ready**: `Event`<`void`\>
+ `Readonly` **ready**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/devtools/devtools-host-events.ts:7](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/devtools/devtools-host-events.ts#L7)
+[packages/sdk/client/src/packlets/devtools/devtools-host-events.ts:7](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/devtools/devtools-host-events.ts#L7)

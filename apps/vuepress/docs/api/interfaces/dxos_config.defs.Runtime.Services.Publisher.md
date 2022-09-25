@@ -5,17 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [server](dxos_config.defs.Runtime.Services.Publisher.md#server)
-
 ## Properties
 
 ### server
 
-• `Optional` **server**: `string`
+ `Optional` **server**: `string`
 
 Options:
   - proto3_optional = true

@@ -8,49 +8,11 @@ Client proxy to local/remote HALO service.
 
 - [`Halo`](../interfaces/dxos_client.Halo.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.HaloProxy.md#constructor)
-
-### Properties
-
-- [\_contacts](dxos_client.HaloProxy.md#_contacts)
-- [\_contactsChanged](dxos_client.HaloProxy.md#_contactschanged)
-- [\_invitationProxy](dxos_client.HaloProxy.md#_invitationproxy)
-- [\_profile](dxos_client.HaloProxy.md#_profile)
-- [\_subscriptions](dxos_client.HaloProxy.md#_subscriptions)
-- [profileChanged](dxos_client.HaloProxy.md#profilechanged)
-
-### Accessors
-
-- [info](dxos_client.HaloProxy.md#info)
-- [invitationProxy](dxos_client.HaloProxy.md#invitationproxy)
-- [profile](dxos_client.HaloProxy.md#profile)
-
-### Methods
-
-- [acceptInvitation](dxos_client.HaloProxy.md#acceptinvitation)
-- [addKeyRecord](dxos_client.HaloProxy.md#addkeyrecord)
-- [createInvitation](dxos_client.HaloProxy.md#createinvitation)
-- [createProfile](dxos_client.HaloProxy.md#createprofile)
-- [getDevicePreference](dxos_client.HaloProxy.md#getdevicepreference)
-- [getGlobalPreference](dxos_client.HaloProxy.md#getglobalpreference)
-- [queryContacts](dxos_client.HaloProxy.md#querycontacts)
-- [queryDevices](dxos_client.HaloProxy.md#querydevices)
-- [recoverProfile](dxos_client.HaloProxy.md#recoverprofile)
-- [setDevicePreference](dxos_client.HaloProxy.md#setdevicepreference)
-- [setGlobalPreference](dxos_client.HaloProxy.md#setglobalpreference)
-- [sign](dxos_client.HaloProxy.md#sign)
-- [subscribeToProfile](dxos_client.HaloProxy.md#subscribetoprofile)
-- [toString](dxos_client.HaloProxy.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new HaloProxy**(`_serviceProvider`)
+**new HaloProxy**(`_serviceProvider`)
 
 #### Parameters
 
@@ -60,73 +22,73 @@ Client proxy to local/remote HALO service.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L34)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L34)
 
 ## Properties
 
 ### \_contacts
 
-• `Private` **\_contacts**: [`PartyMember`](../interfaces/dxos_client.PartyMember.md)[] = `[]`
+ `Private` **\_contacts**: [`PartyMember`](../interfaces/dxos_client.PartyMember.md)[] = `[]`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L32)
 
 ___
 
 ### \_contactsChanged
 
-• `Private` `Readonly` **\_contactsChanged**: `Event`<`void`\>
+ `Private` `Readonly` **\_contactsChanged**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L28)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L28)
 
 ___
 
 ### \_invitationProxy
 
-• `Private` `Readonly` **\_invitationProxy**: [`InvitationProxy`](dxos_client.InvitationProxy.md)
+ `Private` `Readonly` **\_invitationProxy**: [`InvitationProxy`](dxos_client.InvitationProxy.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L25)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L25)
 
 ___
 
 ### \_profile
 
-• `Private` `Optional` **\_profile**: [`Profile`](../interfaces/dxos_client.Profile.md)
+ `Private` `Optional` **\_profile**: [`Profile`](../interfaces/dxos_client.Profile.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L31)
 
 ___
 
 ### \_subscriptions
 
-• `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
+ `Private` `Readonly` **\_subscriptions**: `SubscriptionGroup`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L26)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L26)
 
 ___
 
 ### profileChanged
 
-• `Readonly` **profileChanged**: `Event`<`void`\>
+ `Readonly` **profileChanged**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L29)
 
 ## Accessors
 
 ### info
 
-• `get` **info**(): [`HaloInfo`](../interfaces/dxos_client.HaloInfo.md)
+`get` **info**(): [`HaloInfo`](../interfaces/dxos_client.HaloInfo.md)
 
 #### Returns
 
@@ -138,13 +100,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L42)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L42)
 
 ___
 
 ### invitationProxy
 
-• `get` **invitationProxy**(): [`InvitationProxy`](dxos_client.InvitationProxy.md)
+`get` **invitationProxy**(): [`InvitationProxy`](dxos_client.InvitationProxy.md)
 
 #### Returns
 
@@ -152,13 +114,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L48)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L48)
 
 ___
 
 ### profile
 
-• `get` **profile**(): `undefined` \| [`Profile`](../interfaces/dxos_client.Profile.md)
+`get` **profile**(): `undefined` \| [`Profile`](../interfaces/dxos_client.Profile.md)
 
 User profile info.
 
@@ -172,13 +134,13 @@ Halo.profile
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L55)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L55)
 
 ## Methods
 
 ### acceptInvitation
 
-▸ **acceptInvitation**(`invitationDescriptor`): [`Invitation`](dxos_client.Invitation.md)<`void`\>
+**acceptInvitation**(`invitationDescriptor`): [`Invitation`](dxos_client.Invitation.md)<`void`\>
 
 Joins an existing identity HALO by invitation.
 Used to authorize another device of the same user.
@@ -203,13 +165,13 @@ To be used with `client.halo.createHaloInvitation` on the inviter side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L131)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:131](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L131)
 
 ___
 
 ### addKeyRecord
 
-▸ **addKeyRecord**(`keyRecord`): `Promise`<`void`\>
+**addKeyRecord**(`keyRecord`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -227,13 +189,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L157)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:157](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L157)
 
 ___
 
 ### createInvitation
 
-▸ **createInvitation**(): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
+**createInvitation**(): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
 
 Creates an invitation to an existing HALO party.
 Used to authorize another device of the same user.
@@ -252,13 +214,13 @@ To be used with `client.halo.joinHaloInvitation` on the invitee side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L118)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:118](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L118)
 
 ___
 
 ### createProfile
 
-▸ **createProfile**(`__namedParameters?`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
+**createProfile**(`__namedParameters?`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
 
 Create Profile.
 Add Identity key if public and secret key are provided.
@@ -284,13 +246,13 @@ User profile info.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L75)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L75)
 
 ___
 
 ### getDevicePreference
 
-▸ **getDevicePreference**(`key`): `Promise`<`undefined` \| `string`\>
+**getDevicePreference**(`key`): `Promise`<`undefined` \| `string`\>
 
 #### Parameters
 
@@ -308,13 +270,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:170](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L170)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:170](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L170)
 
 ___
 
 ### getGlobalPreference
 
-▸ **getGlobalPreference**(`key`): `Promise`<`undefined` \| `string`\>
+**getGlobalPreference**(`key`): `Promise`<`undefined` \| `string`\>
 
 #### Parameters
 
@@ -332,13 +294,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:178](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L178)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:178](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L178)
 
 ___
 
 ### queryContacts
 
-▸ **queryContacts**(): [`ResultSet`](dxos_client.ResultSet.md)<[`PartyMember`](../interfaces/dxos_client.PartyMember.md)\>
+**queryContacts**(): [`ResultSet`](dxos_client.ResultSet.md)<[`PartyMember`](../interfaces/dxos_client.PartyMember.md)\>
 
 Query for contacts. Contacts represent member keys across all known Parties.
 
@@ -352,13 +314,13 @@ Query for contacts. Contacts represent member keys across all known Parties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L106)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:106](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L106)
 
 ___
 
 ### queryDevices
 
-▸ **queryDevices**(): `Promise`<`DeviceInfo`[]\>
+**queryDevices**(): `Promise`<`DeviceInfo`[]\>
 
 #### Returns
 
@@ -370,13 +332,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:162](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L162)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:162](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L162)
 
 ___
 
 ### recoverProfile
 
-▸ **recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
+**recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
 
 Joins an existing identity HALO from a recovery seed phrase.
 
@@ -396,13 +358,13 @@ Joins an existing identity HALO from a recovery seed phrase.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L98)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:98](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L98)
 
 ___
 
 ### setDevicePreference
 
-▸ **setDevicePreference**(`key`, `value`): `Promise`<`void`\>
+**setDevicePreference**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -421,13 +383,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:166](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L166)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:166](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L166)
 
 ___
 
 ### setGlobalPreference
 
-▸ **setGlobalPreference**(`key`, `value`): `Promise`<`void`\>
+**setGlobalPreference**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -446,13 +408,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:174](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L174)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:174](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L174)
 
 ___
 
 ### sign
 
-▸ **sign**(`request`): `Promise`<[`SignResponse`](../interfaces/dxos_client.SignResponse.md)\>
+**sign**(`request`): `Promise`<[`SignResponse`](../interfaces/dxos_client.SignResponse.md)\>
 
 #### Parameters
 
@@ -470,13 +432,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:153](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L153)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:153](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L153)
 
 ___
 
 ### subscribeToProfile
 
-▸ **subscribeToProfile**(`callback`): () => `void`
+**subscribeToProfile**(`callback`): () => `void`
 
 **`Deprecated`**
 
@@ -490,7 +452,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 **`Deprecated`**
 
@@ -504,13 +466,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L63)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L63)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -518,4 +480,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L38)
+[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L38)

@@ -2,62 +2,52 @@
 
 [@dxos/react-registry-client](../modules/dxos_react_registry_client.md).BotData
 
-## Table of contents
-
-### Properties
-
-- [created](dxos_react_registry_client.BotData.md#created)
-- [description](dxos_react_registry_client.BotData.md#description)
-- [dxn](dxos_react_registry_client.BotData.md#dxn)
-- [tag](dxos_react_registry_client.BotData.md#tag)
-- [version](dxos_react_registry_client.BotData.md#version)
-
 ## Properties
 
 ### created
 
-• `Optional` **created**: `string`
+ `Optional` **created**: `string`
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L19)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L19)
 
 ___
 
 ### description
 
-• `Optional` **description**: `string`
+ `Optional` **description**: `string`
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L18)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:18](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L18)
 
 ___
 
 ### dxn
 
-• **dxn**: `DXN`
+ **dxn**: `DXN`
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L15)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L15)
 
 ___
 
 ### tag
 
-• `Optional` **tag**: `string`
+ `Optional` **tag**: `string`
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L16)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L16)
 
 ___
 
 ### version
 
-• `Optional` **version**: `string`
+ `Optional` **version**: `string`
 
 #### Defined in
 
-[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L17)
+[packages/sdk/react-registry-client/src/hooks/queries/useBots.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-registry-client/src/hooks/queries/useBots.ts#L17)

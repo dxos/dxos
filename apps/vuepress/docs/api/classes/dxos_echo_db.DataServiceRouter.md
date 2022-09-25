@@ -8,44 +8,27 @@ Routes DataService requests to different DataServiceHost instances based on part
 
 - `DataService`
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.DataServiceRouter.md#constructor)
-
-### Properties
-
-- [\_trackedParties](dxos_echo_db.DataServiceRouter.md#_trackedparties)
-
-### Methods
-
-- [subscribeEntitySet](dxos_echo_db.DataServiceRouter.md#subscribeentityset)
-- [subscribeEntityStream](dxos_echo_db.DataServiceRouter.md#subscribeentitystream)
-- [trackParty](dxos_echo_db.DataServiceRouter.md#trackparty)
-- [write](dxos_echo_db.DataServiceRouter.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new DataServiceRouter**()
+**new DataServiceRouter**()
 
 ## Properties
 
 ### \_trackedParties
 
-• `Private` `Readonly` **\_trackedParties**: `ComplexMap`<`PublicKey`, [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)\>
+ `Private` `Readonly` **\_trackedParties**: `ComplexMap`<`PublicKey`, [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L31)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L31)
 
 ## Methods
 
 ### subscribeEntitySet
 
-▸ **subscribeEntitySet**(`request`): `Stream`<`SubscribeEntitySetResponse`\>
+**subscribeEntitySet**(`request`): `Stream`<`SubscribeEntitySetResponse`\>
 
 #### Parameters
 
@@ -63,13 +46,13 @@ DataService.subscribeEntitySet
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L38)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L38)
 
 ___
 
 ### subscribeEntityStream
 
-▸ **subscribeEntityStream**(`request`): `Stream`<`SubscribeEntityStreamResponse`\>
+**subscribeEntityStream**(`request`): `Stream`<`SubscribeEntityStreamResponse`\>
 
 #### Parameters
 
@@ -87,13 +70,13 @@ DataService.subscribeEntityStream
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L44)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L44)
 
 ___
 
 ### trackParty
 
-▸ **trackParty**(`key`, `host`): `void`
+**trackParty**(`key`, `host`): `void`
 
 #### Parameters
 
@@ -108,13 +91,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L33)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L33)
 
 ___
 
 ### write
 
-▸ **write**(`request`): `Promise`<`MutationReceipt`\>
+**write**(`request`): `Promise`<`MutationReceipt`\>
 
 #### Parameters
 
@@ -132,4 +115,4 @@ DataService.write
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-service-router.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L50)
+[packages/echo/echo-db/src/packlets/database/data-service-router.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/data-service-router.ts#L50)

@@ -14,37 +14,18 @@ Polkadot DXNS accounts client backend.
 
 - [`AccountsClientBackend`](../interfaces/dxos_registry_client.AccountsClientBackend.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.PolkadotAccounts.md#constructor)
-
-### Properties
-
-- [api](dxos_registry_client.PolkadotAccounts.md#api)
-- [transactionsHandler](dxos_registry_client.PolkadotAccounts.md#transactionshandler)
-
-### Methods
-
-- [addDevice](dxos_registry_client.PolkadotAccounts.md#adddevice)
-- [belongsToAccount](dxos_registry_client.PolkadotAccounts.md#belongstoaccount)
-- [createAccount](dxos_registry_client.PolkadotAccounts.md#createaccount)
-- [getAccount](dxos_registry_client.PolkadotAccounts.md#getaccount)
-- [listAccounts](dxos_registry_client.PolkadotAccounts.md#listaccounts)
-
 ## Constructors
 
 ### constructor
 
-• **new PolkadotAccounts**(`api`, `signFn?`)
+**new PolkadotAccounts**(`api`, `signFn?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `api` | `ApiPromise` |
-| `signFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `signFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Inherited from
 
@@ -52,13 +33,13 @@ Polkadot DXNS accounts client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L16)
 
 ## Properties
 
 ### api
 
-• `Protected` **api**: `ApiPromise`
+ `Protected` **api**: `ApiPromise`
 
 #### Inherited from
 
@@ -66,13 +47,13 @@ Polkadot DXNS accounts client backend.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L17)
 
 ___
 
 ### transactionsHandler
 
-• `Protected` **transactionsHandler**: [`ApiTransactionHandler`](dxos_registry_client.ApiTransactionHandler.md)
+ `Protected` **transactionsHandler**: [`ApiTransactionHandler`](dxos_registry_client.ApiTransactionHandler.md)
 
 #### Inherited from
 
@@ -80,13 +61,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
+[packages/sdk/registry-client/src/polkadot/polkadot-client.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/polkadot-client.ts#L14)
 
 ## Methods
 
 ### addDevice
 
-▸ **addDevice**(`account`, `device`): `Promise`<`void`\>
+**addDevice**(`account`, `device`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -105,13 +86,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/accounts.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/accounts.ts#L48)
+[packages/sdk/registry-client/src/polkadot/accounts.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/accounts.ts#L48)
 
 ___
 
 ### belongsToAccount
 
-▸ **belongsToAccount**(`account`, `device`): `Promise`<`boolean`\>
+**belongsToAccount**(`account`, `device`): `Promise`<`boolean`\>
 
 #### Parameters
 
@@ -130,13 +111,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/accounts.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/accounts.ts#L53)
+[packages/sdk/registry-client/src/polkadot/accounts.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/accounts.ts#L53)
 
 ___
 
 ### createAccount
 
-▸ **createAccount**(): `Promise`<[`AccountKey`](dxos_registry_client.AccountKey.md)\>
+**createAccount**(): `Promise`<[`AccountKey`](dxos_registry_client.AccountKey.md)\>
 
 #### Returns
 
@@ -148,13 +129,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/accounts.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/accounts.ts#L38)
+[packages/sdk/registry-client/src/polkadot/accounts.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/accounts.ts#L38)
 
 ___
 
 ### getAccount
 
-▸ **getAccount**(`account`): `Promise`<`undefined` \| [`Account`](../interfaces/dxos_registry_client.Account.md)\>
+**getAccount**(`account`): `Promise`<`undefined` \| [`Account`](../interfaces/dxos_registry_client.Account.md)\>
 
 #### Parameters
 
@@ -172,13 +153,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/accounts.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/accounts.ts#L14)
+[packages/sdk/registry-client/src/polkadot/accounts.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/accounts.ts#L14)
 
 ___
 
 ### listAccounts
 
-▸ **listAccounts**(): `Promise`<[`Account`](../interfaces/dxos_registry_client.Account.md)[]\>
+**listAccounts**(): `Promise`<[`Account`](../interfaces/dxos_registry_client.Account.md)[]\>
 
 #### Returns
 
@@ -190,4 +171,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/accounts.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/accounts.ts#L26)
+[packages/sdk/registry-client/src/polkadot/accounts.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/accounts.ts#L26)

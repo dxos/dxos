@@ -9,27 +9,11 @@ For example, the services can be located in Wallet Extension.
 
 - [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.ClientServiceProxy.md#constructor)
-
-### Properties
-
-- [\_client](dxos_client.ClientServiceProxy.md#_client)
-- [services](dxos_client.ClientServiceProxy.md#services)
-
-### Methods
-
-- [close](dxos_client.ClientServiceProxy.md#close)
-- [open](dxos_client.ClientServiceProxy.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new ClientServiceProxy**(`port`, `_timeout?`)
+**new ClientServiceProxy**(`port`, `_timeout?`)
 
 #### Parameters
 
@@ -40,23 +24,23 @@ For example, the services can be located in Wallet Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:18](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L18)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:18](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L18)
 
 ## Properties
 
 ### \_client
 
-• `Private` `Readonly` **\_client**: `ProtoRpcPeer`<[`ClientServices`](../modules/dxos_client.md#clientservices)\>
+ `Private` `Readonly` **\_client**: `ProtoRpcPeer`<[`ClientServices`](../types/dxos_client.ClientServices.md)\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L16)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L16)
 
 ___
 
 ### services
 
-• `Readonly` **services**: [`ClientServices`](../modules/dxos_client.md#clientservices)
+ `Readonly` **services**: [`ClientServices`](../types/dxos_client.ClientServices.md)
 
 #### Implementation of
 
@@ -64,13 +48,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L29)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -82,13 +66,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L35)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L35)
 
 ___
 
 ### open
 
-▸ **open**(`onProgressCallback?`): `Promise`<`void`\>
+**open**(`onProgressCallback?`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -106,4 +90,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxy/service-proxy.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L31)

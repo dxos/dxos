@@ -18,48 +18,11 @@ The Item data structure is governed by a Model class, which implements data cons
 
   ↳ **`Item`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Item.md#constructor)
-
-### Properties
-
-- [\_deleted](dxos_echo_db.Item.md#_deleted)
-- [\_itemManager](dxos_echo_db.Item.md#_itemmanager)
-- [\_onUpdate](dxos_echo_db.Item.md#_onupdate)
-- [\_parent](dxos_echo_db.Item.md#_parent)
-
-### Accessors
-
-- [children](dxos_echo_db.Item.md#children)
-- [deleted](dxos_echo_db.Item.md#deleted)
-- [id](dxos_echo_db.Item.md#id)
-- [links](dxos_echo_db.Item.md#links)
-- [model](dxos_echo_db.Item.md#model)
-- [modelMeta](dxos_echo_db.Item.md#modelmeta)
-- [parent](dxos_echo_db.Item.md#parent)
-- [readOnly](dxos_echo_db.Item.md#readonly)
-- [refs](dxos_echo_db.Item.md#refs)
-- [type](dxos_echo_db.Item.md#type)
-
-### Methods
-
-- [\_processMutation](dxos_echo_db.Item.md#_processmutation)
-- [\_updateParent](dxos_echo_db.Item.md#_updateparent)
-- [delete](dxos_echo_db.Item.md#delete)
-- [restore](dxos_echo_db.Item.md#restore)
-- [select](dxos_echo_db.Item.md#select)
-- [setParent](dxos_echo_db.Item.md#setparent)
-- [subscribe](dxos_echo_db.Item.md#subscribe)
-- [toString](dxos_echo_db.Item.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new Item**<`M`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `_writeStream?`, `parent?`)
+**new Item**<`M`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `_writeStream?`, `parent?`)
 
 Items are constructed by the `Database` object.
 
@@ -86,26 +49,26 @@ Items are constructed by the `Database` object.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L62)
+[packages/echo/echo-db/src/packlets/database/item.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L62)
 
 ## Properties
 
 ### \_deleted
 
-• `Private` **\_deleted**: `boolean` = `false`
+ `Private` **\_deleted**: `boolean` = `false`
 
 Denotes soft delete.
 Item can be restored until garbage collection (e.g., via snapshots).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L33)
+[packages/echo/echo-db/src/packlets/database/item.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L33)
 
 ___
 
 ### \_itemManager
 
-• `Protected` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
+ `Protected` `Readonly` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
 
 #### Inherited from
 
@@ -113,13 +76,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
+[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
 
 ___
 
 ### \_onUpdate
 
-• `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
+ `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_echo_db.Entity.md)<`any`\>\>
 
 #### Inherited from
 
@@ -127,25 +90,25 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
+[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
 
 ___
 
 ### \_parent
 
-• `Private` **\_parent**: ``null`` \| [`Item`](dxos_echo_db.Item.md)<`any`\> = `null`
+ `Private` **\_parent**: ``null`` \| [`Item`](dxos_echo_db.Item.md)<`any`\> = `null`
 
 Parent item (or null if this item is a root item).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L27)
+[packages/echo/echo-db/src/packlets/database/item.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L27)
 
 ## Accessors
 
 ### children
 
-• `get` **children**(): [`Item`](dxos_echo_db.Item.md)<`any`\>[]
+`get` **children**(): [`Item`](dxos_echo_db.Item.md)<`any`\>[]
 
 #### Returns
 
@@ -153,13 +116,13 @@ Parent item (or null if this item is a root item).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L90)
+[packages/echo/echo-db/src/packlets/database/item.ts:90](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L90)
 
 ___
 
 ### deleted
 
-• `get` **deleted**(): `boolean`
+`get` **deleted**(): `boolean`
 
 #### Returns
 
@@ -167,13 +130,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L82)
+[packages/echo/echo-db/src/packlets/database/item.ts:82](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L82)
 
 ___
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -185,13 +148,13 @@ Entity.id
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
+[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
 
 ___
 
 ### links
 
-• `get` **links**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
+`get` **links**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
 
 #### Returns
 
@@ -199,13 +162,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L94)
+[packages/echo/echo-db/src/packlets/database/item.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L94)
 
 ___
 
 ### model
 
-• `get` **model**(): `M`
+`get` **model**(): `M`
 
 #### Returns
 
@@ -217,13 +180,13 @@ Entity.model
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
+[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
 
 ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -235,13 +198,13 @@ Entity.modelMeta
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
+[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
 
 ___
 
 ### parent
 
-• `get` **parent**(): ``null`` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
+`get` **parent**(): ``null`` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
 
 #### Returns
 
@@ -249,13 +212,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L86)
+[packages/echo/echo-db/src/packlets/database/item.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L86)
 
 ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -263,13 +226,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L78)
+[packages/echo/echo-db/src/packlets/database/item.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L78)
 
 ___
 
 ### refs
 
-• `get` **refs**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
+`get` **refs**(): [`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>[]
 
 #### Returns
 
@@ -277,13 +240,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L98)
+[packages/echo/echo-db/src/packlets/database/item.ts:98](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L98)
 
 ___
 
 ### type
 
-• `get` **type**(): `undefined` \| `string`
+`get` **type**(): `undefined` \| `string`
 
 #### Returns
 
@@ -295,13 +258,13 @@ Entity.type
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
+[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
 
 ## Methods
 
 ### \_processMutation
 
-▸ `Private` **_processMutation**(`mutation`, `getItem`): `void`
+`Private` **_processMutation**(`mutation`, `getItem`): `void`
 
 Process a mutation from the stream.
  (Package-private).
@@ -319,13 +282,13 @@ Process a mutation from the stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:184](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L184)
+[packages/echo/echo-db/src/packlets/database/item.ts:184](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L184)
 
 ___
 
 ### \_updateParent
 
-▸ `Private` **_updateParent**(`parent`): `void`
+`Private` **_updateParent**(`parent`): `void`
 
 Atomically update parent/child relationship.
 
@@ -341,13 +304,13 @@ Atomically update parent/child relationship.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:214](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L214)
+[packages/echo/echo-db/src/packlets/database/item.ts:214](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L214)
 
 ___
 
 ### delete
 
-▸ **delete**(): `Promise`<`void`\>
+**delete**(): `Promise`<`void`\>
 
 Delete the item.
 
@@ -357,13 +320,13 @@ Delete the item.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:117](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L117)
+[packages/echo/echo-db/src/packlets/database/item.ts:117](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L117)
 
 ___
 
 ### restore
 
-▸ **restore**(): `Promise`<`void`\>
+**restore**(): `Promise`<`void`\>
 
 Restore deleted item.
 
@@ -373,13 +336,13 @@ Restore deleted item.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:140](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L140)
+[packages/echo/echo-db/src/packlets/database/item.ts:140](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L140)
 
 ___
 
 ### select
 
-▸ **select**(): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `void`\>
+**select**(): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph starting from this item.
 
@@ -389,13 +352,13 @@ Returns a selection context, which can be used to traverse the object graph star
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:105](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L105)
+[packages/echo/echo-db/src/packlets/database/item.ts:105](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L105)
 
 ___
 
 ### setParent
 
-▸ **setParent**(`parentId`): `Promise`<`void`\>
+**setParent**(`parentId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -409,13 +372,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L161)
+[packages/echo/echo-db/src/packlets/database/item.ts:161](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L161)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -429,7 +392,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -447,13 +410,13 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
+[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -461,4 +424,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item.ts#L74)
+[packages/echo/echo-db/src/packlets/database/item.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item.ts#L74)

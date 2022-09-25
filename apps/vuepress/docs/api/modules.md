@@ -1,8 +1,6 @@
 # dxos-protocols
 
-## Table of contents
-
-### Modules
+## Modules
 
 - [@dxos/broadcast](modules/dxos_broadcast.md)
 - [@dxos/client](modules/dxos_client.md)

@@ -9,110 +9,71 @@ Proxies requests to local/remove services.
 
 - [`Party`](../interfaces/dxos_client.Party.md)
 
-## Table of contents
-
-### Properties
-
-- [\_database](dxos_client.PartyProxy.md#_database)
-- [\_invitationProxy](dxos_client.PartyProxy.md#_invitationproxy)
-- [\_isActive](dxos_client.PartyProxy.md#_isactive)
-- [\_isOpen](dxos_client.PartyProxy.md#_isopen)
-- [\_item](dxos_client.PartyProxy.md#_item)
-- [\_key](dxos_client.PartyProxy.md#_key)
-
-### Accessors
-
-- [database](dxos_client.PartyProxy.md#database)
-- [invitationProxy](dxos_client.PartyProxy.md#invitationproxy)
-- [isActive](dxos_client.PartyProxy.md#isactive)
-- [isOpen](dxos_client.PartyProxy.md#isopen)
-- [key](dxos_client.PartyProxy.md#key)
-- [properties](dxos_client.PartyProxy.md#properties)
-- [reduce](dxos_client.PartyProxy.md#reduce)
-- [select](dxos_client.PartyProxy.md#select)
-
-### Methods
-
-- [\_setOpen](dxos_client.PartyProxy.md#_setopen)
-- [close](dxos_client.PartyProxy.md#close)
-- [createInvitation](dxos_client.PartyProxy.md#createinvitation)
-- [createSnapshot](dxos_client.PartyProxy.md#createsnapshot)
-- [destroy](dxos_client.PartyProxy.md#destroy)
-- [getDetails](dxos_client.PartyProxy.md#getdetails)
-- [getProperty](dxos_client.PartyProxy.md#getproperty)
-- [getTitle](dxos_client.PartyProxy.md#gettitle)
-- [initialize](dxos_client.PartyProxy.md#initialize)
-- [open](dxos_client.PartyProxy.md#open)
-- [queryMembers](dxos_client.PartyProxy.md#querymembers)
-- [setActive](dxos_client.PartyProxy.md#setactive)
-- [setProperty](dxos_client.PartyProxy.md#setproperty)
-- [setTitle](dxos_client.PartyProxy.md#settitle)
-
 ## Properties
 
 ### \_database
 
-• `Private` `Optional` `Readonly` **\_database**: [`Database`](dxos_client.Database.md)
+ `Private` `Optional` `Readonly` **\_database**: [`Database`](dxos_client.Database.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L31)
 
 ___
 
 ### \_invitationProxy
 
-• `Private` `Readonly` **\_invitationProxy**: [`InvitationProxy`](dxos_client.InvitationProxy.md)
+ `Private` `Readonly` **\_invitationProxy**: [`InvitationProxy`](dxos_client.InvitationProxy.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L32)
 
 ___
 
 ### \_isActive
 
-• `Private` **\_isActive**: `boolean`
+ `Private` **\_isActive**: `boolean`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L36)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L36)
 
 ___
 
 ### \_isOpen
 
-• `Private` **\_isOpen**: `boolean`
+ `Private` **\_isOpen**: `boolean`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L35)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L35)
 
 ___
 
 ### \_item
 
-• `Private` `Optional` **\_item**: [`Item`](dxos_client.Item.md)<[`ObjectModel`](dxos_client.ObjectModel.md)\>
+ `Private` `Optional` **\_item**: [`Item`](dxos_client.Item.md)<[`ObjectModel`](dxos_client.ObjectModel.md)\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L37)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L37)
 
 ___
 
 ### \_key
 
-• `Private` **\_key**: `PublicKey`
+ `Private` **\_key**: `PublicKey`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L34)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L34)
 
 ## Accessors
 
 ### database
 
-• `get` **database**(): [`Database`](dxos_client.Database.md)
+`get` **database**(): [`Database`](dxos_client.Database.md)
 
 #### Returns
 
@@ -124,13 +85,13 @@ Party.database
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L88)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L88)
 
 ___
 
 ### invitationProxy
 
-• `get` **invitationProxy**(): [`InvitationProxy`](dxos_client.InvitationProxy.md)
+`get` **invitationProxy**(): [`InvitationProxy`](dxos_client.InvitationProxy.md)
 
 #### Returns
 
@@ -138,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L71)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:71](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L71)
 
 ___
 
 ### isActive
 
-• `get` **isActive**(): `boolean`
+`get` **isActive**(): `boolean`
 
 #### Returns
 
@@ -156,13 +117,13 @@ Party.isActive
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L83)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L83)
 
 ___
 
 ### isOpen
 
-• `get` **isOpen**(): `boolean`
+`get` **isOpen**(): `boolean`
 
 #### Returns
 
@@ -174,13 +135,13 @@ Party.isOpen
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L79)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L79)
 
 ___
 
 ### key
 
-• `get` **key**(): `PublicKey`
+`get` **key**(): `PublicKey`
 
 #### Returns
 
@@ -192,13 +153,13 @@ Party.key
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L75)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L75)
 
 ___
 
 ### properties
 
-• `get` **properties**(): `ObjectProperties`
+`get` **properties**(): `ObjectProperties`
 
 #### Returns
 
@@ -210,13 +171,13 @@ Party.properties
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L161)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:161](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L161)
 
 ___
 
 ### reduce
 
-• `get` **reduce**(): <R\>(`result`: `R`, `filter?`: `RootFilter`) => [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+`get` **reduce**(): <R\>(`result`: `R`, `filter?`: `RootFilter`) => [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -224,7 +185,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 `fn`
 
-▸ <`R`\>(`result`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+<`R`\>(`result`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Returns a reducer selection context.
 
@@ -251,13 +212,13 @@ Party.reduce
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:106](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L106)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:106](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L106)
 
 ___
 
 ### select
 
-• `get` **select**(): (`filter?`: `RootFilter`) => [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
+`get` **select**(): (`filter?`: `RootFilter`) => [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -265,7 +226,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 `fn`
 
-▸ (`filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
+(`filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -285,13 +246,13 @@ Party.select
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L99)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L99)
 
 ## Methods
 
 ### \_setOpen
 
-▸ **_setOpen**(`open`): `Promise`<`void`\>
+**_setOpen**(`open`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -305,13 +266,13 @@ Party.select
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:143](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L143)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:143](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L143)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -323,13 +284,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L135)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:135](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L135)
 
 ___
 
 ### createInvitation
 
-▸ **createInvitation**(`inviteeKey?`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
+**createInvitation**(`inviteeKey?`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
 
 Creates an invitation to a given party.
 The Invitation flow requires the inviter and invitee to be online at the same time.
@@ -354,13 +315,13 @@ To be used with `client.echo.acceptInvitation` on the invitee side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:215](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L215)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:215](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L215)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `Promise`<`PartySnapshot`\>
+**createSnapshot**(): `Promise`<`PartySnapshot`\>
 
 Implementation method.
 
@@ -374,13 +335,13 @@ Implementation method.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:223](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L223)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:223](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L223)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 Called by EchoProxy close.
 
@@ -394,13 +355,13 @@ Called by EchoProxy close.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:125](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L125)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:125](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L125)
 
 ___
 
 ### getDetails
 
-▸ **getDetails**(): `Promise`<`PartyDetails`\>
+**getDetails**(): `Promise`<`PartyDetails`\>
 
 #### Returns
 
@@ -412,13 +373,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L139)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:139](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L139)
 
 ___
 
 ### getProperty
 
-▸ **getProperty**(`key`, `defaultValue?`): `any`
+**getProperty**(`key`, `defaultValue?`): `any`
 
 **`Deprecated`**
 
@@ -441,13 +402,13 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:189](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L189)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:189](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L189)
 
 ___
 
 ### getTitle
 
-▸ **getTitle**(): `any`
+**getTitle**(): `any`
 
 **`Deprecated`**
 
@@ -463,13 +424,13 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:175](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L175)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:175](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L175)
 
 ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`void`\>
+**initialize**(): `Promise`<`void`\>
 
 Called by EchoProxy open.
 
@@ -483,13 +444,13 @@ Called by EchoProxy open.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:113](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L113)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:113](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L113)
 
 ___
 
 ### open
 
-▸ **open**(): `Promise`<`void`\>
+**open**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -501,13 +462,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:131](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L131)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:131](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L131)
 
 ___
 
 ### queryMembers
 
-▸ **queryMembers**(): [`ResultSet`](dxos_client.ResultSet.md)<`PartyMember`\>
+**queryMembers**(): [`ResultSet`](dxos_client.ResultSet.md)<`PartyMember`\>
 
 Return set of party members.
 
@@ -521,13 +482,13 @@ Return set of party members.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:197](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L197)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:197](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L197)
 
 ___
 
 ### setActive
 
-▸ **setActive**(`active`, `options`): `Promise`<`void`\>
+**setActive**(`active`, `options`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -546,13 +507,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:151](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L151)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:151](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L151)
 
 ___
 
 ### setProperty
 
-▸ **setProperty**(`key`, `value?`): `Promise`<`void`\>
+**setProperty**(`key`, `value?`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -575,13 +536,13 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:182](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L182)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:182](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L182)
 
 ___
 
 ### setTitle
 
-▸ **setTitle**(`title`): `Promise`<`void`\>
+**setTitle**(`title`): `Promise`<`void`\>
 
 **`Deprecated`**
 
@@ -603,4 +564,4 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:168](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L168)
+[packages/sdk/client/src/packlets/proxy/party-proxy.ts:168](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L168)

@@ -6,18 +6,11 @@
 
 - [`Keyring`](../classes/dxos_credentials.Keyring.md)
 
-## Table of contents
-
-### Methods
-
-- [rawSign](dxos_credentials.Signer.md#rawsign)
-- [sign](dxos_credentials.Signer.md#sign)
-
 ## Methods
 
 ### rawSign
 
-▸ **rawSign**(`data`, `keyRecord`): `Buffer`
+**rawSign**(`data`, `keyRecord`): `Buffer`
 
 Sign the data with the indicated key and return the signature.
 KeyChains are not supported.
@@ -35,13 +28,13 @@ KeyChains are not supported.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/signer.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/signer.ts#L26)
+[packages/halo/credentials/src/keys/signer.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/signer.ts#L26)
 
 ___
 
 ### sign
 
-▸ **sign**(`message`, `keys`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
+**sign**(`message`, `keys`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
 
 Sign the message with the indicated key or keys. The returned signed object will be of the form:
 {
@@ -54,7 +47,7 @@ Sign the message with the indicated key or keys. The returned signed object will
 | Name | Type |
 | :------ | :------ |
 | `message` | `any` |
-| `keys` | [`SigningKey`](../modules/dxos_credentials.md#signingkey)[] |
+| `keys` | [`SigningKey`](../types/dxos_credentials.SigningKey.md)[] |
 | `nonce?` | `Buffer` |
 | `created?` | `string` |
 
@@ -64,4 +57,4 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/signer.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/signer.ts#L20)
+[packages/halo/credentials/src/keys/signer.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/signer.ts#L20)

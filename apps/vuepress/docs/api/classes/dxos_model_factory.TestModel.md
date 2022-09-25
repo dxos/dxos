@@ -11,49 +11,20 @@ Models define a root message type, which is contained in the parent Item's messa
 
   ↳ **`TestModel`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_model_factory.TestModel.md#constructor)
-
-### Properties
-
-- [\_getState](dxos_model_factory.TestModel.md#_getstate)
-- [update](dxos_model_factory.TestModel.md#update)
-- [meta](dxos_model_factory.TestModel.md#meta)
-
-### Accessors
-
-- [itemId](dxos_model_factory.TestModel.md#itemid)
-- [keys](dxos_model_factory.TestModel.md#keys)
-- [modelMeta](dxos_model_factory.TestModel.md#modelmeta)
-- [properties](dxos_model_factory.TestModel.md#properties)
-- [readOnly](dxos_model_factory.TestModel.md#readonly)
-
-### Methods
-
-- [get](dxos_model_factory.TestModel.md#get)
-- [set](dxos_model_factory.TestModel.md#set)
-- [subscribe](dxos_model_factory.TestModel.md#subscribe)
-- [toJSON](dxos_model_factory.TestModel.md#tojson)
-- [toString](dxos_model_factory.TestModel.md#tostring)
-- [write](dxos_model_factory.TestModel.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new TestModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
+**new TestModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `_meta` | [`ModelMeta`](../modules/dxos_model_factory.md#modelmeta)<`any`, `any`, `any`\> | Metadata definitions. |
+| `_meta` | [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\> | Metadata definitions. |
 | `_itemId` | `string` | Parent item. |
 | `_getState` | () => `Map`<`any`, `any`\> | Retrieves the underlying state object. |
-| `_mutationWriter?` | [`MutationWriter`](../modules/dxos_model_factory.md#mutationwriter)<`TestItemMutation`\> | Output mutation stream (unless read-only). |
+| `_mutationWriter?` | [`MutationWriter`](../types/dxos_model_factory.MutationWriter.md)<`TestItemMutation`\> | Output mutation stream (unless read-only). |
 
 #### Inherited from
 
@@ -61,17 +32,17 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L23)
+[packages/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L23)
 
 ## Properties
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => `Map`<`any`, `any`\>
+ `Protected` `Readonly` **\_getState**: () => `Map`<`any`, `any`\>
 
 #### Type declaration
 
-▸ (): `Map`<`any`, `any`\>
+(): `Map`<`any`, `any`\>
 
 ##### Returns
 
@@ -83,13 +54,13 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L26)
+[packages/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L26)
 
 ___
 
 ### update
 
-• `Readonly` **update**: `Event`<[`Model`](dxos_model_factory.Model.md)<`Map`<`any`, `any`\>, `TestItemMutation`\>\>
+ `Readonly` **update**: `Event`<[`Model`](dxos_model_factory.Model.md)<`Map`<`any`, `any`\>, `TestItemMutation`\>\>
 
 #### Inherited from
 
@@ -97,23 +68,23 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L15)
+[packages/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L15)
 
 ___
 
 ### meta
 
-▪ `Static` **meta**: [`ModelMeta`](../modules/dxos_model_factory.md#modelmeta)<`any`, `any`, `any`\>
+ `Static` **meta**: [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-model.ts#L37)
+[packages/echo/model-factory/src/testing/test-model.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-model.ts#L37)
 
 ## Accessors
 
 ### itemId
 
-• `get` **itemId**(): `string`
+`get` **itemId**(): `string`
 
 #### Returns
 
@@ -125,13 +96,13 @@ Model.itemId
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L45)
+[packages/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L45)
 
 ___
 
 ### keys
 
-• `get` **keys**(): `any`[]
+`get` **keys**(): `any`[]
 
 #### Returns
 
@@ -139,17 +110,17 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-model.ts#L44)
+[packages/echo/model-factory/src/testing/test-model.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-model.ts#L44)
 
 ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): [`ModelMeta`](../modules/dxos_model_factory.md#modelmeta)<`any`, `any`, `any`\>
+`get` **modelMeta**(): [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>
 
 #### Returns
 
-[`ModelMeta`](../modules/dxos_model_factory.md#modelmeta)<`any`, `any`, `any`\>
+[`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>
 
 #### Inherited from
 
@@ -157,13 +128,13 @@ Model.modelMeta
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L41)
+[packages/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L41)
 
 ___
 
 ### properties
 
-• `get` **properties**(): `any`
+`get` **properties**(): `any`
 
 #### Returns
 
@@ -171,13 +142,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-model.ts#L48)
+[packages/echo/model-factory/src/testing/test-model.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-model.ts#L48)
 
 ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -189,13 +160,13 @@ Model.readOnly
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L49)
+[packages/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L49)
 
 ## Methods
 
 ### get
 
-▸ **get**(`key`): `any`
+**get**(`key`): `any`
 
 #### Parameters
 
@@ -209,13 +180,13 @@ Model.readOnly
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-model.ts#L52)
+[packages/echo/model-factory/src/testing/test-model.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-model.ts#L52)
 
 ___
 
 ### set
 
-▸ **set**(`key`, `value`): `Promise`<`void`\>
+**set**(`key`, `value`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -230,13 +201,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:56](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/testing/test-model.ts#L56)
+[packages/echo/model-factory/src/testing/test-model.ts:56](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/testing/test-model.ts#L56)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 #### Parameters
 
@@ -248,7 +219,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Register an event listener.
 
@@ -266,13 +237,13 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L53)
+[packages/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L53)
 
 ___
 
 ### toJSON
 
-▸ **toJSON**(): `Object`
+**toJSON**(): `Object`
 
 #### Returns
 
@@ -289,13 +260,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L34)
+[packages/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L34)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -307,13 +278,13 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L30)
+[packages/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L30)
 
 ___
 
 ### write
 
-▸ `Protected` **write**(`mutation`): `Promise`<[`MutationWriteReceipt`](../interfaces/dxos_model_factory.MutationWriteReceipt.md)\>
+`Protected` **write**(`mutation`): `Promise`<[`MutationWriteReceipt`](../interfaces/dxos_model_factory.MutationWriteReceipt.md)\>
 
 Writes the raw mutation to the output stream.
 
@@ -333,4 +304,4 @@ Writes the raw mutation to the output stream.
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/model-factory/src/model.ts#L60)
+[packages/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/model-factory/src/model.ts#L60)

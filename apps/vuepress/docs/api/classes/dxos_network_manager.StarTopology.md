@@ -6,29 +6,11 @@
 
 - [`Topology`](../interfaces/dxos_network_manager.Topology.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_manager.StarTopology.md#constructor)
-
-### Properties
-
-- [\_controller](dxos_network_manager.StarTopology.md#_controller)
-
-### Methods
-
-- [destroy](dxos_network_manager.StarTopology.md#destroy)
-- [init](dxos_network_manager.StarTopology.md#init)
-- [onOffer](dxos_network_manager.StarTopology.md#onoffer)
-- [toString](dxos_network_manager.StarTopology.md#tostring)
-- [update](dxos_network_manager.StarTopology.md#update)
-
 ## Constructors
 
 ### constructor
 
-• **new StarTopology**(`_centralPeer`)
+**new StarTopology**(`_centralPeer`)
 
 #### Parameters
 
@@ -38,23 +20,23 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L15)
+[packages/mesh/network-manager/src/topology/star-topology.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L15)
 
 ## Properties
 
 ### \_controller
 
-• `Private` `Optional` **\_controller**: [`SwarmController`](../interfaces/dxos_network_manager.SwarmController.md)
+ `Private` `Optional` **\_controller**: [`SwarmController`](../interfaces/dxos_network_manager.SwarmController.md)
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L13)
+[packages/mesh/network-manager/src/topology/star-topology.ts:13](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L13)
 
 ## Methods
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 Called when swarm is destroyed or topology is changed.
 
@@ -70,13 +52,13 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L58)
+[packages/mesh/network-manager/src/topology/star-topology.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L58)
 
 ___
 
 ### init
 
-▸ **init**(`controller`): `void`
+**init**(`controller`): `void`
 
 Called when swarm is created.
 
@@ -98,13 +80,13 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:23](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L23)
+[packages/mesh/network-manager/src/topology/star-topology.ts:23](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L23)
 
 ___
 
 ### onOffer
 
-▸ **onOffer**(`peer`): `Promise`<`boolean`\>
+**onOffer**(`peer`): `Promise`<`boolean`\>
 
 Called when remote peer offers a connection.
 
@@ -126,13 +108,13 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L51)
+[packages/mesh/network-manager/src/topology/star-topology.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L51)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -140,13 +122,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L19)
+[packages/mesh/network-manager/src/topology/star-topology.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L19)
 
 ___
 
 ### update
 
-▸ **update**(): `void`
+**update**(): `void`
 
 Called when swarm state is updated.
 
@@ -160,4 +142,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/star-topology.ts#L28)
+[packages/mesh/network-manager/src/topology/star-topology.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/star-topology.ts#L28)

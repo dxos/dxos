@@ -13,35 +13,21 @@ Creates data snapshots.
 - [`FeedDatabaseBackend`](../classes/dxos_echo_db.FeedDatabaseBackend.md)
 - [`RemoteDatabaseBackend`](../classes/dxos_echo_db.RemoteDatabaseBackend.md)
 
-## Table of contents
-
-### Properties
-
-- [isReadOnly](dxos_echo_db.DatabaseBackend.md#isreadonly)
-
-### Methods
-
-- [close](dxos_echo_db.DatabaseBackend.md#close)
-- [createDataServiceHost](dxos_echo_db.DatabaseBackend.md#createdataservicehost)
-- [createSnapshot](dxos_echo_db.DatabaseBackend.md#createsnapshot)
-- [getWriteStream](dxos_echo_db.DatabaseBackend.md#getwritestream)
-- [open](dxos_echo_db.DatabaseBackend.md#open)
-
 ## Properties
 
 ### isReadOnly
 
-• **isReadOnly**: `boolean`
+ **isReadOnly**: `boolean`
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L32)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L32)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -49,13 +35,13 @@ Creates data snapshots.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L30)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L30)
 
 ___
 
 ### createDataServiceHost
 
-▸ **createDataServiceHost**(): [`DataServiceHost`](../classes/dxos_echo_db.DataServiceHost.md)
+**createDataServiceHost**(): [`DataServiceHost`](../classes/dxos_echo_db.DataServiceHost.md)
 
 #### Returns
 
@@ -63,13 +49,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L35)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L35)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -77,13 +63,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L34)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L34)
 
 ___
 
 ### getWriteStream
 
-▸ **getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
+**getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
 
 #### Returns
 
@@ -91,13 +77,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L33)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L33)
 
 ___
 
 ### open
 
-▸ **open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
+**open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -112,4 +98,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L29)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L29)

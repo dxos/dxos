@@ -5,21 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [certfile](dxos_config.defs.Runtime.Kube.Https.md#certfile)
-- [email](dxos_config.defs.Runtime.Kube.Https.md#email)
-- [enabled](dxos_config.defs.Runtime.Kube.Https.md#enabled)
-- [keyfile](dxos_config.defs.Runtime.Kube.Https.md#keyfile)
-- [port](dxos_config.defs.Runtime.Kube.Https.md#port)
-
 ## Properties
 
 ### certfile
 
-• `Optional` **certfile**: `string`
+ `Optional` **certfile**: `string`
 
 Options:
   - proto3_optional = true
@@ -32,7 +22,7 @@ ___
 
 ### email
 
-• `Optional` **email**: `string`
+ `Optional` **email**: `string`
 
 Options:
   - proto3_optional = true
@@ -45,7 +35,7 @@ ___
 
 ### enabled
 
-• `Optional` **enabled**: `boolean`
+ `Optional` **enabled**: `boolean`
 
 Options:
   - proto3_optional = true
@@ -58,7 +48,7 @@ ___
 
 ### keyfile
 
-• `Optional` **keyfile**: `string`
+ `Optional` **keyfile**: `string`
 
 Options:
   - proto3_optional = true
@@ -71,7 +61,7 @@ ___
 
 ### port
 
-• `Optional` **port**: `string`
+ `Optional` **port**: `string`
 
 Options:
   - proto3_optional = true

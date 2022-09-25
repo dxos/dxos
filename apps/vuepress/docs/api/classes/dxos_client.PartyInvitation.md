@@ -11,34 +11,11 @@ It works in non-interactive mode and requires no authentication.
 
   ↳ **`PartyInvitation`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.PartyInvitation.md#constructor)
-
-### Properties
-
-- [\_descriptor](dxos_client.PartyInvitation.md#_descriptor)
-- [\_invitationPromise](dxos_client.PartyInvitation.md#_invitationpromise)
-- [\_onAuthenticate](dxos_client.PartyInvitation.md#_onauthenticate)
-
-### Accessors
-
-- [descriptor](dxos_client.PartyInvitation.md#descriptor)
-
-### Methods
-
-- [authenticate](dxos_client.PartyInvitation.md#authenticate)
-- [getParty](dxos_client.PartyInvitation.md#getparty)
-- [toJSON](dxos_client.PartyInvitation.md#tojson)
-- [wait](dxos_client.PartyInvitation.md#wait)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyInvitation**(`_descriptor`, `_invitationPromise`, `_onAuthenticate`)
+**new PartyInvitation**(`_descriptor`, `_invitationPromise`, `_onAuthenticate`)
 
 #### Parameters
 
@@ -54,13 +31,13 @@ It works in non-interactive mode and requires no authentication.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:13](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L13)
 
 ## Properties
 
 ### \_descriptor
 
-• `Protected` `Readonly` **\_descriptor**: [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+ `Protected` `Readonly` **\_descriptor**: [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Inherited from
 
@@ -68,13 +45,13 @@ It works in non-interactive mode and requires no authentication.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L14)
 
 ___
 
 ### \_invitationPromise
 
-• `Protected` `Readonly` **\_invitationPromise**: `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+ `Protected` `Readonly` **\_invitationPromise**: `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 #### Inherited from
 
@@ -82,17 +59,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L15)
 
 ___
 
 ### \_onAuthenticate
 
-• `Protected` `Readonly` **\_onAuthenticate**: (`secret`: `Uint8Array`) => `void`
+ `Protected` `Readonly` **\_onAuthenticate**: (`secret`: `Uint8Array`) => `void`
 
 #### Type declaration
 
-▸ (`secret`): `void`
+(`secret`): `void`
 
 ##### Parameters
 
@@ -110,13 +87,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L16)
 
 ## Accessors
 
 ### descriptor
 
-• `get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`get` **descriptor**(): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Returns
 
@@ -128,13 +105,13 @@ Invitation.descriptor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L19)
 
 ## Methods
 
 ### authenticate
 
-▸ **authenticate**(`secret`): `void`
+**authenticate**(`secret`): `void`
 
 #### Parameters
 
@@ -152,13 +129,13 @@ Invitation.descriptor
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L24)
 
 ___
 
 ### getParty
 
-▸ **getParty**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+**getParty**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 Wait for the invitation flow to complete and return the target party.
 
@@ -168,13 +145,13 @@ Wait for the invitation flow to complete and return the target party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L72)
+[packages/sdk/client/src/packlets/api/echo.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L72)
 
 ___
 
 ### toJSON
 
-▸ **toJSON**(): `InvitationDescriptor`
+**toJSON**(): `InvitationDescriptor`
 
 #### Returns
 
@@ -186,13 +163,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L35)
 
 ___
 
 ### wait
 
-▸ **wait**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
+**wait**(): `Promise`<[`Party`](../interfaces/dxos_client.Party.md)\>
 
 Wait for the invitation flow to complete.
 
@@ -206,4 +183,4 @@ Wait for the invitation flow to complete.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)
+[packages/sdk/client/src/packlets/api/invitations/invitation.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/invitations/invitation.ts#L31)

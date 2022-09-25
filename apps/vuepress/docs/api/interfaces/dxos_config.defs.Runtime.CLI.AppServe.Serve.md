@@ -5,19 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [config](dxos_config.defs.Runtime.CLI.AppServe.Serve.md#config)
-- [keyPhrase](dxos_config.defs.Runtime.CLI.AppServe.Serve.md#keyphrase)
-- [loginApp](dxos_config.defs.Runtime.CLI.AppServe.Serve.md#loginapp)
-
 ## Properties
 
 ### config
 
-• `Optional` **config**: `string`
+ `Optional` **config**: `string`
 
 Options:
   - proto3_optional = true
@@ -30,7 +22,7 @@ ___
 
 ### keyPhrase
 
-• `Optional` **keyPhrase**: `string`
+ `Optional` **keyPhrase**: `string`
 
 Options:
   - proto3_optional = true
@@ -43,7 +35,7 @@ ___
 
 ### loginApp
 
-• `Optional` **loginApp**: `string`
+ `Optional` **loginApp**: `string`
 
 Options:
   - proto3_optional = true

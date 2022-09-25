@@ -2,21 +2,15 @@
 
 [@dxos/messaging](../modules/dxos_messaging.md).ListeningHandle
 
-## Table of contents
-
-### Properties
-
-- [unsubscribe](dxos_messaging.ListeningHandle.md#unsubscribe)
-
 ## Properties
 
 ### unsubscribe
 
-• **unsubscribe**: () => `Promise`<`void`\>
+ **unsubscribe**: () => `Promise`<`void`\>
 
 #### Type declaration
 
-▸ (): `Promise`<`void`\>
+(): `Promise`<`void`\>
 
 ##### Returns
 
@@ -24,4 +18,4 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:247](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/messenger.ts#L247)
+[packages/mesh/messaging/src/messenger.ts:247](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/messenger.ts#L247)

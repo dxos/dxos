@@ -6,29 +6,11 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 **`Param`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.ItemDemuxer.md#constructor)
-
-### Properties
-
-- [mutation](dxos_echo_db.ItemDemuxer.md#mutation)
-
-### Methods
-
-- [createItemSnapshot](dxos_echo_db.ItemDemuxer.md#createitemsnapshot)
-- [createLinkSnapshot](dxos_echo_db.ItemDemuxer.md#createlinksnapshot)
-- [createSnapshot](dxos_echo_db.ItemDemuxer.md#createsnapshot)
-- [open](dxos_echo_db.ItemDemuxer.md#open)
-- [restoreFromSnapshot](dxos_echo_db.ItemDemuxer.md#restorefromsnapshot)
-
 ## Constructors
 
 ### constructor
 
-• **new ItemDemuxer**(`_itemManager`, `_modelFactory`, `_options?`)
+**new ItemDemuxer**(`_itemManager`, `_modelFactory`, `_options?`)
 
 #### Parameters
 
@@ -40,23 +22,23 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L34)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L34)
 
 ## Properties
 
 ### mutation
 
-• `Readonly` **mutation**: `Event`<`IEchoStream`\>
+ `Readonly` **mutation**: `Event`<`IEchoStream`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L32)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L32)
 
 ## Methods
 
 ### createItemSnapshot
 
-▸ **createItemSnapshot**(`item`): `ItemSnapshot`
+**createItemSnapshot**(`item`): `ItemSnapshot`
 
 #### Parameters
 
@@ -70,13 +52,13 @@ Creates a stream that consumes `IEchoStream` messages and routes them to the ass
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L127)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:127](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L127)
 
 ___
 
 ### createLinkSnapshot
 
-▸ **createLinkSnapshot**(`link`): `LinkSnapshot`
+**createLinkSnapshot**(`link`): `LinkSnapshot`
 
 #### Parameters
 
@@ -90,13 +72,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:139](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L139)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:139](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L139)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -104,27 +86,27 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:119](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L119)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:119](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L119)
 
 ___
 
 ### open
 
-▸ **open**(): [`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+**open**(): [`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Returns
 
-[`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+[`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L40)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L40)
 
 ___
 
 ### restoreFromSnapshot
 
-▸ **restoreFromSnapshot**(`snapshot`): `Promise`<`void`\>
+**restoreFromSnapshot**(`snapshot`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -138,4 +120,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L152)
+[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:152](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L152)

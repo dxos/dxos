@@ -8,39 +8,11 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 - [`Transport`](../interfaces/dxos_network_manager.Transport.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_manager.InMemoryTransport.md#constructor)
-
-### Properties
-
-- [\_incomingDelay](dxos_network_manager.InMemoryTransport.md#_incomingdelay)
-- [\_outgoingDelay](dxos_network_manager.InMemoryTransport.md#_outgoingdelay)
-- [\_ownKey](dxos_network_manager.InMemoryTransport.md#_ownkey)
-- [\_remoteConnection](dxos_network_manager.InMemoryTransport.md#_remoteconnection)
-- [\_remoteKey](dxos_network_manager.InMemoryTransport.md#_remotekey)
-- [closed](dxos_network_manager.InMemoryTransport.md#closed)
-- [connected](dxos_network_manager.InMemoryTransport.md#connected)
-- [errors](dxos_network_manager.InMemoryTransport.md#errors)
-- [\_connections](dxos_network_manager.InMemoryTransport.md#_connections)
-
-### Accessors
-
-- [remoteId](dxos_network_manager.InMemoryTransport.md#remoteid)
-- [sessionId](dxos_network_manager.InMemoryTransport.md#sessionid)
-
-### Methods
-
-- [close](dxos_network_manager.InMemoryTransport.md#close)
-- [signal](dxos_network_manager.InMemoryTransport.md#signal)
-
 ## Constructors
 
 ### constructor
 
-• **new InMemoryTransport**(`_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_stream`)
+**new InMemoryTransport**(`_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_stream`)
 
 #### Parameters
 
@@ -54,63 +26,63 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L41)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L41)
 
 ## Properties
 
 ### \_incomingDelay
 
-• `Private` `Readonly` **\_incomingDelay**: `ReadWriteStream`
+ `Private` `Readonly` **\_incomingDelay**: `ReadWriteStream`
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L37)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L37)
 
 ___
 
 ### \_outgoingDelay
 
-• `Private` `Readonly` **\_outgoingDelay**: `ReadWriteStream`
+ `Private` `Readonly` **\_outgoingDelay**: `ReadWriteStream`
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:36](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L36)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:36](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L36)
 
 ___
 
 ### \_ownKey
 
-• `Private` `Readonly` **\_ownKey**: `ConnectionKey`
+ `Private` `Readonly` **\_ownKey**: `ConnectionKey`
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L33)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L33)
 
 ___
 
 ### \_remoteConnection
 
-• `Private` `Optional` **\_remoteConnection**: [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)
+ `Private` `Optional` **\_remoteConnection**: [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L39)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L39)
 
 ___
 
 ### \_remoteKey
 
-• `Private` `Readonly` **\_remoteKey**: `ConnectionKey`
+ `Private` `Readonly` **\_remoteKey**: `ConnectionKey`
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L34)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L34)
 
 ___
 
 ### closed
 
-• `Readonly` **closed**: `Event`<`void`\>
+ `Readonly` **closed**: `Event`<`void`\>
 
 #### Implementation of
 
@@ -118,13 +90,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L29)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L29)
 
 ___
 
 ### connected
 
-• `Readonly` **connected**: `Event`<`void`\>
+ `Readonly` **connected**: `Event`<`void`\>
 
 #### Implementation of
 
@@ -132,13 +104,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L30)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L30)
 
 ___
 
 ### errors
 
-• `Readonly` **errors**: `ErrorStream`
+ `Readonly` **errors**: `ErrorStream`
 
 #### Implementation of
 
@@ -146,23 +118,23 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L31)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L31)
 
 ___
 
 ### \_connections
 
-▪ `Static` `Private` `Readonly` **\_connections**: `ComplexMap`<`ConnectionKey`, [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)\>
+ `Static` `Private` `Readonly` **\_connections**: `ComplexMap`<`ConnectionKey`, [`InMemoryTransport`](dxos_network_manager.InMemoryTransport.md)\>
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L26)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L26)
 
 ## Accessors
 
 ### remoteId
 
-• `get` **remoteId**(): `PublicKey`
+`get` **remoteId**(): `PublicKey`
 
 #### Returns
 
@@ -170,13 +142,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L72)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L72)
 
 ___
 
 ### sessionId
 
-• `get` **sessionId**(): `PublicKey`
+`get` **sessionId**(): `PublicKey`
 
 #### Returns
 
@@ -184,13 +156,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L76)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L76)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -202,13 +174,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L84)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L84)
 
 ___
 
 ### signal
 
-▸ **signal**(`signal`): `Promise`<`void`\>
+**signal**(`signal`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -226,4 +198,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/in-memory-transport.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L80)
+[packages/mesh/network-manager/src/transport/in-memory-transport.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/in-memory-transport.ts#L80)

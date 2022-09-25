@@ -9,46 +9,11 @@ TODO(burdon): Wrapper/Bridge between HALO APIs.
 - [`CredentialProcessor`](../interfaces/dxos_echo_db.CredentialProcessor.md)
 - [`PartyStateProvider`](../interfaces/dxos_echo_db.PartyStateProvider.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.PartyProcessor.md#constructor)
-
-### Properties
-
-- [\_haloMessages](dxos_echo_db.PartyProcessor.md#_halomessages)
-- [\_state](dxos_echo_db.PartyProcessor.md#_state)
-- [feedAdded](dxos_echo_db.PartyProcessor.md#feedadded)
-- [keyOrInfoAdded](dxos_echo_db.PartyProcessor.md#keyorinfoadded)
-
-### Accessors
-
-- [credentialMessages](dxos_echo_db.PartyProcessor.md#credentialmessages)
-- [feedKeys](dxos_echo_db.PartyProcessor.md#feedkeys)
-- [genesisRequired](dxos_echo_db.PartyProcessor.md#genesisrequired)
-- [infoMessages](dxos_echo_db.PartyProcessor.md#infomessages)
-- [memberKeys](dxos_echo_db.PartyProcessor.md#memberkeys)
-- [partyKey](dxos_echo_db.PartyProcessor.md#partykey)
-- [state](dxos_echo_db.PartyProcessor.md#state)
-
-### Methods
-
-- [getFeedOwningMember](dxos_echo_db.PartyProcessor.md#getfeedowningmember)
-- [getMemberInfo](dxos_echo_db.PartyProcessor.md#getmemberinfo)
-- [getOfflineInvitation](dxos_echo_db.PartyProcessor.md#getofflineinvitation)
-- [isFeedAdmitted](dxos_echo_db.PartyProcessor.md#isfeedadmitted)
-- [isMemberKey](dxos_echo_db.PartyProcessor.md#ismemberkey)
-- [makeSnapshot](dxos_echo_db.PartyProcessor.md#makesnapshot)
-- [processMessage](dxos_echo_db.PartyProcessor.md#processmessage)
-- [restoreFromSnapshot](dxos_echo_db.PartyProcessor.md#restorefromsnapshot)
-- [takeHints](dxos_echo_db.PartyProcessor.md#takehints)
-
 ## Constructors
 
 ### constructor
 
-• **new PartyProcessor**(`_partyKey`)
+**new PartyProcessor**(`_partyKey`)
 
 #### Parameters
 
@@ -58,55 +23,55 @@ TODO(burdon): Wrapper/Bridge between HALO APIs.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:52](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L52)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:52](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L52)
 
 ## Properties
 
 ### \_haloMessages
 
-• `Private` **\_haloMessages**: `Message`[] = `[]`
+ `Private` **\_haloMessages**: `Message`[] = `[]`
 
 Used to generate halo snapshot.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L50)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L50)
 
 ___
 
 ### \_state
 
-• `Private` `Readonly` **\_state**: `PartyState`
+ `Private` `Readonly` **\_state**: `PartyState`
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L41)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L41)
 
 ___
 
 ### feedAdded
 
-• `Readonly` **feedAdded**: `Event`<`PublicKey`\>
+ `Readonly` **feedAdded**: `Event`<`PublicKey`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L43)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L43)
 
 ___
 
 ### keyOrInfoAdded
 
-• `Readonly` **keyOrInfoAdded**: `Event`<`PublicKey`\>
+ `Readonly` **keyOrInfoAdded**: `Event`<`PublicKey`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L45)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L45)
 
 ## Accessors
 
 ### credentialMessages
 
-• `get` **credentialMessages**(): `Map`<`string`, `SignedMessage`\>
+`get` **credentialMessages**(): `Map`<`string`, `SignedMessage`\>
 
 #### Returns
 
@@ -114,13 +79,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L78)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L78)
 
 ___
 
 ### feedKeys
 
-• `get` **feedKeys**(): `PublicKey`[]
+`get` **feedKeys**(): `PublicKey`[]
 
 #### Returns
 
@@ -132,13 +97,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:70](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L70)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:70](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L70)
 
 ___
 
 ### genesisRequired
 
-• `get` **genesisRequired**(): `boolean`
+`get` **genesisRequired**(): `boolean`
 
 Whether PartyGenesis was already processed.
 
@@ -152,13 +117,13 @@ Whether PartyGenesis was already processed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L86)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L86)
 
 ___
 
 ### infoMessages
 
-• `get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
+`get` **infoMessages**(): `Map`<`string`, `SignedMessage`\>
 
 #### Returns
 
@@ -166,13 +131,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L82)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:82](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L82)
 
 ___
 
 ### memberKeys
 
-• `get` **memberKeys**(): `PublicKey`[]
+`get` **memberKeys**(): `PublicKey`[]
 
 #### Returns
 
@@ -184,13 +149,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L74)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L74)
 
 ___
 
 ### partyKey
 
-• `get` **partyKey**(): `PublicKey`
+`get` **partyKey**(): `PublicKey`
 
 #### Returns
 
@@ -202,13 +167,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L66)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L66)
 
 ___
 
 ### state
 
-• `get` **state**(): `PartyState`
+`get` **state**(): `PartyState`
 
 #### Returns
 
@@ -216,13 +181,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:90](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L90)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:90](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L90)
 
 ## Methods
 
 ### getFeedOwningMember
 
-▸ **getFeedOwningMember**(`feedKey`): `undefined` \| `PublicKey`
+**getFeedOwningMember**(`feedKey`): `undefined` \| `PublicKey`
 
 Returns public key of the member that admitted the specified feed.
 
@@ -242,13 +207,13 @@ Returns public key of the member that admitted the specified feed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:112](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L112)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:112](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L112)
 
 ___
 
 ### getMemberInfo
 
-▸ **getMemberInfo**(`publicKey`): `any`
+**getMemberInfo**(`publicKey`): `any`
 
 #### Parameters
 
@@ -262,13 +227,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L104)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:104](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L104)
 
 ___
 
 ### getOfflineInvitation
 
-▸ **getOfflineInvitation**(`invitationID`): `undefined` \| `SignedMessage`
+**getOfflineInvitation**(`invitationID`): `undefined` \| `SignedMessage`
 
 #### Parameters
 
@@ -286,13 +251,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:118](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L118)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:118](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L118)
 
 ___
 
 ### isFeedAdmitted
 
-▸ **isFeedAdmitted**(`feedKey`): `boolean`
+**isFeedAdmitted**(`feedKey`): `boolean`
 
 #### Parameters
 
@@ -310,13 +275,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L94)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L94)
 
 ___
 
 ### isMemberKey
 
-▸ **isMemberKey**(`publicKey`): `boolean`
+**isMemberKey**(`publicKey`): `boolean`
 
 #### Parameters
 
@@ -330,13 +295,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:99](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L99)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:99](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L99)
 
 ___
 
 ### makeSnapshot
 
-▸ **makeSnapshot**(): `HaloStateSnapshot`
+**makeSnapshot**(): `HaloStateSnapshot`
 
 #### Returns
 
@@ -344,13 +309,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:140](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L140)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:140](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L140)
 
 ___
 
 ### processMessage
 
-▸ **processMessage**(`message`): `Promise`<`void`\>
+**processMessage**(`message`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -368,13 +333,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:133](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L133)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:133](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L133)
 
 ___
 
 ### restoreFromSnapshot
 
-▸ **restoreFromSnapshot**(`snapshot`): `Promise`<`void`\>
+**restoreFromSnapshot**(`snapshot`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -388,13 +353,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:146](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L146)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:146](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L146)
 
 ___
 
 ### takeHints
 
-▸ **takeHints**(`hints`): `Promise`<`void`\>
+**takeHints**(`hints`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -408,4 +373,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L122)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:122](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L122)

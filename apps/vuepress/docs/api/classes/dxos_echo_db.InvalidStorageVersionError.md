@@ -8,32 +8,11 @@
 
   ↳ **`InvalidStorageVersionError`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.InvalidStorageVersionError.md#constructor)
-
-### Properties
-
-- [cause](dxos_echo_db.InvalidStorageVersionError.md#cause)
-- [code](dxos_echo_db.InvalidStorageVersionError.md#code)
-- [dxosErrorMessage](dxos_echo_db.InvalidStorageVersionError.md#dxoserrormessage)
-- [message](dxos_echo_db.InvalidStorageVersionError.md#message)
-- [name](dxos_echo_db.InvalidStorageVersionError.md#name)
-- [stack](dxos_echo_db.InvalidStorageVersionError.md#stack)
-- [prepareStackTrace](dxos_echo_db.InvalidStorageVersionError.md#preparestacktrace)
-- [stackTraceLimit](dxos_echo_db.InvalidStorageVersionError.md#stacktracelimit)
-
-### Methods
-
-- [captureStackTrace](dxos_echo_db.InvalidStorageVersionError.md#capturestacktrace)
-
 ## Constructors
 
 ### constructor
 
-• **new InvalidStorageVersionError**(`expected`, `actual`)
+**new InvalidStorageVersionError**(`expected`, `actual`)
 
 #### Parameters
 
@@ -48,13 +27,13 @@ DXOSError.constructor
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/errors/errors.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/errors/errors.ts#L40)
+[packages/echo/echo-db/src/packlets/errors/errors.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/errors/errors.ts#L40)
 
 ## Properties
 
 ### cause
 
-• `Optional` **cause**: `Error`
+ `Optional` **cause**: `Error`
 
 #### Inherited from
 
@@ -68,7 +47,7 @@ ___
 
 ### code
 
-• `Readonly` **code**: `string`
+ `Readonly` **code**: `string`
 
 #### Inherited from
 
@@ -82,7 +61,7 @@ ___
 
 ### dxosErrorMessage
 
-• `Optional` `Readonly` **dxosErrorMessage**: `string`
+ `Optional` `Readonly` **dxosErrorMessage**: `string`
 
 #### Inherited from
 
@@ -96,7 +75,7 @@ ___
 
 ### message
 
-• **message**: `string`
+ **message**: `string`
 
 #### Inherited from
 
@@ -110,7 +89,7 @@ ___
 
 ### name
 
-• **name**: `string`
+ **name**: `string`
 
 #### Inherited from
 
@@ -124,7 +103,7 @@ ___
 
 ### stack
 
-• `Optional` **stack**: `string`
+ `Optional` **stack**: `string`
 
 #### Inherited from
 
@@ -138,11 +117,11 @@ ___
 
 ### prepareStackTrace
 
-▪ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
+ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
 
 #### Type declaration
 
-▸ (`err`, `stackTraces`): `any`
+(`err`, `stackTraces`): `any`
 
 Optional override for formatting stack traces
 
@@ -173,7 +152,7 @@ ___
 
 ### stackTraceLimit
 
-▪ `Static` **stackTraceLimit**: `number`
+ `Static` **stackTraceLimit**: `number`
 
 #### Inherited from
 
@@ -187,7 +166,7 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:13
 
 ### captureStackTrace
 
-▸ `Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
+`Static` **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
 
 Create .stack property on a target object
 

@@ -5,17 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [debug](dxos_config.defs.Runtime.System.md#debug)
-
 ## Properties
 
 ### debug
 
-• `Optional` **debug**: `string`
+ `Optional` **debug**: `string`
 
 Options:
   - proto3_optional = true

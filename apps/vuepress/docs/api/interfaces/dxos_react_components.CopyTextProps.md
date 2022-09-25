@@ -8,374 +8,11 @@
 
   ↳ **`CopyTextProps`**
 
-## Table of contents
-
-### Properties
-
-- [about](dxos_react_components.CopyTextProps.md#about)
-- [accessKey](dxos_react_components.CopyTextProps.md#accesskey)
-- [align](dxos_react_components.CopyTextProps.md#align)
-- [alignContent](dxos_react_components.CopyTextProps.md#aligncontent)
-- [alignItems](dxos_react_components.CopyTextProps.md#alignitems)
-- [alignSelf](dxos_react_components.CopyTextProps.md#alignself)
-- [aria-activedescendant](dxos_react_components.CopyTextProps.md#aria-activedescendant)
-- [aria-atomic](dxos_react_components.CopyTextProps.md#aria-atomic)
-- [aria-autocomplete](dxos_react_components.CopyTextProps.md#aria-autocomplete)
-- [aria-busy](dxos_react_components.CopyTextProps.md#aria-busy)
-- [aria-checked](dxos_react_components.CopyTextProps.md#aria-checked)
-- [aria-colcount](dxos_react_components.CopyTextProps.md#aria-colcount)
-- [aria-colindex](dxos_react_components.CopyTextProps.md#aria-colindex)
-- [aria-colspan](dxos_react_components.CopyTextProps.md#aria-colspan)
-- [aria-controls](dxos_react_components.CopyTextProps.md#aria-controls)
-- [aria-current](dxos_react_components.CopyTextProps.md#aria-current)
-- [aria-describedby](dxos_react_components.CopyTextProps.md#aria-describedby)
-- [aria-details](dxos_react_components.CopyTextProps.md#aria-details)
-- [aria-disabled](dxos_react_components.CopyTextProps.md#aria-disabled)
-- [aria-dropeffect](dxos_react_components.CopyTextProps.md#aria-dropeffect)
-- [aria-errormessage](dxos_react_components.CopyTextProps.md#aria-errormessage)
-- [aria-expanded](dxos_react_components.CopyTextProps.md#aria-expanded)
-- [aria-flowto](dxos_react_components.CopyTextProps.md#aria-flowto)
-- [aria-grabbed](dxos_react_components.CopyTextProps.md#aria-grabbed)
-- [aria-haspopup](dxos_react_components.CopyTextProps.md#aria-haspopup)
-- [aria-hidden](dxos_react_components.CopyTextProps.md#aria-hidden)
-- [aria-invalid](dxos_react_components.CopyTextProps.md#aria-invalid)
-- [aria-keyshortcuts](dxos_react_components.CopyTextProps.md#aria-keyshortcuts)
-- [aria-label](dxos_react_components.CopyTextProps.md#aria-label)
-- [aria-labelledby](dxos_react_components.CopyTextProps.md#aria-labelledby)
-- [aria-level](dxos_react_components.CopyTextProps.md#aria-level)
-- [aria-live](dxos_react_components.CopyTextProps.md#aria-live)
-- [aria-modal](dxos_react_components.CopyTextProps.md#aria-modal)
-- [aria-multiline](dxos_react_components.CopyTextProps.md#aria-multiline)
-- [aria-multiselectable](dxos_react_components.CopyTextProps.md#aria-multiselectable)
-- [aria-orientation](dxos_react_components.CopyTextProps.md#aria-orientation)
-- [aria-owns](dxos_react_components.CopyTextProps.md#aria-owns)
-- [aria-placeholder](dxos_react_components.CopyTextProps.md#aria-placeholder)
-- [aria-posinset](dxos_react_components.CopyTextProps.md#aria-posinset)
-- [aria-pressed](dxos_react_components.CopyTextProps.md#aria-pressed)
-- [aria-readonly](dxos_react_components.CopyTextProps.md#aria-readonly)
-- [aria-relevant](dxos_react_components.CopyTextProps.md#aria-relevant)
-- [aria-required](dxos_react_components.CopyTextProps.md#aria-required)
-- [aria-roledescription](dxos_react_components.CopyTextProps.md#aria-roledescription)
-- [aria-rowcount](dxos_react_components.CopyTextProps.md#aria-rowcount)
-- [aria-rowindex](dxos_react_components.CopyTextProps.md#aria-rowindex)
-- [aria-rowspan](dxos_react_components.CopyTextProps.md#aria-rowspan)
-- [aria-selected](dxos_react_components.CopyTextProps.md#aria-selected)
-- [aria-setsize](dxos_react_components.CopyTextProps.md#aria-setsize)
-- [aria-sort](dxos_react_components.CopyTextProps.md#aria-sort)
-- [aria-valuemax](dxos_react_components.CopyTextProps.md#aria-valuemax)
-- [aria-valuemin](dxos_react_components.CopyTextProps.md#aria-valuemin)
-- [aria-valuenow](dxos_react_components.CopyTextProps.md#aria-valuenow)
-- [aria-valuetext](dxos_react_components.CopyTextProps.md#aria-valuetext)
-- [autoCapitalize](dxos_react_components.CopyTextProps.md#autocapitalize)
-- [autoCorrect](dxos_react_components.CopyTextProps.md#autocorrect)
-- [autoSave](dxos_react_components.CopyTextProps.md#autosave)
-- [bgcolor](dxos_react_components.CopyTextProps.md#bgcolor)
-- [border](dxos_react_components.CopyTextProps.md#border)
-- [borderBottom](dxos_react_components.CopyTextProps.md#borderbottom)
-- [borderColor](dxos_react_components.CopyTextProps.md#bordercolor)
-- [borderLeft](dxos_react_components.CopyTextProps.md#borderleft)
-- [borderRadius](dxos_react_components.CopyTextProps.md#borderradius)
-- [borderRight](dxos_react_components.CopyTextProps.md#borderright)
-- [borderTop](dxos_react_components.CopyTextProps.md#bordertop)
-- [bottom](dxos_react_components.CopyTextProps.md#bottom)
-- [boxShadow](dxos_react_components.CopyTextProps.md#boxshadow)
-- [boxSizing](dxos_react_components.CopyTextProps.md#boxsizing)
-- [children](dxos_react_components.CopyTextProps.md#children)
-- [className](dxos_react_components.CopyTextProps.md#classname)
-- [classes](dxos_react_components.CopyTextProps.md#classes)
-- [color](dxos_react_components.CopyTextProps.md#color)
-- [columnGap](dxos_react_components.CopyTextProps.md#columngap)
-- [contentEditable](dxos_react_components.CopyTextProps.md#contenteditable)
-- [contextMenu](dxos_react_components.CopyTextProps.md#contextmenu)
-- [dangerouslySetInnerHTML](dxos_react_components.CopyTextProps.md#dangerouslysetinnerhtml)
-- [datatype](dxos_react_components.CopyTextProps.md#datatype)
-- [defaultChecked](dxos_react_components.CopyTextProps.md#defaultchecked)
-- [defaultValue](dxos_react_components.CopyTextProps.md#defaultvalue)
-- [dir](dxos_react_components.CopyTextProps.md#dir)
-- [display](dxos_react_components.CopyTextProps.md#display)
-- [displayPrint](dxos_react_components.CopyTextProps.md#displayprint)
-- [draggable](dxos_react_components.CopyTextProps.md#draggable)
-- [flex](dxos_react_components.CopyTextProps.md#flex)
-- [flexBasis](dxos_react_components.CopyTextProps.md#flexbasis)
-- [flexDirection](dxos_react_components.CopyTextProps.md#flexdirection)
-- [flexGrow](dxos_react_components.CopyTextProps.md#flexgrow)
-- [flexShrink](dxos_react_components.CopyTextProps.md#flexshrink)
-- [flexWrap](dxos_react_components.CopyTextProps.md#flexwrap)
-- [fontFamily](dxos_react_components.CopyTextProps.md#fontfamily)
-- [fontSize](dxos_react_components.CopyTextProps.md#fontsize)
-- [fontStyle](dxos_react_components.CopyTextProps.md#fontstyle)
-- [fontWeight](dxos_react_components.CopyTextProps.md#fontweight)
-- [gap](dxos_react_components.CopyTextProps.md#gap)
-- [gridArea](dxos_react_components.CopyTextProps.md#gridarea)
-- [gridAutoColumns](dxos_react_components.CopyTextProps.md#gridautocolumns)
-- [gridAutoFlow](dxos_react_components.CopyTextProps.md#gridautoflow)
-- [gridAutoRows](dxos_react_components.CopyTextProps.md#gridautorows)
-- [gridColumn](dxos_react_components.CopyTextProps.md#gridcolumn)
-- [gridRow](dxos_react_components.CopyTextProps.md#gridrow)
-- [gridTemplateAreas](dxos_react_components.CopyTextProps.md#gridtemplateareas)
-- [gridTemplateColumns](dxos_react_components.CopyTextProps.md#gridtemplatecolumns)
-- [gridTemplateRows](dxos_react_components.CopyTextProps.md#gridtemplaterows)
-- [gutterBottom](dxos_react_components.CopyTextProps.md#gutterbottom)
-- [height](dxos_react_components.CopyTextProps.md#height)
-- [hidden](dxos_react_components.CopyTextProps.md#hidden)
-- [id](dxos_react_components.CopyTextProps.md#id)
-- [inlist](dxos_react_components.CopyTextProps.md#inlist)
-- [inputMode](dxos_react_components.CopyTextProps.md#inputmode)
-- [is](dxos_react_components.CopyTextProps.md#is)
-- [itemID](dxos_react_components.CopyTextProps.md#itemid)
-- [itemProp](dxos_react_components.CopyTextProps.md#itemprop)
-- [itemRef](dxos_react_components.CopyTextProps.md#itemref)
-- [itemScope](dxos_react_components.CopyTextProps.md#itemscope)
-- [itemType](dxos_react_components.CopyTextProps.md#itemtype)
-- [justifyContent](dxos_react_components.CopyTextProps.md#justifycontent)
-- [justifyItems](dxos_react_components.CopyTextProps.md#justifyitems)
-- [justifySelf](dxos_react_components.CopyTextProps.md#justifyself)
-- [key](dxos_react_components.CopyTextProps.md#key)
-- [lang](dxos_react_components.CopyTextProps.md#lang)
-- [left](dxos_react_components.CopyTextProps.md#left)
-- [length](dxos_react_components.CopyTextProps.md#length)
-- [letterSpacing](dxos_react_components.CopyTextProps.md#letterspacing)
-- [lineHeight](dxos_react_components.CopyTextProps.md#lineheight)
-- [m](dxos_react_components.CopyTextProps.md#m)
-- [margin](dxos_react_components.CopyTextProps.md#margin)
-- [marginBottom](dxos_react_components.CopyTextProps.md#marginbottom)
-- [marginLeft](dxos_react_components.CopyTextProps.md#marginleft)
-- [marginRight](dxos_react_components.CopyTextProps.md#marginright)
-- [marginTop](dxos_react_components.CopyTextProps.md#margintop)
-- [marginX](dxos_react_components.CopyTextProps.md#marginx)
-- [marginY](dxos_react_components.CopyTextProps.md#marginy)
-- [maxHeight](dxos_react_components.CopyTextProps.md#maxheight)
-- [maxWidth](dxos_react_components.CopyTextProps.md#maxwidth)
-- [mb](dxos_react_components.CopyTextProps.md#mb)
-- [minHeight](dxos_react_components.CopyTextProps.md#minheight)
-- [minWidth](dxos_react_components.CopyTextProps.md#minwidth)
-- [ml](dxos_react_components.CopyTextProps.md#ml)
-- [monospace](dxos_react_components.CopyTextProps.md#monospace)
-- [mr](dxos_react_components.CopyTextProps.md#mr)
-- [mt](dxos_react_components.CopyTextProps.md#mt)
-- [mx](dxos_react_components.CopyTextProps.md#mx)
-- [my](dxos_react_components.CopyTextProps.md#my)
-- [noWrap](dxos_react_components.CopyTextProps.md#nowrap)
-- [onAbort](dxos_react_components.CopyTextProps.md#onabort)
-- [onAbortCapture](dxos_react_components.CopyTextProps.md#onabortcapture)
-- [onAnimationEnd](dxos_react_components.CopyTextProps.md#onanimationend)
-- [onAnimationEndCapture](dxos_react_components.CopyTextProps.md#onanimationendcapture)
-- [onAnimationIteration](dxos_react_components.CopyTextProps.md#onanimationiteration)
-- [onAnimationIterationCapture](dxos_react_components.CopyTextProps.md#onanimationiterationcapture)
-- [onAnimationStart](dxos_react_components.CopyTextProps.md#onanimationstart)
-- [onAnimationStartCapture](dxos_react_components.CopyTextProps.md#onanimationstartcapture)
-- [onAuxClick](dxos_react_components.CopyTextProps.md#onauxclick)
-- [onAuxClickCapture](dxos_react_components.CopyTextProps.md#onauxclickcapture)
-- [onBeforeInput](dxos_react_components.CopyTextProps.md#onbeforeinput)
-- [onBeforeInputCapture](dxos_react_components.CopyTextProps.md#onbeforeinputcapture)
-- [onBlur](dxos_react_components.CopyTextProps.md#onblur)
-- [onBlurCapture](dxos_react_components.CopyTextProps.md#onblurcapture)
-- [onCanPlay](dxos_react_components.CopyTextProps.md#oncanplay)
-- [onCanPlayCapture](dxos_react_components.CopyTextProps.md#oncanplaycapture)
-- [onCanPlayThrough](dxos_react_components.CopyTextProps.md#oncanplaythrough)
-- [onCanPlayThroughCapture](dxos_react_components.CopyTextProps.md#oncanplaythroughcapture)
-- [onChange](dxos_react_components.CopyTextProps.md#onchange)
-- [onChangeCapture](dxos_react_components.CopyTextProps.md#onchangecapture)
-- [onClick](dxos_react_components.CopyTextProps.md#onclick)
-- [onClickCapture](dxos_react_components.CopyTextProps.md#onclickcapture)
-- [onCompositionEnd](dxos_react_components.CopyTextProps.md#oncompositionend)
-- [onCompositionEndCapture](dxos_react_components.CopyTextProps.md#oncompositionendcapture)
-- [onCompositionStart](dxos_react_components.CopyTextProps.md#oncompositionstart)
-- [onCompositionStartCapture](dxos_react_components.CopyTextProps.md#oncompositionstartcapture)
-- [onCompositionUpdate](dxos_react_components.CopyTextProps.md#oncompositionupdate)
-- [onCompositionUpdateCapture](dxos_react_components.CopyTextProps.md#oncompositionupdatecapture)
-- [onContextMenu](dxos_react_components.CopyTextProps.md#oncontextmenu)
-- [onContextMenuCapture](dxos_react_components.CopyTextProps.md#oncontextmenucapture)
-- [onCopy](dxos_react_components.CopyTextProps.md#oncopy)
-- [onCopyCapture](dxos_react_components.CopyTextProps.md#oncopycapture)
-- [onCopyToClipboard](dxos_react_components.CopyTextProps.md#oncopytoclipboard)
-- [onCut](dxos_react_components.CopyTextProps.md#oncut)
-- [onCutCapture](dxos_react_components.CopyTextProps.md#oncutcapture)
-- [onDoubleClick](dxos_react_components.CopyTextProps.md#ondoubleclick)
-- [onDoubleClickCapture](dxos_react_components.CopyTextProps.md#ondoubleclickcapture)
-- [onDrag](dxos_react_components.CopyTextProps.md#ondrag)
-- [onDragCapture](dxos_react_components.CopyTextProps.md#ondragcapture)
-- [onDragEnd](dxos_react_components.CopyTextProps.md#ondragend)
-- [onDragEndCapture](dxos_react_components.CopyTextProps.md#ondragendcapture)
-- [onDragEnter](dxos_react_components.CopyTextProps.md#ondragenter)
-- [onDragEnterCapture](dxos_react_components.CopyTextProps.md#ondragentercapture)
-- [onDragExit](dxos_react_components.CopyTextProps.md#ondragexit)
-- [onDragExitCapture](dxos_react_components.CopyTextProps.md#ondragexitcapture)
-- [onDragLeave](dxos_react_components.CopyTextProps.md#ondragleave)
-- [onDragLeaveCapture](dxos_react_components.CopyTextProps.md#ondragleavecapture)
-- [onDragOver](dxos_react_components.CopyTextProps.md#ondragover)
-- [onDragOverCapture](dxos_react_components.CopyTextProps.md#ondragovercapture)
-- [onDragStart](dxos_react_components.CopyTextProps.md#ondragstart)
-- [onDragStartCapture](dxos_react_components.CopyTextProps.md#ondragstartcapture)
-- [onDrop](dxos_react_components.CopyTextProps.md#ondrop)
-- [onDropCapture](dxos_react_components.CopyTextProps.md#ondropcapture)
-- [onDurationChange](dxos_react_components.CopyTextProps.md#ondurationchange)
-- [onDurationChangeCapture](dxos_react_components.CopyTextProps.md#ondurationchangecapture)
-- [onEmptied](dxos_react_components.CopyTextProps.md#onemptied)
-- [onEmptiedCapture](dxos_react_components.CopyTextProps.md#onemptiedcapture)
-- [onEncrypted](dxos_react_components.CopyTextProps.md#onencrypted)
-- [onEncryptedCapture](dxos_react_components.CopyTextProps.md#onencryptedcapture)
-- [onEnded](dxos_react_components.CopyTextProps.md#onended)
-- [onEndedCapture](dxos_react_components.CopyTextProps.md#onendedcapture)
-- [onError](dxos_react_components.CopyTextProps.md#onerror)
-- [onErrorCapture](dxos_react_components.CopyTextProps.md#onerrorcapture)
-- [onFocus](dxos_react_components.CopyTextProps.md#onfocus)
-- [onFocusCapture](dxos_react_components.CopyTextProps.md#onfocuscapture)
-- [onGotPointerCapture](dxos_react_components.CopyTextProps.md#ongotpointercapture)
-- [onGotPointerCaptureCapture](dxos_react_components.CopyTextProps.md#ongotpointercapturecapture)
-- [onInput](dxos_react_components.CopyTextProps.md#oninput)
-- [onInputCapture](dxos_react_components.CopyTextProps.md#oninputcapture)
-- [onInvalid](dxos_react_components.CopyTextProps.md#oninvalid)
-- [onInvalidCapture](dxos_react_components.CopyTextProps.md#oninvalidcapture)
-- [onKeyDown](dxos_react_components.CopyTextProps.md#onkeydown)
-- [onKeyDownCapture](dxos_react_components.CopyTextProps.md#onkeydowncapture)
-- [onKeyPress](dxos_react_components.CopyTextProps.md#onkeypress)
-- [onKeyPressCapture](dxos_react_components.CopyTextProps.md#onkeypresscapture)
-- [onKeyUp](dxos_react_components.CopyTextProps.md#onkeyup)
-- [onKeyUpCapture](dxos_react_components.CopyTextProps.md#onkeyupcapture)
-- [onLoad](dxos_react_components.CopyTextProps.md#onload)
-- [onLoadCapture](dxos_react_components.CopyTextProps.md#onloadcapture)
-- [onLoadStart](dxos_react_components.CopyTextProps.md#onloadstart)
-- [onLoadStartCapture](dxos_react_components.CopyTextProps.md#onloadstartcapture)
-- [onLoadedData](dxos_react_components.CopyTextProps.md#onloadeddata)
-- [onLoadedDataCapture](dxos_react_components.CopyTextProps.md#onloadeddatacapture)
-- [onLoadedMetadata](dxos_react_components.CopyTextProps.md#onloadedmetadata)
-- [onLoadedMetadataCapture](dxos_react_components.CopyTextProps.md#onloadedmetadatacapture)
-- [onLostPointerCapture](dxos_react_components.CopyTextProps.md#onlostpointercapture)
-- [onLostPointerCaptureCapture](dxos_react_components.CopyTextProps.md#onlostpointercapturecapture)
-- [onMouseDown](dxos_react_components.CopyTextProps.md#onmousedown)
-- [onMouseDownCapture](dxos_react_components.CopyTextProps.md#onmousedowncapture)
-- [onMouseEnter](dxos_react_components.CopyTextProps.md#onmouseenter)
-- [onMouseLeave](dxos_react_components.CopyTextProps.md#onmouseleave)
-- [onMouseMove](dxos_react_components.CopyTextProps.md#onmousemove)
-- [onMouseMoveCapture](dxos_react_components.CopyTextProps.md#onmousemovecapture)
-- [onMouseOut](dxos_react_components.CopyTextProps.md#onmouseout)
-- [onMouseOutCapture](dxos_react_components.CopyTextProps.md#onmouseoutcapture)
-- [onMouseOver](dxos_react_components.CopyTextProps.md#onmouseover)
-- [onMouseOverCapture](dxos_react_components.CopyTextProps.md#onmouseovercapture)
-- [onMouseUp](dxos_react_components.CopyTextProps.md#onmouseup)
-- [onMouseUpCapture](dxos_react_components.CopyTextProps.md#onmouseupcapture)
-- [onPaste](dxos_react_components.CopyTextProps.md#onpaste)
-- [onPasteCapture](dxos_react_components.CopyTextProps.md#onpastecapture)
-- [onPause](dxos_react_components.CopyTextProps.md#onpause)
-- [onPauseCapture](dxos_react_components.CopyTextProps.md#onpausecapture)
-- [onPlay](dxos_react_components.CopyTextProps.md#onplay)
-- [onPlayCapture](dxos_react_components.CopyTextProps.md#onplaycapture)
-- [onPlaying](dxos_react_components.CopyTextProps.md#onplaying)
-- [onPlayingCapture](dxos_react_components.CopyTextProps.md#onplayingcapture)
-- [onPointerCancel](dxos_react_components.CopyTextProps.md#onpointercancel)
-- [onPointerCancelCapture](dxos_react_components.CopyTextProps.md#onpointercancelcapture)
-- [onPointerDown](dxos_react_components.CopyTextProps.md#onpointerdown)
-- [onPointerDownCapture](dxos_react_components.CopyTextProps.md#onpointerdowncapture)
-- [onPointerEnter](dxos_react_components.CopyTextProps.md#onpointerenter)
-- [onPointerEnterCapture](dxos_react_components.CopyTextProps.md#onpointerentercapture)
-- [onPointerLeave](dxos_react_components.CopyTextProps.md#onpointerleave)
-- [onPointerLeaveCapture](dxos_react_components.CopyTextProps.md#onpointerleavecapture)
-- [onPointerMove](dxos_react_components.CopyTextProps.md#onpointermove)
-- [onPointerMoveCapture](dxos_react_components.CopyTextProps.md#onpointermovecapture)
-- [onPointerOut](dxos_react_components.CopyTextProps.md#onpointerout)
-- [onPointerOutCapture](dxos_react_components.CopyTextProps.md#onpointeroutcapture)
-- [onPointerOver](dxos_react_components.CopyTextProps.md#onpointerover)
-- [onPointerOverCapture](dxos_react_components.CopyTextProps.md#onpointerovercapture)
-- [onPointerUp](dxos_react_components.CopyTextProps.md#onpointerup)
-- [onPointerUpCapture](dxos_react_components.CopyTextProps.md#onpointerupcapture)
-- [onProgress](dxos_react_components.CopyTextProps.md#onprogress)
-- [onProgressCapture](dxos_react_components.CopyTextProps.md#onprogresscapture)
-- [onRateChange](dxos_react_components.CopyTextProps.md#onratechange)
-- [onRateChangeCapture](dxos_react_components.CopyTextProps.md#onratechangecapture)
-- [onReset](dxos_react_components.CopyTextProps.md#onreset)
-- [onResetCapture](dxos_react_components.CopyTextProps.md#onresetcapture)
-- [onScroll](dxos_react_components.CopyTextProps.md#onscroll)
-- [onScrollCapture](dxos_react_components.CopyTextProps.md#onscrollcapture)
-- [onSeeked](dxos_react_components.CopyTextProps.md#onseeked)
-- [onSeekedCapture](dxos_react_components.CopyTextProps.md#onseekedcapture)
-- [onSeeking](dxos_react_components.CopyTextProps.md#onseeking)
-- [onSeekingCapture](dxos_react_components.CopyTextProps.md#onseekingcapture)
-- [onSelect](dxos_react_components.CopyTextProps.md#onselect)
-- [onSelectCapture](dxos_react_components.CopyTextProps.md#onselectcapture)
-- [onStalled](dxos_react_components.CopyTextProps.md#onstalled)
-- [onStalledCapture](dxos_react_components.CopyTextProps.md#onstalledcapture)
-- [onSubmit](dxos_react_components.CopyTextProps.md#onsubmit)
-- [onSubmitCapture](dxos_react_components.CopyTextProps.md#onsubmitcapture)
-- [onSuspend](dxos_react_components.CopyTextProps.md#onsuspend)
-- [onSuspendCapture](dxos_react_components.CopyTextProps.md#onsuspendcapture)
-- [onTimeUpdate](dxos_react_components.CopyTextProps.md#ontimeupdate)
-- [onTimeUpdateCapture](dxos_react_components.CopyTextProps.md#ontimeupdatecapture)
-- [onTouchCancel](dxos_react_components.CopyTextProps.md#ontouchcancel)
-- [onTouchCancelCapture](dxos_react_components.CopyTextProps.md#ontouchcancelcapture)
-- [onTouchEnd](dxos_react_components.CopyTextProps.md#ontouchend)
-- [onTouchEndCapture](dxos_react_components.CopyTextProps.md#ontouchendcapture)
-- [onTouchMove](dxos_react_components.CopyTextProps.md#ontouchmove)
-- [onTouchMoveCapture](dxos_react_components.CopyTextProps.md#ontouchmovecapture)
-- [onTouchStart](dxos_react_components.CopyTextProps.md#ontouchstart)
-- [onTouchStartCapture](dxos_react_components.CopyTextProps.md#ontouchstartcapture)
-- [onTransitionEnd](dxos_react_components.CopyTextProps.md#ontransitionend)
-- [onTransitionEndCapture](dxos_react_components.CopyTextProps.md#ontransitionendcapture)
-- [onVolumeChange](dxos_react_components.CopyTextProps.md#onvolumechange)
-- [onVolumeChangeCapture](dxos_react_components.CopyTextProps.md#onvolumechangecapture)
-- [onWaiting](dxos_react_components.CopyTextProps.md#onwaiting)
-- [onWaitingCapture](dxos_react_components.CopyTextProps.md#onwaitingcapture)
-- [onWheel](dxos_react_components.CopyTextProps.md#onwheel)
-- [onWheelCapture](dxos_react_components.CopyTextProps.md#onwheelcapture)
-- [order](dxos_react_components.CopyTextProps.md#order)
-- [overflow](dxos_react_components.CopyTextProps.md#overflow)
-- [p](dxos_react_components.CopyTextProps.md#p)
-- [padding](dxos_react_components.CopyTextProps.md#padding)
-- [paddingBottom](dxos_react_components.CopyTextProps.md#paddingbottom)
-- [paddingLeft](dxos_react_components.CopyTextProps.md#paddingleft)
-- [paddingRight](dxos_react_components.CopyTextProps.md#paddingright)
-- [paddingTop](dxos_react_components.CopyTextProps.md#paddingtop)
-- [paddingX](dxos_react_components.CopyTextProps.md#paddingx)
-- [paddingY](dxos_react_components.CopyTextProps.md#paddingy)
-- [paragraph](dxos_react_components.CopyTextProps.md#paragraph)
-- [pb](dxos_react_components.CopyTextProps.md#pb)
-- [pl](dxos_react_components.CopyTextProps.md#pl)
-- [placeholder](dxos_react_components.CopyTextProps.md#placeholder)
-- [position](dxos_react_components.CopyTextProps.md#position)
-- [pr](dxos_react_components.CopyTextProps.md#pr)
-- [prefix](dxos_react_components.CopyTextProps.md#prefix)
-- [property](dxos_react_components.CopyTextProps.md#property)
-- [pt](dxos_react_components.CopyTextProps.md#pt)
-- [px](dxos_react_components.CopyTextProps.md#px)
-- [py](dxos_react_components.CopyTextProps.md#py)
-- [radioGroup](dxos_react_components.CopyTextProps.md#radiogroup)
-- [ref](dxos_react_components.CopyTextProps.md#ref)
-- [resource](dxos_react_components.CopyTextProps.md#resource)
-- [results](dxos_react_components.CopyTextProps.md#results)
-- [right](dxos_react_components.CopyTextProps.md#right)
-- [role](dxos_react_components.CopyTextProps.md#role)
-- [rowGap](dxos_react_components.CopyTextProps.md#rowgap)
-- [security](dxos_react_components.CopyTextProps.md#security)
-- [slot](dxos_react_components.CopyTextProps.md#slot)
-- [spellCheck](dxos_react_components.CopyTextProps.md#spellcheck)
-- [style](dxos_react_components.CopyTextProps.md#style)
-- [suppressContentEditableWarning](dxos_react_components.CopyTextProps.md#suppresscontenteditablewarning)
-- [suppressHydrationWarning](dxos_react_components.CopyTextProps.md#suppresshydrationwarning)
-- [sx](dxos_react_components.CopyTextProps.md#sx)
-- [tabIndex](dxos_react_components.CopyTextProps.md#tabindex)
-- [textAlign](dxos_react_components.CopyTextProps.md#textalign)
-- [textOverflow](dxos_react_components.CopyTextProps.md#textoverflow)
-- [textTransform](dxos_react_components.CopyTextProps.md#texttransform)
-- [title](dxos_react_components.CopyTextProps.md#title)
-- [top](dxos_react_components.CopyTextProps.md#top)
-- [translate](dxos_react_components.CopyTextProps.md#translate)
-- [typeof](dxos_react_components.CopyTextProps.md#typeof)
-- [typography](dxos_react_components.CopyTextProps.md#typography)
-- [unselectable](dxos_react_components.CopyTextProps.md#unselectable)
-- [value](dxos_react_components.CopyTextProps.md#value)
-- [variant](dxos_react_components.CopyTextProps.md#variant)
-- [variantMapping](dxos_react_components.CopyTextProps.md#variantmapping)
-- [visibility](dxos_react_components.CopyTextProps.md#visibility)
-- [vocab](dxos_react_components.CopyTextProps.md#vocab)
-- [whiteSpace](dxos_react_components.CopyTextProps.md#whitespace)
-- [width](dxos_react_components.CopyTextProps.md#width)
-- [zIndex](dxos_react_components.CopyTextProps.md#zindex)
-
 ## Properties
 
 ### about
 
-• `Optional` **about**: `string`
+ `Optional` **about**: `string`
 
 #### Inherited from
 
@@ -389,7 +26,7 @@ ___
 
 ### accessKey
 
-• `Optional` **accessKey**: `string`
+ `Optional` **accessKey**: `string`
 
 #### Inherited from
 
@@ -403,7 +40,7 @@ ___
 
 ### align
 
-• `Optional` **align**: ``"right"`` \| ``"left"`` \| ``"inherit"`` \| ``"center"`` \| ``"justify"``
+ `Optional` **align**: ``"right"`` \| ``"left"`` \| ``"inherit"`` \| ``"center"`` \| ``"justify"``
 
 Set the text-align on the component.
 
@@ -423,7 +60,7 @@ ___
 
 ### alignContent
 
-• **alignContent**: `ResponsiveStyleValue`<`undefined` \| `AlignContent` \| `AlignContent`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignContent` \| `AlignContent`[]\>
+ **alignContent**: `ResponsiveStyleValue`<`undefined` \| `AlignContent` \| `AlignContent`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignContent` \| `AlignContent`[]\>
 
 #### Inherited from
 
@@ -433,7 +70,7 @@ ___
 
 ### alignItems
 
-• **alignItems**: `ResponsiveStyleValue`<`undefined` \| `AlignItems` \| `AlignItems`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignItems` \| `AlignItems`[]\>
+ **alignItems**: `ResponsiveStyleValue`<`undefined` \| `AlignItems` \| `AlignItems`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignItems` \| `AlignItems`[]\>
 
 #### Inherited from
 
@@ -443,7 +80,7 @@ ___
 
 ### alignSelf
 
-• **alignSelf**: `ResponsiveStyleValue`<`undefined` \| `AlignSelf` \| `AlignSelf`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignSelf` \| `AlignSelf`[]\>
+ **alignSelf**: `ResponsiveStyleValue`<`undefined` \| `AlignSelf` \| `AlignSelf`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `AlignSelf` \| `AlignSelf`[]\>
 
 #### Inherited from
 
@@ -453,7 +90,7 @@ ___
 
 ### aria-activedescendant
 
-• `Optional` **aria-activedescendant**: `string`
+ `Optional` **aria-activedescendant**: `string`
 
 Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application.
 
@@ -469,7 +106,7 @@ ___
 
 ### aria-atomic
 
-• `Optional` **aria-atomic**: `Booleanish`
+ `Optional` **aria-atomic**: `Booleanish`
 
 Indicates whether assistive technologies will present all, or only parts of, the changed region based on the change notifications defined by the aria-relevant attribute.
 
@@ -485,7 +122,7 @@ ___
 
 ### aria-autocomplete
 
-• `Optional` **aria-autocomplete**: ``"list"`` \| ``"none"`` \| ``"inline"`` \| ``"both"``
+ `Optional` **aria-autocomplete**: ``"list"`` \| ``"none"`` \| ``"inline"`` \| ``"both"``
 
 Indicates whether inputting text could trigger display of one or more predictions of the user's intended value for an input and specifies how predictions would be
 presented if they are made.
@@ -502,7 +139,7 @@ ___
 
 ### aria-busy
 
-• `Optional` **aria-busy**: `Booleanish`
+ `Optional` **aria-busy**: `Booleanish`
 
 Indicates an element is being modified and that assistive technologies MAY want to wait until the modifications are complete before exposing them to the user.
 
@@ -518,7 +155,7 @@ ___
 
 ### aria-checked
 
-• `Optional` **aria-checked**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
+ `Optional` **aria-checked**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
 
 Indicates the current "checked" state of checkboxes, radio buttons, and other widgets.
 
@@ -539,7 +176,7 @@ ___
 
 ### aria-colcount
 
-• `Optional` **aria-colcount**: `number`
+ `Optional` **aria-colcount**: `number`
 
 Defines the total number of columns in a table, grid, or treegrid.
 
@@ -559,7 +196,7 @@ ___
 
 ### aria-colindex
 
-• `Optional` **aria-colindex**: `number`
+ `Optional` **aria-colindex**: `number`
 
 Defines an element's column index or position with respect to the total number of columns within a table, grid, or treegrid.
 
@@ -580,7 +217,7 @@ ___
 
 ### aria-colspan
 
-• `Optional` **aria-colspan**: `number`
+ `Optional` **aria-colspan**: `number`
 
 Defines the number of columns spanned by a cell or gridcell within a table, grid, or treegrid.
 
@@ -601,7 +238,7 @@ ___
 
 ### aria-controls
 
-• `Optional` **aria-controls**: `string`
+ `Optional` **aria-controls**: `string`
 
 Identifies the element (or elements) whose contents or presence are controlled by the current element.
 
@@ -621,7 +258,7 @@ ___
 
 ### aria-current
 
-• `Optional` **aria-current**: `boolean` \| ``"time"`` \| ``"true"`` \| ``"false"`` \| ``"date"`` \| ``"page"`` \| ``"step"`` \| ``"location"``
+ `Optional` **aria-current**: `boolean` \| ``"time"`` \| ``"true"`` \| ``"false"`` \| ``"date"`` \| ``"page"`` \| ``"step"`` \| ``"location"``
 
 Indicates the element that represents the current item within a container or set of related elements.
 
@@ -637,7 +274,7 @@ ___
 
 ### aria-describedby
 
-• `Optional` **aria-describedby**: `string`
+ `Optional` **aria-describedby**: `string`
 
 Identifies the element (or elements) that describes the object.
 
@@ -657,7 +294,7 @@ ___
 
 ### aria-details
 
-• `Optional` **aria-details**: `string`
+ `Optional` **aria-details**: `string`
 
 Identifies the element that provides a detailed, extended description for the object.
 
@@ -677,7 +314,7 @@ ___
 
 ### aria-disabled
 
-• `Optional` **aria-disabled**: `Booleanish`
+ `Optional` **aria-disabled**: `Booleanish`
 
 Indicates that the element is perceivable but disabled, so it is not editable or otherwise operable.
 
@@ -698,7 +335,7 @@ ___
 
 ### aria-dropeffect
 
-• `Optional` **aria-dropeffect**: ``"link"`` \| ``"none"`` \| ``"copy"`` \| ``"execute"`` \| ``"move"`` \| ``"popup"``
+ `Optional` **aria-dropeffect**: ``"link"`` \| ``"none"`` \| ``"copy"`` \| ``"execute"`` \| ``"move"`` \| ``"popup"``
 
 Indicates what functions can be performed when a dragged object is released on the drop target.
 
@@ -718,7 +355,7 @@ ___
 
 ### aria-errormessage
 
-• `Optional` **aria-errormessage**: `string`
+ `Optional` **aria-errormessage**: `string`
 
 Identifies the element that provides an error message for the object.
 
@@ -739,7 +376,7 @@ ___
 
 ### aria-expanded
 
-• `Optional` **aria-expanded**: `Booleanish`
+ `Optional` **aria-expanded**: `Booleanish`
 
 Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed.
 
@@ -755,7 +392,7 @@ ___
 
 ### aria-flowto
 
-• `Optional` **aria-flowto**: `string`
+ `Optional` **aria-flowto**: `string`
 
 Identifies the next element (or elements) in an alternate reading order of content which, at the user's discretion,
 allows assistive technology to override the general default of reading in document source order.
@@ -772,7 +409,7 @@ ___
 
 ### aria-grabbed
 
-• `Optional` **aria-grabbed**: `Booleanish`
+ `Optional` **aria-grabbed**: `Booleanish`
 
 Indicates an element's "grabbed" state in a drag-and-drop operation.
 
@@ -792,7 +429,7 @@ ___
 
 ### aria-haspopup
 
-• `Optional` **aria-haspopup**: `boolean` \| ``"grid"`` \| ``"dialog"`` \| ``"menu"`` \| ``"true"`` \| ``"false"`` \| ``"listbox"`` \| ``"tree"``
+ `Optional` **aria-haspopup**: `boolean` \| ``"grid"`` \| ``"dialog"`` \| ``"menu"`` \| ``"true"`` \| ``"false"`` \| ``"listbox"`` \| ``"tree"``
 
 Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.
 
@@ -808,7 +445,7 @@ ___
 
 ### aria-hidden
 
-• `Optional` **aria-hidden**: `Booleanish`
+ `Optional` **aria-hidden**: `Booleanish`
 
 Indicates whether the element is exposed to an accessibility API.
 
@@ -828,7 +465,7 @@ ___
 
 ### aria-invalid
 
-• `Optional` **aria-invalid**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"grammar"`` \| ``"spelling"``
+ `Optional` **aria-invalid**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"grammar"`` \| ``"spelling"``
 
 Indicates the entered value does not conform to the format expected by the application.
 
@@ -848,7 +485,7 @@ ___
 
 ### aria-keyshortcuts
 
-• `Optional` **aria-keyshortcuts**: `string`
+ `Optional` **aria-keyshortcuts**: `string`
 
 Indicates keyboard shortcuts that an author has implemented to activate or give focus to an element.
 
@@ -864,7 +501,7 @@ ___
 
 ### aria-label
 
-• `Optional` **aria-label**: `string`
+ `Optional` **aria-label**: `string`
 
 Defines a string value that labels the current element.
 
@@ -884,7 +521,7 @@ ___
 
 ### aria-labelledby
 
-• `Optional` **aria-labelledby**: `string`
+ `Optional` **aria-labelledby**: `string`
 
 Identifies the element (or elements) that labels the current element.
 
@@ -904,7 +541,7 @@ ___
 
 ### aria-level
 
-• `Optional` **aria-level**: `number`
+ `Optional` **aria-level**: `number`
 
 Defines the hierarchical level of an element within a structure.
 
@@ -920,7 +557,7 @@ ___
 
 ### aria-live
 
-• `Optional` **aria-live**: ``"off"`` \| ``"assertive"`` \| ``"polite"``
+ `Optional` **aria-live**: ``"off"`` \| ``"assertive"`` \| ``"polite"``
 
 Indicates that an element will be updated, and describes the types of updates the user agents, assistive technologies, and user can expect from the live region.
 
@@ -936,7 +573,7 @@ ___
 
 ### aria-modal
 
-• `Optional` **aria-modal**: `Booleanish`
+ `Optional` **aria-modal**: `Booleanish`
 
 Indicates whether an element is modal when displayed.
 
@@ -952,7 +589,7 @@ ___
 
 ### aria-multiline
 
-• `Optional` **aria-multiline**: `Booleanish`
+ `Optional` **aria-multiline**: `Booleanish`
 
 Indicates whether a text box accepts multiple lines of input or only a single line.
 
@@ -968,7 +605,7 @@ ___
 
 ### aria-multiselectable
 
-• `Optional` **aria-multiselectable**: `Booleanish`
+ `Optional` **aria-multiselectable**: `Booleanish`
 
 Indicates that the user may select more than one item from the current selectable descendants.
 
@@ -984,7 +621,7 @@ ___
 
 ### aria-orientation
 
-• `Optional` **aria-orientation**: ``"horizontal"`` \| ``"vertical"``
+ `Optional` **aria-orientation**: ``"horizontal"`` \| ``"vertical"``
 
 Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.
 
@@ -1000,7 +637,7 @@ ___
 
 ### aria-owns
 
-• `Optional` **aria-owns**: `string`
+ `Optional` **aria-owns**: `string`
 
 Identifies an element (or elements) in order to define a visual, functional, or contextual parent/child relationship
 between DOM elements where the DOM hierarchy cannot be used to represent the relationship.
@@ -1021,7 +658,7 @@ ___
 
 ### aria-placeholder
 
-• `Optional` **aria-placeholder**: `string`
+ `Optional` **aria-placeholder**: `string`
 
 Defines a short hint (a word or short phrase) intended to aid the user with data entry when the control has no value.
 A hint could be a sample value or a brief description of the expected format.
@@ -1038,7 +675,7 @@ ___
 
 ### aria-posinset
 
-• `Optional` **aria-posinset**: `number`
+ `Optional` **aria-posinset**: `number`
 
 Defines an element's number or position in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.
 
@@ -1058,7 +695,7 @@ ___
 
 ### aria-pressed
 
-• `Optional` **aria-pressed**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
+ `Optional` **aria-pressed**: `boolean` \| ``"true"`` \| ``"false"`` \| ``"mixed"``
 
 Indicates the current "pressed" state of toggle buttons.
 
@@ -1079,7 +716,7 @@ ___
 
 ### aria-readonly
 
-• `Optional` **aria-readonly**: `Booleanish`
+ `Optional` **aria-readonly**: `Booleanish`
 
 Indicates that the element is not editable, but is otherwise operable.
 
@@ -1099,7 +736,7 @@ ___
 
 ### aria-relevant
 
-• `Optional` **aria-relevant**: ``"all"`` \| ``"text"`` \| ``"additions"`` \| ``"additions removals"`` \| ``"additions text"`` \| ``"removals"`` \| ``"removals additions"`` \| ``"removals text"`` \| ``"text additions"`` \| ``"text removals"``
+ `Optional` **aria-relevant**: ``"all"`` \| ``"text"`` \| ``"additions"`` \| ``"additions removals"`` \| ``"additions text"`` \| ``"removals"`` \| ``"removals additions"`` \| ``"removals text"`` \| ``"text additions"`` \| ``"text removals"``
 
 Indicates what notifications the user agent will trigger when the accessibility tree within a live region is modified.
 
@@ -1119,7 +756,7 @@ ___
 
 ### aria-required
 
-• `Optional` **aria-required**: `Booleanish`
+ `Optional` **aria-required**: `Booleanish`
 
 Indicates that user input is required on the element before a form may be submitted.
 
@@ -1135,7 +772,7 @@ ___
 
 ### aria-roledescription
 
-• `Optional` **aria-roledescription**: `string`
+ `Optional` **aria-roledescription**: `string`
 
 Defines a human-readable, author-localized description for the role of an element.
 
@@ -1151,7 +788,7 @@ ___
 
 ### aria-rowcount
 
-• `Optional` **aria-rowcount**: `number`
+ `Optional` **aria-rowcount**: `number`
 
 Defines the total number of rows in a table, grid, or treegrid.
 
@@ -1171,7 +808,7 @@ ___
 
 ### aria-rowindex
 
-• `Optional` **aria-rowindex**: `number`
+ `Optional` **aria-rowindex**: `number`
 
 Defines an element's row index or position with respect to the total number of rows within a table, grid, or treegrid.
 
@@ -1192,7 +829,7 @@ ___
 
 ### aria-rowspan
 
-• `Optional` **aria-rowspan**: `number`
+ `Optional` **aria-rowspan**: `number`
 
 Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.
 
@@ -1213,7 +850,7 @@ ___
 
 ### aria-selected
 
-• `Optional` **aria-selected**: `Booleanish`
+ `Optional` **aria-selected**: `Booleanish`
 
 Indicates the current "selected" state of various widgets.
 
@@ -1234,7 +871,7 @@ ___
 
 ### aria-setsize
 
-• `Optional` **aria-setsize**: `number`
+ `Optional` **aria-setsize**: `number`
 
 Defines the number of items in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.
 
@@ -1254,7 +891,7 @@ ___
 
 ### aria-sort
 
-• `Optional` **aria-sort**: ``"none"`` \| ``"ascending"`` \| ``"descending"`` \| ``"other"``
+ `Optional` **aria-sort**: ``"none"`` \| ``"ascending"`` \| ``"descending"`` \| ``"other"``
 
 Indicates if items in a table or grid are sorted in ascending or descending order.
 
@@ -1270,7 +907,7 @@ ___
 
 ### aria-valuemax
 
-• `Optional` **aria-valuemax**: `number`
+ `Optional` **aria-valuemax**: `number`
 
 Defines the maximum allowed value for a range widget.
 
@@ -1286,7 +923,7 @@ ___
 
 ### aria-valuemin
 
-• `Optional` **aria-valuemin**: `number`
+ `Optional` **aria-valuemin**: `number`
 
 Defines the minimum allowed value for a range widget.
 
@@ -1302,7 +939,7 @@ ___
 
 ### aria-valuenow
 
-• `Optional` **aria-valuenow**: `number`
+ `Optional` **aria-valuenow**: `number`
 
 Defines the current value for a range widget.
 
@@ -1322,7 +959,7 @@ ___
 
 ### aria-valuetext
 
-• `Optional` **aria-valuetext**: `string`
+ `Optional` **aria-valuetext**: `string`
 
 Defines the human readable text alternative of aria-valuenow for a range widget.
 
@@ -1338,7 +975,7 @@ ___
 
 ### autoCapitalize
 
-• `Optional` **autoCapitalize**: `string`
+ `Optional` **autoCapitalize**: `string`
 
 #### Inherited from
 
@@ -1352,7 +989,7 @@ ___
 
 ### autoCorrect
 
-• `Optional` **autoCorrect**: `string`
+ `Optional` **autoCorrect**: `string`
 
 #### Inherited from
 
@@ -1366,7 +1003,7 @@ ___
 
 ### autoSave
 
-• `Optional` **autoSave**: `string`
+ `Optional` **autoSave**: `string`
 
 #### Inherited from
 
@@ -1380,7 +1017,7 @@ ___
 
 ### bgcolor
 
-• **bgcolor**: `ResponsiveStyleValue`<`undefined` \| `BackgroundColor` \| `BackgroundColor`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BackgroundColor` \| `BackgroundColor`[]\>
+ **bgcolor**: `ResponsiveStyleValue`<`undefined` \| `BackgroundColor` \| `BackgroundColor`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BackgroundColor` \| `BackgroundColor`[]\>
 
 #### Inherited from
 
@@ -1390,7 +1027,7 @@ ___
 
 ### border
 
-• **border**: `ResponsiveStyleValue`<`undefined` \| `number` \| `string` & {} \| ``"inset"`` \| ``"hidden"`` \| ``"inherit"`` \| ``"none"`` \| ``"-moz-initial"`` \| ``"initial"`` \| ``"revert"`` \| ``"revert-layer"`` \| ``"unset"`` \| ``"medium"`` \| ``"aliceblue"`` \| ``"antiquewhite"`` \| ``"aqua"`` \| ``"aquamarine"`` \| ``"azure"`` \| ``"beige"`` \| ``"bisque"`` \| ``"black"`` \| ``"blanchedalmond"`` \| ``"blue"`` \| ``"blueviolet"`` \| ``"brown"`` \| ``"burlywood"`` \| ``"cadetblue"`` \| ``"chartreuse"`` \| ``"chocolate"`` \| ``"coral"`` \| ``"cornflowerblue"`` \| ``"cornsilk"`` \| ``"crimson"`` \| ``"cyan"`` \| ``"darkblue"`` \| ``"darkcyan"`` \| ``"darkgoldenrod"`` \| ``"darkgray"`` \| ``"darkgreen"`` \| ``"darkgrey"`` \| ``"darkkhaki"`` \| ``"darkmagenta"`` \| ``"darkolivegreen"`` \| ``"darkorange"`` \| ``"darkorchid"`` \| ``"darkred"`` \| ``"darksalmon"`` \| ``"darkseagreen"`` \| ``"darkslateblue"`` \| ``"darkslategray"`` \| ``"darkslategrey"`` \| ``"darkturquoise"`` \| ``"darkviolet"`` \| ``"deeppink"`` \| ``"deepskyblue"`` \| ``"dimgray"`` \| ``"dimgrey"`` \| ``"dodgerblue"`` \| ``"firebrick"`` \| ``"floralwhite"`` \| ``"forestgreen"`` \| ``"fuchsia"`` \| ``"gainsboro"`` \| ``"ghostwhite"`` \| ``"gold"`` \| ``"goldenrod"`` \| ``"gray"`` \| ``"green"`` \| ``"greenyellow"`` \| ``"grey"`` \| ``"honeydew"`` \| ``"hotpink"`` \| ``"indianred"`` \| ``"indigo"`` \| ``"ivory"`` \| ``"khaki"`` \| ``"lavender"`` \| ``"lavenderblush"`` \| ``"lawngreen"`` \| ``"lemonchiffon"`` \| ``"lightblue"`` \| ``"lightcoral"`` \| ``"lightcyan"`` \| ``"lightgoldenrodyellow"`` \| ``"lightgray"`` \| ``"lightgreen"`` \| ``"lightgrey"`` \| ``"lightpink"`` \| ``"lightsalmon"`` \| ``"lightseagreen"`` \| ``"lightskyblue"`` \| ``"lightslategray"`` \| ``"lightslategrey"`` \| ``"lightsteelblue"`` \| ``"lightyellow"`` \| ``"lime"`` \| ``"limegreen"`` \| ``"linen"`` \| ``"magenta"`` \| ``"maroon"`` \| ``"mediumaquamarine"`` \| ``"mediumblue"`` \| ``"mediumorchid"`` \| ``"mediumpurple"`` \| ``"mediumseagreen"`` \| ``"mediumslateblue"`` \| ``"mediumspringgreen"`` \| ``"mediumturquoise"`` \| ``"mediumvioletred"`` \| ``"midnightblue"`` \| ``"mintcream"`` \| ``"mistyrose"`` \| ``"moccasin"`` \| ``"navajowhite"`` \| ``"navy"`` \| ``"oldlace"`` \| ``"olive"`` \| ``"olivedrab"`` \| ``"orange"`` \| ``"orangered"`` \| ``"orchid"`` \| ``"palegoldenrod"`` \| ``"palegreen"`` \| ``"paleturquoise"`` \| ``"palevioletred"`` \| ``"papayawhip"`` \| ``"peachpuff"`` \| ``"peru"`` \| ``"pink"`` \| ``"plum"`` \| ``"powderblue"`` \| ``"purple"`` \| ``"rebeccapurple"`` \| ``"red"`` \| ``"rosybrown"`` \| ``"royalblue"`` \| ``"saddlebrown"`` \| ``"salmon"`` \| ``"sandybrown"`` \| ``"seagreen"`` \| ``"seashell"`` \| ``"sienna"`` \| ``"silver"`` \| ``"skyblue"`` \| ``"slateblue"`` \| ``"slategray"`` \| ``"slategrey"`` \| ``"snow"`` \| ``"springgreen"`` \| ``"steelblue"`` \| ``"tan"`` \| ``"teal"`` \| ``"thistle"`` \| ``"tomato"`` \| ``"transparent"`` \| ``"turquoise"`` \| ``"violet"`` \| ``"wheat"`` \| ``"white"`` \| ``"whitesmoke"`` \| ``"yellow"`` \| ``"yellowgreen"`` \| ``"ActiveBorder"`` \| ``"ActiveCaption"`` \| ``"AppWorkspace"`` \| ``"Background"`` \| ``"ButtonFace"`` \| ``"ButtonHighlight"`` \| ``"ButtonShadow"`` \| ``"ButtonText"`` \| ``"CaptionText"`` \| ``"GrayText"`` \| ``"Highlight"`` \| ``"HighlightText"`` \| ``"InactiveBorder"`` \| ``"InactiveCaption"`` \| ``"InactiveCaptionText"`` \| ``"InfoBackground"`` \| ``"InfoText"`` \| ``"Menu"`` \| ``"MenuText"`` \| ``"Scrollbar"`` \| ``"ThreeDDarkShadow"`` \| ``"ThreeDFace"`` \| ``"ThreeDHighlight"`` \| ``"ThreeDLightShadow"`` \| ``"ThreeDShadow"`` \| ``"Window"`` \| ``"WindowFrame"`` \| ``"WindowText"`` \| ``"currentcolor"`` \| ``"thick"`` \| ``"thin"`` \| ``"dashed"`` \| ``"dotted"`` \| ``"double"`` \| ``"groove"`` \| ``"outset"`` \| ``"ridge"`` \| ``"solid"``\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `number` \| `string` & {} \| ``"inset"`` \| ``"hidden"`` \| ``"inherit"`` \| ``"none"`` \| ``"-moz-initial"`` \| ``"initial"`` \| ``"revert"`` \| ``"revert-layer"`` \| ``"unset"`` \| ``"medium"`` \| ``"aliceblue"`` \| ``"antiquewhite"`` \| ``"aqua"`` \| ``"aquamarine"`` \| ``"azure"`` \| ``"beige"`` \| ``"bisque"`` \| ``"black"`` \| ``"blanchedalmond"`` \| ``"blue"`` \| ``"blueviolet"`` \| ``"brown"`` \| ``"burlywood"`` \| ``"cadetblue"`` \| ``"chartreuse"`` \| ``"chocolate"`` \| ``"coral"`` \| ``"cornflowerblue"`` \| ``"cornsilk"`` \| ``"crimson"`` \| ``"cyan"`` \| ``"darkblue"`` \| ``"darkcyan"`` \| ``"darkgoldenrod"`` \| ``"darkgray"`` \| ``"darkgreen"`` \| ``"darkgrey"`` \| ``"darkkhaki"`` \| ``"darkmagenta"`` \| ``"darkolivegreen"`` \| ``"darkorange"`` \| ``"darkorchid"`` \| ``"darkred"`` \| ``"darksalmon"`` \| ``"darkseagreen"`` \| ``"darkslateblue"`` \| ``"darkslategray"`` \| ``"darkslategrey"`` \| ``"darkturquoise"`` \| ``"darkviolet"`` \| ``"deeppink"`` \| ``"deepskyblue"`` \| ``"dimgray"`` \| ``"dimgrey"`` \| ``"dodgerblue"`` \| ``"firebrick"`` \| ``"floralwhite"`` \| ``"forestgreen"`` \| ``"fuchsia"`` \| ``"gainsboro"`` \| ``"ghostwhite"`` \| ``"gold"`` \| ``"goldenrod"`` \| ``"gray"`` \| ``"green"`` \| ``"greenyellow"`` \| ``"grey"`` \| ``"honeydew"`` \| ``"hotpink"`` \| ``"indianred"`` \| ``"indigo"`` \| ``"ivory"`` \| ``"khaki"`` \| ``"lavender"`` \| ``"lavenderblush"`` \| ``"lawngreen"`` \| ``"lemonchiffon"`` \| ``"lightblue"`` \| ``"lightcoral"`` \| ``"lightcyan"`` \| ``"lightgoldenrodyellow"`` \| ``"lightgray"`` \| ``"lightgreen"`` \| ``"lightgrey"`` \| ``"lightpink"`` \| ``"lightsalmon"`` \| ``"lightseagreen"`` \| ``"lightskyblue"`` \| ``"lightslategray"`` \| ``"lightslategrey"`` \| ``"lightsteelblue"`` \| ``"lightyellow"`` \| ``"lime"`` \| ``"limegreen"`` \| ``"linen"`` \| ``"magenta"`` \| ``"maroon"`` \| ``"mediumaquamarine"`` \| ``"mediumblue"`` \| ``"mediumorchid"`` \| ``"mediumpurple"`` \| ``"mediumseagreen"`` \| ``"mediumslateblue"`` \| ``"mediumspringgreen"`` \| ``"mediumturquoise"`` \| ``"mediumvioletred"`` \| ``"midnightblue"`` \| ``"mintcream"`` \| ``"mistyrose"`` \| ``"moccasin"`` \| ``"navajowhite"`` \| ``"navy"`` \| ``"oldlace"`` \| ``"olive"`` \| ``"olivedrab"`` \| ``"orange"`` \| ``"orangered"`` \| ``"orchid"`` \| ``"palegoldenrod"`` \| ``"palegreen"`` \| ``"paleturquoise"`` \| ``"palevioletred"`` \| ``"papayawhip"`` \| ``"peachpuff"`` \| ``"peru"`` \| ``"pink"`` \| ``"plum"`` \| ``"powderblue"`` \| ``"purple"`` \| ``"rebeccapurple"`` \| ``"red"`` \| ``"rosybrown"`` \| ``"royalblue"`` \| ``"saddlebrown"`` \| ``"salmon"`` \| ``"sandybrown"`` \| ``"seagreen"`` \| ``"seashell"`` \| ``"sienna"`` \| ``"silver"`` \| ``"skyblue"`` \| ``"slateblue"`` \| ``"slategray"`` \| ``"slategrey"`` \| ``"snow"`` \| ``"springgreen"`` \| ``"steelblue"`` \| ``"tan"`` \| ``"teal"`` \| ``"thistle"`` \| ``"tomato"`` \| ``"transparent"`` \| ``"turquoise"`` \| ``"violet"`` \| ``"wheat"`` \| ``"white"`` \| ``"whitesmoke"`` \| ``"yellow"`` \| ``"yellowgreen"`` \| ``"ActiveBorder"`` \| ``"ActiveCaption"`` \| ``"AppWorkspace"`` \| ``"Background"`` \| ``"ButtonFace"`` \| ``"ButtonHighlight"`` \| ``"ButtonShadow"`` \| ``"ButtonText"`` \| ``"CaptionText"`` \| ``"GrayText"`` \| ``"Highlight"`` \| ``"HighlightText"`` \| ``"InactiveBorder"`` \| ``"InactiveCaption"`` \| ``"InactiveCaptionText"`` \| ``"InfoBackground"`` \| ``"InfoText"`` \| ``"Menu"`` \| ``"MenuText"`` \| ``"Scrollbar"`` \| ``"ThreeDDarkShadow"`` \| ``"ThreeDFace"`` \| ``"ThreeDHighlight"`` \| ``"ThreeDLightShadow"`` \| ``"ThreeDShadow"`` \| ``"Window"`` \| ``"WindowFrame"`` \| ``"WindowText"`` \| ``"currentcolor"`` \| ``"thick"`` \| ``"thin"`` \| ``"dashed"`` \| ``"dotted"`` \| ``"double"`` \| ``"groove"`` \| ``"outset"`` \| ``"ridge"`` \| ``"solid"``\>
+ **border**: `ResponsiveStyleValue`<`undefined` \| `number` \| `string` & {} \| ``"inset"`` \| ``"hidden"`` \| ``"inherit"`` \| ``"none"`` \| ``"-moz-initial"`` \| ``"initial"`` \| ``"revert"`` \| ``"revert-layer"`` \| ``"unset"`` \| ``"medium"`` \| ``"aliceblue"`` \| ``"antiquewhite"`` \| ``"aqua"`` \| ``"aquamarine"`` \| ``"azure"`` \| ``"beige"`` \| ``"bisque"`` \| ``"black"`` \| ``"blanchedalmond"`` \| ``"blue"`` \| ``"blueviolet"`` \| ``"brown"`` \| ``"burlywood"`` \| ``"cadetblue"`` \| ``"chartreuse"`` \| ``"chocolate"`` \| ``"coral"`` \| ``"cornflowerblue"`` \| ``"cornsilk"`` \| ``"crimson"`` \| ``"cyan"`` \| ``"darkblue"`` \| ``"darkcyan"`` \| ``"darkgoldenrod"`` \| ``"darkgray"`` \| ``"darkgreen"`` \| ``"darkgrey"`` \| ``"darkkhaki"`` \| ``"darkmagenta"`` \| ``"darkolivegreen"`` \| ``"darkorange"`` \| ``"darkorchid"`` \| ``"darkred"`` \| ``"darksalmon"`` \| ``"darkseagreen"`` \| ``"darkslateblue"`` \| ``"darkslategray"`` \| ``"darkslategrey"`` \| ``"darkturquoise"`` \| ``"darkviolet"`` \| ``"deeppink"`` \| ``"deepskyblue"`` \| ``"dimgray"`` \| ``"dimgrey"`` \| ``"dodgerblue"`` \| ``"firebrick"`` \| ``"floralwhite"`` \| ``"forestgreen"`` \| ``"fuchsia"`` \| ``"gainsboro"`` \| ``"ghostwhite"`` \| ``"gold"`` \| ``"goldenrod"`` \| ``"gray"`` \| ``"green"`` \| ``"greenyellow"`` \| ``"grey"`` \| ``"honeydew"`` \| ``"hotpink"`` \| ``"indianred"`` \| ``"indigo"`` \| ``"ivory"`` \| ``"khaki"`` \| ``"lavender"`` \| ``"lavenderblush"`` \| ``"lawngreen"`` \| ``"lemonchiffon"`` \| ``"lightblue"`` \| ``"lightcoral"`` \| ``"lightcyan"`` \| ``"lightgoldenrodyellow"`` \| ``"lightgray"`` \| ``"lightgreen"`` \| ``"lightgrey"`` \| ``"lightpink"`` \| ``"lightsalmon"`` \| ``"lightseagreen"`` \| ``"lightskyblue"`` \| ``"lightslategray"`` \| ``"lightslategrey"`` \| ``"lightsteelblue"`` \| ``"lightyellow"`` \| ``"lime"`` \| ``"limegreen"`` \| ``"linen"`` \| ``"magenta"`` \| ``"maroon"`` \| ``"mediumaquamarine"`` \| ``"mediumblue"`` \| ``"mediumorchid"`` \| ``"mediumpurple"`` \| ``"mediumseagreen"`` \| ``"mediumslateblue"`` \| ``"mediumspringgreen"`` \| ``"mediumturquoise"`` \| ``"mediumvioletred"`` \| ``"midnightblue"`` \| ``"mintcream"`` \| ``"mistyrose"`` \| ``"moccasin"`` \| ``"navajowhite"`` \| ``"navy"`` \| ``"oldlace"`` \| ``"olive"`` \| ``"olivedrab"`` \| ``"orange"`` \| ``"orangered"`` \| ``"orchid"`` \| ``"palegoldenrod"`` \| ``"palegreen"`` \| ``"paleturquoise"`` \| ``"palevioletred"`` \| ``"papayawhip"`` \| ``"peachpuff"`` \| ``"peru"`` \| ``"pink"`` \| ``"plum"`` \| ``"powderblue"`` \| ``"purple"`` \| ``"rebeccapurple"`` \| ``"red"`` \| ``"rosybrown"`` \| ``"royalblue"`` \| ``"saddlebrown"`` \| ``"salmon"`` \| ``"sandybrown"`` \| ``"seagreen"`` \| ``"seashell"`` \| ``"sienna"`` \| ``"silver"`` \| ``"skyblue"`` \| ``"slateblue"`` \| ``"slategray"`` \| ``"slategrey"`` \| ``"snow"`` \| ``"springgreen"`` \| ``"steelblue"`` \| ``"tan"`` \| ``"teal"`` \| ``"thistle"`` \| ``"tomato"`` \| ``"transparent"`` \| ``"turquoise"`` \| ``"violet"`` \| ``"wheat"`` \| ``"white"`` \| ``"whitesmoke"`` \| ``"yellow"`` \| ``"yellowgreen"`` \| ``"ActiveBorder"`` \| ``"ActiveCaption"`` \| ``"AppWorkspace"`` \| ``"Background"`` \| ``"ButtonFace"`` \| ``"ButtonHighlight"`` \| ``"ButtonShadow"`` \| ``"ButtonText"`` \| ``"CaptionText"`` \| ``"GrayText"`` \| ``"Highlight"`` \| ``"HighlightText"`` \| ``"InactiveBorder"`` \| ``"InactiveCaption"`` \| ``"InactiveCaptionText"`` \| ``"InfoBackground"`` \| ``"InfoText"`` \| ``"Menu"`` \| ``"MenuText"`` \| ``"Scrollbar"`` \| ``"ThreeDDarkShadow"`` \| ``"ThreeDFace"`` \| ``"ThreeDHighlight"`` \| ``"ThreeDLightShadow"`` \| ``"ThreeDShadow"`` \| ``"Window"`` \| ``"WindowFrame"`` \| ``"WindowText"`` \| ``"currentcolor"`` \| ``"thick"`` \| ``"thin"`` \| ``"dashed"`` \| ``"dotted"`` \| ``"double"`` \| ``"groove"`` \| ``"outset"`` \| ``"ridge"`` \| ``"solid"``\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `number` \| `string` & {} \| ``"inset"`` \| ``"hidden"`` \| ``"inherit"`` \| ``"none"`` \| ``"-moz-initial"`` \| ``"initial"`` \| ``"revert"`` \| ``"revert-layer"`` \| ``"unset"`` \| ``"medium"`` \| ``"aliceblue"`` \| ``"antiquewhite"`` \| ``"aqua"`` \| ``"aquamarine"`` \| ``"azure"`` \| ``"beige"`` \| ``"bisque"`` \| ``"black"`` \| ``"blanchedalmond"`` \| ``"blue"`` \| ``"blueviolet"`` \| ``"brown"`` \| ``"burlywood"`` \| ``"cadetblue"`` \| ``"chartreuse"`` \| ``"chocolate"`` \| ``"coral"`` \| ``"cornflowerblue"`` \| ``"cornsilk"`` \| ``"crimson"`` \| ``"cyan"`` \| ``"darkblue"`` \| ``"darkcyan"`` \| ``"darkgoldenrod"`` \| ``"darkgray"`` \| ``"darkgreen"`` \| ``"darkgrey"`` \| ``"darkkhaki"`` \| ``"darkmagenta"`` \| ``"darkolivegreen"`` \| ``"darkorange"`` \| ``"darkorchid"`` \| ``"darkred"`` \| ``"darksalmon"`` \| ``"darkseagreen"`` \| ``"darkslateblue"`` \| ``"darkslategray"`` \| ``"darkslategrey"`` \| ``"darkturquoise"`` \| ``"darkviolet"`` \| ``"deeppink"`` \| ``"deepskyblue"`` \| ``"dimgray"`` \| ``"dimgrey"`` \| ``"dodgerblue"`` \| ``"firebrick"`` \| ``"floralwhite"`` \| ``"forestgreen"`` \| ``"fuchsia"`` \| ``"gainsboro"`` \| ``"ghostwhite"`` \| ``"gold"`` \| ``"goldenrod"`` \| ``"gray"`` \| ``"green"`` \| ``"greenyellow"`` \| ``"grey"`` \| ``"honeydew"`` \| ``"hotpink"`` \| ``"indianred"`` \| ``"indigo"`` \| ``"ivory"`` \| ``"khaki"`` \| ``"lavender"`` \| ``"lavenderblush"`` \| ``"lawngreen"`` \| ``"lemonchiffon"`` \| ``"lightblue"`` \| ``"lightcoral"`` \| ``"lightcyan"`` \| ``"lightgoldenrodyellow"`` \| ``"lightgray"`` \| ``"lightgreen"`` \| ``"lightgrey"`` \| ``"lightpink"`` \| ``"lightsalmon"`` \| ``"lightseagreen"`` \| ``"lightskyblue"`` \| ``"lightslategray"`` \| ``"lightslategrey"`` \| ``"lightsteelblue"`` \| ``"lightyellow"`` \| ``"lime"`` \| ``"limegreen"`` \| ``"linen"`` \| ``"magenta"`` \| ``"maroon"`` \| ``"mediumaquamarine"`` \| ``"mediumblue"`` \| ``"mediumorchid"`` \| ``"mediumpurple"`` \| ``"mediumseagreen"`` \| ``"mediumslateblue"`` \| ``"mediumspringgreen"`` \| ``"mediumturquoise"`` \| ``"mediumvioletred"`` \| ``"midnightblue"`` \| ``"mintcream"`` \| ``"mistyrose"`` \| ``"moccasin"`` \| ``"navajowhite"`` \| ``"navy"`` \| ``"oldlace"`` \| ``"olive"`` \| ``"olivedrab"`` \| ``"orange"`` \| ``"orangered"`` \| ``"orchid"`` \| ``"palegoldenrod"`` \| ``"palegreen"`` \| ``"paleturquoise"`` \| ``"palevioletred"`` \| ``"papayawhip"`` \| ``"peachpuff"`` \| ``"peru"`` \| ``"pink"`` \| ``"plum"`` \| ``"powderblue"`` \| ``"purple"`` \| ``"rebeccapurple"`` \| ``"red"`` \| ``"rosybrown"`` \| ``"royalblue"`` \| ``"saddlebrown"`` \| ``"salmon"`` \| ``"sandybrown"`` \| ``"seagreen"`` \| ``"seashell"`` \| ``"sienna"`` \| ``"silver"`` \| ``"skyblue"`` \| ``"slateblue"`` \| ``"slategray"`` \| ``"slategrey"`` \| ``"snow"`` \| ``"springgreen"`` \| ``"steelblue"`` \| ``"tan"`` \| ``"teal"`` \| ``"thistle"`` \| ``"tomato"`` \| ``"transparent"`` \| ``"turquoise"`` \| ``"violet"`` \| ``"wheat"`` \| ``"white"`` \| ``"whitesmoke"`` \| ``"yellow"`` \| ``"yellowgreen"`` \| ``"ActiveBorder"`` \| ``"ActiveCaption"`` \| ``"AppWorkspace"`` \| ``"Background"`` \| ``"ButtonFace"`` \| ``"ButtonHighlight"`` \| ``"ButtonShadow"`` \| ``"ButtonText"`` \| ``"CaptionText"`` \| ``"GrayText"`` \| ``"Highlight"`` \| ``"HighlightText"`` \| ``"InactiveBorder"`` \| ``"InactiveCaption"`` \| ``"InactiveCaptionText"`` \| ``"InfoBackground"`` \| ``"InfoText"`` \| ``"Menu"`` \| ``"MenuText"`` \| ``"Scrollbar"`` \| ``"ThreeDDarkShadow"`` \| ``"ThreeDFace"`` \| ``"ThreeDHighlight"`` \| ``"ThreeDLightShadow"`` \| ``"ThreeDShadow"`` \| ``"Window"`` \| ``"WindowFrame"`` \| ``"WindowText"`` \| ``"currentcolor"`` \| ``"thick"`` \| ``"thin"`` \| ``"dashed"`` \| ``"dotted"`` \| ``"double"`` \| ``"groove"`` \| ``"outset"`` \| ``"ridge"`` \| ``"solid"``\>
 
 #### Inherited from
 
@@ -1400,7 +1037,7 @@ ___
 
 ### borderBottom
 
-• **borderBottom**: `ResponsiveStyleValue`<`undefined` \| `BorderBottom`<`string` \| `number`\> \| `BorderBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderBottom`<`string` \| `number`\> \| `BorderBottom`<`string` \| `number`\>[]\>
+ **borderBottom**: `ResponsiveStyleValue`<`undefined` \| `BorderBottom`<`string` \| `number`\> \| `BorderBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderBottom`<`string` \| `number`\> \| `BorderBottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1410,7 +1047,7 @@ ___
 
 ### borderColor
 
-• **borderColor**: `ResponsiveStyleValue`<`undefined` \| `BorderColor` \| `BorderColor`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderColor` \| `BorderColor`[]\>
+ **borderColor**: `ResponsiveStyleValue`<`undefined` \| `BorderColor` \| `BorderColor`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderColor` \| `BorderColor`[]\>
 
 #### Inherited from
 
@@ -1420,7 +1057,7 @@ ___
 
 ### borderLeft
 
-• **borderLeft**: `ResponsiveStyleValue`<`undefined` \| `BorderLeft`<`string` \| `number`\> \| `BorderLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderLeft`<`string` \| `number`\> \| `BorderLeft`<`string` \| `number`\>[]\>
+ **borderLeft**: `ResponsiveStyleValue`<`undefined` \| `BorderLeft`<`string` \| `number`\> \| `BorderLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderLeft`<`string` \| `number`\> \| `BorderLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1430,7 +1067,7 @@ ___
 
 ### borderRadius
 
-• **borderRadius**: `ResponsiveStyleValue`<`undefined` \| `BorderRadius`<`string` \| `number`\> \| `BorderRadius`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderRadius`<`string` \| `number`\> \| `BorderRadius`<`string` \| `number`\>[]\>
+ **borderRadius**: `ResponsiveStyleValue`<`undefined` \| `BorderRadius`<`string` \| `number`\> \| `BorderRadius`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderRadius`<`string` \| `number`\> \| `BorderRadius`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1440,7 +1077,7 @@ ___
 
 ### borderRight
 
-• **borderRight**: `ResponsiveStyleValue`<`undefined` \| `BorderRight`<`string` \| `number`\> \| `BorderRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderRight`<`string` \| `number`\> \| `BorderRight`<`string` \| `number`\>[]\>
+ **borderRight**: `ResponsiveStyleValue`<`undefined` \| `BorderRight`<`string` \| `number`\> \| `BorderRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderRight`<`string` \| `number`\> \| `BorderRight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1450,7 +1087,7 @@ ___
 
 ### borderTop
 
-• **borderTop**: `ResponsiveStyleValue`<`undefined` \| `BorderTop`<`string` \| `number`\> \| `BorderTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderTop`<`string` \| `number`\> \| `BorderTop`<`string` \| `number`\>[]\>
+ **borderTop**: `ResponsiveStyleValue`<`undefined` \| `BorderTop`<`string` \| `number`\> \| `BorderTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BorderTop`<`string` \| `number`\> \| `BorderTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1460,7 +1097,7 @@ ___
 
 ### bottom
 
-• **bottom**: `ResponsiveStyleValue`<`undefined` \| `Bottom`<`string` \| `number`\> \| `Bottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Bottom`<`string` \| `number`\> \| `Bottom`<`string` \| `number`\>[]\>
+ **bottom**: `ResponsiveStyleValue`<`undefined` \| `Bottom`<`string` \| `number`\> \| `Bottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Bottom`<`string` \| `number`\> \| `Bottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1470,7 +1107,7 @@ ___
 
 ### boxShadow
 
-• **boxShadow**: `ResponsiveStyleValue`<`undefined` \| `number` \| `BoxShadow`\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `number` \| `BoxShadow`\>
+ **boxShadow**: `ResponsiveStyleValue`<`undefined` \| `number` \| `BoxShadow`\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `number` \| `BoxShadow`\>
 
 #### Inherited from
 
@@ -1480,7 +1117,7 @@ ___
 
 ### boxSizing
 
-• **boxSizing**: `ResponsiveStyleValue`<`undefined` \| `BoxSizing` \| `BoxSizing`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BoxSizing` \| `BoxSizing`[]\>
+ **boxSizing**: `ResponsiveStyleValue`<`undefined` \| `BoxSizing` \| `BoxSizing`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `BoxSizing` \| `BoxSizing`[]\>
 
 #### Inherited from
 
@@ -1490,7 +1127,7 @@ ___
 
 ### children
 
-• `Optional` **children**: `ReactNode`
+ `Optional` **children**: `ReactNode`
 
 The content of the component.
 
@@ -1506,7 +1143,7 @@ ___
 
 ### className
 
-• `Optional` **className**: `string`
+ `Optional` **className**: `string`
 
 #### Inherited from
 
@@ -1520,7 +1157,7 @@ ___
 
 ### classes
 
-• `Optional` **classes**: `Partial`<`TypographyClasses`\> & `Partial`<`ClassNameMap`<`never`\>\>
+ `Optional` **classes**: `Partial`<`TypographyClasses`\> & `Partial`<`ClassNameMap`<`never`\>\>
 
 Override or extend the styles applied to the component.
 
@@ -1538,7 +1175,7 @@ ___
 
 ### color
 
-• **color**: `ResponsiveStyleValue`<`undefined` \| `Color` \| `Color`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Color` \| `Color`[]\>
+ **color**: `ResponsiveStyleValue`<`undefined` \| `Color` \| `Color`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Color` \| `Color`[]\>
 
 #### Inherited from
 
@@ -1548,7 +1185,7 @@ ___
 
 ### columnGap
 
-• **columnGap**: `ResponsiveStyleValue`<`undefined` \| `ColumnGap`<`string` \| `number`\> \| `ColumnGap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `ColumnGap`<`string` \| `number`\> \| `ColumnGap`<`string` \| `number`\>[]\>
+ **columnGap**: `ResponsiveStyleValue`<`undefined` \| `ColumnGap`<`string` \| `number`\> \| `ColumnGap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `ColumnGap`<`string` \| `number`\> \| `ColumnGap`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1558,7 +1195,7 @@ ___
 
 ### contentEditable
 
-• `Optional` **contentEditable**: `Booleanish` \| ``"inherit"``
+ `Optional` **contentEditable**: `Booleanish` \| ``"inherit"``
 
 #### Inherited from
 
@@ -1572,7 +1209,7 @@ ___
 
 ### contextMenu
 
-• `Optional` **contextMenu**: `string`
+ `Optional` **contextMenu**: `string`
 
 #### Inherited from
 
@@ -1586,7 +1223,7 @@ ___
 
 ### dangerouslySetInnerHTML
 
-• `Optional` **dangerouslySetInnerHTML**: `Object`
+ `Optional` **dangerouslySetInnerHTML**: `Object`
 
 #### Type declaration
 
@@ -1606,7 +1243,7 @@ ___
 
 ### datatype
 
-• `Optional` **datatype**: `string`
+ `Optional` **datatype**: `string`
 
 #### Inherited from
 
@@ -1620,7 +1257,7 @@ ___
 
 ### defaultChecked
 
-• `Optional` **defaultChecked**: `boolean`
+ `Optional` **defaultChecked**: `boolean`
 
 #### Inherited from
 
@@ -1634,7 +1271,7 @@ ___
 
 ### defaultValue
 
-• `Optional` **defaultValue**: `string` \| `number` \| readonly `string`[]
+ `Optional` **defaultValue**: `string` \| `number` \| readonly `string`[]
 
 #### Inherited from
 
@@ -1648,7 +1285,7 @@ ___
 
 ### dir
 
-• `Optional` **dir**: `string`
+ `Optional` **dir**: `string`
 
 #### Inherited from
 
@@ -1662,7 +1299,7 @@ ___
 
 ### display
 
-• **display**: `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\>
+ **display**: `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\>
 
 #### Inherited from
 
@@ -1672,7 +1309,7 @@ ___
 
 ### displayPrint
 
-• **displayPrint**: `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\>
+ **displayPrint**: `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Display` \| `Display`[]\>
 
 #### Inherited from
 
@@ -1682,7 +1319,7 @@ ___
 
 ### draggable
 
-• `Optional` **draggable**: `Booleanish`
+ `Optional` **draggable**: `Booleanish`
 
 #### Inherited from
 
@@ -1696,7 +1333,7 @@ ___
 
 ### flex
 
-• **flex**: `ResponsiveStyleValue`<`undefined` \| `Flex`<`string` \| `number`\> \| `Flex`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Flex`<`string` \| `number`\> \| `Flex`<`string` \| `number`\>[]\>
+ **flex**: `ResponsiveStyleValue`<`undefined` \| `Flex`<`string` \| `number`\> \| `Flex`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Flex`<`string` \| `number`\> \| `Flex`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1706,7 +1343,7 @@ ___
 
 ### flexBasis
 
-• **flexBasis**: `ResponsiveStyleValue`<`undefined` \| `FlexBasis`<`string` \| `number`\> \| `FlexBasis`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexBasis`<`string` \| `number`\> \| `FlexBasis`<`string` \| `number`\>[]\>
+ **flexBasis**: `ResponsiveStyleValue`<`undefined` \| `FlexBasis`<`string` \| `number`\> \| `FlexBasis`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexBasis`<`string` \| `number`\> \| `FlexBasis`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1716,7 +1353,7 @@ ___
 
 ### flexDirection
 
-• **flexDirection**: `ResponsiveStyleValue`<`undefined` \| `FlexDirection` \| `FlexDirection`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexDirection` \| `FlexDirection`[]\>
+ **flexDirection**: `ResponsiveStyleValue`<`undefined` \| `FlexDirection` \| `FlexDirection`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexDirection` \| `FlexDirection`[]\>
 
 #### Inherited from
 
@@ -1726,7 +1363,7 @@ ___
 
 ### flexGrow
 
-• **flexGrow**: `ResponsiveStyleValue`<`undefined` \| `FlexGrow` \| `FlexGrow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexGrow` \| `FlexGrow`[]\>
+ **flexGrow**: `ResponsiveStyleValue`<`undefined` \| `FlexGrow` \| `FlexGrow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexGrow` \| `FlexGrow`[]\>
 
 #### Inherited from
 
@@ -1736,7 +1373,7 @@ ___
 
 ### flexShrink
 
-• **flexShrink**: `ResponsiveStyleValue`<`undefined` \| `FlexShrink` \| `FlexShrink`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexShrink` \| `FlexShrink`[]\>
+ **flexShrink**: `ResponsiveStyleValue`<`undefined` \| `FlexShrink` \| `FlexShrink`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexShrink` \| `FlexShrink`[]\>
 
 #### Inherited from
 
@@ -1746,7 +1383,7 @@ ___
 
 ### flexWrap
 
-• **flexWrap**: `ResponsiveStyleValue`<`undefined` \| `FlexWrap` \| `FlexWrap`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexWrap` \| `FlexWrap`[]\>
+ **flexWrap**: `ResponsiveStyleValue`<`undefined` \| `FlexWrap` \| `FlexWrap`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FlexWrap` \| `FlexWrap`[]\>
 
 #### Inherited from
 
@@ -1756,7 +1393,7 @@ ___
 
 ### fontFamily
 
-• **fontFamily**: `ResponsiveStyleValue`<`undefined` \| `FontFamily` \| `FontFamily`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontFamily` \| `FontFamily`[]\>
+ **fontFamily**: `ResponsiveStyleValue`<`undefined` \| `FontFamily` \| `FontFamily`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontFamily` \| `FontFamily`[]\>
 
 #### Inherited from
 
@@ -1766,7 +1403,7 @@ ___
 
 ### fontSize
 
-• **fontSize**: `ResponsiveStyleValue`<`undefined` \| `FontSize`<`string` \| `number`\> \| `FontSize`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontSize`<`string` \| `number`\> \| `FontSize`<`string` \| `number`\>[]\>
+ **fontSize**: `ResponsiveStyleValue`<`undefined` \| `FontSize`<`string` \| `number`\> \| `FontSize`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontSize`<`string` \| `number`\> \| `FontSize`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1776,7 +1413,7 @@ ___
 
 ### fontStyle
 
-• **fontStyle**: `ResponsiveStyleValue`<`undefined` \| `FontStyle` \| `FontStyle`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontStyle` \| `FontStyle`[]\>
+ **fontStyle**: `ResponsiveStyleValue`<`undefined` \| `FontStyle` \| `FontStyle`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `FontStyle` \| `FontStyle`[]\>
 
 #### Inherited from
 
@@ -1786,7 +1423,7 @@ ___
 
 ### fontWeight
 
-• **fontWeight**: `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\>
+ **fontWeight**: `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\>
 
 #### Inherited from
 
@@ -1796,7 +1433,7 @@ ___
 
 ### gap
 
-• **gap**: `ResponsiveStyleValue`<`undefined` \| `Gap`<`string` \| `number`\> \| `Gap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Gap`<`string` \| `number`\> \| `Gap`<`string` \| `number`\>[]\>
+ **gap**: `ResponsiveStyleValue`<`undefined` \| `Gap`<`string` \| `number`\> \| `Gap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Gap`<`string` \| `number`\> \| `Gap`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1806,7 +1443,7 @@ ___
 
 ### gridArea
 
-• **gridArea**: `ResponsiveStyleValue`<`undefined` \| `GridArea` \| `GridArea`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridArea` \| `GridArea`[]\>
+ **gridArea**: `ResponsiveStyleValue`<`undefined` \| `GridArea` \| `GridArea`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridArea` \| `GridArea`[]\>
 
 #### Inherited from
 
@@ -1816,7 +1453,7 @@ ___
 
 ### gridAutoColumns
 
-• **gridAutoColumns**: `ResponsiveStyleValue`<`undefined` \| `GridAutoColumns`<`string` \| `number`\> \| `GridAutoColumns`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoColumns`<`string` \| `number`\> \| `GridAutoColumns`<`string` \| `number`\>[]\>
+ **gridAutoColumns**: `ResponsiveStyleValue`<`undefined` \| `GridAutoColumns`<`string` \| `number`\> \| `GridAutoColumns`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoColumns`<`string` \| `number`\> \| `GridAutoColumns`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1826,7 +1463,7 @@ ___
 
 ### gridAutoFlow
 
-• **gridAutoFlow**: `ResponsiveStyleValue`<`undefined` \| `GridAutoFlow` \| `GridAutoFlow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoFlow` \| `GridAutoFlow`[]\>
+ **gridAutoFlow**: `ResponsiveStyleValue`<`undefined` \| `GridAutoFlow` \| `GridAutoFlow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoFlow` \| `GridAutoFlow`[]\>
 
 #### Inherited from
 
@@ -1836,7 +1473,7 @@ ___
 
 ### gridAutoRows
 
-• **gridAutoRows**: `ResponsiveStyleValue`<`undefined` \| `GridAutoRows`<`string` \| `number`\> \| `GridAutoRows`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoRows`<`string` \| `number`\> \| `GridAutoRows`<`string` \| `number`\>[]\>
+ **gridAutoRows**: `ResponsiveStyleValue`<`undefined` \| `GridAutoRows`<`string` \| `number`\> \| `GridAutoRows`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridAutoRows`<`string` \| `number`\> \| `GridAutoRows`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1846,7 +1483,7 @@ ___
 
 ### gridColumn
 
-• **gridColumn**: `ResponsiveStyleValue`<`undefined` \| `GridColumn` \| `GridColumn`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridColumn` \| `GridColumn`[]\>
+ **gridColumn**: `ResponsiveStyleValue`<`undefined` \| `GridColumn` \| `GridColumn`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridColumn` \| `GridColumn`[]\>
 
 #### Inherited from
 
@@ -1856,7 +1493,7 @@ ___
 
 ### gridRow
 
-• **gridRow**: `ResponsiveStyleValue`<`undefined` \| `GridRow` \| `GridRow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridRow` \| `GridRow`[]\>
+ **gridRow**: `ResponsiveStyleValue`<`undefined` \| `GridRow` \| `GridRow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridRow` \| `GridRow`[]\>
 
 #### Inherited from
 
@@ -1866,7 +1503,7 @@ ___
 
 ### gridTemplateAreas
 
-• **gridTemplateAreas**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateAreas` \| `GridTemplateAreas`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateAreas` \| `GridTemplateAreas`[]\>
+ **gridTemplateAreas**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateAreas` \| `GridTemplateAreas`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateAreas` \| `GridTemplateAreas`[]\>
 
 #### Inherited from
 
@@ -1876,7 +1513,7 @@ ___
 
 ### gridTemplateColumns
 
-• **gridTemplateColumns**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateColumns`<`string` \| `number`\> \| `GridTemplateColumns`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateColumns`<`string` \| `number`\> \| `GridTemplateColumns`<`string` \| `number`\>[]\>
+ **gridTemplateColumns**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateColumns`<`string` \| `number`\> \| `GridTemplateColumns`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateColumns`<`string` \| `number`\> \| `GridTemplateColumns`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1886,7 +1523,7 @@ ___
 
 ### gridTemplateRows
 
-• **gridTemplateRows**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateRows`<`string` \| `number`\> \| `GridTemplateRows`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateRows`<`string` \| `number`\> \| `GridTemplateRows`<`string` \| `number`\>[]\>
+ **gridTemplateRows**: `ResponsiveStyleValue`<`undefined` \| `GridTemplateRows`<`string` \| `number`\> \| `GridTemplateRows`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `GridTemplateRows`<`string` \| `number`\> \| `GridTemplateRows`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1896,7 +1533,7 @@ ___
 
 ### gutterBottom
 
-• `Optional` **gutterBottom**: `boolean`
+ `Optional` **gutterBottom**: `boolean`
 
 If `true`, the text will have a bottom margin.
 
@@ -1916,7 +1553,7 @@ ___
 
 ### height
 
-• **height**: `ResponsiveStyleValue`<`undefined` \| `Height`<`string` \| `number`\> \| `Height`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Height`<`string` \| `number`\> \| `Height`<`string` \| `number`\>[]\>
+ **height**: `ResponsiveStyleValue`<`undefined` \| `Height`<`string` \| `number`\> \| `Height`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Height`<`string` \| `number`\> \| `Height`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -1926,7 +1563,7 @@ ___
 
 ### hidden
 
-• `Optional` **hidden**: `boolean`
+ `Optional` **hidden**: `boolean`
 
 #### Inherited from
 
@@ -1940,7 +1577,7 @@ ___
 
 ### id
 
-• `Optional` **id**: `string`
+ `Optional` **id**: `string`
 
 #### Inherited from
 
@@ -1954,7 +1591,7 @@ ___
 
 ### inlist
 
-• `Optional` **inlist**: `any`
+ `Optional` **inlist**: `any`
 
 #### Inherited from
 
@@ -1968,7 +1605,7 @@ ___
 
 ### inputMode
 
-• `Optional` **inputMode**: ``"text"`` \| ``"none"`` \| ``"search"`` \| ``"tel"`` \| ``"url"`` \| ``"email"`` \| ``"numeric"`` \| ``"decimal"``
+ `Optional` **inputMode**: ``"text"`` \| ``"none"`` \| ``"search"`` \| ``"tel"`` \| ``"url"`` \| ``"email"`` \| ``"numeric"`` \| ``"decimal"``
 
 Hints at the type of data that might be entered by the user while editing the element or its contents
 
@@ -1988,7 +1625,7 @@ ___
 
 ### is
 
-• `Optional` **is**: `string`
+ `Optional` **is**: `string`
 
 Specify that a standard HTML element should behave like a defined custom built-in element
 
@@ -2008,7 +1645,7 @@ ___
 
 ### itemID
 
-• `Optional` **itemID**: `string`
+ `Optional` **itemID**: `string`
 
 #### Inherited from
 
@@ -2022,7 +1659,7 @@ ___
 
 ### itemProp
 
-• `Optional` **itemProp**: `string`
+ `Optional` **itemProp**: `string`
 
 #### Inherited from
 
@@ -2036,7 +1673,7 @@ ___
 
 ### itemRef
 
-• `Optional` **itemRef**: `string`
+ `Optional` **itemRef**: `string`
 
 #### Inherited from
 
@@ -2050,7 +1687,7 @@ ___
 
 ### itemScope
 
-• `Optional` **itemScope**: `boolean`
+ `Optional` **itemScope**: `boolean`
 
 #### Inherited from
 
@@ -2064,7 +1701,7 @@ ___
 
 ### itemType
 
-• `Optional` **itemType**: `string`
+ `Optional` **itemType**: `string`
 
 #### Inherited from
 
@@ -2078,7 +1715,7 @@ ___
 
 ### justifyContent
 
-• **justifyContent**: `ResponsiveStyleValue`<`undefined` \| `JustifyContent` \| `JustifyContent`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifyContent` \| `JustifyContent`[]\>
+ **justifyContent**: `ResponsiveStyleValue`<`undefined` \| `JustifyContent` \| `JustifyContent`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifyContent` \| `JustifyContent`[]\>
 
 #### Inherited from
 
@@ -2088,7 +1725,7 @@ ___
 
 ### justifyItems
 
-• **justifyItems**: `ResponsiveStyleValue`<`undefined` \| `JustifyItems` \| `JustifyItems`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifyItems` \| `JustifyItems`[]\>
+ **justifyItems**: `ResponsiveStyleValue`<`undefined` \| `JustifyItems` \| `JustifyItems`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifyItems` \| `JustifyItems`[]\>
 
 #### Inherited from
 
@@ -2098,7 +1735,7 @@ ___
 
 ### justifySelf
 
-• **justifySelf**: `ResponsiveStyleValue`<`undefined` \| `JustifySelf` \| `JustifySelf`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifySelf` \| `JustifySelf`[]\>
+ **justifySelf**: `ResponsiveStyleValue`<`undefined` \| `JustifySelf` \| `JustifySelf`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `JustifySelf` \| `JustifySelf`[]\>
 
 #### Inherited from
 
@@ -2108,7 +1745,7 @@ ___
 
 ### key
 
-• `Optional` **key**: ``null`` \| `Key`
+ `Optional` **key**: ``null`` \| `Key`
 
 #### Inherited from
 
@@ -2122,7 +1759,7 @@ ___
 
 ### lang
 
-• `Optional` **lang**: `string`
+ `Optional` **lang**: `string`
 
 #### Inherited from
 
@@ -2136,7 +1773,7 @@ ___
 
 ### left
 
-• **left**: `ResponsiveStyleValue`<`undefined` \| `Left`<`string` \| `number`\> \| `Left`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Left`<`string` \| `number`\> \| `Left`<`string` \| `number`\>[]\>
+ **left**: `ResponsiveStyleValue`<`undefined` \| `Left`<`string` \| `number`\> \| `Left`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Left`<`string` \| `number`\> \| `Left`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2146,17 +1783,17 @@ ___
 
 ### length
 
-• `Optional` **length**: `number`
+ `Optional` **length**: `number`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyText.tsx:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L15)
+[packages/sdk/react-components/src/Clipboard/CopyText.tsx:15](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L15)
 
 ___
 
 ### letterSpacing
 
-• **letterSpacing**: `ResponsiveStyleValue`<`undefined` \| `LetterSpacing`<`string` \| `number`\> \| `LetterSpacing`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `LetterSpacing`<`string` \| `number`\> \| `LetterSpacing`<`string` \| `number`\>[]\>
+ **letterSpacing**: `ResponsiveStyleValue`<`undefined` \| `LetterSpacing`<`string` \| `number`\> \| `LetterSpacing`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `LetterSpacing`<`string` \| `number`\> \| `LetterSpacing`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2166,7 +1803,7 @@ ___
 
 ### lineHeight
 
-• **lineHeight**: `ResponsiveStyleValue`<`undefined` \| `LineHeight`<`string` \| `number`\> \| `LineHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `LineHeight`<`string` \| `number`\> \| `LineHeight`<`string` \| `number`\>[]\>
+ **lineHeight**: `ResponsiveStyleValue`<`undefined` \| `LineHeight`<`string` \| `number`\> \| `LineHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `LineHeight`<`string` \| `number`\> \| `LineHeight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2176,7 +1813,7 @@ ___
 
 ### m
 
-• **m**: `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\>
+ **m**: `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2186,7 +1823,7 @@ ___
 
 ### margin
 
-• **margin**: `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\>
+ **margin**: `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Margin`<`string` \| `number`\> \| `Margin`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2196,7 +1833,7 @@ ___
 
 ### marginBottom
 
-• **marginBottom**: `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\>
+ **marginBottom**: `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2206,7 +1843,7 @@ ___
 
 ### marginLeft
 
-• **marginLeft**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
+ **marginLeft**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2216,7 +1853,7 @@ ___
 
 ### marginRight
 
-• **marginRight**: `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\>
+ **marginRight**: `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2226,7 +1863,7 @@ ___
 
 ### marginTop
 
-• **marginTop**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
+ **marginTop**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2236,7 +1873,7 @@ ___
 
 ### marginX
 
-• **marginX**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
+ **marginX**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2246,7 +1883,7 @@ ___
 
 ### marginY
 
-• **marginY**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
+ **marginY**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2256,7 +1893,7 @@ ___
 
 ### maxHeight
 
-• **maxHeight**: `ResponsiveStyleValue`<`undefined` \| `MaxHeight`<`string` \| `number`\> \| `MaxHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MaxHeight`<`string` \| `number`\> \| `MaxHeight`<`string` \| `number`\>[]\>
+ **maxHeight**: `ResponsiveStyleValue`<`undefined` \| `MaxHeight`<`string` \| `number`\> \| `MaxHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MaxHeight`<`string` \| `number`\> \| `MaxHeight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2266,7 +1903,7 @@ ___
 
 ### maxWidth
 
-• **maxWidth**: `ResponsiveStyleValue`<`undefined` \| `MaxWidth`<`string` \| `number`\> \| `MaxWidth`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MaxWidth`<`string` \| `number`\> \| `MaxWidth`<`string` \| `number`\>[]\>
+ **maxWidth**: `ResponsiveStyleValue`<`undefined` \| `MaxWidth`<`string` \| `number`\> \| `MaxWidth`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MaxWidth`<`string` \| `number`\> \| `MaxWidth`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2276,7 +1913,7 @@ ___
 
 ### mb
 
-• **mb**: `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\>
+ **mb**: `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginBottom`<`string` \| `number`\> \| `MarginBottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2286,7 +1923,7 @@ ___
 
 ### minHeight
 
-• **minHeight**: `ResponsiveStyleValue`<`undefined` \| `MinHeight`<`string` \| `number`\> \| `MinHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MinHeight`<`string` \| `number`\> \| `MinHeight`<`string` \| `number`\>[]\>
+ **minHeight**: `ResponsiveStyleValue`<`undefined` \| `MinHeight`<`string` \| `number`\> \| `MinHeight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MinHeight`<`string` \| `number`\> \| `MinHeight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2296,7 +1933,7 @@ ___
 
 ### minWidth
 
-• **minWidth**: `ResponsiveStyleValue`<`undefined` \| `MinWidth`<`string` \| `number`\> \| `MinWidth`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MinWidth`<`string` \| `number`\> \| `MinWidth`<`string` \| `number`\>[]\>
+ **minWidth**: `ResponsiveStyleValue`<`undefined` \| `MinWidth`<`string` \| `number`\> \| `MinWidth`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MinWidth`<`string` \| `number`\> \| `MinWidth`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2306,7 +1943,7 @@ ___
 
 ### ml
 
-• **ml**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
+ **ml**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2316,17 +1953,17 @@ ___
 
 ### monospace
 
-• `Optional` **monospace**: `boolean`
+ `Optional` **monospace**: `boolean`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyText.tsx:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L16)
+[packages/sdk/react-components/src/Clipboard/CopyText.tsx:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L16)
 
 ___
 
 ### mr
 
-• **mr**: `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\>
+ **mr**: `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginRight`<`string` \| `number`\> \| `MarginRight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2336,7 +1973,7 @@ ___
 
 ### mt
 
-• **mt**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
+ **mt**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2346,7 +1983,7 @@ ___
 
 ### mx
 
-• **mx**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
+ **mx**: `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginLeft`<`string` \| `number`\> \| `MarginLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2356,7 +1993,7 @@ ___
 
 ### my
 
-• **my**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
+ **my**: `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `MarginTop`<`string` \| `number`\> \| `MarginTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -2366,7 +2003,7 @@ ___
 
 ### noWrap
 
-• `Optional` **noWrap**: `boolean`
+ `Optional` **noWrap**: `boolean`
 
 If `true`, the text will not wrap, but instead will truncate with a text overflow ellipsis.
 
@@ -2389,7 +2026,7 @@ ___
 
 ### onAbort
 
-• `Optional` **onAbort**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAbort**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2403,7 +2040,7 @@ ___
 
 ### onAbortCapture
 
-• `Optional` **onAbortCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAbortCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2417,7 +2054,7 @@ ___
 
 ### onAnimationEnd
 
-• `Optional` **onAnimationEnd**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationEnd**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2431,7 +2068,7 @@ ___
 
 ### onAnimationEndCapture
 
-• `Optional` **onAnimationEndCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationEndCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2445,7 +2082,7 @@ ___
 
 ### onAnimationIteration
 
-• `Optional` **onAnimationIteration**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationIteration**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2459,7 +2096,7 @@ ___
 
 ### onAnimationIterationCapture
 
-• `Optional` **onAnimationIterationCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationIterationCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2473,7 +2110,7 @@ ___
 
 ### onAnimationStart
 
-• `Optional` **onAnimationStart**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationStart**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2487,7 +2124,7 @@ ___
 
 ### onAnimationStartCapture
 
-• `Optional` **onAnimationStartCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAnimationStartCapture**: `AnimationEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2501,7 +2138,7 @@ ___
 
 ### onAuxClick
 
-• `Optional` **onAuxClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAuxClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2515,7 +2152,7 @@ ___
 
 ### onAuxClickCapture
 
-• `Optional` **onAuxClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onAuxClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2529,7 +2166,7 @@ ___
 
 ### onBeforeInput
 
-• `Optional` **onBeforeInput**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBeforeInput**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2543,7 +2180,7 @@ ___
 
 ### onBeforeInputCapture
 
-• `Optional` **onBeforeInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBeforeInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2557,7 +2194,7 @@ ___
 
 ### onBlur
 
-• `Optional` **onBlur**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBlur**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2571,7 +2208,7 @@ ___
 
 ### onBlurCapture
 
-• `Optional` **onBlurCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onBlurCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2585,7 +2222,7 @@ ___
 
 ### onCanPlay
 
-• `Optional` **onCanPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2599,7 +2236,7 @@ ___
 
 ### onCanPlayCapture
 
-• `Optional` **onCanPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2613,7 +2250,7 @@ ___
 
 ### onCanPlayThrough
 
-• `Optional` **onCanPlayThrough**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayThrough**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2627,7 +2264,7 @@ ___
 
 ### onCanPlayThroughCapture
 
-• `Optional` **onCanPlayThroughCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCanPlayThroughCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2641,7 +2278,7 @@ ___
 
 ### onChange
 
-• `Optional` **onChange**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onChange**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2655,7 +2292,7 @@ ___
 
 ### onChangeCapture
 
-• `Optional` **onChangeCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onChangeCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2669,7 +2306,7 @@ ___
 
 ### onClick
 
-• `Optional` **onClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2683,7 +2320,7 @@ ___
 
 ### onClickCapture
 
-• `Optional` **onClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2697,7 +2334,7 @@ ___
 
 ### onCompositionEnd
 
-• `Optional` **onCompositionEnd**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionEnd**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2711,7 +2348,7 @@ ___
 
 ### onCompositionEndCapture
 
-• `Optional` **onCompositionEndCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionEndCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2725,7 +2362,7 @@ ___
 
 ### onCompositionStart
 
-• `Optional` **onCompositionStart**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionStart**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2739,7 +2376,7 @@ ___
 
 ### onCompositionStartCapture
 
-• `Optional` **onCompositionStartCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionStartCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2753,7 +2390,7 @@ ___
 
 ### onCompositionUpdate
 
-• `Optional` **onCompositionUpdate**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionUpdate**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2767,7 +2404,7 @@ ___
 
 ### onCompositionUpdateCapture
 
-• `Optional` **onCompositionUpdateCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCompositionUpdateCapture**: `CompositionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2781,7 +2418,7 @@ ___
 
 ### onContextMenu
 
-• `Optional` **onContextMenu**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onContextMenu**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2795,7 +2432,7 @@ ___
 
 ### onContextMenuCapture
 
-• `Optional` **onContextMenuCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onContextMenuCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2809,7 +2446,7 @@ ___
 
 ### onCopy
 
-• `Optional` **onCopy**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCopy**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2823,7 +2460,7 @@ ___
 
 ### onCopyCapture
 
-• `Optional` **onCopyCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCopyCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2837,11 +2474,11 @@ ___
 
 ### onCopyToClipboard
 
-• `Optional` **onCopyToClipboard**: (`text`: `string`) => `void`
+ `Optional` **onCopyToClipboard**: (`text`: `string`) => `void`
 
 #### Type declaration
 
-▸ (`text`): `void`
+(`text`): `void`
 
 ##### Parameters
 
@@ -2855,13 +2492,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyText.tsx:17](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L17)
+[packages/sdk/react-components/src/Clipboard/CopyText.tsx:17](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L17)
 
 ___
 
 ### onCut
 
-• `Optional` **onCut**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCut**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2875,7 +2512,7 @@ ___
 
 ### onCutCapture
 
-• `Optional` **onCutCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onCutCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2889,7 +2526,7 @@ ___
 
 ### onDoubleClick
 
-• `Optional` **onDoubleClick**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDoubleClick**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2903,7 +2540,7 @@ ___
 
 ### onDoubleClickCapture
 
-• `Optional` **onDoubleClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDoubleClickCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2917,7 +2554,7 @@ ___
 
 ### onDrag
 
-• `Optional` **onDrag**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDrag**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2931,7 +2568,7 @@ ___
 
 ### onDragCapture
 
-• `Optional` **onDragCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2945,7 +2582,7 @@ ___
 
 ### onDragEnd
 
-• `Optional` **onDragEnd**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnd**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2959,7 +2596,7 @@ ___
 
 ### onDragEndCapture
 
-• `Optional` **onDragEndCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEndCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2973,7 +2610,7 @@ ___
 
 ### onDragEnter
 
-• `Optional` **onDragEnter**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnter**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -2987,7 +2624,7 @@ ___
 
 ### onDragEnterCapture
 
-• `Optional` **onDragEnterCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragEnterCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3001,7 +2638,7 @@ ___
 
 ### onDragExit
 
-• `Optional` **onDragExit**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragExit**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3015,7 +2652,7 @@ ___
 
 ### onDragExitCapture
 
-• `Optional` **onDragExitCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragExitCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3029,7 +2666,7 @@ ___
 
 ### onDragLeave
 
-• `Optional` **onDragLeave**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragLeave**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3043,7 +2680,7 @@ ___
 
 ### onDragLeaveCapture
 
-• `Optional` **onDragLeaveCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragLeaveCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3057,7 +2694,7 @@ ___
 
 ### onDragOver
 
-• `Optional` **onDragOver**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragOver**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3071,7 +2708,7 @@ ___
 
 ### onDragOverCapture
 
-• `Optional` **onDragOverCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragOverCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3085,7 +2722,7 @@ ___
 
 ### onDragStart
 
-• `Optional` **onDragStart**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragStart**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3099,7 +2736,7 @@ ___
 
 ### onDragStartCapture
 
-• `Optional` **onDragStartCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDragStartCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3113,7 +2750,7 @@ ___
 
 ### onDrop
 
-• `Optional` **onDrop**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDrop**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3127,7 +2764,7 @@ ___
 
 ### onDropCapture
 
-• `Optional` **onDropCapture**: `DragEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDropCapture**: `DragEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3141,7 +2778,7 @@ ___
 
 ### onDurationChange
 
-• `Optional` **onDurationChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDurationChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3155,7 +2792,7 @@ ___
 
 ### onDurationChangeCapture
 
-• `Optional` **onDurationChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onDurationChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3169,7 +2806,7 @@ ___
 
 ### onEmptied
 
-• `Optional` **onEmptied**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEmptied**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3183,7 +2820,7 @@ ___
 
 ### onEmptiedCapture
 
-• `Optional` **onEmptiedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEmptiedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3197,7 +2834,7 @@ ___
 
 ### onEncrypted
 
-• `Optional` **onEncrypted**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEncrypted**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3211,7 +2848,7 @@ ___
 
 ### onEncryptedCapture
 
-• `Optional` **onEncryptedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEncryptedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3225,7 +2862,7 @@ ___
 
 ### onEnded
 
-• `Optional` **onEnded**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEnded**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3239,7 +2876,7 @@ ___
 
 ### onEndedCapture
 
-• `Optional` **onEndedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onEndedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3253,7 +2890,7 @@ ___
 
 ### onError
 
-• `Optional` **onError**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onError**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3267,7 +2904,7 @@ ___
 
 ### onErrorCapture
 
-• `Optional` **onErrorCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onErrorCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3281,7 +2918,7 @@ ___
 
 ### onFocus
 
-• `Optional` **onFocus**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onFocus**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3295,7 +2932,7 @@ ___
 
 ### onFocusCapture
 
-• `Optional` **onFocusCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onFocusCapture**: `FocusEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3309,7 +2946,7 @@ ___
 
 ### onGotPointerCapture
 
-• `Optional` **onGotPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onGotPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3323,7 +2960,7 @@ ___
 
 ### onGotPointerCaptureCapture
 
-• `Optional` **onGotPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onGotPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3337,7 +2974,7 @@ ___
 
 ### onInput
 
-• `Optional` **onInput**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInput**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3351,7 +2988,7 @@ ___
 
 ### onInputCapture
 
-• `Optional` **onInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInputCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3365,7 +3002,7 @@ ___
 
 ### onInvalid
 
-• `Optional` **onInvalid**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInvalid**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3379,7 +3016,7 @@ ___
 
 ### onInvalidCapture
 
-• `Optional` **onInvalidCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onInvalidCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3393,7 +3030,7 @@ ___
 
 ### onKeyDown
 
-• `Optional` **onKeyDown**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyDown**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3407,7 +3044,7 @@ ___
 
 ### onKeyDownCapture
 
-• `Optional` **onKeyDownCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyDownCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3421,7 +3058,7 @@ ___
 
 ### onKeyPress
 
-• `Optional` **onKeyPress**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyPress**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 **`Deprecated`**
 
@@ -3437,7 +3074,7 @@ ___
 
 ### onKeyPressCapture
 
-• `Optional` **onKeyPressCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyPressCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 **`Deprecated`**
 
@@ -3453,7 +3090,7 @@ ___
 
 ### onKeyUp
 
-• `Optional` **onKeyUp**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyUp**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3467,7 +3104,7 @@ ___
 
 ### onKeyUpCapture
 
-• `Optional` **onKeyUpCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onKeyUpCapture**: `KeyboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3481,7 +3118,7 @@ ___
 
 ### onLoad
 
-• `Optional` **onLoad**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoad**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3495,7 +3132,7 @@ ___
 
 ### onLoadCapture
 
-• `Optional` **onLoadCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3509,7 +3146,7 @@ ___
 
 ### onLoadStart
 
-• `Optional` **onLoadStart**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadStart**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3523,7 +3160,7 @@ ___
 
 ### onLoadStartCapture
 
-• `Optional` **onLoadStartCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadStartCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3537,7 +3174,7 @@ ___
 
 ### onLoadedData
 
-• `Optional` **onLoadedData**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedData**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3551,7 +3188,7 @@ ___
 
 ### onLoadedDataCapture
 
-• `Optional` **onLoadedDataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedDataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3565,7 +3202,7 @@ ___
 
 ### onLoadedMetadata
 
-• `Optional` **onLoadedMetadata**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedMetadata**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3579,7 +3216,7 @@ ___
 
 ### onLoadedMetadataCapture
 
-• `Optional` **onLoadedMetadataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLoadedMetadataCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3593,7 +3230,7 @@ ___
 
 ### onLostPointerCapture
 
-• `Optional` **onLostPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLostPointerCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3607,7 +3244,7 @@ ___
 
 ### onLostPointerCaptureCapture
 
-• `Optional` **onLostPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onLostPointerCaptureCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3621,7 +3258,7 @@ ___
 
 ### onMouseDown
 
-• `Optional` **onMouseDown**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseDown**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3635,7 +3272,7 @@ ___
 
 ### onMouseDownCapture
 
-• `Optional` **onMouseDownCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseDownCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3649,7 +3286,7 @@ ___
 
 ### onMouseEnter
 
-• `Optional` **onMouseEnter**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseEnter**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3663,7 +3300,7 @@ ___
 
 ### onMouseLeave
 
-• `Optional` **onMouseLeave**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseLeave**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3677,7 +3314,7 @@ ___
 
 ### onMouseMove
 
-• `Optional` **onMouseMove**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseMove**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3691,7 +3328,7 @@ ___
 
 ### onMouseMoveCapture
 
-• `Optional` **onMouseMoveCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseMoveCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3705,7 +3342,7 @@ ___
 
 ### onMouseOut
 
-• `Optional` **onMouseOut**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOut**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3719,7 +3356,7 @@ ___
 
 ### onMouseOutCapture
 
-• `Optional` **onMouseOutCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOutCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3733,7 +3370,7 @@ ___
 
 ### onMouseOver
 
-• `Optional` **onMouseOver**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOver**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3747,7 +3384,7 @@ ___
 
 ### onMouseOverCapture
 
-• `Optional` **onMouseOverCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseOverCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3761,7 +3398,7 @@ ___
 
 ### onMouseUp
 
-• `Optional` **onMouseUp**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseUp**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3775,7 +3412,7 @@ ___
 
 ### onMouseUpCapture
 
-• `Optional` **onMouseUpCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onMouseUpCapture**: `MouseEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3789,7 +3426,7 @@ ___
 
 ### onPaste
 
-• `Optional` **onPaste**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPaste**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3803,7 +3440,7 @@ ___
 
 ### onPasteCapture
 
-• `Optional` **onPasteCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPasteCapture**: `ClipboardEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3817,7 +3454,7 @@ ___
 
 ### onPause
 
-• `Optional` **onPause**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPause**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3831,7 +3468,7 @@ ___
 
 ### onPauseCapture
 
-• `Optional` **onPauseCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPauseCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3845,7 +3482,7 @@ ___
 
 ### onPlay
 
-• `Optional` **onPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlay**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3859,7 +3496,7 @@ ___
 
 ### onPlayCapture
 
-• `Optional` **onPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlayCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3873,7 +3510,7 @@ ___
 
 ### onPlaying
 
-• `Optional` **onPlaying**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlaying**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3887,7 +3524,7 @@ ___
 
 ### onPlayingCapture
 
-• `Optional` **onPlayingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPlayingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3901,7 +3538,7 @@ ___
 
 ### onPointerCancel
 
-• `Optional` **onPointerCancel**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerCancel**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3915,7 +3552,7 @@ ___
 
 ### onPointerCancelCapture
 
-• `Optional` **onPointerCancelCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerCancelCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3929,7 +3566,7 @@ ___
 
 ### onPointerDown
 
-• `Optional` **onPointerDown**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerDown**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3943,7 +3580,7 @@ ___
 
 ### onPointerDownCapture
 
-• `Optional` **onPointerDownCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerDownCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3957,7 +3594,7 @@ ___
 
 ### onPointerEnter
 
-• `Optional` **onPointerEnter**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerEnter**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3971,7 +3608,7 @@ ___
 
 ### onPointerEnterCapture
 
-• `Optional` **onPointerEnterCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerEnterCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3985,7 +3622,7 @@ ___
 
 ### onPointerLeave
 
-• `Optional` **onPointerLeave**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerLeave**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -3999,7 +3636,7 @@ ___
 
 ### onPointerLeaveCapture
 
-• `Optional` **onPointerLeaveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerLeaveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4013,7 +3650,7 @@ ___
 
 ### onPointerMove
 
-• `Optional` **onPointerMove**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerMove**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4027,7 +3664,7 @@ ___
 
 ### onPointerMoveCapture
 
-• `Optional` **onPointerMoveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerMoveCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4041,7 +3678,7 @@ ___
 
 ### onPointerOut
 
-• `Optional` **onPointerOut**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOut**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4055,7 +3692,7 @@ ___
 
 ### onPointerOutCapture
 
-• `Optional` **onPointerOutCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOutCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4069,7 +3706,7 @@ ___
 
 ### onPointerOver
 
-• `Optional` **onPointerOver**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOver**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4083,7 +3720,7 @@ ___
 
 ### onPointerOverCapture
 
-• `Optional` **onPointerOverCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerOverCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4097,7 +3734,7 @@ ___
 
 ### onPointerUp
 
-• `Optional` **onPointerUp**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerUp**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4111,7 +3748,7 @@ ___
 
 ### onPointerUpCapture
 
-• `Optional` **onPointerUpCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onPointerUpCapture**: `PointerEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4125,7 +3762,7 @@ ___
 
 ### onProgress
 
-• `Optional` **onProgress**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onProgress**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4139,7 +3776,7 @@ ___
 
 ### onProgressCapture
 
-• `Optional` **onProgressCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onProgressCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4153,7 +3790,7 @@ ___
 
 ### onRateChange
 
-• `Optional` **onRateChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onRateChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4167,7 +3804,7 @@ ___
 
 ### onRateChangeCapture
 
-• `Optional` **onRateChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onRateChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4181,7 +3818,7 @@ ___
 
 ### onReset
 
-• `Optional` **onReset**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onReset**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4195,7 +3832,7 @@ ___
 
 ### onResetCapture
 
-• `Optional` **onResetCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onResetCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4209,7 +3846,7 @@ ___
 
 ### onScroll
 
-• `Optional` **onScroll**: `UIEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onScroll**: `UIEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4223,7 +3860,7 @@ ___
 
 ### onScrollCapture
 
-• `Optional` **onScrollCapture**: `UIEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onScrollCapture**: `UIEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4237,7 +3874,7 @@ ___
 
 ### onSeeked
 
-• `Optional` **onSeeked**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeeked**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4251,7 +3888,7 @@ ___
 
 ### onSeekedCapture
 
-• `Optional` **onSeekedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeekedCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4265,7 +3902,7 @@ ___
 
 ### onSeeking
 
-• `Optional` **onSeeking**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeeking**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4279,7 +3916,7 @@ ___
 
 ### onSeekingCapture
 
-• `Optional` **onSeekingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSeekingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4293,7 +3930,7 @@ ___
 
 ### onSelect
 
-• `Optional` **onSelect**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSelect**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4307,7 +3944,7 @@ ___
 
 ### onSelectCapture
 
-• `Optional` **onSelectCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSelectCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4321,7 +3958,7 @@ ___
 
 ### onStalled
 
-• `Optional` **onStalled**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onStalled**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4335,7 +3972,7 @@ ___
 
 ### onStalledCapture
 
-• `Optional` **onStalledCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onStalledCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4349,7 +3986,7 @@ ___
 
 ### onSubmit
 
-• `Optional` **onSubmit**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSubmit**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4363,7 +4000,7 @@ ___
 
 ### onSubmitCapture
 
-• `Optional` **onSubmitCapture**: `FormEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSubmitCapture**: `FormEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4377,7 +4014,7 @@ ___
 
 ### onSuspend
 
-• `Optional` **onSuspend**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSuspend**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4391,7 +4028,7 @@ ___
 
 ### onSuspendCapture
 
-• `Optional` **onSuspendCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onSuspendCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4405,7 +4042,7 @@ ___
 
 ### onTimeUpdate
 
-• `Optional` **onTimeUpdate**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTimeUpdate**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4419,7 +4056,7 @@ ___
 
 ### onTimeUpdateCapture
 
-• `Optional` **onTimeUpdateCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTimeUpdateCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4433,7 +4070,7 @@ ___
 
 ### onTouchCancel
 
-• `Optional` **onTouchCancel**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchCancel**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4447,7 +4084,7 @@ ___
 
 ### onTouchCancelCapture
 
-• `Optional` **onTouchCancelCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchCancelCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4461,7 +4098,7 @@ ___
 
 ### onTouchEnd
 
-• `Optional` **onTouchEnd**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchEnd**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4475,7 +4112,7 @@ ___
 
 ### onTouchEndCapture
 
-• `Optional` **onTouchEndCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchEndCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4489,7 +4126,7 @@ ___
 
 ### onTouchMove
 
-• `Optional` **onTouchMove**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchMove**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4503,7 +4140,7 @@ ___
 
 ### onTouchMoveCapture
 
-• `Optional` **onTouchMoveCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchMoveCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4517,7 +4154,7 @@ ___
 
 ### onTouchStart
 
-• `Optional` **onTouchStart**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchStart**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4531,7 +4168,7 @@ ___
 
 ### onTouchStartCapture
 
-• `Optional` **onTouchStartCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTouchStartCapture**: `TouchEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4545,7 +4182,7 @@ ___
 
 ### onTransitionEnd
 
-• `Optional` **onTransitionEnd**: `TransitionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTransitionEnd**: `TransitionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4559,7 +4196,7 @@ ___
 
 ### onTransitionEndCapture
 
-• `Optional` **onTransitionEndCapture**: `TransitionEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onTransitionEndCapture**: `TransitionEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4573,7 +4210,7 @@ ___
 
 ### onVolumeChange
 
-• `Optional` **onVolumeChange**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onVolumeChange**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4587,7 +4224,7 @@ ___
 
 ### onVolumeChangeCapture
 
-• `Optional` **onVolumeChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onVolumeChangeCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4601,7 +4238,7 @@ ___
 
 ### onWaiting
 
-• `Optional` **onWaiting**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWaiting**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4615,7 +4252,7 @@ ___
 
 ### onWaitingCapture
 
-• `Optional` **onWaitingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWaitingCapture**: `ReactEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4629,7 +4266,7 @@ ___
 
 ### onWheel
 
-• `Optional` **onWheel**: `WheelEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWheel**: `WheelEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4643,7 +4280,7 @@ ___
 
 ### onWheelCapture
 
-• `Optional` **onWheelCapture**: `WheelEventHandler`<`HTMLSpanElement`\>
+ `Optional` **onWheelCapture**: `WheelEventHandler`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4657,7 +4294,7 @@ ___
 
 ### order
 
-• **order**: `ResponsiveStyleValue`<`undefined` \| `Order` \| `Order`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Order` \| `Order`[]\>
+ **order**: `ResponsiveStyleValue`<`undefined` \| `Order` \| `Order`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Order` \| `Order`[]\>
 
 #### Inherited from
 
@@ -4667,7 +4304,7 @@ ___
 
 ### overflow
 
-• **overflow**: `ResponsiveStyleValue`<`undefined` \| `Overflow` \| `Overflow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Overflow` \| `Overflow`[]\>
+ **overflow**: `ResponsiveStyleValue`<`undefined` \| `Overflow` \| `Overflow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Overflow` \| `Overflow`[]\>
 
 #### Inherited from
 
@@ -4677,7 +4314,7 @@ ___
 
 ### p
 
-• **p**: `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\>
+ **p**: `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4687,7 +4324,7 @@ ___
 
 ### padding
 
-• **padding**: `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\>
+ **padding**: `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Padding`<`string` \| `number`\> \| `Padding`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4697,7 +4334,7 @@ ___
 
 ### paddingBottom
 
-• **paddingBottom**: `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\>
+ **paddingBottom**: `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4707,7 +4344,7 @@ ___
 
 ### paddingLeft
 
-• **paddingLeft**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
+ **paddingLeft**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4717,7 +4354,7 @@ ___
 
 ### paddingRight
 
-• **paddingRight**: `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\>
+ **paddingRight**: `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4727,7 +4364,7 @@ ___
 
 ### paddingTop
 
-• **paddingTop**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
+ **paddingTop**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4737,7 +4374,7 @@ ___
 
 ### paddingX
 
-• **paddingX**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
+ **paddingX**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4747,7 +4384,7 @@ ___
 
 ### paddingY
 
-• **paddingY**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
+ **paddingY**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4757,7 +4394,7 @@ ___
 
 ### paragraph
 
-• `Optional` **paragraph**: `boolean`
+ `Optional` **paragraph**: `boolean`
 
 If `true`, the element will be a paragraph element.
 
@@ -4777,7 +4414,7 @@ ___
 
 ### pb
 
-• **pb**: `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\>
+ **pb**: `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingBottom`<`string` \| `number`\> \| `PaddingBottom`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4787,7 +4424,7 @@ ___
 
 ### pl
 
-• **pl**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
+ **pl**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4797,7 +4434,7 @@ ___
 
 ### placeholder
 
-• `Optional` **placeholder**: `string`
+ `Optional` **placeholder**: `string`
 
 #### Inherited from
 
@@ -4811,7 +4448,7 @@ ___
 
 ### position
 
-• **position**: `ResponsiveStyleValue`<`undefined` \| `Position` \| `Position`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Position` \| `Position`[]\>
+ **position**: `ResponsiveStyleValue`<`undefined` \| `Position` \| `Position`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Position` \| `Position`[]\>
 
 #### Inherited from
 
@@ -4821,7 +4458,7 @@ ___
 
 ### pr
 
-• **pr**: `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\>
+ **pr**: `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingRight`<`string` \| `number`\> \| `PaddingRight`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4831,7 +4468,7 @@ ___
 
 ### prefix
 
-• `Optional` **prefix**: `string`
+ `Optional` **prefix**: `string`
 
 #### Inherited from
 
@@ -4845,7 +4482,7 @@ ___
 
 ### property
 
-• `Optional` **property**: `string`
+ `Optional` **property**: `string`
 
 #### Inherited from
 
@@ -4859,7 +4496,7 @@ ___
 
 ### pt
 
-• **pt**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
+ **pt**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4869,7 +4506,7 @@ ___
 
 ### px
 
-• **px**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
+ **px**: `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingLeft`<`string` \| `number`\> \| `PaddingLeft`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4879,7 +4516,7 @@ ___
 
 ### py
 
-• **py**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
+ **py**: `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `PaddingTop`<`string` \| `number`\> \| `PaddingTop`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4889,7 +4526,7 @@ ___
 
 ### radioGroup
 
-• `Optional` **radioGroup**: `string`
+ `Optional` **radioGroup**: `string`
 
 #### Inherited from
 
@@ -4903,7 +4540,7 @@ ___
 
 ### ref
 
-• `Optional` **ref**: ``null`` \| (`instance`: ``null`` \| `HTMLSpanElement`) => `void` \| `RefObject`<`HTMLSpanElement`\>
+ `Optional` **ref**: ``null`` \| (`instance`: ``null`` \| `HTMLSpanElement`) => `void` \| `RefObject`<`HTMLSpanElement`\>
 
 #### Inherited from
 
@@ -4917,7 +4554,7 @@ ___
 
 ### resource
 
-• `Optional` **resource**: `string`
+ `Optional` **resource**: `string`
 
 #### Inherited from
 
@@ -4931,7 +4568,7 @@ ___
 
 ### results
 
-• `Optional` **results**: `number`
+ `Optional` **results**: `number`
 
 #### Inherited from
 
@@ -4945,7 +4582,7 @@ ___
 
 ### right
 
-• **right**: `ResponsiveStyleValue`<`undefined` \| `Right`<`string` \| `number`\> \| `Right`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Right`<`string` \| `number`\> \| `Right`<`string` \| `number`\>[]\>
+ **right**: `ResponsiveStyleValue`<`undefined` \| `Right`<`string` \| `number`\> \| `Right`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Right`<`string` \| `number`\> \| `Right`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4955,7 +4592,7 @@ ___
 
 ### role
 
-• `Optional` **role**: `AriaRole`
+ `Optional` **role**: `AriaRole`
 
 #### Inherited from
 
@@ -4969,7 +4606,7 @@ ___
 
 ### rowGap
 
-• **rowGap**: `ResponsiveStyleValue`<`undefined` \| `RowGap`<`string` \| `number`\> \| `RowGap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `RowGap`<`string` \| `number`\> \| `RowGap`<`string` \| `number`\>[]\>
+ **rowGap**: `ResponsiveStyleValue`<`undefined` \| `RowGap`<`string` \| `number`\> \| `RowGap`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `RowGap`<`string` \| `number`\> \| `RowGap`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -4979,7 +4616,7 @@ ___
 
 ### security
 
-• `Optional` **security**: `string`
+ `Optional` **security**: `string`
 
 #### Inherited from
 
@@ -4993,7 +4630,7 @@ ___
 
 ### slot
 
-• `Optional` **slot**: `string`
+ `Optional` **slot**: `string`
 
 #### Inherited from
 
@@ -5007,7 +4644,7 @@ ___
 
 ### spellCheck
 
-• `Optional` **spellCheck**: `Booleanish`
+ `Optional` **spellCheck**: `Booleanish`
 
 #### Inherited from
 
@@ -5021,7 +4658,7 @@ ___
 
 ### style
 
-• `Optional` **style**: `CSSProperties`
+ `Optional` **style**: `CSSProperties`
 
 #### Inherited from
 
@@ -5035,7 +4672,7 @@ ___
 
 ### suppressContentEditableWarning
 
-• `Optional` **suppressContentEditableWarning**: `boolean`
+ `Optional` **suppressContentEditableWarning**: `boolean`
 
 #### Inherited from
 
@@ -5049,7 +4686,7 @@ ___
 
 ### suppressHydrationWarning
 
-• `Optional` **suppressHydrationWarning**: `boolean`
+ `Optional` **suppressHydrationWarning**: `boolean`
 
 #### Inherited from
 
@@ -5063,7 +4700,7 @@ ___
 
 ### sx
 
-• `Optional` **sx**: `SxProps`<`Theme`\>
+ `Optional` **sx**: `SxProps`<`Theme`\>
 
 The system prop that allows defining system overrides as well as additional CSS styles.
 
@@ -5079,7 +4716,7 @@ ___
 
 ### tabIndex
 
-• `Optional` **tabIndex**: `number`
+ `Optional` **tabIndex**: `number`
 
 #### Inherited from
 
@@ -5093,7 +4730,7 @@ ___
 
 ### textAlign
 
-• **textAlign**: `ResponsiveStyleValue`<`undefined` \| `TextAlign` \| `TextAlign`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextAlign` \| `TextAlign`[]\>
+ **textAlign**: `ResponsiveStyleValue`<`undefined` \| `TextAlign` \| `TextAlign`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextAlign` \| `TextAlign`[]\>
 
 #### Inherited from
 
@@ -5103,7 +4740,7 @@ ___
 
 ### textOverflow
 
-• **textOverflow**: `ResponsiveStyleValue`<`undefined` \| `TextOverflow` \| `TextOverflow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextOverflow` \| `TextOverflow`[]\>
+ **textOverflow**: `ResponsiveStyleValue`<`undefined` \| `TextOverflow` \| `TextOverflow`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextOverflow` \| `TextOverflow`[]\>
 
 #### Inherited from
 
@@ -5113,7 +4750,7 @@ ___
 
 ### textTransform
 
-• **textTransform**: `ResponsiveStyleValue`<`undefined` \| `TextTransform` \| `TextTransform`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextTransform` \| `TextTransform`[]\>
+ **textTransform**: `ResponsiveStyleValue`<`undefined` \| `TextTransform` \| `TextTransform`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `TextTransform` \| `TextTransform`[]\>
 
 #### Inherited from
 
@@ -5123,7 +4760,7 @@ ___
 
 ### title
 
-• `Optional` **title**: `string`
+ `Optional` **title**: `string`
 
 #### Inherited from
 
@@ -5137,7 +4774,7 @@ ___
 
 ### top
 
-• **top**: `ResponsiveStyleValue`<`undefined` \| `Top`<`string` \| `number`\> \| `Top`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Top`<`string` \| `number`\> \| `Top`<`string` \| `number`\>[]\>
+ **top**: `ResponsiveStyleValue`<`undefined` \| `Top`<`string` \| `number`\> \| `Top`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Top`<`string` \| `number`\> \| `Top`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -5147,7 +4784,7 @@ ___
 
 ### translate
 
-• `Optional` **translate**: ``"yes"`` \| ``"no"``
+ `Optional` **translate**: ``"yes"`` \| ``"no"``
 
 #### Inherited from
 
@@ -5161,7 +4798,7 @@ ___
 
 ### typeof
 
-• `Optional` **typeof**: `string`
+ `Optional` **typeof**: `string`
 
 #### Inherited from
 
@@ -5175,7 +4812,7 @@ ___
 
 ### typography
 
-• **typography**: `ResponsiveStyleValue`<`undefined` \| `string`\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string`\>
+ **typography**: `ResponsiveStyleValue`<`undefined` \| `string`\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string`\>
 
 #### Inherited from
 
@@ -5185,7 +4822,7 @@ ___
 
 ### unselectable
 
-• `Optional` **unselectable**: ``"on"`` \| ``"off"``
+ `Optional` **unselectable**: ``"on"`` \| ``"off"``
 
 #### Inherited from
 
@@ -5199,17 +4836,17 @@ ___
 
 ### value
 
-• `Optional` **value**: `string`
+ `Optional` **value**: `string`
 
 #### Defined in
 
-[packages/sdk/react-components/src/Clipboard/CopyText.tsx:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L14)
+[packages/sdk/react-components/src/Clipboard/CopyText.tsx:14](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-components/src/Clipboard/CopyText.tsx#L14)
 
 ___
 
 ### variant
 
-• `Optional` **variant**: ``"button"`` \| ``"caption"`` \| ``"h1"`` \| ``"h2"`` \| ``"h3"`` \| ``"h4"`` \| ``"h5"`` \| ``"h6"`` \| ``"inherit"`` \| ``"subtitle1"`` \| ``"subtitle2"`` \| ``"body1"`` \| ``"body2"`` \| ``"overline"``
+ `Optional` **variant**: ``"button"`` \| ``"caption"`` \| ``"h1"`` \| ``"h2"`` \| ``"h3"`` \| ``"h4"`` \| ``"h5"`` \| ``"h6"`` \| ``"inherit"`` \| ``"subtitle1"`` \| ``"subtitle2"`` \| ``"body1"`` \| ``"body2"`` \| ``"overline"``
 
 Applies the theme typography styles.
 
@@ -5229,7 +4866,7 @@ ___
 
 ### variantMapping
 
-• `Optional` **variantMapping**: `Partial`<`Record`<``"button"`` \| ``"caption"`` \| ``"h1"`` \| ``"h2"`` \| ``"h3"`` \| ``"h4"`` \| ``"h5"`` \| ``"h6"`` \| ``"inherit"`` \| ``"subtitle1"`` \| ``"subtitle2"`` \| ``"body1"`` \| ``"body2"`` \| ``"overline"``, `string`\>\>
+ `Optional` **variantMapping**: `Partial`<`Record`<``"button"`` \| ``"caption"`` \| ``"h1"`` \| ``"h2"`` \| ``"h3"`` \| ``"h4"`` \| ``"h5"`` \| ``"h6"`` \| ``"inherit"`` \| ``"subtitle1"`` \| ``"subtitle2"`` \| ``"body1"`` \| ``"body2"`` \| ``"overline"``, `string`\>\>
 
 The component maps the variant prop to a range of different HTML element types.
 For instance, subtitle1 to `<h6>`.
@@ -5250,7 +4887,7 @@ ___
 
 ### visibility
 
-• **visibility**: `ResponsiveStyleValue`<`undefined` \| `Visibility` \| `Visibility`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Visibility` \| `Visibility`[]\>
+ **visibility**: `ResponsiveStyleValue`<`undefined` \| `Visibility` \| `Visibility`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Visibility` \| `Visibility`[]\>
 
 #### Inherited from
 
@@ -5260,7 +4897,7 @@ ___
 
 ### vocab
 
-• `Optional` **vocab**: `string`
+ `Optional` **vocab**: `string`
 
 #### Inherited from
 
@@ -5274,7 +4911,7 @@ ___
 
 ### whiteSpace
 
-• **whiteSpace**: `ResponsiveStyleValue`<`undefined` \| `WhiteSpace` \| `WhiteSpace`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `WhiteSpace` \| `WhiteSpace`[]\>
+ **whiteSpace**: `ResponsiveStyleValue`<`undefined` \| `WhiteSpace` \| `WhiteSpace`[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `WhiteSpace` \| `WhiteSpace`[]\>
 
 #### Inherited from
 
@@ -5284,7 +4921,7 @@ ___
 
 ### width
 
-• **width**: `ResponsiveStyleValue`<`undefined` \| `Width`<`string` \| `number`\> \| `Width`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Width`<`string` \| `number`\> \| `Width`<`string` \| `number`\>[]\>
+ **width**: `ResponsiveStyleValue`<`undefined` \| `Width`<`string` \| `number`\> \| `Width`<`string` \| `number`\>[]\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `Width`<`string` \| `number`\> \| `Width`<`string` \| `number`\>[]\>
 
 #### Inherited from
 
@@ -5294,7 +4931,7 @@ ___
 
 ### zIndex
 
-• **zIndex**: `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\>
+ **zIndex**: `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\> \| (`theme`: `Theme`) => `ResponsiveStyleValue`<`undefined` \| `string` \| `string` & {} \| `number` & {}\>
 
 #### Inherited from
 

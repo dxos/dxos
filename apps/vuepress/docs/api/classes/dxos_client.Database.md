@@ -4,45 +4,11 @@
 
 Represents a shared dataset containing queryable Items that are constructed from an ordered stream of mutations.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Database.md#constructor)
-
-### Properties
-
-- [\_assertInitialized](dxos_client.Database.md#_assertinitialized)
-- [\_backend](dxos_client.Database.md#_backend)
-- [\_itemManager](dxos_client.Database.md#_itemmanager)
-- [\_modelFactory](dxos_client.Database.md#_modelfactory)
-- [\_state](dxos_client.Database.md#_state)
-
-### Accessors
-
-- [entityUpdate](dxos_client.Database.md#entityupdate)
-- [isReadOnly](dxos_client.Database.md#isreadonly)
-- [state](dxos_client.Database.md#state)
-- [update](dxos_client.Database.md#update)
-
-### Methods
-
-- [createDataServiceHost](dxos_client.Database.md#createdataservicehost)
-- [createItem](dxos_client.Database.md#createitem)
-- [createLink](dxos_client.Database.md#createlink)
-- [createSnapshot](dxos_client.Database.md#createsnapshot)
-- [destroy](dxos_client.Database.md#destroy)
-- [getItem](dxos_client.Database.md#getitem)
-- [initialize](dxos_client.Database.md#initialize)
-- [reduce](dxos_client.Database.md#reduce)
-- [select](dxos_client.Database.md#select)
-- [waitForItem](dxos_client.Database.md#waitforitem)
-
 ## Constructors
 
 ### constructor
 
-• **new Database**(`_modelFactory`, `_backend`, `memberKey`)
+**new Database**(`_modelFactory`, `_backend`, `memberKey`)
 
 Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
 
@@ -62,7 +28,7 @@ packages/echo/echo-db/dist/src/packlets/database/database.d.ts:41
 
 ### \_assertInitialized
 
-• `Private` **\_assertInitialized**: `any`
+ `Private` **\_assertInitialized**: `any`
 
 #### Defined in
 
@@ -72,7 +38,7 @@ ___
 
 ### \_backend
 
-• `Private` `Readonly` **\_backend**: `any`
+ `Private` `Readonly` **\_backend**: `any`
 
 #### Defined in
 
@@ -82,7 +48,7 @@ ___
 
 ### \_itemManager
 
-• `Private` `Readonly` **\_itemManager**: `any`
+ `Private` `Readonly` **\_itemManager**: `any`
 
 #### Defined in
 
@@ -92,7 +58,7 @@ ___
 
 ### \_modelFactory
 
-• `Private` `Readonly` **\_modelFactory**: `any`
+ `Private` `Readonly` **\_modelFactory**: `any`
 
 #### Defined in
 
@@ -102,7 +68,7 @@ ___
 
 ### \_state
 
-• `Private` **\_state**: `any`
+ `Private` **\_state**: `any`
 
 #### Defined in
 
@@ -112,7 +78,7 @@ packages/echo/echo-db/dist/src/packlets/database/database.d.ts:37
 
 ### entityUpdate
 
-• `get` **entityUpdate**(): `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
+`get` **entityUpdate**(): `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
 
 Fired immediately after any update in the entities.
 If the information about which entity got updated is not required prefer using `update`.
@@ -129,7 +95,7 @@ ___
 
 ### isReadOnly
 
-• `get` **isReadOnly**(): `boolean`
+`get` **isReadOnly**(): `boolean`
 
 #### Returns
 
@@ -143,7 +109,7 @@ ___
 
 ### state
 
-• `get` **state**(): `State`
+`get` **state**(): `State`
 
 #### Returns
 
@@ -157,7 +123,7 @@ ___
 
 ### update
 
-• `get` **update**(): `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>[]\>
+`get` **update**(): `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>[]\>
 
 Fired when any item is updated.
 Contains a list of all entities changed from the last update.
@@ -174,7 +140,7 @@ packages/echo/echo-db/dist/src/packlets/database/database.d.ts:48
 
 ### createDataServiceHost
 
-▸ **createDataServiceHost**(): `DataServiceHost`
+**createDataServiceHost**(): `DataServiceHost`
 
 #### Returns
 
@@ -188,7 +154,7 @@ ___
 
 ### createItem
 
-▸ **createItem**<`M`\>(`options?`): `Promise`<[`Item`](dxos_client.Item.md)<`M`\>\>
+**createItem**<`M`\>(`options?`): `Promise`<[`Item`](dxos_client.Item.md)<`M`\>\>
 
 Creates a new item with the given queryable type and model.
 
@@ -216,7 +182,7 @@ ___
 
 ### createLink
 
-▸ **createLink**<`M`, `S`, `T`\>(`options`): `Promise`<[`Link`](dxos_client.Link.md)<`M`, `S`, `T`\>\>
+**createLink**<`M`, `S`, `T`\>(`options`): `Promise`<[`Link`](dxos_client.Link.md)<`M`, `S`, `T`\>\>
 
 #### Type parameters
 
@@ -244,7 +210,7 @@ ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -258,7 +224,7 @@ ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -272,7 +238,7 @@ ___
 
 ### getItem
 
-▸ **getItem**(`itemId`): `undefined` \| [`Item`](dxos_client.Item.md)<`any`\>
+**getItem**(`itemId`): `undefined` \| [`Item`](dxos_client.Item.md)<`any`\>
 
 Retrieves a item from the index.
 
@@ -294,7 +260,7 @@ ___
 
 ### initialize
 
-▸ **initialize**(): `Promise`<`void`\>
+**initialize**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -308,7 +274,7 @@ ___
 
 ### reduce
 
-▸ **reduce**<`R`\>(`result`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
+**reduce**<`R`\>(`result`, `filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `R`\>
 
 Returns a reducer selection context.
 
@@ -337,7 +303,7 @@ ___
 
 ### select
 
-▸ **select**(`filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
+**select**(`filter?`): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph.
 
@@ -359,7 +325,7 @@ ___
 
 ### waitForItem
 
-▸ **waitForItem**<`T`\>(`filter`): `Promise`<[`Item`](dxos_client.Item.md)<`T`\>\>
+**waitForItem**<`T`\>(`filter`): `Promise`<[`Item`](dxos_client.Item.md)<`T`\>\>
 
 Waits for item matching the filter to be present and returns it.
 

@@ -5,20 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [keyStorage](dxos_config.defs.Runtime.Client.Storage-1.md#keystorage)
-- [path](dxos_config.defs.Runtime.Client.Storage-1.md#path)
-- [persistent](dxos_config.defs.Runtime.Client.Storage-1.md#persistent)
-- [storageType](dxos_config.defs.Runtime.Client.Storage-1.md#storagetype)
-
 ## Properties
 
 ### keyStorage
 
-• `Optional` **keyStorage**: [`StorageDriver`](../enums/dxos_config.defs.Runtime.Client.Storage.StorageDriver.md)
+ `Optional` **keyStorage**: [`StorageDriver`](../enums/dxos_config.defs.Runtime.Client.Storage.StorageDriver.md)
 
 Options:
   - proto3_optional = true
@@ -31,7 +22,7 @@ ___
 
 ### path
 
-• `Optional` **path**: `string`
+ `Optional` **path**: `string`
 
 Options:
   - proto3_optional = true
@@ -44,7 +35,7 @@ ___
 
 ### persistent
 
-• `Optional` **persistent**: `boolean`
+ `Optional` **persistent**: `boolean`
 
 Options:
   - proto3_optional = true
@@ -57,7 +48,7 @@ ___
 
 ### storageType
 
-• `Optional` **storageType**: [`StorageDriver`](../enums/dxos_config.defs.Runtime.Client.Storage.StorageDriver.md)
+ `Optional` **storageType**: [`StorageDriver`](../enums/dxos_config.defs.Runtime.Client.Storage.StorageDriver.md)
 
 Options:
   - proto3_optional = true

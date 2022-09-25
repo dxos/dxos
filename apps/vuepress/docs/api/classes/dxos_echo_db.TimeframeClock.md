@@ -4,31 +4,11 @@
 
 Keeps state of the last timeframe that was processed by ECHO.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.TimeframeClock.md#constructor)
-
-### Properties
-
-- [update](dxos_echo_db.TimeframeClock.md#update)
-
-### Accessors
-
-- [timeframe](dxos_echo_db.TimeframeClock.md#timeframe)
-
-### Methods
-
-- [hasGaps](dxos_echo_db.TimeframeClock.md#hasgaps)
-- [updateTimeframe](dxos_echo_db.TimeframeClock.md#updatetimeframe)
-- [waitUntilReached](dxos_echo_db.TimeframeClock.md#waituntilreached)
-
 ## Constructors
 
 ### constructor
 
-• **new TimeframeClock**(`_timeframe?`)
+**new TimeframeClock**(`_timeframe?`)
 
 #### Parameters
 
@@ -38,23 +18,23 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L16)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L16)
 
 ## Properties
 
 ### update
 
-• `Readonly` **update**: `Event`<`Timeframe`\>
+ `Readonly` **update**: `Event`<`Timeframe`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L14)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L14)
 
 ## Accessors
 
 ### timeframe
 
-• `get` **timeframe**(): `Timeframe`
+`get` **timeframe**(): `Timeframe`
 
 #### Returns
 
@@ -62,13 +42,13 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L20)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L20)
 
 ## Methods
 
 ### hasGaps
 
-▸ **hasGaps**(`timeframe`): `boolean`
+**hasGaps**(`timeframe`): `boolean`
 
 #### Parameters
 
@@ -82,13 +62,13 @@ Keeps state of the last timeframe that was processed by ECHO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L29)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L29)
 
 ___
 
 ### updateTimeframe
 
-▸ **updateTimeframe**(`key`, `seq`): `void`
+**updateTimeframe**(`key`, `seq`): `void`
 
 #### Parameters
 
@@ -103,13 +83,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L24)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L24)
 
 ___
 
 ### waitUntilReached
 
-▸ **waitUntilReached**(`target`): `Promise`<`void`\>
+**waitUntilReached**(`target`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -123,4 +103,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L34)
+[packages/echo/echo-db/src/packlets/database/timeframe-clock.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/timeframe-clock.ts#L34)

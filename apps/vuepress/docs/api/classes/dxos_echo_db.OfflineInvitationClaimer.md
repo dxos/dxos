@@ -5,35 +5,11 @@
 Class to facilitate making an unauthenticated connection to an existing Party in order to claim an
 offline invitation. If successful, the regular interactive Greeting flow will follow.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.OfflineInvitationClaimer.md#constructor)
-
-### Properties
-
-- [\_greeterPlugin](dxos_echo_db.OfflineInvitationClaimer.md#_greeterplugin)
-- [\_state](dxos_echo_db.OfflineInvitationClaimer.md#_state)
-
-### Accessors
-
-- [state](dxos_echo_db.OfflineInvitationClaimer.md#state)
-
-### Methods
-
-- [claim](dxos_echo_db.OfflineInvitationClaimer.md#claim)
-- [connect](dxos_echo_db.OfflineInvitationClaimer.md#connect)
-- [destroy](dxos_echo_db.OfflineInvitationClaimer.md#destroy)
-- [disconnect](dxos_echo_db.OfflineInvitationClaimer.md#disconnect)
-- [createOfflineInvitationClaimHandler](dxos_echo_db.OfflineInvitationClaimer.md#createofflineinvitationclaimhandler)
-- [createSecretProvider](dxos_echo_db.OfflineInvitationClaimer.md#createsecretprovider)
-
 ## Constructors
 
 ### constructor
 
-• **new OfflineInvitationClaimer**(`_networkManager`, `_invitationDescriptor`)
+**new OfflineInvitationClaimer**(`_networkManager`, `_invitationDescriptor`)
 
 #### Parameters
 
@@ -44,33 +20,33 @@ offline invitation. If successful, the regular interactive Greeting flow will fo
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L48)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L48)
 
 ## Properties
 
 ### \_greeterPlugin
 
-• `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
+ `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L45)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L45)
 
 ___
 
 ### \_state
 
-• **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md) = `GreetingState.INITIALIZED`
+ **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md) = `GreetingState.INITIALIZED`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L46)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L46)
 
 ## Accessors
 
 ### state
 
-• `get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
+`get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
 
 #### Returns
 
@@ -78,13 +54,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L55)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L55)
 
 ## Methods
 
 ### claim
 
-▸ **claim**(): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
+**claim**(): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
 
 Executes a 'CLAIM' command for an offline invitation.  If successful, the Party member's device will begin
 interactive Greeting, with a new invitation and swarm key which will be provided to the claimant.
@@ -96,13 +72,13 @@ Those will be returned in the form of an InvitationDescriptor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:98](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L98)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:98](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L98)
 
 ___
 
 ### connect
 
-▸ **connect**(`timeout?`): `Promise`<`void`\>
+**connect**(`timeout?`): `Promise`<`void`\>
 
 Initiate a connection to some Party member node.
 
@@ -118,13 +94,13 @@ Initiate a connection to some Party member node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L63)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L63)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -132,13 +108,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:128](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L128)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:128](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L128)
 
 ___
 
 ### disconnect
 
-▸ **disconnect**(): `Promise`<`void`\>
+**disconnect**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -146,13 +122,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:122](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L122)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:122](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L122)
 
 ___
 
 ### createOfflineInvitationClaimHandler
 
-▸ `Static` **createOfflineInvitationClaimHandler**(`invitationManager`): (`message`: `any`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
+`Static` **createOfflineInvitationClaimHandler**(`invitationManager`): (`message`: `any`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
 
 Create a function for handling PartyInvitation claims on the indicated Party. This is used by members
 of the Party for responding to attempts to claim an Invitation which has been written to the Party.
@@ -167,7 +143,7 @@ of the Party for responding to attempts to claim an Invitation which has been wr
 
 `fn`
 
-▸ (`message`, `remotePeerId`, `peerId`): `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
+(`message`, `remotePeerId`, `peerId`): `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
 
 Create a function for handling PartyInvitation claims on the indicated Party. This is used by members
 of the Party for responding to attempts to claim an Invitation which has been written to the Party.
@@ -186,13 +162,13 @@ of the Party for responding to attempts to claim an Invitation which has been wr
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:140](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L140)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:140](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L140)
 
 ___
 
 ### createSecretProvider
 
-▸ `Static` **createSecretProvider**(`credentials`): `SecretProvider`
+`Static` **createSecretProvider**(`credentials`): `SecretProvider`
 
 #### Parameters
 
@@ -206,4 +182,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:178](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L178)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:178](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L178)

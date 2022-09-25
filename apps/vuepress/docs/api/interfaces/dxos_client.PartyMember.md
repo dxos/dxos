@@ -2,18 +2,11 @@
 
 [@dxos/client](../modules/dxos_client.md).PartyMember
 
-## Table of contents
-
-### Properties
-
-- [displayName](dxos_client.PartyMember.md#displayname)
-- [publicKey](dxos_client.PartyMember.md#publickey)
-
 ## Properties
 
 ### displayName
 
-• `Optional` **displayName**: `string`
+ `Optional` **displayName**: `string`
 
 #### Defined in
 
@@ -23,7 +16,7 @@ ___
 
 ### publicKey
 
-• **publicKey**: `PublicKey`
+ **publicKey**: `PublicKey`
 
 #### Defined in
 

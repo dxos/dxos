@@ -8,46 +8,11 @@ Establishes a websocket connection to signal server and provides RPC methods.
 
 - `SignalMethods`
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_messaging.SignalClient.md#constructor)
-
-### Properties
-
-- [\_cleanupSubscriptions](dxos_messaging.SignalClient.md#_cleanupsubscriptions)
-- [\_client](dxos_messaging.SignalClient.md#_client)
-- [\_connectionStarted](dxos_messaging.SignalClient.md#_connectionstarted)
-- [\_lastError](dxos_messaging.SignalClient.md#_lasterror)
-- [\_lastStateChange](dxos_messaging.SignalClient.md#_laststatechange)
-- [\_messageStreams](dxos_messaging.SignalClient.md#_messagestreams)
-- [\_reconnectAfter](dxos_messaging.SignalClient.md#_reconnectafter)
-- [\_reconnectIntervalId](dxos_messaging.SignalClient.md#_reconnectintervalid)
-- [\_state](dxos_messaging.SignalClient.md#_state)
-- [\_swarmStreams](dxos_messaging.SignalClient.md#_swarmstreams)
-- [commandTrace](dxos_messaging.SignalClient.md#commandtrace)
-- [statusChanged](dxos_messaging.SignalClient.md#statuschanged)
-- [swarmEvent](dxos_messaging.SignalClient.md#swarmevent)
-
-### Methods
-
-- [\_createClient](dxos_messaging.SignalClient.md#_createclient)
-- [\_reconnect](dxos_messaging.SignalClient.md#_reconnect)
-- [\_setState](dxos_messaging.SignalClient.md#_setstate)
-- [\_subscribeSwarmEvents](dxos_messaging.SignalClient.md#_subscribeswarmevents)
-- [close](dxos_messaging.SignalClient.md#close)
-- [getStatus](dxos_messaging.SignalClient.md#getstatus)
-- [join](dxos_messaging.SignalClient.md#join)
-- [leave](dxos_messaging.SignalClient.md#leave)
-- [sendMessage](dxos_messaging.SignalClient.md#sendmessage)
-- [subscribeMessages](dxos_messaging.SignalClient.md#subscribemessages)
-
 ## Constructors
 
 ### constructor
 
-• **new SignalClient**(`_host`, `_onMessage`)
+**new SignalClient**(`_host`, `_onMessage`)
 
 #### Parameters
 
@@ -58,149 +23,149 @@ Establishes a websocket connection to signal server and provides RPC methods.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:104](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L104)
+[packages/mesh/messaging/src/signal-client.ts:104](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L104)
 
 ## Properties
 
 ### \_cleanupSubscriptions
 
-• `Private` **\_cleanupSubscriptions**: `SubscriptionGroup`
+ `Private` **\_cleanupSubscriptions**: `SubscriptionGroup`
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L83)
+[packages/mesh/messaging/src/signal-client.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L83)
 
 ___
 
 ### \_client
 
-• `Private` **\_client**: `SignalRPCClient`
+ `Private` **\_client**: `SignalRPCClient`
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L81)
+[packages/mesh/messaging/src/signal-client.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L81)
 
 ___
 
 ### \_connectionStarted
 
-• `Private` **\_connectionStarted**: `number`
+ `Private` **\_connectionStarted**: `number`
 
 Timestamp of when the connection attempt was began.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L72)
+[packages/mesh/messaging/src/signal-client.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L72)
 
 ___
 
 ### \_lastError
 
-• `Private` `Optional` **\_lastError**: `Error`
+ `Private` `Optional` **\_lastError**: `Error`
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L62)
+[packages/mesh/messaging/src/signal-client.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L62)
 
 ___
 
 ### \_lastStateChange
 
-• `Private` **\_lastStateChange**: `number`
+ `Private` **\_lastStateChange**: `number`
 
 Timestamp of last state change.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L77)
+[packages/mesh/messaging/src/signal-client.ts:77](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L77)
 
 ___
 
 ### \_messageStreams
 
-• `Private` `Readonly` **\_messageStreams**: `ComplexMap`<`PublicKey`, `Stream`<`Message`\>\>
+ `Private` `Readonly` **\_messageStreams**: `ComplexMap`<`PublicKey`, `Stream`<`Message`\>\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L97)
+[packages/mesh/messaging/src/signal-client.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L97)
 
 ___
 
 ### \_reconnectAfter
 
-• `Private` **\_reconnectAfter**: `number` = `DEFAULT_RECONNECT_TIMEOUT`
+ `Private` **\_reconnectAfter**: `number` = `DEFAULT_RECONNECT_TIMEOUT`
 
 Number of milliseconds after which the connection will be attempted again in case of error.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L67)
+[packages/mesh/messaging/src/signal-client.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L67)
 
 ___
 
 ### \_reconnectIntervalId
 
-• `Private` `Optional` **\_reconnectIntervalId**: `Timeout`
+ `Private` `Optional` **\_reconnectIntervalId**: `Timeout`
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L79)
+[packages/mesh/messaging/src/signal-client.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L79)
 
 ___
 
 ### \_state
 
-• `Private` **\_state**: [`SignalState`](../enums/dxos_messaging.SignalState.md) = `SignalState.CONNECTING`
+ `Private` **\_state**: [`SignalState`](../enums/dxos_messaging.SignalState.md) = `SignalState.CONNECTING`
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L60)
+[packages/mesh/messaging/src/signal-client.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L60)
 
 ___
 
 ### \_swarmStreams
 
-• `Private` `Readonly` **\_swarmStreams**: `ComplexMap`<`PublicKey`, `Stream`<`SwarmEvent`\>\>
+ `Private` `Readonly` **\_swarmStreams**: `ComplexMap`<`PublicKey`, `Stream`<`SwarmEvent`\>\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:92](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L92)
+[packages/mesh/messaging/src/signal-client.ts:92](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L92)
 
 ___
 
 ### commandTrace
 
-• `Readonly` **commandTrace**: `Event`<[`CommandTrace`](../modules/dxos_messaging.md#commandtrace)\>
+ `Readonly` **commandTrace**: `Event`<[`CommandTrace`](../types/dxos_messaging.CommandTrace.md)\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L86)
+[packages/mesh/messaging/src/signal-client.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L86)
 
 ___
 
 ### statusChanged
 
-• `Readonly` **statusChanged**: `Event`<[`SignalStatus`](../modules/dxos_messaging.md#signalstatus)\>
+ `Readonly` **statusChanged**: `Event`<[`SignalStatus`](../types/dxos_messaging.SignalStatus.md)\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L84)
+[packages/mesh/messaging/src/signal-client.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L84)
 
 ___
 
 ### swarmEvent
 
-• `Readonly` **swarmEvent**: `Event`<{ `swarmEvent`: `SwarmEvent` ; `topic`: `PublicKey`  }\>
+ `Readonly` **swarmEvent**: `Event`<{ `swarmEvent`: `SwarmEvent` ; `topic`: `PublicKey`  }\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L87)
+[packages/mesh/messaging/src/signal-client.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L87)
 
 ## Methods
 
 ### \_createClient
 
-▸ `Private` **_createClient**(): `void`
+`Private` **_createClient**(): `void`
 
 #### Returns
 
@@ -208,13 +173,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:127](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L127)
+[packages/mesh/messaging/src/signal-client.ts:127](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L127)
 
 ___
 
 ### \_reconnect
 
-▸ `Private` **_reconnect**(): `void`
+`Private` **_reconnect**(): `void`
 
 #### Returns
 
@@ -222,13 +187,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:188](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L188)
+[packages/mesh/messaging/src/signal-client.ts:188](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L188)
 
 ___
 
 ### \_setState
 
-▸ `Private` **_setState**(`newState`): `void`
+`Private` **_setState**(`newState`): `void`
 
 #### Parameters
 
@@ -242,13 +207,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L120)
+[packages/mesh/messaging/src/signal-client.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L120)
 
 ___
 
 ### \_subscribeSwarmEvents
 
-▸ `Private` **_subscribeSwarmEvents**(`topic`, `peerId`): `Promise`<`void`\>
+`Private` **_subscribeSwarmEvents**(`topic`, `peerId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -263,13 +228,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:266](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L266)
+[packages/mesh/messaging/src/signal-client.ts:266](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L266)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -277,27 +242,27 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:211](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L211)
+[packages/mesh/messaging/src/signal-client.ts:211](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L211)
 
 ___
 
 ### getStatus
 
-▸ **getStatus**(): [`SignalStatus`](../modules/dxos_messaging.md#signalstatus)
+**getStatus**(): [`SignalStatus`](../types/dxos_messaging.SignalStatus.md)
 
 #### Returns
 
-[`SignalStatus`](../modules/dxos_messaging.md#signalstatus)
+[`SignalStatus`](../types/dxos_messaging.SignalStatus.md)
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:223](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L223)
+[packages/mesh/messaging/src/signal-client.ts:223](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L223)
 
 ___
 
 ### join
 
-▸ **join**(`__namedParameters`): `Promise`<`void`\>
+**join**(`__namedParameters`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -317,13 +282,13 @@ SignalMethods.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:234](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L234)
+[packages/mesh/messaging/src/signal-client.ts:234](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L234)
 
 ___
 
 ### leave
 
-▸ **leave**(`__namedParameters`): `Promise`<`void`\>
+**leave**(`__namedParameters`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -343,13 +308,13 @@ SignalMethods.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:246](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L246)
+[packages/mesh/messaging/src/signal-client.ts:246](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L246)
 
 ___
 
 ### sendMessage
 
-▸ **sendMessage**(`msg`): `Promise`<`void`\>
+**sendMessage**(`msg`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -367,13 +332,13 @@ SignalMethods.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:262](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L262)
+[packages/mesh/messaging/src/signal-client.ts:262](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L262)
 
 ___
 
 ### subscribeMessages
 
-▸ **subscribeMessages**(`peerId`): `Promise`<`void`\>
+**subscribeMessages**(`peerId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -391,4 +356,4 @@ SignalMethods.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:291](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/signal-client.ts#L291)
+[packages/mesh/messaging/src/signal-client.ts:291](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/signal-client.ts#L291)

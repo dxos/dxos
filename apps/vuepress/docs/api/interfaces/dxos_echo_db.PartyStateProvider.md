@@ -6,68 +6,53 @@
 
 - [`PartyProcessor`](../classes/dxos_echo_db.PartyProcessor.md)
 
-## Table of contents
-
-### Properties
-
-- [feedKeys](dxos_echo_db.PartyStateProvider.md#feedkeys)
-- [genesisRequired](dxos_echo_db.PartyStateProvider.md#genesisrequired)
-- [memberKeys](dxos_echo_db.PartyStateProvider.md#memberkeys)
-- [partyKey](dxos_echo_db.PartyStateProvider.md#partykey)
-
-### Methods
-
-- [getFeedOwningMember](dxos_echo_db.PartyStateProvider.md#getfeedowningmember)
-- [getOfflineInvitation](dxos_echo_db.PartyStateProvider.md#getofflineinvitation)
-- [isFeedAdmitted](dxos_echo_db.PartyStateProvider.md#isfeedadmitted)
-
 ## Properties
 
 ### feedKeys
 
-• **feedKeys**: `PublicKey`[]
+ **feedKeys**: `PublicKey`[]
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L31)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L31)
 
 ___
 
 ### genesisRequired
 
-• **genesisRequired**: `boolean`
+ **genesisRequired**: `boolean`
 
 Whether PartyGenesis was already processed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L29)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L29)
 
 ___
 
 ### memberKeys
 
-• **memberKeys**: `PublicKey`[]
+ **memberKeys**: `PublicKey`[]
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L30)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L30)
 
 ___
 
 ### partyKey
 
-• **partyKey**: `PublicKey`
+ **partyKey**: `PublicKey`
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L25)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L25)
 
 ## Methods
 
 ### getFeedOwningMember
 
-▸ **getFeedOwningMember**(`feedKey`): `undefined` \| `PublicKey`
+**getFeedOwningMember**(`feedKey`): `undefined` \| `PublicKey`
 
 #### Parameters
 
@@ -81,13 +66,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:32](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L32)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:32](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L32)
 
 ___
 
 ### getOfflineInvitation
 
-▸ **getOfflineInvitation**(`invitationID`): `undefined` \| `SignedMessage`
+**getOfflineInvitation**(`invitationID`): `undefined` \| `SignedMessage`
 
 #### Parameters
 
@@ -101,13 +86,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L33)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L33)
 
 ___
 
 ### isFeedAdmitted
 
-▸ **isFeedAdmitted**(`feedKey`): `boolean`
+**isFeedAdmitted**(`feedKey`): `boolean`
 
 #### Parameters
 
@@ -121,4 +106,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/pipeline/party-processor.ts#L34)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/pipeline/party-processor.ts#L34)

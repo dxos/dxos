@@ -9,67 +9,11 @@ NOTE: This implements a write-through cache.
 
 - [`Signer`](../interfaces/dxos_credentials.Signer.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_credentials.Keyring.md#constructor)
-
-### Properties
-
-- [\_findTrustedCache](dxos_credentials.Keyring.md#_findtrustedcache)
-- [\_keyCache](dxos_credentials.Keyring.md#_keycache)
-- [\_keystore](dxos_credentials.Keyring.md#_keystore)
-- [keysUpdate](dxos_credentials.Keyring.md#keysupdate)
-- [\_signatureValidationCache](dxos_credentials.Keyring.md#_signaturevalidationcache)
-
-### Accessors
-
-- [keys](dxos_credentials.Keyring.md#keys)
-
-### Methods
-
-- [\_addKeyRecord](dxos_credentials.Keyring.md#_addkeyrecord)
-- [\_addTempKeyRecord](dxos_credentials.Keyring.md#_addtempkeyrecord)
-- [\_findFullKey](dxos_credentials.Keyring.md#_findfullkey)
-- [\_findFullKeys](dxos_credentials.Keyring.md#_findfullkeys)
-- [addKeyRecord](dxos_credentials.Keyring.md#addkeyrecord)
-- [addPublicKey](dxos_credentials.Keyring.md#addpublickey)
-- [createKeyRecord](dxos_credentials.Keyring.md#createkeyrecord)
-- [deleteAllKeyRecords](dxos_credentials.Keyring.md#deleteallkeyrecords)
-- [deleteSecretKey](dxos_credentials.Keyring.md#deletesecretkey)
-- [export](dxos_credentials.Keyring.md#export)
-- [findKey](dxos_credentials.Keyring.md#findkey)
-- [findKeys](dxos_credentials.Keyring.md#findkeys)
-- [findTrusted](dxos_credentials.Keyring.md#findtrusted)
-- [getFullKey](dxos_credentials.Keyring.md#getfullkey)
-- [getKey](dxos_credentials.Keyring.md#getkey)
-- [hasKey](dxos_credentials.Keyring.md#haskey)
-- [hasSecretKey](dxos_credentials.Keyring.md#hassecretkey)
-- [import](dxos_credentials.Keyring.md#import)
-- [isTrusted](dxos_credentials.Keyring.md#istrusted)
-- [load](dxos_credentials.Keyring.md#load)
-- [loadJSON](dxos_credentials.Keyring.md#loadjson)
-- [metrics](dxos_credentials.Keyring.md#metrics)
-- [rawSign](dxos_credentials.Keyring.md#rawsign)
-- [sign](dxos_credentials.Keyring.md#sign)
-- [toJSON](dxos_credentials.Keyring.md#tojson)
-- [updateKey](dxos_credentials.Keyring.md#updatekey)
-- [verify](dxos_credentials.Keyring.md#verify)
-- [buildKeyChain](dxos_credentials.Keyring.md#buildkeychain)
-- [cryptoSign](dxos_credentials.Keyring.md#cryptosign)
-- [cryptoVerify](dxos_credentials.Keyring.md#cryptoverify)
-- [signMessage](dxos_credentials.Keyring.md#signmessage)
-- [signingFilter](dxos_credentials.Keyring.md#signingfilter)
-- [signingKeys](dxos_credentials.Keyring.md#signingkeys)
-- [validateSignature](dxos_credentials.Keyring.md#validatesignature)
-- [validateSignatures](dxos_credentials.Keyring.md#validatesignatures)
-
 ## Constructors
 
 ### constructor
 
-• **new Keyring**(`keystore?`)
+**new Keyring**(`keystore?`)
 
 If no KeyStore is supplied, in-memory key storage will be used.
 
@@ -81,65 +25,65 @@ If no KeyStore is supplied, in-memory key storage will be used.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:295](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L295)
+[packages/halo/credentials/src/keys/keyring.ts:295](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L295)
 
 ## Properties
 
 ### \_findTrustedCache
 
-• `Private` `Readonly` **\_findTrustedCache**: `Map`<`string`, `PublicKeyLike`\>
+ `Private` `Readonly` **\_findTrustedCache**: `Map`<`string`, `PublicKeyLike`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:285](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L285)
+[packages/halo/credentials/src/keys/keyring.ts:285](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L285)
 
 ___
 
 ### \_keyCache
 
-• `Private` `Readonly` **\_keyCache**: `Map`<`string`, `any`\>
+ `Private` `Readonly` **\_keyCache**: `Map`<`string`, `any`\>
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:284](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L284)
+[packages/halo/credentials/src/keys/keyring.ts:284](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L284)
 
 ___
 
 ### \_keystore
 
-• `Private` `Readonly` **\_keystore**: [`KeyStore`](dxos_credentials.KeyStore.md)
+ `Private` `Readonly` **\_keystore**: [`KeyStore`](dxos_credentials.KeyStore.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:283](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L283)
+[packages/halo/credentials/src/keys/keyring.ts:283](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L283)
 
 ___
 
 ### keysUpdate
 
-• `Readonly` **keysUpdate**: `Event`<`KeyRecord`[]\>
+ `Readonly` **keysUpdate**: `Event`<`KeyRecord`[]\>
 
 Event that is called on all key changes with updated array of keys.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:290](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L290)
+[packages/halo/credentials/src/keys/keyring.ts:290](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L290)
 
 ___
 
 ### \_signatureValidationCache
 
-▪ `Static` **\_signatureValidationCache**: `SignatureValidationCache`
+ `Static` **\_signatureValidationCache**: `SignatureValidationCache`
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L79)
+[packages/halo/credentials/src/keys/keyring.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L79)
 
 ## Accessors
 
 ### keys
 
-• `get` **keys**(): `KeyRecord`[]
+`get` **keys**(): `KeyRecord`[]
 
 All keys as an array.
 
@@ -149,13 +93,13 @@ All keys as an array.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:302](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L302)
+[packages/halo/credentials/src/keys/keyring.ts:302](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L302)
 
 ## Methods
 
 ### \_addKeyRecord
 
-▸ `Private` **_addKeyRecord**(`keyRecord`, `overwrite?`): `Promise`<`KeyRecord`\>
+`Private` **_addKeyRecord**(`keyRecord`, `overwrite?`): `Promise`<`KeyRecord`\>
 
 Adds a KeyRecord to the keyring and stores it in the keystore.
 The KeyRecord may contain a key pair, or only a public key.
@@ -175,13 +119,13 @@ A copy of the KeyRecord, minus secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:369](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L369)
+[packages/halo/credentials/src/keys/keyring.ts:369](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L369)
 
 ___
 
 ### \_addTempKeyRecord
 
-▸ `Private` **_addTempKeyRecord**(`keyRecord`, `overwrite?`): `KeyRecord`
+`Private` **_addTempKeyRecord**(`keyRecord`, `overwrite?`): `KeyRecord`
 
 Adds a temporary KeyRecord to the keyring.  The key is not stored to the KeyStore.
 The KeyRecord may contain a key pair, or only a public key.
@@ -201,13 +145,13 @@ A copy of the KeyRecord, minus secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:393](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L393)
+[packages/halo/credentials/src/keys/keyring.ts:393](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L393)
 
 ___
 
 ### \_findFullKey
 
-▸ `Private` **_findFullKey**(...`filters`): `undefined` \| `KeyRecord`
+`Private` **_findFullKey**(...`filters`): `undefined` \| `KeyRecord`
 
 Find one key matching the indicated criteria: 'party', 'type', etc.
 
@@ -215,7 +159,7 @@ Find one key matching the indicated criteria: 'party', 'type', etc.
 
 | Name | Type |
 | :------ | :------ |
-| `...filters` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)[] |
+| `...filters` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)[] |
 
 #### Returns
 
@@ -223,13 +167,13 @@ Find one key matching the indicated criteria: 'party', 'type', etc.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:530](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L530)
+[packages/halo/credentials/src/keys/keyring.ts:530](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L530)
 
 ___
 
 ### \_findFullKeys
 
-▸ `Private` **_findFullKeys**(...`filters`): `KeyRecord`[]
+`Private` **_findFullKeys**(...`filters`): `KeyRecord`[]
 
 Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
 
@@ -237,7 +181,7 @@ Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
 
 | Name | Type |
 | :------ | :------ |
-| `...filters` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)[] |
+| `...filters` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)[] |
 
 #### Returns
 
@@ -245,13 +189,13 @@ Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:512](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L512)
+[packages/halo/credentials/src/keys/keyring.ts:512](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L512)
 
 ___
 
 ### addKeyRecord
 
-▸ **addKeyRecord**(`keyRecord`): `Promise`<`KeyRecord`\>
+**addKeyRecord**(`keyRecord`): `Promise`<`KeyRecord`\>
 
 Adds a keyRecord that must contain a key pair (publicKey/secretKey).
 
@@ -269,13 +213,13 @@ A copy of the KeyRecord, without secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:341](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L341)
+[packages/halo/credentials/src/keys/keyring.ts:341](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L341)
 
 ___
 
 ### addPublicKey
 
-▸ **addPublicKey**(`keyRecord`): `Promise`<`KeyRecord`\>
+**addPublicKey**(`keyRecord`): `Promise`<`KeyRecord`\>
 
 Adds the KeyRecord that must contain a publicKey but no secretKey.
 
@@ -293,13 +237,13 @@ A copy of the KeyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:353](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L353)
+[packages/halo/credentials/src/keys/keyring.ts:353](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L353)
 
 ___
 
 ### createKeyRecord
 
-▸ **createKeyRecord**(`attributes?`): `Promise`<`KeyRecord`\>
+**createKeyRecord**(`attributes?`): `Promise`<`KeyRecord`\>
 
 Creates a new public/private key pair and stores in a new KeyRecord with the supplied attributes.
 Secret key is removed from the returned version of the KeyRecord.
@@ -318,13 +262,13 @@ New KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:627](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L627)
+[packages/halo/credentials/src/keys/keyring.ts:627](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L627)
 
 ___
 
 ### deleteAllKeyRecords
 
-▸ **deleteAllKeyRecords**(): `Promise`<`void`\>
+**deleteAllKeyRecords**(): `Promise`<`void`\>
 
 Delete every keyRecord. Safe to continue to use the object.
 
@@ -334,13 +278,13 @@ Delete every keyRecord. Safe to continue to use the object.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:324](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L324)
+[packages/halo/credentials/src/keys/keyring.ts:324](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L324)
 
 ___
 
 ### deleteSecretKey
 
-▸ **deleteSecretKey**(`keyRecord`): `Promise`<`void`\>
+**deleteSecretKey**(`keyRecord`): `Promise`<`void`\>
 
 Deletes the secretKey from a stored KeyRecord.
 
@@ -356,13 +300,13 @@ Deletes the secretKey from a stored KeyRecord.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:438](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L438)
+[packages/halo/credentials/src/keys/keyring.ts:438](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L438)
 
 ___
 
 ### export
 
-▸ **export**(): `Object`
+**export**(): `Object`
 
 Export the Keyring contents.
 
@@ -376,13 +320,13 @@ Export the Keyring contents.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:600](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L600)
+[packages/halo/credentials/src/keys/keyring.ts:600](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L600)
 
 ___
 
 ### findKey
 
-▸ **findKey**(...`filters`): `undefined` \| `KeyRecord`
+**findKey**(...`filters`): `undefined` \| `KeyRecord`
 
 Find one key matching the indicated criteria: 'party', 'type', etc.
 Secret key is removed from the returned version of the KeyRecord.
@@ -391,7 +335,7 @@ Secret key is removed from the returned version of the KeyRecord.
 
 | Name | Type |
 | :------ | :------ |
-| `...filters` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)[] |
+| `...filters` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)[] |
 
 #### Returns
 
@@ -401,13 +345,13 @@ KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:543](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L543)
+[packages/halo/credentials/src/keys/keyring.ts:543](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L543)
 
 ___
 
 ### findKeys
 
-▸ **findKeys**(...`filters`): `KeyRecord`[]
+**findKeys**(...`filters`): `KeyRecord`[]
 
 Find all keys matching the indicated criteria: 'key', 'type', 'own', etc.
 Secret keys are removed from the returned version of the KeyRecords.
@@ -416,7 +360,7 @@ Secret keys are removed from the returned version of the KeyRecords.
 
 | Name | Type |
 | :------ | :------ |
-| `...filters` | [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)[] |
+| `...filters` | [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)[] |
 
 #### Returns
 
@@ -426,13 +370,13 @@ KeyRecords, without secretKeys
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:522](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L522)
+[packages/halo/credentials/src/keys/keyring.ts:522](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L522)
 
 ___
 
 ### findTrusted
 
-▸ **findTrusted**(`chain`): `undefined` \| `KeyRecord`
+**findTrusted**(`chain`): `undefined` \| `KeyRecord`
 
 Find the first trusted key in the KeyChain, working from tip to root. For example, if the KeyChain has
 keys: D->C->B->A and the Keyring trusted D, that would be returned. But if it did not trust D, but did trust
@@ -450,13 +394,13 @@ C, then C would, and so forth back to the root (A).
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:726](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L726)
+[packages/halo/credentials/src/keys/keyring.ts:726](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L726)
 
 ___
 
 ### getFullKey
 
-▸ **getFullKey**(`publicKey`): `undefined` \| `KeyRecord`
+**getFullKey**(`publicKey`): `undefined` \| `KeyRecord`
 
 Return the keyRecord from the keyring, if present.
 
@@ -472,13 +416,13 @@ Return the keyRecord from the keyring, if present.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:488](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L488)
+[packages/halo/credentials/src/keys/keyring.ts:488](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L488)
 
 ___
 
 ### getKey
 
-▸ **getKey**(`publicKey`): `undefined` \| `KeyRecord`
+**getKey**(`publicKey`): `undefined` \| `KeyRecord`
 
 Return the keyRecord from the keyring, if present.
 Secret key is removed from the returned version of the KeyRecord.
@@ -497,13 +441,13 @@ KeyRecord, without secretKey
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:501](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L501)
+[packages/halo/credentials/src/keys/keyring.ts:501](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L501)
 
 ___
 
 ### hasKey
 
-▸ **hasKey**(`publicKey`): `boolean`
+**hasKey**(`publicKey`): `boolean`
 
 Is the publicKey in the keyring?
 
@@ -519,13 +463,13 @@ Is the publicKey in the keyring?
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:468](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L468)
+[packages/halo/credentials/src/keys/keyring.ts:468](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L468)
 
 ___
 
 ### hasSecretKey
 
-▸ **hasSecretKey**(`keyRecord`): `boolean`
+**hasSecretKey**(`keyRecord`): `boolean`
 
 Returns true if the stored KeyRecord has a secretKey available.
 
@@ -541,13 +485,13 @@ Returns true if the stored KeyRecord has a secretKey available.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:455](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L455)
+[packages/halo/credentials/src/keys/keyring.ts:455](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L455)
 
 ___
 
 ### import
 
-▸ **import**(`records`): `Promise`<`void`\>
+**import**(`records`): `Promise`<`void`\>
 
 Import KeyRecords into the KeyRing.
 
@@ -563,13 +507,13 @@ Import KeyRecords into the KeyRing.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:609](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L609)
+[packages/halo/credentials/src/keys/keyring.ts:609](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L609)
 
 ___
 
 ### isTrusted
 
-▸ **isTrusted**(`publicKey`): `boolean`
+**isTrusted**(`publicKey`): `boolean`
 
 Tests if the given key is trusted.
 
@@ -585,13 +529,13 @@ Tests if the given key is trusted.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:478](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L478)
+[packages/halo/credentials/src/keys/keyring.ts:478](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L478)
 
 ___
 
 ### load
 
-▸ **load**(): `Promise`<[`Keyring`](dxos_credentials.Keyring.md)\>
+**load**(): `Promise`<[`Keyring`](dxos_credentials.Keyring.md)\>
 
 Load keys from the KeyStore.  This call is required when using a persistent KeyStore.
 
@@ -601,13 +545,13 @@ Load keys from the KeyStore.  This call is required when using a persistent KeyS
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:309](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L309)
+[packages/halo/credentials/src/keys/keyring.ts:309](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L309)
 
 ___
 
 ### loadJSON
 
-▸ **loadJSON**(`value`): `Promise`<`any`[]\>
+**loadJSON**(`value`): `Promise`<`any`[]\>
 
 Load keys from supplied JSON into the Keyring.
 
@@ -623,13 +567,13 @@ Load keys from supplied JSON into the Keyring.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:576](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L576)
+[packages/halo/credentials/src/keys/keyring.ts:576](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L576)
 
 ___
 
 ### metrics
 
-▸ **metrics**(): `Object`
+**metrics**(): `Object`
 
 Application-wide Keyring metrics.
 
@@ -644,13 +588,13 @@ Application-wide Keyring metrics.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:811](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L811)
+[packages/halo/credentials/src/keys/keyring.ts:811](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L811)
 
 ___
 
 ### rawSign
 
-▸ **rawSign**(`data`, `keyRecord`): `Buffer`
+**rawSign**(`data`, `keyRecord`): `Buffer`
 
 Sign the data with the indicated key and return the signature.
 KeyChains are not supported.
@@ -672,13 +616,13 @@ KeyChains are not supported.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:667](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L667)
+[packages/halo/credentials/src/keys/keyring.ts:667](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L667)
 
 ___
 
 ### sign
 
-▸ **sign**(`message`, `keys`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
+**sign**(`message`, `keys`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
 
 Sign the message with the indicated key or keys. The returned signed object will be of the form:
 {
@@ -705,13 +649,13 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:642](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L642)
+[packages/halo/credentials/src/keys/keyring.ts:642](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L642)
 
 ___
 
 ### toJSON
 
-▸ **toJSON**(): `string`
+**toJSON**(): `string`
 
 Serialize the Keyring contents to JSON.
 
@@ -721,13 +665,13 @@ Serialize the Keyring contents to JSON.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:552](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L552)
+[packages/halo/credentials/src/keys/keyring.ts:552](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L552)
 
 ___
 
 ### updateKey
 
-▸ **updateKey**(`keyRecord`): `Promise`<`KeyRecord`\>
+**updateKey**(`keyRecord`): `Promise`<`KeyRecord`\>
 
 Adds or updates a KeyRecord. The KeyRecord must contain a publicKey and it may contain a secretKey.
 If the KeyRecord already exists, the secretKey will NOT be updated.
@@ -746,13 +690,13 @@ A copy of the KeyRecord, without secrets.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:414](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L414)
+[packages/halo/credentials/src/keys/keyring.ts:414](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L414)
 
 ___
 
 ### verify
 
-▸ **verify**(`message`, `options?`): `boolean`
+**verify**(`message`, `options?`): `boolean`
 
 Verify all the signatures on a signed message.
 By default, at least ONE of the signing keys must be a known, trusted key.
@@ -773,13 +717,13 @@ If `requireAllKeysBeTrusted` is true, ALL keys must be known and trusted.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:688](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L688)
+[packages/halo/credentials/src/keys/keyring.ts:688](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L688)
 
 ___
 
 ### buildKeyChain
 
-▸ `Static` **buildKeyChain**(`publicKey`, `signedMessageMap`, `exclude?`): `KeyChain`
+`Static` **buildKeyChain**(`publicKey`, `signedMessageMap`, `exclude?`): `KeyChain`
 
 Builds up a KeyChain for `publicKey` from the supplied SignedMessages. The message map should be indexed
 by the hexlified PublicKeyLike. If a single message admits more than one key, it should have a map entry for each.
@@ -798,13 +742,13 @@ by the hexlified PublicKeyLike. If a single message admits more than one key, it
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:157](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L157)
+[packages/halo/credentials/src/keys/keyring.ts:157](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L157)
 
 ___
 
 ### cryptoSign
 
-▸ `Static` **cryptoSign**(`message`, `secretkey`): `Buffer`
+`Static` **cryptoSign**(`message`, `secretkey`): `Buffer`
 
 #### Parameters
 
@@ -819,13 +763,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L88)
+[packages/halo/credentials/src/keys/keyring.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L88)
 
 ___
 
 ### cryptoVerify
 
-▸ `Static` **cryptoVerify**(`message`, `signature`, `publicKey`): `boolean`
+`Static` **cryptoVerify**(`message`, `signature`, `publicKey`): `boolean`
 
 #### Parameters
 
@@ -841,13 +785,13 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L83)
+[packages/halo/credentials/src/keys/keyring.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L83)
 
 ___
 
 ### signMessage
 
-▸ `Static` **signMessage**(`message`, `keys`, `keyChainMap`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
+`Static` **signMessage**(`message`, `keys`, `keyChainMap`, `nonce?`, `created?`): `WithTypeUrl`<`SignedMessage`\>
 
 Sign the message with the indicated key or keys. The returned signed object will be of the form:
 {
@@ -871,13 +815,13 @@ Sign the message with the indicated key or keys. The returned signed object will
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L100)
+[packages/halo/credentials/src/keys/keyring.ts:100](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L100)
 
 ___
 
 ### signingFilter
 
-▸ `Static` **signingFilter**(`attributes?`): [`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+`Static` **signingFilter**(`attributes?`): [`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 Creates a search filter for a key that can be used for signing.
 
@@ -889,17 +833,17 @@ Creates a search filter for a key that can be used for signing.
 
 #### Returns
 
-[`FilterFunction`](../modules/dxos_credentials.md#filterfunction)
+[`FilterFunction`](../types/dxos_credentials.FilterFunction.md)
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:271](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L271)
+[packages/halo/credentials/src/keys/keyring.ts:271](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L271)
 
 ___
 
 ### signingKeys
 
-▸ `Static` **signingKeys**(`message`, `__namedParameters?`): `PublicKey`[]
+`Static` **signingKeys**(`message`, `__namedParameters?`): `PublicKey`[]
 
 What keys were used to sign this message?
 
@@ -918,13 +862,13 @@ What keys were used to sign this message?
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:201](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L201)
+[packages/halo/credentials/src/keys/keyring.ts:201](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L201)
 
 ___
 
 ### validateSignature
 
-▸ `Static` **validateSignature**(`message`, `signature`, `key`): `boolean`
+`Static` **validateSignature**(`message`, `signature`, `key`): `boolean`
 
 Validates a single signature on a message.
 This does not check that the key is trusted, only that the signature is valid.
@@ -943,13 +887,13 @@ This does not check that the key is trusted, only that the signature is valid.
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:253](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L253)
+[packages/halo/credentials/src/keys/keyring.ts:253](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L253)
 
 ___
 
 ### validateSignatures
 
-▸ `Static` **validateSignatures**(`message`): `boolean`
+`Static` **validateSignatures**(`message`): `boolean`
 
 Validate all the signatures on a signed message.
 This does not check that the keys are trusted, only that the signatures are valid.
@@ -966,4 +910,4 @@ This does not check that the keys are trusted, only that the signatures are vali
 
 #### Defined in
 
-[packages/halo/credentials/src/keys/keyring.ts:233](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/keys/keyring.ts#L233)
+[packages/halo/credentials/src/keys/keyring.ts:233](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/keys/keyring.ts#L233)

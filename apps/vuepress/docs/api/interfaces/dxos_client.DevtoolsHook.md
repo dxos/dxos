@@ -4,32 +4,25 @@
 
 A hook bound to window.__DXOS__.
 
-## Table of contents
-
-### Properties
-
-- [client](dxos_client.DevtoolsHook.md#client)
-- [openClientRpcServer](dxos_client.DevtoolsHook.md#openclientrpcserver)
-
 ## Properties
 
 ### client
 
-• **client**: [`Client`](../classes/dxos_client.Client.md)
+ **client**: [`Client`](../classes/dxos_client.Client.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/devtools.ts#L19)
+[packages/sdk/client/src/packlets/proxy/devtools.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/devtools.ts#L19)
 
 ___
 
 ### openClientRpcServer
 
-• **openClientRpcServer**: () => `Promise`<`boolean`\>
+ **openClientRpcServer**: () => `Promise`<`boolean`\>
 
 #### Type declaration
 
-▸ (): `Promise`<`boolean`\>
+(): `Promise`<`boolean`\>
 
 ##### Returns
 
@@ -37,4 +30,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/devtools.ts#L20)
+[packages/sdk/client/src/packlets/proxy/devtools.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/devtools.ts#L20)

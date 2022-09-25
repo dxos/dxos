@@ -4,29 +4,22 @@
 
 Info required for offline invitations.
 
-## Table of contents
-
-### Properties
-
-- [authNonce](dxos_credentials.SecretInfo.md#authnonce)
-- [id](dxos_credentials.SecretInfo.md#id)
-
 ## Properties
 
 ### authNonce
 
-• **authNonce**: `any`
+ **authNonce**: `any`
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L16)
+[packages/halo/credentials/src/greet/invitation.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/invitation.ts#L16)
 
 ___
 
 ### id
 
-• **id**: `any`
+ **id**: `any`
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:15](https://github.com/dxos/dxos/blob/32ae9b579/packages/halo/credentials/src/greet/invitation.ts#L15)
+[packages/halo/credentials/src/greet/invitation.ts:15](https://github.com/dxos/dxos/blob/db8188dae/packages/halo/credentials/src/greet/invitation.ts#L15)

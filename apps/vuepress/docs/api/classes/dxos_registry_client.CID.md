@@ -5,30 +5,11 @@
 Conten-addressable ID.
 https://docs.ipfs.io/concepts/content-addressing
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.CID.md#constructor)
-
-### Properties
-
-- [value](dxos_registry_client.CID.md#value)
-
-### Methods
-
-- [[custom]](dxos_registry_client.CID.md#[custom])
-- [equals](dxos_registry_client.CID.md#equals)
-- [toB58String](dxos_registry_client.CID.md#tob58string)
-- [toString](dxos_registry_client.CID.md#tostring)
-- [from](dxos_registry_client.CID.md#from)
-- [fromB58String](dxos_registry_client.CID.md#fromb58string)
-
 ## Constructors
 
 ### constructor
 
-• **new CID**(`value`)
+**new CID**(`value`)
 
 #### Parameters
 
@@ -38,23 +19,23 @@ https://docs.ipfs.io/concepts/content-addressing
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L33)
+[packages/sdk/registry-client/src/api/cid.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L33)
 
 ## Properties
 
 ### value
 
-• `Readonly` **value**: `Uint8Array`
+ `Readonly` **value**: `Uint8Array`
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L34)
+[packages/sdk/registry-client/src/api/cid.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L34)
 
 ## Methods
 
 ### [custom]
 
-▸ **[custom]**(): `string`
+**[custom]**(): `string`
 
 #### Returns
 
@@ -62,19 +43,19 @@ https://docs.ipfs.io/concepts/content-addressing
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L51)
+[packages/sdk/registry-client/src/api/cid.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L51)
 
 ___
 
 ### equals
 
-▸ **equals**(`other`): `boolean`
+**equals**(`other`): `boolean`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `other` | [`CIDLike`](../modules/dxos_registry_client.md#cidlike) |
+| `other` | [`CIDLike`](../types/dxos_registry_client.CIDLike.md) |
 
 #### Returns
 
@@ -82,13 +63,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L39)
+[packages/sdk/registry-client/src/api/cid.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L39)
 
 ___
 
 ### toB58String
 
-▸ **toB58String**(): `string`
+**toB58String**(): `string`
 
 #### Returns
 
@@ -96,13 +77,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L43)
+[packages/sdk/registry-client/src/api/cid.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L43)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -110,19 +91,19 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L47)
+[packages/sdk/registry-client/src/api/cid.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L47)
 
 ___
 
 ### from
 
-▸ `Static` **from**(`value`): [`CID`](dxos_registry_client.CID.md)
+`Static` **from**(`value`): [`CID`](dxos_registry_client.CID.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `value` | [`CIDLike`](../modules/dxos_registry_client.md#cidlike) |
+| `value` | [`CIDLike`](../types/dxos_registry_client.CIDLike.md) |
 
 #### Returns
 
@@ -130,13 +111,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:21](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L21)
+[packages/sdk/registry-client/src/api/cid.ts:21](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L21)
 
 ___
 
 ### fromB58String
 
-▸ `Static` **fromB58String**(`str`): [`CID`](dxos_registry_client.CID.md)
+`Static` **fromB58String**(`str`): [`CID`](dxos_registry_client.CID.md)
 
 #### Parameters
 
@@ -150,4 +131,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/api/cid.ts:16](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/api/cid.ts#L16)
+[packages/sdk/registry-client/src/api/cid.ts:16](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/api/cid.ts#L16)

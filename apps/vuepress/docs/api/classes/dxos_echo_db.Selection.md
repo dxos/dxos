@@ -17,35 +17,11 @@ Each Selection contains a visitor
 | `T` | extends [`Entity`](dxos_echo_db.Entity.md)<`any`\> |
 | `R` | `void` |
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Selection.md#constructor)
-
-### Accessors
-
-- [root](dxos_echo_db.Selection.md#root)
-
-### Methods
-
-- [\_createSubSelection](dxos_echo_db.Selection.md#_createsubselection)
-- [call](dxos_echo_db.Selection.md#call)
-- [children](dxos_echo_db.Selection.md#children)
-- [exec](dxos_echo_db.Selection.md#exec)
-- [filter](dxos_echo_db.Selection.md#filter)
-- [links](dxos_echo_db.Selection.md#links)
-- [parent](dxos_echo_db.Selection.md#parent)
-- [query](dxos_echo_db.Selection.md#query)
-- [refs](dxos_echo_db.Selection.md#refs)
-- [source](dxos_echo_db.Selection.md#source)
-- [target](dxos_echo_db.Selection.md#target)
-
 ## Constructors
 
 ### constructor
 
-• **new Selection**<`T`, `R`\>(`_visitor`, `_update`, `_root`, `_reducer?`)
+**new Selection**<`T`, `R`\>(`_visitor`, `_update`, `_root`, `_reducer?`)
 
 #### Type parameters
 
@@ -58,36 +34,36 @@ Each Selection contains a visitor
 
 | Name | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `_visitor` | (`options`: [`QueryOptions`](../modules/dxos_echo_db.md#queryoptions)) => [`SelectionContext`](../modules/dxos_echo_db.md#selectioncontext)<`T`, `R`\> | `undefined` | Executes the query. |
+| `_visitor` | (`options`: [`QueryOptions`](../types/dxos_echo_db.QueryOptions.md)) => [`SelectionContext`](../types/dxos_echo_db.SelectionContext.md)<`T`, `R`\> | `undefined` | Executes the query. |
 | `_update` | `Event`<[`Entity`](dxos_echo_db.Entity.md)<`Model`<`any`, `any`\>\>[]\> | `undefined` | The unfiltered update event. |
-| `_root` | [`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot) | `undefined` | The root of the selection. Must be a stable reference. |
+| `_root` | [`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md) | `undefined` | The root of the selection. Must be a stable reference. |
 | `_reducer` | `boolean` | `false` |  |
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L78)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L78)
 
 ## Accessors
 
 ### root
 
-• `get` **root**(): [`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot)
+`get` **root**(): [`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md)
 
 The root of the selection. Either a database or an item. Must be a stable reference.
 
 #### Returns
 
-[`SelectionRoot`](../modules/dxos_echo_db.md#selectionroot)
+[`SelectionRoot`](../types/dxos_echo_db.SelectionRoot.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:112](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L112)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:112](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L112)
 
 ## Methods
 
 ### \_createSubSelection
 
-▸ `Private` **_createSubSelection**<`U`\>(`map`): [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\>
+`Private` **_createSubSelection**<`U`\>(`map`): [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\>
 
 Creates a derrived selection by aplying a mapping function to the result of the current selection.
 
@@ -101,7 +77,7 @@ Creates a derrived selection by aplying a mapping function to the result of the 
 
 | Name | Type |
 | :------ | :------ |
-| `map` | (`context`: [`SelectionContext`](../modules/dxos_echo_db.md#selectioncontext)<`T`, `R`\>, `options`: [`QueryOptions`](../modules/dxos_echo_db.md#queryoptions)) => [`SelectionContext`](../modules/dxos_echo_db.md#selectioncontext)<`U`, `R`\> |
+| `map` | (`context`: [`SelectionContext`](../types/dxos_echo_db.SelectionContext.md)<`T`, `R`\>, `options`: [`QueryOptions`](../types/dxos_echo_db.QueryOptions.md)) => [`SelectionContext`](../types/dxos_echo_db.SelectionContext.md)<`U`, `R`\> |
 
 #### Returns
 
@@ -109,13 +85,13 @@ Creates a derrived selection by aplying a mapping function to the result of the 
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L88)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L88)
 
 ___
 
 ### call
 
-▸ **call**(`visitor`): [`Selection`](dxos_echo_db.Selection.md)<`T`, `R`\>
+**call**(`visitor`): [`Selection`](dxos_echo_db.Selection.md)<`T`, `R`\>
 
 Visitor.
 
@@ -123,7 +99,7 @@ Visitor.
 
 | Name | Type |
 | :------ | :------ |
-| `visitor` | [`Callable`](../modules/dxos_echo_db.md#callable)<`T`, `R`\> |
+| `visitor` | [`Callable`](../types/dxos_echo_db.Callable.md)<`T`, `R`\> |
 
 #### Returns
 
@@ -131,13 +107,13 @@ Visitor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L120)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L120)
 
 ___
 
 ### children
 
-▸ **children**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**children**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Select children of the items in this selection.
 
@@ -146,7 +122,7 @@ Select children of the items in this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\> |
-| `filter?` | [`ItemFilter`](../modules/dxos_echo_db.md#itemfilter) |
+| `filter?` | [`ItemFilter`](../types/dxos_echo_db.ItemFilter.md) |
 
 #### Returns
 
@@ -154,13 +130,13 @@ Select children of the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L138)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:138](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L138)
 
 ___
 
 ### exec
 
-▸ **exec**(`options?`): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
+**exec**(`options?`): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
 
 Finish the selection and return the result.
 
@@ -168,7 +144,7 @@ Finish the selection and return the result.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`QueryOptions`](../modules/dxos_echo_db.md#queryoptions) |
+| `options` | [`QueryOptions`](../types/dxos_echo_db.QueryOptions.md) |
 
 #### Returns
 
@@ -176,13 +152,13 @@ Finish the selection and return the result.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L97)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L97)
 
 ___
 
 ### filter
 
-▸ **filter**(`this`, `filter`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**filter**(`this`, `filter`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Filter entities of this selection.
 
@@ -191,7 +167,7 @@ Filter entities of this selection.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\> | - |
-| `filter` | [`ItemFilter`](../modules/dxos_echo_db.md#itemfilter) | A filter object or a predicate function. |
+| `filter` | [`ItemFilter`](../types/dxos_echo_db.ItemFilter.md) | A filter object or a predicate function. |
 
 #### Returns
 
@@ -199,9 +175,9 @@ Filter entities of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:128](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L128)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:128](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L128)
 
-▸ **filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\>
+**filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\>
 
 #### Type parameters
 
@@ -214,7 +190,7 @@ Filter entities of this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\> |
-| `filter` | [`Predicate`](../modules/dxos_echo_db.md#predicate)<`U`\> |
+| `filter` | [`Predicate`](../types/dxos_echo_db.Predicate.md)<`U`\> |
 
 #### Returns
 
@@ -222,13 +198,13 @@ Filter entities of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:129](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L129)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:129](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L129)
 
 ___
 
 ### links
 
-▸ **links**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
+**links**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
 
 Select links sourcing from the items in this selection.
 
@@ -237,7 +213,7 @@ Select links sourcing from the items in this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\> |
-| `filter` | [`LinkFilter`](../modules/dxos_echo_db.md#linkfilter) |
+| `filter` | [`LinkFilter`](../types/dxos_echo_db.LinkFilter.md) |
 
 #### Returns
 
@@ -245,13 +221,13 @@ Select links sourcing from the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:162](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L162)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:162](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L162)
 
 ___
 
 ### parent
 
-▸ **parent**(`this`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**parent**(`this`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Select parent of the items in this selection.
 
@@ -267,13 +243,13 @@ Select parent of the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L152)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:152](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L152)
 
 ___
 
 ### query
 
-▸ **query**(`options?`): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
+**query**(`options?`): [`SelectionResult`](dxos_echo_db.SelectionResult.md)<`T`, `R`\>
 
 **`Deprecated`**
 
@@ -281,7 +257,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`QueryOptions`](../modules/dxos_echo_db.md#queryoptions) |
+| `options` | [`QueryOptions`](../types/dxos_echo_db.QueryOptions.md) |
 
 #### Returns
 
@@ -289,13 +265,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:105](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L105)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:105](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L105)
 
 ___
 
 ### refs
 
-▸ **refs**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
+**refs**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\>
 
 Select links pointing to items in this selection.
 
@@ -304,7 +280,7 @@ Select links pointing to items in this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\> |
-| `filter` | [`LinkFilter`](../modules/dxos_echo_db.md#linkfilter) |
+| `filter` | [`LinkFilter`](../types/dxos_echo_db.LinkFilter.md) |
 
 #### Returns
 
@@ -312,13 +288,13 @@ Select links pointing to items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:173](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L173)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:173](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L173)
 
 ___
 
 ### source
 
-▸ **source**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**source**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Select sources of links in this selection.
 
@@ -327,7 +303,7 @@ Select sources of links in this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\> |
-| `filter` | [`ItemFilter`](../modules/dxos_echo_db.md#itemfilter) |
+| `filter` | [`ItemFilter`](../types/dxos_echo_db.ItemFilter.md) |
 
 #### Returns
 
@@ -335,13 +311,13 @@ Select sources of links in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:195](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L195)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:195](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L195)
 
 ___
 
 ### target
 
-▸ **target**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
+**target**(`this`, `filter?`): [`Selection`](dxos_echo_db.Selection.md)<[`Item`](dxos_echo_db.Item.md)<`any`\>, `R`\>
 
 Select targets of links in this selection.
 
@@ -350,7 +326,7 @@ Select targets of links in this selection.
 | Name | Type |
 | :------ | :------ |
 | `this` | [`Selection`](dxos_echo_db.Selection.md)<[`Link`](dxos_echo_db.Link.md)<`Model`<`any`, `any`\>, `any`, `any`\>, `R`\> |
-| `filter` | [`ItemFilter`](../modules/dxos_echo_db.md#itemfilter) |
+| `filter` | [`ItemFilter`](../types/dxos_echo_db.ItemFilter.md) |
 
 #### Returns
 
@@ -358,4 +334,4 @@ Select targets of links in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:184](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L184)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:184](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L184)

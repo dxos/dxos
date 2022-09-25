@@ -2,54 +2,37 @@
 
 [@dxos/client](../modules/dxos_client.md).InvitationProxy
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.InvitationProxy.md#constructor)
-
-### Properties
-
-- [activeInvitations](dxos_client.InvitationProxy.md#activeinvitations)
-- [invitationsUpdate](dxos_client.InvitationProxy.md#invitationsupdate)
-
-### Methods
-
-- [\_removeInvitation](dxos_client.InvitationProxy.md#_removeinvitation)
-- [createInvitationRequest](dxos_client.InvitationProxy.md#createinvitationrequest)
-- [handleInvitationRedemption](dxos_client.InvitationProxy.md#handleinvitationredemption)
-
 ## Constructors
 
 ### constructor
 
-• **new InvitationProxy**()
+**new InvitationProxy**()
 
 ## Properties
 
 ### activeInvitations
 
-• `Readonly` **activeInvitations**: [`InvitationRequest`](dxos_client.InvitationRequest.md)[] = `[]`
+ `Readonly` **activeInvitations**: [`InvitationRequest`](dxos_client.InvitationRequest.md)[] = `[]`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L38)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L38)
 
 ___
 
 ### invitationsUpdate
 
-• `Readonly` **invitationsUpdate**: `Event`<`void`\>
+ `Readonly` **invitationsUpdate**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L39)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L39)
 
 ## Methods
 
 ### \_removeInvitation
 
-▸ `Protected` **_removeInvitation**(`invitation`): `void`
+`Protected` **_removeInvitation**(`invitation`): `void`
 
 #### Parameters
 
@@ -63,13 +46,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L88)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L88)
 
 ___
 
 ### createInvitationRequest
 
-▸ **createInvitationRequest**(`__namedParameters`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
+**createInvitationRequest**(`__namedParameters`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
 
 #### Parameters
 
@@ -83,13 +66,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L41)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L41)
 
 ___
 
 ### handleInvitationRedemption
 
-▸ `Static` **handleInvitationRedemption**(`__namedParameters`): [`HandleInvitationRedemptionResult`](../interfaces/dxos_client.HandleInvitationRedemptionResult.md)
+`Static` **handleInvitationRedemption**(`__namedParameters`): [`HandleInvitationRedemptionResult`](../interfaces/dxos_client.HandleInvitationRedemptionResult.md)
 
 #### Parameters
 
@@ -103,4 +86,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L94)
+[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L94)

@@ -2,19 +2,11 @@
 
 [@dxos/client](../modules/dxos_client.md).ClientInfo
 
-## Table of contents
-
-### Properties
-
-- [echo](dxos_client.ClientInfo.md#echo)
-- [halo](dxos_client.ClientInfo.md#halo)
-- [initialized](dxos_client.ClientInfo.md#initialized)
-
 ## Properties
 
 ### echo
 
-• **echo**: `Object`
+ **echo**: `Object`
 
 #### Type declaration
 
@@ -24,24 +16,24 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L72)
+[packages/sdk/client/src/packlets/proxy/client.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L72)
 
 ___
 
 ### halo
 
-• **halo**: [`HaloInfo`](dxos_client.HaloInfo.md)
+ **halo**: [`HaloInfo`](dxos_client.HaloInfo.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L73)
+[packages/sdk/client/src/packlets/proxy/client.ts:73](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L73)
 
 ___
 
 ### initialized
 
-• **initialized**: `boolean`
+ **initialized**: `boolean`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/proxy/client.ts#L71)
+[packages/sdk/client/src/packlets/proxy/client.ts:71](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/proxy/client.ts#L71)

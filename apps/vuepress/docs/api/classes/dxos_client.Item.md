@@ -18,49 +18,11 @@ The Item data structure is governed by a Model class, which implements data cons
 
   ↳ **`Item`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Item.md#constructor)
-
-### Properties
-
-- [\_deleted](dxos_client.Item.md#_deleted)
-- [\_itemManager](dxos_client.Item.md#_itemmanager)
-- [\_onUpdate](dxos_client.Item.md#_onupdate)
-- [\_parent](dxos_client.Item.md#_parent)
-- [\_updateParent](dxos_client.Item.md#_updateparent)
-- [\_writeStream](dxos_client.Item.md#_writestream)
-
-### Accessors
-
-- [children](dxos_client.Item.md#children)
-- [deleted](dxos_client.Item.md#deleted)
-- [id](dxos_client.Item.md#id)
-- [links](dxos_client.Item.md#links)
-- [model](dxos_client.Item.md#model)
-- [modelMeta](dxos_client.Item.md#modelmeta)
-- [parent](dxos_client.Item.md#parent)
-- [readOnly](dxos_client.Item.md#readonly)
-- [refs](dxos_client.Item.md#refs)
-- [type](dxos_client.Item.md#type)
-
-### Methods
-
-- [\_processMutation](dxos_client.Item.md#_processmutation)
-- [delete](dxos_client.Item.md#delete)
-- [restore](dxos_client.Item.md#restore)
-- [select](dxos_client.Item.md#select)
-- [setParent](dxos_client.Item.md#setparent)
-- [subscribe](dxos_client.Item.md#subscribe)
-- [toString](dxos_client.Item.md#tostring)
-
 ## Constructors
 
 ### constructor
 
-• **new Item**<`M`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `_writeStream?`, `parent?`)
+**new Item**<`M`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `_writeStream?`, `parent?`)
 
 Items are constructed by the `Database` object.
 
@@ -93,7 +55,7 @@ packages/echo/echo-db/dist/src/packlets/database/item.d.ts:33
 
 ### \_deleted
 
-• `Private` **\_deleted**: `any`
+ `Private` **\_deleted**: `any`
 
 Denotes soft delete.
 Item can be restored until garbage collection (e.g., via snapshots).
@@ -106,7 +68,7 @@ ___
 
 ### \_itemManager
 
-• `Protected` `Readonly` **\_itemManager**: `ItemManager`
+ `Protected` `Readonly` **\_itemManager**: `ItemManager`
 
 #### Inherited from
 
@@ -120,7 +82,7 @@ ___
 
 ### \_onUpdate
 
-• `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
+ `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
 
 #### Inherited from
 
@@ -134,7 +96,7 @@ ___
 
 ### \_parent
 
-• `Private` **\_parent**: `any`
+ `Private` **\_parent**: `any`
 
 Parent item (or null if this item is a root item).
 
@@ -146,7 +108,7 @@ ___
 
 ### \_updateParent
 
-• `Private` **\_updateParent**: `any`
+ `Private` **\_updateParent**: `any`
 
 Atomically update parent/child relationship.
 
@@ -160,7 +122,7 @@ ___
 
 ### \_writeStream
 
-• `Private` `Optional` `Readonly` **\_writeStream**: `any`
+ `Private` `Optional` `Readonly` **\_writeStream**: `any`
 
 #### Defined in
 
@@ -170,7 +132,7 @@ packages/echo/echo-db/dist/src/packlets/database/item.d.ts:14
 
 ### children
 
-• `get` **children**(): [`Item`](dxos_client.Item.md)<`any`\>[]
+`get` **children**(): [`Item`](dxos_client.Item.md)<`any`\>[]
 
 #### Returns
 
@@ -184,7 +146,7 @@ ___
 
 ### deleted
 
-• `get` **deleted**(): `boolean`
+`get` **deleted**(): `boolean`
 
 #### Returns
 
@@ -198,7 +160,7 @@ ___
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -216,7 +178,7 @@ ___
 
 ### links
 
-• `get` **links**(): [`Link`](dxos_client.Link.md)<`any`, `any`, `any`\>[]
+`get` **links**(): [`Link`](dxos_client.Link.md)<`any`, `any`, `any`\>[]
 
 #### Returns
 
@@ -230,7 +192,7 @@ ___
 
 ### model
 
-• `get` **model**(): `M`
+`get` **model**(): `M`
 
 #### Returns
 
@@ -248,7 +210,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -266,7 +228,7 @@ ___
 
 ### parent
 
-• `get` **parent**(): ``null`` \| [`Item`](dxos_client.Item.md)<`any`\>
+`get` **parent**(): ``null`` \| [`Item`](dxos_client.Item.md)<`any`\>
 
 #### Returns
 
@@ -280,7 +242,7 @@ ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -294,7 +256,7 @@ ___
 
 ### refs
 
-• `get` **refs**(): [`Link`](dxos_client.Link.md)<`any`, `any`, `any`\>[]
+`get` **refs**(): [`Link`](dxos_client.Link.md)<`any`, `any`, `any`\>[]
 
 #### Returns
 
@@ -308,7 +270,7 @@ ___
 
 ### type
 
-• `get` **type**(): `undefined` \| `string`
+`get` **type**(): `undefined` \| `string`
 
 #### Returns
 
@@ -326,7 +288,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ### \_processMutation
 
-▸ `Private` **_processMutation**(`mutation`, `getItem`): `void`
+`Private` **_processMutation**(`mutation`, `getItem`): `void`
 
 Process a mutation from the stream.
  (Package-private).
@@ -350,7 +312,7 @@ ___
 
 ### delete
 
-▸ **delete**(): `Promise`<`void`\>
+**delete**(): `Promise`<`void`\>
 
 Delete the item.
 
@@ -366,7 +328,7 @@ ___
 
 ### restore
 
-▸ **restore**(): `Promise`<`void`\>
+**restore**(): `Promise`<`void`\>
 
 Restore deleted item.
 
@@ -382,7 +344,7 @@ ___
 
 ### select
 
-▸ **select**(): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
+**select**(): [`Selection`](dxos_client.Selection.md)<[`Item`](dxos_client.Item.md)<`any`\>, `void`\>
 
 Returns a selection context, which can be used to traverse the object graph starting from this item.
 
@@ -398,7 +360,7 @@ ___
 
 ### setParent
 
-▸ **setParent**(`parentId`): `Promise`<`void`\>
+**setParent**(`parentId`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -418,7 +380,7 @@ ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -432,7 +394,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Subscribe for updates.
 
@@ -452,7 +414,7 @@ ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 

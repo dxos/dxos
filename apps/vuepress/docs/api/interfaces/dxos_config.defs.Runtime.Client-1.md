@@ -5,23 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [debug](dxos_config.defs.Runtime.Client-1.md#debug)
-- [enableSnapshots](dxos_config.defs.Runtime.Client-1.md#enablesnapshots)
-- [invitationExpiration](dxos_config.defs.Runtime.Client-1.md#invitationexpiration)
-- [mode](dxos_config.defs.Runtime.Client-1.md#mode)
-- [remoteSource](dxos_config.defs.Runtime.Client-1.md#remotesource)
-- [snapshotInterval](dxos_config.defs.Runtime.Client-1.md#snapshotinterval)
-- [storage](dxos_config.defs.Runtime.Client-1.md#storage)
-
 ## Properties
 
 ### debug
 
-• `Optional` **debug**: `string`
+ `Optional` **debug**: `string`
 
 Options:
   - (env) = "DEBUG"
@@ -35,7 +23,7 @@ ___
 
 ### enableSnapshots
 
-• `Optional` **enableSnapshots**: `boolean`
+ `Optional` **enableSnapshots**: `boolean`
 
 Options:
   - proto3_optional = true
@@ -48,7 +36,7 @@ ___
 
 ### invitationExpiration
 
-• `Optional` **invitationExpiration**: `number`
+ `Optional` **invitationExpiration**: `number`
 
 Milliseconds
 
@@ -63,7 +51,7 @@ ___
 
 ### mode
 
-• `Optional` **mode**: [`Mode`](../enums/dxos_config.defs.Runtime.Client.Mode.md)
+ `Optional` **mode**: [`Mode`](../enums/dxos_config.defs.Runtime.Client.Mode.md)
 
 Options:
   - proto3_optional = true
@@ -76,7 +64,7 @@ ___
 
 ### remoteSource
 
-• `Optional` **remoteSource**: `string`
+ `Optional` **remoteSource**: `string`
 
 Options:
   - proto3_optional = true
@@ -89,7 +77,7 @@ ___
 
 ### snapshotInterval
 
-• `Optional` **snapshotInterval**: `number`
+ `Optional` **snapshotInterval**: `number`
 
 Milliseconds
 
@@ -104,7 +92,7 @@ ___
 
 ### storage
 
-• `Optional` **storage**: [`Storage`](dxos_config.defs.Runtime.Client.Storage-1.md)
+ `Optional` **storage**: [`Storage`](dxos_config.defs.Runtime.Client.Storage-1.md)
 
 Options:
   - proto3_optional = true

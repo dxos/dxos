@@ -5,20 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [command](dxos_config.defs.Module.Build.md#command)
-- [outdir](dxos_config.defs.Module.Build.md#outdir)
-- [tag](dxos_config.defs.Module.Build.md#tag)
-- [version](dxos_config.defs.Module.Build.md#version)
-
 ## Properties
 
 ### command
 
-• `Optional` **command**: `string`
+ `Optional` **command**: `string`
 
 Options:
   - proto3_optional = true
@@ -31,7 +22,7 @@ ___
 
 ### outdir
 
-• `Optional` **outdir**: `string`
+ `Optional` **outdir**: `string`
 
 Options:
   - proto3_optional = true
@@ -44,7 +35,7 @@ ___
 
 ### tag
 
-• `Optional` **tag**: `string`
+ `Optional` **tag**: `string`
 
 Options:
   - proto3_optional = true
@@ -57,7 +48,7 @@ ___
 
 ### version
 
-• `Optional` **version**: `string`
+ `Optional` **version**: `string`
 
 Options:
   - proto3_optional = true

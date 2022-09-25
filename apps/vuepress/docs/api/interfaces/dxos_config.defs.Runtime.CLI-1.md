@@ -5,23 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [app](dxos_config.defs.Runtime.CLI-1.md#app)
-- [channel](dxos_config.defs.Runtime.CLI-1.md#channel)
-- [console](dxos_config.defs.Runtime.CLI-1.md#console)
-- [mdns](dxos_config.defs.Runtime.CLI-1.md#mdns)
-- [nodePath](dxos_config.defs.Runtime.CLI-1.md#nodepath)
-- [npmClient](dxos_config.defs.Runtime.CLI-1.md#npmclient)
-- [signal](dxos_config.defs.Runtime.CLI-1.md#signal)
-
 ## Properties
 
 ### app
 
-• `Optional` **app**: [`AppServe`](dxos_config.defs.Runtime.CLI.AppServe-1.md)
+ `Optional` **app**: [`AppServe`](dxos_config.defs.Runtime.CLI.AppServe-1.md)
 
 Options:
   - proto3_optional = true
@@ -34,7 +22,7 @@ ___
 
 ### channel
 
-• `Optional` **channel**: `string`
+ `Optional` **channel**: `string`
 
 Options:
   - proto3_optional = true
@@ -47,7 +35,7 @@ ___
 
 ### console
 
-• `Optional` **console**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
+ `Optional` **console**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
 
 Options:
   - proto3_optional = true
@@ -60,7 +48,7 @@ ___
 
 ### mdns
 
-• `Optional` **mdns**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
+ `Optional` **mdns**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
 
 Options:
   - proto3_optional = true
@@ -73,7 +61,7 @@ ___
 
 ### nodePath
 
-• `Optional` **nodePath**: `string`
+ `Optional` **nodePath**: `string`
 
 Options:
   - proto3_optional = true
@@ -86,7 +74,7 @@ ___
 
 ### npmClient
 
-• `Optional` **npmClient**: `string`
+ `Optional` **npmClient**: `string`
 
 Options:
   - proto3_optional = true
@@ -99,7 +87,7 @@ ___
 
 ### signal
 
-• `Optional` **signal**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
+ `Optional` **signal**: [`Package`](dxos_config.defs.Runtime.CLI.Package.md)
 
 Options:
   - proto3_optional = true

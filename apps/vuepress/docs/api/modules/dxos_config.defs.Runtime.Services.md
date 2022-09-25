@@ -2,13 +2,11 @@
 
 [defs](dxos_config.defs.md).[Runtime](dxos_config.defs.Runtime.md).Services
 
-## Table of contents
-
-### Namespaces
+## Namespaces
 
 - [Kube](dxos_config.defs.Runtime.Services.Kube.md)
 
-### Interfaces
+## Interfaces
 
 - [AppServer](../interfaces/dxos_config.defs.Runtime.Services.AppServer.md)
 - [BotFactory](../interfaces/dxos_config.defs.Runtime.Services.BotFactory.md)

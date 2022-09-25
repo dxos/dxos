@@ -4,25 +4,11 @@
 
 Project
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client_testing.ProjectBuilder.md#constructor)
-
-### Accessors
-
-- [project](dxos_client_testing.ProjectBuilder.md#project)
-
-### Methods
-
-- [createTasks](dxos_client_testing.ProjectBuilder.md#createtasks)
-
 ## Constructors
 
 ### constructor
 
-• **new ProjectBuilder**(`_builder`, `_org`, `_project`)
+**new ProjectBuilder**(`_builder`, `_org`, `_project`)
 
 #### Parameters
 
@@ -34,13 +20,13 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L45)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L45)
 
 ## Accessors
 
 ### project
 
-• `get` **project**(): `Item`<`ObjectModel`\>
+`get` **project**(): `Item`<`ObjectModel`\>
 
 #### Returns
 
@@ -48,19 +34,19 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L51)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L51)
 
 ## Methods
 
 ### createTasks
 
-▸ **createTasks**(`n?`, `people?`): `Promise`<`void`[]\>
+**createTasks**(`n?`, `people?`): `Promise`<`void`[]\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `n` | [`NumberRange`](../modules/dxos_client_testing.md#numberrange) | `1` |
+| `n` | [`NumberRange`](../types/dxos_client_testing.NumberRange.md) | `1` |
 | `people?` | `Item`<`ObjectModel`\>[] | `undefined` |
 
 #### Returns
@@ -69,4 +55,4 @@ Project
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L55)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L55)

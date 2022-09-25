@@ -10,41 +10,11 @@ Acts as a read-only view into IdentityManager.
 
 - `IdentityCredentials`
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.Identity.md#constructor)
-
-### Properties
-
-- [\_deviceKey](dxos_echo_db.Identity.md#_devicekey)
-- [\_deviceKeyChain](dxos_echo_db.Identity.md#_devicekeychain)
-- [\_identityKey](dxos_echo_db.Identity.md#_identitykey)
-
-### Accessors
-
-- [contacts](dxos_echo_db.Identity.md#contacts)
-- [deviceKey](dxos_echo_db.Identity.md#devicekey)
-- [deviceKeyChain](dxos_echo_db.Identity.md#devicekeychain)
-- [displayName](dxos_echo_db.Identity.md#displayname)
-- [halo](dxos_echo_db.Identity.md#halo)
-- [identityGenesis](dxos_echo_db.Identity.md#identitygenesis)
-- [identityInfo](dxos_echo_db.Identity.md#identityinfo)
-- [identityKey](dxos_echo_db.Identity.md#identitykey)
-- [keyring](dxos_echo_db.Identity.md#keyring)
-- [preferences](dxos_echo_db.Identity.md#preferences)
-- [signer](dxos_echo_db.Identity.md#signer)
-
-### Methods
-
-- [createCredentialsSigner](dxos_echo_db.Identity.md#createcredentialssigner)
-
 ## Constructors
 
 ### constructor
 
-• **new Identity**(`_keyring`, `_halo`)
+**new Identity**(`_keyring`, `_halo`)
 
 #### Parameters
 
@@ -55,43 +25,43 @@ Acts as a read-only view into IdentityManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L35)
+[packages/echo/echo-db/src/halo/identity.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L35)
 
 ## Properties
 
 ### \_deviceKey
 
-• `Private` `Readonly` **\_deviceKey**: `KeyRecord`
+ `Private` `Readonly` **\_deviceKey**: `KeyRecord`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L28)
+[packages/echo/echo-db/src/halo/identity.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L28)
 
 ___
 
 ### \_deviceKeyChain
 
-• `Private` `Readonly` **\_deviceKeyChain**: `KeyChain`
+ `Private` `Readonly` **\_deviceKeyChain**: `KeyChain`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L29)
+[packages/echo/echo-db/src/halo/identity.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L29)
 
 ___
 
 ### \_identityKey
 
-• `Private` `Readonly` **\_identityKey**: `KeyRecord`
+ `Private` `Readonly` **\_identityKey**: `KeyRecord`
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L27)
+[packages/echo/echo-db/src/halo/identity.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L27)
 
 ## Accessors
 
 ### contacts
 
-• `get` **contacts**(): [`ContactManager`](dxos_echo_db.ContactManager.md)
+`get` **contacts**(): [`ContactManager`](dxos_echo_db.ContactManager.md)
 
 #### Returns
 
@@ -103,13 +73,13 @@ IdentityCredentials.contacts
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L85)
+[packages/echo/echo-db/src/halo/identity.ts:85](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L85)
 
 ___
 
 ### deviceKey
 
-• `get` **deviceKey**(): `KeyRecord`
+`get` **deviceKey**(): `KeyRecord`
 
 #### Returns
 
@@ -121,13 +91,13 @@ IdentityCredentials.deviceKey
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:57](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L57)
+[packages/echo/echo-db/src/halo/identity.ts:57](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L57)
 
 ___
 
 ### deviceKeyChain
 
-• `get` **deviceKeyChain**(): `KeyChain`
+`get` **deviceKeyChain**(): `KeyChain`
 
 #### Returns
 
@@ -139,13 +109,13 @@ IdentityCredentials.deviceKeyChain
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L61)
+[packages/echo/echo-db/src/halo/identity.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L61)
 
 ___
 
 ### displayName
 
-• `get` **displayName**(): `undefined` \| `string`
+`get` **displayName**(): `undefined` \| `string`
 
 #### Returns
 
@@ -157,13 +127,13 @@ IdentityCredentials.displayName
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L65)
+[packages/echo/echo-db/src/halo/identity.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L65)
 
 ___
 
 ### halo
 
-• `get` **halo**(): [`HaloParty`](dxos_echo_db.HaloParty.md)
+`get` **halo**(): [`HaloParty`](dxos_echo_db.HaloParty.md)
 
 HALO party. Must be open.
 
@@ -173,13 +143,13 @@ HALO party. Must be open.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:93](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L93)
+[packages/echo/echo-db/src/halo/identity.ts:93](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L93)
 
 ___
 
 ### identityGenesis
 
-• `get` **identityGenesis**(): `SignedMessage`
+`get` **identityGenesis**(): `SignedMessage`
 
 #### Returns
 
@@ -191,13 +161,13 @@ IdentityCredentials.identityGenesis
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:77](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L77)
+[packages/echo/echo-db/src/halo/identity.ts:77](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L77)
 
 ___
 
 ### identityInfo
 
-• `get` **identityInfo**(): `undefined` \| `SignedMessage`
+`get` **identityInfo**(): `undefined` \| `SignedMessage`
 
 Contains profile username.
 Can be missing if the username wasn't provided when profile was created.
@@ -212,13 +182,13 @@ IdentityCredentials.identityInfo
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:73](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L73)
+[packages/echo/echo-db/src/halo/identity.ts:73](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L73)
 
 ___
 
 ### identityKey
 
-• `get` **identityKey**(): `KeyRecord`
+`get` **identityKey**(): `KeyRecord`
 
 #### Returns
 
@@ -230,13 +200,13 @@ IdentityCredentials.identityKey
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L53)
+[packages/echo/echo-db/src/halo/identity.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L53)
 
 ___
 
 ### keyring
 
-• `get` **keyring**(): `Keyring`
+`get` **keyring**(): `Keyring`
 
 #### Returns
 
@@ -248,13 +218,13 @@ IdentityCredentials.keyring
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L49)
+[packages/echo/echo-db/src/halo/identity.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L49)
 
 ___
 
 ### preferences
 
-• `get` **preferences**(): [`Preferences`](dxos_echo_db.Preferences.md)
+`get` **preferences**(): [`Preferences`](dxos_echo_db.Preferences.md)
 
 #### Returns
 
@@ -266,13 +236,13 @@ IdentityCredentials.preferences
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L81)
+[packages/echo/echo-db/src/halo/identity.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L81)
 
 ___
 
 ### signer
 
-• `get` **signer**(): `Signer`
+`get` **signer**(): `Signer`
 
 #### Returns
 
@@ -280,13 +250,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L45)
+[packages/echo/echo-db/src/halo/identity.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L45)
 
 ## Methods
 
 ### createCredentialsSigner
 
-▸ **createCredentialsSigner**(): [`CredentialsSigner`](dxos_echo_db.CredentialsSigner.md)
+**createCredentialsSigner**(): [`CredentialsSigner`](dxos_echo_db.CredentialsSigner.md)
 
 #### Returns
 
@@ -298,4 +268,4 @@ IdentityCredentials.createCredentialsSigner
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity.ts#L97)
+[packages/echo/echo-db/src/halo/identity.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity.ts#L97)

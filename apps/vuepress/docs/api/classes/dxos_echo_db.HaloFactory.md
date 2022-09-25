@@ -4,25 +4,11 @@
 
 Create and manage HALO parties.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.HaloFactory.md#constructor)
-
-### Methods
-
-- [\_joinHalo](dxos_echo_db.HaloFactory.md#_joinhalo)
-- [constructParty](dxos_echo_db.HaloFactory.md#constructparty)
-- [createHalo](dxos_echo_db.HaloFactory.md#createhalo)
-- [joinHalo](dxos_echo_db.HaloFactory.md#joinhalo)
-- [recoverHalo](dxos_echo_db.HaloFactory.md#recoverhalo)
-
 ## Constructors
 
 ### constructor
 
-• **new HaloFactory**(`_networkManager`, `_modelFactory`, `_snapshotStore`, `_feedProviderFactory`, `_keyring`, `_options?`)
+**new HaloFactory**(`_networkManager`, `_modelFactory`, `_snapshotStore`, `_feedProviderFactory`, `_keyring`, `_options?`)
 
 #### Parameters
 
@@ -37,13 +23,13 @@ Create and manage HALO parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:54](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L54)
+[packages/echo/echo-db/src/halo/halo-factory.ts:54](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L54)
 
 ## Methods
 
 ### \_joinHalo
 
-▸ `Private` **_joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+`Private` **_joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 #### Parameters
 
@@ -58,13 +44,13 @@ Create and manage HALO parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:158](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L158)
+[packages/echo/echo-db/src/halo/halo-factory.ts:158](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L158)
 
 ___
 
 ### constructParty
 
-▸ **constructParty**(): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**constructParty**(): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 #### Returns
 
@@ -72,13 +58,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L63)
+[packages/echo/echo-db/src/halo/halo-factory.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L63)
 
 ___
 
 ### createHalo
 
-▸ **createHalo**(`options?`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**createHalo**(`options?`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 #### Parameters
 
@@ -92,13 +78,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L79)
+[packages/echo/echo-db/src/halo/halo-factory.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L79)
 
 ___
 
 ### joinHalo
 
-▸ **joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 #### Parameters
 
@@ -113,13 +99,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:152](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L152)
+[packages/echo/echo-db/src/halo/halo-factory.ts:152](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L152)
 
 ___
 
 ### recoverHalo
 
-▸ **recoverHalo**(`seedPhrase`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**recoverHalo**(`seedPhrase`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 #### Parameters
 
@@ -133,4 +119,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:135](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/halo-factory.ts#L135)
+[packages/echo/echo-db/src/halo/halo-factory.ts:135](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/halo-factory.ts#L135)

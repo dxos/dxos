@@ -20,36 +20,11 @@ Subclassed by Item and Link.
 
   ↳ [`Link`](dxos_client.Link.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.Entity.md#constructor)
-
-### Properties
-
-- [\_id](dxos_client.Entity.md#_id)
-- [\_itemManager](dxos_client.Entity.md#_itemmanager)
-- [\_onUpdate](dxos_client.Entity.md#_onupdate)
-- [\_subscriptions](dxos_client.Entity.md#_subscriptions)
-- [\_type](dxos_client.Entity.md#_type)
-
-### Accessors
-
-- [id](dxos_client.Entity.md#id)
-- [model](dxos_client.Entity.md#model)
-- [modelMeta](dxos_client.Entity.md#modelmeta)
-- [type](dxos_client.Entity.md#type)
-
-### Methods
-
-- [subscribe](dxos_client.Entity.md#subscribe)
-
 ## Constructors
 
 ### constructor
 
-• **new Entity**<`M`\>(`_itemManager`, `_id`, `_type`, `stateManager`)
+**new Entity**<`M`\>(`_itemManager`, `_id`, `_type`, `stateManager`)
 
 #### Type parameters
 
@@ -74,7 +49,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:16
 
 ### \_id
 
-• `Private` `Readonly` **\_id**: `any`
+ `Private` `Readonly` **\_id**: `any`
 
 #### Defined in
 
@@ -84,7 +59,7 @@ ___
 
 ### \_itemManager
 
-• `Protected` `Readonly` **\_itemManager**: `ItemManager`
+ `Protected` `Readonly` **\_itemManager**: `ItemManager`
 
 #### Defined in
 
@@ -94,7 +69,7 @@ ___
 
 ### \_onUpdate
 
-• `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
+ `Protected` `Readonly` **\_onUpdate**: `Event`<[`Entity`](dxos_client.Entity.md)<`any`\>\>
 
 #### Defined in
 
@@ -104,7 +79,7 @@ ___
 
 ### \_subscriptions
 
-• `Private` `Readonly` **\_subscriptions**: `any`
+ `Private` `Readonly` **\_subscriptions**: `any`
 
 #### Defined in
 
@@ -114,7 +89,7 @@ ___
 
 ### \_type
 
-• `Private` `Readonly` **\_type**: `any`
+ `Private` `Readonly` **\_type**: `any`
 
 #### Defined in
 
@@ -124,7 +99,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:13
 
 ### id
 
-• `get` **id**(): `string`
+`get` **id**(): `string`
 
 #### Returns
 
@@ -138,7 +113,7 @@ ___
 
 ### model
 
-• `get` **model**(): `M`
+`get` **model**(): `M`
 
 #### Returns
 
@@ -152,7 +127,7 @@ ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -166,7 +141,7 @@ ___
 
 ### type
 
-• `get` **type**(): `undefined` \| `string`
+`get` **type**(): `undefined` \| `string`
 
 #### Returns
 
@@ -180,7 +155,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 Subscribe for updates.
 
@@ -194,7 +169,7 @@ Subscribe for updates.
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 Subscribe for updates.
 

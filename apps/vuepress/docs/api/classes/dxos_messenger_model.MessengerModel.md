@@ -10,38 +10,11 @@ MessengerModel is a simple model which represents a chat as an array of Messages
 
   ↳ **`MessengerModel`**
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_messenger_model.MessengerModel.md#constructor)
-
-### Properties
-
-- [\_getState](dxos_messenger_model.MessengerModel.md#_getstate)
-- [update](dxos_messenger_model.MessengerModel.md#update)
-- [meta](dxos_messenger_model.MessengerModel.md#meta)
-
-### Accessors
-
-- [itemId](dxos_messenger_model.MessengerModel.md#itemid)
-- [messages](dxos_messenger_model.MessengerModel.md#messages)
-- [modelMeta](dxos_messenger_model.MessengerModel.md#modelmeta)
-- [readOnly](dxos_messenger_model.MessengerModel.md#readonly)
-
-### Methods
-
-- [sendMessage](dxos_messenger_model.MessengerModel.md#sendmessage)
-- [subscribe](dxos_messenger_model.MessengerModel.md#subscribe)
-- [toJSON](dxos_messenger_model.MessengerModel.md#tojson)
-- [toString](dxos_messenger_model.MessengerModel.md#tostring)
-- [write](dxos_messenger_model.MessengerModel.md#write)
-
 ## Constructors
 
 ### constructor
 
-• **new MessengerModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
+**new MessengerModel**(`_meta`, `_itemId`, `_getState`, `_mutationWriter?`)
 
 #### Parameters
 
@@ -64,11 +37,11 @@ packages/echo/model-factory/dist/src/model.d.ts:20
 
 ### \_getState
 
-• `Protected` `Readonly` **\_getState**: () => `Message`[]
+ `Protected` `Readonly` **\_getState**: () => `Message`[]
 
 #### Type declaration
 
-▸ (): `Message`[]
+(): `Message`[]
 
 ##### Returns
 
@@ -86,7 +59,7 @@ ___
 
 ### update
 
-• `Readonly` **update**: `Event`<`Model`<`Message`[], `Message`\>\>
+ `Readonly` **update**: `Event`<`Model`<`Message`[], `Message`\>\>
 
 #### Inherited from
 
@@ -100,17 +73,17 @@ ___
 
 ### meta
 
-▪ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
+ `Static` **meta**: `ModelMeta`<`any`, `any`, `any`\>
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/messenger-model/src/model.ts#L34)
+[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/messenger-model/src/model.ts#L34)
 
 ## Accessors
 
 ### itemId
 
-• `get` **itemId**(): `string`
+`get` **itemId**(): `string`
 
 #### Returns
 
@@ -128,7 +101,7 @@ ___
 
 ### messages
 
-• `get` **messages**(): `Message`[]
+`get` **messages**(): `Message`[]
 
 #### Returns
 
@@ -136,13 +109,13 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/messenger-model/src/model.ts#L40)
+[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/messenger-model/src/model.ts#L40)
 
 ___
 
 ### modelMeta
 
-• `get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
+`get` **modelMeta**(): `ModelMeta`<`any`, `any`, `any`\>
 
 #### Returns
 
@@ -160,7 +133,7 @@ ___
 
 ### readOnly
 
-• `get` **readOnly**(): `boolean`
+`get` **readOnly**(): `boolean`
 
 #### Returns
 
@@ -178,7 +151,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 ### sendMessage
 
-▸ **sendMessage**(`message`): `Promise`<`void`\>
+**sendMessage**(`message`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -192,13 +165,13 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/messenger-model/src/model.ts#L44)
+[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/messenger-model/src/model.ts#L44)
 
 ___
 
 ### subscribe
 
-▸ **subscribe**(`listener`): () => `void`
+**subscribe**(`listener`): () => `void`
 
 #### Parameters
 
@@ -210,7 +183,7 @@ ___
 
 `fn`
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -228,7 +201,7 @@ ___
 
 ### toJSON
 
-▸ **toJSON**(): `Object`
+**toJSON**(): `Object`
 
 #### Returns
 
@@ -251,7 +224,7 @@ ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -269,7 +242,7 @@ ___
 
 ### write
 
-▸ `Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
+`Protected` **write**(`mutation`): `Promise`<`MutationWriteReceipt`\>
 
 Writes the raw mutation to the output stream.
 

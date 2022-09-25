@@ -11,36 +11,11 @@ Write operations result in mutations being written to the outgoing stream.
 
 - [`DatabaseBackend`](../interfaces/dxos_echo_db.DatabaseBackend.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.FeedDatabaseBackend.md#constructor)
-
-### Properties
-
-- [\_echoProcessor](dxos_echo_db.FeedDatabaseBackend.md#_echoprocessor)
-- [\_itemDemuxer](dxos_echo_db.FeedDatabaseBackend.md#_itemdemuxer)
-- [\_itemManager](dxos_echo_db.FeedDatabaseBackend.md#_itemmanager)
-
-### Accessors
-
-- [echoProcessor](dxos_echo_db.FeedDatabaseBackend.md#echoprocessor)
-- [isReadOnly](dxos_echo_db.FeedDatabaseBackend.md#isreadonly)
-
-### Methods
-
-- [close](dxos_echo_db.FeedDatabaseBackend.md#close)
-- [createDataServiceHost](dxos_echo_db.FeedDatabaseBackend.md#createdataservicehost)
-- [createSnapshot](dxos_echo_db.FeedDatabaseBackend.md#createsnapshot)
-- [getWriteStream](dxos_echo_db.FeedDatabaseBackend.md#getwritestream)
-- [open](dxos_echo_db.FeedDatabaseBackend.md#open)
-
 ## Constructors
 
 ### constructor
 
-• **new FeedDatabaseBackend**(`_outboundStream`, `_snapshot?`, `_options?`)
+**new FeedDatabaseBackend**(`_outboundStream`, `_snapshot?`, `_options?`)
 
 #### Parameters
 
@@ -52,57 +27,57 @@ Write operations result in mutations being written to the outgoing stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L49)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L49)
 
 ## Properties
 
 ### \_echoProcessor
 
-• `Private` **\_echoProcessor**: [`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+ `Private` **\_echoProcessor**: [`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:45](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L45)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:45](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L45)
 
 ___
 
 ### \_itemDemuxer
 
-• `Private` **\_itemDemuxer**: [`ItemDemuxer`](dxos_echo_db.ItemDemuxer.md)
+ `Private` **\_itemDemuxer**: [`ItemDemuxer`](dxos_echo_db.ItemDemuxer.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L47)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L47)
 
 ___
 
 ### \_itemManager
 
-• `Private` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
+ `Private` **\_itemManager**: [`ItemManager`](dxos_echo_db.ItemManager.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L46)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L46)
 
 ## Accessors
 
 ### echoProcessor
 
-• `get` **echoProcessor**(): [`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+`get` **echoProcessor**(): [`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Returns
 
-[`EchoProcessor`](../modules/dxos_echo_db.md#echoprocessor)
+[`EchoProcessor`](../types/dxos_echo_db.EchoProcessor.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:65](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L65)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:65](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L65)
 
 ___
 
 ### isReadOnly
 
-• `get` **isReadOnly**(): `boolean`
+`get` **isReadOnly**(): `boolean`
 
 #### Returns
 
@@ -114,13 +89,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:72](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L72)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:72](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L72)
 
 ## Methods
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -132,13 +107,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L69)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L69)
 
 ___
 
 ### createDataServiceHost
 
-▸ **createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
+**createDataServiceHost**(): [`DataServiceHost`](dxos_echo_db.DataServiceHost.md)
 
 #### Returns
 
@@ -150,13 +125,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L84)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L84)
 
 ___
 
 ### createSnapshot
 
-▸ **createSnapshot**(): `DatabaseSnapshot`
+**createSnapshot**(): `DatabaseSnapshot`
 
 #### Returns
 
@@ -168,13 +143,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L80)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L80)
 
 ___
 
 ### getWriteStream
 
-▸ **getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
+**getWriteStream**(): `undefined` \| `FeedWriter`<`EchoEnvelope`\>
 
 #### Returns
 
@@ -186,13 +161,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L76)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L76)
 
 ___
 
 ### open
 
-▸ **open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
+**open**(`itemManager`, `modelFactory`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -211,4 +186,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:55](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/packlets/database/database-backend.ts#L55)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:55](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/packlets/database/database-backend.ts#L55)

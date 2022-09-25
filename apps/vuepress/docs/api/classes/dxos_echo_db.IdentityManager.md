@@ -4,36 +4,11 @@
 
 Manages the keyring and HALO party.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.IdentityManager.md#constructor)
-
-### Properties
-
-- [\_identity](dxos_echo_db.IdentityManager.md#_identity)
-- [ready](dxos_echo_db.IdentityManager.md#ready)
-
-### Accessors
-
-- [identity](dxos_echo_db.IdentityManager.md#identity)
-
-### Methods
-
-- [\_initialize](dxos_echo_db.IdentityManager.md#_initialize)
-- [close](dxos_echo_db.IdentityManager.md#close)
-- [createHalo](dxos_echo_db.IdentityManager.md#createhalo)
-- [getIdentityKey](dxos_echo_db.IdentityManager.md#getidentitykey)
-- [joinHalo](dxos_echo_db.IdentityManager.md#joinhalo)
-- [loadFromStorage](dxos_echo_db.IdentityManager.md#loadfromstorage)
-- [recoverHalo](dxos_echo_db.IdentityManager.md#recoverhalo)
-
 ## Constructors
 
 ### constructor
 
-• **new IdentityManager**(`_keyring`, `_haloFactory`, `_metadataStore`)
+**new IdentityManager**(`_keyring`, `_haloFactory`, `_metadataStore`)
 
 #### Parameters
 
@@ -45,33 +20,33 @@ Manages the keyring and HALO party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L29)
+[packages/echo/echo-db/src/halo/identity-manager.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L29)
 
 ## Properties
 
 ### \_identity
 
-• `Private` **\_identity**: `undefined` \| [`Identity`](dxos_echo_db.Identity.md)
+ `Private` **\_identity**: `undefined` \| [`Identity`](dxos_echo_db.Identity.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L25)
+[packages/echo/echo-db/src/halo/identity-manager.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L25)
 
 ___
 
 ### ready
 
-• `Readonly` **ready**: `Event`<`void`\>
+ `Readonly` **ready**: `Event`<`void`\>
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L27)
+[packages/echo/echo-db/src/halo/identity-manager.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L27)
 
 ## Accessors
 
 ### identity
 
-• `get` **identity**(): `undefined` \| [`Identity`](dxos_echo_db.Identity.md)
+`get` **identity**(): `undefined` \| [`Identity`](dxos_echo_db.Identity.md)
 
 #### Returns
 
@@ -79,13 +54,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L35)
+[packages/echo/echo-db/src/halo/identity-manager.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L35)
 
 ## Methods
 
 ### \_initialize
 
-▸ `Private` **_initialize**(`halo`): `Promise`<`void`\>
+`Private` **_initialize**(`halo`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -99,13 +74,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L39)
+[packages/echo/echo-db/src/halo/identity-manager.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L39)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -113,13 +88,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:53](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L53)
+[packages/echo/echo-db/src/halo/identity-manager.ts:53](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L53)
 
 ___
 
 ### createHalo
 
-▸ **createHalo**(`options?`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**createHalo**(`options?`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 Creates the Identity HALO.
 
@@ -135,13 +110,13 @@ Creates the Identity HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L88)
+[packages/echo/echo-db/src/halo/identity-manager.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L88)
 
 ___
 
 ### getIdentityKey
 
-▸ **getIdentityKey**(): `undefined` \| `KeyRecord`
+**getIdentityKey**(): `undefined` \| `KeyRecord`
 
 #### Returns
 
@@ -149,13 +124,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L60)
+[packages/echo/echo-db/src/halo/identity-manager.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L60)
 
 ___
 
 ### joinHalo
 
-▸ **joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**joinHalo**(`invitationDescriptor`, `secretProvider`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 Joins an existing Identity HALO.
 
@@ -172,13 +147,13 @@ Joins an existing Identity HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L120)
+[packages/echo/echo-db/src/halo/identity-manager.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L120)
 
 ___
 
 ### loadFromStorage
 
-▸ **loadFromStorage**(): `Promise`<`void`\>
+**loadFromStorage**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -186,13 +161,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:64](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L64)
+[packages/echo/echo-db/src/halo/identity-manager.ts:64](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L64)
 
 ___
 
 ### recoverHalo
 
-▸ **recoverHalo**(`seedPhrase`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
+**recoverHalo**(`seedPhrase`): `Promise`<[`HaloParty`](dxos_echo_db.HaloParty.md)\>
 
 Joins an existing Identity HALO from a recovery seed phrase.
 TODO(telackey): Combine with joinHalo?
@@ -212,4 +187,4 @@ The downside is that would wreck the symmetry to createParty/joinParty.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/identity-manager.ts:108](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/halo/identity-manager.ts#L108)
+[packages/echo/echo-db/src/halo/identity-manager.ts:108](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/halo/identity-manager.ts#L108)

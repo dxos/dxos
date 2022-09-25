@@ -2,25 +2,15 @@
 
 [@dxos/react-client-testing](../modules/dxos_react_client_testing.md).ItemAdapter
 
-## Table of contents
-
-### Properties
-
-- [description](dxos_react_client_testing.ItemAdapter.md#description)
-- [linkedItems](dxos_react_client_testing.ItemAdapter.md#linkeditems)
-- [linkedTypes](dxos_react_client_testing.ItemAdapter.md#linkedtypes)
-- [meta](dxos_react_client_testing.ItemAdapter.md#meta)
-- [title](dxos_react_client_testing.ItemAdapter.md#title)
-
 ## Properties
 
 ### description
 
-• **description**: (`item`: `Item`<`ObjectModel`\>) => `undefined` \| `string`
+ **description**: (`item`: `Item`<`ObjectModel`\>) => `undefined` \| `string`
 
 #### Type declaration
 
-▸ (`item`): `undefined` \| `string`
+(`item`): `undefined` \| `string`
 
 ##### Parameters
 
@@ -34,17 +24,17 @@
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L60)
+[packages/sdk/react-client-testing/src/adapter.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/adapter.ts#L60)
 
 ___
 
 ### linkedItems
 
-• `Optional` **linkedItems**: (`item`: `Item`<`ObjectModel`\>, `kind`: `string`) => `Item`<`ObjectModel`\>[]
+ `Optional` **linkedItems**: (`item`: `Item`<`ObjectModel`\>, `kind`: `string`) => `Item`<`ObjectModel`\>[]
 
 #### Type declaration
 
-▸ (`item`, `kind`): `Item`<`ObjectModel`\>[]
+(`item`, `kind`): `Item`<`ObjectModel`\>[]
 
 ##### Parameters
 
@@ -59,17 +49,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:62](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L62)
+[packages/sdk/react-client-testing/src/adapter.ts:62](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/adapter.ts#L62)
 
 ___
 
 ### linkedTypes
 
-• `Optional` **linkedTypes**: (`item`: `Item`<`ObjectModel`\>) => `string`[]
+ `Optional` **linkedTypes**: (`item`: `Item`<`ObjectModel`\>) => `string`[]
 
 #### Type declaration
 
-▸ (`item`): `string`[]
+(`item`): `string`[]
 
 ##### Parameters
 
@@ -83,17 +73,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L61)
+[packages/sdk/react-client-testing/src/adapter.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/adapter.ts#L61)
 
 ___
 
 ### meta
 
-• `Optional` **meta**: (`type`: `string`) => `undefined` \| [`ItemMeta`](../modules/dxos_react_client_testing.md#itemmeta)
+ `Optional` **meta**: (`type`: `string`) => `undefined` \| [`ItemMeta`](../types/dxos_react_client_testing.ItemMeta.md)
 
 #### Type declaration
 
-▸ (`type`): `undefined` \| [`ItemMeta`](../modules/dxos_react_client_testing.md#itemmeta)
+(`type`): `undefined` \| [`ItemMeta`](../types/dxos_react_client_testing.ItemMeta.md)
 
 ##### Parameters
 
@@ -103,21 +93,21 @@ ___
 
 ##### Returns
 
-`undefined` \| [`ItemMeta`](../modules/dxos_react_client_testing.md#itemmeta)
+`undefined` \| [`ItemMeta`](../types/dxos_react_client_testing.ItemMeta.md)
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:63](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L63)
+[packages/sdk/react-client-testing/src/adapter.ts:63](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/adapter.ts#L63)
 
 ___
 
 ### title
 
-• **title**: (`item`: `Item`<`ObjectModel`\>) => `undefined` \| `string`
+ **title**: (`item`: `Item`<`ObjectModel`\>) => `undefined` \| `string`
 
 #### Type declaration
 
-▸ (`item`): `undefined` \| `string`
+(`item`): `undefined` \| `string`
 
 ##### Parameters
 
@@ -131,4 +121,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-client-testing/src/adapter.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-client-testing/src/adapter.ts#L59)
+[packages/sdk/react-client-testing/src/adapter.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-client-testing/src/adapter.ts#L59)

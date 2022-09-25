@@ -6,23 +6,11 @@ Stores party snapshots. Takes any `random-access-storage` compatible backend.
 
 Passing `ram` as a backend will make all of files temporary, effectively disabling snapshots.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.SnapshotStore.md#constructor)
-
-### Methods
-
-- [clear](dxos_echo_db.SnapshotStore.md#clear)
-- [load](dxos_echo_db.SnapshotStore.md#load)
-- [save](dxos_echo_db.SnapshotStore.md#save)
-
 ## Constructors
 
 ### constructor
 
-• **new SnapshotStore**(`_directory`)
+**new SnapshotStore**(`_directory`)
 
 #### Parameters
 
@@ -32,13 +20,13 @@ Passing `ram` as a backend will make all of files temporary, effectively disabli
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:20](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L20)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:20](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L20)
 
 ## Methods
 
 ### clear
 
-▸ **clear**(): `Promise`<`void`\>
+**clear**(): `Promise`<`void`\>
 
 Removes all data.
 
@@ -48,13 +36,13 @@ Removes all data.
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:61](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L61)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:61](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L61)
 
 ___
 
 ### load
 
-▸ **load**(`partyKey`): `Promise`<`undefined` \| `PartySnapshot`\>
+**load**(`partyKey`): `Promise`<`undefined` \| `PartySnapshot`\>
 
 #### Parameters
 
@@ -68,13 +56,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L24)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L24)
 
 ___
 
 ### save
 
-▸ **save**(`snapshot`): `Promise`<`void`\>
+**save**(`snapshot`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -88,4 +76,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/snapshots/snapshot-store.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L46)
+[packages/echo/echo-db/src/snapshots/snapshot-store.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/snapshots/snapshot-store.ts#L46)

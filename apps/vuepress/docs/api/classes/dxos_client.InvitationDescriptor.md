@@ -9,38 +9,11 @@ Invitations can be interactive or offline.
 
 This descriptor might also have a bundled secret for authentication in interactive mode.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client.InvitationDescriptor.md#constructor)
-
-### Properties
-
-- [identityKey](dxos_client.InvitationDescriptor.md#identitykey)
-- [invitation](dxos_client.InvitationDescriptor.md#invitation)
-- [secret](dxos_client.InvitationDescriptor.md#secret)
-- [swarmKey](dxos_client.InvitationDescriptor.md#swarmkey)
-- [type](dxos_client.InvitationDescriptor.md#type)
-
-### Accessors
-
-- [hash](dxos_client.InvitationDescriptor.md#hash)
-
-### Methods
-
-- [encode](dxos_client.InvitationDescriptor.md#encode)
-- [toProto](dxos_client.InvitationDescriptor.md#toproto)
-- [toQueryParameters](dxos_client.InvitationDescriptor.md#toqueryparameters)
-- [decode](dxos_client.InvitationDescriptor.md#decode)
-- [fromProto](dxos_client.InvitationDescriptor.md#fromproto)
-- [fromQueryParameters](dxos_client.InvitationDescriptor.md#fromqueryparameters)
-
 ## Constructors
 
 ### constructor
 
-• **new InvitationDescriptor**(`type`, `swarmKey`, `invitation`, `identityKey?`, `secret?`)
+**new InvitationDescriptor**(`type`, `swarmKey`, `invitation`, `identityKey?`, `secret?`)
 
 #### Parameters
 
@@ -60,7 +33,7 @@ packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:31
 
 ### identityKey
 
-• `Optional` `Readonly` **identityKey**: `PublicKey`
+ `Optional` `Readonly` **identityKey**: `PublicKey`
 
 #### Defined in
 
@@ -70,7 +43,7 @@ ___
 
 ### invitation
 
-• `Readonly` **invitation**: `Uint8Array`
+ `Readonly` **invitation**: `Uint8Array`
 
 #### Defined in
 
@@ -80,7 +53,7 @@ ___
 
 ### secret
 
-• `Optional` **secret**: `Uint8Array`
+ `Optional` **secret**: `Uint8Array`
 
 #### Defined in
 
@@ -90,7 +63,7 @@ ___
 
 ### swarmKey
 
-• `Readonly` **swarmKey**: `Uint8Array`
+ `Readonly` **swarmKey**: `Uint8Array`
 
 #### Defined in
 
@@ -100,7 +73,7 @@ ___
 
 ### type
 
-• `Readonly` **type**: `Type`
+ `Readonly` **type**: `Type`
 
 #### Defined in
 
@@ -110,7 +83,7 @@ packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:23
 
 ### hash
 
-• `get` **hash**(): `string`
+`get` **hash**(): `string`
 
 #### Returns
 
@@ -124,7 +97,7 @@ packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:32
 
 ### encode
 
-▸ **encode**(): `string`
+**encode**(): `string`
 
 #### Returns
 
@@ -138,7 +111,7 @@ ___
 
 ### toProto
 
-▸ **toProto**(): `InvitationDescriptor`
+**toProto**(): `InvitationDescriptor`
 
 #### Returns
 
@@ -152,7 +125,7 @@ ___
 
 ### toQueryParameters
 
-▸ **toQueryParameters**(): `InvitationQueryParameters`
+**toQueryParameters**(): `InvitationQueryParameters`
 
 Exports an InvitationDescriptor to an object suitable for use as query parameters.
 
@@ -168,7 +141,7 @@ ___
 
 ### decode
 
-▸ `Static` **decode**(`code`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`Static` **decode**(`code`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Parameters
 
@@ -188,7 +161,7 @@ ___
 
 ### fromProto
 
-▸ `Static` **fromProto**(`invitation`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`Static` **fromProto**(`invitation`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Parameters
 
@@ -208,7 +181,7 @@ ___
 
 ### fromQueryParameters
 
-▸ `Static` **fromQueryParameters**(`queryParameters`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
+`Static` **fromQueryParameters**(`queryParameters`): [`InvitationDescriptor`](dxos_client.InvitationDescriptor.md)
 
 #### Parameters
 

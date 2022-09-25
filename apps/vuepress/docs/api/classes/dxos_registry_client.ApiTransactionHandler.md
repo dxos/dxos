@@ -4,55 +4,38 @@
 
 TODO(burdon): Comment.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.ApiTransactionHandler.md#constructor)
-
-### Properties
-
-- [signFn](dxos_registry_client.ApiTransactionHandler.md#signfn)
-
-### Methods
-
-- [ensureExtrinsicNotFailed](dxos_registry_client.ApiTransactionHandler.md#ensureextrinsicnotfailed)
-- [getErrorName](dxos_registry_client.ApiTransactionHandler.md#geterrorname)
-- [sendSudoTransaction](dxos_registry_client.ApiTransactionHandler.md#sendsudotransaction)
-- [sendTransaction](dxos_registry_client.ApiTransactionHandler.md#sendtransaction)
-
 ## Constructors
 
 ### constructor
 
-• **new ApiTransactionHandler**(`api`, `_signFn?`)
+**new ApiTransactionHandler**(`api`, `_signFn?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `api` | `ApiPromise` |
-| `_signFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `_signFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L27)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L27)
 
 ## Properties
 
 ### signFn
 
-• `Private` **signFn**: [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction)
+ `Private` **signFn**: [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md)
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:25](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L25)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:25](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L25)
 
 ## Methods
 
 ### ensureExtrinsicNotFailed
 
-▸ **ensureExtrinsicNotFailed**(`events`): `void`
+**ensureExtrinsicNotFailed**(`events`): `void`
 
 #### Parameters
 
@@ -66,13 +49,13 @@ TODO(burdon): Comment.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L100)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:100](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L100)
 
 ___
 
 ### getErrorName
 
-▸ **getErrorName**(`rejectionEvent`): `string`
+**getErrorName**(`rejectionEvent`): `string`
 
 #### Parameters
 
@@ -86,20 +69,20 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L78)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L78)
 
 ___
 
 ### sendSudoTransaction
 
-▸ **sendSudoTransaction**(`transaction`, `sudoSignFn`): `Promise`<`SendTransactionResult`\>
+**sendSudoTransaction**(`transaction`, `sudoSignFn`): `Promise`<`SendTransactionResult`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `transaction` | `Tx` |
-| `sudoSignFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) \| `AddressOrPair` |
+| `sudoSignFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) \| `AddressOrPair` |
 
 #### Returns
 
@@ -107,20 +90,20 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:71](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L71)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:71](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L71)
 
 ___
 
 ### sendTransaction
 
-▸ **sendTransaction**(`transaction`, `signFn?`): `Promise`<`SendTransactionResult`\>
+**sendTransaction**(`transaction`, `signFn?`): `Promise`<`SendTransactionResult`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `transaction` | `SubmittableExtrinsic`<``"promise"``, `ISubmittableResult`\> |
-| `signFn` | [`SignTxFunction`](../modules/dxos_registry_client.md#signtxfunction) |
+| `signFn` | [`SignTxFunction`](../types/dxos_registry_client.SignTxFunction.md) |
 
 #### Returns
 
@@ -128,4 +111,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L38)
+[packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/polkadot/api-transaction-handler.ts#L38)

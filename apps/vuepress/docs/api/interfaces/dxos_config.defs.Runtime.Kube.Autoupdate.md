@@ -5,18 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [enabled](dxos_config.defs.Runtime.Kube.Autoupdate.md#enabled)
-- [interval](dxos_config.defs.Runtime.Kube.Autoupdate.md#interval)
-
 ## Properties
 
 ### enabled
 
-• `Optional` **enabled**: `boolean`
+ `Optional` **enabled**: `boolean`
 
 Options:
   - proto3_optional = true
@@ -29,7 +22,7 @@ ___
 
 ### interval
 
-• `Optional` **interval**: `string`
+ `Optional` **interval**: `string`
 
 Seconds
 

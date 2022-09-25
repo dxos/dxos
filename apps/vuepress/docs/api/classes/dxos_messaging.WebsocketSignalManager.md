@@ -6,42 +6,11 @@
 
 - [`SignalManager`](../interfaces/dxos_messaging.SignalManager.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_messaging.WebsocketSignalManager.md#constructor)
-
-### Properties
-
-- [\_destroyed](dxos_messaging.WebsocketSignalManager.md#_destroyed)
-- [\_reconcileTimeoutId](dxos_messaging.WebsocketSignalManager.md#_reconciletimeoutid)
-- [\_reconciling](dxos_messaging.WebsocketSignalManager.md#_reconciling)
-- [\_servers](dxos_messaging.WebsocketSignalManager.md#_servers)
-- [\_topicsJoined](dxos_messaging.WebsocketSignalManager.md#_topicsjoined)
-- [\_topicsJoinedPerSignal](dxos_messaging.WebsocketSignalManager.md#_topicsjoinedpersignal)
-- [commandTrace](dxos_messaging.WebsocketSignalManager.md#commandtrace)
-- [onMessage](dxos_messaging.WebsocketSignalManager.md#onmessage)
-- [statusChanged](dxos_messaging.WebsocketSignalManager.md#statuschanged)
-- [swarmEvent](dxos_messaging.WebsocketSignalManager.md#swarmevent)
-
-### Methods
-
-- [\_reconcileJoinedTopics](dxos_messaging.WebsocketSignalManager.md#_reconcilejoinedtopics)
-- [\_reconcileLater](dxos_messaging.WebsocketSignalManager.md#_reconcilelater)
-- [\_scheduleReconcile](dxos_messaging.WebsocketSignalManager.md#_schedulereconcile)
-- [destroy](dxos_messaging.WebsocketSignalManager.md#destroy)
-- [getStatus](dxos_messaging.WebsocketSignalManager.md#getstatus)
-- [join](dxos_messaging.WebsocketSignalManager.md#join)
-- [leave](dxos_messaging.WebsocketSignalManager.md#leave)
-- [sendMessage](dxos_messaging.WebsocketSignalManager.md#sendmessage)
-- [subscribeMessages](dxos_messaging.WebsocketSignalManager.md#subscribemessages)
-
 ## Constructors
 
 ### constructor
 
-• **new WebsocketSignalManager**(`_hosts`)
+**new WebsocketSignalManager**(`_hosts`)
 
 #### Parameters
 
@@ -51,77 +20,77 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L46)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L46)
 
 ## Properties
 
 ### \_destroyed
 
-• `Private` **\_destroyed**: `boolean` = `false`
+ `Private` **\_destroyed**: `boolean` = `false`
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L31)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L31)
 
 ___
 
 ### \_reconcileTimeoutId
 
-• `Private` `Optional` **\_reconcileTimeoutId**: `Timeout`
+ `Private` `Optional` **\_reconcileTimeoutId**: `Timeout`
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L30)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L30)
 
 ___
 
 ### \_reconciling
 
-• `Private` `Optional` **\_reconciling**: `boolean` = `false`
+ `Private` `Optional` **\_reconciling**: `boolean` = `false`
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L29)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L29)
 
 ___
 
 ### \_servers
 
-• `Private` `Readonly` **\_servers**: `Map`<`string`, [`SignalClient`](dxos_messaging.SignalClient.md)\>
+ `Private` `Readonly` **\_servers**: `Map`<`string`, [`SignalClient`](dxos_messaging.SignalClient.md)\>
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L19)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L19)
 
 ___
 
 ### \_topicsJoined
 
-• `Private` `Readonly` **\_topicsJoined**: `ComplexMap`<`PublicKey`, `PublicKey`\>
+ `Private` `Readonly` **\_topicsJoined**: `ComplexMap`<`PublicKey`, `PublicKey`\>
 
 Topics joined: topic => peerId
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L22)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L22)
 
 ___
 
 ### \_topicsJoinedPerSignal
 
-• `Private` `Readonly` **\_topicsJoinedPerSignal**: `Map`<`string`, `ComplexMap`<`PublicKey`, `PublicKey`\>\>
+ `Private` `Readonly` **\_topicsJoinedPerSignal**: `Map`<`string`, `ComplexMap`<`PublicKey`, `PublicKey`\>\>
 
 host => topic => peerId
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L27)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L27)
 
 ___
 
 ### commandTrace
 
-• `Readonly` **commandTrace**: `Event`<[`CommandTrace`](../modules/dxos_messaging.md#commandtrace)\>
+ `Readonly` **commandTrace**: `Event`<[`CommandTrace`](../types/dxos_messaging.CommandTrace.md)\>
 
 #### Implementation of
 
@@ -129,13 +98,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:34](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L34)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:34](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L34)
 
 ___
 
 ### onMessage
 
-• `Readonly` **onMessage**: `Event`<{ `author`: `PublicKey` ; `payload`: `Any` ; `recipient`: `PublicKey`  }\>
+ `Readonly` **onMessage**: `Event`<{ `author`: `PublicKey` ; `payload`: `Any` ; `recipient`: `PublicKey`  }\>
 
 #### Implementation of
 
@@ -143,13 +112,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L40)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:40](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L40)
 
 ___
 
 ### statusChanged
 
-• `Readonly` **statusChanged**: `Event`<[`SignalStatus`](../modules/dxos_messaging.md#signalstatus)[]\>
+ `Readonly` **statusChanged**: `Event`<[`SignalStatus`](../types/dxos_messaging.SignalStatus.md)[]\>
 
 #### Implementation of
 
@@ -157,13 +126,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:33](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L33)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:33](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L33)
 
 ___
 
 ### swarmEvent
 
-• `Readonly` **swarmEvent**: `Event`<{ `swarmEvent`: `SwarmEvent` ; `topic`: `PublicKey`  }\>
+ `Readonly` **swarmEvent**: `Event`<{ `swarmEvent`: `SwarmEvent` ; `topic`: `PublicKey`  }\>
 
 #### Implementation of
 
@@ -171,13 +140,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L35)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L35)
 
 ## Methods
 
 ### \_reconcileJoinedTopics
 
-▸ `Private` **_reconcileJoinedTopics**(): `Promise`<`void`\>
+`Private` **_reconcileJoinedTopics**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -185,13 +154,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:123](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L123)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:123](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L123)
 
 ___
 
 ### \_reconcileLater
 
-▸ `Private` **_reconcileLater**(): `void`
+`Private` **_reconcileLater**(): `void`
 
 #### Returns
 
@@ -199,13 +168,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:110](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L110)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:110](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L110)
 
 ___
 
 ### \_scheduleReconcile
 
-▸ `Private` **_scheduleReconcile**(): `void`
+`Private` **_scheduleReconcile**(): `void`
 
 #### Returns
 
@@ -213,13 +182,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L88)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L88)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -231,17 +200,17 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:199](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L199)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:199](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L199)
 
 ___
 
 ### getStatus
 
-▸ **getStatus**(): [`SignalStatus`](../modules/dxos_messaging.md#signalstatus)[]
+**getStatus**(): [`SignalStatus`](../types/dxos_messaging.SignalStatus.md)[]
 
 #### Returns
 
-[`SignalStatus`](../modules/dxos_messaging.md#signalstatus)[]
+[`SignalStatus`](../types/dxos_messaging.SignalStatus.md)[]
 
 #### Implementation of
 
@@ -249,13 +218,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:68](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L68)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:68](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L68)
 
 ___
 
 ### join
 
-▸ **join**(`__namedParameters`): `Promise`<`void`\>
+**join**(`__namedParameters`): `Promise`<`void`\>
 
 Join topic on signal network, to be discoverable by other peers.
 
@@ -277,13 +246,13 @@ SignalManager.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L74)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L74)
 
 ___
 
 ### leave
 
-▸ **leave**(`__namedParameters`): `Promise`<`void`\>
+**leave**(`__namedParameters`): `Promise`<`void`\>
 
 Leave topic on signal network, to stop being discoverable by other peers.
 
@@ -305,13 +274,13 @@ SignalManager.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:81](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L81)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:81](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L81)
 
 ___
 
 ### sendMessage
 
-▸ **sendMessage**(`__namedParameters`): `Promise`<`void`\>
+**sendMessage**(`__namedParameters`): `Promise`<`void`\>
 
 Send message to peer.
 
@@ -334,13 +303,13 @@ SignalManager.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:171](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L171)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:171](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L171)
 
 ___
 
 ### subscribeMessages
 
-▸ **subscribeMessages**(`peerId`): `Promise`<`void`\>
+**subscribeMessages**(`peerId`): `Promise`<`void`\>
 
 Start receiving messages from
 
@@ -360,4 +329,4 @@ SignalManager.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:190](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/messaging/src/websocket-signal-manager.ts#L190)
+[packages/mesh/messaging/src/websocket-signal-manager.ts:190](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/messaging/src/websocket-signal-manager.ts#L190)

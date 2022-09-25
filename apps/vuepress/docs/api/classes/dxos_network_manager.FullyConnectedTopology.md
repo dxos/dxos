@@ -6,45 +6,27 @@
 
 - [`Topology`](../interfaces/dxos_network_manager.Topology.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_manager.FullyConnectedTopology.md#constructor)
-
-### Properties
-
-- [\_controller](dxos_network_manager.FullyConnectedTopology.md#_controller)
-
-### Methods
-
-- [destroy](dxos_network_manager.FullyConnectedTopology.md#destroy)
-- [init](dxos_network_manager.FullyConnectedTopology.md#init)
-- [onOffer](dxos_network_manager.FullyConnectedTopology.md#onoffer)
-- [toString](dxos_network_manager.FullyConnectedTopology.md#tostring)
-- [update](dxos_network_manager.FullyConnectedTopology.md#update)
-
 ## Constructors
 
 ### constructor
 
-• **new FullyConnectedTopology**()
+**new FullyConnectedTopology**()
 
 ## Properties
 
 ### \_controller
 
-• `Private` `Optional` **\_controller**: [`SwarmController`](../interfaces/dxos_network_manager.SwarmController.md)
+ `Private` `Optional` **\_controller**: [`SwarmController`](../interfaces/dxos_network_manager.SwarmController.md)
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:12](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L12)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:12](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L12)
 
 ## Methods
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 Called when swarm is destroyed or topology is changed.
 
@@ -60,13 +42,13 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L31)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L31)
 
 ___
 
 ### init
 
-▸ **init**(`controller`): `void`
+**init**(`controller`): `void`
 
 Called when swarm is created.
 
@@ -88,13 +70,13 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:14](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L14)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:14](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L14)
 
 ___
 
 ### onOffer
 
-▸ **onOffer**(`peer`): `Promise`<`boolean`\>
+**onOffer**(`peer`): `Promise`<`boolean`\>
 
 Called when remote peer offers a connection.
 
@@ -116,13 +98,13 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:27](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L27)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:27](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L27)
 
 ___
 
 ### toString
 
-▸ **toString**(): `string`
+**toString**(): `string`
 
 #### Returns
 
@@ -130,13 +112,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:35](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L35)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:35](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L35)
 
 ___
 
 ### update
 
-▸ **update**(): `void`
+**update**(): `void`
 
 Called when swarm state is updated.
 
@@ -150,4 +132,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:19](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L19)
+[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:19](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L19)

@@ -4,26 +4,11 @@
 
 Org
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_client_testing.OrgBuilder.md#constructor)
-
-### Accessors
-
-- [org](dxos_client_testing.OrgBuilder.md#org)
-
-### Methods
-
-- [createPeople](dxos_client_testing.OrgBuilder.md#createpeople)
-- [createProjects](dxos_client_testing.OrgBuilder.md#createprojects)
-
 ## Constructors
 
 ### constructor
 
-• **new OrgBuilder**(`_builder`, `_org`)
+**new OrgBuilder**(`_builder`, `_org`)
 
 #### Parameters
 
@@ -34,13 +19,13 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:69](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L69)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:69](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L69)
 
 ## Accessors
 
 ### org
 
-• `get` **org**(): `Item`<`ObjectModel`\>
+`get` **org**(): `Item`<`ObjectModel`\>
 
 #### Returns
 
@@ -48,19 +33,19 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:74](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L74)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:74](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L74)
 
 ## Methods
 
 ### createPeople
 
-▸ **createPeople**(`n?`): `Promise`<`Item`<`ObjectModel`\>[]\>
+**createPeople**(`n?`): `Promise`<`Item`<`ObjectModel`\>[]\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `n` | [`NumberRange`](../modules/dxos_client_testing.md#numberrange) | `1` |
+| `n` | [`NumberRange`](../types/dxos_client_testing.NumberRange.md) | `1` |
 
 #### Returns
 
@@ -68,19 +53,19 @@ Org
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:78](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L78)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:78](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L78)
 
 ___
 
 ### createProjects
 
-▸ **createProjects**(`n?`, `callback?`): `Promise`<`Item`<`ObjectModel`\>[]\>
+**createProjects**(`n?`, `callback?`): `Promise`<`Item`<`ObjectModel`\>[]\>
 
 #### Parameters
 
 | Name | Type | Default value |
 | :------ | :------ | :------ |
-| `n` | [`NumberRange`](../modules/dxos_client_testing.md#numberrange) | `1` |
+| `n` | [`NumberRange`](../types/dxos_client_testing.NumberRange.md) | `1` |
 | `callback?` | (`buidler`: [`ProjectBuilder`](dxos_client_testing.ProjectBuilder.md)) => `Promise`<`void`\> | `undefined` |
 
 #### Returns
@@ -89,4 +74,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client-testing/src/builders/partyBuilder.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84)
+[packages/sdk/client-testing/src/builders/partyBuilder.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client-testing/src/builders/partyBuilder.ts#L84)

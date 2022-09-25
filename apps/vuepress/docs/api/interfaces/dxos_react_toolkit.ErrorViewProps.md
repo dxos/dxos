@@ -2,56 +2,45 @@
 
 [@dxos/react-toolkit](../modules/dxos_react_toolkit.md).ErrorViewProps
 
-## Table of contents
-
-### Properties
-
-- [context](dxos_react_toolkit.ErrorViewProps.md#context)
-- [error](dxos_react_toolkit.ErrorViewProps.md#error)
-- [issueLink](dxos_react_toolkit.ErrorViewProps.md#issuelink)
-- [onReload](dxos_react_toolkit.ErrorViewProps.md#onreload)
-- [onReset](dxos_react_toolkit.ErrorViewProps.md#onreset)
-- [title](dxos_react_toolkit.ErrorViewProps.md#title)
-
 ## Properties
 
 ### context
 
-• `Optional` **context**: `any`
+ `Optional` **context**: `any`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L41)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L41)
 
 ___
 
 ### error
 
-• **error**: ``null`` \| `Error`
+ **error**: ``null`` \| `Error`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L39)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L39)
 
 ___
 
 ### issueLink
 
-• `Optional` **issueLink**: `string`
+ `Optional` **issueLink**: `string`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:42](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L42)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:42](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L42)
 
 ___
 
 ### onReload
 
-• `Optional` **onReload**: () => `void`
+ `Optional` **onReload**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -59,17 +48,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L37)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L37)
 
 ___
 
 ### onReset
 
-• `Optional` **onReset**: () => `void`
+ `Optional` **onReset**: () => `void`
 
 #### Type declaration
 
-▸ (): `void`
+(): `void`
 
 ##### Returns
 
@@ -77,14 +66,14 @@ ___
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:38](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L38)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:38](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L38)
 
 ___
 
 ### title
 
-• `Optional` **title**: `string`
+ `Optional` **title**: `string`
 
 #### Defined in
 
-[packages/sdk/react-toolkit/src/components/ErrorView.tsx:40](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L40)
+[packages/sdk/react-toolkit/src/components/ErrorView.tsx:40](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/react-toolkit/src/components/ErrorView.tsx#L40)

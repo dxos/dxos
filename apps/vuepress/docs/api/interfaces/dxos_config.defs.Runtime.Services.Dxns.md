@@ -5,21 +5,11 @@
 Defined in:
   file://./../../dxos/config.proto
 
-## Table of contents
-
-### Properties
-
-- [account](dxos_config.defs.Runtime.Services.Dxns.md#account)
-- [accountUri](dxos_config.defs.Runtime.Services.Dxns.md#accounturi)
-- [address](dxos_config.defs.Runtime.Services.Dxns.md#address)
-- [faucet](dxos_config.defs.Runtime.Services.Dxns.md#faucet)
-- [server](dxos_config.defs.Runtime.Services.Dxns.md#server)
-
 ## Properties
 
 ### account
 
-• `Optional` **account**: `string`
+ `Optional` **account**: `string`
 
 Public address of a DXNS Account.
 
@@ -34,7 +24,7 @@ ___
 
 ### accountUri
 
-• `Optional` **accountUri**: `string`
+ `Optional` **accountUri**: `string`
 
 Substrate account URI. This is a secret.
 KUBEs do not serve this with the config but we store it in profile.yml.
@@ -52,7 +42,7 @@ ___
 
 ### address
 
-• `Optional` **address**: `string`
+ `Optional` **address**: `string`
 
 Public Polkadot Address.
 
@@ -67,7 +57,7 @@ ___
 
 ### faucet
 
-• `Optional` **faucet**: `string`
+ `Optional` **faucet**: `string`
 
 Options:
   - proto3_optional = true
@@ -80,7 +70,7 @@ ___
 
 ### server
 
-• `Optional` **server**: `string`
+ `Optional` **server**: `string`
 
 DXNS endpoint.
 

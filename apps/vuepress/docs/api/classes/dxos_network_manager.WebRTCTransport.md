@@ -8,36 +8,11 @@ Implements Transport for WebRTC. Uses simple-peer under the hood.
 
 - [`Transport`](../interfaces/dxos_network_manager.Transport.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_network_manager.WebRTCTransport.md#constructor)
-
-### Properties
-
-- [\_peer](dxos_network_manager.WebRTCTransport.md#_peer)
-- [closed](dxos_network_manager.WebRTCTransport.md#closed)
-- [connected](dxos_network_manager.WebRTCTransport.md#connected)
-- [errors](dxos_network_manager.WebRTCTransport.md#errors)
-
-### Accessors
-
-- [peer](dxos_network_manager.WebRTCTransport.md#peer)
-- [remoteId](dxos_network_manager.WebRTCTransport.md#remoteid)
-- [sessionId](dxos_network_manager.WebRTCTransport.md#sessionid)
-
-### Methods
-
-- [\_disconnectStreams](dxos_network_manager.WebRTCTransport.md#_disconnectstreams)
-- [close](dxos_network_manager.WebRTCTransport.md#close)
-- [signal](dxos_network_manager.WebRTCTransport.md#signal)
-
 ## Constructors
 
 ### constructor
 
-• **new WebRTCTransport**(`_initiator`, `_stream`, `_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_sendSignal`, `_webrtcConfig?`)
+**new WebRTCTransport**(`_initiator`, `_stream`, `_ownId`, `_remoteId`, `_sessionId`, `_topic`, `_sendSignal`, `_webrtcConfig?`)
 
 #### Parameters
 
@@ -54,23 +29,23 @@ Implements Transport for WebRTC. Uses simple-peer under the hood.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L30)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L30)
 
 ## Properties
 
 ### \_peer
 
-• `Private` **\_peer**: `Instance`
+ `Private` **\_peer**: `Instance`
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:22](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L22)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:22](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L22)
 
 ___
 
 ### closed
 
-• `Readonly` **closed**: `Event`<`void`\>
+ `Readonly` **closed**: `Event`<`void`\>
 
 #### Implementation of
 
@@ -78,13 +53,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:24](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L24)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:24](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L24)
 
 ___
 
 ### connected
 
-• `Readonly` **connected**: `Event`<`void`\>
+ `Readonly` **connected**: `Event`<`void`\>
 
 #### Implementation of
 
@@ -92,13 +67,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:26](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L26)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:26](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L26)
 
 ___
 
 ### errors
 
-• `Readonly` **errors**: `ErrorStream`
+ `Readonly` **errors**: `ErrorStream`
 
 #### Implementation of
 
@@ -106,13 +81,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:28](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L28)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:28](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L28)
 
 ## Accessors
 
 ### peer
 
-• `get` **peer**(): `Instance`
+`get` **peer**(): `Instance`
 
 #### Returns
 
@@ -120,13 +95,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L87)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L87)
 
 ___
 
 ### remoteId
 
-• `get` **remoteId**(): `PublicKey`
+`get` **remoteId**(): `PublicKey`
 
 #### Returns
 
@@ -134,13 +109,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:79](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L79)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:79](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L79)
 
 ___
 
 ### sessionId
 
-• `get` **sessionId**(): `PublicKey`
+`get` **sessionId**(): `PublicKey`
 
 #### Returns
 
@@ -148,13 +123,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L83)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L83)
 
 ## Methods
 
 ### \_disconnectStreams
 
-▸ `Private` **_disconnectStreams**(): `Promise`<`void`\>
+`Private` **_disconnectStreams**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -162,13 +137,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:103](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L103)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:103](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L103)
 
 ___
 
 ### close
 
-▸ **close**(): `Promise`<`void`\>
+**close**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -180,13 +155,13 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:97](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L97)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:97](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L97)
 
 ___
 
 ### signal
 
-▸ **signal**(`signal`): `Promise`<`void`\>
+**signal**(`signal`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -204,4 +179,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:91](https://github.com/dxos/dxos/blob/32ae9b579/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L91)
+[packages/mesh/network-manager/src/transport/webrtc-transport.ts:91](https://github.com/dxos/dxos/blob/db8188dae/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L91)

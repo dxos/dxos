@@ -8,26 +8,11 @@ ECHO API.
 
 - [`EchoProxy`](../classes/dxos_client.EchoProxy.md)
 
-## Table of contents
-
-### Properties
-
-- [info](dxos_client.Echo.md#info)
-
-### Methods
-
-- [acceptInvitation](dxos_client.Echo.md#acceptinvitation)
-- [cloneParty](dxos_client.Echo.md#cloneparty)
-- [createParty](dxos_client.Echo.md#createparty)
-- [getParty](dxos_client.Echo.md#getparty)
-- [queryParties](dxos_client.Echo.md#queryparties)
-- [registerModel](dxos_client.Echo.md#registermodel)
-
 ## Properties
 
 ### info
 
-• **info**: `Object`
+ **info**: `Object`
 
 #### Type declaration
 
@@ -37,13 +22,13 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L82)
+[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L82)
 
 ## Methods
 
 ### acceptInvitation
 
-▸ **acceptInvitation**(`invitationDescriptor`): [`PartyInvitation`](../classes/dxos_client.PartyInvitation.md)
+**acceptInvitation**(`invitationDescriptor`): [`PartyInvitation`](../classes/dxos_client.PartyInvitation.md)
 
 #### Parameters
 
@@ -57,13 +42,13 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:88](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L88)
+[packages/sdk/client/src/packlets/api/echo.ts:88](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L88)
 
 ___
 
 ### cloneParty
 
-▸ **cloneParty**(`snapshot`): `Promise`<[`Party`](dxos_client.Party.md)\>
+**cloneParty**(`snapshot`): `Promise`<[`Party`](dxos_client.Party.md)\>
 
 #### Parameters
 
@@ -77,13 +62,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:85](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L85)
+[packages/sdk/client/src/packlets/api/echo.ts:85](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L85)
 
 ___
 
 ### createParty
 
-▸ **createParty**(): `Promise`<[`Party`](dxos_client.Party.md)\>
+**createParty**(): `Promise`<[`Party`](dxos_client.Party.md)\>
 
 #### Returns
 
@@ -91,13 +76,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L84)
+[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L84)
 
 ___
 
 ### getParty
 
-▸ **getParty**(`partyKey`): `undefined` \| [`Party`](dxos_client.Party.md)
+**getParty**(`partyKey`): `undefined` \| [`Party`](dxos_client.Party.md)
 
 #### Parameters
 
@@ -111,13 +96,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:86](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L86)
+[packages/sdk/client/src/packlets/api/echo.ts:86](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L86)
 
 ___
 
 ### queryParties
 
-▸ **queryParties**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`Party`](dxos_client.Party.md)\>
+**queryParties**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`Party`](dxos_client.Party.md)\>
 
 #### Returns
 
@@ -125,13 +110,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:87](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L87)
+[packages/sdk/client/src/packlets/api/echo.ts:87](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L87)
 
 ___
 
 ### registerModel
 
-▸ **registerModel**(`constructor`): `void`
+**registerModel**(`constructor`): `void`
 
 #### Parameters
 
@@ -145,4 +130,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/client/src/packlets/api/echo.ts#L83)
+[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/client/src/packlets/api/echo.ts#L83)

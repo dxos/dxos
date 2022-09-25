@@ -9,26 +9,11 @@ Uses a DXNS key stored in HALO.
 
 - `Partial`<`Signer`\>
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.ClientSigner.md#constructor)
-
-### Properties
-
-- [id](dxos_registry_client.ClientSigner.md#id)
-- [publicKey](dxos_registry_client.ClientSigner.md#publickey)
-
-### Methods
-
-- [signRaw](dxos_registry_client.ClientSigner.md#signraw)
-
 ## Constructors
 
 ### constructor
 
-• **new ClientSigner**(`client`, `registry`, `address`)
+**new ClientSigner**(`client`, `registry`, `address`)
 
 #### Parameters
 
@@ -40,33 +25,33 @@ Uses a DXNS key stored in HALO.
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:43](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L43)
+[packages/sdk/registry-client/src/util/client-signer.ts:43](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/util/client-signer.ts#L43)
 
 ## Properties
 
 ### id
 
-• `Private` **id**: `number` = `0`
+ `Private` **id**: `number` = `0`
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:39](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L39)
+[packages/sdk/registry-client/src/util/client-signer.ts:39](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/util/client-signer.ts#L39)
 
 ___
 
 ### publicKey
 
-• `Private` `Readonly` **publicKey**: `PublicKey`
+ `Private` `Readonly` **publicKey**: `PublicKey`
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:41](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L41)
+[packages/sdk/registry-client/src/util/client-signer.ts:41](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/util/client-signer.ts#L41)
 
 ## Methods
 
 ### signRaw
 
-▸ **signRaw**(`__namedParameters`): `Promise`<`SignerResult`\>
+**signRaw**(`__namedParameters`): `Promise`<`SignerResult`\>
 
 #### Parameters
 
@@ -84,4 +69,4 @@ Partial.signRaw
 
 #### Defined in
 
-[packages/sdk/registry-client/src/util/client-signer.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/util/client-signer.ts#L51)
+[packages/sdk/registry-client/src/util/client-signer.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/util/client-signer.ts#L51)

@@ -9,72 +9,47 @@ Useful for testing code which relies on the DXNS registry without connecting to 
 
 - [`RegistryClientBackend`](../interfaces/dxos_registry_client.RegistryClientBackend.md)
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_registry_client.MemoryRegistryClientBackend.md#constructor)
-
-### Properties
-
-- [authorities](dxos_registry_client.MemoryRegistryClientBackend.md#authorities)
-- [records](dxos_registry_client.MemoryRegistryClientBackend.md#records)
-- [resources](dxos_registry_client.MemoryRegistryClientBackend.md#resources)
-
-### Methods
-
-- [getDomainKey](dxos_registry_client.MemoryRegistryClientBackend.md#getdomainkey)
-- [getRecord](dxos_registry_client.MemoryRegistryClientBackend.md#getrecord)
-- [getResource](dxos_registry_client.MemoryRegistryClientBackend.md#getresource)
-- [listAuthorities](dxos_registry_client.MemoryRegistryClientBackend.md#listauthorities)
-- [listRecords](dxos_registry_client.MemoryRegistryClientBackend.md#listrecords)
-- [listResources](dxos_registry_client.MemoryRegistryClientBackend.md#listresources)
-- [registerAuthority](dxos_registry_client.MemoryRegistryClientBackend.md#registerauthority)
-- [registerDomainName](dxos_registry_client.MemoryRegistryClientBackend.md#registerdomainname)
-- [registerRecord](dxos_registry_client.MemoryRegistryClientBackend.md#registerrecord)
-- [registerResource](dxos_registry_client.MemoryRegistryClientBackend.md#registerresource)
-
 ## Constructors
 
 ### constructor
 
-• **new MemoryRegistryClientBackend**()
+**new MemoryRegistryClientBackend**()
 
 ## Properties
 
 ### authorities
 
-• `Readonly` **authorities**: `Map`<`string`, [`Authority`](../modules/dxos_registry_client.md#authority)\>
+ `Readonly` **authorities**: `Map`<`string`, [`Authority`](../types/dxos_registry_client.Authority.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:29](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L29)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:29](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L29)
 
 ___
 
 ### records
 
-• `Readonly` **records**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Record`\>
+ `Readonly` **records**: `ComplexMap`<[`CID`](dxos_registry_client.CID.md), `Record`\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:31](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L31)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:31](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L31)
 
 ___
 
 ### resources
 
-• `Readonly` **resources**: `ComplexMap`<[`DXN`](dxos_registry_client.DXN.md), [`CID`](dxos_registry_client.CID.md)\>
+ `Readonly` **resources**: `ComplexMap`<[`DXN`](dxos_registry_client.DXN.md), [`CID`](dxos_registry_client.CID.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:30](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L30)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:30](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L30)
 
 ## Methods
 
 ### getDomainKey
 
-▸ **getDomainKey**(`domainName`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
+**getDomainKey**(`domainName`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -92,13 +67,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:37](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L37)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:37](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L37)
 
 ___
 
 ### getRecord
 
-▸ **getRecord**(`cid`): `Promise`<`undefined` \| [`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)\>
+**getRecord**(`cid`): `Promise`<`undefined` \| [`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)\>
 
 #### Parameters
 
@@ -108,7 +83,7 @@ ___
 
 #### Returns
 
-`Promise`<`undefined` \| [`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)\>
+`Promise`<`undefined` \| [`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)\>
 
 #### Implementation of
 
@@ -116,13 +91,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:107](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L107)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:107](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L107)
 
 ___
 
 ### getResource
 
-▸ **getResource**(`name`): `Promise`<`undefined` \| [`CID`](dxos_registry_client.CID.md)\>
+**getResource**(`name`): `Promise`<`undefined` \| [`CID`](dxos_registry_client.CID.md)\>
 
 #### Parameters
 
@@ -140,17 +115,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:76](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L76)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:76](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L76)
 
 ___
 
 ### listAuthorities
 
-▸ **listAuthorities**(): `Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+**listAuthorities**(): `Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 #### Returns
 
-`Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)[]\>
+`Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)[]\>
 
 #### Implementation of
 
@@ -158,17 +133,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:46](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L46)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:46](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L46)
 
 ___
 
 ### listRecords
 
-▸ **listRecords**(): `Promise`<[`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)[]\>
+**listRecords**(): `Promise`<[`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)[]\>
 
 #### Returns
 
-`Promise`<[`RecordWithCid`](../modules/dxos_registry_client.md#recordwithcid)[]\>
+`Promise`<[`RecordWithCid`](../types/dxos_registry_client.RecordWithCid.md)[]\>
 
 #### Implementation of
 
@@ -176,13 +151,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:111](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L111)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:111](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L111)
 
 ___
 
 ### listResources
 
-▸ **listResources**(): `Promise`<[[`DXN`](dxos_registry_client.DXN.md), [`CID`](dxos_registry_client.CID.md)][]\>
+**listResources**(): `Promise`<[[`DXN`](dxos_registry_client.DXN.md), [`CID`](dxos_registry_client.CID.md)][]\>
 
 #### Returns
 
@@ -194,13 +169,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:80](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L80)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:80](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L80)
 
 ___
 
 ### registerAuthority
 
-▸ **registerAuthority**(`owner`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
+**registerAuthority**(`owner`): `Promise`<[`DomainKey`](dxos_registry_client.DomainKey.md)\>
 
 #### Parameters
 
@@ -218,13 +193,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:50](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L50)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:50](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L50)
 
 ___
 
 ### registerDomainName
 
-▸ **registerDomainName**(`domainName`, `owner`): `Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)\>
+**registerDomainName**(`domainName`, `owner`): `Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)\>
 
 #### Parameters
 
@@ -235,17 +210,17 @@ ___
 
 #### Returns
 
-`Promise`<[`Authority`](../modules/dxos_registry_client.md#authority)\>
+`Promise`<[`Authority`](../types/dxos_registry_client.Authority.md)\>
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:60](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L60)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:60](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L60)
 
 ___
 
 ### registerRecord
 
-▸ **registerRecord**(`record`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
+**registerRecord**(`record`): `Promise`<[`CID`](dxos_registry_client.CID.md)\>
 
 #### Parameters
 
@@ -263,13 +238,13 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:115](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L115)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:115](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L115)
 
 ___
 
 ### registerResource
 
-▸ **registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
+**registerResource**(`name`, `cid`, `owner`): `Promise`<`void`\>
 
 #### Parameters
 
@@ -289,4 +264,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/registry-client/src/testing/memory-registry-client.ts:84](https://github.com/dxos/dxos/blob/32ae9b579/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L84)
+[packages/sdk/registry-client/src/testing/memory-registry-client.ts:84](https://github.com/dxos/dxos/blob/db8188dae/packages/sdk/registry-client/src/testing/memory-registry-client.ts#L84)

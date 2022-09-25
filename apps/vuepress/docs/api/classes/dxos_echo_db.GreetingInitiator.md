@@ -5,33 +5,11 @@
 Attempts to connect to a greeting responder to 'redeem' an invitation, potentially with some out-of-band
 authentication check, in order to be admitted to a Party.
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.GreetingInitiator.md#constructor)
-
-### Properties
-
-- [\_greeterPlugin](dxos_echo_db.GreetingInitiator.md#_greeterplugin)
-- [\_state](dxos_echo_db.GreetingInitiator.md#_state)
-
-### Accessors
-
-- [state](dxos_echo_db.GreetingInitiator.md#state)
-
-### Methods
-
-- [connect](dxos_echo_db.GreetingInitiator.md#connect)
-- [destroy](dxos_echo_db.GreetingInitiator.md#destroy)
-- [disconnect](dxos_echo_db.GreetingInitiator.md#disconnect)
-- [redeemInvitation](dxos_echo_db.GreetingInitiator.md#redeeminvitation)
-
 ## Constructors
 
 ### constructor
 
-• **new GreetingInitiator**(`_networkManager`, `_invitationDescriptor`, `_getMessagesToNotarize`)
+**new GreetingInitiator**(`_networkManager`, `_invitationDescriptor`, `_getMessagesToNotarize`)
 
 #### Parameters
 
@@ -43,33 +21,33 @@ authentication check, in order to be admitted to a Party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:59](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L59)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:59](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L59)
 
 ## Properties
 
 ### \_greeterPlugin
 
-• `Private` `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
+ `Private` `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L48)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L48)
 
 ___
 
 ### \_state
 
-• `Private` **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md) = `GreetingState.INITIALIZED`
+ `Private` **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md) = `GreetingState.INITIALIZED`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L51)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L51)
 
 ## Accessors
 
 ### state
 
-• `get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
+`get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
 
 #### Returns
 
@@ -77,13 +55,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:67](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L67)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:67](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L67)
 
 ## Methods
 
 ### connect
 
-▸ **connect**(`timeout?`): `Promise`<`void`\>
+**connect**(`timeout?`): `Promise`<`void`\>
 
 Initiate a connection to a greeting responder node.
 
@@ -99,13 +77,13 @@ Initiate a connection to a greeting responder node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:75](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L75)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:75](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L75)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -113,13 +91,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:191](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L191)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:191](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L191)
 
 ___
 
 ### disconnect
 
-▸ **disconnect**(): `Promise`<`void`\>
+**disconnect**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -127,13 +105,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:185](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L185)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:185](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L185)
 
 ___
 
 ### redeemInvitation
 
-▸ **redeemInvitation**(`secretProvider`): `Promise`<[`InvitationResult`](../interfaces/dxos_echo_db.InvitationResult.md)\>
+**redeemInvitation**(`secretProvider`): `Promise`<[`InvitationResult`](../interfaces/dxos_echo_db.InvitationResult.md)\>
 
 Called after connecting to initiate greeting protocol exchange.
 
@@ -149,4 +127,4 @@ Called after connecting to initiate greeting protocol exchange.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-initiator.ts:120](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L120)
+[packages/echo/echo-db/src/invitations/greeting-initiator.ts:120](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/greeting-initiator.ts#L120)

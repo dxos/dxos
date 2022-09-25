@@ -8,36 +8,11 @@ seed phrase).
 
 TODO(telackey): DoS mitigation
 
-## Table of contents
-
-### Constructors
-
-- [constructor](dxos_echo_db.HaloRecoveryInitiator.md#constructor)
-
-### Properties
-
-- [\_greeterPlugin](dxos_echo_db.HaloRecoveryInitiator.md#_greeterplugin)
-- [\_peerId](dxos_echo_db.HaloRecoveryInitiator.md#_peerid)
-- [\_state](dxos_echo_db.HaloRecoveryInitiator.md#_state)
-
-### Accessors
-
-- [state](dxos_echo_db.HaloRecoveryInitiator.md#state)
-
-### Methods
-
-- [claim](dxos_echo_db.HaloRecoveryInitiator.md#claim)
-- [connect](dxos_echo_db.HaloRecoveryInitiator.md#connect)
-- [createSecretProvider](dxos_echo_db.HaloRecoveryInitiator.md#createsecretprovider)
-- [destroy](dxos_echo_db.HaloRecoveryInitiator.md#destroy)
-- [disconnect](dxos_echo_db.HaloRecoveryInitiator.md#disconnect)
-- [createHaloInvitationClaimHandler](dxos_echo_db.HaloRecoveryInitiator.md#createhaloinvitationclaimhandler)
-
 ## Constructors
 
 ### constructor
 
-• **new HaloRecoveryInitiator**(`_networkManager`, `_credentialsSigner`)
+**new HaloRecoveryInitiator**(`_networkManager`, `_credentialsSigner`)
 
 #### Parameters
 
@@ -48,43 +23,43 @@ TODO(telackey): DoS mitigation
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:51](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L51)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:51](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L51)
 
 ## Properties
 
 ### \_greeterPlugin
 
-• `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
+ `Optional` **\_greeterPlugin**: `GreetingCommandPlugin`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:48](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L48)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:48](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L48)
 
 ___
 
 ### \_peerId
 
-• `Optional` **\_peerId**: `Buffer`
+ `Optional` **\_peerId**: `Buffer`
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:49](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L49)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:49](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L49)
 
 ___
 
 ### \_state
 
-• **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
+ **\_state**: [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:47](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L47)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:47](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L47)
 
 ## Accessors
 
 ### state
 
-• `get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
+`get` **state**(): [`GreetingState`](../enums/dxos_echo_db.GreetingState.md)
 
 #### Returns
 
@@ -92,13 +67,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:58](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L58)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:58](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L58)
 
 ## Methods
 
 ### claim
 
-▸ **claim**(): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
+**claim**(): `Promise`<[`InvitationDescriptor`](dxos_echo_db.InvitationDescriptor.md)\>
 
 Executes a 'CLAIM' command for an offline invitation.  If successful, the Party member's device will begin
 interactive Greeting, with a new invitation and swarm key which will be provided to the claimant.
@@ -110,13 +85,13 @@ Those will be returned in the form of an InvitationDescriptor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:100](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L100)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:100](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L100)
 
 ___
 
 ### connect
 
-▸ **connect**(`timeout?`): `Promise`<`void`\>
+**connect**(`timeout?`): `Promise`<`void`\>
 
 Initiate a connection to some Party member node.
 
@@ -132,13 +107,13 @@ Initiate a connection to some Party member node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:66](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L66)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:66](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L66)
 
 ___
 
 ### createSecretProvider
 
-▸ **createSecretProvider**(): `SecretProvider`
+**createSecretProvider**(): `SecretProvider`
 
 #### Returns
 
@@ -146,13 +121,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:146](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L146)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:146](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L146)
 
 ___
 
 ### destroy
 
-▸ **destroy**(): `Promise`<`void`\>
+**destroy**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -160,13 +135,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:138](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L138)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:138](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L138)
 
 ___
 
 ### disconnect
 
-▸ **disconnect**(): `Promise`<`void`\>
+**disconnect**(): `Promise`<`void`\>
 
 #### Returns
 
@@ -174,13 +149,13 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:132](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L132)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:132](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L132)
 
 ___
 
 ### createHaloInvitationClaimHandler
 
-▸ `Static` **createHaloInvitationClaimHandler**(`identityKey`, `invitationManager`): (`message`: `any`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
+`Static` **createHaloInvitationClaimHandler**(`identityKey`, `invitationManager`): (`message`: `any`, `remotePeerId`: `Buffer`, `peerId`: `Buffer`) => `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
 
 #### Parameters
 
@@ -193,7 +168,7 @@ ___
 
 `fn`
 
-▸ (`message`, `remotePeerId`, `peerId`): `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
+(`message`, `remotePeerId`, `peerId`): `Promise`<`WithTypeUrl`<`ClaimResponse`\>\>
 
 ##### Parameters
 
@@ -209,4 +184,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:161](https://github.com/dxos/dxos/blob/32ae9b579/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L161)
+[packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts:161](https://github.com/dxos/dxos/blob/db8188dae/packages/echo/echo-db/src/invitations/halo-recovery-initiator.ts#L161)
