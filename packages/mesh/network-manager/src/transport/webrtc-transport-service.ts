@@ -8,10 +8,10 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { WebRTCService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/webrtc';
+import { WebRTCService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 
 export class WebRTCTransportService implements WebRTCService {
-  protected peer: SimplePeer | undefined;
+  protected peers = new Map<number, SimplePeer>();
 
   constructor (
     private readonly _webrtcConfig?: any
@@ -22,7 +22,7 @@ export class WebRTCTransportService implements WebRTCService {
     return new Stream(({ ready, next, close }) => {
 
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
-      this.peer = new SimplePeerConstructor({
+      const peer = new SimplePeerConstructor({
         initiator: request.initiator,
         wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
         config: this._webrtcConfig
@@ -34,7 +34,7 @@ export class WebRTCTransportService implements WebRTCService {
         }
       });
 
-      this.peer.on('data', async (payload) => {
+      peer.on('data', async (payload) => {
         next({
           data: {
             payload
@@ -42,7 +42,7 @@ export class WebRTCTransportService implements WebRTCService {
         });
       });
 
-      this.peer.on('signal', async data => {
+      peer.on('signal', async data => {
         next({
           signal: {
             payload: { json: JSON.stringify(data) }
@@ -50,7 +50,7 @@ export class WebRTCTransportService implements WebRTCService {
         });
       });
 
-      this.peer.on('connect', () => {
+      peer.on('connect', () => {
         next({
           connection: {
             state: ConnectionState.CONNECTED
@@ -58,7 +58,7 @@ export class WebRTCTransportService implements WebRTCService {
         });
       });
 
-      this.peer.on('error', async (err) => {
+      peer.on('error', async (err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
@@ -68,7 +68,7 @@ export class WebRTCTransportService implements WebRTCService {
         close(err);
       });
 
-      this.peer.on('close', async () => {
+      peer.on('close', async () => {
         next({
           connection: {
             state: ConnectionState.CLOSED
@@ -77,23 +77,26 @@ export class WebRTCTransportService implements WebRTCService {
         close();
       });
 
+      this.peers.set(request.connectionId, peer);
+
       ready();
     });
   }
 
-  async sendSignal ({ signal }: SignalRequest): Promise<void> {
-    assert(this.peer, 'Connection not ready to accept signals.');
+  async sendSignal ({ connectionId, signal }: SignalRequest): Promise<void> {
+    assert(this.peers.has(connectionId), 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
-    this.peer!.signal(JSON.parse(signal.json));
+    this.peers.get(connectionId)!.signal(JSON.parse(signal.json));
   }
 
-  async sendData (request: DataRequest): Promise<void> {
-    assert(this.peer);
-    this.peer.write(request.payload);
+  async sendData ({ connectionId, payload }: DataRequest): Promise<void> {
+    assert(this.peers.has(connectionId));
+    this.peers.get(connectionId)!.write(payload);
   }
 
-  async close () {
-    this.peer!.destroy();
+  async close ({ connectionId }: CloseRequest) {
+    this.peers.get(connectionId)?.destroy();
+    this.peers.delete;
     log('Closed.');
   }
 }

@@ -35,7 +35,7 @@ enum ConnectionState {
 }
 
 message ConnectionRequest {
-  // int32 connection_id = 1;
+  int32 connection_id = 1;
   bool initiator = 2;
 }
 
@@ -61,15 +61,15 @@ message WebRTCEvent {
 }
 
 message SignalRequest {
-  // int32 connection_id = 1;
+  int32 connection_id = 1;
   Signal signal = 2;
 }
 
 message DataRequest {
-  // int32 connection_id = 1;
+  int32 connection_id = 1;
   bytes payload = 2;
 }
 
 message CloseRequest{
-
+  int32 connection_id = 1;
 }

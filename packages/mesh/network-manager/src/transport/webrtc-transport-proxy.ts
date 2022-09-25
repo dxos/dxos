@@ -26,6 +26,7 @@ export interface WebRTCTransportProxyParams {
   topic: PublicKey
   sendSignal: (msg: SignalMessage) => void
   port: RpcPort
+  webRTCConnectionId: number
 }
 
 export class WebRTCTransportProxy implements Transport {
@@ -57,9 +58,9 @@ export class WebRTCTransportProxy implements Transport {
     await this._rpc.open();
     this._openedRpc.wake();
 
-    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.WebRTCService.sendData({ payload: data }));
+    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.WebRTCService.sendData({ connectionId: this._params.webRTCConnectionId, payload: data }));
 
-    this._serviceStream = this._rpc.rpc.WebRTCService.open({ initiator: this._params.initiator });
+    this._serviceStream = this._rpc.rpc.WebRTCService.open({ connectionId: this._params.webRTCConnectionId, initiator: this._params.initiator });
     this._serviceStream.subscribe(async (msg: WebRTCEvent) => {
       if (msg.connection) {
         await this._handleConnection(msg.connection);
@@ -104,7 +105,7 @@ export class WebRTCTransportProxy implements Transport {
 
   async signal (signal: Signal): Promise<void> {
     await this._openedRpc.wait();
-    await this._rpc.rpc.WebRTCService.sendSignal({ signal });
+    await this._rpc.rpc.WebRTCService.sendSignal({ connectionId: this._params.webRTCConnectionId, signal });
   }
 
   async close (): Promise<void> {
@@ -112,7 +113,7 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
     this._serviceStream.close();
-    await this._rpc.rpc.WebRTCService.close({});
+    await this._rpc.rpc.WebRTCService.close({ connectionId: this._params.webRTCConnectionId });
     this._rpc.close();
     this.closed.emit();
     this._closed = true;
