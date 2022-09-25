@@ -34,7 +34,6 @@ describe('extending protobuf', () => {
 
     const schema = new Schema(anyProto, anySubstitutions);
     const codec = schema.tryGetCodecForType('example.testing.any.Wrapper');
-
     codec.addJson(anotherProto.toJSON());
 
     const data = {
