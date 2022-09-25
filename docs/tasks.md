@@ -26,11 +26,12 @@
 # 2022-09-19 RB
 
 - [ ] `dxos/client-services`
+  - [ ] factor out invitations from client-services (and remove echo-db deps).
+  - [ ] move echo-db errors to new halo module
+
   - [ ] rethink ServiceContext (e.g., DataService, SpaceManager)
   - [ ] move HaloInvitations from ServiceContext
   - [ ] ServiceContext remove public member access
-  - [ ] document design pattern
-  - [ ] client proxies vs. services
   - [ ] SpaceManager/DataInvitations constructor SigningContext
   - [ ] move from dxos/echo-db/services
   - [ ] move DataService from echo-db to client-services

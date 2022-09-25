@@ -115,7 +115,7 @@ export class PartyService implements PartyServiceRpc {
 
   async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
     return todo();
-    // const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     // return {
     //   processedTimeframe: party.timeframe
     // };
@@ -281,7 +281,7 @@ export class PartyService implements PartyServiceRpc {
   async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
     return todo();
     // assert(request.partyKey);
-    // const party = this.echo.getParty(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     // return party.createSnapshot();
   }
 }

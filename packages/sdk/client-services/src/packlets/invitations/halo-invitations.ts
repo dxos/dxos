@@ -15,6 +15,8 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 import { Identity, IdentityManager } from '../identity';
 import { InvitationDescriptor } from '../invitations';
 
+// TODO(burdon): Move to halo.
+
 /**
  * Create and process Halo (space) invitations for device management.
  */

@@ -19,7 +19,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
-import { PartyNotFoundError } from '../errors';
+import { SpaceNotFoundError } from '../errors';
 import { DataServiceHost } from './data-service-host';
 
 const log = debug('dxos:echo-db:data-service-router');
@@ -39,20 +39,20 @@ export class DataService implements DataServiceRpc {
 
   subscribeEntitySet (request: SubscribeEntitySetRequest): Stream<SubscribeEntitySetResponse> {
     assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntitySet();
   }
 
   subscribeEntityStream (request: SubscribeEntityStreamRequest): Stream<SubscribeEntityStreamResponse> {
     assert(request.partyKey);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.subscribeEntityStream(request);
   }
 
   write (request: WriteRequest): Promise<MutationReceipt> {
     assert(request.partyKey);
     assert(request.mutation);
-    const host = this._trackedParties.get(request.partyKey) ?? raise(new PartyNotFoundError(request.partyKey));
+    const host = this._trackedParties.get(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     return host.write(request.mutation);
   }
 }
