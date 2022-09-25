@@ -17,7 +17,7 @@ const colorHash = new ColorHash({
 /**
  * Process packages in workspace.
  */
-export class Processor {
+export class ModuleProcessor {
   public readonly projectsByName = new Map<string, Project>();
   public readonly projectsByPackage = new Map<string, Project>();
 
@@ -167,6 +167,7 @@ export class Processor {
 
   /**
    * Generate mermaid graph.
+   * https://mermaid.live
    * https://mermaid-js.github.io/mermaid/#/README
    */
   generateGraph (project: Project, docsDir: string, baseUrl: string) {

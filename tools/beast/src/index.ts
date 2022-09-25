@@ -3,5 +3,5 @@
 //
 
 export * from './main';
-export * from './processor';
+export * from './module-processor';
 export * from './types';
