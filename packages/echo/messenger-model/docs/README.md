@@ -67,12 +67,13 @@ click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
 click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
 click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
 click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
+click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
 click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
 click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -85,6 +86,7 @@ dxos/crypto:::defaultNode
 dxos/debug:::defaultNode
 dxos/echo-protocol:::defaultNode
 dxos/feed-store:::defaultNode
+dxos/mesh-protocol:::defaultNode
 dxos/model-factory:::defaultNode
 dxos/protocols:::defaultNode
 dxos/util:::defaultNode
@@ -101,6 +103,7 @@ dxos/util:::defaultNode
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
 | [`@dxos/echo-protocol`](../../echo-protocol/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../feed-store/docs/README.md) |  |
+| [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/model-factory`](../../model-factory/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

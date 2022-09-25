@@ -91,11 +91,13 @@ end
 %% Hyperlinks
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
 click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
 click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
 click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
 click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
 click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
 click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
@@ -108,7 +110,7 @@ click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -116,11 +118,13 @@ dxos/botkit:::rootNode
 
 dxos/async:::defaultNode
 dxos/bot-factory-client:::defaultNode
+dxos/broadcast:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/config:::defaultNode
 dxos/credentials:::defaultNode
 dxos/crypto:::defaultNode
 dxos/debug:::defaultNode
+dxos/feed-store:::defaultNode
 dxos/log:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/messaging:::defaultNode
@@ -139,11 +143,13 @@ dxos/util:::defaultNode
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
 | [`@dxos/bot-factory-client`](../../bot-factory-client/docs/README.md) | &check; |
+| [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/config`](../../../sdk/config/docs/README.md) | &check; |
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
+| [`@dxos/feed-store`](../../../echo/feed-store/docs/README.md) |  |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) | &check; |

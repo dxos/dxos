@@ -149,6 +149,7 @@ end
 %% Hyperlinks
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
 click dxos/client-testing "dxos/dxos/tree/main/packages/sdk/client-testing/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
@@ -170,6 +171,7 @@ click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/do
 click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs";
 click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
 click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
+click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
 click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
 click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
 click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
@@ -180,12 +182,13 @@ click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/d
 click dxos/react-ipfs "dxos/dxos/tree/main/packages/sdk/react-ipfs/docs";
 click dxos/react-registry-client "dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
 click dxos/react-toolkit "dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
 click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
 click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -193,6 +196,7 @@ dxos/kitchen-sink:::rootNode
 
 dxos/async:::defaultNode
 dxos/bot-factory-client:::defaultNode
+dxos/broadcast:::defaultNode
 dxos/client:::defaultNode
 dxos/client-testing:::defaultNode
 dxos/codec-protobuf:::defaultNode
@@ -214,6 +218,7 @@ dxos/network-manager:::defaultNode
 dxos/object-model:::defaultNode
 dxos/protocol-plugin-presence:::defaultNode
 dxos/protocol-plugin-replicator:::defaultNode
+dxos/protocol-plugin-rpc:::defaultNode
 dxos/protocols:::defaultNode
 dxos/random-access-storage:::defaultNode
 dxos/react-async:::defaultNode
@@ -224,6 +229,7 @@ dxos/react-echo-graph:::defaultNode
 dxos/react-ipfs:::defaultNode
 dxos/react-registry-client:::defaultNode
 dxos/react-toolkit:::defaultNode
+dxos/registry-client:::defaultNode
 dxos/rpc:::defaultNode
 dxos/rpc-tunnel:::defaultNode
 dxos/util:::defaultNode
@@ -235,6 +241,7 @@ dxos/util:::defaultNode
 |---|---|
 | [`@dxos/async`](../../../../packages/common/async/docs/README.md) |  |
 | [`@dxos/bot-factory-client`](../../../../packages/bot/bot-factory-client/docs/README.md) |  |
+| [`@dxos/broadcast`](../../../../packages/mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client`](../../../../packages/sdk/client/docs/README.md) | &check; |
 | [`@dxos/client-testing`](../../../../packages/sdk/client-testing/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../../packages/common/codec-protobuf/docs/README.md) |  |
@@ -256,6 +263,7 @@ dxos/util:::defaultNode
 | [`@dxos/object-model`](../../../../packages/echo/object-model/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../../../packages/mesh/protocol-plugin-presence/docs/README.md) |  |
 | [`@dxos/protocol-plugin-replicator`](../../../../packages/mesh/protocol-plugin-replicator/docs/README.md) |  |
+| [`@dxos/protocol-plugin-rpc`](../../../../packages/mesh/protocol-plugin-rpc/docs/README.md) |  |
 | [`@dxos/protocols`](../../../../packages/common/protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../../../packages/common/random-access-storage/docs/README.md) |  |
 | [`@dxos/react-async`](../../../../packages/common/react-async/docs/README.md) |  |
@@ -266,6 +274,7 @@ dxos/util:::defaultNode
 | [`@dxos/react-ipfs`](../../../../packages/sdk/react-ipfs/docs/README.md) | &check; |
 | [`@dxos/react-registry-client`](../../../../packages/sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../../packages/sdk/react-toolkit/docs/README.md) | &check; |
+| [`@dxos/registry-client`](../../../../packages/sdk/registry-client/docs/README.md) |  |
 | [`@dxos/rpc`](../../../../packages/common/rpc/docs/README.md) |  |
 | [`@dxos/rpc-tunnel`](../../../../packages/common/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/util`](../../../../packages/common/util/docs/README.md) | &check; |

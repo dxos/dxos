@@ -104,9 +104,11 @@ end
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
 click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
 click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
 click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
 click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
 click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs";
 click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
@@ -119,11 +121,12 @@ click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
 click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs";
 click dxos/react-registry-client "dxos/dxos/tree/main/packages/sdk/react-registry-client/docs";
 click dxos/react-toolkit "dxos/dxos/tree/main/packages/sdk/react-toolkit/docs";
+click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
 click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -132,9 +135,11 @@ dxos/devtools-mesh:::rootNode
 dxos/async:::defaultNode
 dxos/broadcast:::defaultNode
 dxos/codec-protobuf:::defaultNode
+dxos/config:::defaultNode
 dxos/credentials:::defaultNode
 dxos/crypto:::defaultNode
 dxos/debug:::defaultNode
+dxos/feed-store:::defaultNode
 dxos/gem-core:::defaultNode
 dxos/gem-spore:::defaultNode
 dxos/log:::defaultNode
@@ -147,6 +152,7 @@ dxos/react-async:::defaultNode
 dxos/react-components:::defaultNode
 dxos/react-registry-client:::defaultNode
 dxos/react-toolkit:::defaultNode
+dxos/registry-client:::defaultNode
 dxos/rpc:::defaultNode
 dxos/util:::defaultNode
 ```
@@ -158,9 +164,11 @@ dxos/util:::defaultNode
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
 | [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) |  |
+| [`@dxos/config`](../../../sdk/config/docs/README.md) |  |
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
+| [`@dxos/feed-store`](../../../echo/feed-store/docs/README.md) |  |
 | [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
 | [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
@@ -173,5 +181,6 @@ dxos/util:::defaultNode
 | [`@dxos/react-components`](../../../sdk/react-components/docs/README.md) | &check; |
 | [`@dxos/react-registry-client`](../../../sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../sdk/react-toolkit/docs/README.md) | &check; |
+| [`@dxos/registry-client`](../../../sdk/registry-client/docs/README.md) |  |
 | [`@dxos/rpc`](../../../common/rpc/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

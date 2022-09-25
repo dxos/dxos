@@ -28,7 +28,7 @@ click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/do
 click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 

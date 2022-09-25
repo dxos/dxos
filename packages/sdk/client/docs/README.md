@@ -94,6 +94,7 @@ end
 
 %% Hyperlinks
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
 click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
@@ -117,13 +118,14 @@ click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
 dxos/client:::rootNode
 
 dxos/async:::defaultNode
+dxos/broadcast:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/config:::defaultNode
 dxos/credentials:::defaultNode
@@ -152,6 +154,7 @@ dxos/util:::defaultNode
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
+| [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/config`](../../config/docs/README.md) | &check; |
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |

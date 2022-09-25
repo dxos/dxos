@@ -84,6 +84,7 @@ end
 
 %% Hyperlinks
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
 click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
@@ -101,16 +102,18 @@ click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-
 click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
 click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
 click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
+click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
 dxos/text-model:::rootNode
 
 dxos/async:::defaultNode
+dxos/broadcast:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/credentials:::defaultNode
 dxos/crypto:::defaultNode
@@ -128,6 +131,7 @@ dxos/protocol-plugin-presence:::defaultNode
 dxos/protocol-plugin-replicator:::defaultNode
 dxos/protocols:::defaultNode
 dxos/random-access-storage:::defaultNode
+dxos/rpc:::defaultNode
 dxos/util:::defaultNode
 ```
 
@@ -136,6 +140,7 @@ dxos/util:::defaultNode
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
+| [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/credentials`](../../../halo/credentials/docs/README.md) |  |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
@@ -153,4 +158,5 @@ dxos/util:::defaultNode
 | [`@dxos/protocol-plugin-replicator`](../../../mesh/protocol-plugin-replicator/docs/README.md) |  |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
+| [`@dxos/rpc`](../../../common/rpc/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

@@ -35,16 +35,18 @@ end
 
 %% Hyperlinks
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
 click dxos/network-generator "dxos/dxos/tree/main/packages/mesh/network-generator/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
 dxos/protocol-network-generator:::rootNode
 
 dxos/async:::defaultNode
+dxos/debug:::defaultNode
 dxos/network-generator:::defaultNode
 ```
 
@@ -53,4 +55,5 @@ dxos/network-generator:::defaultNode
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
+| [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
 | [`@dxos/network-generator`](../../network-generator/docs/README.md) | &check; |

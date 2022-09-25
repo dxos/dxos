@@ -54,6 +54,7 @@ end
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
 click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
 click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
 click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
@@ -62,7 +63,7 @@ click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -71,6 +72,7 @@ dxos/bot-factory-client:::rootNode
 dxos/async:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/debug:::defaultNode
+dxos/log:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/messaging:::defaultNode
 dxos/protocol-plugin-rpc:::defaultNode
@@ -86,6 +88,7 @@ dxos/util:::defaultNode
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
+| [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../mesh/messaging/docs/README.md) |  |
 | [`@dxos/protocol-plugin-rpc`](../../../mesh/protocol-plugin-rpc/docs/README.md) | &check; |

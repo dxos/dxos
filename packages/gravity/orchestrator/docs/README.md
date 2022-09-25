@@ -124,6 +124,7 @@ end
 click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
 click dxos/botkit "dxos/dxos/tree/main/packages/bot/botkit/docs";
+click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
@@ -152,7 +153,7 @@ click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -161,6 +162,7 @@ dxos/gravity-orchestrator:::rootNode
 dxos/async:::defaultNode
 dxos/bot-factory-client:::defaultNode
 dxos/botkit:::defaultNode
+dxos/broadcast:::defaultNode
 dxos/client:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/config:::defaultNode
@@ -196,6 +198,7 @@ dxos/util:::defaultNode
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
 | [`@dxos/bot-factory-client`](../../../bot/bot-factory-client/docs/README.md) | &check; |
 | [`@dxos/botkit`](../../../bot/botkit/docs/README.md) | &check; |
+| [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client`](../../../sdk/client/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/config`](../../../sdk/config/docs/README.md) | &check; |

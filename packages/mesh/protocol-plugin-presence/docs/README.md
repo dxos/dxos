@@ -48,12 +48,13 @@ click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
 click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
 click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
 click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
 click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
 click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
 click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
 
 %% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
 classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
 
@@ -63,6 +64,7 @@ dxos/async:::defaultNode
 dxos/broadcast:::defaultNode
 dxos/codec-protobuf:::defaultNode
 dxos/crypto:::defaultNode
+dxos/debug:::defaultNode
 dxos/mesh-protocol:::defaultNode
 dxos/protocols:::defaultNode
 dxos/util:::defaultNode
@@ -76,6 +78,7 @@ dxos/util:::defaultNode
 | [`@dxos/broadcast`](../../broadcast/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) |  |
+| [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |
