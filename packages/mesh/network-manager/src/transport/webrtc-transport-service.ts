@@ -8,7 +8,7 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
 
 export class WebRTCTransportService implements BridgeService {
   protected peers = new Map<number, SimplePeer>();
@@ -18,7 +18,7 @@ export class WebRTCTransportService implements BridgeService {
   ) {
   }
 
-  open (request: ConnectionRequest): Stream<WebRTCEvent> {
+  open (request: ConnectionRequest): Stream<BridgeEvent> {
     return new Stream(({ ready, next, close }) => {
 
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);

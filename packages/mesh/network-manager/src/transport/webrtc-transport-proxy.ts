@@ -6,7 +6,7 @@ import { Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey, schema } from '@dxos/protocols';
-import { ConnectionState, WebRTCEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
@@ -37,7 +37,7 @@ export class WebRTCTransportProxy implements Transport {
 
   private readonly _rpc: ProtoRpcPeer<Services>;
   private readonly _openedRpc = new Trigger();
-  private _serviceStream!: Stream<WebRTCEvent>;
+  private _serviceStream!: Stream<BridgeEvent>;
 
   constructor (private readonly _params: WebRTCTransportProxyParams) {
     this._rpc = createProtoRpcPeer({
@@ -61,7 +61,7 @@ export class WebRTCTransportProxy implements Transport {
     this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.BridgeService.sendData({ connectionId: this._params.webRTCConnectionId, payload: data }));
 
     this._serviceStream = this._rpc.rpc.BridgeService.open({ connectionId: this._params.webRTCConnectionId, initiator: this._params.initiator });
-    this._serviceStream.subscribe(async (msg: WebRTCEvent) => {
+    this._serviceStream.subscribe(async (msg: BridgeEvent) => {
       if (msg.connection) {
         await this._handleConnection(msg.connection);
       } else if (msg.data) {
@@ -72,7 +72,7 @@ export class WebRTCTransportProxy implements Transport {
     });
   }
 
-  private async _handleConnection (connectionEvent: WebRTCEvent.ConnectionEvent): Promise<void> {
+  private async _handleConnection (connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
       this.errors.raise(new Error(connectionEvent.error));
     }
@@ -89,11 +89,11 @@ export class WebRTCTransportProxy implements Transport {
     }
   }
 
-  private _handleData (dataEvent: WebRTCEvent.DataEvent) {
+  private _handleData (dataEvent: BridgeEvent.DataEvent) {
     this._params.stream.write(dataEvent.payload);
   }
 
-  private async _handleSignal (signalEvent: WebRTCEvent.SignalEvent) {
+  private async _handleSignal (signalEvent: BridgeEvent.SignalEvent) {
     await this._params.sendSignal({
       author: this._params.ownId,
       recipient: this._params.remoteId,

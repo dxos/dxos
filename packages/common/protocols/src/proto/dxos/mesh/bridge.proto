@@ -15,7 +15,7 @@ package dxos.mesh.bridge;
 service BridgeService {
 
   ///
-  rpc Open(ConnectionRequest) returns (stream WebRTCEvent);
+  rpc Open(ConnectionRequest) returns (stream BridgeEvent);
 
   ///
   rpc SendSignal(SignalRequest) returns (google.protobuf.Empty);
@@ -39,7 +39,7 @@ message ConnectionRequest {
   bool initiator = 2;
 }
 
-message WebRTCEvent {
+message BridgeEvent {
   message ConnectionEvent {
     ConnectionState state = 1;
     optional string error = 2; // TODO(burdon): Error type.
