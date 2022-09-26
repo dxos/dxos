@@ -2,8 +2,6 @@
 [![MIT License](https://img.shields.io/npm/l/@dxos/client?style=flat)](https://github.com/dxos/dxos/blob/main/LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
 
-![js-dxos](./docs/assets/images/github-repo-banner.png)
-
 ## DXOS Monorepo
 
 This monorepo contains the implementation of the DXOS protocols, SDK, and toolchain.

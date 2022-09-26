@@ -85,7 +85,7 @@ The HALO Identity can be used in the browser environment, using the [HALO Wallet
 
 The recent bundle can be downloaded from the [Protocols Releases](https://github.com/dxos/protocols/releases) and loaded in the `chrome://extensions/` page.
 
-![Developer mode extensions](../../static/img/tutorial/dev-extensions.png)
+![Developer mode extensions](./images/dev-extensions.png)
 
 ### Invite HALO Wallet as a new device
 
@@ -103,11 +103,11 @@ Copy the outputted `code`.
 
 2. Paste the code in the HALO Wallet:
 
-![Developer mode extensions](../../static/img/tutorial/wallet1.png)
+![Developer mode extensions](./images/wallet1.png)
 
 3. Insert the pin taken from the terminal:
 
-![Developer mode extensions](../../static/img/tutorial/wallet2.png)
+![Developer mode extensions](./images/wallet2.png)
 
 #### Troubleshooting
 

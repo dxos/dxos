@@ -5,7 +5,7 @@ label: DXNS Account Devices
 
 # DXNS Account Devices
 
-![DXNS Diagram](../../static/img/tutorial/dxns-diagram.png)
+![DXNS Diagram](./images/dxns-diagram.png)
 
 A DXNS Account is a blockchain record holding ownership of Domains.
 It consist of a list of authorized DXNS Devices - in this context it means a blockchain Addresses.
@@ -124,10 +124,10 @@ dx ns deploy --domain example --name example.app
 
 After the HALO Device invitations to the Wallet, we should see DXNS Account address synced automatically in the Wallet:
 
-![Developer mode extensions](../../static/img/tutorial/wallet3.png)
+![Developer mode extensions](./images/wallet3.png)
 
 With the Wallet, we can go to a public (Console instance)[https://demo.kube.dxos.network/app/dxos:app.console/]. One of the Console purposes is to serve as a blockchain explorer.
 
 On the **Developer** page you should see information about your DXNS Account, the devices, and Apps deployed with this DXNS Account.
 
-![Developer mode extensions](../../static/img/tutorial/wallet4.png)
+![Developer mode extensions](./images/wallet4.png)
