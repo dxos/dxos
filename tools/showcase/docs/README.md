@@ -10,7 +10,7 @@ Components that display other components and references to APIs.
 flowchart LR
 
 %% Classes
-classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef def fill:#fff,stroke:#333,stroke-width:1px
 classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes

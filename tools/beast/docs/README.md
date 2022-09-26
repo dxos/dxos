@@ -10,13 +10,13 @@ Code analyzer.
 flowchart LR
 
 %% Classes
-classDef default fill:#fff,stroke:#333,stroke-width:1px
-classDef root2 fill:#fff,stroke:#333,stroke-width:4px
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph tools1 [tools]
-  style tools1 fill:red
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
   dxos/beast("@dxos/beast"):::root
   click dxos/beast "dxos/dxos/tree/main/tools/beast/docs"
 end

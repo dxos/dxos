@@ -189,7 +189,7 @@ export class ModuleProcessor {
     });
 
     flowchart
-      .addClassDef('default', {
+      .addClassDef('def', {
         'fill': '#fff',
         'stroke': '#333',
         'stroke-width': '1px'
@@ -279,7 +279,7 @@ export class ModuleProcessor {
         included.forEach(pkg => graph.addNode({
           id: safeName(pkg),
           label: pkg,
-          className: pkg === project.package.name ? 'root' : 'default',
+          className: pkg === project.package.name ? 'root' : 'def',
           href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
         }));
 
@@ -297,7 +297,7 @@ export class ModuleProcessor {
           excluded.forEach(pkg => subgraph.addNode({
             id: safeName(pkg),
             label: pkg,
-            className: 'default',
+            className: 'def',
             href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
           }));
         }

@@ -10,7 +10,7 @@ Debug utilities
 flowchart LR
 
 %% Classes
-classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef def fill:#fff,stroke:#333,stroke-width:1px
 classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
@@ -20,7 +20,7 @@ subgraph common [common]
 
   subgraph common-excluded [common-excluded]
     style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
-    dxos/debug("@dxos/debug"):::default
+    dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end

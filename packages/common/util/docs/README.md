@@ -10,7 +10,7 @@ Temporary bucket for misc functions, which should graduate into separate package
 flowchart LR
 
 %% Classes
-classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef def fill:#fff,stroke:#333,stroke-width:1px
 classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
@@ -20,7 +20,7 @@ subgraph common [common]
 
   subgraph common-excluded [common-excluded]
     style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
-    dxos/util("@dxos/util"):::default
+    dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
 end
