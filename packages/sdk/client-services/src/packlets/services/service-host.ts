@@ -36,7 +36,6 @@ export class ClientServiceHost implements ClientServiceProvider {
     );
 
     const networkManager = new NetworkManager(this._config.get('runtime.services.signal.server') ? {
-      // TODO(mykola): SignalManager need to be subscribed for message receiving first.
       signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
       ice: this._config.get('runtime.services.ice'),
       log: true

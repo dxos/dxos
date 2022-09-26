@@ -1,16 +1,27 @@
-import { latch, trigger, until } from '@dxos/async'
-import { Config } from '@dxos/config'
+import { until } from '@dxos/async'
+import { Config, ConfigProto } from '@dxos/config'
 import { afterTest } from '@dxos/testutils'
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation'
 import { ClientServiceHost } from '../src/packlets/services/service-host'
 import { InvitationState } from '@dxos/protocols/proto/dxos/client'
 
+export const defaultTestingConfig: ConfigProto = {
+  version: 1,
+  runtime: {
+    services: {
+      signal: {
+        server: 'ws://localhost:4000/.well-known/dx/signal'
+      }
+    }
+  }
+};
+
 describe('ServiceHost', () => {
   it('device invitations', async () => {
-    const peer1 = new ClientServiceHost(new Config({}))
+    const peer1 = new ClientServiceHost(new Config(defaultTestingConfig))
     await peer1.open()
     afterTest(() => peer1.close())
-    const peer2 = new ClientServiceHost(new Config({}))
+    const peer2 = new ClientServiceHost(new Config(defaultTestingConfig))
     await peer2.open()
     afterTest(() => peer2.close())
 
@@ -33,5 +44,5 @@ describe('ServiceHost', () => {
         }
       })
     })
-  })
+  }).timeout(10_000)
 })

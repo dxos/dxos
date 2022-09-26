@@ -132,9 +132,11 @@ describe('space/space-protocol', () => {
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage()
 
-    const topic = PublicKey.random();
+    const keyring = new Keyring()
 
-    const peerId1 = PublicKey.random();
+    const topic = await keyring.createKey();
+
+    const peerId1 = await keyring.createKey();
     const networkManager1 = new NetworkManager({
       signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal'])
     });
@@ -150,7 +152,7 @@ describe('space/space-protocol', () => {
       [replicator1]
     );
 
-    const peerId2 = PublicKey.random();
+    const peerId2 = await keyring.createKey();
     const networkManager2 = new NetworkManager({
       signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal'])
     });

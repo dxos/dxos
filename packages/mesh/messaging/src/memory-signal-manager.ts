@@ -112,6 +112,7 @@ export class MemorySignalManager implements SignalManager {
       .onMessage.emit({ author, recipient, payload });
   }
 
+  // TODO(mykola): Delete this.
   async subscribeMessages (peerId: PublicKey): Promise<void> {}
 
   async destroy () {}

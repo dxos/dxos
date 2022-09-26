@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { discoveryKey } from '@dxos/crypto';
+import { discoveryKey, sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
@@ -22,18 +22,22 @@ export interface SwarmIdentity {
 export class SpaceProtocol {
   private readonly _presence: PresencePlugin;
   private readonly _authenticator: AuthPlugin;
+  private readonly _discoveryKey: PublicKey;
+  private readonly _peerId: PublicKey;
 
   readonly authenticationFailed: Event;
 
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _topic: PublicKey,
+    topic: PublicKey,
     private readonly _swarmIdentity: SwarmIdentity,
     private readonly _plugins: Plugin[]
   ) {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this.authenticationFailed = this._authenticator.authenticationFailed;
+    this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())))
+    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())))
   }
 
   async start () {
@@ -48,16 +52,16 @@ export class SpaceProtocol {
 
     this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
-      peerId: this._swarmIdentity.peerKey,
-      topic: this._topic,
+      peerId: this._peerId,
+      topic: this._discoveryKey,
       presence: this._presence,
       topology: new MMSTTopology(topologyConfig),
-      label: `Protocol swarm: ${this._topic}`
+      label: `Protocol swarm: ${this._discoveryKey}`
     });
   }
 
   async stop () {
-    await this._networkManager.leaveProtocolSwarm(this._topic);
+    await this._networkManager.leaveProtocolSwarm(this._discoveryKey);
   }
 
   private _createProtocol (credentials: Uint8Array | undefined, { initiator, channel }: { initiator: boolean, channel: Buffer }) {
@@ -75,22 +79,22 @@ export class SpaceProtocol {
       discoveryKey: channel,
 
       discoveryToPublicKey: (dk: any) => {
-        if (!discoveryKey(this._topic.asBuffer()).equals(dk)) {
+        if (!PublicKey.from(dk).equals(this._discoveryKey)) {
           return undefined;
         }
 
         // TODO(dmaretskyi): Why does this do side effects?
         // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
-        protocol.setContext({ topic: this._topic.toHex() });
+        protocol.setContext({ topic: this._discoveryKey.toHex() });
 
         // TODO(burdon): IMPORTANT: inconsistent use of toHex and asBuffer.
         //  - Need to progressively clean-up all uses of Keys via Typescript.
-        return this._topic.asBuffer();
+        return this._discoveryKey.asBuffer();
       },
 
       userSession: {
         // TODO(burdon): See deprecated `protocolFactory` in HALO.
-        peerId: this._swarmIdentity.peerKey.toHex(),
+        peerId: this._peerId.toHex(),
         // TODO(telackey): This ought to be the CredentialsProvider itself, so that fresh credentials can be minted.
         credentials: credentials ? Buffer.from(credentials).toString('base64') : undefined
       },
