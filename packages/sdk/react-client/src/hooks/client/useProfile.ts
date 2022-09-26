@@ -8,6 +8,7 @@ import { clientServiceBundle } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { isNode } from '@dxos/util';
 
 import { useClient } from './useClient';
 
@@ -25,7 +26,7 @@ export const useProfile = (disableHaloLogin = false) => {
   useEffect(() => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)), [client]);
 
   useAsyncEffect(async () => {
-    if (disableHaloLogin) {
+    if (isNode() || disableHaloLogin) {
       return;
     }
 
