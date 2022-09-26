@@ -28,7 +28,11 @@ module.exports = {
     'vite.config.ts',
 
     // Dependencies
-    'node_modules'
+    'node_modules',
+
+    // Templates
+    // TODO(wittjosiah): Fix lint config to lint these files.
+    '*.t.ts'
   ],
   overrides: [
     {

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "rootDir": "../../.."
+  },
+  "include": [
+    "apps/templates/hello/**/*.t.ts",
+    "apps/templates/hello/package.json",
+    "./tsconfig.json"
+  ]
+}

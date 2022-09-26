@@ -55,10 +55,10 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/system": "^5.8.1",
     "@types/color-hash": "^1.0.1",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.9",
-    "faker": "^5.1.0"
+    "faker": "^5.5.3"
   }
 }

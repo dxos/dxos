@@ -34,7 +34,7 @@
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/react-dom": "^17.0.9",
@@ -43,7 +43,7 @@
     "@types/webpack-env": "^1.16.0",
     "chalk": "^4.1.0",
     "copy": "~0.3.2",
-    "faker": "^5.1.0",
+    "faker": "^5.5.3",
     "playwright": "^1.25.1",
     "rmdir": "~1.2.0",
     "uuid": "^8.3.2"
