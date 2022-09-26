@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.5.1
+  nx: nrwl/nx@1.6.0
 
 aliases:
   - &docker_image
@@ -28,18 +28,18 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright install
+      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+#     - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
-          environment:
-            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
-            NODE_OPTIONS: --max_old_space_size=8198
+#      - run:
+#          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+#          environment:
+#             TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+#            NODE_OPTIONS: --max_old_space_size=8198
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
@@ -74,7 +74,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright install
+      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
       - run: pnpm nx run-many --target=test --skip-nx-cache

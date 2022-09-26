@@ -11,7 +11,7 @@ import fetch from 'node-fetch';
 // Fix a bug making fetch not being properly bound with webpack.
 const fetchBound = fetch;
 
-const CONFIG_ENDPOINT = '/config/config.json';
+const CONFIG_ENDPOINT = '/.well-known/dx/config';
 
 export const LocalStorage = (item = 'options') => JSON.parse(window.localStorage.getItem(item) || '{}');
 

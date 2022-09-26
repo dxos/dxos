@@ -122,13 +122,14 @@ export abstract class BaseCommand extends Command {
    * Convenience function to wrap command passing in kube publisher.
    */
   async execWithPublisher <T> (callback: (rpc: PublisherRpcPeer) => Promise<T | undefined>): Promise<T | undefined> {
+    let rpc: PublisherRpcPeer | undefined;
     try {
       assert(this._clientConfig);
 
       const wsEndpoint = this._clientConfig?.runtime?.services?.publisher?.server;
       assert(wsEndpoint);
 
-      const rpc = new PublisherRpcPeer(wsEndpoint);
+      rpc = new PublisherRpcPeer(wsEndpoint);
 
       await Promise.race([
         rpc.connected.waitForCount(1),
@@ -137,11 +138,13 @@ export abstract class BaseCommand extends Command {
 
       const value = await callback(rpc);
 
-      await rpc.close();
-
       return value;
     } catch (err: any) {
       this.error(err);
+    } finally {
+      if (rpc) {
+        await rpc.close();
+      }
     }
   }
 }
