@@ -8,7 +8,6 @@ import minimatch from 'minimatch';
 import path from 'path';
 
 import { Flowchart } from './mermaid';
-
 import { PackageJson, Project, WorkspaceJson } from './types';
 
 // TODO(burdon): Factor out.
