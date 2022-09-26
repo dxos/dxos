@@ -15,7 +15,12 @@ flowchart LR
 subgraph common
   style common fill:#debac2,stroke:#fff;
 
-  dxos/testutils("@dxos/testutils")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/testutils("@dxos/testutils")
+  end
 end
 
 

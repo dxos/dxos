@@ -30,7 +30,6 @@ dxos/echo-protocol --> dxos/credentials;
 dxos/gravity-orchestrator --> dxos/botkit;
 dxos/gravity-orchestrator --> dxos/client;
 dxos/gravity-orchestrator --> dxos/signal;
-dxos/gravity-orchestrator --> dxos/testutils;
 dxos/messaging --> dxos/rpc;
 dxos/network-manager --> dxos/credentials;
 dxos/network-manager --> dxos/messaging;
@@ -70,7 +69,6 @@ subgraph common
   dxos/random-access-storage("@dxos/random-access-storage")
   dxos/rpc("@dxos/rpc")
   dxos/rpc-tunnel("@dxos/rpc-tunnel")
-  dxos/testutils("@dxos/testutils")
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
@@ -78,6 +76,7 @@ subgraph common
     dxos/async("@dxos/async")
     dxos/debug("@dxos/debug")
     dxos/log("@dxos/log")
+    dxos/testutils("@dxos/testutils")
     dxos/util("@dxos/util")
   end
 end

@@ -175,6 +175,7 @@ export class ModuleProcessor {
    * https://mermaid.live
    * https://mermaid-js.github.io/mermaid/#/README
    */
+  // TODO(burdon): Create graph object.
   generateGraph (project: Project, docsDir: string, baseUrl: string) {
     const safeName = (name: string) => name.replace(/@/g, '');
 
