@@ -6,8 +6,8 @@ import { Event, Trigger } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey, schema } from '@dxos/protocols';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ConnectionState, WebRTCEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { SignalMessage } from '../signal';
