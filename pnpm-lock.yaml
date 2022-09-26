@@ -8754,7 +8754,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/material': 5.8.7_bk6rmx7robimclftfia7dcxft4
       react: 17.0.2
     dev: true
@@ -8770,7 +8770,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@types/react': 17.0.50
       react: 17.0.2
