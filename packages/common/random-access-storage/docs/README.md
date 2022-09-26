@@ -19,6 +19,12 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/random-access-storage("@dxos/random-access-storage"):::root
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
+
+  subgraph common-excluded [common-excluded]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
+  end
 end
 
 %% Links

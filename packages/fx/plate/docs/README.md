@@ -19,6 +19,8 @@ subgraph fx [fx]
   style fx fill:#e6b3c3,stroke:#fff
   dxos/plate("@dxos/plate"):::root
   click dxos/plate "dxos/dxos/tree/main/packages/fx/plate/docs"
+  dxos/file("@dxos/file"):::def
+  click dxos/file "dxos/dxos/tree/main/packages/fx/file/docs"
 end
 
 %% Links

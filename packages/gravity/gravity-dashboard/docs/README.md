@@ -21,6 +21,12 @@ subgraph gravity [gravity]
   click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
 end
 
+subgraph gem [gem]
+  style gem fill:#b3c7e6,stroke:#fff
+  dxos/gem-core("@dxos/gem-core"):::def
+  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/gravity-dashboard --> dxos/gem-core

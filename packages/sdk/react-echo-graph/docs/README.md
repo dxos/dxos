@@ -21,9 +21,18 @@ subgraph sdk [sdk]
   click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs"
 end
 
+subgraph gem [gem]
+  style gem fill:#b3c7e6,stroke:#fff
+  dxos/gem-core("@dxos/gem-core"):::def
+  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+  dxos/gem-spore("@dxos/gem-spore"):::def
+  click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/react-echo-graph --> dxos/gem-spore
+dxos/gem-spore --> dxos/gem-core
 ```
 
 ## Dependencies

@@ -22,6 +22,8 @@ subgraph common [common]
     style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/keys("@dxos/keys"):::def
+    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
   end
 end
 

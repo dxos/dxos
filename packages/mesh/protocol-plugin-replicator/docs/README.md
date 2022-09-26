@@ -19,11 +19,32 @@ subgraph mesh [mesh]
   style mesh fill:#b3e6c0,stroke:#fff
   dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::root
   click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs"
+  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs"
+end
+
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+
+  subgraph common-excluded [common-excluded]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
+    dxos/async("@dxos/async"):::def
+    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/keys("@dxos/keys"):::def
+    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+  end
 end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
+dxos/mesh-protocol --> dxos/codec-protobuf
 ```
 
 ## Dependencies

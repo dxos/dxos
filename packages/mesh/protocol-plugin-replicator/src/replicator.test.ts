@@ -58,7 +58,6 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     replicate: async (feeds: FeedData[]) => {
       const hypercoreFeeds = await Promise.all(feeds.map(async (feed) => {
         const { key } = decodeFeed(feed);
-
         if (key) {
           const { feed } = await feedStore.openReadOnlyFeed(PublicKey.from(key));
           return feed;

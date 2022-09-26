@@ -209,18 +209,20 @@ export class ModuleProcessor {
     {
       const addLinks = (current: Project) => {
         visited.add(current);
+
         current.dependencies.forEach(sub => {
           if (
             !this.options.exclude?.includes(sub.package.name) &&
             !array(current.dependencies).some(p => p.descendents.has(sub.package.name))
           ) {
-            // TODO(burdon): ???
-            if (!visited.has(sub)) {
-              flowchart.addLink({
-                source: safeName(current.package.name),
-                target: safeName(sub.package.name)
-              });
-            }
+            flowchart.addLink({
+              source: safeName(current.package.name),
+              target: safeName(sub.package.name)
+            });
+          }
+
+          if (!visited.has(sub)) {
+            addLinks(sub);
           }
         });
       };
