@@ -23,6 +23,11 @@
   - Remove unused function
   - Try to minimize dependency on third-party crypto libraries
 
+- [ ] `@dxos/protocol-plugin-replicator`
+  - Mocha instead of jest
+  - Don't use raw hypercore feeds
+  - Refactor is its up to our code quality standards
+
 # 2022-09-19 RB
 
 - [ ] `dxos/client-services`
