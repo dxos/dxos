@@ -10,35 +10,50 @@ import { Flowchart } from './mermaid';
 // TODO(burdon): Integrate into processor.
 
 describe('Mermaid builder', () => {
-  test('Flowchart', () => {
-    const flowchart = new Flowchart();
-
-    flowchart
-      .addLinkStyle('default', { 'stroke': '#333' });
+  test.only('Flowchart', () => {
+    const flowchart = new Flowchart({
+      linkStyle: { 'stroke': 'green' }
+    });
 
     flowchart
       .addClassDef('test', { 'fill': 'red' });
 
     flowchart
-      .createSubgraph({ id: 'G1' })
-      .addStyle('G1', { 'fill': '#EEE', 'stroke-width': 'none' })
-      .createNode({ id: 'A', label: 'Test', className: 'test', href: 'https://dxos.org' })
-      .createNode({ id: 'B' })
-      .addStyle('B', { 'fill': 'blue', 'stroke-width': '4px' })
-      .createSubgraph({ id: 'G2', label: ' ' })
-      .createNode({ id: 'C' });
+      .addSubgraph({
+        id: 'G1',
+        style: {
+          'fill': '#EEE', 'stroke-width': 'none'
+        }
+      })
+      .addNode({
+        id: 'A',
+        label: 'Test',
+        className: 'test',
+        href: 'https://dxos.org'
+      })
+      .addNode({
+        id: 'B',
+        style: { 'fill': 'blue', 'stroke-width': '4px' }
+      })
+      .addSubgraph({ id: 'G2', label: ' ' })
+      .addNode({ id: 'C' });
 
     flowchart
-      .createSubgraph({ id: 'G3' });
+      .addSubgraph({ id: 'G3' });
 
     flowchart
-      .createNode({ id: 'D' })
-      .addStyle('D', { 'stroke': 'green' });
+      .addNode({ id: 'D' });
 
     flowchart
-      .createLink({ source: 'A', target: 'B' })
-      .createLink({ source: 'B', target: 'C' })
-      .createLink({ source: 'B', target: 'D' });
+      .addLink({ source: 'A', target: 'B' })
+      .addLink({ source: 'B', target: 'C' })
+      .addLink({
+        source: 'B',
+        target: 'D',
+        style: {
+          'stroke': 'red'
+        }
+      });
 
     const output = flowchart.render();
     expect(output).toBeTruthy();

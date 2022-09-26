@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import defaultsDeep from 'lodash/defaultsdeep';
+
 // TODO(burdon): Make types relevant to ERD, etc.
 
 type Style = {
@@ -13,30 +15,33 @@ type Node = {
   readonly id: string
   readonly label?: string
   readonly className?: string
-  readonly style?: string
+  readonly style?: any
   readonly href?: string
 }
 
 type Link = {
   readonly source: string
   readonly target: string
+  readonly style?: any
 }
 
 type Subgraph = {
   readonly id: string
   readonly label?: string
-  readonly style?: string
+  readonly style?: any
 }
 
 interface SubgraphBuilder {
-  addStyle (id: string, properties: any): SubgraphBuilder
-  createNode (node: Node): SubgraphBuilder
-  createSubgraph ({ id, label }: Subgraph): SubgraphBuilder
+  addNode (node: Node): SubgraphBuilder
+  addSubgraph (subgraph: Subgraph): SubgraphBuilder
   build (indent?: number): string[]
 }
 
 const ROOT_SUBGRAPH_ID = '_root_';
 
+/**
+ * Sub-graph (also used for root graph).
+ */
 class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _styles = new Set<Style>();
@@ -44,21 +49,17 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 
   constructor (
     readonly id: string,
-    readonly label?: string
+    readonly label?: string,
+    readonly style?: string
   ) {}
 
-  addStyle (id: string, properties: any) {
-    this._styles.add({ id, properties });
-    return this;
-  }
-
-  createSubgraph ({ id, label }: Subgraph) {
-    const subgraph = new SubgraphImpl(id, label);
+  addSubgraph ({ id, label, style }: Subgraph) {
+    const subgraph = new SubgraphImpl(id, label, style);
     this._subgraphs.add(subgraph);
     return subgraph;
   }
 
-  createNode (node: Node) {
+  addNode (node: Node) {
     this._nodes.add(node);
     return this;
   }
@@ -69,6 +70,8 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
     const section = (lines: string[]) => lines.length ? lines : undefined;
 
     const sections = [
+      this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
+
       section(Array.from(this._nodes.values())
         .map(node => Flowchart.renderNode(node).map(str => line(str, indent + 1))).flat()),
 
@@ -94,6 +97,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
 type FlowchartOptions = {
   direction?: 'LR' | 'RL' | 'TD'
   curve?: 'basis' | 'bump' | 'normal' | 'step'
+  linkStyle?: any
 }
 
 export const FlowchartDefaultOptions: FlowchartOptions = {
@@ -108,36 +112,31 @@ export const FlowchartDefaultOptions: FlowchartOptions = {
  */
 export class Flowchart implements SubgraphBuilder {
   private readonly _classDefs = new Set<Style>();
-  private readonly _linkStyles = new Set<Style>();
   private readonly _root: SubgraphBuilder = new SubgraphImpl(ROOT_SUBGRAPH_ID);
   private readonly _links = new Set<Link>();
+  private readonly _options: FlowchartOptions;
   private readonly _config: any;
 
   constructor (
-    private readonly options: FlowchartOptions = FlowchartDefaultOptions
+    options?: FlowchartOptions
   ) {
+    this._options = defaultsDeep({}, options, FlowchartDefaultOptions);
     this._config = {
       flowchart: {
-        curve: this.options.curve
+        curve: this._options.curve
       }
     };
   }
 
-  addStyle = this._root.addStyle.bind(this._root);
-  createNode = this._root.createNode.bind(this._root);
-  createSubgraph = this._root.createSubgraph.bind(this._root);
+  addNode = this._root.addNode.bind(this._root);
+  addSubgraph = this._root.addSubgraph.bind(this._root);
 
   addClassDef (id: string, properties: any) {
     this._classDefs.add({ id, properties });
     return this;
   }
 
-  addLinkStyle (id: string, properties: any) {
-    this._linkStyles.add({ id, properties });
-    return this;
-  }
-
-  createLink (link: Link) {
+  addLink (link: Link) {
     this._links.add(link);
     return this;
   }
@@ -149,19 +148,19 @@ export class Flowchart implements SubgraphBuilder {
     const section = (label: string, lines: string[]) => lines.length ? ['', `%% ${label}`, ...lines] : undefined;
 
     const sections = [
-      section('Classes', [
-        ...Array.from(this._classDefs.values()).map(classDef => Flowchart.renderClassDef(classDef)),
-        ...Array.from(this._linkStyles.values()).map(style => Flowchart.renderLinkStyle(style))
-      ]),
+      section('Classes', Array.from(this._classDefs.values()).map(classDef => Flowchart.renderClassDef(classDef))),
       section('Nodes', this._root.build()),
-      section('Links', Array.from(this._links.values()).map(link => Flowchart.renderLink(link)))
-    ].filter(Boolean);
+      section('Links', [
+        this._options.linkStyle && Flowchart.renderLinkStyle({ id: 'default', properties: this._options.linkStyle }),
+        Array.from(this._links.values()).map((link, i) => Flowchart.renderLink(link, i)).flat()
+      ].filter(Boolean).flat())
+    ].filter(Boolean).flat();
 
     return [
       '```mermaid',
       Flowchart.renderDirective('init', this._config),
       '',
-      `flowchart ${this.options.direction}`,
+      `flowchart ${this._options.direction}`,
       ...sections.flat(),
       '```'
     ].flat() as string[];
@@ -198,21 +197,25 @@ export class Flowchart implements SubgraphBuilder {
   }
 
   static renderNode (node: Node): string[] {
-    const line = [
+    const def = [
       node.id,
       node.label && `(${node.label})`,
       node.className && `:::${node.className}`
     ].filter(Boolean).join('');
 
     return [
-      line,
+      def,
+      node.style && `style ${node.id} ${Flowchart.renderProperties(node.style)}`,
 
       // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
       node.href && `click ${node.id} "${node.href}"`
     ].filter(Boolean) as string[];
   }
 
-  static renderLink (link: Link): string {
-    return `${link.source} --> ${link.target}`;
+  static renderLink (link: Link, i: number): string[] {
+    return [
+      `${link.source} --> ${link.target}`,
+      link.style && Flowchart.renderLinkStyle({ id: String(i), properties: link.style })
+    ].filter(Boolean);
   }
 }
