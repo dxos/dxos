@@ -9,12 +9,18 @@
     "serve": "vuepress dev docs"
   },
   "devDependencies": {
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
     "@vuepress/client": "^2.0.0-beta.51",
+    "@vuepress/plugin-register-components": "^2.0.0-beta.51",
     "@vuepress/plugin-search": "^2.0.0-beta.51",
     "front-matter": "^4.0.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "typedoc": "^0.23.15",
     "typedoc-plugin-markdown": "^3.13.6",
     "typescript": "^4.7.2",
+    "vite": "3.0.9",
     "vue": "^3.2.39",
     "vuepress": "^2.0.0-beta.51",
     "vuepress-plugin-typedoc": "0.11.1"

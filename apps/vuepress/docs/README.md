@@ -21,3 +21,24 @@ features:
     details: Decentralized, private, secure, convenient identity.
 footer: MIT Licensed | Copyright © DXOS.org
 ---
+
+<script setup>
+  import { createElement, useState } from 'react';
+
+  const Test = () => {
+    const [value, setValue] = useState(0);
+
+    return createElement(
+      'button',
+      { onClick: () => setValue(value => value + 1) },
+      value
+    )
+  };
+</script>
+
+<div id="test"></div>
+
+<ReactTest
+  target="test"
+  :component="Test"
+/>

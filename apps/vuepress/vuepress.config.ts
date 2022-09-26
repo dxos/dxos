@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { registerComponentsPlugin } from '@vuepress/plugin-register-components';
 import { searchPlugin } from '@vuepress/plugin-search';
-import { join } from 'path';
-import { defaultTheme, defineUserConfig, UserConfig, viteBundler } from 'vuepress';
+import { join, resolve } from 'node:path';
+import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
 import { apiSidebar, DOCS_PATH, packageToModule, PINNED_PACKAGES, sidebarSection } from './src';
 
@@ -42,16 +43,13 @@ const config: UserConfig = defineUserConfig({
     }
   }),
   plugins: [
+    // Config: https://vuepress.github.io/reference/plugin/register-components.html
+    registerComponentsPlugin({
+      componentsDir: resolve(__dirname, './src/components')
+    }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin()
-  ],
-  bundler: viteBundler({
-    viteOptions: {
-      plugins: [
-
-      ]
-    }
-  })
+  ]
 });
 
 export default config;
