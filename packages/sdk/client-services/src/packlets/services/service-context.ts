@@ -95,9 +95,9 @@ export class ServiceContext {
     );
 
     await spaceManager.open();
-
     this.spaceManager = spaceManager;
-    this.dataInvitations = new DataInvitations(this.networkManager, this.spaceManager, signingContext);
+
+    this.dataInvitations = new DataInvitations(this.networkManager, signingContext, this.spaceManager);
 
     this.initialized.wake();
   }

@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Space, SigningContext, SpaceManager } from '@dxos/echo-db';
+import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
@@ -15,14 +15,16 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { InvitationDescriptor } from './invitation-descriptor';
 
+// TODO(burdon): Possible to factor out echo-db deps.
+
 /**
  * Create and manage data invitations for Data spaces.
  */
 export class DataInvitations {
   constructor (
     private readonly _networkManager: NetworkManager,
-    private readonly _spaceManager: SpaceManager,
-    private readonly _signingContext: SigningContext
+    private readonly _signingContext: SigningContext,
+    private readonly _spaceManager: SpaceManager
   ) {}
 
   /**

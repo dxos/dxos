@@ -24,6 +24,7 @@
     "debug": "^4.3.3",
     "js-yaml": "^4.1.0",
     "madge": "^5.0.1",
+    "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
     "minimatch": "^5.1.0",
     "ts-morph": "^16.0.0",

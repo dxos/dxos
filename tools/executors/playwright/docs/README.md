@@ -9,25 +9,20 @@
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph executors
-  style executors fill:#edabb0,stroke:#fff;
+%% Nodes
 
-  dxos/playwright("@dxos/playwright")
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/playwright("@dxos/playwright"):::root
+  click dxos/playwright "dxos/dxos/tree/main/tools/executors/playwright/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/playwright:::rootNode
-
 ```
 
 ## Dependencies

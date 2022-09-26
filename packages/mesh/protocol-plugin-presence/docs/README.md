@@ -9,68 +9,22 @@ Protocol plugin presence.
 
 flowchart LR
 
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::root
+  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs"
+end
+
 %% Links
-dxos/broadcast --> dxos/crypto;
-dxos/broadcast --> dxos/protocols;
-dxos/mesh-protocol --> dxos/codec-protobuf;
-dxos/protocol-plugin-presence --> dxos/broadcast;
-dxos/protocol-plugin-presence --> dxos/mesh-protocol;
-dxos/protocols --> dxos/codec-protobuf;
-
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/broadcast("@dxos/broadcast")
-  dxos/mesh-protocol("@dxos/mesh-protocol")
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/crypto("@dxos/crypto")
-  dxos/protocols("@dxos/protocols")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/keys("@dxos/keys")
-    dxos/util("@dxos/util")
-  end
-end
-
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs";
-click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protocol-plugin-presence:::rootNode
-
-dxos/async:::defaultNode
-dxos/broadcast:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/crypto:::defaultNode
-dxos/debug:::defaultNode
-dxos/keys:::defaultNode
-dxos/mesh-protocol:::defaultNode
-dxos/protocols:::defaultNode
-dxos/util:::defaultNode
+dxos/protocol-plugin-presence --> dxos/broadcast
+dxos/protocol-plugin-presence --> dxos/mesh-protocol
 ```
 
 ## Dependencies

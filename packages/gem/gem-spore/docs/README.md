@@ -9,29 +9,21 @@ Gem spore.
 
 flowchart LR
 
-%% Links
-dxos/gem-spore --> dxos/gem-core;
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph gem
-  style gem fill:#b3c7e6,stroke:#fff;
+%% Nodes
 
-  dxos/gem-core("@dxos/gem-core")
-  dxos/gem-spore("@dxos/gem-spore")
+subgraph gem [gem]
+  style gem fill:#b3c7e6,stroke:#fff
+  dxos/gem-spore("@dxos/gem-spore"):::root
+  click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
 end
 
-
-%% Hyperlinks
-click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/gem-spore:::rootNode
-
-dxos/gem-core:::defaultNode
+dxos/gem-spore --> dxos/gem-core
 ```
 
 ## Dependencies

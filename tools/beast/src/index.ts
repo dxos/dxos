@@ -3,5 +3,6 @@
 //
 
 export * from './main';
-export * from './processor';
+export * from './mermaid';
+export * from './module-processor';
 export * from './types';

@@ -11,6 +11,8 @@ import { InvalidInvitationError } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
+// TODO(burdon): Move to halo.
+
 // Encode with only alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 

@@ -3330,6 +3330,7 @@ importers:
       color-hash: ^1.0.3
       debug: ^4.3.3
       js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       madge: ^5.0.1
       minimatch: ^5.1.0
@@ -3344,6 +3345,7 @@ importers:
       color-hash: 1.1.1
       debug: 4.3.4
       js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       lodash.pick: 4.4.0
       madge: 5.0.1
       minimatch: 5.1.0
