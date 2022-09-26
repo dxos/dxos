@@ -9,25 +9,20 @@ Basic crypto key utils
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/crypto-names("@dxos/crypto-names")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/crypto-names("@dxos/crypto-names"):::root
+  click dxos/crypto-names "dxos/dxos/tree/main/packages/common/crypto-names/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/crypto-names:::rootNode
-
 ```
 
 ## Dependencies

@@ -199,7 +199,7 @@ export class Flowchart implements SubgraphBuilder {
   static renderNode (node: Node): string[] {
     const def = [
       node.id,
-      node.label && `(${node.label})`,
+      node.label && `("${node.label}")`,
       node.className && `:::${node.className}`
     ].filter(Boolean).join('');
 

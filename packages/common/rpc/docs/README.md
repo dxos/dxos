@@ -9,47 +9,20 @@ Tiny RPC library.
 
 flowchart LR
 
-%% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/util --> dxos/protocols;
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-  dxos/rpc("@dxos/rpc")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/util("@dxos/util")
-  end
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/rpc("@dxos/rpc"):::root
+  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
 end
 
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/rpc:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/protocols:::defaultNode
-dxos/util:::defaultNode
 ```
 
 ## Dependencies

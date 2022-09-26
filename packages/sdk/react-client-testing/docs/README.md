@@ -9,25 +9,20 @@ Tools for react testing.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph sdk
-  style sdk fill:#dddeba,stroke:#fff;
+%% Nodes
 
-  dxos/react-client-testing("@dxos/react-client-testing")
+subgraph sdk [sdk]
+  style sdk fill:#dddeba,stroke:#fff
+  dxos/react-client-testing("@dxos/react-client-testing"):::root
+  click dxos/react-client-testing "dxos/dxos/tree/main/packages/sdk/react-client-testing/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/react-client-testing:::rootNode
-
 ```
 
 ## Dependencies

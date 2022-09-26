@@ -9,52 +9,20 @@ MESH protocol framework.
 
 flowchart LR
 
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/mesh-protocol("@dxos/mesh-protocol"):::root
+  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs"
+end
+
 %% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/util --> dxos/protocols;
-
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/mesh-protocol("@dxos/mesh-protocol")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/util("@dxos/util")
-  end
-end
-
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/mesh-protocol:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/protocols:::defaultNode
-dxos/util:::defaultNode
 ```
 
 ## Dependencies

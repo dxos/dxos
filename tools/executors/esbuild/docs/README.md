@@ -9,25 +9,20 @@
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph executors
-  style executors fill:#edabb0,stroke:#fff;
+%% Nodes
 
-  dxos/esbuild("@dxos/esbuild")
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/esbuild("@dxos/esbuild"):::root
+  click dxos/esbuild "dxos/dxos/tree/main/tools/executors/esbuild/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/esbuild:::rootNode
-
 ```
 
 ## Dependencies

@@ -9,58 +9,21 @@ Plugin to enable Vite to build DXOS apps.
 
 flowchart LR
 
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
+  dxos/vite-plugin("@dxos/vite-plugin"):::root
+  click dxos/vite-plugin "dxos/dxos/tree/main/tools/vite-plugin/docs"
+end
+
 %% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/util --> dxos/protocols;
-dxos/vite-plugin --> dxos/config;
-
-%% Sections
-subgraph tools
-  style tools fill:#bbabed,stroke:#fff;
-
-  dxos/vite-plugin("@dxos/vite-plugin")
-end
-
-subgraph sdk
-  style sdk fill:#dddeba,stroke:#fff;
-
-  dxos/config("@dxos/config")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/debug("@dxos/debug")
-    dxos/util("@dxos/util")
-  end
-end
-
-
-%% Hyperlinks
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/vite-plugin:::rootNode
-
-dxos/codec-protobuf:::defaultNode
-dxos/config:::defaultNode
-dxos/debug:::defaultNode
-dxos/protocols:::defaultNode
-dxos/util:::defaultNode
+dxos/vite-plugin --> dxos/config
 ```
 
 ## Dependencies

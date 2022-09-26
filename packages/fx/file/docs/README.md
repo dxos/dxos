@@ -9,25 +9,20 @@
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph fx
-  style fx fill:#e6b3c3,stroke:#fff;
+%% Nodes
 
-  dxos/file("@dxos/file")
+subgraph fx [fx]
+  style fx fill:#e6b3c3,stroke:#fff
+  dxos/file("@dxos/file"):::root
+  click dxos/file "dxos/dxos/tree/main/packages/fx/file/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/file:::rootNode
-
 ```
 
 ## Dependencies

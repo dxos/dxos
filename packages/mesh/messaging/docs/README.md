@@ -9,59 +9,21 @@ Messaging
 
 flowchart LR
 
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/messaging("@dxos/messaging"):::root
+  click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs"
+end
+
 %% Links
-dxos/messaging --> dxos/rpc;
-dxos/protocols --> dxos/codec-protobuf;
-dxos/util --> dxos/protocols;
-
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/messaging("@dxos/messaging")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-  dxos/rpc("@dxos/rpc")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/log("@dxos/log")
-    dxos/util("@dxos/util")
-  end
-end
-
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/messaging:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/log:::defaultNode
-dxos/protocols:::defaultNode
-dxos/rpc:::defaultNode
-dxos/util:::defaultNode
+dxos/messaging --> dxos/rpc
 ```
 
 ## Dependencies

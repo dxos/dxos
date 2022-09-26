@@ -9,41 +9,20 @@ Network generator.
 
 flowchart LR
 
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/network-generator("@dxos/network-generator"):::root
+  click dxos/network-generator "dxos/dxos/tree/main/packages/mesh/network-generator/docs"
+end
+
 %% Links
-
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/network-generator("@dxos/network-generator")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-  end
-end
-
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/network-generator:::rootNode
-
-dxos/async:::defaultNode
-dxos/debug:::defaultNode
 ```
 
 ## Dependencies

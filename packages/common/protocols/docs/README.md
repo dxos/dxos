@@ -9,29 +9,21 @@ Protobuf definitions for DXOS protocols.
 
 flowchart LR
 
-%% Links
-dxos/protocols --> dxos/codec-protobuf;
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/protocols("@dxos/protocols"):::root
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
 end
 
-
-%% Hyperlinks
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protocols:::rootNode
-
-dxos/codec-protobuf:::defaultNode
+dxos/protocols --> dxos/codec-protobuf
 ```
 
 ## Dependencies

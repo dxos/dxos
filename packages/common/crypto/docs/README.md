@@ -9,33 +9,21 @@ Basic crypto key utils
 
 flowchart LR
 
-%% Links
-dxos/crypto --> dxos/protocols;
-dxos/protocols --> dxos/codec-protobuf;
+%% Classes
+classDef default fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/crypto("@dxos/crypto")
-  dxos/protocols("@dxos/protocols")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/crypto("@dxos/crypto"):::root
+  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
 end
 
-
-%% Hyperlinks
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/crypto:::rootNode
-
-dxos/codec-protobuf:::defaultNode
-dxos/protocols:::defaultNode
+dxos/crypto --> dxos/protocols
 ```
 
 ## Dependencies
