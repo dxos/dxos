@@ -8,7 +8,6 @@ import minimatch from 'minimatch';
 import path from 'path';
 
 import { Flowchart } from './mermaid';
-
 import { PackageJson, Project, WorkspaceJson } from './types';
 
 // TODO(burdon): Factor out.
@@ -209,18 +208,20 @@ export class ModuleProcessor {
     {
       const addLinks = (current: Project) => {
         visited.add(current);
+
         current.dependencies.forEach(sub => {
           if (
             !this.options.exclude?.includes(sub.package.name) &&
             !array(current.dependencies).some(p => p.descendents.has(sub.package.name))
           ) {
-            // TODO(burdon): ???
-            if (!visited.has(sub)) {
-              flowchart.addLink({
-                source: safeName(current.package.name),
-                target: safeName(sub.package.name)
-              });
-            }
+            flowchart.addLink({
+              source: safeName(current.package.name),
+              target: safeName(sub.package.name)
+            });
+          }
+
+          if (!visited.has(sub)) {
+            addLinks(sub);
           }
         });
       };
@@ -290,7 +291,7 @@ export class ModuleProcessor {
             style: {
               'fill': colorHash.hex(section),
               'stroke': '#333',
-              'stroke-dashed': '5 5'
+              'stroke-dasharray': '5 5'
             }
           });
 
