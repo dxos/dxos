@@ -8,7 +8,6 @@ import minimatch from 'minimatch';
 import path from 'path';
 
 import { Flowchart } from './mermaid';
-
 import { PackageJson, Project, WorkspaceJson } from './types';
 
 // TODO(burdon): Factor out.
@@ -292,7 +291,7 @@ export class ModuleProcessor {
             style: {
               'fill': colorHash.hex(section),
               'stroke': '#333',
-              'stroke-dashed': '5 5'
+              'stroke-dasharray': '5 5'
             }
           });
 

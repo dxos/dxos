@@ -37,7 +37,7 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
     dxos/log("@dxos/log"):::def

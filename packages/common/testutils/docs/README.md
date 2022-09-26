@@ -19,7 +19,7 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
 
   subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/testutils("@dxos/testutils"):::def
     click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs"
   end
