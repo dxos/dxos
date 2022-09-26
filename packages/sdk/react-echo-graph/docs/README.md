@@ -9,25 +9,20 @@ Low level components using gem library.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph sdk
-  style sdk fill:#dddeba,stroke:#fff;
+%% Nodes
 
-  dxos/react-echo-graph("@dxos/react-echo-graph")
+subgraph sdk [sdk]
+  style sdk fill:#dddeba,stroke:#fff
+  dxos/react-echo-graph("@dxos/react-echo-graph"):::root
+  click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/react-echo-graph:::rootNode
-
 ```
 
 ## Dependencies

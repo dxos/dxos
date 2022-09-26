@@ -9,76 +9,22 @@ Protocol plugin replicator.
 
 flowchart LR
 
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::root
+  click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs"
+end
+
 %% Links
-dxos/keyring --> dxos/protocols;
-dxos/keyring --> dxos/random-access-storage;
-dxos/mesh-protocol --> dxos/codec-protobuf;
-dxos/protocol-plugin-replicator --> dxos/keyring;
-dxos/protocol-plugin-replicator --> dxos/mesh-protocol;
-dxos/protocols --> dxos/codec-protobuf;
-
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/mesh-protocol("@dxos/mesh-protocol")
-  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator")
-end
-
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-  dxos/random-access-storage("@dxos/random-access-storage")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/keys("@dxos/keys")
-    dxos/log("@dxos/log")
-    dxos/util("@dxos/util")
-  end
-end
-
-subgraph halo
-  style halo fill:#cabade,stroke:#fff;
-
-  dxos/keyring("@dxos/keyring")
-end
-
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/keyring "dxos/dxos/tree/main/packages/halo/keyring/docs";
-click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs";
-click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protocol-plugin-replicator:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/keyring:::defaultNode
-dxos/keys:::defaultNode
-dxos/log:::defaultNode
-dxos/mesh-protocol:::defaultNode
-dxos/protocols:::defaultNode
-dxos/random-access-storage:::defaultNode
-dxos/util:::defaultNode
+dxos/protocol-plugin-replicator --> dxos/keyring
+dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 ```
 
 ## Dependencies

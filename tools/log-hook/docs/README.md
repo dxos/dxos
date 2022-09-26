@@ -9,25 +9,20 @@ Logger
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph tools
-  style tools fill:#bbabed,stroke:#fff;
+%% Nodes
 
-  dxos/log-hook("@dxos/log-hook")
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
+  dxos/log-hook("@dxos/log-hook"):::root
+  click dxos/log-hook "dxos/dxos/tree/main/tools/log-hook/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/log-hook:::rootNode
-
 ```
 
 ## Dependencies

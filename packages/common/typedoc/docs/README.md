@@ -9,25 +9,20 @@ DXOS Typedoc - API Reference.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/typedoc("@dxos/typedoc")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/typedoc("@dxos/typedoc"):::root
+  click dxos/typedoc "dxos/dxos/tree/main/packages/common/typedoc/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/typedoc:::rootNode
-
 ```
 
 ## Dependencies

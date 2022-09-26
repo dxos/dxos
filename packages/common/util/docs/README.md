@@ -9,36 +9,24 @@ Temporary bucket for misc functions, which should graduate into separate package
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/debug("@dxos/debug")
-    dxos/keys("@dxos/keys")
-    dxos/util("@dxos/util")
+  subgraph common-excluded [common-excluded]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dashed:5 5
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
 end
 
-
-%% Hyperlinks
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/util:::rootNode
-
-dxos/debug:::defaultNode
-dxos/keys:::defaultNode
 ```
 
 ## Dependencies

@@ -9,25 +9,20 @@ Gravity dashboard.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph gravity
-  style gravity fill:#edabad,stroke:#fff;
+%% Nodes
 
-  dxos/gravity-dashboard("@dxos/gravity-dashboard")
+subgraph gravity [gravity]
+  style gravity fill:#edabad,stroke:#fff
+  dxos/gravity-dashboard("@dxos/gravity-dashboard"):::root
+  click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/gravity-dashboard:::rootNode
-
 ```
 
 ## Dependencies

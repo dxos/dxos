@@ -9,54 +9,21 @@ RPC ports over various transports.
 
 flowchart LR
 
-%% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/rpc --> dxos/protocols;
-dxos/rpc-tunnel --> dxos/rpc;
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-  dxos/rpc("@dxos/rpc")
-  dxos/rpc-tunnel("@dxos/rpc-tunnel")
-
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/keys("@dxos/keys")
-    dxos/util("@dxos/util")
-  end
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::root
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs"
 end
 
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/rpc-tunnel:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/keys:::defaultNode
-dxos/protocols:::defaultNode
-dxos/rpc:::defaultNode
-dxos/util:::defaultNode
+dxos/rpc-tunnel --> dxos/rpc
 ```
 
 ## Dependencies

@@ -9,25 +9,20 @@
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph tools
-  style tools fill:#bbabed,stroke:#fff;
+%% Nodes
 
-  dxos/protobuf-test("@dxos/protobuf-test")
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
+  dxos/protobuf-test("@dxos/protobuf-test"):::root
+  click dxos/protobuf-test "dxos/dxos/tree/main/tools/protobuf-test/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:4px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protobuf-test:::rootNode
-
 ```
 
 ## Dependencies
