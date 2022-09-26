@@ -4,6 +4,11 @@
 
 // TODO(burdon): Make types relevant to ERD, etc.
 
+type Style = {
+  readonly id: string
+  readonly properties: any
+}
+
 type Node = {
   readonly id: string
   readonly label?: string
@@ -23,40 +28,42 @@ type Subgraph = {
   readonly style?: string
 }
 
-type Style = {
-  readonly id: string
-  readonly properties: any
+interface SubgraphBuilder {
+  addStyle (id: string, properties: any): SubgraphBuilder
+  createNode (node: Node): SubgraphBuilder
+  createSubgraph ({ id, label }: Subgraph): SubgraphBuilder
+  build (indent?: number): string[]
 }
 
 const ROOT_SUBGRAPH_ID = '_root_';
 
-class SubgraphImpl implements Subgraph {
+class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
   private readonly _styles = new Set<Style>();
-  private readonly _subgraphs = new Set<SubgraphImpl>();
+  private readonly _subgraphs = new Set<SubgraphBuilder>();
 
   constructor (
     readonly id: string,
     readonly label?: string
   ) {}
 
-  addStyle(id: string, properties: any) {
+  addStyle (id: string, properties: any) {
     this._styles.add({ id, properties });
     return this;
   }
 
-  createSubgraph ({ id, label }: Subgraph): SubgraphImpl {
+  createSubgraph ({ id, label }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label);
     this._subgraphs.add(subgraph);
     return subgraph;
   }
 
-  createNode (node: Node): SubgraphImpl {
+  createNode (node: Node) {
     this._nodes.add(node);
     return this;
   }
 
-  render (indent = -1): string[] {
+  build (indent = -1): string[] {
     const line = (str: string, i = indent) => ' '.repeat(i * 2) + str;
 
     const section = (lines: string[]) => lines.length ? lines : undefined;
@@ -69,14 +76,14 @@ class SubgraphImpl implements Subgraph {
         .map(style => line(Flowchart.renderStyle(style), indent + 1))),
 
       section(Array.from(this._subgraphs.values())
-        .map(subgraph => ['', subgraph.render(indent + 1)].flat()).flat())
+        .map(subgraph => ['', subgraph.build(indent + 1)].flat()).flat())
     ].filter(Boolean).flat() as string[];
 
     if (indent >= 0) {
       return [
         line(`subgraph ${this.id} [${this.label ?? this.id}]`),
         sections,
-        line(`end`)
+        line('end')
       ].flat();
     } else {
       return sections;
@@ -86,41 +93,48 @@ class SubgraphImpl implements Subgraph {
 
 type FlowchartOptions = {
   direction?: 'LR' | 'RL' | 'TD'
-  curve?: 'basis' | 'normal'
+  curve?: 'basis' | 'bump' | 'normal' | 'step'
 }
+
+export const FlowchartDefaultOptions: FlowchartOptions = {
+  direction: 'LR',
+  curve: 'basis'
+};
 
 /**
  * Mermaid Flowchart builder.
  * https://mermaid.live
  * https://mermaid-js.github.io/mermaid/#/README
  */
-// TODO(burdon): Integrate into processor.
-export class Flowchart {
+export class Flowchart implements SubgraphBuilder {
   private readonly _classDefs = new Set<Style>();
   private readonly _linkStyles = new Set<Style>();
-  private readonly _root: SubgraphImpl = new SubgraphImpl(ROOT_SUBGRAPH_ID);
+  private readonly _root: SubgraphBuilder = new SubgraphImpl(ROOT_SUBGRAPH_ID);
   private readonly _links = new Set<Link>();
+  private readonly _config: any;
 
   constructor (
-    private readonly options: FlowchartOptions = {}
-  ) {}
+    private readonly options: FlowchartOptions = FlowchartDefaultOptions
+  ) {
+    this._config = {
+      flowchart: {
+        curve: this.options.curve
+      }
+    };
+  }
 
-  addClassDef(id: string, properties: any) {
+  addStyle = this._root.addStyle.bind(this._root);
+  createNode = this._root.createNode.bind(this._root);
+  createSubgraph = this._root.createSubgraph.bind(this._root);
+
+  addClassDef (id: string, properties: any) {
     this._classDefs.add({ id, properties });
     return this;
   }
 
-  addLinkStyle(id: string, properties: any) {
+  addLinkStyle (id: string, properties: any) {
     this._linkStyles.add({ id, properties });
     return this;
-  }
-
-  createSubgraph (subgraph: Subgraph) {
-    return this._root.createSubgraph(subgraph);
-  }
-
-  createNode (node: Node): SubgraphImpl {
-    return this._root.createNode(node);
   }
 
   createLink (link: Link) {
@@ -131,41 +145,40 @@ export class Flowchart {
   /**
    * Generate mermaid document.
    */
-  // TODO(burdon): Normalize with subgraph builder.
   build () {
-    // TODO(burdon): Defaults object.
-    const init = {
-      flowchart: {
-        curve: this.options.curve ?? 'basis'
-      }
-    }
-
-    const section = (label: string, lines: string[]) => lines.length ? ['', label, ...lines]: undefined;
+    const section = (label: string, lines: string[]) => lines.length ? ['', `%% ${label}`, ...lines] : undefined;
 
     const sections = [
-      section('%% Classes', [
+      section('Classes', [
         ...Array.from(this._classDefs.values()).map(classDef => Flowchart.renderClassDef(classDef)),
-        ...Array.from(this._linkStyles.values()).map(style => Flowchart.renderLinkStyle(style)),
+        ...Array.from(this._linkStyles.values()).map(style => Flowchart.renderLinkStyle(style))
       ]),
-      section('%% Nodes', this._root.render()),
-      section('%% Links', Array.from(this._links.values()).map(link => Flowchart.renderLink(link)))
+      section('Nodes', this._root.build()),
+      section('Links', Array.from(this._links.values()).map(link => Flowchart.renderLink(link)))
     ].filter(Boolean);
 
-    // TODO(burdon): Optional sections.
-    const lines = [
+    return [
       '```mermaid',
-      `%%{ init: ${JSON.stringify(init).replace(/"/g, '\'')} }%%\n`,
-      `flowchart ${this.options.direction ?? 'LR'}`,
+      Flowchart.renderDirective('init', this._config),
+      '',
+      `flowchart ${this.options.direction}`,
       ...sections.flat(),
       '```'
-    ];
+    ].flat() as string[];
+  }
 
-    return lines.join('\n');
+  render () {
+    return this.build().join('\n');
   }
 
   //
   // Renderers
   //
+
+  // https://mermaid-js.github.io/mermaid/#/directives
+  static renderDirective (directive: string, properties: any): string {
+    return `%%{ ${directive}: ${JSON.stringify(properties).replace(/"/g, '\'')} }%%`;
+  }
 
   static renderProperties (properties: any): string {
     return Object.entries(properties).map(([key, value]) => `${key}:${value}`).join(',');
