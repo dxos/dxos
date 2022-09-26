@@ -3,6 +3,6 @@
 //
 
 export * from './common';
-export * from './invitations';
+export * from './data-invitations';
+export * from './halo-invitations';
 export * from './invitation-descriptor';
-export * from './types';

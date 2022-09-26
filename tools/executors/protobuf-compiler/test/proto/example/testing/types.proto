@@ -5,12 +5,11 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+
 import "@dxos/protobuf-test";
-import "example/testing/another.proto";
+
 import "example/testing/any.proto";
-import "example/testing/extensions.proto";
 
 package example.testing.types;
 
@@ -23,7 +22,7 @@ message Any {
 
 /// NOTE: Substitution.
 message Key {
-  required bytes data = 1;
+  bytes data = 1;
 }
 
 message Scalars {
@@ -64,7 +63,7 @@ message OptionalScalars {
 
 message ComplexFields {
   repeated Key repeatedField = 16;
-  required Key requiredField = 17;
+  Key requiredField = 17;
   map<string, Key> mappedField = 18;
 
   message Inner {
@@ -91,7 +90,7 @@ message WithTimestamp {
 
 message Outer {
   Inner inner = 1;
-  
+
   message Inner {
     int32 num = 1;
   }
@@ -117,10 +116,10 @@ message Task {
    * Task key.
    * Multiline field comment.
    */
-  required Key key = 3;
+  Key key = 3;
 
   // I'm a comment
-  required TaskType type = 4;
+  TaskType type = 4;
 
   // And I'm a comment with
   // multiple lines

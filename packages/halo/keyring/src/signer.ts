@@ -4,6 +4,9 @@
 
 import { PublicKey } from '@dxos/keys';
 
+/**
+ *
+ */
 export interface Signer {
   /**
    * Sign a message with the given key.

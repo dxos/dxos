@@ -6,16 +6,10 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { SystemService as SystemServiceRpc } from '@dxos/protocols/proto/dxos/client';
 
-import { CreateServicesOpts } from '../types';
-
-class SystemService implements SystemServiceRpc {
-  private readonly _config: Config;
-
-  constructor ({
-    config
-  }: CreateServicesOpts) {
-    this._config = config;
-  }
+export class SystemService implements SystemServiceRpc {
+  constructor (
+    private readonly _config: Config
+  ) {}
 
   async getConfig (request: void) {
     return this._config.values;
@@ -25,5 +19,3 @@ class SystemService implements SystemServiceRpc {
     todo();
   }
 }
-
-export const createSystemService = (opts: CreateServicesOpts) => new SystemService(opts);

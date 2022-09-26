@@ -7,6 +7,7 @@ export type UntilCallback<T> = (resolve: (value: T) => void, reject: (error: Err
 /**
  * Awaits promise.
  */
+// TODO(burdon): Reconcile with latch/trigger.
 export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promise<T> => {
   return new Promise((resolve, reject) => {
     const t = timeout && setTimeout(() => {

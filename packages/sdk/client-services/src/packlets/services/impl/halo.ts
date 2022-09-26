@@ -19,14 +19,13 @@ import {
 import { SubscriptionGroup } from '@dxos/util';
 
 import { HaloSigner } from '../signer';
-import { CreateServicesOpts } from '../types';
 
 /**
  * HALO service implementation.
  */
 export class HaloService implements HaloServiceRpc {
   constructor (
-    private readonly echo: any,
+    private readonly echo: any, // TODO(burdon): Remove.
     private readonly signer?: HaloSigner
   ) {}
 
@@ -107,5 +106,3 @@ export class HaloService implements HaloServiceRpc {
     };
   }
 }
-
-export const createHaloService = ({ echo, signer }: CreateServicesOpts): HaloService => new HaloService(echo, signer);

@@ -26,18 +26,19 @@
 # 2022-09-19 RB
 
 - [ ] `dxos/client-services`
-  - [ ] move SpaceManager to echo-db (factor out invitations)
+  - [ ] rethink ServiceContext (e.g., DataService, SpaceManager)
   - [ ] move HaloInvitations from ServiceContext
   - [ ] ServiceContext remove public member access
   - [ ] document design pattern
   - [ ] client proxies vs. services
   - [ ] SpaceManager/DataInvitations constructor SigningContext
-  - [x] move from dxos/client
   - [ ] move from dxos/echo-db/services
   - [ ] move DataService from echo-db to client-services
-  - [ ] remove `types.ts` files (anti-pattern)
   - [ ] service factories; clientServiceBundle
   - [ ] deps check
+  - [x] move from dxos/client
+  - [x] move SpaceManager to echo-db (factor out invitations)
+  - [x] remove `types.ts` files (anti-pattern)
 
 - [x] Remove `dxos/echo-protocol`
 - [ ] `dxos/protocols`

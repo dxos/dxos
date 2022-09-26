@@ -7,20 +7,41 @@ import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { Processor } from './processor';
+// TODO(burdon): Error if removed.
+// > @dxos/beast@2.33.8 update:docs /Users/burdon/Code/dxos/dxos/tools/beast
+// > ts-node --esm ./src/main.ts docs
+// /Users/burdon/Code/dxos/dxos/node_modules/.pnpm/ts-node@10.9.1_sx5ynny5elbe7xjikueazwirqy/node_modules/ts-node/src/index.ts:859
+//     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+import { log } from '@dxos/log';
+
+import { ModuleProcessor } from './module-processor';
 
 const main = () => {
+  log.info('Started');
+  const rootDir = path.join(__dirname, '../../..');
+  console.log(rootDir);
+
   yargs(hideBin(process.argv))
     .scriptName('beast')
     .option('json', {
       type: 'boolean'
     })
+    .option('verbose', {
+      type: 'boolean'
+    })
 
     .command({
       command: 'list',
-      handler: ({ json }: { json: boolean }) => {
-        const processor = new Processor(path.join(process.cwd(), '../..'));
+      handler: ({
+        json,
+        verbose
+      }: {
+        json: boolean
+        verbose?: boolean
+      }) => {
+        const processor = new ModuleProcessor(rootDir, { verbose }).init();
         const projects = processor.projects.map(p => p.package.name);
+
         if (json) {
           console.log(JSON.stringify({ projects }, undefined, 2));
         } else {
@@ -41,18 +62,20 @@ const main = () => {
       handler: ({
         project: name,
         filter,
-        json
+        json,
+        verbose
       }: {
         project?: string
         filter?: string
         json?: boolean
+        verbose?: boolean
       }) => {
         if (!name) {
           process.exit(1);
         }
 
-        const processor = new Processor(path.join(process.cwd(), '../..'));
-        const project = processor.process(name, { filter });
+        const processor = new ModuleProcessor(rootDir, { verbose }).init();
+        const project = processor.projectsByName.get(name);
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
           if (json) {
@@ -72,24 +95,55 @@ const main = () => {
       command: 'docs [pattern]',
       describe: 'Generate docs and dependency diagrams.',
       builder: yargs => yargs
-        .option('filter', {
+        .option('baseUrl', {
+          description: 'Base URL for links',
+          type: 'string',
+          default: 'dxos/dxos/tree/main'
+        })
+        .option('outDir', {
+          description: 'Folder for generated docs',
+          type: 'string',
+          default: './docs'
+        })
+        .option('include', {
           description: 'Dependency filter',
           type: 'string',
           default: '@dxos/*'
+        })
+        .option('exclude', {
+          description: 'Excluded files',
+          type: 'string',
+          // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
+          default: [
+            '@dxos/async',
+            '@dxos/debug',
+            '@dxos/keys',
+            '@dxos/log',
+            '@dxos/testutils',
+            '@dxos/util'
+          ].join(',')
         }),
       handler: ({
+        verbose,
         pattern = '*',
-        filter
+        baseUrl,
+        outDir,
+        include,
+        exclude = ''
       }: {
+        verbose?: boolean
         pattern?: string
-        filter?: string
+        baseUrl : string
+        outDir: string
+        include: string
+        exclude: string
       }) => {
-        const processor = new Processor(path.join(process.cwd(), '../..'));
-
+        const processor = new ModuleProcessor(rootDir, { verbose, include, exclude: exclude?.split(',') }).init();
         processor.match(pattern).forEach(project => {
-          console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
-          processor.process(project.name, { filter });
-          processor.createDocs(project);
+          if (verbose) {
+            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+          }
+          processor.createDocs(project, outDir, baseUrl);
         });
       }
     })

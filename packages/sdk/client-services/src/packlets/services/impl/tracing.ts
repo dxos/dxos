@@ -5,16 +5,13 @@
 import { Config } from '@dxos/config';
 import { TracingService as TracingServiceRpc } from '@dxos/protocols/proto/dxos/devtools';
 
-import { CreateServicesOpts } from '../types';
-
-class TracingService implements TracingServiceRpc {
-  private readonly _config: Config;
-
-  constructor ({
-    config
-  }: CreateServicesOpts) {
-    this._config = config;
-  }
+/**
+ *
+ */
+export class TracingService implements TracingServiceRpc {
+  constructor (
+    private readonly _config: Config
+  ) {}
 
   async setTracingOptions () {
     throw new Error('Tracing not available.');
@@ -24,5 +21,3 @@ class TracingService implements TracingServiceRpc {
     throw new Error('Tracing not available.');
   }
 }
-
-export const createTracingService = (opts: CreateServicesOpts) => new TracingService(opts);

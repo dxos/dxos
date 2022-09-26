@@ -31,6 +31,7 @@ const log = debug('dxos:echo-db:data-service-router');
 export class DataService implements DataServiceRpc {
   private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(x => x.toHex());
 
+  // TODO(burdon): Register party.
   trackParty (key: PublicKey, host: DataServiceHost) {
     log(`Tracking party: ${key}`);
     this._trackedParties.set(key, host);

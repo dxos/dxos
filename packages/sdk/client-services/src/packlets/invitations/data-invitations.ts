@@ -15,7 +15,9 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { InvitationDescriptor } from './invitation-descriptor';
 
-// TODO(burdon): Move to @dxos/identity?
+/**
+ * Create and manage data invitations for Data spaces.
+ */
 export class DataInvitations {
   constructor (
     private readonly _networkManager: NetworkManager,

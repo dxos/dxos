@@ -7,6 +7,7 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { SecretProvider } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
@@ -30,13 +31,12 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
-import { SecretProvider, ServiceContext } from '../service-context';
-import { CreateServicesOpts } from '../types';
+import { ServiceContext } from '../service-context';
 
 /**
  * Party service implementation.
  */
-class PartyService implements PartyServiceRpc {
+export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
   constructor (
@@ -222,6 +222,7 @@ class PartyService implements PartyServiceRpc {
         if (!secret) {
           throw new Error('Secret not provided.');
         }
+
         return Buffer.from(secret);
       };
 
@@ -284,5 +285,3 @@ class PartyService implements PartyServiceRpc {
     // return party.createSnapshot();
   }
 }
-
-export const createPartyService = ({ context }: CreateServicesOpts): PartyService => new PartyService(context);

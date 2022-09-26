@@ -25,12 +25,10 @@ describe('ServiceContext', () => {
       signalManager: new MemorySignalManager(signalContext)
     });
 
-    const context = new ServiceContext(
+    return new ServiceContext(
       storage,
       networkManager
     );
-
-    return context;
   };
 
   describe('Identity management', () => {
@@ -39,7 +37,7 @@ describe('ServiceContext', () => {
       await peer.open();
       afterTest(() => peer.close());
 
-      const identity = await peer.create();
+      const identity = await peer.createIdentity();
       expect(identity).toBeTruthy();
     });
 
@@ -54,11 +52,11 @@ describe('ServiceContext', () => {
       await peer2.open();
       afterTest(() => peer2.close());
 
-      const identity1 = await peer1.create();
+      const identity1 = await peer1.createIdentity();
       expect(identity1).toBeTruthy();
 
-      const invitation = await peer1.invitations.createInvitation();
-      const identity2 = await peer2.invitations.acceptInvitation(invitation);
+      const invitation = await peer1.haloInvitations.createInvitation();
+      const identity2 = await peer2.haloInvitations.acceptInvitation(invitation);
 
       expect(identity2.identityKey).toEqual(identity1.identityKey);
     });
@@ -69,7 +67,7 @@ describe('ServiceContext', () => {
       const serviceContext = await setup();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
-      await serviceContext.create();
+      await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
       expect(space.database).toBeTruthy();
@@ -80,7 +78,7 @@ describe('ServiceContext', () => {
       const serviceContext = await setup();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
-      await serviceContext.create();
+      await serviceContext.createIdentity();
 
       const space = await serviceContext.spaceManager!.createSpace();
 
@@ -101,12 +99,12 @@ describe('ServiceContext', () => {
       const peer1 = await setup({ signalContext });
       await peer1.open();
       afterTest(() => peer1.close());
-      await peer1.create();
+      await peer1.createIdentity();
 
       const peer2 = await setup({ signalContext });
       await peer2.open();
       afterTest(() => peer2.close());
-      await peer2.create();
+      await peer2.createIdentity();
 
       const space1 = await peer1.spaceManager!.createSpace();
       const invitation = await peer1.createInvitation(space1.key);
