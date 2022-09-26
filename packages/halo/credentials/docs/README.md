@@ -26,6 +26,7 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
 dxos/credentials --> dxos/mesh-protocol
+dxos/credentials --> dxos/protocols
 ```
 
 ## Dependencies
@@ -37,10 +38,8 @@ dxos/credentials --> dxos/mesh-protocol
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) | &check; |
-| [`@dxos/keyring`](../../keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

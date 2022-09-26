@@ -45,7 +45,6 @@ dxos/kodama --> dxos/react-client
 | [`@dxos/echo-db`](../../../../packages/echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../../packages/common/feed-store/docs/README.md) |  |
 | [`@dxos/halo-protocol`](../../../../packages/halo/halo-protocol/docs/README.md) |  |
-| [`@dxos/keyring`](../../../../packages/halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../../packages/common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../../packages/mesh/mesh-protocol/docs/README.md) |  |

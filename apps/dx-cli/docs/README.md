@@ -24,6 +24,7 @@ end
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/dx-cli --> dxos/client
+dxos/dx-cli --> dxos/plate
 ```
 
 ## Dependencies
@@ -41,8 +42,8 @@ dxos/dx-cli --> dxos/client
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../packages/echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../packages/common/feed-store/docs/README.md) |  |
+| [`@dxos/file`](../../../packages/fx/file/docs/README.md) |  |
 | [`@dxos/halo-protocol`](../../../packages/halo/halo-protocol/docs/README.md) |  |
-| [`@dxos/keyring`](../../../packages/halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../packages/common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../packages/mesh/mesh-protocol/docs/README.md) |  |
@@ -50,6 +51,7 @@ dxos/dx-cli --> dxos/client
 | [`@dxos/model-factory`](../../../packages/echo/model-factory/docs/README.md) |  |
 | [`@dxos/network-manager`](../../../packages/mesh/network-manager/docs/README.md) |  |
 | [`@dxos/object-model`](../../../packages/echo/object-model/docs/README.md) |  |
+| [`@dxos/plate`](../../../packages/fx/plate/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../../packages/mesh/protocol-plugin-presence/docs/README.md) |  |
 | [`@dxos/protocol-plugin-replicator`](../../../packages/mesh/protocol-plugin-replicator/docs/README.md) |  |
 | [`@dxos/protocol-plugin-rpc`](../../../packages/mesh/protocol-plugin-rpc/docs/README.md) |  |

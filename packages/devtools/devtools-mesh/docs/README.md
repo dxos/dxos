@@ -23,6 +23,7 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
+dxos/devtools-mesh --> dxos/gem-spore
 dxos/devtools-mesh --> dxos/react-components
 dxos/devtools-mesh --> dxos/react-toolkit
 ```
@@ -42,8 +43,9 @@ dxos/devtools-mesh --> dxos/react-toolkit
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../halo/halo-protocol/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |

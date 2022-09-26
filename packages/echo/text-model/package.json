@@ -32,8 +32,8 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@types/faker": "^5.5.1",
-    "faker": "^5.1.0"
+    "@types/faker": "^5.5.9",
+    "faker": "^5.5.3"
   },
   "publishConfig": {
     "access": "public"

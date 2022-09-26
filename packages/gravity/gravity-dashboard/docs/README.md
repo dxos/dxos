@@ -23,9 +23,11 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
+dxos/gravity-dashboard --> dxos/gem-core
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
+| [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |

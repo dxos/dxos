@@ -39,7 +39,6 @@ dxos/echo-e2e --> dxos/echo-db
 | [`@dxos/echo-db`](../../../packages/echo/echo-db/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../packages/common/feed-store/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../packages/halo/halo-protocol/docs/README.md) | &check; |
-| [`@dxos/keyring`](../../../packages/halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../packages/common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../packages/mesh/mesh-protocol/docs/README.md) |  |

@@ -41,7 +41,6 @@ dxos/client-services --> dxos/echo-db
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../halo/halo-protocol/docs/README.md) | &check; |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |

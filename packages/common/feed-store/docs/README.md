@@ -23,7 +23,6 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
-dxos/feed-store --> dxos/keyring
 ```
 
 ## Dependencies
@@ -31,11 +30,7 @@ dxos/feed-store --> dxos/keyring
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../async/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
 | [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../log/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../protocols/docs/README.md) |  |
-| [`@dxos/random-access-storage`](../../random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../util/docs/README.md) | &check; |

@@ -23,7 +23,6 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
-dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 ```
 
@@ -34,10 +33,6 @@ dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
-| [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../../common/protocols/docs/README.md) |  |
-| [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

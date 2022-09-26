@@ -34,10 +34,8 @@ dxos/messenger-model --> dxos/model-factory
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) |  |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/model-factory`](../../model-factory/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

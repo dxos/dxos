@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@dxos/gem-core": "2.2.1-beta.11",
-    "@dxos/gem-spore": "2.2.1-beta.11",
+    "@dxos/gem-core": "workspace:*",
+    "@dxos/gem-spore": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",

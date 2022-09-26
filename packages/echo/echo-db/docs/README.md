@@ -27,6 +27,7 @@ dxos/echo-db --> dxos/halo-protocol
 dxos/echo-db --> dxos/network-manager
 dxos/echo-db --> dxos/object-model
 dxos/echo-db --> dxos/protocol-plugin-replicator
+dxos/echo-db --> dxos/random-access-storage
 dxos/echo-db --> dxos/protocol-plugin-rpc
 ```
 
@@ -42,7 +43,6 @@ dxos/echo-db --> dxos/protocol-plugin-rpc
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../halo/halo-protocol/docs/README.md) | &check; |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) | &check; |

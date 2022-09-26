@@ -42,7 +42,6 @@ dxos/registry-client --> dxos/client
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
 | [`@dxos/halo-protocol`](../../../halo/halo-protocol/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |

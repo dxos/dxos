@@ -50,8 +50,9 @@ dxos/kitchen-sink --> dxos/react-toolkit
 | [`@dxos/echo-db`](../../../../packages/echo/echo-db/docs/README.md) | &check; |
 | [`@dxos/echo-testing`](../../../../packages/echo/echo-testing/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../../packages/common/feed-store/docs/README.md) |  |
+| [`@dxos/gem-core`](../../../../packages/gem/gem-core/docs/README.md) | &check; |
+| [`@dxos/gem-spore`](../../../../packages/gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../../packages/halo/halo-protocol/docs/README.md) |  |
-| [`@dxos/keyring`](../../../../packages/halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../../packages/common/keys/docs/README.md) |  |
 | [`@dxos/log`](../../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../../packages/mesh/mesh-protocol/docs/README.md) |  |

@@ -39,13 +39,11 @@ dxos/network-manager --> dxos/protocol-plugin-presence
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |
 | [`@dxos/messaging`](../../messaging/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/rpc`](../../../common/rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

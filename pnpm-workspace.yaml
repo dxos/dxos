@@ -1,11 +1,14 @@
 packages:
   - apps/experimental/*
+  - apps/templates/*
   - apps/*
   - e2e/*
   - packages/bot/*
   - packages/common/*
   - packages/devtools/*
   - packages/echo/*
+  - packages/fx/*
+  - packages/gem/*
   - packages/gravity/*
   - packages/halo/*
   - packages/mesh/*
