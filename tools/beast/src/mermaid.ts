@@ -44,7 +44,6 @@ const ROOT_SUBGRAPH_ID = '_root_';
  */
 class SubgraphImpl implements Subgraph, SubgraphBuilder {
   private readonly _nodes = new Set<Node>();
-  private readonly _styles = new Set<Style>();
   private readonly _subgraphs = new Set<SubgraphBuilder>();
 
   constructor (
@@ -56,6 +55,7 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   addSubgraph ({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
     this._subgraphs.add(subgraph);
+    // console.log('<<<<<<<<<<<<<<', this.id, id);
     return subgraph;
   }
 
@@ -70,17 +70,21 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
     const section = (lines: string[]) => lines.length ? lines : undefined;
 
     const sections = [
+      // Current style.
       this.style && line(`style ${this.id} ${Flowchart.renderProperties(this.style)}`, indent + 1),
 
+      // Nodes.
       section(Array.from(this._nodes.values())
         .map(node => Flowchart.renderNode(node).map(str => line(str, indent + 1))).flat()),
 
-      section(Array.from(this._styles.values())
-        .map(style => line(Flowchart.renderStyle(style), indent + 1))),
-
+      // Recursively render subgraphs.
       section(Array.from(this._subgraphs.values())
         .map(subgraph => ['', subgraph.build(indent + 1)].flat()).flat())
     ].filter(Boolean).flat() as string[];
+
+    if (this.id === 'common') {
+      // console.log('>>>>>>>>>>>', this.id, this._subgraphs.size, sections);
+    }
 
     if (indent >= 0) {
       return [

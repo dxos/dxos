@@ -19,11 +19,20 @@ subgraph deprecated [deprecated]
   style deprecated fill:#bac5de,stroke:#fff
   dxos/protocols-toolchain("@dxos/protocols-toolchain"):::root
   click dxos/protocols-toolchain "dxos/dxos/tree/main/tools/deprecated/protocols-toolchain/docs"
+  dxos/toolchain-node-library("@dxos/toolchain-node-library"):::def
+  click dxos/toolchain-node-library "dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs"
+end
+
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/protobuf-compiler("@dxos/protobuf-compiler"):::def
+  click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
 end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/protocols-toolchain --> dxos/toolchain-node-library
+dxos/toolchain-node-library --> dxos/protobuf-compiler
 ```
 
 ## Dependencies

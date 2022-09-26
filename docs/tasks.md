@@ -48,6 +48,8 @@
   - [ ] move echo-db errors to new halo module
   - [ ] move HaloInvitations from ServiceContext
 
+  - [ ] rename service files (e.g., party-service.ts)
+
   - [ ] rethink ServiceContext (e.g., DataService, SpaceManager)
   - [ ] ServiceContext remove public member access
   - [ ] SpaceManager/DataInvitations constructor SigningContext

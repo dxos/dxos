@@ -19,6 +19,8 @@ subgraph tools [tools]
   style tools fill:#bbabed,stroke:#fff
   dxos/eslint-plugin("@dxos/eslint-plugin"):::root
   click dxos/eslint-plugin "dxos/dxos/tree/main/tools/eslint-plugin/docs"
+  dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules"):::def
+  click dxos/eslint-plugin-rules "dxos/dxos/tree/main/tools/eslint-rules/docs"
 end
 
 %% Links

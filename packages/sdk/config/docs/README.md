@@ -21,9 +21,28 @@ subgraph sdk [sdk]
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
 end
 
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+
+  subgraph common-excluded [common-excluded]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/keys("@dxos/keys"):::def
+    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+  end
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/config --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
 ```
 
 ## Dependencies
