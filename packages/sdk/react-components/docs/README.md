@@ -21,9 +21,31 @@ subgraph sdk [sdk]
   click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs"
 end
 
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/react-async("@dxos/react-async"):::def
+  click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+
+  subgraph common-excluded [common-excluded]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/async("@dxos/async"):::def
+    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+  end
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/react-components --> dxos/react-async
+dxos/util --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
 ```
 
 ## Dependencies

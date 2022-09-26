@@ -19,6 +19,8 @@ subgraph gem [gem]
   style gem fill:#b3c7e6,stroke:#fff
   dxos/gem-spore("@dxos/gem-spore"):::root
   click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
+  dxos/gem-core("@dxos/gem-core"):::def
+  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
 end
 
 %% Links

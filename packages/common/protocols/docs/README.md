@@ -19,6 +19,8 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/protocols("@dxos/protocols"):::root
   click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 end
 
 %% Links

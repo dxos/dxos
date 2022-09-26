@@ -21,6 +21,12 @@ subgraph deprecated [deprecated]
   click dxos/toolchain-node-library "dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs"
 end
 
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/protobuf-compiler("@dxos/protobuf-compiler"):::def
+  click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/toolchain-node-library --> dxos/protobuf-compiler
