@@ -13,12 +13,12 @@ import { PublicKey, schema } from '@dxos/protocols';
 import { WebRTCService } from '@dxos/protocols/proto/dxos/mesh/webrtc';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
+import { randomInt } from '@dxos/util';
 
 import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
-import { randomInt } from '@dxos/util';
 
 describe('WebRTCTransportProxy', () => {
   const setup = async ({
