@@ -10,7 +10,7 @@ import { Flowchart } from './mermaid';
 // TODO(burdon): Integrate into processor.
 
 describe('Mermaid builder', () => {
-  test.only('Flowchart', () => {
+  test('Flowchart', () => {
     const flowchart = new Flowchart({
       linkStyle: { 'stroke': 'green' }
     });

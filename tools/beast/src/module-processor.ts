@@ -7,6 +7,8 @@ import fs from 'fs';
 import minimatch from 'minimatch';
 import path from 'path';
 
+import { Flowchart } from './mermaid';
+
 import { PackageJson, Project, WorkspaceJson } from './types';
 
 // TODO(burdon): Factor out.
@@ -158,13 +160,13 @@ export class ModuleProcessor {
       '|---|---|'
     ];
 
-    array(project.descendents).sort().forEach(name => {
-      const sub = this.projectsByPackage.get(name)!;
+    array(project.descendents).sort().forEach(pkg => {
+      const sub = this.projectsByPackage.get(pkg)!;
       const link = createLink(sub);
       // TODO(burdon): Test ":heavy_check_mark:"
       //  https://github.com/StylishThemes/GitHub-Dark/wiki/Emoji
       // content.push(`| ${link} | ${project.dependencies.has(sub) ? '&check;' : ''} |`);
-      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === name) ? '&check;' : ''} |`);
+      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === pkg) ? '&check;' : ''} |`);
     });
 
     return content.join('\n');
@@ -179,7 +181,25 @@ export class ModuleProcessor {
   generateGraph (project: Project, docsDir: string, baseUrl: string) {
     const safeName = (name: string) => name.replace(/@/g, '');
 
-    const content: string[][] = [];
+    const flowchart = new Flowchart({
+      linkStyle: {
+        'stroke': '#333',
+        'stroke-width': '1px'
+      }
+    });
+
+    flowchart
+      .addClassDef('default', {
+        'fill': '#fff',
+        'stroke': '#333',
+        'stroke-width': '1px'
+      })
+      .addClassDef('root', {
+        'fill': '#fff',
+        'stroke': '#333',
+        'stroke-width': '4px'
+      });
+
     const visited = new Set<Project>();
 
     //
@@ -187,10 +207,6 @@ export class ModuleProcessor {
     // https://mermaid-js.github.io/mermaid/#/flowchart?id=links-between-nodes
     //
     {
-      const links: string[] = [
-        '%% Links'
-      ];
-
       const addLinks = (current: Project) => {
         visited.add(current);
         current.dependencies.forEach(sub => {
@@ -198,17 +214,18 @@ export class ModuleProcessor {
             !this.options.exclude?.includes(sub.package.name) &&
             !array(current.dependencies).some(p => p.descendents.has(sub.package.name))
           ) {
-            links.push(`${safeName(current.package.name)} --> ${safeName(sub.package.name)};`);
-          }
-
-          if (!visited.has(sub)) {
-            addLinks(sub);
+            // TODO(burdon): ???
+            if (!visited.has(sub)) {
+              flowchart.addLink({
+                source: safeName(current.package.name),
+                target: safeName(sub.package.name)
+              });
+            }
           }
         });
       };
 
       addLinks(project);
-      content.push(links.sort());
     }
 
     //
@@ -216,6 +233,7 @@ export class ModuleProcessor {
     // https://mermaid-js.github.io/mermaid/#/flowchart?id=subgraphs
     //
     {
+      // TODO(burdon): Get from package.json metadata?
       const sectionName = (subdir: string): string => {
         const parts = subdir.split('/');
         parts.pop();
@@ -239,7 +257,7 @@ export class ModuleProcessor {
         return result;
       }, new Map<string, string[]>());
 
-      const sections = Array.from(sectionDefs.entries()).map(([section, packages]) => {
+      Array.from(sectionDefs.entries()).forEach(([section, packages]) => {
         const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], pkg) => {
           if (this.options.exclude?.includes(pkg)) {
             excluded.push(pkg);
@@ -249,76 +267,44 @@ export class ModuleProcessor {
           return [included, excluded];
         }, [[], []]);
 
+        // Main graph.
+        const graph = flowchart.addSubgraph({
+          id: section,
+          style: {
+            'fill': colorHash.hex(section),
+            'stroke': '#fff'
+          }
+        });
+
+        included.forEach(pkg => graph.addNode({
+          id: safeName(pkg),
+          label: pkg,
+          className: pkg === project.package.name ? 'root' : 'default',
+          href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
+        }));
+
         // Common packages with links removed.
-        const excludedGraph = excluded.length ? [
-          '',
-          `  subgraph ${section}-excluded [ ]`,
-          `    style ${section}-excluded fill:${colorHash.hex(section)},stroke:#333,stroke-dasharray:5 5;\n`,
-          excluded.map(name => `    ${safeName(name)}("${name}")`).sort().join('\n'),
-          '  end'
-        ].join('\n') : undefined;
+        if (excluded.length) {
+          const subgraph = graph.addSubgraph({
+            id: `${section}-excluded`,
+            style: {
+              'fill': colorHash.hex(section),
+              'stroke': '#333',
+              'stroke-dashed': '5 5'
+            }
+          });
 
-        return [
-          `subgraph ${section}`,
-          `  style ${section} fill:${colorHash.hex(section)},stroke:#fff;\n`,
-          included.map(name => `  ${safeName(name)}("${name}")`).sort().join('\n'),
-          excludedGraph,
-          'end\n'
-        ].filter(Boolean).join('\n');
+          excluded.forEach(pkg => subgraph.addNode({
+            id: safeName(pkg),
+            label: pkg,
+            className: 'default',
+            href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
+          }));
+        }
       });
-
-      content.push(['%% Sections', ...sections]);
     }
 
-    //
-    // Hyperlinks
-    // https://mermaid-js.github.io/mermaid/#/flowchart?id=interaction
-    //
-    {
-      const hyperlinks = array(project.descendents).sort().map(project => {
-        const subdir = this.projectsByPackage.get(project)!.subdir;
-        // click dxos/crypto "dxos/dxos/tree/main/packages/sdk/client/docs";
-        return `click ${safeName(project)} "${path.join(baseUrl, subdir, docsDir)}";`;
-      });
-
-      content.push(['%% Hyperlinks', ...hyperlinks]);
-    }
-
-    //
-    // Styles
-    // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-and-classes
-    //
-    {
-      const styles = [
-        '%% Styles',
-        'classDef rootNode fill:#fff,stroke:#333,stroke-width:4px',
-        'classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px',
-        'linkStyle default stroke:#333,stroke-width:1px',
-        '',
-        `${safeName(project.package.name)}:::rootNode`,
-        '',
-        ...array(project.descendents).sort().map(name => `${safeName(name)}:::defaultNode`)
-      ];
-
-      content.push(styles);
-    }
-
-    // https://mermaid-js.github.io/mermaid/#/flowchart?id=styling-line-curves
-    const config = {
-      flowchart: {
-        curve: 'basis'
-      }
-    };
-
-    const defs = [
-      '```mermaid',
-      `%%{ init: ${JSON.stringify(config).replace(/"/g, '\'')} }%%\n`,
-      'flowchart LR',
-      ...content.map(lines => ['', ...lines]).flat(),
-      '```'
-    ];
-
-    return defs.join('\n');
+    return flowchart.render();
   }
 
   private readJson <T> (filepath: string): T {
