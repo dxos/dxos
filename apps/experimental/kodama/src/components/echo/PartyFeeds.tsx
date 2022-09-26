@@ -15,8 +15,10 @@ export const PartyFeeds: FC<{
 }> = ({
   partyKey
 }) => {
-  const devtoolsHost = useDevtools();
-  const { feeds = [] } = useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
+  return null;
+  // TODO(dmaretskyi): Not working currently.
+  // const devtoolsHost = useDevtools();
+  const { feeds = [] } = {}; //useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
 
   return (
     <Table

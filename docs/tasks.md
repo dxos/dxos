@@ -1,3 +1,16 @@
+# Missing functionality
+
+- HALO
+  - [ ] Profile username
+  - [ ] Device preferences
+  - [ ] Offline invitations
+  - [ ] Halo recovery
+- ECHO
+  - [ ] Party properties (i.e. party title)
+- Devtools
+
+- [ ] Replace setImmediate with setTimeout(..., 0)
+
 # 2022-09-19 DM
  
 - [ ] `@dxos/keyring`

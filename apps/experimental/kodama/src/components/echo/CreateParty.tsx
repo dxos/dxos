@@ -23,7 +23,7 @@ export const CreateParty: FC<{
     const name = text.trim();
     if (name.length) {
       const party = await client.echo.createParty();
-      void party.setProperty('title', name);
+      // void party.setProperty('title', name);
       setName('');
       onCreate?.(party.key);
     }

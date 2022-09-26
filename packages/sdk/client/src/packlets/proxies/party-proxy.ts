@@ -4,7 +4,7 @@
 
 import { ClientServiceProvider } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, PARTY_ITEM_TYPE, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -110,7 +110,7 @@ export class PartyProxy implements Party {
     // }
 
     // Root item for properties.
-    // this._item = await this._database?.waitForItem({ type: PARTY_ITEM_TYPE });
+    this._item = await this._database?.createItem({ type: PARTY_ITEM_TYPE });
   }
 
   /**
@@ -152,6 +152,9 @@ export class PartyProxy implements Party {
     // });
   }
 
+  /**
+   * TODO: Currently broken.
+   */
   get properties (): ObjectProperties {
     return this._item!.model;
   }

@@ -82,7 +82,7 @@ export const Join: FC<{
         <Box marginTop={1}>
           <TextInput
             focus={invitation && !status?.processing}
-            placeholder='Enter verification code.'
+            placeholder='Enter verification code (enter 0000).'
             value={secret ?? ''}
             onChange={setSecret}
             onSubmit={() => handleSubmit(invitation!, secret!)}
