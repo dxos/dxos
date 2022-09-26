@@ -8,9 +8,9 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
-import { WebRTCService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/webrtc';
+import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, WebRTCEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
 
-export class WebRTCTransportService implements WebRTCService {
+export class WebRTCTransportService implements BridgeService {
   protected peers = new Map<number, SimplePeer>();
 
   constructor (

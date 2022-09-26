@@ -1,9 +1,9 @@
 {
   "version": 3,
-  "file": "webrtc.d.ts",
+  "file": "bridge.d.ts",
   "sourceRoot": "",
   "sources": [
-    "../../../src/proto/dxos/mesh/webrtc.proto"
+    "../../../src/proto/dxos/mesh/bridge.proto"
   ],
   "names": [],
   "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"

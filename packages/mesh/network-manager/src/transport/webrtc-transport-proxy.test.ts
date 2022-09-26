@@ -10,7 +10,7 @@ import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { PublicKey, schema } from '@dxos/protocols';
-import { WebRTCService } from '@dxos/protocols/proto/dxos/mesh/webrtc';
+import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { randomInt } from '@dxos/util';
@@ -40,15 +40,15 @@ describe('WebRTCTransportProxy', () => {
   } = {}) => {
     const [port1, port2] = createLinkedPorts();
 
-    const webRTCTransportService: WebRTCService = new WebRTCTransportService();
+    const webRTCTransportService: BridgeService = new WebRTCTransportService();
 
-    // Starting WebRTCService
+    // Starting BridgeService
     const webRTCService = createProtoRpcPeer({
       requested: {},
       exposed: {
-        WebRTCService: schema.getService('dxos.mesh.webrtc.WebRTCService')
+        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
       },
-      handlers: { WebRTCService: webRTCTransportService },
+      handlers: { BridgeService: webRTCTransportService },
       port: port1,
       noHandshake: true,
       encodingOptions: {

@@ -7,12 +7,12 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 import "dxos/mesh/swarm.proto";
 
-package dxos.mesh.webrtc;
+package dxos.mesh.bridge;
 
 //
-// Broker connections between processes and WebRTC peers.
+// Broker connections between processes and peers.
 //
-service WebRTCService {
+service BridgeService {
 
   ///
   rpc Open(ConnectionRequest) returns (stream WebRTCEvent);
