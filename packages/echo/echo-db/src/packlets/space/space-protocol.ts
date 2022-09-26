@@ -36,8 +36,8 @@ export class SpaceProtocol {
     this._presence = new PresencePlugin(this._swarmIdentity.peerKey.asBuffer());
     this._authenticator = new AuthPlugin(this._swarmIdentity, []); // Enabled for all protocol extensions.
     this.authenticationFailed = this._authenticator.authenticationFailed;
-    this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())))
-    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())))
+    this._discoveryKey = PublicKey.from(discoveryKey(sha256(topic.toHex())));
+    this._peerId = PublicKey.from(discoveryKey(sha256(this._swarmIdentity.peerKey.toHex())));
   }
 
   async start () {

@@ -30,7 +30,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     private readonly _signer?: HaloSigner
   ) {
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage, keyStorage } = createStorageObjects(
+    const { storage } = createStorageObjects(
       this._config.get('runtime.client.storage', {})!
     );
 

@@ -5,16 +5,15 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol, ReplicatorPlugin, codec } from '@dxos/echo-db';
+import { FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
-import { afterTest } from '@dxos/testutils';
-
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol, ReplicatorPlugin, codec } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { afterTest } from '@dxos/testutils';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -130,9 +129,9 @@ describe('space/space-protocol', () => {
 
   it('replicates a feed through a webrtc connection', async () => {
     // Some storage drivers may break when there are multiple storage instances.
-    const storage = createStorage()
+    const storage = createStorage();
 
-    const keyring = new Keyring()
+    const keyring = new Keyring();
 
     const topic = await keyring.createKey();
 

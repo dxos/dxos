@@ -28,7 +28,7 @@ describe('Client - nonpersistent', () => {
       username: 'DXOS test'
     });
 
-    const profile = client.halo.profile;
+    // const profile = client.halo.profile;
     // expect(profile?.username).toEqual('DXOS test');
 
     await client.destroy();
@@ -79,7 +79,7 @@ describe('Client - nonpersistent', () => {
 
     const invite = await party.createInvitation();
     const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
-  
+
     await otherParty.database.waitForItem({ type: 'example:item/test' });
     const otherItem = otherParty.database.select({ type: 'example:item/test' }).exec().entities[0];
     expect(otherItem.model.get('foo')).toEqual('bar');

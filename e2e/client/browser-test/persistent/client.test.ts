@@ -8,7 +8,7 @@ import 'source-map-support/register';
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
-describe('Client - persistent', () => {   
+describe('Client - persistent', () => {
   it.skip('reset storage', async () => {
     const client = new Client();
     await client.initialize(); // TODO(marik-d): This line does not work.

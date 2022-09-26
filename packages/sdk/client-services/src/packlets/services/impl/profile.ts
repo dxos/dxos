@@ -7,7 +7,7 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { generatePasscode, SecretProvider } from '@dxos/credentials';
+import { generatePasscode } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
@@ -69,14 +69,13 @@ export class ProfileService implements ProfileServiceRpc {
     return new Stream(({ next, close }) => {
       setImmediate(async () => {
         const secret = Buffer.from(generatePasscode());
-        let invitation: InvitationDescriptor; // eslint-disable-line prefer-const
         // TODO(burdon): Not used.
-        const secretProvider = async () => {
-          next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
-          return Buffer.from(secret);
-        };
+        // const secretProvider = async () => {
+        //   next({ descriptor: invitation.toProto(), state: InvitationState.CONNECTED });
+        //   return Buffer.from(secret);
+        // };
 
-        invitation = await this.context.haloInvitations.createInvitation({
+        const invitation = await this.context.haloInvitations.createInvitation({
           onFinish: () => {
             next({ state: InvitationState.SUCCESS });
             close();
@@ -92,19 +91,19 @@ export class ProfileService implements ProfileServiceRpc {
   acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
-      const [secretLatch, secretTrigger] = latch();
+      const [_secretLatch, secretTrigger] = latch();
       const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
       // Secret will be provided separately (in AuthenticateInvitation).
       // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
-      const secretProvider: SecretProvider = async () => {
-        await secretLatch;
-        const secret = inviteeInvitation.secret;
-        if (!secret) {
-          throw new Error('Secret not provided.');
-        }
-        return Buffer.from(secret);
-      };
+      // const secretProvider: SecretProvider = async () => {
+      //   await secretLatch;
+      //   const secret = inviteeInvitation.secret;
+      //   if (!secret) {
+      //     throw new Error('Secret not provided.');
+      //   }
+      //   return Buffer.from(secret);
+      // };
 
       // Joining process is kicked off, and will await authentication with a secret.
       const haloPartyPromise = this.context.haloInvitations.acceptInvitation(InvitationDescriptor.fromProto(request));
