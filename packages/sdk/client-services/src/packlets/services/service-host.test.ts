@@ -27,7 +27,6 @@ describe('ServiceHost', () => {
     const invitation = await until<InvitationDescriptor>((resolve) => {
       const stream = peer1.services.ProfileService.createInvitation();
       stream.subscribe(msg => {
-        console.log('peer1', msg);
         if (msg.descriptor) {
           resolve(msg.descriptor);
         }
@@ -37,7 +36,6 @@ describe('ServiceHost', () => {
     await until(resolve => {
       const stream = peer2.services.ProfileService.acceptInvitation(invitation);
       stream.subscribe(msg => {
-        console.log('peer2', msg);
         if (msg.state === InvitationState.SUCCESS) {
           resolve();
         }

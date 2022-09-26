@@ -30,12 +30,11 @@ export class ClientServiceHost implements ClientServiceProvider {
     private readonly _signer?: HaloSigner
   ) {
     // TODO(dmaretskyi): Remove keyStorage.
-    const { storage, keyStorage } = createStorageObjects(
+    const { storage } = createStorageObjects(
       this._config.get('runtime.client.storage', {})!
     );
 
     const networkManager = new NetworkManager(this._config.get('runtime.services.signal.server') ? {
-      // TODO(mykola): SignalManager need to be subscribed for message receiving first.
       signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
       ice: this._config.get('runtime.services.ice'),
       log: true

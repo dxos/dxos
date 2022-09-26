@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AuthProvider, AuthVerifier } from 'packages/echo/echo-db/src/packlets/space/auth-plugin';
-
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
@@ -18,6 +16,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
+import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
 
 // TODO(burdon): Factor out to CredentialGenerator?

@@ -7,7 +7,6 @@ import { v4 } from 'uuid';
 
 import { latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { SecretProvider } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import {
   AuthenticateInvitationRequest,
@@ -211,20 +210,20 @@ export class PartyService implements PartyServiceRpc {
   acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
-      const [secretLatch, secretTrigger] = latch();
+      const [_secretLatch, secretTrigger] = latch();
       const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
       // Secret will be provided separately (in AuthenticateInvitation).
       // Process will continue when `secretLatch` resolves, triggered by `secretTrigger`.
-      const secretProvider: SecretProvider = async () => {
-        await secretLatch;
-        const secret = inviteeInvitation.secret;
-        if (!secret) {
-          throw new Error('Secret not provided.');
-        }
+      // const secretProvider: SecretProvider = async () => {
+      //   await secretLatch;
+      //   const secret = inviteeInvitation.secret;
+      //   if (!secret) {
+      //     throw new Error('Secret not provided.');
+      //   }
 
-        return Buffer.from(secret);
-      };
+      //   return Buffer.from(secret);
+      // };
 
       // Joining process is kicked off, and will await authentication with a secret.
       const partyPromise = this.serviceContext.joinSpace(InvitationDescriptor.fromProto(request));

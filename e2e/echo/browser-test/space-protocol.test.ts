@@ -5,16 +5,15 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol, ReplicatorPlugin, codec } from '@dxos/echo-db';
+import { FeedStore } from '@dxos/feed-store';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
-import { afterTest } from '@dxos/testutils';
-
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol, ReplicatorPlugin, codec } from '@dxos/echo-db';
-import { FeedStore } from '@dxos/feed-store';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { afterTest } from '@dxos/testutils';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -130,11 +129,13 @@ describe('space/space-protocol', () => {
 
   it('replicates a feed through a webrtc connection', async () => {
     // Some storage drivers may break when there are multiple storage instances.
-    const storage = createStorage()
+    const storage = createStorage();
 
-    const topic = PublicKey.random();
+    const keyring = new Keyring();
 
-    const peerId1 = PublicKey.random();
+    const topic = await keyring.createKey();
+
+    const peerId1 = await keyring.createKey();
     const networkManager1 = new NetworkManager({
       signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal'])
     });
@@ -150,7 +151,7 @@ describe('space/space-protocol', () => {
       [replicator1]
     );
 
-    const peerId2 = PublicKey.random();
+    const peerId2 = await keyring.createKey();
     const networkManager2 = new NetworkManager({
       signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal'])
     });
