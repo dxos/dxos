@@ -18,6 +18,7 @@ import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
+import { randomInt } from '@dxos/util';
 
 describe('WebRTCTransportProxy', () => {
   const setup = async ({
@@ -58,6 +59,7 @@ describe('WebRTCTransportProxy', () => {
     afterTest(() => webRTCService.close());
 
     const webRTCTransportProxy = new WebRTCTransportProxy({
+      webRTCConnectionId: randomInt(0, 1000),
       initiator,
       stream,
       ownId,
