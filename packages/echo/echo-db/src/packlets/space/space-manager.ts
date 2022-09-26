@@ -4,7 +4,6 @@
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { AuthProvider, AuthVerifier } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { CredentialGenerator, CredentialSigner } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -17,6 +16,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { DataService } from '../database';
 import { MetadataStore } from '../metadata';
+import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
 
 // TODO(burdon): Factor out to CredentialGenerator?
