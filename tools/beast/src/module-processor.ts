@@ -162,9 +162,6 @@ export class ModuleProcessor {
     array(project.descendents).sort().forEach(pkg => {
       const sub = this.projectsByPackage.get(pkg)!;
       const link = createLink(sub);
-      // TODO(burdon): Test ":heavy_check_mark:"
-      //  https://github.com/StylishThemes/GitHub-Dark/wiki/Emoji
-      // content.push(`| ${link} | ${project.dependencies.has(sub) ? '&check;' : ''} |`);
       content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === pkg) ? '&check;' : ''} |`);
     });
 
