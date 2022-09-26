@@ -208,8 +208,10 @@ export class ModuleProcessor {
 
         current.dependencies.forEach(sub => {
           if (
+            // Don't link excluded packages.
             !this.options.exclude?.includes(sub.package.name) &&
-            !array(current.dependencies).some(p => p.descendents.has(sub.package.name))
+            // Skip any descendents that depend directly on the package.
+            !array(current.dependencies).some(pkg => pkg.descendents.has(sub.package.name))
           ) {
             flowchart.addLink({
               source: safeName(current.package.name),
