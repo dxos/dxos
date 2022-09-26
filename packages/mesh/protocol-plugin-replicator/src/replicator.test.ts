@@ -5,11 +5,10 @@
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
-import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
-import { createBatchStream, FeedDescriptor, FeedStore, HypercoreFeed } from '@dxos/feed-store';
+import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
@@ -53,7 +52,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     replicate: async (feeds: FeedData[]) => {
       const hypercoreFeeds = await Promise.all(feeds.map(async (feedData) => {
         if (feedData.key) {
-          const feed  = await feedStore.openReadOnlyFeed(PublicKey.from(feedData.key));
+          const feed = await feedStore.openReadOnlyFeed(PublicKey.from(feedData.key));
           return feed.feed;
         }
 
