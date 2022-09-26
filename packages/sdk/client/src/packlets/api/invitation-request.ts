@@ -6,7 +6,6 @@ import assert from 'node:assert';
 
 import { Event, until } from '@dxos/async';
 import { InvitationDescriptor } from '@dxos/client-services';
-import { raise } from '@dxos/debug';
 
 /**
  * Invitation created by sender.
