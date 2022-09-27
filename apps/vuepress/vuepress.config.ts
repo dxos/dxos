@@ -7,7 +7,7 @@ import { searchPlugin } from '@vuepress/plugin-search';
 import { join, resolve } from 'node:path';
 import { defaultTheme, defineUserConfig, UserConfig } from 'vuepress';
 
-import { apiSidebar, DOCS_PATH, packageToModule, PINNED_PACKAGES, sidebarSection } from './src';
+import { apiSidebar, DOCS_PATH, packageToModule, PINNED_PACKAGES, showcasePlugin, sidebarSection } from './src';
 
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
@@ -48,7 +48,8 @@ const config: UserConfig = defineUserConfig({
       componentsDir: resolve(__dirname, './src/components')
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
-    searchPlugin()
+    searchPlugin(),
+    showcasePlugin()
   ]
 });
 

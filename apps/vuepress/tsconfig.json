@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "preserve",
+    "module": "esnext",
     "lib": [
       "ESNext",
       "DOM"
