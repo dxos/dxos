@@ -23,7 +23,7 @@ describe('Code analysis', () => {
     });
   });
 
-  test('client', () => {
+  test.only('client', () => {
     const projectDir = path.join(__dirname, '../../..', 'packages/sdk/client');
 
     // https://ts-morph.com/navigation/getting-source-files
@@ -35,6 +35,14 @@ describe('Code analysis', () => {
     // Gets ALL referenced directories.
     const dirs = project.getDirectories();
     expect(dirs.length).toBeTruthy();
+
+    // https://ts-morph.com/details/index
+    // TODO(burdon): Break out class
+    // TODO(burdon): Navigate imports (package), then look for private final, new, etc.
+
+
+    // TODO(burdon): Find package.
+    // TODO(burdon): Generalize processor algorithm to sort by group.
 
     // TODO(burdon): Create decorators to find files.
     // TODO(burdon): Generate class diagram (of readonly class instances -- or via decorators).
@@ -99,6 +107,8 @@ describe('Code analysis', () => {
     const root = findClassOrInterface(target);
     if (root) {
       process(flowchart, root, 2);
+      const dir = root.getSourceFile().getDirectoryPath();
+      console.log(dir);
     }
 
     console.log(flowchart.render());
