@@ -34,6 +34,7 @@
     }
   },
   "implicitDependencies": [
-    "protobuf-compiler"
+    "protobuf-compiler",
+    "mocha"
   ]
 }
