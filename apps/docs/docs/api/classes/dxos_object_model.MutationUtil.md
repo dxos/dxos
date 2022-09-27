@@ -34,7 +34,7 @@ Represents mutations on objects.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:217](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L217)
+[packages/echo/object-model/src/mutation.ts:217](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L217)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:210](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L210)
+[packages/echo/object-model/src/mutation.ts:210](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L210)
 
 ___
 
@@ -78,7 +78,7 @@ Create single field mutation.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:264](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L264)
+[packages/echo/object-model/src/mutation.ts:264](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L264)
 
 ___
 
@@ -100,4 +100,4 @@ Create field mutations.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:279](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L279)
+[packages/echo/object-model/src/mutation.ts:279](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L279)

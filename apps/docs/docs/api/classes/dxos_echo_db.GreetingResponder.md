@@ -28,7 +28,7 @@ Upon successful greeting, the peer is admitted into the Party specified in the i
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:59](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L59)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:59](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L59)
 
 ## Properties
 
@@ -38,7 +38,7 @@ Upon successful greeting, the peer is admitted into the Party specified in the i
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L50)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:50](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L50)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L48)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:48](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L48)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:52](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L52)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:52](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L52)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L49)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:49](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L49)
 
 ___
 
@@ -80,7 +80,7 @@ Param: Invitation id
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:57](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L57)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:57](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L57)
 
 ## Accessors
 
@@ -97,7 +97,7 @@ Return the current state for this Greeting Responder (waiting, peer connected, s
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:80](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L80)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:80](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L80)
 
 ## Methods
 
@@ -119,7 +119,7 @@ Callback which writes the Invitee's messages to the Party, signed by our key.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:197](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L197)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:197](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L197)
 
 ___
 
@@ -135,7 +135,7 @@ Call to clean up. Subsequent calls to any method have undefined results.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:184](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L184)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:184](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L184)
 
 ___
 
@@ -160,7 +160,7 @@ Listen for connections from invitee peers.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:92](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L92)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:92](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L92)
 
 ___
 
@@ -176,7 +176,7 @@ Start listening for connections.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:147](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L147)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:147](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L147)
 
 ___
 
@@ -192,4 +192,4 @@ Stop listening for connections. Until destroy() is called, getState() continues 
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/greeting-responder.ts:171](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/greeting-responder.ts#L171)
+[packages/echo/echo-db/src/invitations/greeting-responder.ts:171](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/greeting-responder.ts#L171)

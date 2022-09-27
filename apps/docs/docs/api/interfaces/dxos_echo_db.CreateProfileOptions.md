@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:6](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/types.ts#L6)
+[packages/echo/echo-db/src/halo/types.ts:6](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/types.ts#L6)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:7](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/types.ts#L7)
+[packages/echo/echo-db/src/halo/types.ts:7](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/types.ts#L7)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/types.ts#L9)
+[packages/echo/echo-db/src/halo/types.ts:9](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/types.ts#L9)
 
 ___
 
@@ -45,4 +45,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/types.ts:8](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/types.ts#L8)
+[packages/echo/echo-db/src/halo/types.ts:8](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/types.ts#L8)

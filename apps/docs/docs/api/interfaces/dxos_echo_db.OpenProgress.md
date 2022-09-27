@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-manager.ts#L29)
+[packages/echo/echo-db/src/parties/party-manager.ts:29](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-manager.ts#L29)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:30](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-manager.ts#L30)
+[packages/echo/echo-db/src/parties/party-manager.ts:30](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-manager.ts#L30)
 
 ___
 
@@ -35,4 +35,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-manager.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-manager.ts#L31)
+[packages/echo/echo-db/src/parties/party-manager.ts:31](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-manager.ts#L31)

@@ -35,7 +35,7 @@ Represents scalar, array, and hierarchical values.
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:162](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L162)
+[packages/echo/object-model/src/mutation.ts:162](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L162)
 
 ___
 
@@ -57,7 +57,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:167](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L167)
+[packages/echo/object-model/src/mutation.ts:167](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L167)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:119](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L119)
+[packages/echo/object-model/src/mutation.ts:119](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L119)
 
 ___
 
@@ -97,7 +97,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:115](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L115)
+[packages/echo/object-model/src/mutation.ts:115](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L115)
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:75](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L75)
+[packages/echo/object-model/src/mutation.ts:75](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L75)
 
 ___
 
@@ -137,7 +137,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:135](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L135)
+[packages/echo/object-model/src/mutation.ts:135](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L135)
 
 ___
 
@@ -157,7 +157,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:127](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L127)
+[packages/echo/object-model/src/mutation.ts:127](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L127)
 
 ___
 
@@ -177,7 +177,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:148](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L148)
+[packages/echo/object-model/src/mutation.ts:148](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L148)
 
 ___
 
@@ -197,7 +197,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:155](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L155)
+[packages/echo/object-model/src/mutation.ts:155](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L155)
 
 ___
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:123](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L123)
+[packages/echo/object-model/src/mutation.ts:123](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L123)
 
 ___
 
@@ -237,7 +237,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:139](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L139)
+[packages/echo/object-model/src/mutation.ts:139](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L139)
 
 ___
 
@@ -257,7 +257,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:131](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L131)
+[packages/echo/object-model/src/mutation.ts:131](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L131)
 
 ___
 
@@ -277,4 +277,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/mutation.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/mutation.ts#L94)
+[packages/echo/object-model/src/mutation.ts:94](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/mutation.ts#L94)

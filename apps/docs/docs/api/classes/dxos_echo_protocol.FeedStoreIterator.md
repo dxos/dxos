@@ -31,7 +31,7 @@ data is read. This allows the consumer (e.g., PartyProcessor) to control the ord
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:67](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L67)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:67](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L67)
 
 ## Properties
 
@@ -43,7 +43,7 @@ Curent set of active feeds.
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L37)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:37](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L37)
 
 ___
 
@@ -55,7 +55,7 @@ Trigger to wait for the iteration to stop in the close method;
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:53](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L53)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:53](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L53)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L58)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:58](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L58)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L48)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:48](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L48)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L56)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:56](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L56)
 
 ___
 
@@ -97,7 +97,7 @@ Feed key as hex => feed state
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L40)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:40](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L40)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L47)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:47](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L47)
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:60](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L60)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:60](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L60)
 
 ## Methods
 
@@ -138,7 +138,7 @@ AsyncIterable.\_\_@asyncIterator@9795
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:99](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L99)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:99](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L99)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:236](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L236)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:236](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L236)
 
 ___
 
@@ -168,7 +168,7 @@ Returns all messages that are waiting to be read from each of the open feeds.
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:146](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L146)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:146](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L146)
 
 ___
 
@@ -182,7 +182,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:182](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L182)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:182](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L182)
 
 ___
 
@@ -196,7 +196,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:157](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L157)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:157](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L157)
 
 ___
 
@@ -210,7 +210,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:107](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L107)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:107](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L107)
 
 ___
 
@@ -230,7 +230,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:124](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L124)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:124](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L124)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:211](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L211)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:211](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L211)
 
 ___
 
@@ -266,7 +266,7 @@ Adds a feed to be consumed.
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:80](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L80)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:80](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L80)
 
 ___
 
@@ -282,4 +282,4 @@ Closes the iterator
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:89](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L89)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:89](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L89)

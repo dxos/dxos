@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:64](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L64)
+[packages/echo/echo-protocol/src/types.ts:64](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L64)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L26)
+[packages/echo/echo-protocol/src/types.ts:26](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L26)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L28)
+[packages/echo/echo-protocol/src/types.ts:28](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L28)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L27)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L27)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:100](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L100)
+[packages/echo/echo-protocol/src/types.ts:100](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L100)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L84)
+[packages/echo/echo-protocol/src/types.ts:84](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L84)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:86](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L86)
+[packages/echo/echo-protocol/src/types.ts:86](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L86)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L26)
+[packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts:26](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-store-iterator.ts#L26)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L94)
+[packages/echo/echo-protocol/src/types.ts:94](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L94)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L20)
+[packages/echo/echo-protocol/src/types.ts:20](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L20)
 
 ## Variables
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/codec.ts:9](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/codec.ts#L9)
+[packages/echo/echo-protocol/src/codec.ts:9](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/codec.ts#L9)
 
 ## Functions
 
@@ -186,7 +186,7 @@ Constructs a meta object from the raw stream object.
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/types.ts:59](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/types.ts#L59)
+[packages/echo/echo-protocol/src/types.ts:59](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/types.ts#L59)
 
 ___
 
@@ -212,7 +212,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L27)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L27)
 
 ___
 
@@ -232,7 +232,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L37)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:37](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L37)
 
 ___
 
@@ -255,7 +255,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/testing.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/testing.ts#L15)
+[packages/echo/echo-protocol/src/testing.ts:15](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/testing.ts#L15)
 
 ___
 
@@ -283,4 +283,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-protocol/src/feeds/feed-writer.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L23)
+[packages/echo/echo-protocol/src/feeds/feed-writer.ts:23](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-protocol/src/feeds/feed-writer.ts#L23)

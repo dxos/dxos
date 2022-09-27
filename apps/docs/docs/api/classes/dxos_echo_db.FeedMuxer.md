@@ -28,7 +28,7 @@ Reads messages from individual feeds and splits them into ECHO and HALO streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L54)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:54](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L54)
 
 ## Properties
 
@@ -38,7 +38,7 @@ Reads messages from individual feeds and splits them into ECHO and HALO streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L45)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:45](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L45)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L31)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:31](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L31)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L33)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:33](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L33)
 
 ___
 
@@ -70,7 +70,7 @@ Messages to write into pipeline (e.g., mutations from model).
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L38)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:38](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L38)
 
 ___
 
@@ -82,7 +82,7 @@ Halo message stream to write into pipeline.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:43](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L43)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:43](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L43)
 
 ## Accessors
 
@@ -96,7 +96,7 @@ Halo message stream to write into pipeline.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:95](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L95)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:95](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L95)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L79)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:79](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L79)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:87](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L87)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:87](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L87)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:91](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L91)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:91](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L91)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:83](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L83)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:83](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L83)
 
 ## Methods
 
@@ -168,7 +168,7 @@ Close all streams.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:180](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L180)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:180](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L180)
 
 ___
 
@@ -191,7 +191,7 @@ Feed
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:113](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L113)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:113](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L113)
 
 ___
 
@@ -211,4 +211,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/feed-muxer.ts:99](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L99)
+[packages/echo/echo-db/src/pipeline/feed-muxer.ts:99](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/feed-muxer.ts#L99)

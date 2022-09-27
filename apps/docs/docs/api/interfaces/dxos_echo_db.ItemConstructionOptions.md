@@ -25,7 +25,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
 
 ___
 
@@ -35,7 +35,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L31)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:31](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/item-manager.ts#L31)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L32)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:32](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/item-manager.ts#L32)
 
 ___
 
@@ -73,4 +73,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)
+[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)

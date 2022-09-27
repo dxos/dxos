@@ -34,7 +34,7 @@ Model&lt;Doc, Mutation\&gt;.constructor
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L50)
+[packages/echo/text-model/src/text-model.ts:50](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L50)
 
 ## Properties
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:43](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L43)
+[packages/echo/text-model/src/text-model.ts:43](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L43)
 
 ## Accessors
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:60](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L60)
+[packages/echo/text-model/src/text-model.ts:60](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L60)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:56](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L56)
+[packages/echo/text-model/src/text-model.ts:56](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L56)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:65](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L65)
+[packages/echo/text-model/src/text-model.ts:65](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L65)
 
 ## Methods
 
@@ -197,7 +197,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:69](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L69)
+[packages/echo/text-model/src/text-model.ts:69](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L69)
 
 ___
 
@@ -219,7 +219,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:101](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L101)
+[packages/echo/text-model/src/text-model.ts:101](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L101)
 
 ___
 
@@ -239,7 +239,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:83](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L83)
+[packages/echo/text-model/src/text-model.ts:83](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L83)
 
 ___
 
@@ -259,7 +259,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L79)
+[packages/echo/text-model/src/text-model.ts:79](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L79)
 
 ___
 
@@ -280,7 +280,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:138](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L138)
+[packages/echo/text-model/src/text-model.ts:138](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L138)
 
 ___
 
@@ -301,7 +301,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:142](https://github.com/dxos/dxos/blob/b06737400/packages/echo/text-model/src/text-model.ts#L142)
+[packages/echo/text-model/src/text-model.ts:142](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/text-model/src/text-model.ts#L142)
 
 ___
 

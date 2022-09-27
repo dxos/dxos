@@ -32,7 +32,7 @@ Defines generic object accessor.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:70](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L70)
+[packages/echo/object-model/src/object-model.ts:70](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L70)
 
 ___
 
@@ -53,4 +53,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:71](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L71)
+[packages/echo/object-model/src/object-model.ts:71](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L71)

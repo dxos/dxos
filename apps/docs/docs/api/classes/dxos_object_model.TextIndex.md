@@ -23,7 +23,7 @@ Caching text search.
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L24)
+[packages/echo/object-model/src/text-index.ts:24](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L24)
 
 ## Properties
 
@@ -33,7 +33,7 @@ Caching text search.
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L20)
+[packages/echo/object-model/src/text-index.ts:20](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L20)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L22)
+[packages/echo/object-model/src/text-index.ts:22](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L22)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:18](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L18)
+[packages/echo/object-model/src/text-index.ts:18](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L18)
 
 ## Methods
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L44)
+[packages/echo/object-model/src/text-index.ts:44](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L44)
 
 ___
 
@@ -93,4 +93,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:35](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/text-index.ts#L35)
+[packages/echo/object-model/src/text-index.ts:35](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/text-index.ts#L35)

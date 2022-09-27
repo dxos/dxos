@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L54)
+[packages/echo/feed-store/src/hypercore-types.ts:54](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L54)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L17)
+[packages/echo/feed-store/src/hypercore-types.ts:17](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L17)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:14](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L14)
+[packages/echo/feed-store/src/hypercore-types.ts:14](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L14)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L49)
+[packages/echo/feed-store/src/hypercore-types.ts:49](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L49)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L50)
+[packages/echo/feed-store/src/hypercore-types.ts:50](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L50)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L48)
+[packages/echo/feed-store/src/hypercore-types.ts:48](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L48)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L45)
+[packages/echo/feed-store/src/hypercore-types.ts:45](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L45)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:12](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L12)
+[packages/echo/feed-store/src/hypercore-types.ts:12](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L12)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:15](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L15)
+[packages/echo/feed-store/src/hypercore-types.ts:15](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L15)
 
 ___
 
@@ -179,7 +179,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:46](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L46)
+[packages/echo/feed-store/src/hypercore-types.ts:46](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L46)
 
 ___
 
@@ -189,7 +189,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L16)
+[packages/echo/feed-store/src/hypercore-types.ts:16](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L16)
 
 ___
 
@@ -199,7 +199,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:18](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L18)
+[packages/echo/feed-store/src/hypercore-types.ts:18](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L18)
 
 ___
 
@@ -209,7 +209,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:11](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L11)
+[packages/echo/feed-store/src/hypercore-types.ts:11](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L11)
 
 ___
 
@@ -234,7 +234,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L47)
+[packages/echo/feed-store/src/hypercore-types.ts:47](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L47)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:13](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L13)
+[packages/echo/feed-store/src/hypercore-types.ts:13](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L13)
 
 ___
 
@@ -268,7 +268,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:51](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L51)
+[packages/echo/feed-store/src/hypercore-types.ts:51](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L51)
 
 ## Methods
 
@@ -292,7 +292,7 @@ Callback is called with (err, seq) when all data has been written at the returne
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L26)
+[packages/echo/feed-store/src/hypercore-types.ts:26](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L26)
 
 ___
 
@@ -312,7 +312,7 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:43](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L43)
+[packages/echo/feed-store/src/hypercore-types.ts:43](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L43)
 
 ___
 
@@ -335,7 +335,7 @@ Gets a block of data. If the data is not available locally this method will prio
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L33)
+[packages/echo/feed-store/src/hypercore-types.ts:33](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L33)
 
 ▸ **get**(`index`, `options`, `callback`): `void`
 
@@ -355,7 +355,7 @@ Get a block of data. If the data is not available locally this method will prior
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L41)
+[packages/echo/feed-store/src/hypercore-types.ts:41](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L41)
 
 ___
 
@@ -375,4 +375,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:53](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L53)
+[packages/echo/feed-store/src/hypercore-types.ts:53](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L53)

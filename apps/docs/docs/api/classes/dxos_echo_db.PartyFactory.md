@@ -29,7 +29,7 @@ Creates and constructs party instances.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:42](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L42)
+[packages/echo/echo-db/src/parties/party-factory.ts:42](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L42)
 
 ## Methods
 
@@ -49,7 +49,7 @@ Creates and constructs party instances.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:201](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L201)
+[packages/echo/echo-db/src/parties/party-factory.ts:201](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L201)
 
 ___
 
@@ -72,7 +72,7 @@ Constructs a party object from an existing set of feeds.
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:119](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L119)
+[packages/echo/echo-db/src/parties/party-factory.ts:119](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L119)
 
 ___
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:141](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L141)
+[packages/echo/echo-db/src/parties/party-factory.ts:141](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L141)
 
 ___
 
@@ -108,7 +108,7 @@ Create a new party with a new feed for it. Writes a party genensis message to th
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:55](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L55)
+[packages/echo/echo-db/src/parties/party-factory.ts:55](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L55)
 
 ___
 
@@ -129,4 +129,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/parties/party-factory.ts:150](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/parties/party-factory.ts#L150)
+[packages/echo/echo-db/src/parties/party-factory.ts:150](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/parties/party-factory.ts#L150)

@@ -26,7 +26,7 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L29)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:29](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L29)
 
 ## Accessors
 
@@ -40,7 +40,7 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:36](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L36)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:36](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L36)
 
 ## Methods
 
@@ -54,7 +54,7 @@ Contains a signer (keyring), provides signing keys to create signed credential m
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L44)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:44](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L44)
 
 ___
 
@@ -77,7 +77,7 @@ Devices need to sign with their keyChain including the device key admission cred
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:58](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L58)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:58](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L58)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L40)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:40](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L40)
 
 ___
 
@@ -114,4 +114,4 @@ Uses the device key without keychain for signing.
 
 #### Defined in
 
-[packages/echo/echo-db/src/protocol/credentials-signer.ts:17](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/protocol/credentials-signer.ts#L17)
+[packages/echo/echo-db/src/protocol/credentials-signer.ts:17](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/protocol/credentials-signer.ts#L17)

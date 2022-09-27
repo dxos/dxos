@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L79)
+[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L79)
 
 ## Accessors
 
@@ -161,7 +161,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L145)
+[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L145)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L101)
+[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L101)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L105)
+[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L105)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L123)
+[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L123)
 
 ___
 
@@ -244,7 +244,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L169)
+[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L169)
 
 ___
 
@@ -265,7 +265,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L157)
+[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L157)
 
 ___
 
@@ -290,7 +290,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L110)
+[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L110)
 
 ___
 
@@ -312,7 +312,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L139)
+[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L139)
 
 ___
 
@@ -335,7 +335,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L131)
+[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L131)
 
 ___
 
@@ -404,7 +404,7 @@ Returns an immutable object.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L97)
+[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L97)
 
 ___
 

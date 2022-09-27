@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/feed-store.ts#L22)
+[packages/echo/feed-store/src/feed-store.ts:22](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/feed-store.ts#L22)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/feed-store.ts#L23)
+[packages/echo/feed-store/src/feed-store.ts:23](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/feed-store.ts#L23)

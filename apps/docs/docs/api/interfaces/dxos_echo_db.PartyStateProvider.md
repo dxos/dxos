@@ -19,7 +19,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:31](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L31)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:31](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L31)
 
 ___
 
@@ -31,7 +31,7 @@ Whether PartyGenesis was already processed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L29)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:29](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L29)
 
 ___
 
@@ -41,7 +41,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:30](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L30)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:30](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L30)
 
 ___
 
@@ -51,7 +51,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L25)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:25](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L25)
 
 ## Methods
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L32)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:32](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L32)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L33)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:33](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L33)
 
 ___
 
@@ -111,4 +111,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-processor.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-processor.ts#L34)
+[packages/echo/echo-db/src/pipeline/party-processor.ts:34](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-processor.ts#L34)

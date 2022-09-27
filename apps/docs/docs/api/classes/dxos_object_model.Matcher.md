@@ -24,7 +24,7 @@ NOTE: The approach here is to match items against the DNF predicate tree.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:22](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L22)
+[packages/echo/object-model/src/matcher.ts:22](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/matcher.ts#L22)
 
 ## Methods
 
@@ -47,7 +47,7 @@ Recursively match predicate tree against current item.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:41](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L41)
+[packages/echo/object-model/src/matcher.ts:41](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/matcher.ts#L41)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:26](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L26)
+[packages/echo/object-model/src/matcher.ts:26](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/matcher.ts#L26)
 
 ___
 
@@ -102,4 +102,4 @@ Returns list of matched items.
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L34)
+[packages/echo/object-model/src/matcher.ts:34](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/matcher.ts#L34)

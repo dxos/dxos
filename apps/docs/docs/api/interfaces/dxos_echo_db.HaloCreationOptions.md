@@ -17,7 +17,7 @@ Options allowed when creating the HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L45)
+[packages/echo/echo-db/src/halo/halo-factory.ts:45](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo-factory.ts#L45)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo-factory.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo-factory.ts#L44)
+[packages/echo/echo-db/src/halo/halo-factory.ts:44](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo-factory.ts#L44)

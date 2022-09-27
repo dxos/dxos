@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:24](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L24)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:24](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/metadata-store.ts#L24)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/metadata-store.ts#L23)
+[packages/echo/echo-db/src/pipeline/metadata-store.ts:23](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/metadata-store.ts#L23)

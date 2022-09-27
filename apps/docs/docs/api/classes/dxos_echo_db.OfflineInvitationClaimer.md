@@ -25,7 +25,7 @@ offline invitation. If successful, the regular interactive Greeting flow will fo
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:48](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L48)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:48](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L48)
 
 ## Properties
 
@@ -35,7 +35,7 @@ offline invitation. If successful, the regular interactive Greeting flow will fo
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L45)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:45](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L45)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:46](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L46)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:46](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L46)
 
 ## Accessors
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:55](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L55)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:55](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L55)
 
 ## Methods
 
@@ -77,7 +77,7 @@ Those will be returned in the form of an InvitationDescriptor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:98](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L98)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:98](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L98)
 
 ___
 
@@ -99,7 +99,7 @@ Initiate a connection to some Party member node.
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:63](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L63)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:63](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L63)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:128](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L128)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:128](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L128)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:122](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L122)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:122](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L122)
 
 ___
 
@@ -167,7 +167,7 @@ of the Party for responding to attempts to claim an Invitation which has been wr
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:140](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L140)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:140](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L140)
 
 ___
 
@@ -187,4 +187,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:178](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L178)
+[packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts:178](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/offline-invitation-claimer.ts#L178)

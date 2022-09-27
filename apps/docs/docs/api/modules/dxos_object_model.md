@@ -44,7 +44,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/object-model/src/matcher.ts:10](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/matcher.ts#L10)
+[packages/echo/object-model/src/matcher.ts:10](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/matcher.ts#L10)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:16](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/object-model.ts#L16)
+[packages/echo/object-model/src/object-model.ts:16](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/object-model.ts#L16)
 
 ## Functions
 
@@ -77,7 +77,7 @@ Removes the potentially nested property.
 
 #### Defined in
 
-[packages/echo/object-model/src/util.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/util.ts#L21)
+[packages/echo/object-model/src/util.ts:21](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/util.ts#L21)
 
 ___
 
@@ -99,4 +99,4 @@ Keys must be valid object keys or dot s
 
 #### Defined in
 
-[packages/echo/object-model/src/util.ts:8](https://github.com/dxos/dxos/blob/b06737400/packages/echo/object-model/src/util.ts#L8)
+[packages/echo/object-model/src/util.ts:8](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/object-model/src/util.ts#L8)

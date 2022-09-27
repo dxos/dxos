@@ -34,7 +34,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L27)
+[packages/echo/model-factory/src/testing/test-rig.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L27)
 
 ## Properties
 
@@ -44,7 +44,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:21](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L21)
+[packages/echo/model-factory/src/testing/test-rig.ts:21](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L21)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:25](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L25)
+[packages/echo/model-factory/src/testing/test-rig.ts:25](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L25)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L23)
+[packages/echo/model-factory/src/testing/test-rig.ts:23](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L23)
 
 ## Accessors
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L34)
+[packages/echo/model-factory/src/testing/test-rig.ts:34](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L34)
 
 ## Methods
 
@@ -92,7 +92,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:102](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L102)
+[packages/echo/model-factory/src/testing/test-rig.ts:102](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L102)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:67](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L67)
+[packages/echo/model-factory/src/testing/test-rig.ts:67](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L67)
 
 ___
 
@@ -133,7 +133,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L38)
+[packages/echo/model-factory/src/testing/test-rig.ts:38](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L38)
 
 ___
 
@@ -147,7 +147,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L49)
+[packages/echo/model-factory/src/testing/test-rig.ts:49](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L49)
 
 ___
 
@@ -161,4 +161,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:43](https://github.com/dxos/dxos/blob/b06737400/packages/echo/model-factory/src/testing/test-rig.ts#L43)
+[packages/echo/model-factory/src/testing/test-rig.ts:43](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/model-factory/src/testing/test-rig.ts#L43)

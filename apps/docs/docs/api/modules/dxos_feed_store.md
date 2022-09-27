@@ -46,7 +46,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/feed-store/src/hypercore-types.ts:57](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/hypercore-types.ts#L57)
+[packages/echo/feed-store/src/hypercore-types.ts:57](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/hypercore-types.ts#L57)
 
 ## Functions
 
@@ -67,7 +67,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/feed-store/src/create-batch-stream.ts:20](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/create-batch-stream.ts#L20)
+[packages/echo/feed-store/src/create-batch-stream.ts:20](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/create-batch-stream.ts#L20)
 
 ___
 
@@ -83,7 +83,7 @@ Creates a readStream stream that can be used as a buffer into which messages can
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L33)
+[packages/echo/feed-store/src/stream.ts:33](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/stream.ts#L33)
 
 ___
 
@@ -112,7 +112,7 @@ Creates a transform object stream.
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:59](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L59)
+[packages/echo/feed-store/src/stream.ts:59](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/stream.ts#L59)
 
 ___
 
@@ -140,7 +140,7 @@ Creates a writeStream object stream.
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:42](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L42)
+[packages/echo/feed-store/src/stream.ts:42](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/stream.ts#L42)
 
 ___
 
@@ -162,4 +162,4 @@ Returns a stream that appends messages directly to a hypercore feed.
 
 #### Defined in
 
-[packages/echo/feed-store/src/stream.ts:23](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/stream.ts#L23)
+[packages/echo/feed-store/src/stream.ts:23](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/stream.ts#L23)

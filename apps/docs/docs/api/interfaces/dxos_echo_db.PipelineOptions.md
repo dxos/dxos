@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L27)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L27)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:29](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L29)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:29](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L29)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:33](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L33)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:33](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L33)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:32](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L32)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:32](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L32)
 
 ___
 
@@ -83,4 +83,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/party-pipeline.ts:28](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L28)
+[packages/echo/echo-db/src/pipeline/party-pipeline.ts:28](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/pipeline/party-pipeline.ts#L28)

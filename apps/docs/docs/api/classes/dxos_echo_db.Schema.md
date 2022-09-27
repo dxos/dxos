@@ -23,7 +23,7 @@ Wrapper for ECHO Item that represents an `ObjectModel` schema.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L34)
+[packages/echo/echo-db/src/api/schema.ts:34](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L34)
 
 ## Accessors
 
@@ -37,7 +37,7 @@ Wrapper for ECHO Item that represents an `ObjectModel` schema.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:42](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L42)
+[packages/echo/echo-db/src/api/schema.ts:42](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L42)
 
 ___
 
@@ -51,7 +51,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:38](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L38)
+[packages/echo/echo-db/src/api/schema.ts:38](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L38)
 
 ## Methods
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:74](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L74)
+[packages/echo/echo-db/src/api/schema.ts:74](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L74)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:94](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L94)
+[packages/echo/echo-db/src/api/schema.ts:94](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L94)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L84)
+[packages/echo/echo-db/src/api/schema.ts:84](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L84)
 
 ___
 
@@ -132,7 +132,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:46](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L46)
+[packages/echo/echo-db/src/api/schema.ts:46](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L46)
 
 ___
 
@@ -152,4 +152,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:51](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/api/schema.ts#L51)
+[packages/echo/echo-db/src/api/schema.ts:51](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/api/schema.ts#L51)

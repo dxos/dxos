@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:36](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L36)
+[packages/echo/echo-db/src/echo.ts:36](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/echo.ts#L36)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/echo.ts:37](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/echo.ts#L37)
+[packages/echo/echo-db/src/echo.ts:37](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/echo.ts#L37)

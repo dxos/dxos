@@ -32,7 +32,7 @@ This descriptor might also have a bundled secret for authentication in interacti
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:72](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L72)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:72](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L72)
 
 ## Properties
 
@@ -42,7 +42,7 @@ This descriptor might also have a bundled secret for authentication in interacti
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:76](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L76)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:76](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L76)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:75](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L75)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:75](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L75)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:77](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L77)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:77](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L77)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:74](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L74)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:74](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L74)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:73](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L73)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:73](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L73)
 
 ## Accessors
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:90](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L90)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:90](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L90)
 
 ## Methods
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:124](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L124)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:124](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L124)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:114](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L114)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:114](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L114)
 
 ___
 
@@ -140,7 +140,7 @@ Exports an InvitationDescriptor to an object suitable for use as query parameter
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:98](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L98)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:98](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L98)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:66](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L66)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:66](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L66)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:52](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L52)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:52](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L52)
 
 ___
 
@@ -200,4 +200,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:39](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L39)
+[packages/echo/echo-db/src/invitations/invitation-descriptor.ts:39](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/invitations/invitation-descriptor.ts#L39)

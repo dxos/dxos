@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L34)
+[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/messenger-model/src/model.ts#L34)
 
 ## Accessors
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L40)
+[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/messenger-model/src/model.ts#L40)
 
 ___
 
@@ -170,7 +170,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/b06737400/packages/echo/messenger-model/src/model.ts#L44)
+[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/messenger-model/src/model.ts#L44)
 
 ___
 

@@ -15,4 +15,4 @@ custom_edit_url: null
 
 #### Defined in
 
-[packages/echo/feed-store/src/feed-store.ts:27](https://github.com/dxos/dxos/blob/b06737400/packages/echo/feed-store/src/feed-store.ts#L27)
+[packages/echo/feed-store/src/feed-store.ts:27](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/feed-store/src/feed-store.ts#L27)

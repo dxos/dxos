@@ -46,7 +46,7 @@ Each Selection contains a visitor
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:78](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L78)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:78](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L78)
 
 ## Accessors
 
@@ -62,7 +62,7 @@ The root of the selection. Either a database or an item. Must be a stable refere
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:112](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L112)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:112](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L112)
 
 ## Methods
 
@@ -90,7 +90,7 @@ Creates a derrived selection by aplying a mapping function to the result of the 
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:88](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L88)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:88](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L88)
 
 ___
 
@@ -112,7 +112,7 @@ Visitor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:120](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L120)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:120](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L120)
 
 ___
 
@@ -135,7 +135,7 @@ Select children of the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:138](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L138)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:138](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L138)
 
 ___
 
@@ -157,7 +157,7 @@ Finish the selection and return the result.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:97](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L97)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:97](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L97)
 
 ___
 
@@ -180,7 +180,7 @@ Filter entities of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:128](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L128)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:128](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L128)
 
 ▸ **filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_echo_db.Selection.md)<`U`, `R`\>
 
@@ -203,7 +203,7 @@ Filter entities of this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:129](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L129)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:129](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L129)
 
 ___
 
@@ -226,7 +226,7 @@ Select links sourcing from the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:162](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L162)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:162](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L162)
 
 ___
 
@@ -248,7 +248,7 @@ Select parent of the items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:152](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L152)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:152](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L152)
 
 ___
 
@@ -270,7 +270,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:105](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L105)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:105](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L105)
 
 ___
 
@@ -293,7 +293,7 @@ Select links pointing to items in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:173](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L173)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:173](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L173)
 
 ___
 
@@ -316,7 +316,7 @@ Select sources of links in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:195](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L195)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:195](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L195)
 
 ___
 
@@ -339,4 +339,4 @@ Select targets of links in this selection.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:184](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L184)
+[packages/echo/echo-db/src/packlets/database/selection/selection.ts:184](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L184)

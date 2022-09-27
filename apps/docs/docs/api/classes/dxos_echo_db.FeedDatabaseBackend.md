@@ -32,7 +32,7 @@ Write operations result in mutations being written to the outgoing stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L49)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:49](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L49)
 
 ## Properties
 
@@ -42,7 +42,7 @@ Write operations result in mutations being written to the outgoing stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:45](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L45)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:45](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L45)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:47](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L47)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:47](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L47)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:46](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L46)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:46](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L46)
 
 ## Accessors
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:65](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L65)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:65](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L65)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:72](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L72)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:72](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L72)
 
 ## Methods
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:69](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L69)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:69](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L69)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:84](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L84)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:84](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L84)
 
 ___
 
@@ -148,7 +148,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:80](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L80)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:80](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L80)
 
 ___
 
@@ -166,7 +166,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:76](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L76)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:76](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L76)
 
 ___
 
@@ -191,4 +191,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:55](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/packlets/database/database-backend.ts#L55)
+[packages/echo/echo-db/src/packlets/database/database-backend.ts:55](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/packlets/database/database-backend.ts#L55)

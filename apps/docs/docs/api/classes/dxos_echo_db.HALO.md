@@ -23,7 +23,7 @@ Manages user's identity and devices.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:54](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L54)
+[packages/echo/echo-db/src/halo/halo.ts:54](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L54)
 
 ## Properties
 
@@ -33,7 +33,7 @@ Manages user's identity and devices.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:50](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L50)
+[packages/echo/echo-db/src/halo/halo.ts:50](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L50)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:52](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L52)
+[packages/echo/echo-db/src/halo/halo.ts:52](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L52)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:49](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L49)
+[packages/echo/echo-db/src/halo/halo.ts:49](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L49)
 
 ## Accessors
 
@@ -69,7 +69,7 @@ Get user's identity.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:99](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L99)
+[packages/echo/echo-db/src/halo/halo.ts:99](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L99)
 
 ___
 
@@ -85,7 +85,7 @@ User's identity display name.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:121](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L121)
+[packages/echo/echo-db/src/halo/halo.ts:121](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L121)
 
 ___
 
@@ -101,7 +101,7 @@ User's IDENTITY keypair.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:113](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L113)
+[packages/echo/echo-db/src/halo/halo.ts:113](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L113)
 
 ___
 
@@ -117,7 +117,7 @@ Event that is fired when the user's identity has been initialized.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:106](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L106)
+[packages/echo/echo-db/src/halo/halo.ts:106](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L106)
 
 ___
 
@@ -133,7 +133,7 @@ Whether the current identity manager has been initialized.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:92](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L92)
+[packages/echo/echo-db/src/halo/halo.ts:92](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L92)
 
 ___
 
@@ -149,7 +149,7 @@ Local keyring. Stores locally known keypairs.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:128](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L128)
+[packages/echo/echo-db/src/halo/halo.ts:128](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L128)
 
 ## Methods
 
@@ -171,7 +171,7 @@ Creates the initial HALO party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:192](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L192)
+[packages/echo/echo-db/src/halo/halo.ts:192](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L192)
 
 ___
 
@@ -195,7 +195,7 @@ NOTE: This method does not initialize the HALO party.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:175](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L175)
+[packages/echo/echo-db/src/halo/halo.ts:175](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L175)
 
 ___
 
@@ -211,7 +211,7 @@ Closes HALO. Automatically called when client is destroyed.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:153](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L153)
+[packages/echo/echo-db/src/halo/halo.ts:153](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L153)
 
 ___
 
@@ -234,7 +234,7 @@ Create an invitation to an exiting identity HALO.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:228](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L228)
+[packages/echo/echo-db/src/halo/halo.ts:228](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L228)
 
 ___
 
@@ -259,7 +259,7 @@ User profile info.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:250](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L250)
+[packages/echo/echo-db/src/halo/halo.ts:250](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L250)
 
 ___
 
@@ -275,7 +275,7 @@ User profile info.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:273](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L273)
+[packages/echo/echo-db/src/halo/halo.ts:273](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L273)
 
 ___
 
@@ -295,7 +295,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:81](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L81)
+[packages/echo/echo-db/src/halo/halo.ts:81](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L81)
 
 ___
 
@@ -318,7 +318,7 @@ Joins an existing identity HALO by invitation.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:219](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L219)
+[packages/echo/echo-db/src/halo/halo.ts:219](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L219)
 
 ___
 
@@ -334,7 +334,7 @@ Query for contacts. Contacts represent member keys across all known Parties.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:238](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L238)
+[packages/echo/echo-db/src/halo/halo.ts:238](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L238)
 
 ___
 
@@ -356,7 +356,7 @@ Joins an existing identity HALO from a recovery seed phrase.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:208](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L208)
+[packages/echo/echo-db/src/halo/halo.ts:208](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L208)
 
 ___
 
@@ -372,7 +372,7 @@ Reset the identity and delete all key records.
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:162](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L162)
+[packages/echo/echo-db/src/halo/halo.ts:162](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L162)
 
 ___
 
@@ -398,7 +398,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:285](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L285)
+[packages/echo/echo-db/src/halo/halo.ts:285](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L285)
 
 ___
 
@@ -412,4 +412,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/halo/halo.ts:77](https://github.com/dxos/dxos/blob/b06737400/packages/echo/echo-db/src/halo/halo.ts#L77)
+[packages/echo/echo-db/src/halo/halo.ts:77](https://github.com/dxos/protocols/blob/c793f0fed/packages/echo/echo-db/src/halo/halo.ts#L77)
