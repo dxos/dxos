@@ -1,4 +1,7 @@
 
+//
+// Copyright 2022 DXOS.org
+//
 
 const config = {
   signalPort: 12087,
@@ -6,6 +9,6 @@ const config = {
   peer2Id: '1',
   sessionId: '2',
   topic: '3'
-}
+};
 
-export default config
+export default config;

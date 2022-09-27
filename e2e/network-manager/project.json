@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "e2e/rpc-tunnel/src",
+  "sourceRoot": "e2e/network-manager/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "e2e/rpc-tunnel/dist",
-        "tsConfig": "e2e/rpc-tunnel/tsconfig.json",
-        "main": "e2e/rpc-tunnel/src/index.ts"
+        "outputPath": "e2e/network-manager/dist",
+        "tsConfig": "e2e/network-manager/tsconfig.json",
+        "main": "e2e/network-manager/src/index.ts"
       }
     },
     "lint": {
@@ -20,24 +20,24 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "e2e/rpc-tunnel/**/*.{ts,js}"
+          "e2e/network-manager/**/*.{ts,js}"
         ]
       }
     },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "e2e/rpc-tunnel/out",
-        "configFile": "e2e/rpc-tunnel/vite.config.ts"
+        "outputPath": "e2e/network-manager/out",
+        "configFile": "e2e/network-manager/vite.config.ts"
       }
     },
     "e2e": {
       "executor": "@dxos/playwright:playwright",
       "options": {
         "testPatterns": [
-          "e2e/rpc-tunnel/playwright/tests/*.spec.ts"
+          "e2e/network-manager/playwright/tests/*.spec.ts"
         ],
-        "config": "e2e/rpc-tunnel/playwright/config.ts"
+        "config": "e2e/network-manager/playwright/config.ts"
       }
     }
   },

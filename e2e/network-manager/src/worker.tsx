@@ -15,7 +15,7 @@ import config from './worker-config';
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
-import { MessageRouter, SignalMessage, TestProtocolPlugin, testProtocolProvider, WebRTCTransportProxy } from '@dxos/network-manager';
+import { MessageRouter, TestProtocolPlugin, testProtocolProvider, WebRTCTransportProxy } from '@dxos/network-manager';
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 import { SignalClient } from '@dxos/messaging';
@@ -81,7 +81,7 @@ const App = ({
 
     setClosed(false);
   }, []);
-
+  console.log("App ready");
   return (
     <JsonTreeView data={{
       closed,
@@ -118,7 +118,7 @@ if (typeof SharedWorker !== 'undefined') {
 
     render(
       <StrictMode>
-        {app}
+        app
       </StrictMode>,
       document.getElementById('root')
     );

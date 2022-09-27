@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { WebRTCTransportService } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
+import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
-import { BridgeService } from '@dxos/protocols/src/proto/gen/dxos/mesh/bridge';
-import { WebRTCTransportService } from '@dxos/network-manager';
-
 
 const setup = async (port: RpcPort) => {
   const webRTCTransportService: BridgeService = new WebRTCTransportService();
@@ -32,7 +31,7 @@ const setup = async (port: RpcPort) => {
 const channel = new MessageChannel(async (channel, port) => {
   await setup(
     createWorkerPort({ channel, port, source: 'child', destination: 'parent' })
-  )
+  );
 });
 
 onconnect = event => channel.onConnect(event);
