@@ -9,4 +9,5 @@ export * from './topology';
 export * from './transport';
 export * from './signal';
 export * from './types';
+export * from './testing';
 export * from './connection-log';

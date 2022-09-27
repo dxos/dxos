@@ -59,7 +59,6 @@ describe('WebRTCTransportProxy', () => {
     afterTest(() => webRTCService.close());
 
     const webRTCTransportProxy = new WebRTCTransportProxy({
-      webRTCConnectionId: randomInt(0, 1000),
       initiator,
       stream,
       ownId,
