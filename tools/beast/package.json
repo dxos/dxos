@@ -32,6 +32,7 @@
     "yargs": "~16.2.0"
   },
   "devDependencies": {
+    "@types/lodash.defaultsdeep": "^4.6.7",
     "@dxos/protocols-toolchain": "workspace:*",
     "@babel/core": "^7.18.13",
     "@types/color-hash": "^1.0.1",
