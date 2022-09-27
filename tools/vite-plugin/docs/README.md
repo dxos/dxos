@@ -34,7 +34,7 @@ subgraph common [common]
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"

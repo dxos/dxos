@@ -44,7 +44,7 @@ subgraph common [common]
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"

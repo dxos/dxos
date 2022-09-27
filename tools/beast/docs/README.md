@@ -24,7 +24,7 @@ end
 subgraph common [common]
   style common fill:#debac2,stroke:#fff
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"

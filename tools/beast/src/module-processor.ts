@@ -200,7 +200,6 @@ export class ModuleProcessor {
 
     //
     // Links
-    // https://mermaid-js.github.io/mermaid/#/flowchart?id=links-between-nodes
     //
     {
       const addLinks = (current: Project) => {
@@ -229,8 +228,7 @@ export class ModuleProcessor {
     }
 
     //
-    // Sections
-    // https://mermaid-js.github.io/mermaid/#/flowchart?id=subgraphs
+    // Subgraphs
     //
     {
       // TODO(burdon): Get from package.json metadata?
@@ -287,6 +285,7 @@ export class ModuleProcessor {
         if (excluded.length) {
           const subgraph = graph.addSubgraph({
             id: `${section}-excluded`,
+            label: ' ',
             style: {
               'fill': colorHash.hex(section),
               'stroke': '#333',

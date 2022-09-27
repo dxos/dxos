@@ -24,7 +24,7 @@ end
 subgraph common [common]
   style common fill:#debac2,stroke:#fff
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"

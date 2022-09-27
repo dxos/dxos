@@ -22,7 +22,7 @@ subgraph common [common]
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
