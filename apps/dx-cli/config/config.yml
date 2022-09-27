@@ -12,7 +12,7 @@ runtime:
       server: "http://127.0.0.1:5001"
       gateway: "http://127.0.0.1:8888/ipfs/"
     signal:
-      server: 'ws://localhost:9003/.well-known/dx/signal'
+      server: 'wss://halo.dxos.org/.well-known/dx/signal'
     ice:
       - urls: 'turn:demo.kube.dxos.network:3478'
         username: 'dxos'

@@ -18,7 +18,7 @@
   - [ ] Epochs
 
 
-## JW
+## JW/MW
 
 - [ ] `@dxos/protocol-plugin-replicator`
   - [ ] Don't use raw hypercore feeds - operate on FeedDescriptor instead
@@ -30,6 +30,8 @@
 - [ ] Fix/remove .js files
 - [ ] Avoid using `Buffer` in types (e.g. don't depend on input parameters being `Buffer` rather then `Uint8Array`). Prefer to use `PublicKey` for keys or ids
 - [ ] Devtools
+- [ ] client context close error (and rename network manager close)
+      ERROR Signal socket error wss://halo.dxos.org/.well-known/dx/signal WebSocket was closed before the connection was established
 
 ## DM
 

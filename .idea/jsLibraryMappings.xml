@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="JavaScriptLibraryMappings">
-    <includedPredefinedLibrary name="Node.js Core" />
-    <excludedPredefinedLibrary name="dxos/apps/docs/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/dx-cli/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/kai/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/kitchen-sink/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/kodama/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/lexical-editor/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/wallet-extension/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/experimental/wallet-playground/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/halo/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/templates/bare/node_modules" />
-    <excludedPredefinedLibrary name="dxos/apps/templates/hello/node_modules" />
-    <excludedPredefinedLibrary name="dxos/e2e/client/node_modules" />
-    <excludedPredefinedLibrary name="dxos/e2e/protobuf-compiler/node_modules" />
-    <excludedPredefinedLibrary name="dxos/e2e/rpc-tunnel/node_modules" />
-    <excludedPredefinedLibrary name="dxos/e2e/rpc-worker-proxy/node_modules" />
     <excludedPredefinedLibrary name="dxos/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/bot/bot-factory-client/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/bot/botkit/node_modules" />

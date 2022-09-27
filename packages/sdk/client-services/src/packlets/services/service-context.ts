@@ -66,6 +66,10 @@ export class ServiceContext {
 
   async close () {
     await this.identityManager.close();
+    await this.spaceManager?.close();
+    await this.feedStore.close();
+    // TODO(burdon): ERROR Signal socket error; normalize close method.
+    await this.networkManager.destroy();
   }
 
   async createIdentity () {
