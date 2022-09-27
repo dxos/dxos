@@ -26,6 +26,7 @@
     "madge": "^5.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
+    "lodash": "4.17.21",
     "minimatch": "^5.1.0",
     "ts-morph": "^16.0.0",
     "yargs": "~16.2.0"

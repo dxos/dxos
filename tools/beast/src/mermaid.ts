@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import defaultsDeep from 'lodash/defaultsdeep';
+import defaultsDeep from 'lodash.defaultsdeep';
 
 // TODO(burdon): Make types relevant to ERD, etc.
 
