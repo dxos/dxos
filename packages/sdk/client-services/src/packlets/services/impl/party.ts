@@ -38,11 +38,11 @@ import { ServiceContext } from '../service-context';
 export class PartyService implements PartyServiceRpc {
   private inviteeInvitations: InviteeInvitations = new Map();
 
-  constructor(
+  constructor (
     private readonly serviceContext: ServiceContext
   ) { }
 
-  subscribeToParty(request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
+  subscribeToParty (request: SubscribePartyRequest): Stream<SubscribePartyResponse> {
     return new Stream(({ next }) => {
       next({
         party: {
@@ -51,7 +51,7 @@ export class PartyService implements PartyServiceRpc {
           isActive: true,
           members: []
         }
-      })
+      });
     });
     // const update = (next: (message: SubscribePartyResponse) => void) => {
     //   try {
@@ -96,7 +96,7 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  subscribeParties() {
+  subscribeParties () {
     return new Stream<SubscribePartiesResponse>(({ next }) => {
       const update = () => {
         next({
@@ -121,7 +121,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  async getPartyDetails(request: GetPartyDetailsRequest): Promise<PartyDetails> {
+  async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
     return todo();
     // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
     // return {
@@ -129,7 +129,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  async createParty(): Promise<Party> {
+  async createParty (): Promise<Party> {
     await this.serviceContext.initialized.wait();
     const space = await this.serviceContext.spaceManager!.createSpace();
     return {
@@ -139,7 +139,7 @@ export class PartyService implements PartyServiceRpc {
     };
   }
 
-  async cloneParty(snapshot: PartySnapshot): Promise<Party> {
+  async cloneParty (snapshot: PartySnapshot): Promise<Party> {
     return todo();
     // const party = await this.echo.cloneParty(snapshot);
     // return {
@@ -149,7 +149,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  async setPartyState(request: SetPartyStateRequest) {
+  async setPartyState (request: SetPartyStateRequest) {
     return todo();
     // const party = this.echo.getParty(request.partyKey);
     // if (!party) {
@@ -180,7 +180,7 @@ export class PartyService implements PartyServiceRpc {
     // };
   }
 
-  createInvitation(request: CreateInvitationRequest): Stream<InvitationRequest> {
+  createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
       setImmediate(async () => {
         try {
@@ -216,7 +216,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  acceptInvitation(request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
+  acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
       const [_secretLatch, secretTrigger] = latch();
@@ -250,7 +250,7 @@ export class PartyService implements PartyServiceRpc {
     });
   }
 
-  async authenticateInvitation(request: AuthenticateInvitationRequest) {
+  async authenticateInvitation (request: AuthenticateInvitationRequest) {
     assert(request.processId, 'Process ID is missing.');
     const invitation = this.inviteeInvitations.get(request.processId);
     assert(invitation, 'Invitation not found.');
@@ -261,11 +261,11 @@ export class PartyService implements PartyServiceRpc {
     invitation.secretTrigger?.();
   }
 
-  subscribeMembers(request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
+  subscribeMembers (request: SubscribeMembersRequest): Stream<SubscribeMembersResponse> {
     return new Stream(({ next }) => {
       next({
-        members: [] 
-      })
+        members: []
+      });
     });
     // const party = this.echo.getParty(request.partyKey);
     // if (party) {
@@ -290,7 +290,7 @@ export class PartyService implements PartyServiceRpc {
     // }
   }
 
-  async createSnapshot(request: CreateSnaspotRequest): Promise<PartySnapshot> {
+  async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
     return todo();
     // assert(request.partyKey);
     // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));

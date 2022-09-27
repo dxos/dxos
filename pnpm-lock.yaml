@@ -1177,11 +1177,9 @@ importers:
 
   packages/common/debug:
     specifiers:
-      '@dxos/keys': workspace:*
       debug: ^4.3.3
       events: ^3.3.0
     dependencies:
-      '@dxos/keys': link:../keys
       debug: 4.3.4
       events: 3.3.0
 
@@ -3322,6 +3320,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@types/color-hash': ^1.0.1
       '@types/lodash': ^4.14.182
+      '@types/lodash.defaultsdeep': ^4.6.7
       '@types/madge': ^5.0.0
       '@types/minimatch': ^5.1.2
       '@types/yargs': ~16.0.1
@@ -3330,6 +3329,7 @@ importers:
       color-hash: ^1.0.3
       debug: ^4.3.3
       js-yaml: ^4.1.0
+      lodash: 4.17.21
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       madge: ^5.0.1
@@ -3345,6 +3345,7 @@ importers:
       color-hash: 1.1.1
       debug: 4.3.4
       js-yaml: 4.1.0
+      lodash: 4.17.21
       lodash.defaultsdeep: 4.6.1
       lodash.pick: 4.4.0
       madge: 5.0.1
@@ -3356,6 +3357,7 @@ importers:
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/color-hash': 1.0.2
       '@types/lodash': 4.14.184
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/madge': 5.0.0
       '@types/minimatch': 5.1.2
       '@types/yargs': 16.0.4
@@ -14931,6 +14933,12 @@ packages:
 
   /@types/lodash.defaultsdeep/4.6.6:
     resolution: {integrity: sha512-k3bXTg1/54Obm6uFEtSwvDm2vCyK9jSROv0V9X3gFFNPu7eKmvqqadPSXx0SkVVixSilR30BxhFlnIj8OavXOA==}
+    dependencies:
+      '@types/lodash': 4.14.184
+    dev: true
+
+  /@types/lodash.defaultsdeep/4.6.7:
+    resolution: {integrity: sha512-D+AUxs64qehDMkbfFoskG0XsIOh2CHBGqYfcQcubLbZSFCGKJKS885su3a97huqBNHj+p9of9UZ/uUIP46wUGQ==}
     dependencies:
       '@types/lodash': 4.14.184
     dev: true

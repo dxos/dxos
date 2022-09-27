@@ -6,7 +6,6 @@ import React, { FC } from 'react';
 
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { useDevtools, useStream } from '@dxos/react-client';
 
 import { Table } from '../util';
 
@@ -18,7 +17,7 @@ export const PartyFeeds: FC<{
   return null;
   // TODO(dmaretskyi): Not working currently.
   // const devtoolsHost = useDevtools();
-  const { feeds = [] } = {}; //useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
+  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
 
   return (
     <Table

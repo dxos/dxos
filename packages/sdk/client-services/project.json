@@ -13,26 +13,6 @@
         "main": "packages/sdk/client-services/src/index.ts"
       }
     },
-    "bundle": {
-      "executor": "@dxos/esbuild:bundle",
-      "outputs": [
-        "{options.outdir}"
-      ],
-      "options": {
-        "entryPoints": [
-          "packages/sdk/client-services/src/index.ts"
-        ],
-        "outdir": "packages/sdk/client-services/dist/browser",
-        "bundlePackages": [
-          "@dxos/credentials",
-          "@dxos/crypto",
-          "@dxos/echo-db",
-          "@dxos/feed-store",
-          "@dxos/network-manager",
-          "@dxos/object-model"
-        ]
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

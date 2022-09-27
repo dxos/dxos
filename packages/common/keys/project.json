@@ -17,7 +17,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": [
         "{options.outputFile}"
-      ],
+    ],
       "options": {
         "lintFilePatterns": [
           "packages/common/keys/**/*.{ts,js}"
@@ -34,6 +34,7 @@
     }
   },
   "implicitDependencies": [
-    "protobuf-compiler"
+    "protobuf-compiler",
+    "mocha"
   ]
 }

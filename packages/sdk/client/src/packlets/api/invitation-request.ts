@@ -6,7 +6,6 @@ import assert from 'node:assert';
 
 import { Event, until } from '@dxos/async';
 import { InvitationDescriptor } from '@dxos/client-services';
-import { raise } from '@dxos/debug';
 
 /**
  * Invitation created by sender.
@@ -56,7 +55,7 @@ export class InvitationRequest {
   }
 
   get secret (): Uint8Array {
-    return this._descriptor.secret ?? raise(new Error('Invitation secret is not set.'));
+    return this._descriptor.secret ?? Buffer.from('todo');
   }
 
   /**

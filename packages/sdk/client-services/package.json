@@ -6,7 +6,6 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/browser/index.js",
     "node:assert": "assert"
   },
   "files": [
