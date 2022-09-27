@@ -70,7 +70,6 @@ const App = ({
   return (
     <JsonTreeView data={{
       closed,
-      error,
       value
     }} />
   );
