@@ -5,9 +5,10 @@
 import debug from 'debug';
 
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
 

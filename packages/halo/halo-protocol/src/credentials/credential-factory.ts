@@ -4,62 +4,125 @@
 
 import assert from 'assert';
 
-import { Keyring } from '@dxos/credentials';
-import { MessageType, PublicKey } from '@dxos/protocols';
+import { Signer } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
+import { MessageType } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getSignaturePayload, sign } from './signing';
-import { SIGNATURE_TYPE_ED25519 } from './verifier';
+import { getSignaturePayload } from './signing';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
-export type CreateCredentialParams = {
+export type CreateCredentialSignerParams = {
   subject: PublicKey
   assertion: MessageType
-  issuer: PublicKey
-  keyring: Keyring
-  /**
-   * Provided if it is different from issuer.
-   */
-  signingKey?: PublicKey
-  /**
-   * Provided if signing key is different from issuer.
-   */
-  chain?: Chain
   nonce?: Uint8Array
 }
 
-export const createCredential = async (opts: CreateCredentialParams): Promise<Credential> => {
-  assert(opts.assertion['@type'], 'Invalid assertion.');
-  assert(!!opts.signingKey === !!opts.chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+export type CreateCredentialParams = {
+  signer: Signer
+  issuer: PublicKey
+  signingKey?: PublicKey
 
-  // TODO(dmaretskyi): Verify chain.
+  // Provided only if signer is different from issuer.
+  chain?: Chain
 
-  const signingKey = opts.signingKey ?? opts.issuer;
+  subject: PublicKey
+  assertion: MessageType
+  nonce?: Uint8Array
+}
 
-  // Form a temporary credential with signature fields missing. This will act as an input data for the signature.
+/**
+ * Construct a signed credential message.
+ */
+export const createCredential = async ({
+  signer,
+  issuer,
+  subject,
+  assertion,
+  signingKey,
+  chain,
+  nonce
+}: CreateCredentialParams): Promise<Credential> => {
+  assert(assertion['@type'], 'Invalid assertion.');
+  assert(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
+  if (chain) {
+    const result = await verifyChain(chain, issuer, signingKey!);
+    assert(result.kind === 'pass', 'Invalid chain.');
+  }
+
+  // Create the credential with proof value and chain fields missing (for signature payload).
   const credential: Credential = {
-    subject: {
-      id: opts.subject,
-      assertion: opts.assertion
-    },
-    issuer: opts.issuer,
+    issuer,
     issuanceDate: new Date(),
+    subject: {
+      id: subject,
+      assertion
+    },
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
-      signer: signingKey,
-      nonce: opts.nonce,
+      signer: signingKey ?? issuer,
       value: new Uint8Array(),
-      chain: undefined
+      nonce
     }
   };
 
-  const signData = getSignaturePayload(credential);
-  const signature = await sign(opts.keyring, signingKey, signData);
-
-  credential.proof.value = signature;
-  if (opts.chain) {
-    credential.proof.chain = opts.chain;
+  // Set proof after creating signature.
+  const signedPayload = getSignaturePayload(credential);
+  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
+  if (chain) {
+    credential.proof.chain = chain;
   }
 
   return credential;
 };
+
+// TODO(burdon): Use consistently (merge halo/echo protocol packages).
+export const createCredentialMessage = (credential: Credential) => {
+  return {
+    '@type': 'dxos.echo.feed.CredentialsMessage',
+    credential
+  };
+};
+
+export interface CredentialSigner {
+  getIssuer(): PublicKey
+  createCredential: (params: CreateCredentialSignerParams) => Promise<Credential>
+}
+
+/**
+ * Issue credentials directly signed by the issuer.
+ */
+export const createCredentialSignerWithKey = (
+  signer: Signer,
+  issuer: PublicKey
+): CredentialSigner => ({
+  getIssuer: () => issuer,
+  createCredential: ({ subject, assertion, nonce }) => createCredential({
+    signer,
+    issuer,
+    subject,
+    assertion,
+    nonce
+  })
+});
+
+/**
+ * Issue credentials with transitive proof via a chain.
+ */
+export const createCredentialSignerWithChain = (
+  signer: Signer,
+  chain: Chain,
+  signingKey: PublicKey
+): CredentialSigner => ({
+  getIssuer: () => chain.credential.issuer,
+  createCredential: ({ subject, assertion, nonce }) => createCredential({
+    signer,
+    issuer: chain.credential.issuer,
+    signingKey,
+    chain,
+    subject,
+    assertion,
+    nonce
+  })
+});

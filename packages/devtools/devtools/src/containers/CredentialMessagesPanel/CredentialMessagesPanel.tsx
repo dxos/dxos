@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { useDevtools, useParties, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 

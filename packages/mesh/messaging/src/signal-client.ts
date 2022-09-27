@@ -6,8 +6,8 @@ import assert from 'assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 

@@ -64,10 +64,10 @@ export const Share: FC<{
               </Text>
             <Text>{invitation.descriptor.encode()}</Text>
           </Box>
-          <Box flexDirection='column' marginTop={1}>
+          {/* <Box flexDirection='column' marginTop={1}>
             <Text color='red'>Verification code</Text>
             <Text>{String(invitation.secret)}</Text>
-          </Box>
+          </Box> */}
         </Box>
       )}
 

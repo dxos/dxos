@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 

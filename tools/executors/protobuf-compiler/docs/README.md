@@ -9,25 +9,20 @@
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph executors
-  style executors fill:#edabb0,stroke:#fff;
+%% Nodes
 
-  dxos/protobuf-compiler("@dxos/protobuf-compiler")
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/protobuf-compiler("@dxos/protobuf-compiler"):::root
+  click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protobuf-compiler:::rootNode
-
 ```
 
 ## Dependencies

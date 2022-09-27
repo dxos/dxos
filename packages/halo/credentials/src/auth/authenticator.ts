@@ -5,7 +5,7 @@
 import debug from 'debug';
 import moment from 'moment';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 

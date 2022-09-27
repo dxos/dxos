@@ -2,27 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AsyncCallback, Callback } from '@dxos/util';
 
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { MemberStateMachine, MemberInfo } from './member-state-machine';
 
-const log = debug('dxos:halo:party-state-machine');
+export interface PartyState {
+  readonly genesisCredential: Credential | undefined
+  readonly members: ReadonlyMap<PublicKey, MemberInfo>
+  readonly feeds: ReadonlyMap<PublicKey, FeedInfo>
+  readonly credentials: Credential[]
+}
 
 /**
  * Validates and processes credentials for a single party.
  * Keeps a list of members and feeds.
  * Keeps and in-memory index of credentials and allows to query them.
  */
-export class PartyStateMachine {
+export class PartyStateMachine implements PartyState {
   private readonly _members = new MemberStateMachine(this._partyKey);
   private readonly _feeds = new FeedStateMachine(this._partyKey);
   private readonly _credentials: Credential[] = [];
   private _genesisCredential: Credential | undefined;
+
+  readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
+  readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
+  readonly onMemberAdmitted = this._members.onMemberAdmitted;
 
   constructor (
     private readonly _partyKey: PublicKey
@@ -50,51 +59,53 @@ export class PartyStateMachine {
   async process (credential: Credential, fromFeed: PublicKey): Promise<boolean> {
     const result = await verifyCredential(credential);
     if (result.kind !== 'pass') {
-      log(`Invalid credential: ${result.errors.join(', ')}`);
+      log.warn(`Invalid credential: ${result.errors.join(', ')}`);
       return false;
     }
 
     switch (getCredentialAssertion(credential)['@type']) {
       case 'dxos.halo.credentials.PartyGenesis':
         if (this._genesisCredential) {
-          log('Party already has a genesis credential.');
+          log.warn('Party already has a genesis credential.');
           return false;
         }
         if (!credential.issuer.equals(this._partyKey)) {
-          log('Party genesis credential must be issued by party.');
+          log.warn('Party genesis credential must be issued by party.');
           return false;
         }
         if (!credential.subject.id.equals(this._partyKey)) {
-          log('Party genesis credential must be issued to party.');
+          log.warn('Party genesis credential must be issued to party.');
           return false;
         }
         this._genesisCredential = credential;
         break;
       case 'dxos.halo.credentials.PartyMember':
         if (!this._genesisCredential) {
-          log('Party must have a genesis credential before adding members.');
+          log.warn('Party must have a genesis credential before adding members.');
           return false;
         }
         if (!this._canInviteNewMembers(credential.issuer)) {
-          log(`Party member ${credential.issuer} is not authorized to invite new members.`);
+          log.warn(`Party member ${credential.issuer} is not authorized to invite new members.`);
           return false;
         }
-        this._members.process(credential);
+        await this._members.process(credential);
         break;
       case 'dxos.halo.credentials.AdmittedFeed':
         if (!this._genesisCredential) {
-          log('Party must have a genesis credential before admitting feeds.');
+          log.warn('Party must have a genesis credential before admitting feeds.');
           return false;
         }
         if (!this._canAdmitFeeds(credential.issuer)) {
-          log(`Party member ${credential.issuer} is not authorized to admit feeds.`);
+          log.warn(`Party member ${credential.issuer} is not authorized to admit feeds.`);
           return false;
         }
-        this._feeds.process(credential, fromFeed);
+        // TODO(dmaretskyi): Check that the feed owner is a member of the party.
+        await this._feeds.process(credential, fromFeed);
         break;
     }
 
     this._credentials.push(credential);
+    await this.onCredentialProcessed.callIfSet(credential);
 
     return true;
   }

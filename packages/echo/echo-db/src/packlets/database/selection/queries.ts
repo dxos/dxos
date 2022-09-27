@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ItemID } from '@dxos/echo-protocol';
+import { ItemID } from '@dxos/protocols';
 
 import { Entity } from '../entity';
 import { Item } from '../item';

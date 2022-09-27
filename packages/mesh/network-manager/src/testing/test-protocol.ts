@@ -7,9 +7,9 @@
 import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
 
 import { protocolFactory } from '../protocol-factory';
 

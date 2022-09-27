@@ -20,6 +20,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

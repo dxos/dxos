@@ -6,7 +6,7 @@ import { Readable } from 'readable-stream';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { createBatchStream } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import {
   SubscribeToFeedsRequest,
   SubscribeToFeedsResponse,

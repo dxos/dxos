@@ -6,7 +6,7 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { validateKeyPair } from '@dxos/crypto';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { Client, InvitationOffer, Item, Role } from './api';
 

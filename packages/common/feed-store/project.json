@@ -1,0 +1,36 @@
+{
+  "sourceRoot": "packages/common/feed-store/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/common/feed-store/dist",
+        "tsConfig": "packages/common/feed-store/tsconfig.json",
+        "main": "packages/common/feed-store/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/common/feed-store/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/common/feed-store/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  }
+}

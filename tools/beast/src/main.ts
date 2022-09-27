@@ -14,21 +14,32 @@ import { hideBin } from 'yargs/helpers';
 //     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
 import { log } from '@dxos/log';
 
-import { Processor } from './processor';
+import { ModuleProcessor } from './module-processor';
 
 const main = () => {
   log.info('Started');
+  const rootDir = path.join(__dirname, '../../..');
+  console.log(rootDir);
 
   yargs(hideBin(process.argv))
     .scriptName('beast')
     .option('json', {
       type: 'boolean'
     })
+    .option('verbose', {
+      type: 'boolean'
+    })
 
     .command({
       command: 'list',
-      handler: ({ json }: { json: boolean }) => {
-        const processor = new Processor(path.join(process.cwd(), '../..')).init();
+      handler: ({
+        json,
+        verbose
+      }: {
+        json: boolean
+        verbose?: boolean
+      }) => {
+        const processor = new ModuleProcessor(rootDir, { verbose }).init();
         const projects = processor.projects.map(p => p.package.name);
 
         if (json) {
@@ -51,17 +62,19 @@ const main = () => {
       handler: ({
         project: name,
         filter,
-        json
+        json,
+        verbose
       }: {
         project?: string
         filter?: string
         json?: boolean
+        verbose?: boolean
       }) => {
         if (!name) {
           process.exit(1);
         }
 
-        const processor = new Processor(path.join(process.cwd(), '../..')).init();
+        const processor = new ModuleProcessor(rootDir, { verbose }).init();
         const project = processor.projectsByName.get(name);
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
@@ -100,25 +113,36 @@ const main = () => {
         .option('exclude', {
           description: 'Excluded files',
           type: 'string',
-          // TODO(burdon): Get from package annotation.
-          default: ['@dxos/async', '@dxos/debug', '@dxos/log', '@dxos/util'].join(',')
+          // TODO(burdon): Get from config or package annotation (e.g., "dxos/beast" key).
+          default: [
+            '@dxos/async',
+            '@dxos/debug',
+            '@dxos/keys',
+            '@dxos/log',
+            '@dxos/testutils',
+            '@dxos/util'
+          ].join(',')
         }),
       handler: ({
+        verbose,
         pattern = '*',
         baseUrl,
         outDir,
         include,
-        exclude
+        exclude = ''
       }: {
+        verbose?: boolean
         pattern?: string
         baseUrl : string
         outDir: string
-        include?: string
-        exclude?: string
+        include: string
+        exclude: string
       }) => {
-        const processor = new Processor(path.join(process.cwd(), '../..'), include, exclude?.split(',') ?? []).init();
+        const processor = new ModuleProcessor(rootDir, { verbose, include, exclude: exclude?.split(',') }).init();
         processor.match(pattern).forEach(project => {
-          console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+          if (verbose) {
+            console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
+          }
           processor.createDocs(project, outDir, baseUrl);
         });
       }

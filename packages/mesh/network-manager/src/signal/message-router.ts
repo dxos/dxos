@@ -5,8 +5,9 @@
 import assert from 'assert';
 
 import { Any } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, MakeOptional } from '@dxos/util';
 

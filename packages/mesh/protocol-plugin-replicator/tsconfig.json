@@ -30,7 +30,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/feed-store"
+      "path": "../../common/feed-store"
     },
     {
       "path": "../mesh-protocol"

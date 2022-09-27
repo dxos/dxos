@@ -18,6 +18,6 @@ export type Project = {
   subdir: string
   package: PackageJson
   dependencies: Set<Project>
-  descendents: Set<string>
-  cycles?: string[][]
+  descendents: Set<string> // Includes modules that are not workspace projects.
+  cycles: string[][]
 }

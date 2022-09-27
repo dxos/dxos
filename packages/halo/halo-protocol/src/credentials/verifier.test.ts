@@ -5,10 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { Keyring } from '@dxos/credentials';
-import { PublicKey } from '@dxos/protocols';
+import { Keyring } from '@dxos/keyring';
+import { PublicKey } from '@dxos/keys';
 import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
@@ -17,7 +16,7 @@ describe('verifier', () => {
   describe('no chain', () => {
     test('pass', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -28,7 +27,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -37,7 +36,7 @@ describe('verifier', () => {
 
     test('fail - invalid signature', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -48,7 +47,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -60,7 +59,7 @@ describe('verifier', () => {
 
     test('fail - invalid issuer', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -71,7 +70,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -83,7 +82,7 @@ describe('verifier', () => {
 
     test('fail - invalid nonce', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -94,7 +93,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject,
         nonce: PublicKey.random().asUint8Array()
       });
@@ -107,7 +106,7 @@ describe('verifier', () => {
 
     test('fail - no nonce provided', async () => {
       const keyring = new Keyring();
-      const { publicKey: issuer } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -118,7 +117,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -132,8 +131,8 @@ describe('verifier', () => {
   describe('chain', () => {
     test('pass - delegated authority with 1 device', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -146,7 +145,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -157,7 +156,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device,
         chain
@@ -168,8 +167,8 @@ describe('verifier', () => {
 
     test('fail - missing chain', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -182,7 +181,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -193,7 +192,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device,
         chain
@@ -206,8 +205,8 @@ describe('verifier', () => {
 
     test('fail - invalid chain signature', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -220,7 +219,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -231,7 +230,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device,
         chain
@@ -244,8 +243,8 @@ describe('verifier', () => {
 
     test('fail - invalid chain assertion', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -258,7 +257,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
       const credential = await createCredential({
@@ -268,7 +267,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device,
         chain
@@ -281,7 +280,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject
       });
 
@@ -290,9 +289,9 @@ describe('verifier', () => {
 
     test('fail - chain does not lead to issuer', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: identity2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const identity2 = await keyring.createKey();
+      const device = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
       const chain: Chain = {
@@ -305,7 +304,7 @@ describe('verifier', () => {
           },
           subject: device,
           issuer: identity,
-          keyring
+          signer: keyring
         })
       };
 
@@ -316,7 +315,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device,
         chain
@@ -330,7 +329,7 @@ describe('verifier', () => {
         },
         subject: device,
         issuer: identity2,
-        keyring
+        signer: keyring
       });
 
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
@@ -338,9 +337,9 @@ describe('verifier', () => {
 
     test('pass - delegated authority with 2 devices', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device1 = await keyring.createKey();
+      const device2 = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -353,7 +352,7 @@ describe('verifier', () => {
           },
           subject: device2,
           issuer: identity,
-          keyring,
+          signer: keyring,
           signingKey: device1,
           chain: {
             credential: await createCredential({
@@ -364,7 +363,7 @@ describe('verifier', () => {
               },
               subject: device1,
               issuer: identity,
-              keyring
+              signer: keyring
             })
           }
         })
@@ -377,7 +376,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device2,
         chain
@@ -388,9 +387,9 @@ describe('verifier', () => {
 
     test('fail - cyclic chain', async () => {
       const keyring = new Keyring();
-      const { publicKey: identity } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device1 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
-      const { publicKey: device2 } = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
+      const identity = await keyring.createKey();
+      const device1 = await keyring.createKey();
+      const device2 = await keyring.createKey();
       const partyKey = PublicKey.random();
       const subject = PublicKey.random();
 
@@ -403,7 +402,7 @@ describe('verifier', () => {
           },
           subject: device2,
           issuer: identity,
-          keyring,
+          signer: keyring,
           signingKey: device1,
           chain: {
             credential: await createCredential({
@@ -414,7 +413,7 @@ describe('verifier', () => {
               },
               subject: device1,
               issuer: identity,
-              keyring
+              signer: keyring
             })
           }
         })
@@ -427,7 +426,7 @@ describe('verifier', () => {
           role: PartyMember.Role.ADMIN
         },
         issuer: identity,
-        keyring,
+        signer: keyring,
         subject,
         signingKey: device2,
         chain
@@ -441,7 +440,7 @@ describe('verifier', () => {
         },
         subject: device1,
         issuer: device2,
-        keyring
+        signer: keyring
       });
 
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });

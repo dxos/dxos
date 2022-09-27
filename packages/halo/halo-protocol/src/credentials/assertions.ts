@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { MessageType, PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
+import { MessageType } from '@dxos/protocols';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const getCredentialAssertion = (credential: Credential): MessageType => credential.subject.assertion;
