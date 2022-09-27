@@ -14,6 +14,7 @@ export {
   Selection,
   SelectionResult,
   ItemFilterDeleted,
+  InvitationDescriptor,
   OpenProgress,
   PartyMember,
   ResultSet,
@@ -24,16 +25,9 @@ export {
 } from '@dxos/echo-db';
 
 export {
-  InvitationDescriptor
-} from '@dxos/client-services';
-
-export {
-  PublicKey
-} from '@dxos/keys';
-
-export {
-  ItemID
-} from '@dxos/protocols';
+  ItemID,
+  PartyKey
+} from '@dxos/echo-protocol';
 
 // TODO(burdon): Remove exported protos?
 export {
@@ -58,5 +52,6 @@ export {
 } from '@dxos/network-manager';
 
 export * from './packlets/api';
-// export * from './packlets/devtools';
-export * from './packlets/proxies';
+export * from './packlets/devtools';
+export * from './packlets/proxy';
+export * from './packlets/services';

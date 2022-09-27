@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+export * from './client-service';
 export * from './echo';
+export * from './errors';
 export * from './halo';
-export * from './invitation';
-export * from './invitation-request';
+export * from './invitations';

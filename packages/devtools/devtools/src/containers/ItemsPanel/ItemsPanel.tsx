@@ -10,10 +10,10 @@ import { Box } from '@mui/material';
 
 import { Item } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { MessengerModel } from '@dxos/messenger-model';
 import { Model } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 import { useParties, useParty, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';

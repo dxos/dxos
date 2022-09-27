@@ -51,7 +51,6 @@ export class HaloParty {
   private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
-    partyKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
@@ -61,7 +60,7 @@ export class HaloParty {
     _options: PipelineOptions
   ) {
     this._partyCore = new PartyPipeline(
-      partyKey,
+      _credentialsSigner.getIdentityKey().publicKey,
       _feedProvider,
       modelFactory,
       snapshotStore,
@@ -107,19 +106,15 @@ export class HaloParty {
   // (eg, identity, credentials, device management.)
   //
 
-  get identityInfo () {
-    // TODO(dmaretskyi): Not implemented.
-    return undefined;
-    // return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
+  get identityInfo (): SignedMessage | undefined {
+    return this._partyCore.processor.infoMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
-  get identityGenesis () {
-    // TODO(dmaretskyi): Not implemented.
-    return undefined;
-    // return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
+  get identityGenesis (): SignedMessage | undefined {
+    return this._partyCore.processor.credentialMessages.get(this._credentialsSigner.getIdentityKey().publicKey.toHex());
   }
 
-  get credentialMessages () {
+  get credentialMessages (): Map<string, SignedMessage> {
     return this._partyCore.processor.credentialMessages;
   }
 
@@ -167,7 +162,7 @@ export class HaloParty {
       this._partyCore.processor,
       this._genesisFeedKey,
       this._credentialsSigner,
-      this._partyCore.credentialsWriter as any, // TODO(dmaretskyi): Fix.
+      this._partyCore.credentialsWriter,
       this._networkManager
     );
 
@@ -181,22 +176,18 @@ export class HaloParty {
       this._partyCore.key,
       this._networkManager,
       peerId,
-
-      // TODO(dmaretskyi): Fix authenticator.
-      { get: async () => Buffer.from('') } // createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
+      createCredentialsProvider(this._credentialsSigner, this._partyCore.key, writeFeed.key)
     );
 
     // Replication.
     await this._protocol.start([
-      createReplicatorPlugin(this._feedProvider)
-      // TODO(dmaretskyi): Fix authenticator.
-      // createAuthPlugin(createAuthenticator(
-      //   this._partyCore.processor,
-      //   this._credentialsSigner,
-      //   this._partyCore.credentialsWriter
-      // ), peerId),
-      // TODO(dmaretskyi): Fix recovery.
-      // createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
+      createReplicatorPlugin(this._feedProvider),
+      createAuthPlugin(createAuthenticator(
+        this._partyCore.processor,
+        this._credentialsSigner,
+        this._partyCore.credentialsWriter
+      ), peerId),
+      createHaloRecoveryPlugin(this._credentialsSigner.getIdentityKey().publicKey, this._invitationManager, peerId)
     ]);
 
     // Issue an 'update' whenever the properties change.

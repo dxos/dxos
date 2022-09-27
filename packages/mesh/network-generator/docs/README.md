@@ -9,34 +9,41 @@ Network generator.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph mesh
+  style mesh fill:#b3e6c0,stroke:#fff;
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/network-generator("@dxos/network-generator"):::root
-  click dxos/network-generator "dxos/dxos/tree/main/packages/mesh/network-generator/docs"
+  dxos/network-generator("@dxos/network-generator")
 end
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+subgraph common
+  style common fill:#debac2,stroke:#fff;
 
-  subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
-    dxos/async("@dxos/async"):::def
-    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
-    dxos/debug("@dxos/debug"):::def
-    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
-    dxos/keys("@dxos/keys"):::def
-    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
   end
 end
 
-%% Links
+
+%% Hyperlinks
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/network-generator:::rootNode
+
+dxos/async:::defaultNode
+dxos/debug:::defaultNode
 ```
 
 ## Dependencies
@@ -45,4 +52,3 @@ linkStyle default stroke:#333,stroke-width:1px
 |---|---|
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
-| [`@dxos/keys`](../../../common/keys/docs/README.md) |  |

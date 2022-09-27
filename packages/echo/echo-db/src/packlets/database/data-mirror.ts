@@ -6,8 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { failUndefined } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { Model } from '@dxos/model-factory';
+import { PublicKey } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { Entity } from './entity';

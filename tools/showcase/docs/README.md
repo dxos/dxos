@@ -9,20 +9,25 @@ Components that display other components and references to APIs.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph tools
+  style tools fill:#bbabed,stroke:#fff;
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
-  dxos/showcase("@dxos/showcase"):::root
-  click dxos/showcase "dxos/dxos/tree/main/tools/showcase/docs"
+  dxos/showcase("@dxos/showcase")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/showcase:::rootNode
+
 ```
 
 ## Dependencies

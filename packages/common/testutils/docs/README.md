@@ -9,24 +9,25 @@ Test utilities
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph common
+  style common fill:#debac2,stroke:#fff;
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
-
-  subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
-    dxos/testutils("@dxos/testutils"):::def
-    click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs"
-  end
+  dxos/testutils("@dxos/testutils")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/testutils:::rootNode
+
 ```
 
 ## Dependencies

@@ -6,8 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { PublicKeyLike, PublicKey } from '@dxos/keys';
 import { ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { PublicKeyLike, PublicKey } from '@dxos/protocols';
 import { Command, NotarizeResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
 import { Message } from '@dxos/protocols/proto/dxos/halo/signed';

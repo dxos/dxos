@@ -5,46 +5,50 @@
 import { join } from 'path';
 import * as pb from 'protobufjs';
 
-import { Schema, anySubstitutions } from '../src';
+import { Schema } from '../src/schema';
+import { anySubstitutions } from '../src/substitutions/any';
 
 describe('extending protobuf', () => {
   it('extends proto with another file', async () => {
-    const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
-    const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another.proto'));
+    const anyProto = await pb.load(join(__dirname, './any.proto'));
+    const anotherProto = await pb.load(join(__dirname, './another.proto'));
 
     const schema = new Schema(anyProto, anySubstitutions);
-    const codec = schema.tryGetCodecForType('example.testing.any.Wrapper');
+    const codec = schema.tryGetCodecForType('dxos.test.any.Wrapper');
     codec.addJson(anotherProto.toJSON());
 
     const data = {
       payload: {
-        '@type': 'example.testing.another.AnotherMessage',
+        '@type': 'dxos.test.another.AnotherMessage',
         foo: 'foo'
       }
     };
 
     const encoded = codec.encode(data);
     const decoded = codec.decode(encoded);
+
     expect(decoded).toEqual(data);
   });
 
   it('Extends proto with duplicate keys', async () => {
-    const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
-    const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another-with-any.proto'));
+    const anyProto = await pb.load(join(__dirname, './any.proto'));
+    const anotherProtoWithAny = await pb.load(join(__dirname, './anotherWithAny.proto'));
 
     const schema = new Schema(anyProto, anySubstitutions);
-    const codec = schema.tryGetCodecForType('example.testing.any.Wrapper');
-    codec.addJson(anotherProto.toJSON());
+    const codec = schema.tryGetCodecForType('dxos.test.any.Wrapper');
+
+    codec.addJson(anotherProtoWithAny.toJSON());
 
     const data = {
       payload: {
-        '@type': 'example.testing.another.AnotherMessageWithAny',
+        '@type': 'dxos.test.another.AnotherMessageWithAny',
         foo: 'foo'
       }
     };
 
     const encoded = codec.encode(data);
     const decoded = codec.decode(encoded);
+
     expect(decoded).toEqual(data);
   });
 });

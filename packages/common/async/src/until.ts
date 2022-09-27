@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-export type UntilCallback<T> = (resolve: (value: T) => void, reject: (error: Error) => void) => void | Promise<void>
+export type UntilCallback<T> = (resolve: (value?: T) => void, reject: (error: Error) => void) => void | Promise<void>
 
 /**
  * Awaits promise.
  */
-// TODO(burdon): Reconcile with latch/trigger.
-export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promise<T> => {
+export const until = <T> (cb: UntilCallback<T>, timeout?: number) => {
   return new Promise((resolve, reject) => {
     const t = timeout && setTimeout(() => {
       reject(new Error(`Timeout after ${t}ms`));
@@ -16,7 +15,7 @@ export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promis
 
     setImmediate(async () => {
       try {
-        await cb((value: T) => {
+        await cb((value?: T) => {
           t && clearTimeout(t);
           resolve(value);
         }, (error: Error) => {

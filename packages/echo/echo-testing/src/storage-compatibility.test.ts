@@ -52,7 +52,7 @@ const createData = async (storagePath: string) => {
   await echo.close();
 };
 
-test.skip('can load from saved state', async () => {
+test('can load from saved state', async () => {
   const storagePath = `/tmp/dxos/test-${Date.now()}`;
   await createData(storagePath);
 

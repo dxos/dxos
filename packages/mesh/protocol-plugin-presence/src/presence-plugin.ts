@@ -12,9 +12,8 @@ import queueMicrotask from 'queue-microtask';
 
 import { Event } from '@dxos/async';
 import { Broadcast, Middleware } from '@dxos/broadcast';
-import { PublicKey } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { schema } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
 import { Alive } from '@dxos/protocols/proto/dxos/mesh/presence';
 
 const log = debug('dxos:mesh:presence');
@@ -65,8 +64,6 @@ export class PresencePlugin {
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.mesh.presence.Alive');
   private readonly _neighbors = new Map<string, any>();
-
-  // TODO(dmaretskyi): Delete events that aren't used.
   private readonly _error = new Event<Error>();
   private readonly _peerJoined = new Event<Buffer>();
   private readonly _peerLeft = new Event<Buffer>();
@@ -416,10 +413,10 @@ export class PresencePlugin {
         connections: Array.from(this._neighbors.values()).map((peer) => ({ peerId: PublicKey.bufferize(peer.getSession().peerId) })),
         metadata: this._metadata && bufferJson.encode(this._metadata)
       };
-      await this._broadcast.publish(Buffer.from(this._codec.encode(message)));
+      await this._broadcast.publish(this._codec.encode(message));
       log('ping', message);
     } catch (err: any) {
-      // TODO(dmaretskyi): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
+      // TODO(marik-d): This or one of its subscribers seems to leak "Error: Resource is closed" errors.
       // They are not fatal, and probably happend because the connection was closed but the broadcast job was not cleaned up.
       process.nextTick(() => this._error.emit(err));
     }

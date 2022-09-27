@@ -8,8 +8,8 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { colors, Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Typography } from '@mui/material';
 
 import { Item } from '@dxos/echo-db';
+import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
 import { CreateItemDialog } from '../CreateItem';

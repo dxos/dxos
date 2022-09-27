@@ -6,7 +6,7 @@ import React, { ReactNode, useState } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
 import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';

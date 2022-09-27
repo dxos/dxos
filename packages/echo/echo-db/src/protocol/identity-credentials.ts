@@ -5,9 +5,7 @@
 import {
   createIdentityInfoMessage, createKeyAdmitMessage, createPartyGenesisMessage, Keyring
 } from '@dxos/credentials';
-import { todo } from '@dxos/debug';
-import { Chain } from '@dxos/halo-protocol';
-import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
+import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { humanize } from '@dxos/util';
 
@@ -21,7 +19,7 @@ export interface IdentityCredentials {
   keyring: Keyring
   identityKey: KeyRecord
   deviceKey: KeyRecord
-  deviceKeyChain: Chain
+  deviceKeyChain: KeyChain
   identityGenesis: SignedMessage
   identityInfo: SignedMessage | undefined
   displayName: string | undefined
@@ -31,7 +29,6 @@ export interface IdentityCredentials {
 }
 
 export const createTestIdentityCredentials = async (keyring: Keyring): Promise<IdentityCredentials> => {
-  throw new Error('Not implemented');
   const identityKey = await keyring.createKeyRecord({ type: KeyType.IDENTITY });
   const deviceKey = await keyring.createKeyRecord({ type: KeyType.DEVICE });
   const feedKey = await keyring.createKeyRecord({ type: KeyType.FEED });
@@ -51,18 +48,17 @@ export const createTestIdentityCredentials = async (keyring: Keyring): Promise<I
     keyring,
     identityKey,
     deviceKey,
-    deviceKeyChain: todo(),
+    deviceKeyChain,
     identityGenesis: keyAdmit.payload as SignedMessage,
     identityInfo: identityInfo.payload as SignedMessage,
     displayName,
-    createCredentialsSigner: () => new CredentialsSigner(keyring, identityKey, deviceKey, todo()),
+    createCredentialsSigner: () => new CredentialsSigner(keyring, identityKey, deviceKey, deviceKeyChain),
     preferences: undefined,
     contacts: undefined
   };
 };
 
 export const deriveTestDeviceCredentials = async (identity: IdentityCredentials): Promise<IdentityCredentials> => {
-  throw new Error('Not implemented');
   const deviceKey = await identity.keyring.createKeyRecord({ type: KeyType.DEVICE });
   const keyAdmit = createKeyAdmitMessage(identity.keyring, identity.identityKey.publicKey, deviceKey, [identity.identityKey]);
 
@@ -74,12 +70,12 @@ export const deriveTestDeviceCredentials = async (identity: IdentityCredentials)
   return {
     ...identity,
     deviceKey,
-    deviceKeyChain: todo(),
+    deviceKeyChain,
     createCredentialsSigner: () => new CredentialsSigner(
       identity.keyring,
       identity.identityKey,
       deviceKey,
-      todo()
+      deviceKeyChain
     )
   };
 };

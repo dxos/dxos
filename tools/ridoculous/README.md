@@ -5,17 +5,6 @@ Has the same [meaning](https://www.urbandictionary.com/define.php?term=ridoculou
 ## ESM
 
 This package uses ESM with minimal `tsc` and `mocha` configurations.
-NOTE: This is non-standard for the @dxos monorepo and some libs (e.g., @dxos/log) might not work.
-
-ESM modules have the following configuration and require file extensions for imports.
-
-```
-// package.json
-"type": "module"
-
-// tsconfig.json
-"module": "ESNext"
-```
 
 ## Remark
 

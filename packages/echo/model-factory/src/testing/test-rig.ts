@@ -5,9 +5,8 @@
 import debug from 'debug';
 
 import { Trigger } from '@dxos/async';
-import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import type { FeedWriter, WriteReceipt } from '@dxos/echo-protocol';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';

@@ -11,6 +11,7 @@
     <excludedPredefinedLibrary name="dxos/apps/experimental/wallet-extension/node_modules" />
     <excludedPredefinedLibrary name="dxos/apps/experimental/wallet-playground/node_modules" />
     <excludedPredefinedLibrary name="dxos/apps/halo/node_modules" />
+    <excludedPredefinedLibrary name="dxos/apps/hello-world/node_modules" />
     <excludedPredefinedLibrary name="dxos/apps/templates/bare/node_modules" />
     <excludedPredefinedLibrary name="dxos/apps/templates/hello/node_modules" />
     <excludedPredefinedLibrary name="dxos/e2e/client/node_modules" />
@@ -25,6 +26,7 @@
     <excludedPredefinedLibrary name="dxos/packages/common/crypto-names/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/common/crypto/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/common/debug/node_modules" />
+    <excludedPredefinedLibrary name="dxos/packages/common/feed-store/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/common/log/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/common/protocols/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/common/random-access-storage/node_modules" />
@@ -38,7 +40,9 @@
     <excludedPredefinedLibrary name="dxos/packages/devtools/devtools-mesh/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/devtools/devtools/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/echo/echo-db/node_modules" />
+    <excludedPredefinedLibrary name="dxos/packages/echo/echo-protocol/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/echo/echo-testing/node_modules" />
+    <excludedPredefinedLibrary name="dxos/packages/echo/feed-store/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/echo/messenger-model/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/echo/model-factory/node_modules" />
     <excludedPredefinedLibrary name="dxos/packages/echo/object-model/node_modules" />

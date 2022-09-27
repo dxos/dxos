@@ -7,8 +7,8 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -32,8 +32,8 @@ export class Swarm {
    */
   readonly id = PublicKey.random();
 
-  private readonly _connections = new ComplexMap<PublicKey, Connection>(key => key.toHex());
-  private readonly _discoveredPeers = new ComplexSet<PublicKey>(key => key.toHex());
+  private readonly _connections = new ComplexMap<PublicKey, Connection>(x => x.toHex());
+  private readonly _discoveredPeers = new ComplexSet<PublicKey>(x => x.toHex());
 
   get connections () {
     return Array.from(this._connections.values());

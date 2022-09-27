@@ -1,0 +1,33 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "jest",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/protocols"
+    },
+    {
+      "path": "../../common/random-access-storage"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

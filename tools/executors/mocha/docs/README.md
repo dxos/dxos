@@ -9,20 +9,25 @@
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph executors
+  style executors fill:#edabb0,stroke:#fff;
 
-subgraph executors [executors]
-  style executors fill:#edabb0,stroke:#fff
-  dxos/mocha("@dxos/mocha"):::root
-  click dxos/mocha "dxos/dxos/tree/main/tools/executors/mocha/docs"
+  dxos/mocha("@dxos/mocha")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/mocha:::rootNode
+
 ```
 
 ## Dependencies

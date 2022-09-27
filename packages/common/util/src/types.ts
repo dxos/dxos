@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export type AsyncCallback<T> = (param: T) => Promise<void>;
-
 export type Provider<T> = () => T
 
 export type MaybePromise<T> = T | Promise<T>

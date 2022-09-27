@@ -70,16 +70,15 @@ export class Protocol {
   readonly extensionsHandshake = new Event();
   readonly handshake = new Event<this>();
 
-  private readonly _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
-  private readonly _streamOptions: ProtocolStreamCtorOpts | undefined;
-  private readonly _initTimeout: number;
-  private readonly _initiator!: boolean;
-  private readonly _discoveryKey?: Buffer;
-
+  private _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
+  private _streamOptions: ProtocolStreamCtorOpts | undefined;
+  private _initTimeout: number;
   private _extensionInit: ExtensionInit;
   private _init = false;
   private _connected = false;
   private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
+  private _initiator!: boolean;
+  private _discoveryKey?: Buffer;
 
   /**
    * Protocol extensions.
@@ -89,10 +88,11 @@ export class Protocol {
   /**
    * https://github.com/mafintosh/hypercore-protocol
    */
-  private readonly _stream: ProtocolStream;
+  private _stream: ProtocolStream;
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
+   * @type {Feed}
    */
   private _channel?: any = undefined;
 

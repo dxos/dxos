@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Validate string keys from url params as space keys.

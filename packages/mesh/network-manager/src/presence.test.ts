@@ -5,9 +5,9 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
 import { NetworkManager } from './network-manager';

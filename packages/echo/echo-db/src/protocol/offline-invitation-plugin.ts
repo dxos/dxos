@@ -3,7 +3,7 @@
 //
 
 import { GreetingCommandPlugin } from '@dxos/credentials';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 import { InvitationFactory, OfflineInvitationClaimer } from '../invitations';
 

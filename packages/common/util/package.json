@@ -19,12 +19,13 @@
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "@dxos/keys": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "assert": "^2.0.0",
     "util": "^0.12.4"
   },
   "devDependencies": {
-    "@dxos/crypto": "workspace:*"
+    "@dxos/crypto": "workspace:*",
+    "@dxos/protocols": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

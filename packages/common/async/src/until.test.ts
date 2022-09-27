@@ -7,7 +7,7 @@ import { until } from './until';
 
 describe('until', () => {
   test('success', async () => {
-    const value = await until<number>(async (resolve) => {
+    const value = await until(async (resolve) => {
       await sleep(100);
       resolve(100);
     });

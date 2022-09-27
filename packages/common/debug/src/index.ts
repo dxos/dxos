@@ -16,4 +16,3 @@ export * from './strings';
 export * from './throw';
 export * from './throw-unhandled-rejection';
 export * from './timeout-warning';
-export * from './todo';

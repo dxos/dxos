@@ -7,9 +7,7 @@ import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { IdentityRecord } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/keys';
-import { schema, Timeframe } from '@dxos/protocols';
+import { schema, PublicKey, Timeframe } from '@dxos/protocols';
 import { EchoMetadata, PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Directory } from '@dxos/random-access-storage';
 
@@ -118,17 +116,6 @@ export class MetadataStore {
     await this._directory.delete();
   }
 
-  getIdentityRecord (): IdentityRecord | undefined {
-    return this._metadata.identity;
-  }
-
-  async setIdentityRecord (record: IdentityRecord) {
-    assert(!this._metadata.identity, 'Cannot overwrite existing identity in metadata');
-
-    this._metadata.identity = record;
-    await this._save();
-  }
-
   /**
    * Adds new party to store and saves it in persistent storage.
    */
@@ -136,26 +123,40 @@ export class MetadataStore {
     if (this.getParty(partyKey)) {
       return;
     }
-    const party: PartyMetadata = {
-      record: {
-        spaceKey: partyKey,
-        // TODO(dmaretskyi): Refactor it so that genesis feed key is generated in advance.
-        genesisFeedKey: PublicKey.from('')
-      }
-    };
-
     if (!this._metadata.parties) {
-      this._metadata.parties = [party];
+      this._metadata.parties = [{ key: partyKey }];
     } else {
-      this._metadata.parties.push(party);
+      this._metadata.parties.push({ key: partyKey });
+    }
+    await this._save();
+  }
+
+  /**
+   * Adds feed key to the party specified by public key and saves updated data in persistent storage.
+   * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
+   */
+  async addPartyFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
+    if (this.hasFeed(partyKey, feedKey)) {
+      return;
+    }
+    if (!this.getParty(partyKey)) {
+      await this.addParty(partyKey);
+    }
+    const party = this.getParty(partyKey);
+    assert(party);
+    if (party.feedKeys) {
+      party.feedKeys.push(feedKey);
+    } else {
+      party.feedKeys = [feedKey];
     }
     await this._save();
   }
 
   async setGenesisFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
     assert(PublicKey.isPublicKey(feedKey));
+    await this.addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
-    party.record.genesisFeedKey = feedKey;
+    party.genesisFeedKey = feedKey;
     await this._save();
   }
 
@@ -165,10 +166,7 @@ export class MetadataStore {
    * Creates party if it doesn't exist. Does nothing if party already has feed with given key.
    */
   async setDataFeed (partyKey: PublicKey, feedKey: PublicKey): Promise<void> {
-    // TODO(dmaretskyi): Don't create party automatically.
-    if (!this.getParty(partyKey)) {
-      await this.addParty(partyKey);
-    }
+    await this.addPartyFeed(partyKey, feedKey);
     const party = this.getParty(partyKey) ?? failUndefined();
     party.dataFeedKey = feedKey;
     await this._save();
@@ -178,7 +176,18 @@ export class MetadataStore {
    * Returns party with given public key.
    */
   getParty (partyKey: PublicKey): PartyMetadata | undefined {
-    return this._metadata.parties?.find(party => party.record.spaceKey.equals(partyKey));
+    return this._metadata.parties?.find(party => party.key && partyKey.equals(party.key));
+  }
+
+  /**
+   * Checks if a party with given key has a feed with given key.
+   */
+  hasFeed (partyKey: PublicKey, feedKey: PublicKey): boolean {
+    const party = this.getParty(partyKey);
+    if (!party) {
+      return false;
+    }
+    return !!party.feedKeys?.find(fk => feedKey.equals(fk));
   }
 
   async setTimeframe (partyKey: PublicKey, timeframe: Timeframe) {

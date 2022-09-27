@@ -5,8 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { ModelFactory } from '@dxos/model-factory';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -27,11 +26,10 @@ const log = debug('dxos:echo-db:database-backend');
  * Creates data snapshots.
  */
 export interface DatabaseBackend {
-  isReadOnly: boolean
-
   open(itemManager: ItemManager, modelFactory: ModelFactory): Promise<void>
   close(): Promise<void>
 
+  isReadOnly: boolean
   getWriteStream(): FeedWriter<EchoEnvelope> | undefined
   createSnapshot(): DatabaseSnapshot
   createDataServiceHost(): DataServiceHost
@@ -51,16 +49,8 @@ export class FeedDatabaseBackend implements DatabaseBackend {
   constructor (
     private readonly _outboundStream: FeedWriter<EchoEnvelope> | undefined,
     private readonly _snapshot?: DatabaseSnapshot,
-    private readonly _options: ItemDemuxerOptions = {} // TODO(burdon): Pass in factory instead?
+    private readonly _options: ItemDemuxerOptions = {}
   ) {}
-
-  get isReadOnly (): boolean {
-    return !!this._outboundStream;
-  }
-
-  get echoProcessor () {
-    return this._echoProcessor;
-  }
 
   async open (itemManager: ItemManager, modelFactory: ModelFactory) {
     this._itemManager = itemManager;
@@ -72,7 +62,15 @@ export class FeedDatabaseBackend implements DatabaseBackend {
     }
   }
 
+  get echoProcessor () {
+    return this._echoProcessor;
+  }
+
   async close () {
+  }
+
+  get isReadOnly (): boolean {
+    return !!this._outboundStream;
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
@@ -102,12 +100,8 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
   constructor (
     private readonly _service: DataService,
-    private readonly _partyKey: PublicKey
+    private readonly _partyKey: PartyKey
   ) {}
-
-  get isReadOnly (): boolean {
-    return false;
-  }
 
   async open (itemManager: ItemManager, modelFactory: ModelFactory): Promise<void> {
     this._itemManager = itemManager;
@@ -119,6 +113,10 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
   async close (): Promise<void> {
     // Do nothing for now.
+  }
+
+  get isReadOnly (): boolean {
+    return false;
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {

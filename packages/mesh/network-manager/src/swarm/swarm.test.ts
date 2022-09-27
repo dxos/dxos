@@ -7,9 +7,9 @@ import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { afterTest } from '@dxos/testutils';
 
 import { OfferMessage, SignalMessage, SignalMessaging } from '../signal';

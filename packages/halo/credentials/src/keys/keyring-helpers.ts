@@ -9,8 +9,8 @@
 import stableStringify from 'json-stable-stringify';
 import assert from 'node:assert';
 
-import { createKeyPair } from '@dxos/crypto';
-import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
+import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
 import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { createDateTimeString } from '../proto';

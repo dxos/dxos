@@ -17,7 +17,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "source-map-support": "^0.5.12"

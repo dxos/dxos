@@ -7,8 +7,8 @@ import { Transform } from 'stream';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 

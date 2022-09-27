@@ -4,7 +4,7 @@
 
 import React, { FC, ReactNode, createContext, useContext, useMemo, useReducer } from 'react';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 export type AppState = {
   debug?: boolean

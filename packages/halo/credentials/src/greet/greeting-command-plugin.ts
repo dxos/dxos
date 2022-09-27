@@ -12,8 +12,8 @@ import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 
 import { wrapMessage } from '../party';

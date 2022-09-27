@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 import { humanize } from './human-hash';
 

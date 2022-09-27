@@ -9,11 +9,10 @@ import { it as test } from 'mocha';
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { checkType } from '@dxos/debug';
-import { MockFeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { MockFeedWriter } from '@dxos/echo-protocol';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { Item } from './item';

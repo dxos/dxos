@@ -4,11 +4,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/packlets",
-    "src/api",
-    "src/index.ts"
-  ],
-  "exclude": [
+    "src"
   ],
   "references": [
     {
@@ -39,9 +35,6 @@
       "path": "../../halo/credentials"
     },
     {
-      "path": "../../halo/halo-protocol"
-    },
-    {
       "path": "../../mesh/network-manager"
     },
     {
@@ -54,7 +47,10 @@
       "path": "../../mesh/protocol-plugin-replicator"
     },
     {
-      "path": "../../common/feed-store"
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed-store"
     },
     {
       "path": "../model-factory"

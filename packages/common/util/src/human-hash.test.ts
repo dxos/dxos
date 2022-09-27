@@ -5,7 +5,7 @@
 // DXOS testing browser.
 
 import { createKeyPair, createId } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 import { humanize } from './human-hash';
 

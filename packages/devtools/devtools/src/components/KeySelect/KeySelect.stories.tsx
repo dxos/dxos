@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 import { KeySelect } from './KeySelect';
 

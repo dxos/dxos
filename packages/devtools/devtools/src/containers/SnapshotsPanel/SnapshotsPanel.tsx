@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@mui/material';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { useDevtools, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';

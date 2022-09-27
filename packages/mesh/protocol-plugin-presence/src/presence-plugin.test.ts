@@ -8,9 +8,9 @@ import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
 import waitForExpect from 'wait-for-expect';
 
-import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
+import { PublicKey } from '@dxos/protocols';
 
 import { PresencePlugin } from './presence-plugin';
 

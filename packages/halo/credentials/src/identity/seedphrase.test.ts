@@ -5,8 +5,8 @@
 import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
 import expect from 'expect';
 
-import { createKeyPair } from '@dxos/crypto';
-import { KeyPair, PublicKey } from '@dxos/keys';
+import { createKeyPair, KeyPair } from '@dxos/crypto';
+import { PublicKey } from '@dxos/protocols';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Keyring } from '../keys';

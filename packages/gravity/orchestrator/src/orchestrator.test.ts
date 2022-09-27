@@ -21,7 +21,7 @@ class TestBot extends Bot {
   }
 }
 
-describe.skip('Orchestrator', () => {
+describe('Orchestrator', () => {
   let counter = 0;
 
   const orchestrator = new Orchestrator(new InProcessBotContainer(() => new TestBot(() => counter++)));

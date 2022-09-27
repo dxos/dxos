@@ -9,10 +9,9 @@ import { synchronized } from '@dxos/async';
 import { Keyring, SecretProvider } from '@dxos/credentials';
 import { createKeyPair, KeyPair } from '@dxos/crypto';
 import { raise } from '@dxos/debug';
-import { IdentityRecord } from '@dxos/halo-protocol';
-import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { humanize } from '@dxos/util';
 
@@ -211,16 +210,6 @@ export class HALO {
     assert(!this.identity?.identityKey, 'Identity key already exists.');
 
     return this._identityManager.recoverHalo(seedPhrase);
-  }
-
-  /**
-   * Initializes the current agent as a new device with the provided identity.
-   *
-   * Expects the device key to exist in the keyring.
-   * Expects the new device to be admitted to the HALO.
-   */
-  async manuallyJoin (identity: IdentityRecord) {
-    await this._identityManager.manuallyJoin(identity);
   }
 
   /**

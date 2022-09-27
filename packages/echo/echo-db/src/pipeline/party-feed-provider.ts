@@ -7,9 +7,9 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { Keyring } from '@dxos/credentials';
-import { FeedSelector, FeedStoreIterator, MessageSelector, FeedDescriptor, FeedStore } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { FeedSelector, FeedStoreIterator, MessageSelector } from '@dxos/echo-protocol';
+import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { ComplexMap } from '@dxos/util';
 
@@ -61,6 +61,7 @@ export class PartyFeedProvider {
       return this._feeds.get(feedKey)!;
     }
 
+    await this._metadataStore.addPartyFeed(this._partyKey, feedKey);
     if (!this._keyring.hasKey(feedKey)) {
       await this._keyring.addPublicKey({ type: KeyType.FEED, publicKey: feedKey });
     }
@@ -97,7 +98,9 @@ export class PartyFeedProvider {
     }
 
     this.feedOpened.on((descriptor) => {
-      iterator.addFeedDescriptor(descriptor);
+      if (this._metadataStore.getParty(this._partyKey)?.feedKeys?.find(feedKey => feedKey.equals(descriptor.key))) {
+        iterator.addFeedDescriptor(descriptor);
+      }
     });
 
     iterator.stalled.on(candidates => {

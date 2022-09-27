@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 
 // From https://github.com/SEBv15/humanhash/blob/166c1a6f70d854fe6767cdd76be1237112d4eaf1/index.js
 

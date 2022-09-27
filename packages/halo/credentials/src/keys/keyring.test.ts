@@ -8,8 +8,7 @@ import expect from 'expect';
 import assert from 'node:assert';
 
 import { createKeyPair, randomBytes, verify } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols';
+import { PublicKey, schema } from '@dxos/protocols';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Filter } from './filter';

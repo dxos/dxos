@@ -5,8 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { PublicKey, Timeframe } from '@dxos/protocols';
 
 import { getInsertionIndex } from './ordering';
 import { ModelMessage } from './types';

@@ -8,8 +8,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
-import { TYPES } from '@dxos/protocols';
+import { PublicKey, TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 

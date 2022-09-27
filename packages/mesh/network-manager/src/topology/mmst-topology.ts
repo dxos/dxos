@@ -5,8 +5,8 @@
 import assert from 'node:assert';
 import distance from 'xor-distance';
 
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
 

@@ -9,43 +9,53 @@ Abstract module to send broadcast messages.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
+dxos/broadcast --> dxos/crypto;
+dxos/crypto --> dxos/protocols;
+dxos/protocols --> dxos/codec-protobuf;
 
-%% Nodes
+%% Sections
+subgraph mesh
+  style mesh fill:#b3e6c0,stroke:#fff;
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/broadcast("@dxos/broadcast"):::root
-  click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs"
+  dxos/broadcast("@dxos/broadcast")
 end
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
-  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
-  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/crypto("@dxos/crypto"):::def
-  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+subgraph common
+  style common fill:#debac2,stroke:#fff;
 
-  subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
-    dxos/async("@dxos/async"):::def
-    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
-    dxos/debug("@dxos/debug"):::def
-    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
-    dxos/keys("@dxos/keys"):::def
-    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/crypto("@dxos/crypto")
+  dxos/protocols("@dxos/protocols")
+
+  subgraph common-excluded [ ]
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
+
+    dxos/async("@dxos/async")
+    dxos/debug("@dxos/debug")
   end
 end
 
-%% Links
+
+%% Hyperlinks
+click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
+click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-dxos/broadcast --> dxos/crypto
-dxos/broadcast --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
+
+dxos/broadcast:::rootNode
+
+dxos/async:::defaultNode
+dxos/codec-protobuf:::defaultNode
+dxos/crypto:::defaultNode
+dxos/debug:::defaultNode
+dxos/protocols:::defaultNode
 ```
 
 ## Dependencies
@@ -56,5 +66,4 @@ dxos/protocols --> dxos/codec-protobuf
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/crypto`](../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
-| [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../common/protocols/docs/README.md) | &check; |

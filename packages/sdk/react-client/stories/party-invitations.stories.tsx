@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 
 import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 
 import {

@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { ItemID } from '@dxos/protocols';
+import { ItemID } from '@dxos/echo-protocol';
 
 import { ObjectModel } from './object-model';
 

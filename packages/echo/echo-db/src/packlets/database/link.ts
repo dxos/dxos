@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
+import { ItemID, ItemType } from '@dxos/echo-protocol';
 import { Model, StateManager } from '@dxos/model-factory';
-import { ItemID, ItemType } from '@dxos/protocols';
 
 import { Entity } from './entity';
 import { Item } from './item';

@@ -9,20 +9,25 @@
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph e2e
+  style e2e fill:#abcced,stroke:#fff;
 
-subgraph e2e [e2e]
-  style e2e fill:#abcced,stroke:#fff
-  dxos/protobuf-compiler-e2e("@dxos/protobuf-compiler-e2e"):::root
-  click dxos/protobuf-compiler-e2e "dxos/dxos/tree/main/e2e/protobuf-compiler/docs"
+  dxos/protobuf-compiler-e2e("@dxos/protobuf-compiler-e2e")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/protobuf-compiler-e2e:::rootNode
+
 ```
 
 ## Dependencies

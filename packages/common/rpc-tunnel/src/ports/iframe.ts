@@ -16,8 +16,7 @@ const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: Messag
     return;
   }
 
-  // TODO(dmaretskyi): Determine if we need to strictly specify the target origin here.
-  iframe.contentWindow.postMessage(message, '*', [message.payload]);
+  iframe.contentWindow.postMessage(message, origin, [message.payload]);
 };
 
 const sendToParentWindow = (origin: string, message: MessageData) => {

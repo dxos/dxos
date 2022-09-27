@@ -1,11 +1,9 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "composite": true,
-    "module": "ESNext",
+    "module": "ES2020",
     "moduleResolution": "node",
     "outDir": "dist",
-    "target": "ESNext",
     "types": [
       "mocha"
     ]

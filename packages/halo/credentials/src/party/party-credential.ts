@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
 import { randomBytes } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
 import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';

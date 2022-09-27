@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 
 import { Party } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { HashIcon } from '@dxos/react-components';
 import { humanize } from '@dxos/util';
 

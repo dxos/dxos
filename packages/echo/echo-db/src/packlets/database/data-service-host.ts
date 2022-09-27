@@ -7,9 +7,8 @@ import assert from 'node:assert';
 
 import { Stream } from '@dxos/codec-protobuf';
 import { failUndefined, raise } from '@dxos/debug';
-import { FeedWriter } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import { ItemID } from '@dxos/protocols';
+import { FeedWriter, ItemID } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   MutationReceipt,
@@ -31,7 +30,6 @@ const log = debug('dxos:echo-db:data-service-host');
  *
  * A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
  */
-// TODO(burdon): Move to client-services.
 export class DataServiceHost {
   constructor (
     private readonly _itemManager: ItemManager,

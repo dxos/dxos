@@ -12,9 +12,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-components": "workspace:*",
@@ -34,7 +32,7 @@
     "@dxos/react-client-testing": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.58",
+    "@types/node": "^16.11.27",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "@vitejs/plugin-react": "^2.0.1",

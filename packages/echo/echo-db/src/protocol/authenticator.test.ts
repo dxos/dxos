@@ -5,14 +5,16 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import {
+  Keyring, createAuthMessage, createEnvelopeMessage, createFeedAdmitMessage, createKeyAdmitMessage, createPartyGenesisMessage, wrapMessage
+} from '@dxos/credentials';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-import { createAuthMessage, Keyring } from '@dxos/credentials';
 
 import { PartyProcessor } from '../pipeline';
 import { createAuthenticator } from './authenticator';
 import { createTestIdentityCredentials } from './identity-credentials';
 
-describe.skip('authenticator', () => {
+describe('authenticator', () => {
   test('authenticates party creator', async () => {
     const keyring = new Keyring();
     const identity = await createTestIdentityCredentials(keyring);
@@ -20,33 +22,33 @@ describe.skip('authenticator', () => {
     const feedKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
-    // await partyProcessor.processMessage({
-    //   data: createPartyGenesisMessage(
-    //     keyring,
-    //     partyKey,
-    //     feedKey.publicKey,
-    //     partyKey
-    //   ),
-    //   meta: {} as any
-    // });
-    // await partyProcessor.processMessage({
-    //   data: createEnvelopeMessage(
-    //     identity.keyring,
-    //     partyKey.publicKey,
-    //     wrapMessage(identity.identityGenesis),
-    //     [partyKey]
-    //   ),
-    //   meta: {} as any
-    // });
-    // await partyProcessor.processMessage({
-    //   data: createFeedAdmitMessage(
-    //     keyring,
-    //     partyKey.publicKey,
-    //     feedKey.publicKey,
-    //     [identity.deviceKeyChain]
-    //   ),
-    //   meta: {} as any
-    // });
+    await partyProcessor.processMessage({
+      data: createPartyGenesisMessage(
+        keyring,
+        partyKey,
+        feedKey.publicKey,
+        partyKey
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createEnvelopeMessage(
+        identity.keyring,
+        partyKey.publicKey,
+        wrapMessage(identity.identityGenesis),
+        [partyKey]
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createFeedAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        feedKey.publicKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    });
 
     const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
 
@@ -87,63 +89,63 @@ describe.skip('authenticator', () => {
     const feedKey = await keyring.createKeyRecord({ type: KeyType.PARTY });
 
     const partyProcessor = new PartyProcessor(partyKey.publicKey);
-    // await partyProcessor.processMessage({
-    //   data: createPartyGenesisMessage(
-    //     keyring,
-    //     partyKey,
-    //     feedKey.publicKey,
-    //     partyKey
-    //   ),
-    //   meta: {} as any
-    // });
-    // await partyProcessor.processMessage({
-    //   data: createEnvelopeMessage(
-    //     identity.keyring,
-    //     partyKey.publicKey,
-    //     wrapMessage(identity.identityGenesis),
-    //     [partyKey]
-    //   ),
-    //   meta: {} as any
-    // });
-    // await partyProcessor.processMessage({
-    //   data: createFeedAdmitMessage(
-    //     keyring,
-    //     partyKey.publicKey,
-    //     feedKey.publicKey,
-    //     [identity.deviceKeyChain]
-    //   ),
-    //   meta: {} as any
-    // });
+    await partyProcessor.processMessage({
+      data: createPartyGenesisMessage(
+        keyring,
+        partyKey,
+        feedKey.publicKey,
+        partyKey
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createEnvelopeMessage(
+        identity.keyring,
+        partyKey.publicKey,
+        wrapMessage(identity.identityGenesis),
+        [partyKey]
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createFeedAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        feedKey.publicKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    });
 
-    // const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
+    const authenticator = createAuthenticator(partyProcessor, identity.createCredentialsSigner(), null as any);
 
-    // const identity2 = await createTestIdentityCredentials(keyring);
+    const identity2 = await createTestIdentityCredentials(keyring);
 
-    // await partyProcessor.processMessage({
-    //   data: createKeyAdmitMessage(
-    //     keyring,
-    //     partyKey.publicKey,
-    //     identity2.identityKey,
-    //     [identity.deviceKeyChain]
-    //   ),
-    //   meta: {} as any
-    // });
-    // await partyProcessor.processMessage({
-    //   data: createKeyAdmitMessage(
-    //     keyring,
-    //     partyKey.publicKey,
-    //     identity2.deviceKey,
-    //     [identity.deviceKeyChain]
-    //   ),
-    //   meta: {} as any
-    // });
+    await partyProcessor.processMessage({
+      data: createKeyAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        identity2.identityKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    });
+    await partyProcessor.processMessage({
+      data: createKeyAdmitMessage(
+        keyring,
+        partyKey.publicKey,
+        identity2.deviceKey,
+        [identity.deviceKeyChain]
+      ),
+      meta: {} as any
+    });
 
-    // const credential = createAuthMessage(
-    //   keyring,
-    //   partyKey.publicKey,
-    //   identity2.identityKey,
-    //   identity2.deviceKey
-    // );
-    // expect(await authenticator.authenticate(credential.payload)).toEqual(true);
+    const credential = createAuthMessage(
+      keyring,
+      partyKey.publicKey,
+      identity2.identityKey,
+      identity2.deviceKey
+    );
+    expect(await authenticator.authenticate(credential.payload)).toEqual(true);
   });
 });

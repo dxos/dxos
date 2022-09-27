@@ -4,7 +4,7 @@
 
 import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 
-import { publicKeySubstitutions } from '../keys';
+import { publicKeySubstitutions } from '../public-key';
 import { timeframeSubstitutions } from '../timeframe';
 
 export default {

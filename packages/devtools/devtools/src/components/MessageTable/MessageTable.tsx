@@ -16,7 +16,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { IFeedGenericBlock } from '@dxos/protocols';
+import { IFeedGenericBlock } from '@dxos/echo-protocol';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { Table, TableCell } from '../Table';

@@ -4,8 +4,7 @@
 
 import debug from 'debug';
 
-import { PublicKey } from '@dxos/keys';
-
+import { PublicKey } from './public-key';
 import { Timeframe } from './timeframe';
 
 const log = debug('dxos:protocols:timeframe:test');

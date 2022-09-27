@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { verifySignature } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { Keyring } from '@dxos/credentials';
+import { PublicKey } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { isValidAuthorizedDeviceCredential } from './assertions';
@@ -27,9 +27,11 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
     }
   }
 
-  const result = await verifyCredentialSignature(credential);
-  if (result.kind === 'fail') {
-    return result;
+  {
+    const result = await verifySignature(credential);
+    if (result.kind === 'fail') {
+      return result;
+    }
   }
 
   return { kind: 'pass' };
@@ -39,13 +41,13 @@ export const verifyCredential = async (credential: Credential): Promise<Verifica
  * Verifies that the signature is valid and was made by the signer.
  * Does not validate other semantics (e.g. chains).
  */
-export const verifyCredentialSignature = async (credential: Credential): Promise<VerificationResult> => {
+const verifySignature = async (credential: Credential): Promise<VerificationResult> => {
   if (credential.proof.type !== SIGNATURE_TYPE_ED25519) {
     return { kind: 'fail', errors: [`Invalid signature type: ${credential.proof.type}`] };
   }
 
   const signData = getSignaturePayload(credential);
-  if (!await verifySignature(credential.proof.signer, signData, credential.proof.value)) {
+  if (!Keyring.cryptoVerify(Buffer.from(signData), Buffer.from(credential.proof.value), credential.proof.signer.asBuffer())) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 
@@ -55,7 +57,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
 /**
  * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
  */
-export const verifyChain = async (chain: Chain, authority: PublicKey, subject: PublicKey): Promise<VerificationResult> => {
+const verifyChain = async (chain: Chain, authority: PublicKey, subject: PublicKey): Promise<VerificationResult> => {
   const result = await verifyCredential(chain.credential);
   if (result.kind === 'fail') {
     return result;

@@ -9,23 +9,29 @@
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
+dxos/eslint-plugin --> dxos/eslint-plugin-rules;
 
-%% Nodes
+%% Sections
+subgraph tools
+  style tools fill:#bbabed,stroke:#fff;
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
-  dxos/eslint-plugin("@dxos/eslint-plugin"):::root
-  click dxos/eslint-plugin "dxos/dxos/tree/main/tools/eslint-plugin/docs"
-  dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules"):::def
-  click dxos/eslint-plugin-rules "dxos/dxos/tree/main/tools/eslint-rules/docs"
+  dxos/eslint-plugin("@dxos/eslint-plugin")
+  dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules")
 end
 
-%% Links
+
+%% Hyperlinks
+click dxos/eslint-plugin-rules "dxos/dxos/tree/main/tools/eslint-rules/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-dxos/eslint-plugin --> dxos/eslint-plugin-rules
+
+dxos/eslint-plugin:::rootNode
+
+dxos/eslint-plugin-rules:::defaultNode
 ```
 
 ## Dependencies

@@ -5,17 +5,16 @@
 import crypto from 'hypercore-crypto';
 import assert from 'node:assert';
 
-import { KeyPair, PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/keys';
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const createId = (): string => PublicKey.stringify(randomBytes(32));
+import { PublicKey, PublicKeyLike, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH } from '@dxos/protocols';
 
 export const SIGNATURE_LENGTH = 64;
 
-export const zeroKey = () => new Uint8Array(32); // TOOD(burdon): Remove?
+export const zeroKey = () => new Uint8Array(32);
+
+export interface KeyPair {
+  publicKey: Buffer
+  secretKey: Buffer
+}
 
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {
@@ -28,8 +27,7 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
 
 export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) => crypto.validateKeyPair({ publicKey, secretKey });
 
-// TODO(dmaretskyi): Slicing because webcrypto keys are too long.
-export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));
+export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer());
 
 /**
  * Return random bytes of length.
@@ -37,6 +35,12 @@ export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(
  * @return {Buffer}
  */
 export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
+
+/**
+ * @return {string}
+ */
+// TODO(wittjosiah): This probably shouldn't rely on PublicKey?
+export const createId = (): string => PublicKey.stringify(randomBytes(32));
 
 /**
  * Sign the contents of message with secretKey

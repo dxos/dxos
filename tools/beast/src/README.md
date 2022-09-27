@@ -1,3 +1,11 @@
-## DXOS Beast
+## Mermaid diagrams
 
-Code analysis tools.
+Example:
+
+```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```

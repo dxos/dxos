@@ -7,9 +7,12 @@ import 'source-map-support/register';
 
 import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
+import { MetadataStore } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/protocols';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Client - persistent', () => {
-  it.skip('reset storage', async () => {
+  it('reset storage', async () => {
     const client = new Client();
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
@@ -47,7 +50,6 @@ describe('Client - persistent', () => {
     }
   }).timeout(10_000).retries(10);
 
-  /*
   it('MetadataStore save/load', async () => {
     const storage = createStorage({ type: StorageType.IDB });
     const directory = storage.createDirectory('metadata');
@@ -67,5 +69,4 @@ describe('Client - persistent', () => {
       expect(partyLoaded?.key).toEqual(partyKey);
     }
   }).retries(10);
-  */
 });

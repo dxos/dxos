@@ -26,7 +26,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../common/feed-store"
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed-store"
     }
   ]
 }

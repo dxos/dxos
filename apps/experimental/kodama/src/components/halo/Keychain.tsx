@@ -15,11 +15,6 @@ import { Table } from '../util';
 const formatDate = (date: Date) => format('yyyy-mm-dd hh:mm', new Date(date));
 
 export const Keychain = () => {
-  const skip = true;
-  if (skip) {
-    return null;
-  }
-
   const devtoolsHost = useDevtools();
   const { keys } = useStream(() => devtoolsHost.subscribeToKeyringKeys({}), {});
   if (keys === undefined) {

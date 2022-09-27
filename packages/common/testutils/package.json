@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@types/jest": "^27.4.1",
-    "@types/node": "^16.11.58"
+    "@types/node": "^16.11.27"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",

@@ -5,9 +5,8 @@
 import assert from 'node:assert';
 
 import type { Codec } from '@dxos/codec-protobuf';
-import type { WriteReceipt } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
-import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
+import type { ItemID, MutationMetaWithTimeframe, WriteReceipt } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
 import { Model } from './model';
 

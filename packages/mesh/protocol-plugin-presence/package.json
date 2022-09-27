@@ -22,7 +22,6 @@
   "dependencies": {
     "@dxos/broadcast": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "assert": "^2.0.0",

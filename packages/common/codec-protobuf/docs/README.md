@@ -9,20 +9,25 @@
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph common
+  style common fill:#debac2,stroke:#fff;
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
-  dxos/codec-protobuf("@dxos/codec-protobuf"):::root
-  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/codec-protobuf:::rootNode
+
 ```
 
 ## Dependencies

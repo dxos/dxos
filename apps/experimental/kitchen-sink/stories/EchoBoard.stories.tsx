@@ -5,7 +5,7 @@
 import faker from 'faker';
 import React from 'react';
 
-import { ItemID } from '@dxos/protocols';
+import { ItemID } from '@dxos/echo-protocol';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';

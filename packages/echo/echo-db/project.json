@@ -21,7 +21,7 @@
       "options": {
         "eslintConfig": "packages/echo/echo-db/eslintConfig.json",
         "lintFilePatterns": [
-          "packages/echo/echo-db/src/packlets/**/*.{ts,js}"
+          "packages/echo/echo-db/**/*.{ts,js}"
         ]
       }
     },

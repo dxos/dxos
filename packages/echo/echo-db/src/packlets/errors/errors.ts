@@ -3,32 +3,12 @@
 //
 
 import { DXOSError } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { ItemID } from '@dxos/protocols';
+import { ItemID } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/protocols';
 
-// TODO(burdon): Move to halo.
-export class IdentityNotInitializedError extends DXOSError {
-  constructor () {
-    super('IDENTITY_NOT_INITIALIZED', 'Identity not initialized.');
-  }
-}
-
-// TODO(burdon): Move to halo.
-export class InvalidInvitationError extends DXOSError {
-  constructor () {
-    super('INVALID_INVITATION', 'Invitation is invalid.');
-  }
-}
-
-export class InvalidStorageVersionError extends DXOSError {
-  constructor (expected: number, actual: number) {
-    super('INVALID_STORAGE_VERSION', `Invalid storage version: Expected ${expected}, actual ${actual}.`);
-  }
-}
-
-export class SpaceNotFoundError extends DXOSError {
+export class PartyNotFoundError extends DXOSError {
   constructor (partyKey: PublicKey) {
-    super('PARTY_NOT_FOUND', `Space not found: ${partyKey}`);
+    super('PARTY_NOT_FOUND', `Party with key not found: ${partyKey}`);
   }
 }
 
@@ -41,5 +21,23 @@ export class EntityNotFoundError extends DXOSError {
 export class UnknownModelError extends DXOSError {
   constructor (model: string) {
     super('UNKNOWN_MODEL', `Unknown model ${model}.`);
+  }
+}
+
+export class IdentityNotInitializedError extends DXOSError {
+  constructor () {
+    super('IDENTITY_NOT_INITIALIZED', 'Identity not initialized.');
+  }
+}
+
+export class InvalidInvitationError extends DXOSError {
+  constructor () {
+    super('INVALID_INVITATION', 'Invitation is invalid.');
+  }
+}
+
+export class InvalidStorageVersionError extends DXOSError {
+  constructor (expected: number, actual: number) {
+    super('INVALID_STORAGE_VERSION', `Invalid storage version: Expected ${expected}, actual ${actual}.`);
   }
 }

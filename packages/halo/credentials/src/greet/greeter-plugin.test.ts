@@ -8,8 +8,8 @@ import pump from 'pump';
 
 import { trigger } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { Command } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { Message } from '@dxos/protocols/proto/dxos/halo/signed';

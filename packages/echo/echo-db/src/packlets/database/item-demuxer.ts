@@ -7,8 +7,8 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
+import { IEchoStream, ItemID } from '@dxos/echo-protocol';
 import { Model, ModelFactory, ModelMessage } from '@dxos/model-factory';
-import { IEchoStream, ItemID } from '@dxos/protocols';
 import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity';

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionState, Swarm } from './swarm';

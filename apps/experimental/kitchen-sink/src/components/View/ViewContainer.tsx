@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Item } from '@dxos/echo-db';
+import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components';
 import { EchoGraph, EchoGraphModel } from '@dxos/react-echo-graph';

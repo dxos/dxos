@@ -4,11 +4,6 @@
 
 import React from 'react';
 import { render } from 'react-dom';
-// import debug from 'debug'
-// import { log } from '@dxos/log'
-
-// debug.enable('dxos:*')
-// log.config.filter='debug'
 
 import { App } from './App';
 

@@ -13,7 +13,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-presence": "workspace:*",
     "@dxos/react-components": "workspace:*",

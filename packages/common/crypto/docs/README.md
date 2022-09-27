@@ -9,30 +9,38 @@ Basic crypto key utils
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
+dxos/crypto --> dxos/protocols;
+dxos/protocols --> dxos/codec-protobuf;
 
-%% Nodes
+%% Sections
+subgraph common
+  style common fill:#debac2,stroke:#fff;
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
-  dxos/crypto("@dxos/crypto"):::root
-  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
-
-  subgraph common-excluded [common-excluded]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
-    dxos/keys("@dxos/keys"):::def
-    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
-  end
+  dxos/codec-protobuf("@dxos/codec-protobuf")
+  dxos/crypto("@dxos/crypto")
+  dxos/protocols("@dxos/protocols")
 end
 
-%% Links
+
+%% Hyperlinks
+click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
+click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/crypto:::rootNode
+
+dxos/codec-protobuf:::defaultNode
+dxos/protocols:::defaultNode
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/keys`](../../keys/docs/README.md) | &check; |
+| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
+| [`@dxos/protocols`](../../protocols/docs/README.md) | &check; |

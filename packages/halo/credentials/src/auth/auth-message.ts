@@ -5,7 +5,7 @@
 import assert from 'node:assert';
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { Auth } from '@dxos/protocols/proto/dxos/halo/credentials/auth';
 import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { Message } from '@dxos/protocols/proto/dxos/halo/signed';

@@ -38,6 +38,14 @@
           "packages/bot/bot-factory-client/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/bot/bot-factory-client/src/**/*.test.{ts,js}"
+        ]
+      }
     }
   },
   "implicitDependencies": [

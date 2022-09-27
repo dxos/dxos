@@ -51,7 +51,6 @@ export const run = async (options: BrowserExecutorOptions) => {
 
   if (options.stayOpen) {
     console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
-    await new Promise(() => {}); // Sleep forever.
   }
 
   return !shouldFail;

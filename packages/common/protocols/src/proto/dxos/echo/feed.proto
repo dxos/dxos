@@ -4,14 +4,10 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
-import "dxos/halo/credentials.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/halo/signed.proto";
 
-// TODO(burdon): Standardize position of "package" (i.e., before/after imports).
-// TODO(burdon): Move Item specific to echo.item?
 package dxos.echo.feed;
 
 /**
@@ -19,16 +15,12 @@ package dxos.echo.feed;
  * This is what is written to the feeds.
  */
 message FeedMessage {
-  dxos.echo.timeframe.TimeframeVector timeframe = 1;
+  timeframe.TimeframeVector timeframe = 1;
 
-  google.protobuf.Any payload = 2;
-}
-
-/**
- * A container for dxos.credentials.Message
- */
-message CredentialsMessage {
-  dxos.halo.credentials.Credential credential = 1;
+  oneof payload {
+    dxos.halo.signed.Message halo = 10;
+    EchoEnvelope echo = 11;
+  }
 }
 
 /**

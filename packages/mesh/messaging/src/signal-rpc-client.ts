@@ -6,9 +6,8 @@ import WebSocket from 'isomorphic-ws';
 
 import { Trigger, Event } from '@dxos/async';
 import { Any, Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, PublicKey } from '@dxos/protocols';
 import { Message as SignalMessage, Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 

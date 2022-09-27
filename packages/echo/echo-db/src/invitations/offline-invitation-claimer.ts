@@ -19,9 +19,8 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
-import { todo } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { ClaimResponse } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
@@ -185,7 +184,7 @@ export class OfflineInvitationClaimer {
         credentials.signer,
           info!.id.value,
           credentials.getIdentityKey(),
-          todo(), // credentials.getDeviceSigningKeys(),
+          credentials.getDeviceSigningKeys(),
           undefined,
           info!.authNonce.value)
     ));

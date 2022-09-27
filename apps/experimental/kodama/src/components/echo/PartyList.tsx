@@ -4,15 +4,16 @@
 
 import React, { FC } from 'react';
 
+import { PartyKey } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { useParties } from '@dxos/react-client';
 
 import { List } from '../util';
 
 export const PartyList: FC<{
-  partyKey?: PublicKey
-  onSelect: (partyKey: PublicKey) => void
+  partyKey?: PartyKey
+  onSelect: (partyKey: PartyKey) => void
 }> = ({
   partyKey, // TODO(burdon): Selection not set.
   onSelect

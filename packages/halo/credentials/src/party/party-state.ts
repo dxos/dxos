@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
-import { PublicKey, PublicKeyLike } from '@dxos/keys';
+import { PublicKey, PublicKeyLike } from '@dxos/protocols';
 import { KeyHint } from '@dxos/protocols/proto/dxos/halo/credentials/greet';
 import { PartyCredential } from '@dxos/protocols/proto/dxos/halo/credentials/party';
 import { KeyChain, KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';

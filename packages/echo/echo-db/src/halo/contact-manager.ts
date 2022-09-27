@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
+import { PublicKey } from '@dxos/protocols';
 
 import { ResultSet } from '../api';
 import { Database, Item } from '../packlets/database';

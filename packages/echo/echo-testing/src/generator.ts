@@ -6,8 +6,8 @@ import faker from 'faker';
 import times from 'lodash.times';
 
 import { Database, Item } from '@dxos/echo-db';
+import { ItemID } from '@dxos/echo-protocol';
 import { ObjectModel } from '@dxos/object-model';
-import { ItemID } from '@dxos/protocols';
 
 export const OBJECT_ORG = 'example:object/org';
 export const OBJECT_PERSON = 'example:object/person';

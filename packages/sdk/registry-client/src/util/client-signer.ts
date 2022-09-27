@@ -8,9 +8,8 @@ import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { cryptoWaitReady, decodeAddress } from '@polkadot/util-crypto';
 import assert from 'node:assert';
 
-import { Client, KeyRecord, KeyType, SignRequest, SignResponse } from '@dxos/client';
-import { HaloSigner } from '@dxos/client-services';
-import { PublicKey } from '@dxos/keys';
+import { Client, KeyRecord, KeyType, HaloSigner, SignRequest, SignResponse } from '@dxos/client';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Plugin to sign HALO messages.

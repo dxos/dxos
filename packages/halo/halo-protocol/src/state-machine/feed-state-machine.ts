@@ -4,9 +4,10 @@
 
 import assert from 'assert';
 
-import { PublicKey } from '@dxos/keys';
+import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/protocols';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback, ComplexMap } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials';
 
@@ -30,7 +31,7 @@ export interface FeedInfo {
 export class FeedStateMachine {
   private _feeds = new ComplexMap<PublicKey, FeedInfo>(key => key.toHex());
 
-  readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
+  readonly feedAdmitted = new Event<FeedInfo>();
 
   constructor (
     private readonly _partyKey: PublicKey
@@ -46,7 +47,7 @@ export class FeedStateMachine {
    * and the issuer has been authorized to issue credentials of this type.
    * @param fromFeed Key of the feed where this credential is recorded.
    */
-  async process (credential: Credential, fromFeed: PublicKey) {
+  process (credential: Credential, fromFeed: PublicKey) {
     const assertion = getCredentialAssertion(credential);
     assert(assertion['@type'] === 'dxos.halo.credentials.AdmittedFeed');
     assert(assertion.partyKey.equals(this._partyKey));
@@ -59,6 +60,6 @@ export class FeedStateMachine {
       parent: fromFeed
     };
     this._feeds.set(credential.subject.id, info);
-    await this.onFeedAdmitted.callIfSet(info);
+    this.feedAdmitted.emit(info);
   }
 }

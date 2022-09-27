@@ -5,9 +5,8 @@
 import assert from 'assert';
 
 import { Any } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
+import { schema, PublicKey } from '@dxos/protocols';
 import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import {
   ComplexMap,

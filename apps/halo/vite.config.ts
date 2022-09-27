@@ -18,8 +18,6 @@ export default defineConfig({
     force: true,
     include: [
       '@dxos/client',
-      '@dxos/keys',
-      '@dxos/log',
       '@dxos/config',
       '@dxos/protocols',
       '@dxos/react-async',

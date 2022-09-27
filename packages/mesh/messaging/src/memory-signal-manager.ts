@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -112,7 +112,6 @@ export class MemorySignalManager implements SignalManager {
       .onMessage.emit({ author, recipient, payload });
   }
 
-  // TODO(mykola): Delete this.
   async subscribeMessages (peerId: PublicKey): Promise<void> {}
 
   async destroy () {}

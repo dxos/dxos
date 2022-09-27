@@ -20,7 +20,9 @@ test('split namespaces', async () => {
   const namespaces = splitSchemaIntoNamespaces(root);
 
   expect(Array.from(namespaces.keys()).sort()).toEqual([
+    'example.testing.another',
     'example.testing.any',
+    'example.testing.extensions',
     'example.testing.types',
     'example.testing.util',
     'google.protobuf'

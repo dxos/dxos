@@ -6,9 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import type { HypercoreFeed } from '@dxos/feed-store';
-import { PublicKeyLike } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { schemaJson } from '@dxos/protocols';
+import { schemaJson, PublicKeyLike } from '@dxos/protocols';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 import { Peer } from './peer';
@@ -60,9 +59,9 @@ export class Replicator {
   static extension = 'dxos.mesh.protocol.replicator';
   private readonly _peers = new Map<Protocol, Peer>();
   private _options: {timeout: number};
-  private readonly _load: LoadFunction;
-  private readonly _subscribe: SubscribeFunction;
-  private readonly _replicate: ReplicateFunction;
+  private _load: LoadFunction;
+  private _subscribe: SubscribeFunction;
+  private _replicate: ReplicateFunction;
 
   constructor (middleware: ReplicatorMiddleware, options?: {timeout: number}) {
     const { load, subscribe = defaultSubscribe, replicate = defaultReplicate } = middleware;

@@ -5,15 +5,15 @@
 import { Box } from 'ink';
 import React, { FC, useState } from 'react';
 
-import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
-import { PublicKey } from '@dxos/keys';
+import { InvitationDescriptor, PartyInvitation, PartyKey } from '@dxos/client';
+import { PublicKey } from '@dxos/protocols';
 import { useClient, useParty } from '@dxos/react-client';
 
 import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
 import { Panel } from '../util';
 
 export const Join: FC<{
-  onJoin?: (partyKey: PublicKey) => void
+  onJoin?: (partyKey: PartyKey) => void
 }> = ({
   onJoin
 }) => {
@@ -82,7 +82,7 @@ export const Join: FC<{
         <Box marginTop={1}>
           <TextInput
             focus={invitation && !status?.processing}
-            placeholder='Enter verification code (enter 0000).'
+            placeholder='Enter verification code.'
             value={secret ?? ''}
             onChange={setSecret}
             onSubmit={() => handleSubmit(invitation!, secret!)}

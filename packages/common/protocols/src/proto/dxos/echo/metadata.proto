@@ -4,11 +4,10 @@
 
 syntax = "proto3";
 
+import "dxos/echo/timeframe.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/echo/timeframe.proto";
 import "dxos/halo/keys.proto";
-import "dxos/halo/credentials.proto";
 
 package dxos.echo.metadata;
 
@@ -20,14 +19,10 @@ message EchoMetadata {
    */
   int32 version = 1;
 
-  google.protobuf.Timestamp created = 2;
-  google.protobuf.Timestamp updated = 3;
+  repeated PartyMetadata parties = 2;
 
-  // TODO(dmaretskyi): Store the device key associated with the identity.
-  optional dxos.halo.credentials.IdentityRecord identity = 10;
-
-  /// List of the data parties.
-  repeated PartyMetadata parties = 11;
+  google.protobuf.Timestamp created = 3;
+  google.protobuf.Timestamp updated = 4;
 }
 
 // TODO(dmaretskyi): Cleanup numbering.
@@ -40,12 +35,12 @@ message PartyMetadata {
   /// Key of the wriatable control feed.
   optional dxos.halo.keys.PubKey control_feed_key = 4;
 
-  /// List of all feed associated with the party.
-  repeated dxos.halo.keys.PubKey feed_keys = 2;
-
   /// Key of the wriatable data feed.
   optional dxos.halo.keys.PubKey data_feed_key = 3;
 
   // Latest timeframe reached while processing party messages.
   optional timeframe.TimeframeVector latest_timeframe = 5;
+
+  /// List of all feed associated with the party.
+  repeated dxos.halo.keys.PubKey feed_keys = 2;
 }

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 // TODO(burdon): Proxy/service abstraction?
 // TODO(burdon): Typed queries/subscriptions.

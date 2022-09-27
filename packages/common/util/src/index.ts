@@ -14,4 +14,3 @@ export * from './subscription';
 export * from './typeguards';
 export * from './types';
 export * from './uint8array';
-export * from './callback';

@@ -41,6 +41,7 @@
     "crypto-names",
     "debug",
     "echo-db",
+    "echo-protocol",
     "echo-testing",
     "feed-store",
     "halo-protocol",

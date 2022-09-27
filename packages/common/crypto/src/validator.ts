@@ -4,12 +4,11 @@
 
 import { verify } from 'hypercore-crypto';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 /**
  * Generator for signature validation function.
  * @param {String} publicKey
  */
-export const getSignatureValidator = (publicKey: string) =>
-  (message: Buffer, signature: Buffer) =>
-    verify(message, signature, PublicKey.bufferize(publicKey));
+export const getSignatureValidator =
+  (publicKey: string) => (message: Buffer, signature: Buffer) => verify(message, signature, PublicKey.bufferize(publicKey));

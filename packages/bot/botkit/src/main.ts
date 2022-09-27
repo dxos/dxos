@@ -5,9 +5,9 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
+import { PublicKey } from '@dxos/protocols';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
 
 import { NodeContainer } from './bot-container';

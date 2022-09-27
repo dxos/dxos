@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/protocols';
 
 import { SwarmController, Topology } from './topology';
 

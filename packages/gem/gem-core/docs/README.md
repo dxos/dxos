@@ -9,20 +9,25 @@ Gem core components and utils.
 
 flowchart LR
 
-%% Classes
-classDef def fill:#fff,stroke:#333,stroke-width:1px
-classDef root fill:#fff,stroke:#333,stroke-width:4px
+%% Links
 
-%% Nodes
+%% Sections
+subgraph gem
+  style gem fill:#b3c7e6,stroke:#fff;
 
-subgraph gem [gem]
-  style gem fill:#b3c7e6,stroke:#fff
-  dxos/gem-core("@dxos/gem-core"):::root
-  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+  dxos/gem-core("@dxos/gem-core")
 end
 
-%% Links
+
+%% Hyperlinks
+
+%% Styles
+classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
+classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
+
+dxos/gem-core:::rootNode
+
 ```
 
 ## Dependencies

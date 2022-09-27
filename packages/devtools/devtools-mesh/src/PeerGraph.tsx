@@ -6,8 +6,8 @@ import React, { useState, useEffect } from 'react';
 
 import { SVG, SVGContextProvider } from '@dxos/gem-core';
 import { Graph } from '@dxos/gem-spore';
-import { PublicKey } from '@dxos/keys';
 import { PeerInfo } from '@dxos/network-manager';
+import type { PublicKey } from '@dxos/protocols';
 import { humanize } from '@dxos/util';
 
 // const classMap: Record<string, string> = {
