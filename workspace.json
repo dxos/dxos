@@ -38,6 +38,7 @@
     "halo-protocol": "packages/halo/halo-protocol",
     "kai": "apps/experimental/kai",
     "keys": "packages/common/keys",
+    "keyring": "packages/halo/keyring",
     "kitchen-sink": "apps/experimental/kitchen-sink",
     "kodama": "apps/experimental/kodama",
     "lexical-editor": "apps/experimental/lexical-editor",
