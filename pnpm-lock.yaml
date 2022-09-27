@@ -919,12 +919,14 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-components': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
+      '@dxos/signal': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
@@ -943,12 +945,14 @@ importers:
       '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
       '@dxos/crypto': link:../../packages/common/crypto
       '@dxos/mesh-protocol': link:../../packages/mesh/mesh-protocol
+      '@dxos/messaging': link:../../packages/mesh/messaging
       '@dxos/network-manager': link:../../packages/mesh/network-manager
       '@dxos/protocols': link:../../packages/common/protocols
       '@dxos/react-async': link:../../packages/common/react-async
       '@dxos/react-components': link:../../packages/sdk/react-components
       '@dxos/rpc': link:../../packages/common/rpc
       '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
+      '@dxos/signal': link:../../packages/mesh/signal
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u

@@ -5,6 +5,8 @@
 
 import { expect, Page, test } from '@playwright/test';
 import waitForExpect from 'wait-for-expect';
+import { createTestBroker, TestBroker } from '@dxos/signal';
+import workerConfig from '../../src/worker-config'
 
 const config = {
   baseUrl: 'http://127.0.0.1:5173'
@@ -13,8 +15,11 @@ const config = {
 test.describe('WebRTC ', () => {
   let pageA: Page;
   let pageB: Page;
+  let broker: TestBroker;
 
   test.beforeAll(async ({ browser }) => {
+    broker = await createTestBroker(workerConfig.signalPort);
+
     const contextA = await browser.newContext();
     const contextB = await browser.newContext();
     pageA = await contextA.newPage();
@@ -22,6 +27,10 @@ test.describe('WebRTC ', () => {
     await pageA.goto(`${config.baseUrl}/worker.html?peer=1`);
     await pageB.goto(`${config.baseUrl}/worker.html?peer=2`);
   });
+
+  test.afterAll(() => {
+    broker.stop();
+  })
 
   test('Establish webRTC connection.', async () => {
     await waitForExpect(async () => {

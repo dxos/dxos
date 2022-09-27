@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { StrictMode, useState } from 'react';
+import React, { Component, StrictMode, useState } from 'react';
 import { render } from 'react-dom';
 
 import { PublicKey, schema } from '@dxos/protocols';
@@ -10,13 +10,15 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import config from './worker-config';
 
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
-import { SignalMessage, TestProtocolPlugin, testProtocolProvider, WebRTCTransportProxy } from '@dxos/network-manager';
+import { MessageRouter, SignalMessage, TestProtocolPlugin, testProtocolProvider, WebRTCTransportProxy } from '@dxos/network-manager';
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
+import { SignalClient } from '@dxos/messaging';
 
 const App = ({
   port,
@@ -24,8 +26,7 @@ const App = ({
   ownId,
   remoteId,
   topic,
-  sessionId,
-  sendSignal
+  sessionId
 }: {
   port: MessagePort,
   initiator: boolean,
@@ -33,7 +34,6 @@ const App = ({
   remoteId: PublicKey,
   topic: PublicKey,
   sessionId: PublicKey,
-  sendSignal: (msg: SignalMessage) => void
 }) => {
   const [closed, setClosed] = useState(true);
   const [value, setValue] = useState<string>();
@@ -45,6 +45,17 @@ const App = ({
     const protocolProvider = testProtocolProvider(topic.asBuffer(), ownId.asBuffer(), plugin);
     const stream = protocolProvider({ channel: discoveryKey(topic), initiator }).stream;
 
+    const signal: SignalClient = new SignalClient(
+      `ws://localhost:${config.signalPort}/.well-known/dx/signal`,
+      async msg => await messageRouter.receiveMessage(msg)
+    );
+
+    const messageRouter: MessageRouter = new MessageRouter({
+      sendMessage: async msg => await signal.sendMessage(msg),
+      onSignal: async msg => await transportProxy.signal(msg.data.signal),
+      onOffer: async () => { return { accept: true }; }
+    });
+
     const transportProxy = new WebRTCTransportProxy({
       initiator,
       stream,
@@ -52,7 +63,7 @@ const App = ({
       remoteId,
       sessionId,
       topic,
-      sendSignal,
+      sendSignal: async msg => await messageRouter.signal(msg),
       port: rpcPort
     })
     await transportProxy.init();
@@ -82,9 +93,32 @@ const App = ({
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
+
+    const searchParams = new URLSearchParams(window.location.toString());
+    let app;
+    if (searchParams.get('peer') === '1') {
+      app = <App
+        port={worker.port}
+        initiator={true}
+        ownId={PublicKey.from(config.peer1Id)}
+        remoteId={PublicKey.from(config.peer2Id)}
+        topic={PublicKey.from(config.topic)}
+        sessionId={PublicKey.from(config.sessionId)}
+      />
+    } else if (searchParams.get('peer') === '2') {
+      app = <App
+        port={worker.port}
+        initiator={false}
+        ownId={PublicKey.from(config.peer2Id)}
+        remoteId={PublicKey.from(config.peer1Id)}
+        topic={PublicKey.from(config.topic)}
+        sessionId={PublicKey.from(config.sessionId)}
+      />
+    }
+
     render(
       <StrictMode>
-        <App port={worker.port} />
+        {app}
       </StrictMode>,
       document.getElementById('root')
     );
