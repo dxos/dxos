@@ -18,18 +18,18 @@ import { SignalMessage, TestProtocolPlugin, testProtocolProvider, WebRTCTranspor
 import { discoveryKey } from '@dxos/crypto';
 import { Protocol } from '@dxos/mesh-protocol';
 
-const App = ({ 
+const App = ({
   port,
-  initiator, 
+  initiator,
   ownId,
   remoteId,
   topic,
   sessionId,
   sendSignal
- }: { 
-  port: MessagePort, 
-  initiator: boolean, 
-  ownId: PublicKey, 
+}: {
+  port: MessagePort,
+  initiator: boolean,
+  ownId: PublicKey,
   remoteId: PublicKey,
   topic: PublicKey,
   sessionId: PublicKey,
@@ -39,11 +39,11 @@ const App = ({
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child', sessionId:  });
+    const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
 
     const plugin = new TestProtocolPlugin(ownId.asBuffer());
     const protocolProvider = testProtocolProvider(topic.asBuffer(), ownId.asBuffer(), plugin);
-    const stream = protocolProvider({ channel: discoveryKey, initiator }).stream;
+    const stream = protocolProvider({ channel: discoveryKey(topic), initiator }).stream;
 
     const transportProxy = new WebRTCTransportProxy({
       initiator,
@@ -64,6 +64,10 @@ const App = ({
       setClosed(true);
     });
 
+    plugin.on('connect', async () => {
+      plugin.send(remoteId.asBuffer(), 'Hello message');
+    })
+
     setClosed(false);
   }, []);
 
@@ -78,7 +82,6 @@ const App = ({
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
-
     render(
       <StrictMode>
         <App port={worker.port} />
