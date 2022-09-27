@@ -912,6 +912,59 @@ importers:
       '@dxos/random-access-storage': link:../../packages/common/random-access-storage
       '@dxos/signal': link:../../packages/mesh/signal
 
+  e2e/network-manager:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      debug: ^4.3.3
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      vite: 3.0.9
+    dependencies:
+      '@dxos/async': link:../../packages/common/async
+      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
+      '@dxos/crypto': link:../../packages/common/crypto
+      '@dxos/mesh-protocol': link:../../packages/mesh/mesh-protocol
+      '@dxos/network-manager': link:../../packages/mesh/network-manager
+      '@dxos/protocols': link:../../packages/common/protocols
+      '@dxos/react-async': link:../../packages/common/react-async
+      '@dxos/react-components': link:../../packages/sdk/react-components
+      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
+      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
+      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
+      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
+      debug: 4.3.4
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/vite-plugin': link:../../tools/vite-plugin
+      '@types/debug': 4.1.7
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
   e2e/protobuf-compiler:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
@@ -8805,13 +8858,13 @@ packages:
       moment:
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       '@mui/x-date-pickers': 5.0.0-alpha.1_oop6dcki46d7lexi6nxggagcai
       '@types/react': 17.0.50
       clsx: 1.2.1
@@ -8852,13 +8905,13 @@ packages:
       moment:
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       '@mui/x-date-pickers': 5.0.0-alpha.1_lo3xzamluryvy2xkcnd6bbfbsy
       '@types/react': 17.0.50
       clsx: 1.2.1
@@ -9342,7 +9395,7 @@ packages:
       '@date-io/moment': 2.13.1_moment@2.29.1
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       clsx: 1.2.1
       moment: 2.29.1
       prop-types: 15.8.1
@@ -9380,7 +9433,7 @@ packages:
       '@date-io/moment': 2.13.1
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       clsx: 1.2.1
       prop-types: 15.8.1
       react: 17.0.2

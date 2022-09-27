@@ -49,6 +49,7 @@
     "model-factory": "packages/echo/model-factory",
     "network-generator": "packages/mesh/network-generator",
     "network-manager": "packages/mesh/network-manager",
+    "network-manager-e2e": "e2e/network-manager",
     "object-model": "packages/echo/object-model",
     "orchestrator": "packages/gravity/orchestrator",
     "playwright": "tools/executors/playwright",

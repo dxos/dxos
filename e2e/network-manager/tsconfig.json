@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "dist",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "types": [
+      "sharedworker"
+    ]
+  },
+  "include": [
+    "src",
+    "playwright"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/rpc-tunnel"
+    },
+    {
+      "path": "../../packages/common/rpc"
+    },
+    {
+      "path": "../../tools/vite-plugin"
+    }
+  ]
+}
