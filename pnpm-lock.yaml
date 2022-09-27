@@ -1177,11 +1177,9 @@ importers:
 
   packages/common/debug:
     specifiers:
-      '@dxos/keys': workspace:*
       debug: ^4.3.3
       events: ^3.3.0
     dependencies:
-      '@dxos/keys': link:../keys
       debug: 4.3.4
       events: 3.3.0
 
