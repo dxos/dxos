@@ -44,6 +44,7 @@ jobs:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=prerelease
+
    e2e:
       docker:
         - *docker_image
