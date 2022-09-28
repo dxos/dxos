@@ -49,7 +49,7 @@ const config: UserConfig = defineUserConfig({
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
     searchPlugin(),
-    showcasePlugin()
+    await showcasePlugin()
   ]
 });
 
