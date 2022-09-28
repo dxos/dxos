@@ -39,6 +39,7 @@ const App = ({
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
+    console.log('Using async effect');
     const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
 
     const plugin = new TestProtocolPlugin(ownId.asBuffer());
@@ -68,14 +69,18 @@ const App = ({
     })
     await transportProxy.init();
 
+    console.log('Subscribing listeners');
     plugin.on('receive', (p: Protocol, s: string) => {
+      console.log(`Received ${s}`);
       setValue(s)
     })
     plugin.on('disconnect', () => {
+      console.log(`Disconnected`);
       setClosed(true);
     });
 
     plugin.on('connect', async () => {
+      console.log(`Connected`);
       plugin.send(remoteId.asBuffer(), 'Hello message');
     })
 
@@ -92,11 +97,13 @@ const App = ({
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
+    console.log('Creating shared worker');
     const worker = new SharedWorker();
 
-    const searchParams = new URLSearchParams(window.location.toString());
+    const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
     let app;
     if (searchParams.get('peer') === '1') {
+      console.log('Creating peer1 App');
       app = <App
         port={worker.port}
         initiator={true}
@@ -106,6 +113,7 @@ if (typeof SharedWorker !== 'undefined') {
         sessionId={PublicKey.from(config.sessionId)}
       />
     } else if (searchParams.get('peer') === '2') {
+      console.log('Creating peer2 App');
       app = <App
         port={worker.port}
         initiator={false}
@@ -116,9 +124,10 @@ if (typeof SharedWorker !== 'undefined') {
       />
     }
 
+    console.log('Rendering');
     render(
       <StrictMode>
-        app
+        {app}
       </StrictMode>,
       document.getElementById('root')
     );
