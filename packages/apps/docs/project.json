@@ -3,6 +3,7 @@
   "root": "packages/apps/docs",
   "projectType": "application",
   "targets": {
+    // TODO(wittjosiah): Run as apart of release please to ensure api docs are up to date.
     "prerelease": {
       "executor": "nx:run-script",
       "outputs": [
