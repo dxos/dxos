@@ -7,11 +7,9 @@ import fs from 'fs';
 import path from 'path';
 
 import { Flowchart } from './mermaid';
-import { ProjectMap } from './project-processor';
-import { Project } from './types';
+import { Project, ProjectMap } from './types';
 import { array } from './util';
 
-// TODO(burdon): Factor out.
 const colorHash = new ColorHash({
   lightness: 0.8
   // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
@@ -19,11 +17,14 @@ const colorHash = new ColorHash({
 
 type GraphBuilderOptions = {
   verbose?: boolean
-  exclude?: string[] // TODO(burdon): Regexp or array.
+
+  // Don't show links for these packages.
+  exclude?: string[]
 }
 
 export class GraphBuilder {
   constructor (
+    private readonly _baseDir: string,
     private readonly _projectMap: ProjectMap,
     private readonly _options: GraphBuilderOptions
   ) {}
@@ -33,7 +34,7 @@ export class GraphBuilder {
    */
   // TODO(burdon): Use remark lib (see ridoculous).
   createDocs (project: Project, docsDir: string, baseUrl: string) {
-    const baseDir = path.join(this._projectMap.baseDir, project.subdir, docsDir);
+    const baseDir = path.join(this._baseDir, project.subdir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
@@ -70,7 +71,7 @@ export class GraphBuilder {
     ];
 
     array(project.descendents).sort().forEach(pkg => {
-      const sub = this._projectMap.getProject(pkg)!;
+      const sub = this._projectMap.getProjectByPackage(pkg)!;
       const link = createLink(sub);
       content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === pkg) ? '&check;' : ''} |`);
     });
@@ -187,7 +188,7 @@ export class GraphBuilder {
           id: safeName(pkg),
           label: pkg,
           className: pkg === project.package.name ? 'root' : 'def',
-          href: path.join(baseUrl, this._projectMap.getProject(pkg)!.subdir, docsDir)
+          href: path.join(baseUrl, this._projectMap.getProjectByPackage(pkg)!.subdir, docsDir)
         }));
 
         // Common packages with links removed.
@@ -206,7 +207,7 @@ export class GraphBuilder {
             id: safeName(pkg),
             label: pkg,
             className: 'def',
-            href: path.join(baseUrl, this._projectMap.getProject(pkg)!.subdir, docsDir)
+            href: path.join(baseUrl, this._projectMap.getProjectByPackage(pkg)!.subdir, docsDir)
           }));
         }
       });

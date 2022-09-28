@@ -58,3 +58,13 @@ export type Class = {
 export type Property = {
   readonly struct: PropertyDeclarationStructure
 }
+
+//
+// Interfaces
+//
+
+export interface ProjectMap {
+  getProjects (filter?: string): Project[]
+  getProjectByName (name: string): Project | undefined
+  getProjectByPackage (packageName: string): Project | undefined
+}
