@@ -1,5 +1,28 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "root": "apps/vuepress",
-  "projectType": "application"
+  "projectType": "application",
+  "targets": {
+    "prerelease": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "apps/vuepress/docs/api",
+        "apps/vuepress/docs/.vuepross/dist"
+      ],
+      "options": {
+        "script": "prerelease"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "apps/vuepress/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
 }

@@ -3,8 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "vuepress build docs",
-    "TODO(wittjosiah)": "Can this be run as a prerelease script and gitignored?",
+    "prerelease": "pnpm run generate:api && vuepress build docs",
     "generate:api": "typedoc --tsconfig ../../tsconfig.json --plugin typedoc-plugin-markdown --out docs/api --githubPages false --hideBreadcrumbs true --hideInPageTOC true --allReflectionsHaveOwnDocument true --hideMembersSymbol true --entryPointStrategy packages --entryPoints ../../packages/echo/* --entryPoints ../../packages/halo/* --entryPoints ../../packages/mesh/* --entryPoints ../../packages/sdk/*",
     "serve": "vuepress dev docs"
   },
