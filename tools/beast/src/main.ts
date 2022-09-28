@@ -14,7 +14,8 @@ import { hideBin } from 'yargs/helpers';
 //     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
 import { log } from '@dxos/log';
 
-import { ModuleProcessor } from './module-processor';
+import { GraphBuilder } from './graph-builder';
+import { ProjectProcessor } from './project-processor';
 
 const main = () => {
   log.info('Started');
@@ -39,7 +40,7 @@ const main = () => {
         json: boolean
         verbose?: boolean
       }) => {
-        const processor = new ModuleProcessor(rootDir, { verbose }).init();
+        const processor = new ProjectProcessor(rootDir, { verbose }).init();
         const projects = processor.projects.map(p => p.package.name);
 
         if (json) {
@@ -74,7 +75,7 @@ const main = () => {
           process.exit(1);
         }
 
-        const processor = new ModuleProcessor(rootDir, { verbose }).init();
+        const processor = new ProjectProcessor(rootDir, { verbose }).init();
         const project = processor.projectsByName.get(name);
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
@@ -138,12 +139,14 @@ const main = () => {
         include: string
         exclude: string
       }) => {
-        const processor = new ModuleProcessor(rootDir, { verbose, include, exclude: exclude?.split(',') }).init();
+        const processor = new ProjectProcessor(rootDir, { verbose, include }).init();
+        const builder = new GraphBuilder(processor, { verbose, exclude: exclude?.split(',') });
         processor.match(pattern).forEach(project => {
           if (verbose) {
             console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);
           }
-          processor.createDocs(project, outDir, baseUrl);
+
+          builder.createDocs(project, outDir, baseUrl);
         });
       }
     })

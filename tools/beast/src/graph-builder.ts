@@ -4,122 +4,36 @@
 
 import ColorHash from 'color-hash';
 import fs from 'fs';
-import minimatch from 'minimatch';
 import path from 'path';
 
 import { Flowchart } from './mermaid';
-import { PackageJson, Project, WorkspaceJson } from './types';
+import { ProjectMap } from './project-processor';
+import { Project } from './types';
+import { array } from './util';
 
 // TODO(burdon): Factor out.
-const array = <T> (collection: Set<T> | Map<any, T>): T[] => Array.from(collection.values() ?? []);
-
 const colorHash = new ColorHash({
   lightness: 0.8
   // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
 });
 
-type ModuleProcessorOptions = {
+type GraphBuilderOptions = {
   verbose?: boolean
-  include?: string
   exclude?: string[] // TODO(burdon): Regexp or array.
 }
 
-/**
- * Process packages in workspace.
- */
-export class ModuleProcessor {
-  public readonly projectsByName = new Map<string, Project>();
-  public readonly projectsByPackage = new Map<string, Project>();
-
+export class GraphBuilder {
   constructor (
-    private readonly baseDir: string,
-    private readonly options: ModuleProcessorOptions = {}
+    private readonly _projectMap: ProjectMap,
+    private readonly _options: GraphBuilderOptions
   ) {}
-
-  get projects (): Project[] {
-    return array(this.projectsByPackage);
-  }
-
-  match (filter?: string): Project[] {
-    return filter ? this.projects.filter(p => minimatch(p.name, filter)) : this.projects;
-  }
-
-  init () {
-    const { projects } = this.readJson<WorkspaceJson>('workspace.json');
-
-    // Read project definitions.
-    for (const name of Object.keys(projects)) {
-      const subdir = projects[name];
-      const packageJson = this.readJson<PackageJson>(path.join(subdir, 'package.json'));
-      const project: Project = {
-        name,
-        subdir,
-        package: packageJson,
-        dependencies: new Set<Project>(),
-        descendents: new Set<string>(),
-        cycles: []
-      };
-
-      this.projectsByName.set(name, project);
-      this.projectsByPackage.set(packageJson.name, project);
-    }
-
-    // Process all projects.
-    const visited = new Set<string>();
-    for (const project of array(this.projectsByName)) {
-      this.processProject(project, visited);
-    }
-
-    return this;
-  }
-
-  /**
-   * Recursively process the project.
-   * @return Array of descendents.
-   */
-  private processProject (project: Project, visited: Set<string>, chain: string[] = [project.package.name]): void {
-    const { package: { dependencies: dependencyMap = {} } } = project;
-    if (this.options.verbose) {
-      console.log('Processing:', project.package.name);
-    }
-
-    // Check if already processed (since depth first).
-    if (!visited.has(project.package.name)) {
-      visited.add(project.package.name);
-
-      // TODO(burdon): Extra validations?
-      if (dependencyMap[project.package.name]) {
-        console.warn(`Invalid dependency on itself: ${project.package.name}`);
-      }
-
-      // TODO(burdon): Support filtering outside of workspace (e.g., crypto) without recursion.
-      const dependencies: Project[] = Object.keys(dependencyMap)
-        .filter(minimatch.filter(this.options.include ?? '*'))
-        .map(dep => this.projectsByPackage.get(dep))
-        .filter(Boolean) as Project[]; // Ignore @dxos packages outside of monorepo.
-
-      dependencies.forEach(dep => {
-        project.dependencies.add(dep);
-        project.descendents.add(dep.package.name);
-
-        const nextChain = [...chain, dep.package.name];
-        if (chain.includes(dep.package.name)) {
-          project.cycles.push(nextChain);
-          console.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
-        } else {
-          this.processProject(dep, visited, nextChain);
-          array(dep.descendents).forEach(pkg => project.descendents.add(pkg));
-        }
-      });
-    }
-  }
 
   /**
    * Create docs page.
    */
   // TODO(burdon): Use remark lib (see ridoculous).
   createDocs (project: Project, docsDir: string, baseUrl: string) {
-    const baseDir = path.join(this.baseDir, project.subdir, docsDir);
+    const baseDir = path.join(this._projectMap.baseDir, project.subdir, docsDir);
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
     }
@@ -129,7 +43,7 @@ export class ModuleProcessor {
       project.package.description,
       '',
       '## Dependency Graph\n',
-      this.generateGraph(project, docsDir, baseUrl),
+      this.generatePackageGraph(project, docsDir, baseUrl),
       '',
       '## Dependencies\n',
       this.generateDependenciesTable(project, docsDir),
@@ -138,10 +52,6 @@ export class ModuleProcessor {
 
     fs.writeFileSync(path.join(baseDir, 'README.md'), content.join('\n'));
   }
-
-  //
-  // Generators
-  //
 
   /**
    * Create table.
@@ -160,7 +70,7 @@ export class ModuleProcessor {
     ];
 
     array(project.descendents).sort().forEach(pkg => {
-      const sub = this.projectsByPackage.get(pkg)!;
+      const sub = this._projectMap.getProject(pkg)!;
       const link = createLink(sub);
       content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === pkg) ? '&check;' : ''} |`);
     });
@@ -173,8 +83,7 @@ export class ModuleProcessor {
    * https://mermaid.live
    * https://mermaid-js.github.io/mermaid/#/README
    */
-  // TODO(burdon): Create graph object.
-  generateGraph (project: Project, docsDir: string, baseUrl: string) {
+  generatePackageGraph (project: Project, docsDir: string, baseUrl: string) {
     const safeName = (name: string) => name.replace(/@/g, '');
 
     const flowchart = new Flowchart({
@@ -208,7 +117,7 @@ export class ModuleProcessor {
         current.dependencies.forEach(sub => {
           if (
             // Don't link excluded packages.
-            !this.options.exclude?.includes(sub.package.name) &&
+            !this._options.exclude?.includes(sub.package.name) &&
             // Skip any descendents that depend directly on the package.
             !array(current.dependencies).some(pkg => pkg.descendents.has(sub.package.name))
           ) {
@@ -257,7 +166,7 @@ export class ModuleProcessor {
 
       Array.from(sectionDefs.entries()).forEach(([section, packages]) => {
         const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], pkg) => {
-          if (this.options.exclude?.includes(pkg)) {
+          if (this._options.exclude?.includes(pkg)) {
             excluded.push(pkg);
           } else {
             included.push(pkg);
@@ -278,7 +187,7 @@ export class ModuleProcessor {
           id: safeName(pkg),
           label: pkg,
           className: pkg === project.package.name ? 'root' : 'def',
-          href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
+          href: path.join(baseUrl, this._projectMap.getProject(pkg)!.subdir, docsDir)
         }));
 
         // Common packages with links removed.
@@ -297,16 +206,12 @@ export class ModuleProcessor {
             id: safeName(pkg),
             label: pkg,
             className: 'def',
-            href: path.join(baseUrl, this.projectsByPackage.get(pkg)!.subdir, docsDir)
+            href: path.join(baseUrl, this._projectMap.getProject(pkg)!.subdir, docsDir)
           }));
         }
       });
     }
 
     return flowchart.render();
-  }
-
-  private readJson <T> (filepath: string): T {
-    return JSON.parse(fs.readFileSync(path.join(this.baseDir, filepath), { encoding: 'utf-8' }));
   }
 }
