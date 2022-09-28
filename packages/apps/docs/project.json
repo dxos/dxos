@@ -1,32 +1,28 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/apps/docs/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/apps/docs",
   "projectType": "application",
   "targets": {
     "prerelease": {
-      "executor": "@nx-plus/docusaurus:browser",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/apps/docs/docs/api",
+        "packages/apps/docs/docs/.vuepress/dist"
+      ],
       "options": {
-        "outputPath": "packages/apps/docs/dist"
-      },
-      "dependsOn": [
-        "^build",
-        "^bundle",
-        "^prerelease",
-        "^proto"
-      ]
+        "script": "prerelease"
+      }
     },
-    "serve": {
-      "executor": "@nx-plus/docusaurus:dev-server",
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "port": 3000
-      },
-      "dependsOn": [
-        "^build",
-        "^bundle",
-        "^prerelease",
-        "^proto"
-      ]
+        "lintFilePatterns": [
+          "packages/apps/docs/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
     }
   }
 }

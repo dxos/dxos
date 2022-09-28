@@ -82,10 +82,8 @@
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
-    "typedoc": "packages/common/typedoc",
     "util": "packages/common/util",
     "vite-plugin": "tools/vite-plugin",
-    "vuepress": "apps/vuepress",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"
   }
