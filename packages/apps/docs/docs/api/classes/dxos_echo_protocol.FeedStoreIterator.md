@@ -129,7 +129,7 @@ We return a singleton here to ensure that the `_generator` function only gets ca
 
 #### Implementation of
 
-AsyncIterable.\_\_@asyncIterator@9795
+AsyncIterable.\_\_@asyncIterator@9824
 
 #### Defined in
 

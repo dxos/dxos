@@ -8,6 +8,7 @@ Abstraction over a P2P connection transport. Currently either WebRTC or in-memor
 
 - [`InMemoryTransport`](../classes/dxos_network_manager.InMemoryTransport.md)
 - [`WebRTCTransport`](../classes/dxos_network_manager.WebRTCTransport.md)
+- [`WebRTCTransportProxy`](../classes/dxos_network_manager.WebRTCTransportProxy.md)
 
 ## Properties
 

@@ -19,4 +19,4 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Defined in
 
-[packages/sdk/react-client/src/hooks/client/useProfile.ts:21](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/hooks/client/useProfile.ts#L21)
+[packages/sdk/react-client/src/hooks/client/useProfile.ts:22](https://github.com/dxos/dxos/blob/main/packages/sdk/react-client/src/hooks/client/useProfile.ts#L22)

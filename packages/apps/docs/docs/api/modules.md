@@ -1,4 +1,4 @@
-# dxos-protocols
+# @dxos/js
 
 ## Modules
 

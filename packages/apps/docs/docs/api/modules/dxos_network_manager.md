@@ -17,6 +17,8 @@
 - [Swarm](../classes/dxos_network_manager.Swarm.md)
 - [SwarmMapper](../classes/dxos_network_manager.SwarmMapper.md)
 - [WebRTCTransport](../classes/dxos_network_manager.WebRTCTransport.md)
+- [WebRTCTransportProxy](../classes/dxos_network_manager.WebRTCTransportProxy.md)
+- [WebRTCTransportService](../classes/dxos_network_manager.WebRTCTransportService.md)
 
 ## Interfaces
 
@@ -36,6 +38,7 @@
 - [Topology](../interfaces/dxos_network_manager.Topology.md)
 - [Transport](../interfaces/dxos_network_manager.Transport.md)
 - [TransportOptions](../interfaces/dxos_network_manager.TransportOptions.md)
+- [WebRTCTransportProxyParams](../interfaces/dxos_network_manager.WebRTCTransportProxyParams.md)
 
 ## Type Aliases
 
