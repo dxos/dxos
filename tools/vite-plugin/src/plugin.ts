@@ -16,6 +16,7 @@ export const dxosPlugin = (configPath?: string): Plugin => ({
     resolve: {
       alias: {
         'node:assert': 'assert/',
+        'node:events': 'events/',
         'node:path': 'path-browserify/',
         'node:util': 'util/'
       }

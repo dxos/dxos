@@ -2160,6 +2160,7 @@ importers:
       debug: ^4.3.3
       encoding-down: ^6.3.0
       end-of-stream: ^1.4.1
+      events: ^3.3.0
       json-stable-stringify: ^1.0.1
       leveldown: ^5.4.1
       levelup: ^4.3.2
@@ -2184,6 +2185,7 @@ importers:
       debug: 4.3.4
       encoding-down: 6.3.0
       end-of-stream: 1.4.4
+      events: 3.3.0
       json-stable-stringify: 1.0.1
       leveldown: 5.6.0
       levelup: 4.4.0

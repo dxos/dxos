@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import assert from 'node:assert';
 
 import { PublicKey, PublicKeyLike } from '@dxos/protocols';

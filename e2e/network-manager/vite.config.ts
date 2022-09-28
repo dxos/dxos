@@ -4,6 +4,7 @@
 
 import { defineConfig } from 'vite';
 
+import { NodeModulesPlugin } from '@dxos/esbuild-plugins';
 import { dxosPlugin } from '@dxos/vite-plugin';
 
 // https://vitejs.dev/config/
@@ -24,18 +25,17 @@ export default defineConfig({
       "@dxos/network-manager",
       "@dxos/messaging",
       "@dxos/signal",
-    ]
+    ],
+    esbuildOptions: {
+      plugins: [
+        NodeModulesPlugin()
+      ]
+    }
   },
   build: {
     commonjsOptions: {
       include: [
-        /async/,
-        /codec-protobuf/,
-        /protocols/,
-        /react-async/,
-        /react-components/,
-        /rpc/,
-        /rpc-worker-proxy/,
+        /packages/,
         /node_modules/
       ]
     }
