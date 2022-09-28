@@ -104,7 +104,7 @@ export class ProjectProcessor implements ProjectMap {
           console.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
         } else {
           this.processProject(dep, visited, nextChain);
-          array(dep.descendents).forEach(pkg => project.descendents.add(pkg));
+          array(dep.descendents).forEach(packageName => project.descendents.add(packageName));
         }
       });
     }

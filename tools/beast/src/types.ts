@@ -28,7 +28,7 @@ export type PackageJson = {
 // Graph nodes.
 //
 
-export type Project = {
+export type Project = { // Potential clash with ts-morph.
   readonly name: string
   readonly subdir: string
   readonly package: PackageJson // TODO(burdon): Change to Package.

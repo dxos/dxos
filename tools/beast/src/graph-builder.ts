@@ -70,10 +70,10 @@ export class GraphBuilder {
       '|---|---|'
     ];
 
-    array(project.descendents).sort().forEach(pkg => {
-      const sub = this._projectMap.getProjectByPackage(pkg)!;
+    array(project.descendents).sort().forEach(packageName => {
+      const sub = this._projectMap.getProjectByPackage(packageName)!;
       const link = createLink(sub);
-      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === pkg) ? '&check;' : ''} |`);
+      content.push(`| ${link} | ${array(project.dependencies).some(sub => sub.package.name === packageName) ? '&check;' : ''} |`);
     });
 
     return content.join('\n');
@@ -120,7 +120,7 @@ export class GraphBuilder {
             // Don't link excluded packages.
             !this._options.exclude?.includes(sub.package.name) &&
             // Skip any descendents that depend directly on the package.
-            !array(current.dependencies).some(pkg => pkg.descendents.has(sub.package.name))
+            !array(current.dependencies).some(packageName => packageName.descendents.has(sub.package.name))
           ) {
             flowchart.addLink({
               source: safeName(current.package.name),
@@ -166,11 +166,11 @@ export class GraphBuilder {
       }, new Map<string, string[]>());
 
       Array.from(sectionDefs.entries()).forEach(([section, packages]) => {
-        const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], pkg) => {
-          if (this._options.exclude?.includes(pkg)) {
-            excluded.push(pkg);
+        const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], packageName) => {
+          if (this._options.exclude?.includes(packageName)) {
+            excluded.push(packageName);
           } else {
-            included.push(pkg);
+            included.push(packageName);
           }
           return [included, excluded];
         }, [[], []]);
@@ -184,11 +184,11 @@ export class GraphBuilder {
           }
         });
 
-        included.forEach(pkg => graph.addNode({
-          id: safeName(pkg),
-          label: pkg,
-          className: pkg === project.package.name ? 'root' : 'def',
-          href: path.join(baseUrl, this._projectMap.getProjectByPackage(pkg)!.subdir, docsDir)
+        included.forEach(packageName => graph.addNode({
+          id: safeName(packageName),
+          label: packageName,
+          className: packageName === project.package.name ? 'root' : 'def',
+          href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
         }));
 
         // Common packages with links removed.
@@ -203,11 +203,11 @@ export class GraphBuilder {
             }
           });
 
-          excluded.forEach(pkg => subgraph.addNode({
-            id: safeName(pkg),
-            label: pkg,
+          excluded.forEach(packageName => subgraph.addNode({
+            id: safeName(packageName),
+            label: packageName,
             className: 'def',
-            href: path.join(baseUrl, this._projectMap.getProjectByPackage(pkg)!.subdir, docsDir)
+            href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
           }));
         }
       });
