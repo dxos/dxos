@@ -62,6 +62,9 @@ export class ServiceContext {
 
   async open () {
     await this.identityManager.open();
+    if(this.identityManager.identity) {
+      await this._initialize();
+    }
   }
 
   async close () {
