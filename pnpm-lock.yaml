@@ -937,6 +937,7 @@ importers:
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
       debug: ^4.3.3
+      events: ^3.3.0
       react: ^17.0.2
       react-dom: ^17.0.2
       vite: 3.0.9
@@ -959,6 +960,7 @@ importers:
       '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       debug: 4.3.4
+      events: 3.3.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
@@ -2262,6 +2264,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
+      events: ^3.3.0
       hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: ^1.2.1
       nanomessage: ^8.4.0
@@ -2275,6 +2278,7 @@ importers:
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       end-of-stream: 1.4.4
+      events: 3.3.0
       hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       nanoerror: 1.2.1
       nanomessage: 8.4.0

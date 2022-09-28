@@ -6,6 +6,9 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:events": "events"
+  },
   "files": [
     "dist",
     "src"
@@ -33,6 +36,7 @@
     "@mui/lab": "^5.0.0-alpha.83",
     "@mui/material": "^5.8.1",
     "debug": "^4.3.3",
+    "events": "^3.3.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },

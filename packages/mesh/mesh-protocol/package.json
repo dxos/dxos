@@ -10,7 +10,8 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:events": "events"
   },
   "files": [
     "dist",
@@ -26,6 +27,7 @@
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
+    "events": "^3.3.0",
     "end-of-stream": "^1.4.1",
     "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "nanoerror": "^1.2.1",

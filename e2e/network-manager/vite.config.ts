@@ -18,7 +18,12 @@ export default defineConfig({
       '@dxos/react-async',
       '@dxos/react-components',
       '@dxos/rpc',
-      '@dxos/rpc-tunnel'
+      '@dxos/rpc-tunnel',
+      "@dxos/crypto",
+      "@dxos/mesh-protocol",
+      "@dxos/network-manager",
+      "@dxos/messaging",
+      "@dxos/signal",
     ]
   },
   build: {

@@ -19,7 +19,7 @@ declare module 'nanoerror' {
 declare module 'buffer-json-encoding';
 
 declare module 'hypercore-protocol' {
-  import events = require('events');
+  import events = require('node:events');
 
   export class Channel {
     options: (options: {extensions: any[]}) => any;
