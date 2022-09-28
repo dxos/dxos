@@ -16,9 +16,6 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
-  vuepress-plugin-typedoc@0.11.1:
-    hash: bxacebaqev7dy7c3ajwi5jiiva
-    path: patches/vuepress-plugin-typedoc@0.11.1.patch
 
 importers:
 
@@ -198,7 +195,6 @@ importers:
       typescript: ^4.7.2
       vue: ^3.2.39
       vuepress: ^2.0.0-beta.51
-      vuepress-plugin-typedoc: 0.11.1
     devDependencies:
       '@dxos/react-components': link:../../sdk/react-components
       '@types/eslint': 8.4.6
@@ -221,7 +217,6 @@ importers:
       typescript: 4.7.4
       vue: 3.2.40
       vuepress: 2.0.0-beta.51_cf67x7swsxhuhjarakslfn5yh4
-      vuepress-plugin-typedoc: 0.11.1_bxacebaqev7dy7c3ajwi5jiiva_7zab47scz53et6rw2zwvyhhfd4
 
   packages/apps/dx-cli:
     specifiers:
@@ -38520,17 +38515,6 @@ packages:
       '@vue/server-renderer': 3.2.40_vue@3.2.40
       '@vue/shared': 3.2.40
     dev: true
-
-  /vuepress-plugin-typedoc/0.11.1_bxacebaqev7dy7c3ajwi5jiiva_7zab47scz53et6rw2zwvyhhfd4:
-    resolution: {integrity: sha512-DEmNLB1RIQBiSmT8EJbEe0RX/wmzAX8lQFVUlWo3AJIy4WcXXzRIN1TnE7JGFXARYYmfBaAaB0Nd3doiblD7Qg==}
-    peerDependencies:
-      typedoc: '>=0.23.0'
-      typedoc-plugin-markdown: '>=3.13.0'
-    dependencies:
-      typedoc: 0.23.15_typescript@4.7.4
-      typedoc-plugin-markdown: 3.13.6_typedoc@0.23.15
-    dev: true
-    patched: true
 
   /vuepress-vite/2.0.0-beta.51_cf67x7swsxhuhjarakslfn5yh4:
     resolution: {integrity: sha512-EfvIBwmgRmj5xO6a3hZxRB5PRNkNK3f6RWunBEgRB31sDpGz9ZAEOTRZZ8lIPM/H1wSH39JkHUDm7fVgeuCCDg==}
