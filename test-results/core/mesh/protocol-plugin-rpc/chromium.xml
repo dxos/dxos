@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuites name="protocol-plugin-rpc chromium Tests" time="2.361" tests="3" failures="1" skipped="0">
+  <testsuite name="Root Suite" timestamp="2022-10-05T20:13:42.358Z" tests="0" time="0" failures="0"></testsuite>
+  <testsuite name="Protocol plugin rpc" timestamp="2022-10-05T20:13:42.358Z" tests="3" time="2.323" failures="1">
+    <testcase name="Protocol plugin rpc Works with rpc port" classname="Works with rpc port" time="2.004">
+      <failure message="Timeout of 2000ms exceeded. For async tests and hooks, ensure &quot;done()&quot; is called; if returning a Promise, ensure it resolves.">Error: Timeout of 2000ms exceeded. For async tests and hooks, ensure &quot;done()&quot; is called; if returning a Promise, ensure it resolves.
+    at createTimeoutError (/home/jdw/Code/dxos/protocols/tmp/mocha/core/mesh/protocol-plugin-rpc/out/bundle.js:9895:21)
+    at Runnable._timeoutError (/home/jdw/Code/dxos/protocols/tmp/mocha/core/mesh/protocol-plugin-rpc/out/bundle.js:10527:16)
+    at /home/jdw/Code/dxos/protocols/tmp/mocha/core/mesh/protocol-plugin-rpc/out/bundle.js:10407:32</failure>
+    </testcase>
+    <testcase name="Protocol plugin rpc Works with protobuf service" classname="Works with protobuf service" time="0.16"></testcase>
+    <testcase name="Protocol plugin rpc One server two clients" classname="One server two clients" time="0.159"></testcase>
+  </testsuite>
+</testsuites>

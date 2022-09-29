@@ -22,7 +22,7 @@ export const runNode = async (options: NodeOptions) => {
     '../setup/react-setup',
     '../setup/catch-unhandled-rejections',
     ...(options.signalServer ? ['../setup/create-signal-server'] : []),
-    ...(options.domRequired ? ['jsdom-global/register'] : [])
+    ...(options.domRequired ? ['../setup/dom-setup'] : [])
   ]);
 
   options.testPatterns.forEach(pattern => {
