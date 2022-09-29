@@ -4,7 +4,6 @@
     "allowJs": true,
     "esModuleInterop": true,
     "jsx": "react",
-    "lib": ["DOM"],
     "noEmit": true,
     "noImplicitAny": false,
     "types": [

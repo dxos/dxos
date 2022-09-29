@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import defaultsDeep from 'lodash.defaultsdeep';
+import defaultsDeep from 'lodash/defaultsdeep';
 
 // TODO(burdon): Make types relevant to ERD, etc.
 
@@ -55,7 +55,6 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
   addSubgraph ({ id, label, style }: Subgraph) {
     const subgraph = new SubgraphImpl(id, label, style);
     this._subgraphs.add(subgraph);
-    // console.log('<<<<<<<<<<<<<<', this.id, id);
     return subgraph;
   }
 
@@ -81,10 +80,6 @@ class SubgraphImpl implements Subgraph, SubgraphBuilder {
       section(Array.from(this._subgraphs.values())
         .map(subgraph => ['', subgraph.build(indent + 1)].flat()).flat())
     ].filter(Boolean).flat() as string[];
-
-    if (this.id === 'common') {
-      // console.log('>>>>>>>>>>>', this.id, this._subgraphs.size, sections);
-    }
 
     if (indent >= 0) {
       return [
