@@ -19,8 +19,14 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/feed-store("@dxos/feed-store"):::root
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/random-access-storage("@dxos/random-access-storage"):::def
+  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
@@ -35,8 +41,18 @@ subgraph common [common]
   end
 end
 
+subgraph halo [halo]
+  style halo fill:#cabade,stroke:#fff
+  dxos/keyring("@dxos/keyring"):::def
+  click dxos/keyring "dxos/dxos/tree/main/packages/halo/keyring/docs"
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
+dxos/feed-store --> dxos/keyring
+dxos/keyring --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/keyring --> dxos/random-access-storage
 ```
 
 ## Dependencies
@@ -44,7 +60,11 @@ linkStyle default stroke:#333,stroke-width:1px
 | Module | Direct |
 |---|---|
 | [`@dxos/async`](../../async/docs/README.md) | &check; |
+| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
 | [`@dxos/debug`](../../debug/docs/README.md) |  |
+| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../log/docs/README.md) | &check; |
+| [`@dxos/protocols`](../../protocols/docs/README.md) |  |
+| [`@dxos/random-access-storage`](../../random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../util/docs/README.md) | &check; |

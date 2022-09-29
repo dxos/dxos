@@ -32,6 +32,8 @@ subgraph common [common]
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/keys("@dxos/keys"):::def
+    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
@@ -40,8 +42,8 @@ end
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/rpc-tunnel --> dxos/rpc
+dxos/rpc --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
-dxos/util --> dxos/protocols
 ```
 
 ## Dependencies
@@ -51,6 +53,7 @@ dxos/util --> dxos/protocols
 | [`@dxos/async`](../../async/docs/README.md) |  |
 | [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
 | [`@dxos/debug`](../../debug/docs/README.md) |  |
+| [`@dxos/keys`](../../keys/docs/README.md) |  |
 | [`@dxos/protocols`](../../protocols/docs/README.md) |  |
 | [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../util/docs/README.md) |  |

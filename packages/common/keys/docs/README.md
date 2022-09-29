@@ -18,7 +18,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 subgraph common [common]
   style common fill:#debac2,stroke:#fff
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"

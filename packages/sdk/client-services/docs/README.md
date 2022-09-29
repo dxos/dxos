@@ -33,12 +33,12 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
 
-  subgraph common-excluded [common-excluded]
+  subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
@@ -59,6 +59,8 @@ subgraph halo [halo]
   style halo fill:#cabade,stroke:#fff
   dxos/credentials("@dxos/credentials"):::def
   click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs"
+  dxos/keyring("@dxos/keyring"):::def
+  click dxos/keyring "dxos/dxos/tree/main/packages/halo/keyring/docs"
   dxos/halo-protocol("@dxos/halo-protocol"):::def
   click dxos/halo-protocol "dxos/dxos/tree/main/packages/halo/halo-protocol/docs"
 end
@@ -95,19 +97,20 @@ end
 linkStyle default stroke:#333,stroke-width:1px
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
+dxos/feed-store --> dxos/keyring
+dxos/keyring --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/keyring --> dxos/random-access-storage
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
-dxos/credentials --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
 dxos/client-services --> dxos/config
 dxos/config --> dxos/protocols
 dxos/client-services --> dxos/echo-db
 dxos/echo-db --> dxos/halo-protocol
-dxos/halo-protocol --> dxos/protocols
+dxos/halo-protocol --> dxos/keyring
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/model-factory --> dxos/feed-store
-dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
 dxos/network-manager --> dxos/credentials
 dxos/network-manager --> dxos/messaging
@@ -119,8 +122,8 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 dxos/echo-db --> dxos/object-model
 dxos/object-model --> dxos/model-factory
 dxos/echo-db --> dxos/protocol-plugin-replicator
+dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
-dxos/echo-db --> dxos/random-access-storage
 dxos/echo-db --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
@@ -140,6 +143,7 @@ dxos/protocol-plugin-rpc --> dxos/mesh-protocol
 | [`@dxos/echo-db`](../../../echo/echo-db/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../halo/halo-protocol/docs/README.md) | &check; |
+| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) |  |
