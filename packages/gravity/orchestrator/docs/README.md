@@ -9,184 +9,143 @@
 
 flowchart LR
 
-%% Links
-dxos/bot-factory-client --> dxos/protocol-plugin-rpc;
-dxos/botkit --> dxos/bot-factory-client;
-dxos/botkit --> dxos/network-manager;
-dxos/botkit --> dxos/registry-client;
-dxos/broadcast --> dxos/crypto;
-dxos/client --> dxos/config;
-dxos/client --> dxos/echo-db;
-dxos/client --> dxos/rpc-tunnel;
-dxos/credentials --> dxos/crypto;
-dxos/credentials --> dxos/feed-store;
-dxos/credentials --> dxos/mesh-protocol;
-dxos/crypto --> dxos/protocols;
-dxos/echo-db --> dxos/network-manager;
-dxos/echo-db --> dxos/object-model;
-dxos/echo-db --> dxos/protocol-plugin-replicator;
-dxos/echo-db --> dxos/random-access-storage;
-dxos/echo-protocol --> dxos/credentials;
-dxos/gravity-orchestrator --> dxos/botkit;
-dxos/gravity-orchestrator --> dxos/client;
-dxos/gravity-orchestrator --> dxos/signal;
-dxos/gravity-orchestrator --> dxos/testutils;
-dxos/messaging --> dxos/rpc;
-dxos/network-manager --> dxos/credentials;
-dxos/network-manager --> dxos/messaging;
-dxos/network-manager --> dxos/protocol-plugin-presence;
-dxos/object-model --> dxos/echo-protocol;
-dxos/object-model --> dxos/model-factory;
-dxos/protocol-plugin-presence --> dxos/broadcast;
-dxos/protocol-plugin-presence --> dxos/mesh-protocol;
-dxos/protocol-plugin-replicator --> dxos/mesh-protocol;
-dxos/protocol-plugin-rpc --> dxos/mesh-protocol;
-dxos/protocol-plugin-rpc --> dxos/messaging;
-dxos/protocols --> dxos/codec-protobuf;
-dxos/registry-client --> dxos/config;
-dxos/rpc-tunnel --> dxos/rpc;
-dxos/util --> dxos/protocols;
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph gravity
-  style gravity fill:#edabad,stroke:#fff;
+%% Nodes
 
-  dxos/gravity-orchestrator("@dxos/gravity-orchestrator")
+subgraph gravity [gravity]
+  style gravity fill:#edabad,stroke:#fff
+  dxos/gravity-orchestrator("@dxos/gravity-orchestrator"):::root
+  click dxos/gravity-orchestrator "dxos/dxos/tree/main/packages/gravity/orchestrator/docs"
 end
 
-subgraph bot
-  style bot fill:#c2b3e6,stroke:#fff;
-
-  dxos/bot-factory-client("@dxos/bot-factory-client")
-  dxos/botkit("@dxos/botkit")
+subgraph bot [bot]
+  style bot fill:#c2b3e6,stroke:#fff
+  dxos/bot-factory-client("@dxos/bot-factory-client"):::def
+  click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs"
+  dxos/botkit("@dxos/botkit"):::def
+  click dxos/botkit "dxos/dxos/tree/main/packages/bot/botkit/docs"
 end
 
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/crypto("@dxos/crypto")
-  dxos/protocols("@dxos/protocols")
-  dxos/random-access-storage("@dxos/random-access-storage")
-  dxos/rpc("@dxos/rpc")
-  dxos/rpc-tunnel("@dxos/rpc-tunnel")
-  dxos/testutils("@dxos/testutils")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
+  dxos/crypto("@dxos/crypto"):::def
+  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
+  dxos/random-access-storage("@dxos/random-access-storage"):::def
+  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
+  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs"
 
   subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/log("@dxos/log")
-    dxos/util("@dxos/util")
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/async("@dxos/async"):::def
+    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+    dxos/testutils("@dxos/testutils"):::def
+    click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs"
   end
 end
 
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
-
-  dxos/broadcast("@dxos/broadcast")
-  dxos/mesh-protocol("@dxos/mesh-protocol")
-  dxos/messaging("@dxos/messaging")
-  dxos/network-manager("@dxos/network-manager")
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence")
-  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator")
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc")
-  dxos/signal("@dxos/signal")
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
+  click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs"
+  dxos/messaging("@dxos/messaging"):::def
+  click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs"
+  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs"
+  dxos/network-manager("@dxos/network-manager"):::def
+  click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs"
+  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
+  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs"
+  dxos/broadcast("@dxos/broadcast"):::def
+  click dxos/broadcast "dxos/dxos/tree/main/packages/mesh/broadcast/docs"
+  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
+  click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs"
+  dxos/signal("@dxos/signal"):::def
+  click dxos/signal "dxos/dxos/tree/main/packages/mesh/signal/docs"
 end
 
-subgraph sdk
-  style sdk fill:#dddeba,stroke:#fff;
-
-  dxos/client("@dxos/client")
-  dxos/config("@dxos/config")
-  dxos/registry-client("@dxos/registry-client")
+subgraph sdk [sdk]
+  style sdk fill:#dddeba,stroke:#fff
+  dxos/config("@dxos/config"):::def
+  click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
+  dxos/registry-client("@dxos/registry-client"):::def
+  click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs"
+  dxos/client("@dxos/client"):::def
+  click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
 end
 
-subgraph halo
-  style halo fill:#cabade,stroke:#fff;
-
-  dxos/credentials("@dxos/credentials")
+subgraph halo [halo]
+  style halo fill:#cabade,stroke:#fff
+  dxos/credentials("@dxos/credentials"):::def
+  click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs"
 end
 
-subgraph echo
-  style echo fill:#b3cae6,stroke:#fff;
-
-  dxos/echo-db("@dxos/echo-db")
-  dxos/echo-protocol("@dxos/echo-protocol")
-  dxos/feed-store("@dxos/feed-store")
-  dxos/model-factory("@dxos/model-factory")
-  dxos/object-model("@dxos/object-model")
+subgraph echo [echo]
+  style echo fill:#b3cae6,stroke:#fff
+  dxos/feed-store("@dxos/feed-store"):::def
+  click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs"
+  dxos/echo-db("@dxos/echo-db"):::def
+  click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs"
+  dxos/echo-protocol("@dxos/echo-protocol"):::def
+  click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs"
+  dxos/model-factory("@dxos/model-factory"):::def
+  click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs"
+  dxos/object-model("@dxos/object-model"):::def
+  click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs"
 end
 
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bot/bot-factory-client/docs";
-click dxos/botkit "dxos/dxos/tree/main/packages/bot/botkit/docs";
-click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs";
-click dxos/credentials "dxos/dxos/tree/main/packages/halo/credentials/docs";
-click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/echo-db "dxos/dxos/tree/main/packages/echo/echo-db/docs";
-click dxos/echo-protocol "dxos/dxos/tree/main/packages/echo/echo-protocol/docs";
-click dxos/feed-store "dxos/dxos/tree/main/packages/echo/feed-store/docs";
-click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
-click dxos/mesh-protocol "dxos/dxos/tree/main/packages/mesh/mesh-protocol/docs";
-click dxos/messaging "dxos/dxos/tree/main/packages/mesh/messaging/docs";
-click dxos/model-factory "dxos/dxos/tree/main/packages/echo/model-factory/docs";
-click dxos/network-manager "dxos/dxos/tree/main/packages/mesh/network-manager/docs";
-click dxos/object-model "dxos/dxos/tree/main/packages/echo/object-model/docs";
-click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/mesh/protocol-plugin-presence/docs";
-click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/mesh/protocol-plugin-replicator/docs";
-click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/mesh/protocol-plugin-rpc/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs";
-click dxos/registry-client "dxos/dxos/tree/main/packages/sdk/registry-client/docs";
-click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/signal "dxos/dxos/tree/main/packages/mesh/signal/docs";
-click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/gravity-orchestrator:::rootNode
-
-dxos/async:::defaultNode
-dxos/bot-factory-client:::defaultNode
-dxos/botkit:::defaultNode
-dxos/client:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/config:::defaultNode
-dxos/credentials:::defaultNode
-dxos/crypto:::defaultNode
-dxos/debug:::defaultNode
-dxos/echo-db:::defaultNode
-dxos/echo-protocol:::defaultNode
-dxos/feed-store:::defaultNode
-dxos/log:::defaultNode
-dxos/mesh-protocol:::defaultNode
-dxos/messaging:::defaultNode
-dxos/model-factory:::defaultNode
-dxos/network-manager:::defaultNode
-dxos/object-model:::defaultNode
-dxos/protocol-plugin-presence:::defaultNode
-dxos/protocol-plugin-replicator:::defaultNode
-dxos/protocol-plugin-rpc:::defaultNode
-dxos/protocols:::defaultNode
-dxos/random-access-storage:::defaultNode
-dxos/registry-client:::defaultNode
-dxos/rpc:::defaultNode
-dxos/rpc-tunnel:::defaultNode
-dxos/signal:::defaultNode
-dxos/testutils:::defaultNode
-dxos/util:::defaultNode
+dxos/bot-factory-client --> dxos/protocol-plugin-rpc
+dxos/protocol-plugin-rpc --> dxos/messaging
+dxos/protocols --> dxos/codec-protobuf
+dxos/messaging --> dxos/rpc
+dxos/util --> dxos/protocols
+dxos/protocol-plugin-rpc --> dxos/mesh-protocol
+dxos/gravity-orchestrator --> dxos/botkit
+dxos/botkit --> dxos/bot-factory-client
+dxos/crypto --> dxos/protocols
+dxos/botkit --> dxos/network-manager
+dxos/network-manager --> dxos/credentials
+dxos/credentials --> dxos/crypto
+dxos/credentials --> dxos/feed-store
+dxos/credentials --> dxos/mesh-protocol
+dxos/network-manager --> dxos/messaging
+dxos/network-manager --> dxos/protocol-plugin-presence
+dxos/protocol-plugin-presence --> dxos/broadcast
+dxos/broadcast --> dxos/crypto
+dxos/protocol-plugin-presence --> dxos/mesh-protocol
+dxos/botkit --> dxos/registry-client
+dxos/registry-client --> dxos/config
+dxos/gravity-orchestrator --> dxos/client
+dxos/client --> dxos/config
+dxos/client --> dxos/echo-db
+dxos/echo-protocol --> dxos/credentials
+dxos/echo-db --> dxos/network-manager
+dxos/echo-db --> dxos/object-model
+dxos/object-model --> dxos/echo-protocol
+dxos/object-model --> dxos/model-factory
+dxos/echo-db --> dxos/protocol-plugin-replicator
+dxos/protocol-plugin-replicator --> dxos/mesh-protocol
+dxos/echo-db --> dxos/random-access-storage
+dxos/client --> dxos/rpc-tunnel
+dxos/rpc-tunnel --> dxos/rpc
+dxos/gravity-orchestrator --> dxos/signal
 ```
 
 ## Dependencies
@@ -196,6 +155,7 @@ dxos/util:::defaultNode
 | [`@dxos/async`](../../../common/async/docs/README.md) |  |
 | [`@dxos/bot-factory-client`](../../../bot/bot-factory-client/docs/README.md) | &check; |
 | [`@dxos/botkit`](../../../bot/botkit/docs/README.md) | &check; |
+| [`@dxos/broadcast`](../../../mesh/broadcast/docs/README.md) |  |
 | [`@dxos/client`](../../../sdk/client/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/config`](../../../sdk/config/docs/README.md) | &check; |

@@ -9,38 +9,30 @@
 
 flowchart LR
 
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph deprecated [deprecated]
+  style deprecated fill:#bac5de,stroke:#fff
+  dxos/protocols-toolchain("@dxos/protocols-toolchain"):::root
+  click dxos/protocols-toolchain "dxos/dxos/tree/main/tools/deprecated/protocols-toolchain/docs"
+  dxos/toolchain-node-library("@dxos/toolchain-node-library"):::def
+  click dxos/toolchain-node-library "dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs"
+end
+
+subgraph executors [executors]
+  style executors fill:#edabb0,stroke:#fff
+  dxos/protobuf-compiler("@dxos/protobuf-compiler"):::def
+  click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
+end
+
 %% Links
-dxos/protocols-toolchain --> dxos/toolchain-node-library;
-dxos/toolchain-node-library --> dxos/protobuf-compiler;
-
-%% Sections
-subgraph deprecated
-  style deprecated fill:#bac5de,stroke:#fff;
-
-  dxos/protocols-toolchain("@dxos/protocols-toolchain")
-  dxos/toolchain-node-library("@dxos/toolchain-node-library")
-end
-
-subgraph executors
-  style executors fill:#edabb0,stroke:#fff;
-
-  dxos/protobuf-compiler("@dxos/protobuf-compiler")
-end
-
-
-%% Hyperlinks
-click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs";
-click dxos/toolchain-node-library "dxos/dxos/tree/main/tools/deprecated/toolchain-node-library/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/protocols-toolchain:::rootNode
-
-dxos/protobuf-compiler:::defaultNode
-dxos/toolchain-node-library:::defaultNode
+dxos/protocols-toolchain --> dxos/toolchain-node-library
+dxos/toolchain-node-library --> dxos/protobuf-compiler
 ```
 
 ## Dependencies
