@@ -9,41 +9,32 @@ DXOS signal server.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph mesh
-  style mesh fill:#b3e6c0,stroke:#fff;
+%% Nodes
 
-  dxos/signal("@dxos/signal")
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
+  dxos/signal("@dxos/signal"):::root
+  click dxos/signal "dxos/dxos/tree/main/packages/mesh/signal/docs"
 end
 
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
 
   subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/async("@dxos/async"):::def
+    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end
 
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/signal:::rootNode
-
-dxos/async:::defaultNode
-dxos/debug:::defaultNode
 ```
 
 ## Dependencies

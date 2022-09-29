@@ -9,41 +9,32 @@ Temporary bucket for misc functions, which should graduate into separate package
 
 flowchart LR
 
-%% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/util --> dxos/protocols;
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph common
-  style common fill:#debac2,stroke:#fff;
+%% Nodes
 
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
   subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/debug("@dxos/debug")
-    dxos/util("@dxos/util")
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
   end
 end
 
-
-%% Hyperlinks
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/util:::rootNode
-
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/protocols:::defaultNode
+dxos/util --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
 ```
 
 ## Dependencies

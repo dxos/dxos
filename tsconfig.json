@@ -8,6 +8,7 @@
     "experimentalDecorators": true,
     "jsx": "react",
     "lib": [
+      "DOM",
       "ESNext"
     ],
     "module": "CommonJS",

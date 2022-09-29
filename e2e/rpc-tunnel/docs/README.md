@@ -9,73 +9,56 @@
 
 flowchart LR
 
-%% Links
-dxos/protocols --> dxos/codec-protobuf;
-dxos/react-components --> dxos/react-async;
-dxos/rpc-tunnel --> dxos/rpc;
-dxos/rpc-tunnel-e2e --> dxos/react-components;
-dxos/rpc-tunnel-e2e --> dxos/rpc-tunnel;
-dxos/util --> dxos/protocols;
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph e2e
-  style e2e fill:#abcced,stroke:#fff;
+%% Nodes
 
-  dxos/rpc-tunnel-e2e("@dxos/rpc-tunnel-e2e")
+subgraph e2e [e2e]
+  style e2e fill:#abcced,stroke:#fff
+  dxos/rpc-tunnel-e2e("@dxos/rpc-tunnel-e2e"):::root
+  click dxos/rpc-tunnel-e2e "dxos/dxos/tree/main/e2e/rpc-tunnel/docs"
 end
 
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
-  dxos/codec-protobuf("@dxos/codec-protobuf")
-  dxos/protocols("@dxos/protocols")
-  dxos/react-async("@dxos/react-async")
-  dxos/rpc("@dxos/rpc")
-  dxos/rpc-tunnel("@dxos/rpc-tunnel")
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
+  dxos/codec-protobuf("@dxos/codec-protobuf"):::def
+  click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
+  dxos/react-async("@dxos/react-async"):::def
+  click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
+  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs"
 
   subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/async("@dxos/async")
-    dxos/debug("@dxos/debug")
-    dxos/util("@dxos/util")
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/async("@dxos/async"):::def
+    click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
+    dxos/debug("@dxos/debug"):::def
+    click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
 end
 
-subgraph sdk
-  style sdk fill:#dddeba,stroke:#fff;
-
-  dxos/react-components("@dxos/react-components")
+subgraph sdk [sdk]
+  style sdk fill:#dddeba,stroke:#fff
+  dxos/react-components("@dxos/react-components"):::def
+  click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs"
 end
 
-
-%% Hyperlinks
-click dxos/async "dxos/dxos/tree/main/packages/common/async/docs";
-click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs";
-click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs";
-click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs";
-click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs";
-click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs";
-click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs";
-click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs";
-click dxos/util "dxos/dxos/tree/main/packages/common/util/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/rpc-tunnel-e2e:::rootNode
-
-dxos/async:::defaultNode
-dxos/codec-protobuf:::defaultNode
-dxos/debug:::defaultNode
-dxos/protocols:::defaultNode
-dxos/react-async:::defaultNode
-dxos/react-components:::defaultNode
-dxos/rpc:::defaultNode
-dxos/rpc-tunnel:::defaultNode
-dxos/util:::defaultNode
+dxos/protocols --> dxos/codec-protobuf
+dxos/rpc-tunnel-e2e --> dxos/react-components
+dxos/react-components --> dxos/react-async
+dxos/util --> dxos/protocols
+dxos/rpc-tunnel-e2e --> dxos/rpc-tunnel
+dxos/rpc-tunnel --> dxos/rpc
 ```
 
 ## Dependencies
