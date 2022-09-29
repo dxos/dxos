@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import expect from 'expect';
+import pick from 'lodash/pick';
 import { it as test } from 'mocha';
 import path from 'path';
-import pick from 'lodash/pick';
-
 import { ClassDeclaration } from 'ts-morph';
 
 import { Flowchart } from './mermaid';
@@ -29,9 +29,10 @@ describe('Code analysis', () => {
 
     const root = builder.getClass('Client');
     console.log(root?.getName());
+    expect(root?.getName()).toBeTruthy();
   });
 
-  test.only('Create graph', () => {
+  test('Create graph', () => {
     const processor = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
 
@@ -65,7 +66,7 @@ describe('Code analysis', () => {
           }
         }
       });
-    }
+    };
 
     const flowchart = new Flowchart();
 
