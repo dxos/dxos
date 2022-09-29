@@ -5,35 +5,22 @@
 import React, { Component, StrictMode, useState } from 'react';
 import { render } from 'react-dom';
 
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import config from './worker-config';
 
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
-import { MessageRouter, TestProtocolPlugin, testProtocolProvider, WebRTCTransportProxy } from '@dxos/network-manager';
-import { discoveryKey } from '@dxos/crypto';
-import { Protocol } from '@dxos/mesh-protocol';
-import { SignalClient } from '@dxos/messaging';
+import { WebRTCTransportService } from './webrtc-transport-service';
+import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 
 const App = ({
-  port,
-  initiator,
-  ownId,
-  remoteId,
-  topic,
-  sessionId
+  port
 }: {
-  port: MessagePort,
-  initiator: boolean,
-  ownId: PublicKey,
-  remoteId: PublicKey,
-  topic: PublicKey,
-  sessionId: PublicKey,
+  port: MessagePort
 }) => {
   const [closed, setClosed] = useState(true);
   const [value, setValue] = useState<string>();
@@ -42,52 +29,24 @@ const App = ({
     console.log('Using async effect');
     const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
 
-    const plugin = new TestProtocolPlugin(ownId.asBuffer());
-    const protocolProvider = testProtocolProvider(topic.asBuffer(), ownId.asBuffer(), plugin);
-    const stream = protocolProvider({ channel: discoveryKey(topic), initiator }).stream;
+    const webRTCTransportService: BridgeService = new WebRTCTransportService();
 
-    const signal: SignalClient = new SignalClient(
-      `ws://localhost:${config.signalPort}/.well-known/dx/signal`,
-      async msg => await messageRouter.receiveMessage(msg)
-    );
-    await signal.subscribeMessages(ownId);
-
-    const messageRouter: MessageRouter = new MessageRouter({
-      sendMessage: async msg => await signal.sendMessage(msg),
-      onSignal: async msg => {
-        if (ownId.equals(msg.recipient)) {
-          await transportProxy.signal(msg.data.signal);
-        }
+    // Starting WebRTCService
+    const server = createProtoRpcPeer({
+      requested: {},
+      exposed: {
+        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
       },
-      onOffer: async () => { return { accept: true }; }
+      handlers: { BridgeService: webRTCTransportService },
+      port: rpcPort,
+      noHandshake: true,
+      encodingOptions: {
+        preserveAny: true
+      }
     });
 
-    const transportProxy = new WebRTCTransportProxy({
-      initiator,
-      stream,
-      ownId,
-      remoteId,
-      sessionId,
-      topic,
-      sendSignal: async msg => await messageRouter.signal(msg),
-      port: rpcPort
-    })
-    await transportProxy.init();
-
-    console.log('Subscribing listeners');
-    plugin.on('receive', (p: Protocol, s: string) => {
-      console.log(`Received ${s}`);
-      setValue(s)
-    })
-    plugin.on('disconnect', () => {
-      console.log(`Disconnected`);
-      setClosed(true);
-    });
-
-    plugin.on('connect', async () => {
-      console.log(`Connected`);
-      plugin.send(remoteId.asBuffer(), 'Hello message');
-    })
+    await server.open();
+    console.log('Bridge Service ready');
 
     setClosed(false);
   }, []);
@@ -102,40 +61,17 @@ const App = ({
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
+    const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
+
     console.log('Creating shared worker');
     const worker = new SharedWorker();
     worker.port.start()
-
-    const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
-    let app;
-    if (searchParams.get('peer') === '1') {
-      console.log('Creating peer1 App');
-      app = <App
-        port={worker.port}
-        initiator={true}
-        ownId={PublicKey.from(config.peer1Id)}
-        remoteId={PublicKey.from(config.peer2Id)}
-        topic={PublicKey.from(config.topic)}
-        sessionId={PublicKey.from(config.sessionId)}
-      />
-    } else if (searchParams.get('peer') === '2') {
-      console.log('Creating peer2 App');
-      app = <App
-        port={worker.port}
-        initiator={false}
-        ownId={PublicKey.from(config.peer2Id)}
-        remoteId={PublicKey.from(config.peer1Id)}
-        topic={PublicKey.from(config.topic)}
-        sessionId={PublicKey.from(config.sessionId)}
-      />
-    } else {
-      throw new Error('Required "peer" query param');
-    }
+    worker.port.postMessage({ initMessage: true, peer: searchParams.get('peer') });
 
     console.log('Rendering');
     render(
       <StrictMode>
-        {app}
+        <App port={worker.port} />
       </StrictMode>,
       document.getElementById('root')
     );

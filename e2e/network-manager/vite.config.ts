@@ -25,6 +25,9 @@ export default defineConfig({
       "@dxos/network-manager",
       "@dxos/messaging",
       "@dxos/signal",
+      '@dxos/protocols/proto/dxos/mesh/bridge',
+      "@dxos/log",
+      "@dxos/util",
     ],
     esbuildOptions: {
       plugins: [
