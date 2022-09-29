@@ -2,4 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './runner';
+export * from './build';
+export * from './run-tests';

@@ -2,15 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { promises as fs } from 'fs';
 import assert from 'node:assert';
-import { dirname, join } from 'path';
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
+import { Browser, BrowserOptions } from '../run-browser';
 import { Lock, trigger } from '../util';
-import { Browser, BrowserOptions } from './runner';
 
 /**
  * Timeout for testing framework to initialize and to load tests.
@@ -19,11 +19,9 @@ const INIT_TIMEOUT = 10_000;
 
 export const runTests = async (bundleFile: string, browser: Browser, options: BrowserOptions): Promise<number> => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
-
-  await fs.mkdir(userDataDir, { recursive: true });
+  await mkdir(userDataDir, { recursive: true });
 
   const browserRunner = getBrowser(browser);
-
   const context = await browserRunner.launchPersistentContext(
     userDataDir,
     {
@@ -35,7 +33,6 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Br
     }
   );
   const page = await context.newPage();
-
   const lock = new Lock();
 
   page.on('pageerror', async (error) => {
@@ -43,6 +40,7 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Br
       console.log(error);
     });
   });
+
   page.on('console', async msg => {
     const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
     await lock.executeSynchronized(async () => {
@@ -57,7 +55,6 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Br
 
   const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string);
   assert(packageDir);
-
   await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
   const [getPromise, resolve] = trigger<number>();
@@ -75,6 +72,7 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Br
     console.log(`\n\nTests failed to load in ${INIT_TIMEOUT} ms.`);
     process.exit(-1);
   }, INIT_TIMEOUT);
+
   await page.exposeFunction('browserMocha__initFinished', () => {
     clearTimeout(exitTimeout);
   });

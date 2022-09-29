@@ -40,7 +40,7 @@
     "checkLeaks": {
       "type": "boolean",
       "description": "Check for global variable leaks",
-      "default": false
+      "default": true
     },
     "debug": {
       "type": "boolean",

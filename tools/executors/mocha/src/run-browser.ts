@@ -3,14 +3,13 @@
 //
 
 import chalk from 'chalk';
-import { promises as fs } from 'fs';
 import glob from 'glob';
-import { join } from 'path';
-import { promisify } from 'util';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 
-import { buildTests } from './build';
-import { runTests } from './run';
-import { runSetup } from './run-setup';
+import { buildTests, runTests } from './browser';
+import { runSetup } from './util';
 
 export type Browser =
   'chromium' |
@@ -31,12 +30,12 @@ export type BrowserOptions = {
 
 export const runBrowser = async (browser: Browser, options: BrowserOptions) => {
   if (options.setup) {
-    await runSetup(options.setup);
+    await runSetup([options.setup]);
   }
 
   const tempDir = 'dist/browser-mocha';
   try {
-    await fs.mkdir(tempDir, { recursive: true });
+    await mkdir(tempDir, { recursive: true });
   } catch (e: any) {
     console.error(e);
   }

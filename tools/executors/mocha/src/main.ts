@@ -12,12 +12,12 @@ import '@swc-node/register';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'path';
 
-import { Browser, BrowserOptions, runBrowser } from './browser';
-import { NodeJsOptions, runNodeJs } from './node';
+import { Browser, BrowserOptions, runBrowser } from './run-browser';
+import { NodeOptions, runNode } from './run-node';
 
 export type TestEnvironment = 'nodejs' | Browser
 
-export type MochaExecutorOptions = NodeJsOptions & BrowserOptions & {
+export type MochaExecutorOptions = NodeOptions & BrowserOptions & {
   environments: TestEnvironment[]
 };
 
@@ -44,7 +44,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
       }
 
       case 'nodejs': {
-        const failures = await runNodeJs(options);
+        const failures = await runNode(options);
         success &&= !failures;
         break;
       }

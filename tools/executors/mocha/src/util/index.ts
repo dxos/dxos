@@ -4,3 +4,4 @@
 
 export * from './lock';
 export * from './trigger';
+export * from './setup';

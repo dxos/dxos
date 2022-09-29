@@ -5,23 +5,23 @@
 import glob from 'glob';
 import Mocha from 'mocha';
 
-import { runSetup } from './setup';
+import { runSetup } from './util';
 
-export type NodeJsOptions = {
+export type NodeOptions = {
   testPatterns: string[]
   timeout: number
   signalServer: boolean
   domRequired: boolean
 }
 
-export const runNodeJs = async (options: NodeJsOptions) => {
+export const runNode = async (options: NodeOptions) => {
   const mocha = new Mocha({ timeout: options.timeout });
 
   await runSetup([
-    './setup/mocha-env',
-    './setup/react-setup',
-    './setup/catch-unhandled-rejections',
-    ...(options.signalServer ? ['./setup/create-signal-server'] : []),
+    '../setup/mocha-env',
+    '../setup/react-setup',
+    '../setup/catch-unhandled-rejections',
+    ...(options.signalServer ? ['../setup/create-signal-server'] : []),
     ...(options.domRequired ? ['jsdom-global/register'] : [])
   ]);
 
