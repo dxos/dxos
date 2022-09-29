@@ -9,34 +9,27 @@ Gravity dashboard.
 
 flowchart LR
 
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
+
+%% Nodes
+
+subgraph gravity [gravity]
+  style gravity fill:#edabad,stroke:#fff
+  dxos/gravity-dashboard("@dxos/gravity-dashboard"):::root
+  click dxos/gravity-dashboard "dxos/dxos/tree/main/packages/gravity/gravity-dashboard/docs"
+end
+
+subgraph gem [gem]
+  style gem fill:#b3c7e6,stroke:#fff
+  dxos/gem-core("@dxos/gem-core"):::def
+  click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
+end
+
 %% Links
-dxos/gravity-dashboard --> dxos/gem-core;
-
-%% Sections
-subgraph gravity
-  style gravity fill:#edabad,stroke:#fff;
-
-  dxos/gravity-dashboard("@dxos/gravity-dashboard")
-end
-
-subgraph gem
-  style gem fill:#b3c7e6,stroke:#fff;
-
-  dxos/gem-core("@dxos/gem-core")
-end
-
-
-%% Hyperlinks
-click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/gravity-dashboard:::rootNode
-
-dxos/gem-core:::defaultNode
+dxos/gravity-dashboard --> dxos/gem-core
 ```
 
 ## Dependencies

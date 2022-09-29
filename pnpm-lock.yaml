@@ -3131,15 +3131,19 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/color-hash': ^1.0.1
+      '@types/jest': ^27.4.1
       '@types/lodash': ^4.14.182
       '@types/madge': ^5.0.0
       '@types/minimatch': ^5.1.2
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
       '@types/yargs': ~16.0.1
       array-iterate: ~2.0.1
       chalk: ^4.1.0
       color-hash: ^1.0.3
       debug: ^4.3.3
       js-yaml: ^4.1.0
+      lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       madge: ^5.0.1
       minimatch: ^5.1.0
@@ -3154,6 +3158,7 @@ importers:
       color-hash: 1.1.1
       debug: 4.3.4
       js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
       lodash.pick: 4.4.0
       madge: 5.0.1
       minimatch: 5.1.0
@@ -3163,9 +3168,12 @@ importers:
       '@babel/core': 7.18.13
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/color-hash': 1.0.2
+      '@types/jest': 27.5.2
       '@types/lodash': 4.14.184
       '@types/madge': 5.0.0
       '@types/minimatch': 5.1.2
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
       '@types/yargs': 16.0.4
       mocha: 8.4.0
       typescript: 4.7.4
@@ -8754,7 +8762,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.19.0
+      '@babel/runtime': 7.18.9
       '@mui/material': 5.8.7_bk6rmx7robimclftfia7dcxft4
       react: 17.0.2
     dev: true
@@ -8770,7 +8778,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.19.0
+      '@babel/runtime': 7.18.9
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@types/react': 17.0.50
       react: 17.0.2

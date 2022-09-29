@@ -9,38 +9,30 @@ Code analyzer.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph tools
-  style tools fill:#bbabed,stroke:#fff;
+%% Nodes
 
-  dxos/beast("@dxos/beast")
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
+  dxos/beast("@dxos/beast"):::root
+  click dxos/beast "dxos/dxos/tree/main/tools/beast/docs"
 end
 
-subgraph common
-  style common fill:#debac2,stroke:#fff;
-
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
 
   subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5;
-
-    dxos/log("@dxos/log")
+    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
 end
 
-
-%% Hyperlinks
-click dxos/log "dxos/dxos/tree/main/packages/common/log/docs";
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/beast:::rootNode
-
-dxos/log:::defaultNode
 ```
 
 ## Dependencies

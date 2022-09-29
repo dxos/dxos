@@ -9,25 +9,20 @@ Markdown processing CLI and library.
 
 flowchart LR
 
-%% Links
+%% Classes
+classDef def fill:#fff,stroke:#333,stroke-width:1px
+classDef root fill:#fff,stroke:#333,stroke-width:4px
 
-%% Sections
-subgraph tools
-  style tools fill:#bbabed,stroke:#fff;
+%% Nodes
 
-  dxos/ridoculous("@dxos/ridoculous")
+subgraph tools [tools]
+  style tools fill:#bbabed,stroke:#fff
+  dxos/ridoculous("@dxos/ridoculous"):::root
+  click dxos/ridoculous "dxos/dxos/tree/main/tools/ridoculous/docs"
 end
 
-
-%% Hyperlinks
-
-%% Styles
-classDef rootNode fill:#fff,stroke:#333,stroke-width:2px
-classDef defaultNode fill:#fff,stroke:#333,stroke-width:1px
+%% Links
 linkStyle default stroke:#333,stroke-width:1px
-
-dxos/ridoculous:::rootNode
-
 ```
 
 ## Dependencies
