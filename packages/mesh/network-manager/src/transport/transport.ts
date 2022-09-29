@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';

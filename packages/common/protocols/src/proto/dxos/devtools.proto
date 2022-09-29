@@ -286,11 +286,11 @@ message SubscribeToSwarmInfoResponse {
         optional string data = 1;
       }
       string state = 1;
-     dxos.halo.keys.PubKey sessionId = 2;
-     dxos.halo.keys.PubKey remotePeerId = 3;
-       optional string transport = 4;
-       repeated string protocolExtensions = 5;
-       repeated Json events = 6;
+      dxos.halo.keys.PubKey sessionId = 2;
+      dxos.halo.keys.PubKey remotePeerId = 3;
+      optional string transport = 4;
+      repeated string protocolExtensions = 5;
+      repeated Json events = 6;
     }
     repeated ConnectionInfo connections = 5;
   }

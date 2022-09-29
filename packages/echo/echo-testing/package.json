@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "faker": "^5.5.3",

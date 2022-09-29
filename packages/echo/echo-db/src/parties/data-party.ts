@@ -8,10 +8,11 @@ import { synchronized, Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
 import { FeedWriter, PartyKey } from '@dxos/echo-protocol';
 import { FeedDescriptor } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
@@ -52,7 +53,7 @@ export class DataParty {
   private _genesisFeedKey?: PublicKey | undefined;
 
   constructor (
-    partyKey: PartyKey,
+    partyKey: PublicKey,
     modelFactory: ModelFactory,
     snapshotStore: SnapshotStore,
     private readonly _feedProvider: PartyFeedProvider,
@@ -90,7 +91,7 @@ export class DataParty {
     };
   }
 
-  get key (): PartyKey {
+  get key (): PublicKey {
     return this._partyCore.key;
   }
 
@@ -320,7 +321,7 @@ export class DataParty {
         return this.processor.memberKeys
           .filter(publicKey => !this.processor.partyKey.equals(publicKey))
           .map((publicKey: PublicKey): PartyMember => {
-            const displayName = this.processor.getMemberInfo(publicKey)?.displayName;
+            const displayName = todo(); // this.processor.getMemberInfo(publicKey)?.displayName;
             return {
               publicKey,
               displayName

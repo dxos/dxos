@@ -40,6 +40,8 @@ subgraph common [common]
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
+    dxos/keys("@dxos/keys"):::def
+    click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
@@ -56,7 +58,7 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/protocols --> dxos/codec-protobuf
 dxos/rpc-tunnel-e2e --> dxos/react-components
 dxos/react-components --> dxos/react-async
-dxos/util --> dxos/protocols
+dxos/rpc --> dxos/protocols
 dxos/rpc-tunnel-e2e --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 ```
@@ -68,6 +70,7 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/async`](../../../packages/common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../packages/common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) |  |
+| [`@dxos/keys`](../../../packages/common/keys/docs/README.md) |  |
 | [`@dxos/protocols`](../../../packages/common/protocols/docs/README.md) | &check; |
 | [`@dxos/react-async`](../../../packages/common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-components`](../../../packages/sdk/react-components/docs/README.md) | &check; |

@@ -40,9 +40,6 @@
       "path": "../../../packages/echo/echo-db"
     },
     {
-      "path": "../../../packages/echo/echo-protocol"
-    },
-    {
       "path": "../../../packages/echo/echo-testing"
     },
     {

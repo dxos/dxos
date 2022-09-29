@@ -8,8 +8,8 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { PublicKey } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
@@ -19,12 +19,10 @@ import { Transport, TransportFactory } from './transport';
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
  */
 export class WebRTCTransport implements Transport {
-  private _peer: SimplePeer;
+  private readonly _peer: SimplePeer;
 
   readonly closed = new Event();
-
   readonly connected = new Event();
-
   readonly errors = new ErrorStream();
 
   constructor (
@@ -39,7 +37,7 @@ export class WebRTCTransport implements Transport {
   ) {
     log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
 
-    log(`Creating webrtc connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
+    log(`Creating WebRTC connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
     this._peer = new SimplePeerConstructor({
       initiator: this._initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
@@ -60,9 +58,7 @@ export class WebRTCTransport implements Transport {
     });
     this._peer.on('connect', () => {
       log(`Connection established ${this._ownId} -> ${this._remoteId}`);
-
       this._stream.pipe(this._peer!).pipe(this._stream);
-
       this.connected.emit();
     });
     this._peer.on('error', async (err) => {
@@ -106,6 +102,7 @@ export class WebRTCTransport implements Transport {
   }
 }
 
+// TODO(burdon): Pass in opts?
 export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebRTCTransport(
   opts.initiator,
   opts.stream,

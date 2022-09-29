@@ -25,7 +25,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.27",
+    "@types/node": "^16.11.58",
     "@types/node-fetch": "^2.5.10",
     "debug": "^4.3.3"
   },

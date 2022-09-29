@@ -7,8 +7,8 @@ import { it as test, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
-import { PublicKey } from '@dxos/protocols';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';

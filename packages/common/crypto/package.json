@@ -17,7 +17,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/protocols": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "assert": "^2.0.0",
     "crypto-js": "^3.1.9-1",
     "hypercore-crypto": "^2.3.0"

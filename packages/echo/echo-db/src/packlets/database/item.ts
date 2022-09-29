@@ -4,8 +4,9 @@
 
 import debug from 'debug';
 
-import { ItemID, ItemType, FeedWriter } from '@dxos/echo-protocol';
+import { FeedWriter } from '@dxos/feed-store';
 import { Model, StateManager } from '@dxos/model-factory';
+import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { Entity } from './entity';

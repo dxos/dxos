@@ -8,9 +8,10 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { FeedWriter, ItemID, ItemType, mapFeedWriter } from '@dxos/echo-protocol';
+import { FeedWriter, mapFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
-import { PublicKey } from '@dxos/protocols';
+import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
