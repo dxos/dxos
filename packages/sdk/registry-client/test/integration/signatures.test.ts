@@ -15,7 +15,7 @@ import assert from 'node:assert';
 
 import { KeyType, Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import {
   ClientSigner,

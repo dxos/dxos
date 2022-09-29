@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import assert from 'assert';
 import debug from 'debug';
 
 import { Client, Party, InvitationDescriptor } from '@dxos/client';
@@ -37,7 +36,7 @@ export class Bot implements BotService {
     await this.client.halo.createProfile({ username: 'Bot' });
 
     if (request.invitation) {
-      assert(request.invitation.secret, 'Secret must be provided with invitation');
+      // assert(request.invitation.secret, 'Secret must be provided with invitation');
       const invitation = InvitationDescriptor.fromProto(request.invitation);
       log('Client bot join party');
       // TODO(yivlad): errors are not handled well in RPC.

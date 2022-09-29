@@ -1,0 +1,14 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package example.testing.any;
+
+message Wrapper {
+  google.protobuf.Any payload = 1;
+}
+

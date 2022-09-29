@@ -8,7 +8,7 @@ import { it as test } from 'mocha';
 import { waitForCondition } from '@dxos/async';
 import { ConfigProto } from '@dxos/config';
 
-import { Client } from './packlets/proxy';
+import { Client } from './packlets/proxies';
 
 describe('Client', () => {
   describe('Local-only tests', () => {});

@@ -6,15 +6,16 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
-import { MockFeedWriter } from '@dxos/echo-protocol';
+import { MockFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { DataMirror } from './data-mirror';
+import { DataService } from './data-service';
 import { DataServiceHost } from './data-service-host';
-import { DataServiceRouter } from './data-service-router';
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
@@ -34,7 +35,7 @@ describe('DataMirror', () => {
     } as any));
 
     const dataServiceHost = new DataServiceHost(itemManager, itemDemuxer);
-    const dataServiceRouter = new DataServiceRouter();
+    const dataServiceRouter = new DataService();
     const partyKey = PublicKey.random();
     dataServiceRouter.trackParty(partyKey, dataServiceHost);
 

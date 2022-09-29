@@ -17,7 +17,7 @@
   ],
   "references": [
     {
-      "path": "../protocols"
+      "path": "../keys"
     },
     {
       "path": "./tsconfig.spec.json"

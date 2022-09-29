@@ -3,7 +3,7 @@
 //
 
 import { WithTypeUrl } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { KeyChain, KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 

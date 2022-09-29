@@ -25,14 +25,6 @@
           "packages/gravity/orchestrator/**/*.{ts,js}"
         ]
       }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
-      "options": {
-        "testPatterns": [
-          "packages/gravity/orchestrator/src/**/*.test.{ts,js}"
-        ]
-      }
     }
   },
   "implicitDependencies": [

@@ -79,7 +79,7 @@ When merging monorepos it's best practice to add packages one by one, starting f
 
 ```
 "deps": {
-  "@types/node": "^16.11.27",
+  "@types/node": "^16.11.58",
 }
 ```
 

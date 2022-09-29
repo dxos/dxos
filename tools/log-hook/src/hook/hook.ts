@@ -24,8 +24,9 @@ export const register = () => {
       // Dump code for debugging
       const DUMP = false;
       if (DUMP) {
+        // TODO(burdon): Decide on better place to put debug files.
         const sourceMap = getSourceMap(filename);
-        const path = join(process.cwd(), '.trace-compiled', filename);
+        const path = join('/tmp/dx-log', '.trace-compiled', filename);
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, output.code, { encoding: 'utf-8' });
         writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });

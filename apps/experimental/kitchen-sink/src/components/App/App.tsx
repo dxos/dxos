@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
-import { ItemID } from '@dxos/echo-protocol';
+import { ItemID } from '@dxos/protocols';
 import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-echo-graph';

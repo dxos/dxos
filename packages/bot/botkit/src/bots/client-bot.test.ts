@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 import { setupBroker, setupClient } from '../testutils';
 import { Bot } from './client-bot';

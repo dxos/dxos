@@ -22,8 +22,10 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/halo-protocol": "workspace:*",
+    "@dxos/keyring": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/model-factory": "workspace:*",
@@ -34,13 +36,14 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/rpc": "workspace:*",
     "assert": "^2.0.0",
-    "base-x": "~3.0.9",
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "json-stable-stringify": "^1.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.unionwith": "^4.6.0",
+    "@dxos/protocol-plugin-rpc": "workspace:*",
     "pify": "~5.0.0"
   },
   "devDependencies": {
@@ -56,7 +59,10 @@
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
     "faker": "^5.5.3",
-    "memdown": "^5.1.0"
+    "memdown": "^5.1.0",
+    "mocha": "^8.4.0",
+    "typescript": "^4.7.2",
+    "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {
     "access": "public"

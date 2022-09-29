@@ -1,3 +1,3 @@
-# Protocol Buffer Definitions
+# Protocols
 
-NOTE: You must rebuild `@dxos/echo-protocol` after updating definitions here.
+System-wide protocol buffer definitions.

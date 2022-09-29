@@ -7,15 +7,15 @@
     "src",
     "scripts"
   ],
+  "exclude": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../common/random-access-storage"
     },
     {
       "path": "../echo-db"
-    },
-    {
-      "path": "../echo-protocol"
     },
     {
       "path": "../object-model"

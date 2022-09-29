@@ -7,8 +7,8 @@ import fs from 'fs';
 import path from 'path';
 
 import { createId } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 
 import { NodeContainer } from '../bot-container';
 import { BotFactory } from '../bot-factory';

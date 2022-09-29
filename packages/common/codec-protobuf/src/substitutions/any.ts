@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EncodingOptions, WithTypeUrl } from '../common';
+import { Any, EncodingOptions, WithTypeUrl } from '../common';
 import type { Schema } from '../schema';
 
 export const anySubstitutions = {
@@ -17,6 +17,15 @@ export const anySubstitutions = {
 
       if (typeof value['@type'] !== 'string') {
         throw new Error('Cannot encode google.protobuf.Any without @type string field');
+      }
+
+      if (value['@type'] === 'google.protobuf.Any') {
+        // eslint-disable-next-line camelcase
+        const { type_url, value: payload } = value as any as Any;
+        return {
+          type_url, // eslint-disable-line camelcase
+          value: payload
+        };
       }
 
       const codec = schema.tryGetCodecForType(value['@type']);
@@ -35,6 +44,12 @@ export const anySubstitutions = {
         };
       }
 
+      if (!schema.hasType(value.type_url)) {
+        return {
+          '@type': 'google.protobuf.Any',
+          ...value
+        };
+      }
       const codec = schema.tryGetCodecForType(value.type_url);
       const data = codec.decode(value.value);
       return {

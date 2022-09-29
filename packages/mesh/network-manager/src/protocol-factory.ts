@@ -5,9 +5,9 @@
 import assert from 'node:assert';
 
 import { discoveryKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
 
 import { ProtocolProvider } from './network-manager';
 

@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { Party } from '@dxos/client';
-import { PublicKeyLike } from '@dxos/protocols';
+import { PublicKeyLike } from '@dxos/keys';
 
 import { useClient } from '../client';
 

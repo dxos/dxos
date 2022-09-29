@@ -8,8 +8,9 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';

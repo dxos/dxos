@@ -110,8 +110,8 @@ export abstract class BaseCommand extends Command {
       log('Destroyed');
 
       // TODO(burdon): Ends with abort signal without sleep (threads still open?)
-      await sleep(10_000);
-
+      await sleep(3_000);
+      log('Done');
       return value;
     } catch (err: any) {
       this.error(err);

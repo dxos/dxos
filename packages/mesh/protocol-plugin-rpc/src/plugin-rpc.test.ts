@@ -7,9 +7,10 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
