@@ -50,10 +50,15 @@ const App = ({
       `ws://localhost:${config.signalPort}/.well-known/dx/signal`,
       async msg => await messageRouter.receiveMessage(msg)
     );
+    await signal.subscribeMessages(ownId);
 
     const messageRouter: MessageRouter = new MessageRouter({
       sendMessage: async msg => await signal.sendMessage(msg),
-      onSignal: async msg => await transportProxy.signal(msg.data.signal),
+      onSignal: async msg => {
+        if (ownId.equals(msg.recipient)) {
+          await transportProxy.signal(msg.data.signal);
+        }
+      },
       onOffer: async () => { return { accept: true }; }
     });
 
@@ -99,6 +104,7 @@ if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     console.log('Creating shared worker');
     const worker = new SharedWorker();
+    worker.port.start()
 
     const searchParams = new URLSearchParams(window.location.toString().split('?').at(-1));
     let app;
@@ -122,6 +128,8 @@ if (typeof SharedWorker !== 'undefined') {
         topic={PublicKey.from(config.topic)}
         sessionId={PublicKey.from(config.sessionId)}
       />
+    } else {
+      throw new Error('Required "peer" query param');
     }
 
     console.log('Rendering');

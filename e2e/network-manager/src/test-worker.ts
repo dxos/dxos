@@ -26,6 +26,7 @@ const setup = async (port: RpcPort) => {
   });
 
   await server.open();
+  console.log('Bridge Service ready');
 };
 
 const channel = new MessageChannel(async (channel, port) => {
@@ -34,4 +35,5 @@ const channel = new MessageChannel(async (channel, port) => {
   );
 });
 
+console.log('Shared worker file imported');
 onconnect = event => channel.onConnect(event);
