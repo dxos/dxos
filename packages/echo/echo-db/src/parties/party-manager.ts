@@ -8,11 +8,10 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { SecretProvider } from '@dxos/credentials';
-import { failUndefined, timed } from '@dxos/debug';
-import { PartyKey } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/protocols';
+import { failUndefined, timed, todo } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { ComplexMap, boolGuard, Provider } from '@dxos/util';
+import { ComplexMap, Provider } from '@dxos/util';
 
 import { InvitationDescriptor } from '../invitations';
 import { MetadataStore } from '../pipeline';
@@ -69,14 +68,14 @@ export class PartyManager {
     }
     this._open = true;
 
-    let partyKeys = this._metadataStore.parties.map(party => party.key).filter(boolGuard);
+    let partyKeys = todo() as any; // this._metadataStore.parties.map(party => party.key).filter(boolGuard);
 
     // Identity may be undefined, for example, on the first start.
     const identity = this._identityProvider();
 
     // TODO(telackey): Does it make any sense to load other parties if we don't have an HALO?
     if (identity) {
-      partyKeys = partyKeys.filter(partyKey => !partyKey.equals(identity.identityKey!.publicKey));
+      partyKeys = partyKeys.filter((partyKey: any) => !partyKey.equals(identity.identityKey!.publicKey));
     }
 
     // TODO(burdon): Does this make sense?
@@ -93,7 +92,7 @@ export class PartyManager {
         const snapshot = await this._snapshotStore.load(partyKey);
 
         const metadata = this._metadataStore.getParty(partyKey) ?? failUndefined();
-        if (!metadata.genesisFeedKey) {
+        if (!metadata.record.genesisFeedKey) {
           log(`Skipping loading party with missing genesis feed key: ${partyKey}`);
           continue;
         }
@@ -101,7 +100,7 @@ export class PartyManager {
         const party = snapshot
           ? await this._partyFactory.constructPartyFromSnapshot(snapshot)
           : await this._partyFactory.constructParty(partyKey);
-        party._setGenesisFeedKey(metadata.genesisFeedKey);
+        party._setGenesisFeedKey(metadata.record.genesisFeedKey);
 
         const isActive = identity?.preferences?.isPartyActive(partyKey) ?? true;
         if (isActive) {
@@ -161,7 +160,7 @@ export class PartyManager {
    * Construct a party object and start replicating with the remote peer that created that party.
    */
   @synchronized
-  async addParty (partyKey: PartyKey, genesisFeedKey: PublicKey) {
+  async addParty (partyKey: PublicKey, genesisFeedKey: PublicKey) {
     assert(this._open, 'PartyManager is not open.');
 
     /*
@@ -191,7 +190,7 @@ export class PartyManager {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.
-    // TODO(telackey): We can check the PartyKey during the greeting flow.
+    // TODO(telackey): We can check the party key during the greeting flow.
     const party = await this._partyFactory.joinParty(invitationDescriptor, secretProvider);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
@@ -213,7 +212,7 @@ export class PartyManager {
     assert(this._open, 'PartyManager is not open.');
 
     // TODO(marik-d): Somehow check that we don't already have this party.
-    // TODO(telackey): We can check the PartyKey during the greeting flow.
+    // TODO(telackey): We can check the PublicKey during the greeting flow.
     const party = await this._partyFactory.cloneParty(snapshot);
     await party.database.waitForItem({ type: PARTY_ITEM_TYPE });
 
@@ -306,15 +305,15 @@ export class PartyManager {
       const memberInfo = party.processor.getMemberInfo(publicKey);
 
       if (contact) {
-        if (memberInfo && contact.displayName !== memberInfo.displayName) {
-          log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
-          contact.displayName = memberInfo.displayName;
-          await contactListItem.model.set(hexKey, memberInfo);
-        }
+        // if (memberInfo && contact.displayName !== memberInfo.displayName) {
+        //   log(`Updating contact ${hexKey} to ${memberInfo.displayName}`);
+        //   contact.displayName = memberInfo.displayName;
+        //   await contactListItem.model.set(hexKey, memberInfo);
+        // }
       } else {
-        const displayName = memberInfo?.displayName ?? hexKey;
-        log(`Creating contact ${hexKey} to ${displayName}`);
-        await contactListItem.model.set(hexKey, { publicKey, displayName });
+        // const displayName = memberInfo?.displayName ?? hexKey;
+        // log(`Creating contact ${hexKey} to ${displayName}`);
+        // await contactListItem.model.set(hexKey, { publicKey, displayName });
       }
     }
   }

@@ -9,8 +9,9 @@ import assert from 'node:assert';
 import { join } from 'path';
 
 import { createId } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { BotService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 

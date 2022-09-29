@@ -2,22 +2,22 @@
 // Copyright 2021 DXOS.org
 //
 
+import debug from 'debug';
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
-import { timed } from '@dxos/debug';
-import { createFeedWriter, FeedSelector, FeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { failUndefined, timed } from '@dxos/debug';
+import { Credential } from '@dxos/halo-protocol/src/proto';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { DatabaseSnapshot, PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
-import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Database, FeedDatabaseBackend, TimeframeClock } from '../packlets/database';
+import { Database, FeedDatabaseBackend } from '../packlets/database';
+import { Pipeline } from '../packlets/pipeline';
 import { createAutomaticSnapshots, SnapshotStore } from '../snapshots';
-import { FeedMuxer } from './feed-muxer';
-import { createMessageSelector } from './message-selector';
+import { consumePipeline } from './feed-muxer';
 import { PartyFeedProvider } from './party-feed-provider';
 import { PartyProcessor } from './party-processor';
 
@@ -32,6 +32,8 @@ export interface PipelineOptions {
   snapshots?: boolean
   snapshotInterval?: number
 }
+
+const log = debug('dxos:echo-db:pipeline');
 
 export interface OpenOptions {
   /**
@@ -66,12 +68,11 @@ export class PartyPipeline {
   private readonly _subscriptions = new SubscriptionGroup();
 
   private _database?: Database;
-  private _pipeline?: FeedMuxer;
   private _partyProcessor?: PartyProcessor;
-  private _timeframeClock?: TimeframeClock;
+  private _pipeline?: Pipeline;
 
   constructor (
-    private readonly _partyKey: PartyKey,
+    private readonly _partyKey: PublicKey,
     private readonly _feedProvider: PartyFeedProvider,
     private readonly _modelFactory: ModelFactory,
     private readonly _snapshotStore: SnapshotStore,
@@ -79,7 +80,7 @@ export class PartyPipeline {
     private readonly _options: PipelineOptions = {}
   ) { }
 
-  get key (): PartyKey {
+  get key (): PublicKey {
     return this._partyKey;
   }
 
@@ -103,13 +104,13 @@ export class PartyPipeline {
   }
 
   get timeframe () {
-    assert(this._timeframeClock, 'Party not open');
-    return this._timeframeClock.timeframe;
+    assert(this._pipeline, 'Party not open.');
+    return this._pipeline.state.timeframe;
   }
 
   get timeframeUpdate () {
-    assert(this._timeframeClock, 'Party not open');
-    return this._timeframeClock.update;
+    assert(this._pipeline, 'Party not open.');
+    return this._pipeline.state.timeframeUpdate;
   }
 
   async getWriteFeed () {
@@ -118,9 +119,9 @@ export class PartyPipeline {
     return feed;
   }
 
-  get credentialsWriter (): FeedWriter<HaloMessage> {
-    assert(this._pipeline?.outboundHaloStream, 'Party not open');
-    return this._pipeline?.outboundHaloStream;
+  get credentialsWriter (): FeedWriter<Credential> {
+    assert(this._pipeline?.writer, 'No writable feed or pipeline is not open.');
+    return mapFeedWriter<Credential, Omit<FeedMessage, 'timeframe'>>(credential => ({ halo: { credential } }), this._pipeline.writer);
   }
 
   /**
@@ -139,8 +140,6 @@ export class PartyPipeline {
       return this;
     }
 
-    this._timeframeClock = new TimeframeClock(initialTimeframe);
-
     const writableFeed = await this._feedProvider.createOrOpenWritableFeed();
 
     if (!this._partyProcessor) {
@@ -148,37 +147,42 @@ export class PartyPipeline {
     }
 
     // Automatically open new admitted feeds.
-    this._subscriptions.push(this._partyProcessor.feedAdded.on(feed => {
-      void this._feedProvider.createOrOpenReadOnlyFeed(feed);
+    this._subscriptions.push(this._partyProcessor.feedAdded.on(async feedKey => {
+      const feed = await this._feedProvider.createOrOpenReadOnlyFeed(feedKey);
+      if (!this._pipeline) {
+        log(`Party processor added feed while pipeline was closed: ${feedKey}`);
+        return;
+      }
+
+      if (feedKey.equals(genesisFeedKey)) {
+        return; // Ignore genesis feed as it is explicitly added to the pipeline during bootstrap.
+      }
+
+      this._pipeline.addFeed(feed);
     }));
 
-    // TODO(dmaretskyi): We still need to hint at the genesis feed for some reason, not doing this breaks invitation tests.
-    await this._partyProcessor.takeHints([{ type: KeyType.FEED, publicKey: genesisFeedKey }]);
+    // Make sure we have the genesis feed open for replication.
+    const genesisFeed = await this._feedProvider.createOrOpenReadOnlyFeed(genesisFeedKey);
 
     //
     // Pipeline
     //
 
-    const iterator = await this._feedProvider.createIterator(
-      createMessageSelector(this._timeframeClock),
-      createFeedSelector(this._partyProcessor, genesisFeedKey),
-      initialTimeframe
-    );
+    this._pipeline = new Pipeline(initialTimeframe ?? new Timeframe());
+    this._pipeline.addFeed(genesisFeed);
 
-    this._pipeline = new FeedMuxer(
-      this._partyProcessor,
-
-      iterator,
-      this._timeframeClock,
-      createFeedWriter(writableFeed.feed),
-      this._options
-    );
+    // Writable feed
+    this._pipeline.setWriteFeed(writableFeed);
 
     //
     // Database
     //
 
-    const databaseBackend = new FeedDatabaseBackend(this._pipeline.outboundEchoStream, this._databaseSnapshot, { snapshots: true });
+    const databaseBackend = new FeedDatabaseBackend(
+      mapFeedWriter<EchoEnvelope, Omit<FeedMessage, 'timeframe'>>(echo => ({ echo }), this._pipeline.writer ?? failUndefined()),
+      this._databaseSnapshot,
+      { snapshots: true }
+    );
     this._database = new Database(
       this._modelFactory,
       databaseBackend,
@@ -187,24 +191,31 @@ export class PartyPipeline {
 
     // Open pipeline and connect it to the database.
     await this._database.initialize();
-    this._pipeline.setEchoProcessor(databaseBackend.echoProcessor);
-    await this._pipeline.open();
 
-    // TODO(burdon): Propagate errors.
-    this._subscriptions.push(this._pipeline.errors.on(err => console.error(err)));
+    consumePipeline(
+      this._pipeline.consume(),
+      this._partyProcessor,
+      databaseBackend.echoProcessor,
+      async error => {
+        // TODO(dmaretskyi): Better error handling.
+        console.error('Pipeline error:', error);
+      }
+    );
 
     if (this._options.snapshots) {
       createAutomaticSnapshots(
         this, // TODO(burdon): Don't pass `this`.
-        this._timeframeClock,
+        this._pipeline.state.timeframeUpdate,
         this._snapshotStore,
         this._options.snapshotInterval ?? DEFAULT_SNAPSHOT_INTERVAL
       );
     }
 
     if (targetTimeframe) {
-      await this._timeframeClock.waitUntilReached(targetTimeframe);
+      await this._pipeline.state.waitUntilReached(targetTimeframe);
     }
+
+    // TODO(dmaretskyi): Do we want to asset here that the writable feed has been admitted to the pipeline.
 
     return this;
   }
@@ -221,11 +232,10 @@ export class PartyPipeline {
     await this._database?.destroy();
     this._database = undefined;
 
-    await this._pipeline?.close();
+    await this._pipeline?.stop();
     this._pipeline = undefined;
 
     this._partyProcessor = undefined;
-    this._timeframeClock = undefined;
 
     this._subscriptions.unsubscribe();
 
@@ -240,7 +250,7 @@ export class PartyPipeline {
 
     return {
       partyKey: this.key.asUint8Array(),
-      timeframe: this._timeframeClock!.timeframe,
+      timeframe: this._pipeline!.state.timeframe,
       timestamp: Date.now(),
       database: this.database.createSnapshot(),
       halo: this.processor.makeSnapshot()
@@ -259,5 +269,3 @@ export class PartyPipeline {
     this._databaseSnapshot = snapshot.database;
   }
 }
-
-const createFeedSelector = (partyProcessor: PartyProcessor, genesisFeed: PublicKey): FeedSelector => feed => genesisFeed.equals(feed.key) || partyProcessor.isFeedAdmitted(feed.key);

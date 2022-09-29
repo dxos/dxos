@@ -8,8 +8,8 @@ import ArrowBackIos from '@mui/icons-material/ArrowBackIos';
 import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 
+import { PublicKey } from '@dxos/keys';
 import { ConnectionState, SwarmInfo } from '@dxos/network-manager';
-import type { PublicKey } from '@dxos/protocols';
 import { CopyText } from '@dxos/react-components';
 
 export interface SwarmInfoViewProps {

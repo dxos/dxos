@@ -4,12 +4,13 @@
 
 import { inspect } from 'node:util';
 
-import { PublicKey } from './public-key';
+import { PublicKey } from '@dxos/keys';
 
 /**
  * A mapping of feed key to a sequence number on that feed.
  * Describes how many messages have been processed.
  */
+// TODO(burdon): Move out of protocols.
 export class Timeframe {
   // Cannot use ComplexMap because @dxos/util depends on @dxos/protocols for PublicKey.
   private readonly _keys = new Map<string, PublicKey>();

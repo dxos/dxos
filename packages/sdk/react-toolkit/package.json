@@ -42,6 +42,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/esbuild-plugins": "~2.29.0",
+    "@dxos/keys": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-client-testing": "workspace:*",

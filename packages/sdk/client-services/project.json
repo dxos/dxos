@@ -1,0 +1,49 @@
+{
+  "sourceRoot": "packages/sdk/client-services/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/client-services/dist",
+        "tsConfig": "packages/sdk/client-services/tsconfig.json",
+        "main": "packages/sdk/client-services/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/client-services/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client-services/src/**/*.test.{ts,js}"
+        ]
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/mocha:browser",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/client-services/browser-test/**/*.test.ts"
+        ],
+        "setup": "packages/sdk/client-services/browser-test/setup.js"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "mocha"
+  ]
+}

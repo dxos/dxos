@@ -5,9 +5,8 @@
 import assert from 'node:assert';
 import { Doc, XmlElement, XmlText, XmlFragment, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
-import { ItemID } from '@dxos/echo-protocol';
 import { Model, ModelMeta, MutationProcessMeta, MutationWriter, StateMachine } from '@dxos/model-factory';
-import { schema } from '@dxos/protocols';
+import { ItemID, schema } from '@dxos/protocols';
 import { Mutation, Snapshot } from '@dxos/protocols/proto/dxos/echo/model/text';
 
 class TextModelStateMachine implements StateMachine<Doc, Mutation, Snapshot> {

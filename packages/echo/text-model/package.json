@@ -22,14 +22,15 @@
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/model-factory": "workspace:*",
-    "@types/node": "^16.11.27",
+    "@types/node": "^16.11.58",
     "assert": "^2.0.0",
     "yjs": "^13.5.41"
   },
   "devDependencies": {
     "@dxos/object-model": "workspace:*",
+    "@dxos/feed-store": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/faker": "^5.5.9",
     "faker": "^5.5.3"

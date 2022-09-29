@@ -18,7 +18,7 @@ message JoinRequest {
 }
 
 message Message {
-  /// TODO(egor): Rename to `sender`.
+  // TODO(egor): Rename to `sender`.
   bytes author = 1;
   bytes recipient = 2;
   google.protobuf.Any payload = 3;
@@ -30,11 +30,14 @@ message ReceptionRequest {
 
 /// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
 message SwarmEvent {
+  // Announce peer available on swarm.
   message PeerAvailable {
     bytes peer = 1;
+
     google.protobuf.Timestamp since = 2;
-    /// When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
-    /// periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
+
+    // When, if at all (handle the default value as not), this availability would expires were it not re-announced, like
+    // periodically in Pub/Sub with some margin such that Pub/Sub network partitions lead to offline statuses.
     optional google.protobuf.Timestamp until = 3;
 
     /// Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.

@@ -57,6 +57,8 @@ The diagram below illustrates the data processing pipeline.
 
 ## 4. Design
 
+![Feeds](./diagrams//echo-packages.drawio.svg)
+
 ### 4.1. Message Ordering
 
 #### 4.1.1. Timeframes

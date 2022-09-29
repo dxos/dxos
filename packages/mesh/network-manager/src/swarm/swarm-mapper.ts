@@ -3,9 +3,9 @@
 //
 
 import { Event } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { PublicKey } from '@dxos/protocols';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
 import { ConnectionState } from './connection';
