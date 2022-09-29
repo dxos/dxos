@@ -7,8 +7,6 @@ import { it as test } from 'mocha';
 
 import { Flowchart } from './mermaid';
 
-// TODO(burdon): Integrate into processor.
-
 describe('Mermaid builder', () => {
   test('Flowchart', () => {
     const flowchart = new Flowchart({

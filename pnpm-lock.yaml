@@ -3131,9 +3131,12 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/protocols-toolchain': workspace:*
       '@types/color-hash': ^1.0.1
+      '@types/jest': ^27.4.1
       '@types/lodash': ^4.14.182
       '@types/madge': ^5.0.0
       '@types/minimatch': ^5.1.2
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.27
       '@types/yargs': ~16.0.1
       array-iterate: ~2.0.1
       chalk: ^4.1.0
@@ -3165,9 +3168,12 @@ importers:
       '@babel/core': 7.18.13
       '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/color-hash': 1.0.2
+      '@types/jest': 27.5.2
       '@types/lodash': 4.14.184
       '@types/madge': 5.0.0
       '@types/minimatch': 5.1.2
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.27
       '@types/yargs': 16.0.4
       mocha: 8.4.0
       typescript: 4.7.4

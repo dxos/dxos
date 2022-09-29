@@ -15,7 +15,7 @@ import { hideBin } from 'yargs/helpers';
 import { log } from '@dxos/log';
 
 import { GraphBuilder } from './graph-builder';
-import { ProjectProcessor } from './project-processor';
+import { WorkspaceProcessor } from './workspace-processor';
 
 const main = () => {
   log.info('Started');
@@ -40,7 +40,7 @@ const main = () => {
         json: boolean
         verbose?: boolean
       }) => {
-        const processor = new ProjectProcessor(baseDir, { verbose }).init();
+        const processor = new WorkspaceProcessor(baseDir, { verbose }).init();
         const projects = processor.getProjects().map(p => p.package.name);
 
         if (json) {
@@ -75,7 +75,7 @@ const main = () => {
           process.exit(1);
         }
 
-        const processor = new ProjectProcessor(baseDir, { verbose }).init();
+        const processor = new WorkspaceProcessor(baseDir, { verbose }).init();
         const project = processor.getProjectByName(name);
         if (project) {
           const descendents = [...project.descendents!.values()].sort();
@@ -139,7 +139,7 @@ const main = () => {
         include: string
         exclude: string
       }) => {
-        const processor = new ProjectProcessor(baseDir, { verbose, include }).init();
+        const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
         const builder = new GraphBuilder(baseDir, processor, { verbose, exclude: exclude?.split(',') });
         processor.getProjects(pattern).forEach(project => {
           if (verbose) {
