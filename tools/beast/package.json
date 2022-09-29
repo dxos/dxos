@@ -26,13 +26,12 @@
     "madge": "^5.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.pick": "^4.4.0",
-    "lodash": "4.17.21",
     "minimatch": "^5.1.0",
     "ts-morph": "^16.0.0",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.7",
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "@dxos/protocols-toolchain": "workspace:*",
     "@babel/core": "^7.18.13",
     "@types/color-hash": "^1.0.1",
@@ -41,7 +40,7 @@
     "@types/madge": "^5.0.0",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^16.11.27",
+    "@types/node": "^16.11.58",
     "@types/yargs": "~16.0.1",
     "mocha": "^8.4.0",
     "typescript": "^4.7.2"
