@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "invitation_protocol.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../../src/proto/dxos/echo/invitation_protocol.proto"
+  ],
+  "names": [],
+  "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"
+}

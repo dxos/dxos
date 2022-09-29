@@ -6,10 +6,10 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { Event, promiseTimeout } from '@dxos/async';
-import { ItemID, ItemType } from '@dxos/echo-protocol';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
+import { ItemID, ItemType } from '@dxos/protocols';
 
 import { Entity } from '../entity';
 import { Item } from '../item';

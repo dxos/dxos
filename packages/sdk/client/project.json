@@ -27,7 +27,6 @@
           "@dxos/credentials",
           "@dxos/crypto",
           "@dxos/echo-db",
-          "@dxos/echo-protocol",
           "@dxos/feed-store",
           "@dxos/network-manager",
           "@dxos/object-model"

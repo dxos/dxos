@@ -5,19 +5,14 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import {
-  createEnvelopeMessage,
-  createFeedAdmitMessage,
-  createPartyGenesisMessage,
-  SecretProvider,
-  wrapMessage
-} from '@dxos/credentials';
+import { SecretProvider } from '@dxos/credentials';
 import { failUndefined, raise, timed } from '@dxos/debug';
-import { createFeedWriter, PartyKey } from '@dxos/echo-protocol';
+import { createFeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { PublicKey, Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -29,7 +24,7 @@ import {
 } from '../invitations';
 import { IdentityNotInitializedError } from '../packlets/errors';
 import { MetadataStore, PartyFeedProvider, PipelineOptions } from '../pipeline';
-import { IdentityCredentials } from '../protocol/identity-credentials';
+import { IdentityCredentials } from '../protocol';
 import { SnapshotStore } from '../snapshots';
 import { DataParty, PARTY_ITEM_TYPE } from './data-party';
 
@@ -70,39 +65,39 @@ export class PartyFactory {
     await party.open();
 
     // PartyGenesis (self-signed by Party).
-    await party.credentialsWriter.write(createPartyGenesisMessage(
-      identity.keyring,
-      partyKey,
-      writableFeed.key,
-      partyKey)
-    );
+    // await party.credentialsWriter.write(createPartyGenesisMessage(
+    //   identity.keyring,
+    //   partyKey,
+    //   writableFeed.key,
+    //   partyKey)
+    // );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.credentialsWriter.write(createEnvelopeMessage(
-      identity.keyring,
-      partyKey.publicKey,
-      wrapMessage(identity.identityGenesis),
-      [partyKey])
-    );
+    // await party.credentialsWriter.write(createEnvelopeMessage(
+    //   identity.keyring,
+    //   partyKey.publicKey,
+    //   wrapMessage(identity.identityGenesis),
+    //   [partyKey])
+    // );
 
     // FeedAdmit (signed by the Device KeyChain).
     // TODO(dmaretskyi): Is this really needed since a feed is already admitted by party genesis message.
-    await party.credentialsWriter.write(createFeedAdmitMessage(
-      identity.keyring,
-      partyKey.publicKey,
-      writableFeed.key,
-      [identity.deviceKeyChain]
-    ));
+    // await party.credentialsWriter.write(createFeedAdmitMessage(
+    //   identity.keyring,
+    //   partyKey.publicKey,
+    //   writableFeed.key,
+    //   [identity.deviceKeyChain]
+    // ));
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
-    if (identity.identityInfo) {
-      await party.credentialsWriter.write(createEnvelopeMessage(
-        identity.keyring,
-        partyKey.publicKey,
-        wrapMessage(identity.identityInfo),
-        [identity.deviceKeyChain]
-      ));
-    }
+    // if (identity.identityInfo) {
+    //   await party.credentialsWriter.write(createEnvelopeMessage(
+    //     identity.keyring,
+    //     partyKey.publicKey,
+    //     wrapMessage(identity.identityInfo),
+    //     [identity.deviceKeyChain]
+    //   ));
+    // }
 
     // Create special properties item.
     await party.database.createItem({ model: ObjectModel, type: PARTY_ITEM_TYPE });
@@ -116,7 +111,7 @@ export class PartyFactory {
   /**
    * Constructs a party object from an existing set of feeds.
    */
-  async constructParty (partyKey: PartyKey, initialTimeframe?: Timeframe) {
+  async constructParty (partyKey: PublicKey, initialTimeframe?: Timeframe) {
     const identity = this._identityProvider() ?? raise(new IdentityNotInitializedError());
 
     //
@@ -187,12 +182,12 @@ export class PartyFactory {
 
     // Copy our signed IdentityInfo into the new Party.
     if (identity.identityInfo) {
-      await party.credentialsWriter.write(createEnvelopeMessage(
-        identity.keyring,
-        partyKey,
-        wrapMessage(identity.identityInfo),
-        [identity.deviceKeyChain]
-      ));
+      // await party.credentialsWriter.write(createEnvelopeMessage(
+      //   identity.keyring,
+      //   partyKey,
+      //   wrapMessage(identity.identityInfo),
+      //   [identity.deviceKeyChain]
+      // ));
     }
 
     return party;
@@ -217,38 +212,38 @@ export class PartyFactory {
     await party.open();
 
     // PartyGenesis (self-signed by Party).
-    await party.credentialsWriter.write(createPartyGenesisMessage(
-      identity.keyring,
-      partyKey,
-      writableFeed.key,
-      partyKey)
-    );
+    // await party.credentialsWriter.write(createPartyGenesisMessage(
+    //   identity.keyring,
+    //   partyKey,
+    //   writableFeed.key,
+    //   partyKey)
+    // );
 
     // KeyAdmit (IdentityGenesis in an Envelope signed by Party).
-    await party.credentialsWriter.write(createEnvelopeMessage(
-      identity.keyring,
-      partyKey.publicKey,
-      wrapMessage(identity.identityGenesis),
-      [partyKey]
-    ));
+    // await party.credentialsWriter.write(createEnvelopeMessage(
+    //   identity.keyring,
+    //   partyKey.publicKey,
+    //   wrapMessage(identity.identityGenesis),
+    //   [partyKey]
+    // ));
 
     // FeedAdmit (signed by the Device KeyChain).
-    await party.credentialsWriter.write(createFeedAdmitMessage(
-      identity.keyring,
-      partyKey.publicKey,
-      writableFeed.key,
-      [identity.deviceKeyChain]
-    ));
+    // await party.credentialsWriter.write(createFeedAdmitMessage(
+    //   identity.keyring,
+    //   partyKey.publicKey,
+    //   writableFeed.key,
+    //   [identity.deviceKeyChain]
+    // ));
 
     // IdentityInfo in an Envelope signed by the Device KeyChain.
-    if (identity.identityInfo) {
-      await party.credentialsWriter.write(createEnvelopeMessage(
-        identity.keyring,
-        partyKey.publicKey,
-        wrapMessage(identity.identityInfo),
-        [identity.deviceKeyChain]
-      ));
-    }
+    // if (identity.identityInfo) {
+    //   await party.credentialsWriter.write(createEnvelopeMessage(
+    //     identity.keyring,
+    //     partyKey.publicKey,
+    //     wrapMessage(identity.identityInfo),
+    //     [identity.deviceKeyChain]
+    //   ));
+    // }
 
     // const keyAdmitMessage = snapshot.halo?.messages?.[1];
     // assert(keyAdmitMessage);
@@ -264,7 +259,7 @@ export class PartyFactory {
     // }
 
     // Write messages to create ECHO items.
-    const feedWriter = createFeedWriter(writableFeed.feed);
+    const feedWriter = createFeedWriter(writableFeed);
     for (const item of snapshot.database?.items || []) {
       const message: FeedMessage = {
         timeframe: new Timeframe(),
@@ -281,6 +276,7 @@ export class PartyFactory {
           snapshot: item.model
         }
       };
+
       await feedWriter.write(message);
     }
 

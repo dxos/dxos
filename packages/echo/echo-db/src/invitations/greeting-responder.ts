@@ -15,9 +15,10 @@ import {
   SecretValidator
 } from '@dxos/credentials';
 import { randomBytes } from '@dxos/crypto';
-import { FeedWriter, SwarmKey } from '@dxos/echo-protocol';
+import { todo } from '@dxos/debug';
+import { FeedWriter } from '@dxos/feed-store';
+import { PublicKey } from '@dxos/keys';
 import { FullyConnectedTopology, NetworkManager } from '@dxos/network-manager';
-import { PublicKey } from '@dxos/protocols';
 import { Message as HaloMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 
 import { PartyStateProvider } from '../pipeline';
@@ -46,7 +47,7 @@ export enum GreetingState {
  */
 export class GreetingResponder {
   private readonly _greeterPlugin: GreetingCommandPlugin;
-  private readonly _swarmKey: SwarmKey = randomBytes();
+  private readonly _swarmKey: PublicKey = randomBytes();
   private readonly _greeter: Greeter;
 
   private _state: GreetingState = GreetingState.INITIALIZED;
@@ -223,7 +224,7 @@ export class GreetingResponder {
         this._credentialsSigner.signer,
         this._partyProcessor.partyKey,
         message,
-        [this._credentialsSigner.getDeviceSigningKeys()]
+        todo() // [this._credentialsSigner.getDeviceSigningKeys()]
       );
 
       await this._credentialsWriter.write(envelope);

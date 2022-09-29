@@ -7,9 +7,10 @@ import assert from 'node:assert';
 
 import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
+import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
 import { PluginRpc } from '@dxos/protocol-plugin-rpc';
-import { PublicKey, schema } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 

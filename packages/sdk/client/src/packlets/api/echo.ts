@@ -2,21 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  ActivationOptions,
-  Database,
-  InvitationDescriptor,
-  PartyMember,
-  ResultSet
-} from '@dxos/echo-db';
-import { PartyKey } from '@dxos/echo-protocol';
+import { InvitationDescriptor } from '@dxos/client-services';
+import { ActivationOptions, Database, PartyMember, ResultSet } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
-import { PublicKey } from '@dxos/protocols';
 import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Invitation, InvitationRequest } from './invitations';
+import { Invitation } from './invitation';
+import { InvitationRequest } from './invitation-request';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey
@@ -83,7 +78,7 @@ export interface Echo {
   registerModel (constructor: ModelConstructor<any>): void
   createParty (): Promise<Party>
   cloneParty (snapshot: PartySnapshot): Promise<Party>
-  getParty (partyKey: PartyKey): Party | undefined
+  getParty (partyKey: PublicKey): Party | undefined
   queryParties (): ResultSet<Party>
   acceptInvitation (invitationDescriptor: InvitationDescriptor): PartyInvitation
 }

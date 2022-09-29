@@ -5,8 +5,7 @@ runtime:
     ipfs:
       server: 'https://ipfs-pub1.kube.dxos.network'
     signal:
-#     server: 'wss://demo.kube.dxos.network/dxos/signal'
-      server: 'ws://localhost:9003/.well-known/dx/signal'
+      server: 'wss://halo.dxos.org/.well-known/dx/signal'
     ice:
       - urls: 'turn:demo.kube.dxos.network:3478'
         username: 'dxos'

@@ -8,7 +8,7 @@ import { join } from 'path';
 
 import { Config } from '@dxos/config';
 import { randomBytes } from '@dxos/crypto';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '@dxos/protocols/proto/dxos/bot';
 
 import { BotContainer } from '../bot-container';

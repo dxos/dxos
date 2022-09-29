@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Add as AddIcon } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { HaloSharingDialog } from '@dxos/react-toolkit';
 
 import { DeviceList } from '../../components';

@@ -8,7 +8,7 @@ import expect from 'expect';
 import moment from 'moment';
 
 import { randomBytes } from '@dxos/crypto';
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 import { KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { Message, SignedMessage } from '@dxos/protocols/proto/dxos/halo/signed';
 

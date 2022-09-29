@@ -14,6 +14,7 @@ export type Unsubscribe = () => void;
 export class SubscriptionGroup {
   private _subscriptions: Unsubscribe[] = [];
 
+  // TODO(dmaretskyi): Rename to add.
   push (callback: Unsubscribe) {
     this._subscriptions.push(callback);
   }

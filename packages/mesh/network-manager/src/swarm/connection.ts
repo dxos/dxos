@@ -6,9 +6,9 @@ import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
-import { PublicKey } from '@dxos/protocols';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage, SignalMessaging } from '../signal';
@@ -67,7 +67,7 @@ export class Connection {
 
   constructor (
     public readonly topic: PublicKey,
-    public readonly ownId: PublicKey,
+    public readonly ownId: PublicKey, // TODO(burdon): peerID?
     public readonly remoteId: PublicKey,
     public readonly sessionId: PublicKey,
     public readonly initiator: boolean,
@@ -122,7 +122,6 @@ export class Connection {
 
   connect () {
     assert(this._state === ConnectionState.INITIAL, 'Invalid state.');
-
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);

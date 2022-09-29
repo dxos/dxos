@@ -182,7 +182,6 @@ message SubscribePartyResponse {
   optional Party party = 1;
 }
 
-
 message SubscribePartiesResponse {
   repeated Party parties = 1;
 }
@@ -232,11 +231,11 @@ service PartyService {
 
   rpc GetPartyDetails(GetPartyDetailsRequest) returns (PartyDetails);
 
-  rpc CreateParty(google.protobuf.Empty) returns(Party);
-  rpc CloneParty(echo.snapshot.PartySnapshot) returns(Party);
+  rpc CreateParty(google.protobuf.Empty) returns (Party);
+  rpc CloneParty(echo.snapshot.PartySnapshot) returns (Party);
 
   /// Open and close or activate and deactivate a party.
-  rpc SetPartyState(SetPartyStateRequest) returns(Party);
+  rpc SetPartyState(SetPartyStateRequest) returns (Party);
 
   rpc CreateInvitation(CreateInvitationRequest) returns (stream InvitationRequest);
   rpc AcceptInvitation(echo.invitation.InvitationDescriptor) returns (stream RedeemedInvitation);

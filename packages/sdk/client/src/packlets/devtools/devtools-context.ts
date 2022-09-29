@@ -4,7 +4,6 @@
 
 import { Config } from '@dxos/config';
 import { Keyring } from '@dxos/credentials';
-import { ECHO } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
@@ -15,6 +14,6 @@ export interface DevtoolsServiceDependencies {
   feedStore: FeedStore
   networkManager: NetworkManager
   keyring: Keyring
-  echo: ECHO
+  echo: any
   modelFactory: ModelFactory
 }

@@ -18,7 +18,7 @@ export const config: ConfigProto = {
         server: 'wss://node1.devnet.dxos.network/dxns/ws'
       },
       signal: {
-        server: 'wss://demo.kube.dxos.network/dxos/signal',
+        server: 'wss://halo.dxos.org/.well-known/dx/signal',
         api: 'https://demo.kube.dxos.network/dxos/signal/api'
       },
       ice: [

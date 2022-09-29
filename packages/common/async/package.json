@@ -4,7 +4,6 @@
   "description": "Async utils.",
   "license": "MIT",
   "author": "DXOS.org",
-  "bugs": "https://github.com/dxos/protocols/issues",
   "repository": "github:dxos/protocols",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

@@ -7,8 +7,8 @@ import React from 'react';
 import InfoIcon from '@mui/icons-material/Info';
 import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 
+import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/network-manager';
-import type { PublicKey } from '@dxos/protocols';
 import { CopyText } from '@dxos/react-components';
 
 import { BooleanIcon } from './BooleanIcon';

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from '@dxos/protocols';
+import { PublicKey } from '@dxos/keys';
 
 /**
  * Signal peer discovery interface.
