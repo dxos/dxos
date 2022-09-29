@@ -3,8 +3,8 @@
 //
 
 import { build } from 'esbuild';
-import { promises as fs } from 'fs';
-import { join, resolve, relative } from 'path';
+import { writeFile } from 'node:fs/promises';
+import { join, resolve, relative } from 'node:path';
 
 import {
   NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin
@@ -30,7 +30,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     async function run() {
       const context = await window.browserMocha__getEnv();
 
-      window.browserMocha = { context };
+      window.mochaExecutor = { environment: context.browser };
 
       mocha.reporter('spec');
       mocha.setup('bdd');
@@ -46,7 +46,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     run();
   `;
 
-  await fs.writeFile(mainFile, mainContents);
+  await writeFile(mainFile, mainContents);
 
   await build({
     entryPoints: [mainFile],

@@ -3,23 +3,16 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "node",
-      "jest"
+      "mocha",
+      "node"
     ]
   },
-  "exclude": [
-    "node_modules"
-  ],
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     {
       "path": "../debug"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

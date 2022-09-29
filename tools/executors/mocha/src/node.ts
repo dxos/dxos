@@ -1,0 +1,37 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+import glob from 'glob';
+import Mocha from 'mocha';
+
+import { runSetup } from './setup';
+
+export type NodeJsOptions = {
+  testPatterns: string[]
+  timeout: number
+  signalServer: boolean
+  domRequired: boolean
+}
+
+export const runNodeJs = async (options: NodeJsOptions) => {
+  const mocha = new Mocha({ timeout: options.timeout });
+
+  await runSetup([
+    './setup/mocha-env',
+    './setup/react-setup',
+    './setup/catch-unhandled-rejections',
+    ...(options.signalServer ? ['./setup/create-signal-server'] : []),
+    ...(options.domRequired ? ['jsdom-global/register'] : [])
+  ]);
+
+  options.testPatterns.forEach(pattern => {
+    glob.sync(pattern).forEach(path => {
+      mocha.addFile(path);
+    });
+  });
+
+  const failures = await new Promise(resolve => mocha.run(failures => resolve(failures)));
+
+  return failures;
+};

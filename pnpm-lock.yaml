@@ -34,10 +34,10 @@ importers:
       '@dxos/plate': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
+      '@dxos/signal': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
       '@nrwl/eslint-plugin-nx': 14.5.7
-      '@nrwl/jest': 14.5.7
       '@nrwl/js': 14.5.7
       '@nrwl/linter': 14.5.7
       '@nrwl/nx-cloud': ^14.3.0
@@ -56,8 +56,8 @@ importers:
       '@storybook/react': ^6.5.10
       '@storybook/testing-library': ^0.0.13
       '@swc-node/register': ~1.5.1
+      '@types/chai': ^4.2.15
       '@types/glob': ~7.1.3
-      '@types/jest': ^27.4.1
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
       '@types/react': ^17.0.24
@@ -66,6 +66,7 @@ importers:
       '@typescript-eslint/eslint-plugin': ^5.29.0
       '@typescript-eslint/parser': ^5.29.0
       babel-loader: ^8.2.5
+      chai: ^4.3.4
       chalk: ^4.1.0
       esbuild: ~0.14.1
       esbuild-node-externals: ^1.4.1
@@ -73,7 +74,6 @@ importers:
       expect: ^27.0.2
       glob: ~7.1.6
       husky: ^8.0.0
-      jest: 27.5.1
       jsdom: ~18.0.1
       jsdom-global: ^3.0.2
       mocha: ^8.4.0
@@ -87,7 +87,6 @@ importers:
       require-from-string: ^2.0.2
       rollup: ~2.77.3
       syncpack: ^8.2.4
-      ts-jest: 27.1.4
       ts-node: 10.9.1
       tslib: ^2.3.0
       typescript: ^4.7.2
@@ -111,10 +110,10 @@ importers:
       '@dxos/plate': link:tools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
+      '@dxos/signal': link:packages/core/mesh/signal
       '@mdx-js/react': 2.1.3_react@17.0.2
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
       '@nrwl/eslint-plugin-nx': 14.5.7_7qzfn3d2xjbaccibm3hyl7xehm
-      '@nrwl/jest': 14.5.7_qkciqi4j474hl23yrcyhosvvza
       '@nrwl/js': 14.5.7_osi77fjxs57mwennraun4e6pmi_eyzl5gu4jyivugy6vmd5y74jcu
       '@nrwl/linter': 14.5.7_24msc4yi7n6uds3ndd7rgnhcwm
       '@nrwl/nx-cloud': 14.4.1
@@ -133,8 +132,8 @@ importers:
       '@storybook/react': 6.5.10_s3urzqyud3z5y2ux632jy7wy6y
       '@storybook/testing-library': 0.0.13_sfoxds7t5ydpegc3knd667wn6m
       '@swc-node/register': 1.5.1_typescript@4.7.4
+      '@types/chai': 4.3.0
       '@types/glob': 7.1.4
-      '@types/jest': 27.5.2
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       '@types/react': 17.0.50
@@ -143,6 +142,7 @@ importers:
       '@typescript-eslint/eslint-plugin': 5.30.5_w2rm4vxqmxmdgpb5j2ovmr5hve
       '@typescript-eslint/parser': 5.30.5_typescript@4.7.4
       babel-loader: 8.2.5_tb6moc662p5idmcg3l5ipbhpta
+      chai: 4.3.4
       chalk: 4.1.2
       esbuild: 0.14.49
       esbuild-node-externals: 1.4.1_esbuild@0.14.49
@@ -150,7 +150,6 @@ importers:
       expect: 27.5.1
       glob: 7.1.7
       husky: 8.0.1
-      jest: 27.5.1_ts-node@10.9.1
       jsdom: 18.0.1
       jsdom-global: 3.0.2_jsdom@18.0.1
       mocha: 8.4.0
@@ -164,7 +163,6 @@ importers:
       require-from-string: 2.0.2
       rollup: 2.77.3
       syncpack: 8.2.4
-      ts-jest: 27.1.4_dp7knfxphemncsb4b5rk37mcqm
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
@@ -545,9 +543,12 @@ importers:
     specifiers:
       '@dxos/debug': workspace:*
       assert: ^2.0.0
+      events: ^3.3.0
     dependencies:
       '@dxos/debug': link:../debug
       assert: 2.0.0
+    devDependencies:
+      events: 3.3.0
 
   packages/common/codec-protobuf:
     specifiers:
@@ -556,6 +557,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       lodash.merge: ^4.6.2
+      path-browserify: ^1.0.1
       protobufjs: ^6.9.0
     dependencies:
       assert: 2.0.0
@@ -564,6 +566,7 @@ importers:
     devDependencies:
       '@types/debug': 4.1.7
       '@types/lodash.merge': 4.6.6
+      path-browserify: 1.0.1
       protobufjs: 6.11.2
 
   packages/common/crypto:
@@ -3407,7 +3410,7 @@ importers:
       eslint-config-semistandard: ^16.0.0
       eslint-config-standard: ^17.0.0
       eslint-plugin-import: ^2.26.0
-      eslint-plugin-jest: ^26.1.0
+      eslint-plugin-mocha: ^10.1.0
       eslint-plugin-n: ^15.2.4
       eslint-plugin-node: ^11.1.0
       eslint-plugin-promise: ^6.0.0
@@ -3423,7 +3426,7 @@ importers:
       eslint-config-semistandard: 16.0.0_qrcbtnaxkrxvrybzqrdy7wnfxa
       eslint-config-standard: 17.0.0_ke2n6hdf62zwczfu4skmqbhriu
       eslint-plugin-import: 2.26.0_oeuekxg2wxmhohnylzuysau2n4
-      eslint-plugin-jest: 26.1.0_oahx2ejvshnr4ob5l3sm7cve4q
+      eslint-plugin-mocha: 10.1.0_eslint@8.24.0
       eslint-plugin-n: 15.2.5_eslint@8.24.0
       eslint-plugin-node: 11.1.0_eslint@8.24.0
       eslint-plugin-promise: 6.0.0_eslint@8.24.0
@@ -8491,6 +8494,7 @@ packages:
       - supports-color
       - ts-node
       - utf-8-validate
+    dev: false
 
   /@jest/environment/27.5.1:
     resolution: {integrity: sha512-/WQjhPJe3/ghaol/4Bq480JKXV/Rfw8nQdN7f41fM8VDHLcxKXou6QyXAh3EFr9/bVG3x74z1NWDkP87EiY8gA==}
@@ -18297,6 +18301,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       fast-json-stable-stringify: 2.1.0
+    dev: false
 
   /bser/2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
@@ -22368,25 +22373,15 @@ packages:
       - supports-color
     dev: false
 
-  /eslint-plugin-jest/26.1.0_oahx2ejvshnr4ob5l3sm7cve4q:
-    resolution: {integrity: sha512-vjF6RvcKm4xZSJgCmXb9fXmhzTva+I9jtj9Qv5JeZQTRocU7WT1g3Kx0cZ+00SekPe2DtSWDawHtSj4RaxFhXQ==}
-    engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+  /eslint-plugin-mocha/10.1.0_eslint@8.24.0:
+    resolution: {integrity: sha512-xLqqWUF17llsogVOC+8C6/jvQ+4IoOREbN7ZCHuOHuD6cT5cDD4h7f2LgsZuzMAiwswWE21tO7ExaknHVDrSkw==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      '@typescript-eslint/eslint-plugin': ^5.0.0
-      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
-      jest: '*'
-    peerDependenciesMeta:
-      '@typescript-eslint/eslint-plugin':
-        optional: true
-      jest:
-        optional: true
+      eslint: '>=7.0.0'
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.30.5_w2rm4vxqmxmdgpb5j2ovmr5hve
-      '@typescript-eslint/utils': 5.30.5_oma37ntcsyoxqn5sr4l7ekf4na
       eslint: 8.24.0
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
+      eslint-utils: 3.0.0_eslint@8.24.0
+      rambda: 7.3.0
     dev: false
 
   /eslint-plugin-n/15.2.5_eslint@8.24.0:
@@ -25868,6 +25863,7 @@ packages:
     dependencies:
       pkg-dir: 4.2.0
       resolve-cwd: 3.0.0
+    dev: false
 
   /imurmurhash/0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -27055,6 +27051,7 @@ packages:
       '@jest/types': 27.5.1
       execa: 5.1.1
       throat: 6.0.1
+    dev: false
 
   /jest-circus/27.5.1:
     resolution: {integrity: sha512-D95R7x5UtlMA5iBYsOHFFbMD/GVA4R/Kdq15f7xYWUfWHBto9NYRsOvnSauTgdF+ogCpJ4tyKOXhUifxS65gdw==}
@@ -27110,6 +27107,7 @@ packages:
       - supports-color
       - ts-node
       - utf-8-validate
+    dev: false
 
   /jest-config/27.5.1_ts-node@10.9.1:
     resolution: {integrity: sha512-5sAsjm6tGdsVbW9ahcChPAFCk4IlkQUknH5AvKjuLTSlcO/wCZKyFdn7Rg0EkC+OGgWODEy2hDpWB1PgzH0JNA==}
@@ -27422,6 +27420,7 @@ packages:
       jest-snapshot: 27.5.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /jest-resolve/26.6.2:
     resolution: {integrity: sha512-sOxsZOq25mT1wRsfHcbtkInS+Ek7Q8jCHUB0ZUTP0tc/c41QHriU/NunqMfCUWsL4H3MHpvQD4QR9kSYhS7UvQ==}
@@ -27637,6 +27636,7 @@ packages:
       chalk: 4.1.2
       jest-util: 27.5.1
       string-length: 4.0.2
+    dev: false
 
   /jest-worker/26.6.2:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
@@ -27674,6 +27674,7 @@ packages:
       - supports-color
       - ts-node
       - utf-8-validate
+    dev: false
 
   /jju/1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
@@ -33251,6 +33252,10 @@ packages:
       performance-now: 2.1.0
     dev: true
 
+  /rambda/7.3.0:
+    resolution: {integrity: sha512-RFVofZYaG2TaVcxjnM0ejdVWf/59rFq1f57OGnjP3GT/bthzFw0GVr5rkP9PKbVlEuF/Y7bOVPLfiiYfxq/EWQ==}
+    dev: false
+
   /ramda/0.28.0:
     resolution: {integrity: sha512-9QnLuG/kPVgWvMQ4aODhsBUFKOUmnbUnsSXACv+NCQZcHbeb+v8Lodp8OVxtRULN1/xOyYLLaL6npE6dMq5QTA==}
     dev: true
@@ -34429,6 +34434,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       resolve-from: 5.0.0
+    dev: false
 
   /resolve-dir/0.1.1:
     resolution: {integrity: sha512-QxMPqI6le2u0dCLyiGzgy92kjkkL6zO0XyvHzjdTNH3zM6e5Hz3BwG6+aEyNgiQ5Xz6PwTwgQEj3U50dByPKIA==}
@@ -37031,42 +37037,6 @@ packages:
       typescript: 4.7.4
       yargs-parser: 20.2.9
     dev: false
-
-  /ts-jest/27.1.4_dp7knfxphemncsb4b5rk37mcqm:
-    resolution: {integrity: sha512-qjkZlVPWVctAezwsOD1OPzbZ+k7zA5z3oxII4dGdZo5ggX/PL7kvwTM0pXTr10fAtbiVpJaL3bWd502zAhpgSQ==}
-    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
-    hasBin: true
-    peerDependencies:
-      '@babel/core': '>=7.0.0-beta.0 <8'
-      '@types/jest': ^27.0.0
-      babel-jest: '>=27.0.0 <28'
-      esbuild: '*'
-      jest: ^27.0.0
-      typescript: '>=3.8 <5.0'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      '@types/jest':
-        optional: true
-      babel-jest:
-        optional: true
-      esbuild:
-        optional: true
-    dependencies:
-      '@babel/core': 7.18.13
-      '@types/jest': 27.5.2
-      bs-logger: 0.2.6
-      esbuild: 0.14.49
-      fast-json-stable-stringify: 2.1.0
-      jest: 27.5.1_ts-node@10.9.1
-      jest-util: 27.5.1
-      json5: 2.2.1
-      lodash.memoize: 4.1.2
-      make-error: 1.3.6
-      semver: 7.3.7
-      typescript: 4.7.4
-      yargs-parser: 20.2.9
-    dev: true
 
   /ts-loader/9.3.1_xnp4kzegbjokq62cajex2ovgkm:
     resolution: {integrity: sha512-OkyShkcZTsTwyS3Kt7a4rsT/t2qvEVQuKCTg4LJmpj9fhFR7ukGdZwV6Qq3tRUkqcXtfGpPR7+hFKHCG/0d3Lw==}

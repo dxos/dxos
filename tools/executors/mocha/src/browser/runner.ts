@@ -9,17 +9,27 @@ import { join } from 'path';
 import { promisify } from 'util';
 
 import { buildTests } from './build';
-import { BrowserExecutorOptions } from './main';
 import { runTests } from './run';
 import { runSetup } from './run-setup';
 
-export enum Browser {
-  CHROMIUM = 'chromium',
-  FIREFOX = 'firefox',
-  WEBKIT = 'webkit',
+export type Browser =
+  'chromium' |
+  'firefox' |
+  'webkit'
+
+export type BrowserOptions = {
+  testPatterns: string[]
+  timeout: number
+  signalServer: boolean
+  setup?: string
+  stayOpen: boolean
+  headless: boolean
+  checkLeaks: boolean
+  debug: boolean
+  browserArgs?: string[]
 }
 
-export const run = async (options: BrowserExecutorOptions) => {
+export const runBrowser = async (browser: Browser, options: BrowserOptions) => {
   if (options.setup) {
     await runSetup(options.setup);
   }
@@ -34,19 +44,16 @@ export const run = async (options: BrowserExecutorOptions) => {
   const files = await resolveFiles(options.testPatterns);
   await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
-  let shouldFail = false;
-  for (const browser of options.browsers) {
-    console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
+  console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
 
-    const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
-    if (exitCode !== 0) {
-      console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
-    } else {
-      console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
-    }
-
-    shouldFail ||= (exitCode !== 0);
+  const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
+  if (exitCode !== 0) {
+    console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
+  } else {
+    console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
   }
+
+  const shouldFail = (exitCode !== 0);
 
   if (options.stayOpen) {
     console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);

@@ -7,20 +7,16 @@
     ],
     "outDir": "dist",
     "types": [
-      "jest",
+      "mocha",
       "node"
     ]
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "references": [
     {
       "path": "../keys"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

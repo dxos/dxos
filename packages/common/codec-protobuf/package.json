@@ -6,6 +6,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
+    "node:path": "path-browserify",
     "./dist/src/index.js": "./dist/browser.js"
   },
   "types": "dist/src/index.d.ts",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/lodash.merge": "^4.6.6",
+    "path-browserify": "^1.0.1",
     "protobufjs": "^6.9.0"
   },
   "publishConfig": {

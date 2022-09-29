@@ -40,17 +40,16 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/common/codec-protobuf"
-      ],
+      "executor": "@dxos/mocha:mocha",
       "options": {
-        "jestConfig": "packages/common/codec-protobuf/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/common/codec-protobuf/**/*.test.{ts,js}"
+        ]
       }
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "mocha"
   ]
 }

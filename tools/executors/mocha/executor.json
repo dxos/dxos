@@ -3,12 +3,7 @@
     "mocha": {
       "implementation": "./dist/src/main",
       "schema": "./src/schema.json",
-      "description": "Runs mocha tests."
-    },
-    "browser": {
-      "implementation": "./dist/src/browser/main",
-      "schema": "./src/browser/schema.json",
-      "description": "Runs mocha tests in a browser"
+      "description": "Runs mocha tests in multiple environments."
     }
   }
 }

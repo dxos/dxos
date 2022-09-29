@@ -10,36 +10,46 @@ import '@dxos/log-hook/register';
 import '@swc-node/register';
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import glob from 'glob';
-import Mocha from 'mocha';
 import { resolve } from 'path';
 
-import './util/react-setup';
-import './util/catch-unhandled-rejections';
+import { Browser, BrowserOptions, runBrowser } from './browser';
+import { NodeJsOptions, runNodeJs } from './node';
 
-export interface MochaExecutorOptions {
-  testPatterns: string[]
-  jsdom: boolean
-  timeout: number
-}
+export type TestEnvironment = 'nodejs' | Browser
+
+export type MochaExecutorOptions = NodeJsOptions & BrowserOptions & {
+  environments: TestEnvironment[]
+};
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing "mocha"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  const mocha = new Mocha({ timeout: options.timeout });
+  options = {
+    ...options,
+    testPatterns: options.testPatterns.map(pattern => resolve(context.root, pattern)),
+    setup: options.setup ? resolve(context.root, options.setup) : options.setup
+  };
 
-  if (options.jsdom) {
-    await import('jsdom-global/register');
+  // TODO(wittjosiah): Run each in parallel in child process?
+  // TODO(wittjosiah): Run all even if there are failures.
+  let success = true;
+  for (const env of options.environments) {
+    switch (env) {
+      case 'chromium':
+      case 'firefox':
+      case 'webkit': {
+        success &&= await runBrowser(env, options);
+        break;
+      }
+
+      case 'nodejs': {
+        const failures = await runNodeJs(options);
+        success &&= !failures;
+        break;
+      }
+    }
   }
 
-  options.testPatterns.forEach(pattern => {
-    glob.sync(pattern).forEach(path => {
-      mocha.addFile(resolve(context.root, path));
-    });
-  });
-
-  const failures = await new Promise(resolve => mocha.run(failures => resolve(failures)));
-
-  return { success: !failures };
+  return { success };
 };

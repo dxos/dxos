@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "mocha"
+    ]
   },
   "include": [
     "src"
@@ -9,9 +12,6 @@
   "references": [
     {
       "path": "../../common/codec-protobuf"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

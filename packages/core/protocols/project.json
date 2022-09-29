@@ -43,17 +43,16 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "packages/core/protocols/coverage"
-      ],
+      "executor": "@dxos/mocha:mocha",
       "options": {
-        "jestConfig": "packages/core/protocols/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/core/protocols/src/**/*.test.{ts,js}"
+        ]
       }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

@@ -1,5 +1,7 @@
 {
   "name": "@dxos/mocha",
   "private": true,
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "executors": "./executor.json"
 }

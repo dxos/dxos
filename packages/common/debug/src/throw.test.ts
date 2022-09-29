@@ -4,7 +4,7 @@
 
 import { expectToThrow } from './throw';
 
-test('expectToThrow', async () => {
+it('expectToThrow', async function () {
   await expectToThrow(() => new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(new Error());

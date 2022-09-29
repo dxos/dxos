@@ -9,17 +9,15 @@ import pkgUp from 'pkg-up';
 import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
-import { Lock, trigger } from '@dxos/async';
-
-import { BrowserExecutorOptions } from './main';
-import { Browser } from './runner';
+import { Lock, trigger } from '../util';
+import { Browser, BrowserOptions } from './runner';
 
 /**
  * Timeout for testing framework to initialize and to load tests.
  */
 const INIT_TIMEOUT = 10_000;
 
-export const runTests = async (bundleFile: string, browser: Browser, options: Omit<BrowserExecutorOptions, 'browsers' | 'files'>): Promise<number> => {
+export const runTests = async (bundleFile: string, browser: Browser, options: BrowserOptions): Promise<number> => {
   const userDataDir = `/tmp/browser-mocha/${v4()}`;
 
   await fs.mkdir(userDataDir, { recursive: true });
@@ -92,9 +90,9 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Om
 
 const getBrowser = (browser: Browser) => {
   switch (browser) {
-    case Browser.CHROMIUM: return chromium;
-    case Browser.FIREFOX: return firefox;
-    case Browser.WEBKIT: return webkit;
+    case 'chromium': return chromium;
+    case 'firefox': return firefox;
+    case 'webkit': return webkit;
     default: throw new Error(`Unsupported browser: ${browser}`);
   }
 };
