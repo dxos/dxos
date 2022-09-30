@@ -38,7 +38,7 @@
 
 - Search domains
   - E.g., Configure `bar.com` as search domain; `ping foo` would resolve to `foo.bar.com` if it exists.
-  - See `resolved.conf` [#433](https://github.com/dxos/protocols/issues/433)
+  - See `resolved.conf` [#433](https://github.com/dxos/dxos/issues/433)
 
 - DXOS.org wildcard cert
   - Possibly to create dynamically for deeper subdomains

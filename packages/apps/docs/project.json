@@ -1,0 +1,32 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/apps/docs/src",
+  "projectType": "application",
+  "targets": {
+    "prerelease": {
+      "executor": "@nx-plus/docusaurus:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/apps/docs/dist"
+      },
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "^prerelease",
+        "^proto"
+      ]
+    },
+    "serve": {
+      "executor": "@nx-plus/docusaurus:dev-server",
+      "options": {
+        "port": 3000
+      },
+      "dependsOn": [
+        "^build",
+        "^bundle",
+        "^prerelease",
+        "^proto"
+      ]
+    }
+  }
+}

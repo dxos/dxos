@@ -1,0 +1,76 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "removeComments": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2018",
+    "types": [
+      "node",
+      "mocha"
+    ]
+  },
+  "include": [
+    "src",
+    "stories",
+    "playwright"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-testing"
+    },
+    {
+      "path": "../../core/echo/object-model"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-testing"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-client-testing"
+    },
+    {
+      "path": "../../sdk/react-components"
+    },
+    {
+      "path": "../../sdk/react-echo-graph"
+    },
+    {
+      "path": "../../sdk/react-ipfs"
+    },
+    {
+      "path": "../../sdk/react-toolkit"
+    }
+  ]
+}

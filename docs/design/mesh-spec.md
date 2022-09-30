@@ -181,7 +181,7 @@ This omits STUN/TURN to focus on communications between peers, their signaling s
 > *   Legacy [simple-peer](https://www.npmjs.com/package/simple-peer) WebRTC library.
 > *   Migrate to [libp2p](https://github.com/libp2p/specs) DHT/Pubsub; need to resolve deprecated star
 
-> *   Current [signaling protocol design](https://github.com/dxos/protocols/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)? protocol.
+> *   Current [signaling protocol design](https://github.com/dxos/dxos/issues/1316). Incl. WebRTC protocol data (SIP, network interfacte, IP addr, STUN/TURN)? protocol.
 > *   MST swarm/routing.
 > *   Scope of replication for signaling servers (i.e., subnet/realm vs. global DXNS network?) Security considerations. Peers configured with multiple signal servers (one per network)?
 > *   Implement general purpose message streaming between peers? (e.g., beyond signaling/discovery, iniitation of party invitations).

@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/core/mesh/broadcast/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/broadcast/dist",
+        "tsConfig": "packages/core/mesh/broadcast/tsconfig.json",
+        "main": "packages/core/mesh/broadcast/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/broadcast/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/core/mesh/broadcast/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/core/mesh/broadcast/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

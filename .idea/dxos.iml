@@ -2,8 +2,8 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/tools/executors/protobuf-compiler/test/__snapshots__" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/common/protocols/proto" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/tools/executors/protobuf-compiler/test/__snapshots__" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/core/protocols/proto" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
       <excludePattern pattern="tmp" />

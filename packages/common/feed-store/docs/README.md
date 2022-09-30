@@ -21,8 +21,6 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
@@ -44,7 +42,13 @@ end
 subgraph halo [halo]
   style halo fill:#cabade,stroke:#fff
   dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/halo/keyring/docs"
+  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+end
+
+subgraph core [core]
+  style core fill:#edabb3,stroke:#fff
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
 
 %% Links
@@ -62,9 +66,9 @@ dxos/keyring --> dxos/random-access-storage
 | [`@dxos/async`](../../async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
 | [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) | &check; |
+| [`@dxos/keyring`](../../../core/halo/keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../log/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../protocols/docs/README.md) |  |
+| [`@dxos/protocols`](../../../core/protocols/docs/README.md) |  |
 | [`@dxos/random-access-storage`](../../random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../util/docs/README.md) | &check; |

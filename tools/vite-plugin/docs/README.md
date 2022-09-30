@@ -31,8 +31,6 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/common/protocols/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -43,6 +41,12 @@ subgraph common [common]
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
+end
+
+subgraph core [core]
+  style core fill:#edabb3,stroke:#fff
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
 
 %% Links
@@ -60,5 +64,5 @@ dxos/protocols --> dxos/codec-protobuf
 | [`@dxos/config`](../../../packages/sdk/config/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) |  |
 | [`@dxos/keys`](../../../packages/common/keys/docs/README.md) |  |
-| [`@dxos/protocols`](../../../packages/common/protocols/docs/README.md) |  |
+| [`@dxos/protocols`](../../../packages/core/protocols/docs/README.md) |  |
 | [`@dxos/util`](../../../packages/common/util/docs/README.md) |  |

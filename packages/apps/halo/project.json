@@ -1,0 +1,75 @@
+{
+  "sourceRoot": "packages/apps/halo/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/apps/halo/dist",
+        "tsConfig": "packages/apps/halo/tsconfig.json",
+        "main": "packages/apps/halo/src/index.ts"
+      }
+    },
+    "build-storybook": {
+      "executor": "@nrwl/storybook:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "uiFramework": "@storybook/react",
+        "outputPath": "packages/apps/halo/out/dxos/storybook/halo",
+        "config": {
+          "configFolder": "packages/apps/halo/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "bundle": {
+      "executor": "@nxext/vite:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/apps/halo/out/halo",
+        "configFile": "packages/apps/halo/vite.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/apps/halo/**/*.{ts,js}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/apps/halo/out/halo",
+        "configFile": "packages/apps/halo/vite.config.ts"
+      }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/apps/halo/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    }
+  }
+}
