@@ -15,16 +15,16 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../mesh/protocol-plugin-presence"
+      "path": "../../core/mesh/protocol-plugin-presence"
     },
     {
       "path": "../../sdk/react-components"

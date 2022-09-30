@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/core/mesh/protocol-plugin-presence/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/protocol-plugin-presence/dist",
+        "tsConfig": "packages/core/mesh/protocol-plugin-presence/tsconfig.json",
+        "main": "packages/core/mesh/protocol-plugin-presence/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/protocol-plugin-presence/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/core/mesh/protocol-plugin-presence/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/core/mesh/protocol-plugin-presence/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}
