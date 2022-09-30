@@ -3,7 +3,7 @@
 //
 
 /**
- * Wrapper for async jest tests.
+ * Wrapper for async tests.
  * @param {Function} test - Async test
  * @param errType
  * @return {Promise<void>}

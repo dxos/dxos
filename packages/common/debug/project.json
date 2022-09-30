@@ -29,6 +29,9 @@
       "options": {
         "testPatterns": [
           "packages/common/debug/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/debug/src/**/*.{ts,js}"
         ]
       }
     }

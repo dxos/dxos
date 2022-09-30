@@ -54,21 +54,16 @@
     "setup": {
       "type": "string",
       "description": "Setup script to run before tests"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Rerun tests on source file changes",
+      "default": false
+    },
+    "watchFiles": {
+      "type": "array",
+      "description": "Glob of files to watch"
     }
-
-    // "ignorePatterns": {
-    //   "type": "array",
-    //   "description": "Globs of tests to ignore"
-    // },
-    // "watch": {
-    //   "type": "boolean",
-    //   "description": "Rerun tests on source file changes",
-    //   "default": false
-    // },
-    // "watchFiles": {
-    //   "type": "array",
-    //   "description": "Glob of files to watch"
-    // }
   },
   "required": ["testPatterns"]
 }
