@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
     "outDir": "dist",
@@ -17,13 +17,13 @@
   ],
   "references": [
     {
-      "path": "../../packages/common/rpc-tunnel"
+      "path": "../../common/rpc"
     },
     {
-      "path": "../../packages/common/rpc"
+      "path": "../../common/rpc-tunnel"
     },
     {
-      "path": "../../tools/vite-plugin"
+      "path": "../../../tools/vite-plugin"
     }
   ]
 }
