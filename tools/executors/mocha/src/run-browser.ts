@@ -8,13 +8,8 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { buildTests, runTests } from './browser';
+import { BrowserType, buildTests, getNewBrowserContext, runTests } from './browser';
 import { runSetup } from './util';
-
-export type Browser =
-  'chromium' |
-  'firefox' |
-  'webkit'
 
 export type BrowserOptions = {
   testPatterns: string[]
@@ -28,7 +23,7 @@ export type BrowserOptions = {
   browserArgs?: string[]
 }
 
-export const runBrowser = async (browser: Browser, options: BrowserOptions) => {
+export const runBrowser = async (browserType: BrowserType, options: BrowserOptions) => {
   if (options.setup) {
     await runSetup([options.setup]);
   }
@@ -43,20 +38,23 @@ export const runBrowser = async (browser: Browser, options: BrowserOptions) => {
   const files = await resolveFiles(options.testPatterns);
   await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
-  console.log(chalk`\n\nRunning in {blue {bold ${browser}}}\n\n`);
+  console.log(chalk`\n\nRunning in {blue {bold ${browserType}}}\n\n`);
 
-  const exitCode = await runTests(join(tempDir, 'bundle.js'), browser, options);
+  const { page } = await getNewBrowserContext(browserType, options);
+  const exitCode = await runTests(page, browserType, join(tempDir, 'bundle.js'), options);
   if (exitCode !== 0) {
-    console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browser}}}}\n\n`);
+    console.log(chalk`\n\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n\n`);
   } else {
-    console.log(chalk`\n\n{green Passed in {blue {bold ${browser}}}}\n\n`);
+    console.log(chalk`\n\n{green Passed in {blue {bold ${browserType}}}}\n\n`);
   }
 
   const shouldFail = (exitCode !== 0);
 
   if (options.stayOpen) {
     console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
-    await new Promise(() => {}); // Sleep forever.
+    await new Promise(resolve => {
+      page.on('close', resolve);
+    });
   }
 
   return !shouldFail;

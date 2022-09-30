@@ -3,36 +3,28 @@
 //
 
 import assert from 'node:assert';
-import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
-import { chromium, firefox, webkit } from 'playwright';
-import { v4 } from 'uuid';
+import { Page } from 'playwright';
 
-import { Browser, BrowserOptions } from '../run-browser';
 import { Lock, trigger } from '../util';
+import { BrowserType } from './browser';
+
+export type RunTestsOptions = {
+  debug: boolean
+}
 
 /**
  * Timeout for testing framework to initialize and to load tests.
  */
 const INIT_TIMEOUT = 10_000;
 
-export const runTests = async (bundleFile: string, browser: Browser, options: BrowserOptions): Promise<number> => {
-  const userDataDir = `/tmp/browser-mocha/${v4()}`;
-  await mkdir(userDataDir, { recursive: true });
-
-  const browserRunner = getBrowser(browser);
-  const context = await browserRunner.launchPersistentContext(
-    userDataDir,
-    {
-      headless: options.headless,
-      args: [
-        ...options.debug ? ['--auto-open-devtools-for-tabs'] : [],
-        ...options.browserArgs ?? []
-      ]
-    }
-  );
-  const page = await context.newPage();
+export const runTests = async (
+  page: Page,
+  browserType: BrowserType,
+  bundleFile: string,
+  options: RunTestsOptions
+): Promise<number> => {
   const lock = new Lock();
 
   page.on('pageerror', async (error) => {
@@ -77,20 +69,11 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Br
     clearTimeout(exitTimeout);
   });
 
-  await page.exposeFunction('browserMocha__getEnv', () => ({ browser }));
+  await page.exposeFunction('browserMocha__getEnv', () => ({ browserType }));
 
   await page.addScriptTag({
     path: bundleFile
   });
 
   return getPromise();
-};
-
-const getBrowser = (browser: Browser) => {
-  switch (browser) {
-    case 'chromium': return chromium;
-    case 'firefox': return firefox;
-    case 'webkit': return webkit;
-    default: throw new Error(`Unsupported browser: ${browser}`);
-  }
 };

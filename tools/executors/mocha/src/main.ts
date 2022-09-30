@@ -12,10 +12,11 @@ import '@swc-node/register';
 import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'path';
 
-import { Browser, BrowserOptions, runBrowser } from './run-browser';
+import { BrowserType } from './browser';
+import { BrowserOptions, runBrowser } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
 
-export type TestEnvironment = 'nodejs' | Browser
+export type TestEnvironment = 'nodejs' | BrowserType
 
 export type MochaExecutorOptions = NodeOptions & BrowserOptions & {
   environments: TestEnvironment[]
@@ -28,7 +29,8 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   options = {
     ...options,
     testPatterns: options.testPatterns.map(pattern => resolve(context.root, pattern)),
-    setup: options.setup ? resolve(context.root, options.setup) : options.setup
+    setup: options.setup ? resolve(context.root, options.setup) : options.setup,
+    headless: options.stayOpen ? true : options.headless
   };
 
   // TODO(wittjosiah): Run each in parallel in child process?

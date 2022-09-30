@@ -30,7 +30,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     async function run() {
       const context = await window.browserMocha__getEnv();
 
-      window.mochaExecutor = { environment: context.browser };
+      window.mochaExecutor = { environment: context.browserType };
 
       mocha.reporter('spec');
       mocha.setup('bdd');
