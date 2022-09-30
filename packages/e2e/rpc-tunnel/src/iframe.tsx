@@ -23,7 +23,7 @@ const App = () => {
 
   useAsyncEffect(async () => {
     if (IN_IFRAME) {
-      const port = createIFramePort({ origin: 'http://127.0.0.1:5173' });
+      const port = createIFramePort({ origin: 'http://localhost:5173' });
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
@@ -81,7 +81,7 @@ const App = () => {
         <iframe
           ref={iframeRef}
           id='test-iframe'
-          // If main app is loaded from 127.0.0.1, localhost is cross-origin.
+          // If main app is loaded from localhost, localhost is cross-origin.
           //   https://stackoverflow.com/a/5268240/2804332
           src='http://localhost:5173/iframe.html'
           style={{
