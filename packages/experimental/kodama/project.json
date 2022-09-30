@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "apps/experimental/kodama/src",
+  "sourceRoot": "packages/experimental/kodama/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "apps/experimental/kodama/**/*.{ts,tsx,js,jsx}"
+          "packages/experimental/kodama/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

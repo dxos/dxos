@@ -46,7 +46,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "apps/halo/**/*.{ts,js}"
+          "packages/apps/halo/**/*.{ts,js}"
         ]
       }
     },
