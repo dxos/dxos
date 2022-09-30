@@ -25,7 +25,7 @@ const App = ({ port }: { port?: MessagePort }) => {
 
   useAsyncEffect(async () => {
     if (port) {
-      const relay = createIFrameWorkerRelay({ origin: 'http://127.0.0.1:5173', port });
+      const relay = createIFrameWorkerRelay({ origin: 'http://localhost:5173', port });
       await relay.start();
     } else {
       const rpcPort = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
@@ -70,7 +70,7 @@ const App = ({ port }: { port?: MessagePort }) => {
         <iframe
           ref={iframeRef}
           id='test-iframe'
-          // If main app is loaded from 127.0.0.1, localhost is cross-origin.
+          // If main app is loaded from localhost, localhost is cross-origin.
           //   https://stackoverflow.com/a/5268240/2804332
           src='http://localhost:5173/iframe-worker.html'
           style={{
