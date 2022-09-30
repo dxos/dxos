@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
     "outDir": "dist",
@@ -13,10 +13,10 @@
   ],
   "references": [
     {
-      "path": "../../packages/common/codec-protobuf"
+      "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../tools/executors/protobuf-compiler"
+      "path": "../../../tools/executors/protobuf-compiler"
     }
   ]
 }

@@ -3,16 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
-  "license": "MIT",
   "homepage": "https://github.com/dxos/dxos",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
+  "license": "MIT",
   "scripts": {
     "check-dependencies": "syncpack list-mismatches",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "nx": "nx",
     "prepare": "husky install"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -25,10 +28,10 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/log-hook": "workspace:*",
     "@dxos/mocha": "workspace:*",
+    "@dxos/plate": "workspace:*",
     "@dxos/playwright": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@mdx-js/react": "^2.1.3",
-    "@dxos/plate": "workspace:*",
     "@nrwl/devkit": "14.5.7",
     "@nrwl/eslint-plugin-nx": "14.5.7",
     "@nrwl/jest": "14.5.7",
@@ -88,9 +91,6 @@
     "vite": "3.0.9",
     "wait-for-expect": "^3.0.2",
     "webpack": "^5.74.0"
-  },
-  "dependencies": {
-    "tslib": "^2.3.0"
   },
   "pnpm": {
     "patchedDependencies": {

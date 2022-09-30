@@ -13,12 +13,12 @@ const log = debug('dxos:rpc-tunnel-e2e:test-client');
 const STORAGE_KEY = 'testclient';
 
 export class TestClient {
-  private _persistant: boolean;
+  private _persistent: boolean;
   private _value: number;
   private _update = new Event();
 
   constructor ({ persistant, value }: { persistant?: boolean, value?: number} = {}) {
-    this._persistant = Boolean(persistant);
+    this._persistent = Boolean(persistant);
 
     if (value) {
       this.persist(value);
@@ -26,7 +26,7 @@ export class TestClient {
       return;
     }
 
-    const str = this._persistant && localStorage.getItem(STORAGE_KEY);
+    const str = this._persistent && localStorage.getItem(STORAGE_KEY);
     try {
       this._value = str ? parseInt(str) : 0;
     } catch {
@@ -35,7 +35,7 @@ export class TestClient {
   }
 
   persist (value: number) {
-    this._persistant && localStorage.setItem('testclient', String(value));
+    this._persistent && localStorage.setItem('testclient', String(value));
   }
 
   get value () {
