@@ -40,6 +40,7 @@
     "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/crypto": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/end-of-stream": "^1.4.0",
