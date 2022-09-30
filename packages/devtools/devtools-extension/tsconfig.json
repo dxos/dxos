@@ -29,10 +29,10 @@
       "path": "../../common/rpc"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../sdk/client"

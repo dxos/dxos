@@ -21,6 +21,9 @@ aliases:
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
+  #
+  # NOTE: This job is required to complete before ALL PRs can be merged to main.
+  #
   check:
     docker:
       - *docker_image
@@ -34,16 +37,21 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run:
-          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
-          environment:
-            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
-            NODE_OPTIONS: --max_old_space_size=8198
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=prerelease
+
+  bundle:
+    docker:
+      - *docker_image
+    steps:
+      - run:
+          command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
+          environment:
+            # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
+            NODE_OPTIONS: --max_old_space_size=8198
 
   e2e:
     docker:
@@ -96,6 +104,9 @@ workflows:
       - check:
           context:
             - Github
+#      - bundle:
+#          context:
+#            - Github
       - e2e:
           context:
             - Github

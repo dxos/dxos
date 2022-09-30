@@ -1,0 +1,28 @@
+{
+  "sourceRoot": "packages/core/mesh/signal/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/signal/dist",
+        "tsConfig": "packages/core/mesh/signal/tsconfig.json",
+        "main": "packages/core/mesh/signal/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/signal/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

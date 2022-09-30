@@ -4,9 +4,9 @@
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "license": "MIT",
-  "homepage": "https://github.com/dxos/protocols",
-  "bugs": "https://github.com/dxos/protocols/issues",
-  "repository": "github:dxos/protocols",
+  "homepage": "https://github.com/dxos/dxos",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
   "scripts": {
     "check-dependencies": "syncpack list-mismatches",
     "fix-dependencies": "syncpack fix-mismatches",

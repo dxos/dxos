@@ -108,7 +108,7 @@ importers:
       '@dxos/eslint-plugin-rules': link:tools/eslint-rules
       '@dxos/log-hook': link:tools/log-hook
       '@dxos/mocha': link:tools/executors/mocha
-      '@dxos/plate': link:packages/fx/plate
+      '@dxos/plate': link:tools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@mdx-js/react': 2.1.3_react@17.0.2
@@ -172,7 +172,7 @@ importers:
       wait-for-expect: 3.0.2
       webpack: 5.74.0_esbuild@0.14.49
 
-  apps/docs:
+  packages/apps/docs:
     specifiers:
       '@algolia/client-search': ^4.14.2
       '@docusaurus/core': 2.1.0
@@ -203,13 +203,13 @@ importers:
       '@docusaurus/core': 2.1.0_coe2saodzr6velnhige3ek3zsy
       '@docusaurus/preset-classic': 2.1.0_bay7tnxndrr4ygds4p7igxs3hq
       '@docusaurus/theme-classic': 2.1.0_3tgeifm2vmwrlpqlopppsnjtcu
-      '@dxos/client': link:../../packages/sdk/client
-      '@dxos/config': link:../../packages/sdk/config
-      '@dxos/react-client': link:../../packages/sdk/react-client
-      '@dxos/react-registry-client': link:../../packages/sdk/react-registry-client
-      '@dxos/registry-client': link:../../packages/sdk/registry-client
-      '@dxos/showcase': link:../../tools/showcase
-      '@dxos/typedoc': link:../../packages/common/typedoc
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-registry-client': link:../../sdk/react-registry-client
+      '@dxos/registry-client': link:../../sdk/registry-client
+      '@dxos/showcase': link:../../../tools/showcase
+      '@dxos/typedoc': link:../../common/typedoc
       '@mdx-js/react': 1.6.22_react@17.0.2
       '@mui/material': 5.8.7_sfoxds7t5ydpegc3knd667wn6m
       clsx: 1.2.1
@@ -225,7 +225,7 @@ importers:
       typescript: 4.7.4
       webpack: 5.74.0
 
-  apps/dx-cli:
+  packages/apps/dx-cli:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -275,15 +275,15 @@ importers:
       typescript: ^4.7.2
       ws: ^7.4.4
     dependencies:
-      '@dxos/async': link:../../packages/common/async
-      '@dxos/client': link:../../packages/sdk/client
-      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
-      '@dxos/config': link:../../packages/sdk/config
-      '@dxos/debug': link:../../packages/common/debug
-      '@dxos/keys': link:../../packages/common/keys
-      '@dxos/plate': link:../../packages/fx/plate
-      '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/rpc': link:../../packages/common/rpc
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/plate': link:../../../tools/plate
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/rpc': link:../../common/rpc
       '@oclif/core': 1.14.2
       '@oclif/plugin-help': 5.1.12
       '@oclif/plugin-plugins': 2.1.0
@@ -304,7 +304,7 @@ importers:
       react: 17.0.2
       ws: 7.5.6
     devDependencies:
-      '@dxos/protocols-toolchain': link:../../tools/deprecated/protocols-toolchain
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@oclif/test': 2.1.1
       '@types/chai': 4.3.0
       '@types/cli-progress': 3.11.0
@@ -313,7 +313,7 @@ importers:
       '@types/fs-extra': 9.0.13
       '@types/inquirer': 9.0.1
       '@types/js-yaml': 4.0.5
-      '@types/lodash.defaultsdeep': 4.6.6
+      '@types/lodash.defaultsdeep': 4.6.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       chai: 4.3.4
@@ -324,441 +324,10 @@ importers:
       tslib: 2.4.0
       typescript: 4.7.4
 
-  apps/experimental/kai:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@emotion/css': ^11.7.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
-      faker: ^5.5.3
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      supervisor: ~0.12.0
-    dependencies:
-      '@dxos/async': link:../../../packages/common/async
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/client-testing': link:../../../packages/sdk/client-testing
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/debug': link:../../../packages/common/debug
-      '@dxos/react-async': link:../../../packages/common/react-async
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@emotion/css': 11.7.1_@babel+core@7.18.13
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-    devDependencies:
-      '@babel/core': 7.18.13
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/faker': 5.5.9
-      '@types/react': 17.0.50
-      '@types/react-dom': 17.0.17
-      faker: 5.5.3
-      supervisor: 0.12.0
+  packages/apps/dx-cli/testing/app:
+    specifiers: {}
 
-  apps/experimental/kitchen-sink:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/echo-testing': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/esbuild-server': ~2.29.0
-      '@dxos/gem-core': workspace:*
-      '@dxos/gem-spore': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-echo-graph': workspace:*
-      '@dxos/react-ipfs': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/util': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@mui/system': ^5.8.1
-      '@mui/x-data-grid': ^5.12.3
-      '@types/d3': ^7.1.0
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
-      '@types/url-join': ~4.0.1
-      buffer: ^6.0.3
-      clsx: ^1.1.1
-      concurrently: ~7.0.0
-      debug: ^4.3.3
-      dotenv: ^8.2.0
-      electron: ~18.0.4
-      esbuild-plugin-yaml: ~0.0.1
-      faker: ^5.5.3
-      immutability-helper: ^3.0.2
-      it-all: 1.0.6
-      mobile-detect: ~1.4.5
-      mocha: ^8.4.0
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      robotjs: ~0.6.0
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      uint8arrays: 3.0.0
-      url-join: ^4.0.1
-    dependencies:
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/client-testing': link:../../../packages/sdk/client-testing
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/echo-db': link:../../../packages/echo/echo-db
-      '@dxos/echo-testing': link:../../../packages/echo/echo-testing
-      '@dxos/gem-core': link:../../../packages/gem/gem-core
-      '@dxos/gem-spore': link:../../../packages/gem/gem-spore
-      '@dxos/object-model': link:../../../packages/echo/object-model
-      '@dxos/protocols': link:../../../packages/common/protocols
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@dxos/react-client-testing': link:../../../packages/sdk/react-client-testing
-      '@dxos/react-components': link:../../../packages/sdk/react-components
-      '@dxos/react-echo-graph': link:../../../packages/sdk/react-echo-graph
-      '@dxos/react-ipfs': link:../../../packages/sdk/react-ipfs
-      '@dxos/react-toolkit': link:../../../packages/sdk/react-toolkit
-      '@dxos/util': link:../../../packages/common/util
-      '@emotion/css': 11.7.1_@babel+core@7.18.13
-      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
-      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
-      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
-      '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/x-data-grid': 5.12.3_oop6dcki46d7lexi6nxggagcai
-      clsx: 1.2.1
-      debug: 4.3.4
-      immutability-helper: 3.1.1
-      it-all: 1.0.6
-      mobile-detect: 1.4.5
-      uint8arrays: 3.0.0
-      url-join: 4.0.1
-    devDependencies:
-      '@babel/core': 7.18.13
-      '@dxos/async': link:../../../packages/common/async
-      '@dxos/debug': link:../../../packages/common/debug
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/esbuild-server': 2.29.0_@types+react@17.0.50
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/d3': 7.4.0
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/react': 17.0.50
-      '@types/react-dom': 17.0.17
-      '@types/url-join': 4.0.1
-      buffer: 6.0.3
-      concurrently: 7.0.0
-      dotenv: 8.6.0
-      electron: 18.0.4
-      esbuild-plugin-yaml: 0.0.1
-      faker: 5.5.3
-      mocha: 8.4.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      robotjs: 0.6.0
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-
-  apps/experimental/kodama:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/node-fetch': ^2.5.10
-      '@types/qrcode-terminal': ^0.12.0
-      '@types/react': ^17.0.24
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      clipboardy: ^3.0.0
-      compare-semver: ~1.1.0
-      date-format: ~4.0.11
-      esbuild: ~0.14.1
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ^8.4.0
-      node-fetch: ^2.6.0
-      npm-api: ~1.0.1
-      qrcode-terminal: ~0.12.0
-      react: ^17.0.2
-      supervisor: ~0.12.0
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/async': link:../../../packages/common/async
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/client-testing': link:../../../packages/sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../packages/common/codec-protobuf
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/debug': link:../../../packages/common/debug
-      '@dxos/keys': link:../../../packages/common/keys
-      '@dxos/protocols': link:../../../packages/common/protocols
-      '@dxos/react-async': link:../../../packages/common/react-async
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      chalk: 4.1.2
-      clipboardy: 3.0.0
-      compare-semver: 1.1.0
-      date-format: 4.0.11
-      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
-      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
-      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
-      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
-      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
-      js-yaml: 4.1.0
-      node-fetch: 2.6.7
-      npm-api: 1.0.1
-      qrcode-terminal: 0.12.0
-      react: 17.0.2
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/node-fetch': 2.5.12
-      '@types/qrcode-terminal': 0.12.0
-      '@types/react': 17.0.50
-      '@types/yargs': 16.0.4
-      esbuild: 0.14.49
-      mocha: 8.4.0
-      supervisor: 0.12.0
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-
-  apps/experimental/lexical-editor:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/esbuild-server': ~2.29.0
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-client-testing': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/text-model': workspace:*
-      '@emotion/css': ^11.7.1
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@lexical/hashtag': ~0.3.11
-      '@lexical/list': ~0.3.11
-      '@lexical/react': ~0.3.11
-      '@lexical/table': ~0.3.11
-      '@lexical/utils': ~0.3.11
-      '@lexical/yjs': ~0.3.11
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/debug': ^4.1.7
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
-      debug: ^4.3.3
-      lexical: ~0.3.11
-      mocha: ^8.4.0
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      wait-for-expect: ^3.0.2
-      y-protocols: ~1.0.5
-      yjs: ^13.5.41
-    dependencies:
-      '@dxos/async': link:../../../packages/common/async
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/debug': link:../../../packages/common/debug
-      '@dxos/object-model': link:../../../packages/echo/object-model
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@dxos/react-components': link:../../../packages/sdk/react-components
-      '@dxos/react-toolkit': link:../../../packages/sdk/react-toolkit
-      '@dxos/text-model': link:../../../packages/echo/text-model
-      '@lexical/hashtag': 0.3.11_lexical@0.3.11
-      '@lexical/list': 0.3.11_lexical@0.3.11
-      '@lexical/table': 0.3.11_lexical@0.3.11
-      '@lexical/utils': 0.3.11_lexical@0.3.11
-      '@lexical/yjs': 0.3.11_lexical@0.3.11+yjs@13.5.41
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
-      lexical: 0.3.11
-      y-protocols: 1.0.5
-      yjs: 13.5.41
-    devDependencies:
-      '@babel/core': 7.18.13
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/esbuild-server': 2.29.0_@types+react@17.0.50
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@dxos/react-client-testing': link:../../../packages/sdk/react-client-testing
-      '@emotion/css': 11.7.1_@babel+core@7.18.13
-      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
-      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
-      '@lexical/react': 0.3.11_vnpfu56njw2jkwfemiko6bm75a
-      '@types/debug': 4.1.7
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/react': 17.0.50
-      '@types/react-dom': 17.0.17
-      debug: 4.3.4
-      mocha: 8.4.0
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-      wait-for-expect: 3.0.2
-
-  apps/experimental/wallet-extension:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/util': workspace:*
-      '@hot-loader/react-dom': 17.0.2
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
-      '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/react-dom': ^17.0.9
-      '@types/uuid': ~8.3.3
-      '@types/webextension-polyfill': ^0.8.0
-      '@types/webpack-env': ^1.16.0
-      chalk: ^4.1.0
-      copy: ~0.3.2
-      faker: ^5.5.3
-      playwright: ^1.25.1
-      react: ^17.0.2
-      react-copy-to-clipboard: ^5.1.0
-      react-dom: ^17.0.2
-      rmdir: ~1.2.0
-      uuid: ^8.3.2
-      webextension-polyfill: ^0.8.0
-    dependencies:
-      '@dxos/async': link:../../../packages/common/async
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/codec-protobuf': link:../../../packages/common/codec-protobuf
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/echo-db': link:../../../packages/echo/echo-db
-      '@dxos/protocols': link:../../../packages/common/protocols
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@dxos/react-components': link:../../../packages/sdk/react-components
-      '@dxos/react-toolkit': link:../../../packages/sdk/react-toolkit
-      '@dxos/rpc': link:../../../packages/common/rpc
-      '@dxos/util': link:../../../packages/common/util
-      '@hot-loader/react-dom': 17.0.2_react@17.0.2
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
-      react: 17.0.2
-      react-copy-to-clipboard: 5.1.0_react@17.0.2
-      react-dom: 17.0.2_react@17.0.2
-      webextension-polyfill: 0.8.0
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/faker': 5.5.9
-      '@types/react': 17.0.50
-      '@types/react-copy-to-clipboard': 5.0.2
-      '@types/react-dom': 17.0.17
-      '@types/uuid': 8.3.3
-      '@types/webextension-polyfill': 0.8.2
-      '@types/webpack-env': 1.16.3
-      chalk: 4.1.2
-      copy: 0.3.2
-      faker: 5.5.3
-      playwright: 1.25.1
-      rmdir: 1.2.0
-      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-
-  apps/experimental/wallet-playground:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/esbuild-plugins': ~2.29.0
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-client': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/react-toolkit': workspace:*
-      '@mui/icons-material': ^5.8.0
-      '@mui/material': ^5.8.1
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
-      react: ^17.0.2
-      react-dom: ^17.0.2
-    dependencies:
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@dxos/react-components': link:../../../packages/sdk/react-components
-      '@dxos/react-toolkit': link:../../../packages/sdk/react-toolkit
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-    devDependencies:
-      '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/react': 17.0.50
-      '@types/react-dom': 17.0.17
-
-  apps/halo:
+  packages/apps/halo:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
@@ -790,18 +359,18 @@ importers:
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
-      '@dxos/client': link:../../packages/sdk/client
-      '@dxos/config': link:../../packages/sdk/config
-      '@dxos/keys': link:../../packages/common/keys
-      '@dxos/log': link:../../packages/common/log
-      '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/react-async': link:../../packages/common/react-async
-      '@dxos/react-client': link:../../packages/sdk/react-client
-      '@dxos/react-components': link:../../packages/sdk/react-components
-      '@dxos/react-toolkit': link:../../packages/sdk/react-toolkit
-      '@dxos/rpc': link:../../packages/common/rpc
-      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
-      '@dxos/util': link:../../packages/common/util
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/keys': link:../../common/keys
+      '@dxos/log': link:../../common/log
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
+      '@dxos/util': link:../../common/util
       '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
       '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
       debug: 4.3.4
@@ -810,8 +379,8 @@ importers:
       react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
     devDependencies:
       '@babel/core': 7.18.13
-      '@dxos/react-client-testing': link:../../packages/sdk/react-client-testing
-      '@dxos/vite-plugin': link:../../tools/vite-plugin
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
+      '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@types/debug': 4.1.7
       '@types/node': 16.11.62
       '@types/react': 17.0.50
@@ -821,7 +390,7 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       vite-plugin-pwa: 0.12.6_vite@3.0.9
 
-  apps/templates/bare:
+  packages/apps/templates/bare:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
@@ -829,14 +398,14 @@ importers:
       typescript: ^4.7.2
       vite: 3.0.9
     dependencies:
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/config': link:../../../packages/sdk/config
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
     devDependencies:
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/vite-plugin': link:../../../../tools/vite-plugin
       typescript: 4.7.4
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
-  apps/templates/hello:
+  packages/apps/templates/hello:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
@@ -867,19 +436,19 @@ importers:
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
     dependencies:
-      '@dxos/client': link:../../../packages/sdk/client
-      '@dxos/config': link:../../../packages/sdk/config
-      '@dxos/react-client': link:../../../packages/sdk/react-client
-      '@dxos/react-components': link:../../../packages/sdk/react-components
-      '@dxos/react-toolkit': link:../../../packages/sdk/react-toolkit
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/react-client': link:../../../sdk/react-client
+      '@dxos/react-components': link:../../../sdk/react-components
+      '@dxos/react-toolkit': link:../../../sdk/react-toolkit
       '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
       '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
       '@babel/core': 7.18.13
-      '@dxos/react-client-testing': link:../../../packages/sdk/react-client-testing
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@dxos/react-client-testing': link:../../../sdk/react-client-testing
+      '@dxos/vite-plugin': link:../../../../tools/vite-plugin
       '@storybook/addon-actions': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
       '@storybook/addon-essentials': 6.5.10_noolnnmhwh27ijmjnril7wwuge
       '@storybook/addon-interactions': 6.5.10_ehdgrczf7r5rbncv6bihe3icne
@@ -897,120 +466,7 @@ importers:
       vite-plugin-pwa: 0.12.6_vite@3.0.9
       webpack: 5.74.0
 
-  e2e/client:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/signal': workspace:*
-      source-map-support: ^0.5.12
-    dependencies:
-      '@dxos/client': link:../../packages/sdk/client
-      '@dxos/credentials': link:../../packages/halo/credentials
-      '@dxos/crypto': link:../../packages/common/crypto
-      '@dxos/echo-db': link:../../packages/echo/echo-db
-      '@dxos/keys': link:../../packages/common/keys
-      '@dxos/object-model': link:../../packages/echo/object-model
-      source-map-support: 0.5.21
-    devDependencies:
-      '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/random-access-storage': link:../../packages/common/random-access-storage
-      '@dxos/signal': link:../../packages/mesh/signal
-
-  e2e/echo:
-    specifiers:
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/halo-protocol': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/messaging': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/testutils': workspace:*
-      source-map-support: ^0.5.12
-    dependencies:
-      '@dxos/crypto': link:../../packages/common/crypto
-      '@dxos/echo-db': link:../../packages/echo/echo-db
-      '@dxos/feed-store': link:../../packages/common/feed-store
-      '@dxos/halo-protocol': link:../../packages/halo/halo-protocol
-      '@dxos/keyring': link:../../packages/halo/keyring
-      '@dxos/keys': link:../../packages/common/keys
-      '@dxos/messaging': link:../../packages/mesh/messaging
-      '@dxos/network-manager': link:../../packages/mesh/network-manager
-      '@dxos/object-model': link:../../packages/echo/object-model
-      '@dxos/random-access-storage': link:../../packages/common/random-access-storage
-      '@dxos/testutils': link:../../packages/common/testutils
-      source-map-support: 0.5.21
-    devDependencies:
-      '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/signal': link:../../packages/mesh/signal
-
-  e2e/protobuf-compiler:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/protobuf-compiler': workspace:*
-    devDependencies:
-      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
-      '@dxos/protobuf-compiler': link:../../tools/executors/protobuf-compiler
-
-  e2e/rpc-tunnel:
-    specifiers:
-      '@babel/core': ^7.18.13
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
-      '@dxos/vite-plugin': workspace:*
-      '@emotion/react': ^11.9.0
-      '@emotion/styled': ^11.8.1
-      '@mui/icons-material': ^5.8.0
-      '@mui/lab': ^5.0.0-alpha.83
-      '@mui/material': ^5.8.1
-      '@types/debug': ^4.1.7
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
-      debug: ^4.3.3
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      vite: 3.0.9
-    dependencies:
-      '@dxos/async': link:../../packages/common/async
-      '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
-      '@dxos/protocols': link:../../packages/common/protocols
-      '@dxos/react-async': link:../../packages/common/react-async
-      '@dxos/react-components': link:../../packages/sdk/react-components
-      '@dxos/rpc': link:../../packages/common/rpc
-      '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
-      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
-      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
-      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
-      '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
-      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
-      debug: 4.3.4
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-    devDependencies:
-      '@babel/core': 7.18.13
-      '@dxos/vite-plugin': link:../../tools/vite-plugin
-      '@types/debug': 4.1.7
-      '@types/react': 17.0.50
-      '@types/react-dom': 17.0.17
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-
-  packages/bot/bot-factory-client:
+  packages/bots/bot-factory-client:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/client': workspace:*
@@ -1030,20 +486,20 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/keys': link:../../common/keys
-      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../common/rpc
       assert: 2.0.0
       debug: 4.3.4
     devDependencies:
       '@dxos/client': link:../../sdk/client
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/network-manager': link:../../core/mesh/network-manager
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       jsonify: 0.0.0
 
-  packages/bot/botkit:
+  packages/bots/botkit:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
@@ -1082,10 +538,10 @@ importers:
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
       abort-controller: 3.0.0
@@ -1099,9 +555,9 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/object-model': link:../../echo/object-model
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/signal': link:../../core/mesh/signal
       '@dxos/util': link:../../common/util
       '@types/debug': 4.1.7
       '@types/download': 8.0.1
@@ -1219,7 +675,7 @@ importers:
       through2: ^3.0.1
     dependencies:
       '@dxos/async': link:../async
-      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/util': link:../util
@@ -1237,7 +693,7 @@ importers:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../crypto
-      '@dxos/protocols': link:../protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../random-access-storage
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1
@@ -1291,27 +747,6 @@ importers:
       pirates: 4.0.5
       sorcery: 0.10.0
       typescript: 4.7.4
-
-  packages/common/protocols:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/keys': workspace:*
-      '@types/debug': ^4.1.7
-      assert: ^2.0.0
-      debug: ^4.3.3
-      glob: ~7.1.6
-      randombytes: ^2.1.0
-      util: ^0.12.4
-    dependencies:
-      '@dxos/codec-protobuf': link:../codec-protobuf
-      '@dxos/keys': link:../keys
-      assert: 2.0.0
-      randombytes: 2.1.0
-      util: 0.12.4
-    devDependencies:
-      '@types/debug': 4.1.7
-      debug: 4.3.4
-      glob: 7.1.7
 
   packages/common/random-access-storage:
     specifiers:
@@ -1375,7 +810,7 @@ importers:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/debug': link:../debug
-      '@dxos/protocols': link:../protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
@@ -1431,6 +866,717 @@ importers:
     devDependencies:
       '@dxos/crypto': link:../crypto
 
+  packages/core/echo/echo-db:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/halo-protocol': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocol-plugin-presence': workspace:*
+      '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocol-plugin-rpc': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/columnify': ^1.5.1
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/json-stable-stringify': ^1.0.32
+      '@types/lodash.defaultsdeep': ^4.6.6
+      '@types/lodash.unionwith': ^4.6.6
+      '@types/memdown': ^3.0.0
+      '@types/pify': ^3.0.2
+      assert: ^2.0.0
+      buffer-json-encoding: ^1.0.2
+      chalk: ^4.1.0
+      columnify: ^1.6.0
+      debug: ^4.3.3
+      faker: ^5.5.3
+      json-stable-stringify: ^1.0.1
+      lodash.defaultsdeep: ^4.6.1
+      lodash.unionwith: ^4.6.0
+      memdown: ^5.1.0
+      mocha: ^8.4.0
+      pify: ~5.0.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/halo-protocol': link:../../halo/halo-protocol
+      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
+      '@dxos/messaging': link:../../mesh/messaging
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/network-manager': link:../../mesh/network-manager
+      '@dxos/object-model': link:../object-model
+      '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
+      '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../protocols
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/rpc': link:../../../common/rpc
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      json-stable-stringify: 1.0.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.unionwith: 4.6.0
+      pify: 5.0.0
+    devDependencies:
+      '@dxos/testutils': link:../../../common/testutils
+      '@types/columnify': 1.5.1
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/json-stable-stringify': 1.0.33
+      '@types/lodash.defaultsdeep': 4.6.7
+      '@types/lodash.unionwith': 4.6.6
+      '@types/memdown': 3.0.0
+      '@types/pify': 3.0.2
+      chalk: 4.1.2
+      columnify: 1.6.0
+      faker: 5.5.3
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
+      mocha: 8.4.0
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
+
+  packages/core/echo/echo-testing:
+    specifiers:
+      '@dxos/echo-db': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@types/faker': ^5.5.9
+      '@types/lodash.times': ^4.3.6
+      abstract-leveldown: ~7.0.0
+      faker: ^5.5.3
+      jsondown: dxos/jsondown#main
+      lodash.times: ^4.3.2
+    dependencies:
+      '@dxos/echo-db': link:../echo-db
+      '@dxos/object-model': link:../object-model
+      '@dxos/protocols': link:../../protocols
+      faker: 5.5.3
+      lodash.times: 4.3.2
+    devDependencies:
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@types/faker': 5.5.9
+      '@types/lodash.times': 4.3.6
+      abstract-leveldown: 7.0.0
+      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
+
+  packages/core/echo/messenger-model:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
+    dependencies:
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../protocols
+
+  packages/core/echo/model-factory:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      assert: ^2.0.0
+      debug: ^4.3.3
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/protocols': link:../../protocols
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      debug: 4.3.4
+    devDependencies:
+      '@types/debug': 4.1.7
+
+  packages/core/echo/object-model:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/lodash.clonedeep': ^4.5.6
+      '@types/lodash.get': ^4.4.6
+      '@types/lodash.set': ^4.3.6
+      assert: ^2.0.0
+      debug: ^4.3.3
+      faker: ^5.5.3
+      lodash.clonedeep: ^4.5.0
+      lodash.get: ^4.4.2
+      lodash.set: ^4.3.2
+      minisearch: ^3.0.2
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/model-factory': link:../model-factory
+      '@dxos/protocols': link:../../protocols
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      debug: 4.3.4
+      lodash.clonedeep: 4.5.0
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
+      minisearch: 3.2.0
+    devDependencies:
+      '@types/debug': 4.1.7
+      '@types/faker': 5.5.9
+      '@types/lodash.clonedeep': 4.5.6
+      '@types/lodash.get': 4.4.6
+      '@types/lodash.set': 4.3.6
+      faker: 5.5.3
+
+  packages/core/echo/text-model:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/model-factory': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/faker': ^5.5.9
+      '@types/node': ^16.11.58
+      assert: ^2.0.0
+      faker: ^5.5.3
+      yjs: ^13.5.41
+    dependencies:
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/echo-db': link:../echo-db
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/model-factory': link:../model-factory
+      '@types/node': 16.11.62
+      assert: 2.0.0
+      yjs: 13.5.41
+    devDependencies:
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/object-model': link:../object-model
+      '@dxos/protocols': link:../../protocols
+      '@types/faker': 5.5.9
+      faker: 5.5.3
+
+  packages/core/halo/credentials:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/protocol-plugin-replicator': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/encoding-down': ^5.0.0
+      '@types/end-of-stream': ^1.4.0
+      '@types/json-stable-stringify': ^1.0.32
+      '@types/levelup': ^4.3.0
+      '@types/lodash.matches': ^4.6.6
+      '@types/memdown': ^3.0.0
+      '@types/pify': ^3.0.2
+      '@types/pump': ^1.1.0
+      '@types/stream-to-array': ^2.3.0
+      assert: ^2.0.0
+      bip39: ^3.0.4
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      encoding-down: ^6.3.0
+      end-of-stream: ^1.4.1
+      json-stable-stringify: ^1.0.1
+      leveldown: ^5.4.1
+      levelup: ^4.3.2
+      lodash.matches: ^4.6.0
+      memdown: ^5.1.0
+      moment: ^2.24.0
+      performance-now: ^2.1.0
+      pump: ^3.0.0
+      stream-to-array: ^2.3.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
+      '@dxos/protocols': link:../../protocols
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      bip39: 3.0.4
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      encoding-down: 6.3.0
+      end-of-stream: 1.4.4
+      json-stable-stringify: 1.0.1
+      leveldown: 5.6.0
+      levelup: 4.4.0
+      lodash.matches: 4.6.0
+      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
+      moment: 2.29.1
+      performance-now: 2.1.0
+      pump: 3.0.0
+      stream-to-array: 2.3.0
+    devDependencies:
+      '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@types/debug': 4.1.7
+      '@types/encoding-down': 5.0.0
+      '@types/end-of-stream': 1.4.1
+      '@types/json-stable-stringify': 1.0.33
+      '@types/levelup': 4.3.3
+      '@types/lodash.matches': 4.6.6
+      '@types/memdown': 3.0.0
+      '@types/pify': 3.0.2
+      '@types/pump': 1.1.1
+      '@types/stream-to-array': 2.3.0
+
+  packages/core/halo/halo-protocol:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/json-stable-stringify': ^1.0.32
+      assert: ^2.0.0
+      debug: ^4.3.3
+      json-stable-stringify: ^1.0.1
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keyring': link:../keyring
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../protocols
+      '@dxos/util': link:../../../common/util
+      '@types/json-stable-stringify': 1.0.33
+      assert: 2.0.0
+      debug: 4.3.4
+      json-stable-stringify: 1.0.1
+    devDependencies:
+      '@types/debug': 4.1.7
+
+  packages/core/halo/keyring:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/node': ^16.11.58
+      assert: ^2.0.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../protocols
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+    devDependencies:
+      '@types/debug': 4.1.7
+      '@types/node': 16.11.62
+
+  packages/core/mesh/broadcast:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/network-generator': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/debug': ^4.1.7
+      assert: ^2.0.0
+      debug: ^4.3.3
+      tiny-lru: ^7.0.6
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/protocols': link:../../protocols
+      assert: 2.0.0
+      debug: 4.3.4
+      tiny-lru: 7.0.6
+    devDependencies:
+      '@dxos/network-generator': link:../network-generator
+      '@types/debug': 4.1.7
+
+  packages/core/mesh/mesh-protocol:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/end-of-stream': ^1.4.0
+      '@types/pump': ^1.1.0
+      assert: ^2.0.0
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      end-of-stream: ^1.4.1
+      hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
+      nanoerror: ^1.2.1
+      nanomessage: ^8.4.0
+      pump: ^3.0.0
+      signal-promise: ^1.0.3
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      end-of-stream: 1.4.4
+      hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
+      nanoerror: 1.2.1
+      nanomessage: 8.4.0
+      signal-promise: 1.0.3
+    devDependencies:
+      '@dxos/protocols': link:../../protocols
+      '@types/debug': 4.1.7
+      '@types/end-of-stream': 1.4.1
+      '@types/pump': 1.1.1
+      pump: 3.0.0
+
+  packages/core/mesh/messaging:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      assert: ^2.0.0
+      earljs: ~0.1.10
+      isomorphic-ws: ^4.0.1
+      mocha: ^8.4.0
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+      ws: ^7.4.4
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../../../common/rpc
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      isomorphic-ws: 4.0.1_ws@7.5.6
+      ws: 7.5.6
+    devDependencies:
+      '@dxos/signal': link:../signal
+      '@dxos/testutils': link:../../../common/testutils
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      earljs: 0.1.12_typescript@4.7.4
+      mocha: 8.4.0
+      typescript: 4.7.4
+      wait-for-expect: 3.0.2
+
+  packages/core/mesh/network-generator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@types/assert': ^1.5.4
+      '@types/end-of-stream': ^1.4.0
+      '@types/pump': ^1.1.0
+      assert: ^2.0.0
+      end-of-stream: ^1.4.1
+      ngraph.generators: ^19.0.1
+      ngraph.graph: ^19.0.1
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      assert: 2.0.0
+      end-of-stream: 1.4.4
+      ngraph.generators: 19.3.1
+      ngraph.graph: 19.1.0
+    devDependencies:
+      '@types/assert': 1.5.6
+      '@types/end-of-stream': 1.4.1
+      '@types/pump': 1.1.1
+
+  packages/core/mesh/network-manager:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
+      '@dxos/protocol-plugin-presence': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      '@koush/wrtc': ^0.5.3
+      '@swc-node/register': ~1.5.1
+      '@types/simple-peer': 9.11.3
+      '@types/ws': ^7.4.0
+      assert: ^2.0.0
+      earljs: ~0.1.10
+      fast-check: ~2.14.0
+      isomorphic-ws: ^4.0.1
+      nanomessage-rpc: ^3.0.0
+      simple-peer: 9.11.0
+      typescript: ^4.7.2
+      ws: ^7.4.4
+      xor-distance: ^2.0.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/messaging': link:../messaging
+      '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
+      '@dxos/protocols': link:../../protocols
+      '@dxos/rpc': link:../../../common/rpc
+      '@dxos/util': link:../../../common/util
+      '@koush/wrtc': 0.5.3
+      assert: 2.0.0
+      isomorphic-ws: 4.0.1_ws@7.5.6
+      nanomessage-rpc: 3.2.0
+      simple-peer: 9.11.0
+      ws: 7.5.6
+      xor-distance: 2.0.0
+    devDependencies:
+      '@dxos/signal': link:../signal
+      '@dxos/testutils': link:../../../common/testutils
+      '@swc-node/register': 1.5.1_typescript@4.7.4
+      '@types/simple-peer': 9.11.3
+      '@types/ws': 7.4.7
+      earljs: 0.1.12_typescript@4.7.4
+      fast-check: 2.14.0
+      typescript: 4.7.4
+
+  packages/core/mesh/protocol-network-generator:
+    specifiers:
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/network-generator': workspace:*
+      '@types/pump': ^1.1.0
+      assert: ^2.0.0
+      pump: ^3.0.0
+    dependencies:
+      '@dxos/network-generator': link:../network-generator
+      assert: 2.0.0
+      pump: 3.0.0
+    devDependencies:
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@types/pump': 1.1.1
+
+  packages/core/mesh/protocol-plugin-presence:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/broadcast': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/protocol-network-generator': workspace:*
+      '@dxos/protocols': workspace:*
+      '@types/debug': ^4.1.7
+      assert: ^2.0.0
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      ngraph.graph: ^19.0.1
+      ngraph.path: ~1.3.1
+      p-limit: ^3.1.0
+      queue-microtask: ^1.1.2
+    dependencies:
+      '@dxos/broadcast': link:../broadcast
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/protocols': link:../../protocols
+      assert: 2.0.0
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+      ngraph.graph: 19.1.0
+      p-limit: 3.1.0
+      queue-microtask: 1.2.3
+    devDependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/protocol-network-generator': link:../protocol-network-generator
+      '@types/debug': 4.1.7
+      ngraph.path: 1.3.1
+
+  packages/core/mesh/protocol-plugin-replicator:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
+      '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/protocol-network-generator': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/end-of-stream': ^1.4.0
+      '@types/pify': ^3.0.2
+      assert: ^2.0.0
+      buffer-json-encoding: ^1.0.2
+      debug: ^4.3.3
+      end-of-stream: ^1.4.1
+      multi-read-stream: ^2.0.0
+      pify: ~5.0.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+      buffer-json-encoding: 1.0.2
+      debug: 4.3.4
+    devDependencies:
+      '@dxos/crypto': link:../../../common/crypto
+      '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/protocol-network-generator': link:../protocol-network-generator
+      '@dxos/protocols': link:../../protocols
+      '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@types/debug': 4.1.7
+      '@types/end-of-stream': 1.4.1
+      '@types/pify': 3.0.2
+      end-of-stream: 1.4.4
+      multi-read-stream: 2.0.0
+      pify: 5.0.0
+
+  packages/core/mesh/protocol-plugin-rpc:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/mesh-protocol': workspace:*
+      '@dxos/messaging': workspace:*
+      '@dxos/network-manager': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/testutils': workspace:*
+      '@dxos/util': workspace:*
+      assert: ^2.0.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/messaging': link:../messaging
+      '@dxos/rpc': link:../../../common/rpc
+      '@dxos/util': link:../../../common/util
+      assert: 2.0.0
+    devDependencies:
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/network-manager': link:../network-manager
+      '@dxos/protocols': link:../../protocols
+      '@dxos/testutils': link:../../../common/testutils
+
+  packages/core/mesh/signal:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
+      debug: ^4.3.3
+      node-fetch: ^2.6.0
+      pkg-up: ^3.1.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      debug: 4.3.4
+      node-fetch: 2.6.7
+      pkg-up: 3.1.0
+    devDependencies:
+      '@dxos/protocols': link:../../protocols
+      '@dxos/util': link:../../../common/util
+      '@types/debug': 4.1.7
+      '@types/node': 16.11.62
+      '@types/node-fetch': 2.5.12
+
+  packages/core/protocols:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/keys': workspace:*
+      '@types/debug': ^4.1.7
+      assert: ^2.0.0
+      debug: ^4.3.3
+      glob: ~7.1.6
+      randombytes: ^2.1.0
+      util: ^0.12.4
+    dependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/keys': link:../../common/keys
+      assert: 2.0.0
+      randombytes: 2.1.0
+      util: 0.12.4
+    devDependencies:
+      '@types/debug': 4.1.7
+      debug: 4.3.4
+      glob: 7.1.7
+
   packages/devtools/devtools:
     specifiers:
       '@babel/core': ^7.18.13
@@ -1484,17 +1630,17 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools-mesh': link:../devtools-mesh
       '@dxos/feed-store': link:../../common/feed-store
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/messenger-model': link:../../echo/messenger-model
-      '@dxos/model-factory': link:../../echo/model-factory
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/messenger-model': link:../../core/echo/messenger-model
+      '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-components': link:../../sdk/react-components
@@ -1502,7 +1648,7 @@ importers:
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
-      '@dxos/text-model': link:../../echo/text-model
+      '@dxos/text-model': link:../../core/echo/text-model
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
@@ -1517,7 +1663,7 @@ importers:
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/config': link:../../sdk/config
-      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
@@ -1578,11 +1724,11 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
-      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools': link:../devtools
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/rpc': link:../../common/rpc
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
@@ -1650,9 +1796,9 @@ importers:
       '@dxos/gem-core': link:../../gem/gem-core
       '@dxos/gem-spore': link:../../gem/gem-spore
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/protocol-plugin-presence': link:../../core/mesh/protocol-plugin-presence
       '@dxos/react-components': link:../../sdk/react-components
       '@dxos/react-toolkit': link:../../sdk/react-toolkit
       '@dxos/util': link:../../common/util
@@ -1666,7 +1812,7 @@ importers:
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/react': 17.0.50
       '@types/react-copy-to-clipboard': 5.0.2
@@ -1674,272 +1820,637 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
 
-  packages/echo/echo-db:
+  packages/e2e/client:
     specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@dxos/signal': workspace:*
+      source-map-support: ^0.5.12
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/keys': link:../../common/keys
+      '@dxos/object-model': link:../../core/echo/object-model
+      source-map-support: 0.5.21
+    devDependencies:
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/random-access-storage': link:../../common/random-access-storage
+      '@dxos/signal': link:../../core/mesh/signal
+
+  packages/e2e/echo:
+    specifiers:
+      '@dxos/crypto': workspace:*
+      '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
       '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
-      '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
-      '@dxos/protocol-plugin-presence': workspace:*
-      '@dxos/protocol-plugin-replicator': workspace:*
-      '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
-      '@dxos/rpc': workspace:*
+      '@dxos/signal': workspace:*
       '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      '@types/columnify': ^1.5.1
+      source-map-support: ^0.5.12
+    dependencies:
+      '@dxos/crypto': link:../../common/crypto
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/halo-protocol': link:../../core/halo/halo-protocol
+      '@dxos/keyring': link:../../core/halo/keyring
+      '@dxos/keys': link:../../common/keys
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/random-access-storage': link:../../common/random-access-storage
+      '@dxos/testutils': link:../../common/testutils
+      source-map-support: 0.5.21
+    devDependencies:
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/signal': link:../../core/mesh/signal
+
+  packages/e2e/protobuf-compiler:
+    specifiers:
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/protobuf-compiler': workspace:*
+    devDependencies:
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/protobuf-compiler': link:../../../tools/executors/protobuf-compiler
+
+  packages/e2e/rpc-tunnel:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/rpc-tunnel': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/json-stable-stringify': ^1.0.32
-      '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.unionwith': ^4.6.6
-      '@types/memdown': ^3.0.0
-      '@types/pify': ^3.0.2
-      assert: ^2.0.0
-      buffer-json-encoding: ^1.0.2
-      chalk: ^4.1.0
-      columnify: ^1.6.0
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
       debug: ^4.3.3
-      faker: ^5.5.3
-      json-stable-stringify: ^1.0.1
-      lodash.defaultsdeep: ^4.6.1
-      lodash.unionwith: ^4.6.0
-      memdown: ^5.1.0
-      mocha: ^8.4.0
-      pify: ~5.0.0
-      typescript: ^4.7.2
-      wait-for-expect: ^3.0.2
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      vite: 3.0.9
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/halo-protocol': link:../../halo/halo-protocol
-      '@dxos/keyring': link:../../halo/keyring
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/model-factory': link:../model-factory
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/object-model': link:../object-model
-      '@dxos/protocol-plugin-presence': link:../../mesh/protocol-plugin-presence
-      '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-components': link:../../sdk/react-components
       '@dxos/rpc': link:../../common/rpc
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      buffer-json-encoding: 1.0.2
+      '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
+      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
+      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
+      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       debug: 4.3.4
-      json-stable-stringify: 1.0.1
-      lodash.defaultsdeep: 4.6.1
-      lodash.unionwith: 4.6.0
-      pify: 5.0.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
     devDependencies:
-      '@dxos/testutils': link:../../common/testutils
-      '@types/columnify': 1.5.1
+      '@babel/core': 7.18.13
+      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@types/debug': 4.1.7
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+
+  packages/experimental/kai:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@emotion/css': ^11.7.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/faker': ^5.5.9
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      faker: ^5.5.3
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      supervisor: ~0.12.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      '@emotion/css': 11.7.1_@babel+core@7.18.13
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/faker': 5.5.9
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
+      faker: 5.5.3
+      supervisor: 0.12.0
+
+  packages/experimental/kitchen-sink:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/echo-db': workspace:*
+      '@dxos/echo-testing': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/esbuild-server': ~2.29.0
+      '@dxos/gem-core': workspace:*
+      '@dxos/gem-spore': workspace:*
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-echo-graph': workspace:*
+      '@dxos/react-ipfs': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@dxos/util': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/icons-material': ^5.8.0
+      '@mui/lab': ^5.0.0-alpha.83
+      '@mui/material': ^5.8.1
+      '@mui/system': ^5.8.1
+      '@mui/x-data-grid': ^5.12.3
+      '@types/d3': ^7.1.0
+      '@types/debug': ^4.1.7
+      '@types/faker': ^5.5.9
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      '@types/url-join': ~4.0.1
+      buffer: ^6.0.3
+      clsx: ^1.1.1
+      concurrently: ~7.0.0
+      debug: ^4.3.3
+      dotenv: ^8.2.0
+      electron: ~18.0.4
+      esbuild-plugin-yaml: ~0.0.1
+      faker: ^5.5.3
+      immutability-helper: ^3.0.2
+      it-all: 1.0.6
+      mobile-detect: ~1.4.5
+      mocha: ^8.4.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      robotjs: ~0.6.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+      uint8arrays: 3.0.0
+      url-join: ^4.0.1
+    dependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/config': link:../../sdk/config
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/echo-testing': link:../../core/echo/echo-testing
+      '@dxos/gem-core': link:../../gem/gem-core
+      '@dxos/gem-spore': link:../../gem/gem-spore
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-echo-graph': link:../../sdk/react-echo-graph
+      '@dxos/react-ipfs': link:../../sdk/react-ipfs
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/util': link:../../common/util
+      '@emotion/css': 11.7.1_@babel+core@7.18.13
+      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
+      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
+      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
+      '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
+      '@mui/x-data-grid': 5.12.3_oop6dcki46d7lexi6nxggagcai
+      clsx: 1.2.1
+      debug: 4.3.4
+      immutability-helper: 3.1.1
+      it-all: 1.0.6
+      mobile-detect: 1.4.5
+      uint8arrays: 3.0.0
+      url-join: 4.0.1
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/async': link:../../common/async
+      '@dxos/debug': link:../../common/debug
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/esbuild-server': 2.29.0_@types+react@17.0.50
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/d3': 7.4.0
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/json-stable-stringify': 1.0.33
-      '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.unionwith': 4.6.6
-      '@types/memdown': 3.0.0
-      '@types/pify': 3.0.2
-      chalk: 4.1.2
-      columnify: 1.6.0
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
+      '@types/url-join': 4.0.1
+      buffer: 6.0.3
+      concurrently: 7.0.0
+      dotenv: 8.6.0
+      electron: 18.0.4
+      esbuild-plugin-yaml: 0.0.1
       faker: 5.5.3
-      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
       mocha: 8.4.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      robotjs: 0.6.0
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
+      typescript: 4.7.4
+
+  packages/experimental/kodama:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
+      '@types/qrcode-terminal': ^0.12.0
+      '@types/react': ^17.0.24
+      '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
+      clipboardy: ^3.0.0
+      compare-semver: ~1.1.0
+      date-format: ~4.0.11
+      esbuild: ~0.14.1
+      ink: ^3.2.0
+      ink-select-input: ~4.2.1
+      ink-spinner: ~4.0.3
+      ink-syntax-highlight: ~1.0.1
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
+      mocha: ^8.4.0
+      node-fetch: ^2.6.0
+      npm-api: ~1.0.1
+      qrcode-terminal: ~0.12.0
+      react: ^17.0.2
+      supervisor: ~0.12.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/client-testing': link:../../sdk/client-testing
+      '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/keys': link:../../common/keys
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-async': link:../../common/react-async
+      '@dxos/react-client': link:../../sdk/react-client
+      chalk: 4.1.2
+      clipboardy: 3.0.0
+      compare-semver: 1.1.0
+      date-format: 4.0.11
+      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
+      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
+      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
+      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
+      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
+      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
+      js-yaml: 4.1.0
+      node-fetch: 2.6.7
+      npm-api: 1.0.1
+      qrcode-terminal: 0.12.0
+      react: 17.0.2
+      yargs: 16.2.0
+    devDependencies:
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      '@types/node-fetch': 2.5.12
+      '@types/qrcode-terminal': 0.12.0
+      '@types/react': 17.0.50
+      '@types/yargs': 16.0.4
+      esbuild: 0.14.49
+      mocha: 8.4.0
+      supervisor: 0.12.0
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
+      typescript: 4.7.4
+
+  packages/experimental/kodama/dist:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
+      '@types/qrcode-terminal': ^0.12.0
+      '@types/react': ^17.0.24
+      '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
+      clipboardy: ^3.0.0
+      compare-semver: ~1.1.0
+      date-format: ~4.0.11
+      esbuild: ~0.14.1
+      ink: ^3.2.0
+      ink-select-input: ~4.2.1
+      ink-spinner: ~4.0.3
+      ink-syntax-highlight: ~1.0.1
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
+      mocha: ^8.4.0
+      node-fetch: ^2.6.0
+      npm-api: ~1.0.1
+      qrcode-terminal: ~0.12.0
+      react: ^17.0.2
+      supervisor: ~0.12.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/client-testing': link:../../../sdk/client-testing
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-async': link:../../../common/react-async
+      '@dxos/react-client': link:../../../sdk/react-client
+      chalk: 4.1.2
+      clipboardy: 3.0.0
+      compare-semver: 1.1.0
+      date-format: 4.0.11
+      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
+      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
+      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
+      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
+      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
+      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
+      js-yaml: 4.1.0
+      node-fetch: 2.6.7
+      npm-api: 1.0.1
+      qrcode-terminal: 0.12.0
+      react: 17.0.2
+      yargs: 16.2.0
+    devDependencies:
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
+      '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      '@types/node-fetch': 2.5.12
+      '@types/qrcode-terminal': 0.12.0
+      '@types/react': 17.0.50
+      '@types/yargs': 16.0.4
+      esbuild: 0.14.49
+      mocha: 8.4.0
+      supervisor: 0.12.0
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
+      typescript: 4.7.4
+
+  packages/experimental/lexical-editor:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/esbuild-server': ~2.29.0
+      '@dxos/object-model': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-client-testing': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@dxos/text-model': workspace:*
+      '@emotion/css': ^11.7.1
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@lexical/hashtag': ~0.3.11
+      '@lexical/list': ~0.3.11
+      '@lexical/react': ~0.3.11
+      '@lexical/table': ~0.3.11
+      '@lexical/utils': ~0.3.11
+      '@lexical/yjs': ~0.3.11
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/debug': ^4.1.7
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      debug: ^4.3.3
+      lexical: ~0.3.11
+      mocha: ^8.4.0
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+      wait-for-expect: ^3.0.2
+      y-protocols: ~1.0.5
+      yjs: ^13.5.41
+    dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/text-model': link:../../core/echo/text-model
+      '@lexical/hashtag': 0.3.11_lexical@0.3.11
+      '@lexical/list': 0.3.11_lexical@0.3.11
+      '@lexical/table': 0.3.11_lexical@0.3.11
+      '@lexical/utils': 0.3.11_lexical@0.3.11
+      '@lexical/yjs': 0.3.11_lexical@0.3.11+yjs@13.5.41
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
+      lexical: 0.3.11
+      y-protocols: 1.0.5
+      yjs: 13.5.41
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/esbuild-server': 2.29.0_@types+react@17.0.50
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@dxos/react-client-testing': link:../../sdk/react-client-testing
+      '@emotion/css': 11.7.1_@babel+core@7.18.13
+      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
+      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
+      '@lexical/react': 0.3.11_vnpfu56njw2jkwfemiko6bm75a
+      '@types/debug': 4.1.7
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
+      debug: 4.3.4
+      mocha: 8.4.0
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
       wait-for-expect: 3.0.2
 
-  packages/echo/echo-testing:
-    specifiers:
-      '@dxos/echo-db': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@types/faker': ^5.5.9
-      '@types/lodash.times': ^4.3.6
-      abstract-leveldown: ~7.0.0
-      faker: ^5.5.3
-      jsondown: dxos/jsondown#main
-      lodash.times: ^4.3.2
-    dependencies:
-      '@dxos/echo-db': link:../echo-db
-      '@dxos/object-model': link:../object-model
-      '@dxos/protocols': link:../../common/protocols
-      faker: 5.5.3
-      lodash.times: 4.3.2
-    devDependencies:
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@types/faker': 5.5.9
-      '@types/lodash.times': 4.3.6
-      abstract-leveldown: 7.0.0
-      jsondown: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0
-
-  packages/echo/messenger-model:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/model-factory': workspace:*
-      '@dxos/protocols': workspace:*
-    dependencies:
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/model-factory': link:../model-factory
-      '@dxos/protocols': link:../../common/protocols
-
-  packages/echo/model-factory:
+  packages/experimental/wallet-extension:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      assert: ^2.0.0
-      debug: ^4.3.3
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/debug': link:../../common/debug
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/keys': link:../../common/keys
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
-    devDependencies:
-      '@types/debug': 4.1.7
-
-  packages/echo/object-model:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/model-factory': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/faker': ^5.5.9
-      '@types/lodash.clonedeep': ^4.5.6
-      '@types/lodash.get': ^4.4.6
-      '@types/lodash.set': ^4.3.6
-      assert: ^2.0.0
-      debug: ^4.3.3
-      faker: ^5.5.3
-      lodash.clonedeep: ^4.5.0
-      lodash.get: ^4.4.2
-      lodash.set: ^4.3.2
-      minisearch: ^3.0.2
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/model-factory': link:../model-factory
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      debug: 4.3.4
-      lodash.clonedeep: 4.5.0
-      lodash.get: 4.4.2
-      lodash.set: 4.3.2
-      minisearch: 3.2.0
-    devDependencies:
-      '@types/debug': 4.1.7
-      '@types/faker': 5.5.9
-      '@types/lodash.clonedeep': 4.5.6
-      '@types/lodash.get': 4.4.6
-      '@types/lodash.set': 4.3.6
-      faker: 5.5.3
-
-  packages/echo/text-model:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/echo-db': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/model-factory': workspace:*
-      '@dxos/object-model': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@dxos/rpc': workspace:*
+      '@dxos/util': workspace:*
+      '@hot-loader/react-dom': 17.0.2
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
       '@types/faker': ^5.5.9
-      '@types/node': ^16.11.58
-      assert: ^2.0.0
+      '@types/react': ^17.0.24
+      '@types/react-copy-to-clipboard': ~5.0.1
+      '@types/react-dom': ^17.0.9
+      '@types/uuid': ~8.3.3
+      '@types/webextension-polyfill': ^0.8.0
+      '@types/webpack-env': ^1.16.0
+      chalk: ^4.1.0
+      copy: ~0.3.2
       faker: ^5.5.3
-      yjs: ^13.5.41
+      playwright: ^1.25.1
+      react: ^17.0.2
+      react-copy-to-clipboard: ^5.1.0
+      react-dom: ^17.0.2
+      rmdir: ~1.2.0
+      uuid: ^8.3.2
+      webextension-polyfill: ^0.8.0
     dependencies:
+      '@dxos/async': link:../../common/async
+      '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/echo-db': link:../echo-db
-      '@dxos/keys': link:../../common/keys
-      '@dxos/model-factory': link:../model-factory
-      '@types/node': 16.11.62
-      assert: 2.0.0
-      yjs: 13.5.41
+      '@dxos/config': link:../../sdk/config
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/protocols': link:../../core/protocols
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@dxos/rpc': link:../../common/rpc
+      '@dxos/util': link:../../common/util
+      '@hot-loader/react-dom': 17.0.2_react@17.0.2
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
+      react: 17.0.2
+      react-copy-to-clipboard: 5.1.0_react@17.0.2
+      react-dom: 17.0.2_react@17.0.2
+      webextension-polyfill: 0.8.0
     devDependencies:
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/object-model': link:../object-model
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/faker': 5.5.9
+      '@types/react': 17.0.50
+      '@types/react-copy-to-clipboard': 5.0.2
+      '@types/react-dom': 17.0.17
+      '@types/uuid': 8.3.3
+      '@types/webextension-polyfill': 0.8.2
+      '@types/webpack-env': 1.16.3
+      chalk: 4.1.2
+      copy: 0.3.2
       faker: 5.5.3
+      playwright: 1.25.1
+      rmdir: 1.2.0
+      uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
 
-  packages/fx/file:
+  packages/experimental/wallet-playground:
     specifiers:
-      '@types/mkdirp': ^1.0.2
-      '@types/node': ^16.11.58
-      mkdirp: ^1.0.4
-      typescript: ^4.7.2
+      '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/esbuild-plugins': ~2.29.0
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-client': workspace:*
+      '@dxos/react-components': workspace:*
+      '@dxos/react-toolkit': workspace:*
+      '@mui/icons-material': ^5.8.0
+      '@mui/material': ^5.8.1
+      '@types/react': ^17.0.24
+      '@types/react-dom': ^17.0.9
+      react: ^17.0.2
+      react-dom: ^17.0.2
     dependencies:
-      mkdirp: 1.0.4
+      '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
+      '@dxos/react-client': link:../../sdk/react-client
+      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-toolkit': link:../../sdk/react-toolkit
+      '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
+      '@mui/material': 5.8.7_hiunvzosbwliizyirxfy6hjyim
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
     devDependencies:
-      '@types/mkdirp': 1.0.2
-      '@types/node': 16.11.62
-      typescript: 4.7.4
-
-  packages/fx/plate:
-    specifiers:
-      '@dxos/file': workspace:*
-      '@types/lodash.flatten': ^4.4.6
-      '@types/lodash.zip': ^4.2.6
-      '@types/node': ^16.11.58
-      '@types/prettier': ^2.4.2
-      '@types/recursive-readdir': ^2.2.0
-      esbuild: ~0.14.1
-      lodash.flatten: ^4.4.0
-      lodash.zip: ^4.2.0
-      prettier: ^2.5.1
-      recursive-readdir: ^2.2.2
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-    dependencies:
-      '@dxos/file': link:../file
-      esbuild: 0.14.49
-      lodash.flatten: 4.4.0
-      lodash.zip: 4.2.0
-      prettier: 2.7.1
-      recursive-readdir: 2.2.2
-    devDependencies:
-      '@types/lodash.flatten': 4.4.7
-      '@types/lodash.zip': 4.2.7
-      '@types/node': 16.11.62
-      '@types/prettier': 2.4.2
-      '@types/recursive-readdir': 2.2.1
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
+      '@dxos/esbuild-plugins': 2.29.0
+      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/react': 17.0.50
+      '@types/react-dom': 17.0.17
 
   packages/gem/gem-core:
     specifiers:
@@ -2094,22 +2605,22 @@ importers:
       node-fetch: ^2.6.0
       source-map-support: ^0.5.12
     dependencies:
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
-      '@dxos/botkit': link:../../bot/botkit
+      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
+      '@dxos/botkit': link:../../bots/botkit
       '@dxos/client': link:../../sdk/client
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../../sdk/config
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/registry-client': link:../../sdk/registry-client
       '@dxos/rpc': link:../../common/rpc
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/signal': link:../../core/mesh/signal
       '@dxos/testutils': link:../../common/testutils
       '@dxos/util': link:../../common/util
       debug: 4.3.4
@@ -2118,473 +2629,6 @@ importers:
     devDependencies:
       '@dxos/async': link:../../common/async
       '@types/debug': 4.1.7
-
-  packages/halo/credentials:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/protocol-plugin-replicator': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/encoding-down': ^5.0.0
-      '@types/end-of-stream': ^1.4.0
-      '@types/json-stable-stringify': ^1.0.32
-      '@types/levelup': ^4.3.0
-      '@types/lodash.matches': ^4.6.6
-      '@types/memdown': ^3.0.0
-      '@types/pify': ^3.0.2
-      '@types/pump': ^1.1.0
-      '@types/stream-to-array': ^2.3.0
-      assert: ^2.0.0
-      bip39: ^3.0.4
-      buffer-json-encoding: ^1.0.2
-      debug: ^4.3.3
-      encoding-down: ^6.3.0
-      end-of-stream: ^1.4.1
-      json-stable-stringify: ^1.0.1
-      leveldown: ^5.4.1
-      levelup: ^4.3.2
-      lodash.matches: ^4.6.0
-      memdown: ^5.1.0
-      moment: ^2.24.0
-      performance-now: ^2.1.0
-      pump: ^3.0.0
-      stream-to-array: ^2.3.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/keys': link:../../common/keys
-      '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      bip39: 3.0.4
-      buffer-json-encoding: 1.0.2
-      debug: 4.3.4
-      encoding-down: 6.3.0
-      end-of-stream: 1.4.4
-      json-stable-stringify: 1.0.1
-      leveldown: 5.6.0
-      levelup: 4.4.0
-      lodash.matches: 4.6.0
-      memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
-      moment: 2.29.1
-      performance-now: 2.1.0
-      pump: 3.0.0
-      stream-to-array: 2.3.0
-    devDependencies:
-      '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@types/debug': 4.1.7
-      '@types/encoding-down': 5.0.0
-      '@types/end-of-stream': 1.4.1
-      '@types/json-stable-stringify': 1.0.33
-      '@types/levelup': 4.3.3
-      '@types/lodash.matches': 4.6.6
-      '@types/memdown': 3.0.0
-      '@types/pify': 3.0.2
-      '@types/pump': 1.1.1
-      '@types/stream-to-array': 2.3.0
-
-  packages/halo/halo-protocol:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/json-stable-stringify': ^1.0.32
-      assert: ^2.0.0
-      debug: ^4.3.3
-      json-stable-stringify: ^1.0.1
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keyring': link:../keyring
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/util': link:../../common/util
-      '@types/json-stable-stringify': 1.0.33
-      assert: 2.0.0
-      debug: 4.3.4
-      json-stable-stringify: 1.0.1
-    devDependencies:
-      '@types/debug': 4.1.7
-
-  packages/halo/keyring:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/node': ^16.11.58
-      assert: ^2.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-    devDependencies:
-      '@types/debug': 4.1.7
-      '@types/node': 16.11.62
-
-  packages/mesh/broadcast:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/network-generator': workspace:*
-      '@dxos/protocols': workspace:*
-      '@types/debug': ^4.1.7
-      assert: ^2.0.0
-      debug: ^4.3.3
-      tiny-lru: ^7.0.6
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/keys': link:../../common/keys
-      '@dxos/protocols': link:../../common/protocols
-      assert: 2.0.0
-      debug: 4.3.4
-      tiny-lru: 7.0.6
-    devDependencies:
-      '@dxos/network-generator': link:../network-generator
-      '@types/debug': 4.1.7
-
-  packages/mesh/mesh-protocol:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/end-of-stream': ^1.4.0
-      '@types/pump': ^1.1.0
-      assert: ^2.0.0
-      buffer-json-encoding: ^1.0.2
-      debug: ^4.3.3
-      end-of-stream: ^1.4.1
-      hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
-      nanoerror: ^1.2.1
-      nanomessage: ^8.4.0
-      pump: ^3.0.0
-      signal-promise: ^1.0.3
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/keys': link:../../common/keys
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      buffer-json-encoding: 1.0.2
-      debug: 4.3.4
-      end-of-stream: 1.4.4
-      hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
-      nanoerror: 1.2.1
-      nanomessage: 8.4.0
-      signal-promise: 1.0.3
-    devDependencies:
-      '@dxos/protocols': link:../../common/protocols
-      '@types/debug': 4.1.7
-      '@types/end-of-stream': 1.4.1
-      '@types/pump': 1.1.1
-      pump: 3.0.0
-
-  packages/mesh/messaging:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      assert: ^2.0.0
-      earljs: ~0.1.10
-      isomorphic-ws: ^4.0.1
-      mocha: ^8.4.0
-      typescript: ^4.7.2
-      wait-for-expect: ^3.0.2
-      ws: ^7.4.4
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/rpc': link:../../common/rpc
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      isomorphic-ws: 4.0.1_ws@7.5.6
-      ws: 7.5.6
-    devDependencies:
-      '@dxos/signal': link:../signal
-      '@dxos/testutils': link:../../common/testutils
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      earljs: 0.1.12_typescript@4.7.4
-      mocha: 8.4.0
-      typescript: 4.7.4
-      wait-for-expect: 3.0.2
-
-  packages/mesh/network-generator:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@types/assert': ^1.5.4
-      '@types/end-of-stream': ^1.4.0
-      '@types/pump': ^1.1.0
-      assert: ^2.0.0
-      end-of-stream: ^1.4.1
-      ngraph.generators: ^19.0.1
-      ngraph.graph: ^19.0.1
-    dependencies:
-      '@dxos/async': link:../../common/async
-      assert: 2.0.0
-      end-of-stream: 1.4.4
-      ngraph.generators: 19.3.1
-      ngraph.graph: 19.1.0
-    devDependencies:
-      '@types/assert': 1.5.6
-      '@types/end-of-stream': 1.4.1
-      '@types/pump': 1.1.1
-
-  packages/mesh/network-manager:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/messaging': workspace:*
-      '@dxos/protocol-plugin-presence': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      '@koush/wrtc': ^0.5.3
-      '@swc-node/register': ~1.5.1
-      '@types/simple-peer': 9.11.3
-      '@types/ws': ^7.4.0
-      assert: ^2.0.0
-      earljs: ~0.1.10
-      fast-check: ~2.14.0
-      isomorphic-ws: ^4.0.1
-      nanomessage-rpc: ^3.0.0
-      simple-peer: 9.11.0
-      typescript: ^4.7.2
-      ws: ^7.4.4
-      xor-distance: ^2.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/credentials': link:../../halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/debug': link:../../common/debug
-      '@dxos/keys': link:../../common/keys
-      '@dxos/log': link:../../common/log
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@dxos/messaging': link:../messaging
-      '@dxos/protocol-plugin-presence': link:../protocol-plugin-presence
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/rpc': link:../../common/rpc
-      '@dxos/util': link:../../common/util
-      '@koush/wrtc': 0.5.3
-      assert: 2.0.0
-      isomorphic-ws: 4.0.1_ws@7.5.6
-      nanomessage-rpc: 3.2.0
-      simple-peer: 9.11.0
-      ws: 7.5.6
-      xor-distance: 2.0.0
-    devDependencies:
-      '@dxos/signal': link:../signal
-      '@dxos/testutils': link:../../common/testutils
-      '@swc-node/register': 1.5.1_typescript@4.7.4
-      '@types/simple-peer': 9.11.3
-      '@types/ws': 7.4.7
-      earljs: 0.1.12_typescript@4.7.4
-      fast-check: 2.14.0
-      typescript: 4.7.4
-
-  packages/mesh/protocol-network-generator:
-    specifiers:
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/network-generator': workspace:*
-      '@types/pump': ^1.1.0
-      assert: ^2.0.0
-      pump: ^3.0.0
-    dependencies:
-      '@dxos/network-generator': link:../network-generator
-      assert: 2.0.0
-      pump: 3.0.0
-    devDependencies:
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@types/pump': 1.1.1
-
-  packages/mesh/protocol-plugin-presence:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/broadcast': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/protocol-network-generator': workspace:*
-      '@dxos/protocols': workspace:*
-      '@types/debug': ^4.1.7
-      assert: ^2.0.0
-      buffer-json-encoding: ^1.0.2
-      debug: ^4.3.3
-      ngraph.graph: ^19.0.1
-      ngraph.path: ~1.3.1
-      p-limit: ^3.1.0
-      queue-microtask: ^1.1.2
-    dependencies:
-      '@dxos/broadcast': link:../broadcast
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/keys': link:../../common/keys
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@dxos/protocols': link:../../common/protocols
-      assert: 2.0.0
-      buffer-json-encoding: 1.0.2
-      debug: 4.3.4
-      ngraph.graph: 19.1.0
-      p-limit: 3.1.0
-      queue-microtask: 1.2.3
-    devDependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@types/debug': 4.1.7
-      ngraph.path: 1.3.1
-
-  packages/mesh/protocol-plugin-replicator:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/protocol-network-generator': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/end-of-stream': ^1.4.0
-      '@types/pify': ^3.0.2
-      assert: ^2.0.0
-      buffer-json-encoding: ^1.0.2
-      debug: ^4.3.3
-      end-of-stream: ^1.4.1
-      multi-read-stream: ^2.0.0
-      pify: ~5.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/keyring': link:../../halo/keyring
-      '@dxos/keys': link:../../common/keys
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-      buffer-json-encoding: 1.0.2
-      debug: 4.3.4
-    devDependencies:
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/protocol-network-generator': link:../protocol-network-generator
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@types/debug': 4.1.7
-      '@types/end-of-stream': 1.4.1
-      '@types/pify': 3.0.2
-      end-of-stream: 1.4.4
-      multi-read-stream: 2.0.0
-      pify: 5.0.0
-
-  packages/mesh/protocol-plugin-rpc:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/mesh-protocol': workspace:*
-      '@dxos/messaging': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/testutils': workspace:*
-      '@dxos/util': workspace:*
-      assert: ^2.0.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/keys': link:../../common/keys
-      '@dxos/mesh-protocol': link:../mesh-protocol
-      '@dxos/messaging': link:../messaging
-      '@dxos/rpc': link:../../common/rpc
-      '@dxos/util': link:../../common/util
-      assert: 2.0.0
-    devDependencies:
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/network-manager': link:../network-manager
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/testutils': link:../../common/testutils
-
-  packages/mesh/signal:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/node': ^16.11.58
-      '@types/node-fetch': ^2.5.10
-      debug: ^4.3.3
-      node-fetch: ^2.6.0
-      pkg-up: ^3.1.0
-    dependencies:
-      '@dxos/async': link:../../common/async
-      debug: 4.3.4
-      node-fetch: 2.6.7
-      pkg-up: 3.1.0
-    devDependencies:
-      '@dxos/protocols': link:../../common/protocols
-      '@dxos/util': link:../../common/util
-      '@types/debug': 4.1.7
-      '@types/node': 16.11.62
-      '@types/node-fetch': 2.5.12
 
   packages/sdk/client:
     specifiers:
@@ -2636,12 +2680,12 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db': link:../../echo/echo-db
-      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/echo-db': link:../../core/echo/echo-db
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/model-factory': link:../../echo/model-factory
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/rpc': link:../../common/rpc
       '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
       '@dxos/util': link:../../common/util
@@ -2656,12 +2700,12 @@ importers:
       readable-stream: 3.6.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
     devDependencies:
-      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/object-model': link:../../echo/object-model
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/react-async': link:../../common/react-async
@@ -2714,21 +2758,21 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
-      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/crypto': link:../../common/crypto
       '@dxos/debug': link:../../common/debug
-      '@dxos/echo-db': link:../../echo/echo-db
+      '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/halo-protocol': link:../../halo/halo-protocol
-      '@dxos/keyring': link:../../halo/keyring
+      '@dxos/halo-protocol': link:../../core/halo/halo-protocol
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/model-factory': link:../../echo/model-factory
-      '@dxos/network-manager': link:../../mesh/network-manager
-      '@dxos/object-model': link:../../echo/object-model
-      '@dxos/protocol-plugin-rpc': link:../../mesh/protocol-plugin-rpc
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/model-factory': link:../../core/echo/model-factory
+      '@dxos/network-manager': link:../../core/mesh/network-manager
+      '@dxos/object-model': link:../../core/echo/object-model
+      '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/rpc': link:../../common/rpc
       '@dxos/testutils': link:../../common/testutils
@@ -2741,7 +2785,7 @@ importers:
       level-js: 5.0.2
       memdown: 5.1.0_tjbpekhnedejisbcwvc5eec3ii
     devDependencies:
-      '@dxos/signal': link:../../mesh/signal
+      '@dxos/signal': link:../../core/mesh/signal
       '@types/json-stable-stringify': 1.0.33
       '@types/level-js': 4.0.2
       '@types/memdown': 3.0.0
@@ -2773,7 +2817,7 @@ importers:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       debug: 4.3.4
@@ -2811,7 +2855,7 @@ importers:
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       boolean: 3.1.4
@@ -2865,15 +2909,15 @@ importers:
       use-subscription: ^1.8.0
     dependencies:
       '@dxos/async': link:../../common/async
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
       '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../mesh/messaging
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/rpc': link:../../common/rpc
       '@dxos/rpc-tunnel': link:../../common/rpc-tunnel
@@ -3024,7 +3068,7 @@ importers:
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.18.13
       '@dxos/client': link:../client
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
@@ -3202,7 +3246,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       '@dxos/debug': link:../../common/debug
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-registry-client': link:../react-registry-client
       '@emotion/css': 11.7.1_@babel+core@7.18.13
@@ -3218,10 +3262,10 @@ importers:
       '@babel/core': 7.18.13
       '@babel/plugin-transform-runtime': 7.16.4_@babel+core@7.18.13
       '@dxos/async': link:../../common/async
-      '@dxos/bot-factory-client': link:../../bot/bot-factory-client
+      '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
       '@dxos/config': link:../config
-      '@dxos/credentials': link:../../halo/credentials
+      '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/esbuild-plugins': 2.29.0
       '@dxos/keys': link:../../common/keys
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
@@ -3286,7 +3330,7 @@ importers:
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
       '@dxos/keys': link:../../common/keys
-      '@dxos/protocols': link:../../common/protocols
+      '@dxos/protocols': link:../../core/protocols
       '@dxos/util': link:../../common/util
       assert: 2.0.0
       bn.js: 4.12.0
@@ -3426,7 +3470,7 @@ importers:
       jsdom-global: 3.0.2_jsdom@18.0.1
       mocha: 8.4.0
       pkg-dir: 5.0.0
-      terser: 5.12.0
+      terser: 5.15.0
       ts-jest: 27.1.4_5jrtamctapj4etgwmvh6x5y554
       typescript: 4.7.4
       wtfnode: 0.9.1
@@ -3524,6 +3568,19 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
+  tools/file:
+    specifiers:
+      '@types/mkdirp': ^1.0.2
+      '@types/node': ^16.11.58
+      mkdirp: ^1.0.4
+      typescript: ^4.7.2
+    dependencies:
+      mkdirp: 1.0.4
+    devDependencies:
+      '@types/mkdirp': 1.0.2
+      '@types/node': 16.11.62
+      typescript: 4.7.4
+
   tools/log-hook:
     specifiers:
       '@swc-node/sourcemap-support': ^0.2.0
@@ -3539,6 +3596,37 @@ importers:
       sorcery: 0.10.0
     devDependencies:
       '@types/node': 16.11.62
+      typescript: 4.7.4
+
+  tools/plate:
+    specifiers:
+      '@dxos/file': workspace:*
+      '@types/lodash.flatten': ^4.4.6
+      '@types/lodash.zip': ^4.2.6
+      '@types/node': ^16.11.58
+      '@types/prettier': ^2.4.2
+      '@types/recursive-readdir': ^2.2.0
+      esbuild: ~0.14.1
+      lodash.flatten: ^4.4.0
+      lodash.zip: ^4.2.0
+      prettier: ^2.5.1
+      recursive-readdir: ^2.2.2
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+    dependencies:
+      '@dxos/file': link:../file
+      esbuild: 0.14.49
+      lodash.flatten: 4.4.0
+      lodash.zip: 4.2.0
+      prettier: 2.7.1
+      recursive-readdir: 2.2.2
+    devDependencies:
+      '@types/lodash.flatten': 4.4.7
+      '@types/lodash.zip': 4.2.7
+      '@types/node': 16.11.62
+      '@types/prettier': 2.4.2
+      '@types/recursive-readdir': 2.2.1
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
   tools/protobuf-test:
@@ -4827,7 +4915,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
 
   /@babel/plugin-syntax-export-default-from/7.18.6_@babel+core@7.18.13:
     resolution: {integrity: sha512-Kr//z3ujSVNx6E9z9ih5xXXMqK07VVTuqPmqGe6Mss/zW5XPeLZeSDZoP9ab/hT4wPKqAgjl2PnhPrcpk8Seew==}
@@ -5259,7 +5347,7 @@ packages:
     dependencies:
       '@babel/core': 7.18.13
       '@babel/helper-compilation-targets': 7.19.1_@babel+core@7.18.13
-      '@babel/helper-function-name': 7.18.9
+      '@babel/helper-function-name': 7.19.0
       '@babel/helper-plugin-utils': 7.19.0
 
   /@babel/plugin-transform-literals/7.16.0_@babel+core@7.18.13:
@@ -5321,7 +5409,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-module-transforms': 7.18.9
+      '@babel/helper-module-transforms': 7.19.0
       '@babel/helper-plugin-utils': 7.19.0
       babel-plugin-dynamic-import-node: 2.3.3
     transitivePeerDependencies:
@@ -5349,7 +5437,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-module-transforms': 7.18.9
+      '@babel/helper-module-transforms': 7.19.0
       '@babel/helper-plugin-utils': 7.19.0
       '@babel/helper-simple-access': 7.18.6
       babel-plugin-dynamic-import-node: 2.3.3
@@ -5407,7 +5495,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-module-transforms': 7.18.9
+      '@babel/helper-module-transforms': 7.19.0
       '@babel/helper-plugin-utils': 7.19.0
     transitivePeerDependencies:
       - supports-color
@@ -5567,7 +5655,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
     dev: true
 
   /@babel/plugin-transform-react-jsx-source/7.18.6_@babel+core@7.18.13:
@@ -5577,7 +5665,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
     dev: true
 
   /@babel/plugin-transform-react-jsx/7.18.10_@babel+core@7.18.13:
@@ -6052,7 +6140,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
       '@babel/helper-validator-option': 7.18.6
       '@babel/plugin-transform-react-display-name': 7.18.6_@babel+core@7.18.13
       '@babel/plugin-transform-react-jsx': 7.18.10_@babel+core@7.18.13
@@ -6066,7 +6154,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
       '@babel/helper-validator-option': 7.18.6
       '@babel/plugin-transform-typescript': 7.18.12_@babel+core@7.18.13
     transitivePeerDependencies:
@@ -6590,15 +6678,15 @@ packages:
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/generator': 7.18.13
+      '@babel/generator': 7.19.0
       '@babel/plugin-syntax-dynamic-import': 7.8.3_@babel+core@7.18.13
       '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.18.13
       '@babel/preset-env': 7.19.1_@babel+core@7.18.13
       '@babel/preset-react': 7.18.6_@babel+core@7.18.13
       '@babel/preset-typescript': 7.18.6_@babel+core@7.18.13
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@babel/runtime-corejs3': 7.19.1
-      '@babel/traverse': 7.18.13
+      '@babel/traverse': 7.19.1
       '@docusaurus/cssnano-preset': 2.1.0
       '@docusaurus/logger': 2.1.0
       '@docusaurus/mdx-loader': 2.1.0_ny44vnc5t4rlukh2kzmv2f2kze
@@ -6688,15 +6776,15 @@ packages:
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
       '@babel/core': 7.18.13
-      '@babel/generator': 7.18.13
+      '@babel/generator': 7.19.0
       '@babel/plugin-syntax-dynamic-import': 7.8.3_@babel+core@7.18.13
       '@babel/plugin-transform-runtime': 7.19.1_@babel+core@7.18.13
       '@babel/preset-env': 7.19.1_@babel+core@7.18.13
       '@babel/preset-react': 7.18.6_@babel+core@7.18.13
       '@babel/preset-typescript': 7.18.6_@babel+core@7.18.13
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@babel/runtime-corejs3': 7.19.1
-      '@babel/traverse': 7.18.13
+      '@babel/traverse': 7.19.1
       '@docusaurus/cssnano-preset': 2.1.0
       '@docusaurus/logger': 2.1.0
       '@docusaurus/mdx-loader': 2.1.0_pvvegsn5ztnel2dakebrt4j6yi
@@ -6801,8 +6889,8 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@babel/parser': 7.18.13
-      '@babel/traverse': 7.18.13
+      '@babel/parser': 7.19.1
+      '@babel/traverse': 7.19.1
       '@docusaurus/logger': 2.1.0
       '@docusaurus/utils': 2.1.0_@docusaurus+types@2.1.0
       '@mdx-js/mdx': 1.6.22
@@ -6835,8 +6923,8 @@ packages:
       react: ^16.8.4 || ^17.0.0
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
-      '@babel/parser': 7.18.13
-      '@babel/traverse': 7.18.13
+      '@babel/parser': 7.19.1
+      '@babel/traverse': 7.19.1
       '@docusaurus/logger': 2.1.0
       '@docusaurus/utils': 2.1.0_v4lnvp4gblp77ocrg7zyeqacum
       '@mdx-js/mdx': 1.6.22
@@ -8952,7 +9040,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/material': 5.8.7_bk6rmx7robimclftfia7dcxft4
       react: 17.0.2
     dev: true
@@ -8968,7 +9056,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@types/react': 17.0.50
       react: 17.0.2
@@ -9086,13 +9174,13 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_u2aypivye4tius5ftakppbroiy
       '@emotion/styled': 11.9.3_2w7x3jlgezktc4gauegs5xdsga
       '@mui/base': 5.0.0-alpha.88_sfoxds7t5ydpegc3knd667wn6m
       '@mui/system': 5.8.7_z5dax4wbbvawomfdisf4dzswiq
-      '@mui/types': 7.1.4
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/types': 7.2.0
+      '@mui/utils': 5.10.6_react@17.0.2
       '@types/react-transition-group': 4.4.5
       clsx: 1.2.1
       csstype: 3.1.0
@@ -9120,13 +9208,13 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/types': 7.1.4_@types+react@17.0.50
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/types': 7.2.0_@types+react@17.0.50
+      '@mui/utils': 5.10.6_react@17.0.2
       '@types/react': 17.0.50
       '@types/react-transition-group': 4.4.5
       clsx: 1.2.1
@@ -9154,11 +9242,11 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/system': 5.8.7_pxzommwrsowkd4kgag6q3sluym
-      '@mui/types': 7.1.4_@types+react@17.0.50
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/types': 7.2.0_@types+react@17.0.50
+      '@mui/utils': 5.10.6_react@17.0.2
       '@types/react': 17.0.50
       '@types/react-transition-group': 4.4.5
       clsx: 1.2.1
@@ -9186,11 +9274,11 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/base': 5.0.0-alpha.88_sfoxds7t5ydpegc3knd667wn6m
       '@mui/system': 5.8.7_react@17.0.2
-      '@mui/types': 7.1.4
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/types': 7.2.0
+      '@mui/utils': 5.10.6_react@17.0.2
       '@types/react-transition-group': 4.4.5
       clsx: 1.2.1
       csstype: 3.1.0
@@ -9501,10 +9589,10 @@ packages:
       react: ^17.0.2 || ^18.0.0
       react-dom: ^17.0.2 || ^18.0.0
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       clsx: 1.2.1
       prop-types: 15.8.1
       react: 17.0.2
@@ -14448,7 +14536,7 @@ packages:
   /@types/bonjour/3.5.10:
     resolution: {integrity: sha512-p7ienRMiS41Nu2/igbJxxLDWrSZ0WxM8UQgCeO9KhoVF7cOVFkrKsiDr1EsJIla8vV3oEEjGcz11jc5yimhzZw==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/cacheable-request/6.0.2:
     resolution: {integrity: sha512-B3xVo+dlKM6nnKTcmm5ZtY/OL8bOAOd2Olee9M1zft65ox50OzjEHW91sDiU9j6cvW8Ejg1/Qkf4xd2kugApUA==}
@@ -14493,7 +14581,7 @@ packages:
     resolution: {integrity: sha512-h8QJa8xSb1WD4fpKBDcATDNGXghFj6/3GRWG6dhmRcu0RX1Ubasur2Uvx5aeEwlf0MwblEC2bMzzMQntxnw/Cw==}
     dependencies:
       '@types/express-serve-static-core': 4.17.31
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/connect/3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
@@ -14695,7 +14783,7 @@ packages:
   /@types/decompress/4.2.4:
     resolution: {integrity: sha512-/C8kTMRTNiNuWGl5nEyKbPiMv6HA+0RbEXzFhFBEzASM6+oa4tJro9b8nj7eRlOFfuLdzUU+DS/GPDlvvzMOhA==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/download/8.0.1:
@@ -14703,7 +14791,7 @@ packages:
     dependencies:
       '@types/decompress': 4.2.4
       '@types/got': 8.3.6
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/encoding-down/5.0.0:
@@ -14806,7 +14894,7 @@ packages:
   /@types/got/8.3.6:
     resolution: {integrity: sha512-nvLlj+831dhdm4LR2Ly+HTpdLyBaMynoOr6wpIxS19d/bPeHQxFU5XQ6Gp6ohBpxvCWZM1uHQIC2+ySRH1rGrQ==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/graceful-fs/4.1.5:
@@ -14901,7 +14989,7 @@ packages:
   /@types/keyv/3.1.3:
     resolution: {integrity: sha512-FXCJgyyN3ivVgRoml4h94G/p3kY+u/B86La+QptcqJaWtBWtmc6TtkNfS40n9bIvyLteHh7zXOtgbobORKPbDg==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/level-codec/9.0.1:
     resolution: {integrity: sha512-6z7DSlBsmbax3I/bV1Q6jT1nKquDjFl95LURVThdKtwILkRawLYtXdINW19xM95N5kqN2detWb2iGrbUlPwNyw==}
@@ -14922,13 +15010,13 @@ packages:
     dependencies:
       '@types/abstract-leveldown': 5.0.2
       '@types/level-errors': 3.0.0
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/lodash.clonedeep/4.5.6:
     resolution: {integrity: sha512-cE1jYr2dEg1wBImvXlNtp0xDoS79rfEdGozQVgliDZj1uERH4k+rmEMTudP9b4VQ8O6nRb5gPqft0QzEQGMQgA==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.defaultsdeep/4.6.6:
@@ -14964,7 +15052,7 @@ packages:
   /@types/lodash.matches/4.6.6:
     resolution: {integrity: sha512-rs1P/R+4ExqZdmIlw6CcIeHUvyQVY/lDP8RiQVw9RnFK5GAQyZ2fLSvPwUtAp2fgqlCY0TOGT4Av69eIgu5HQg==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.merge/4.6.6:
@@ -14982,13 +15070,13 @@ packages:
   /@types/lodash.times/4.3.6:
     resolution: {integrity: sha512-+LSWHXpMIfZlQjyTaUWAH2FpMZmDV3yuy6+QWASl3ahjA1LkDhdFtnjsMAp5fs37jTn8B9CTmtt4evvdifGONQ==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.unionwith/4.6.6:
     resolution: {integrity: sha512-KyF2s7HCVf9Wd+QTlXrMBE4iSQPHAuIy3sE+ZERjD4Nr5YJd2vBOHrzLL8NatQLgeTs68dWTkgZ25yWHbSiq1w==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.zip/4.2.7:
@@ -15221,7 +15309,7 @@ packages:
   /@types/responselike/1.0.0:
     resolution: {integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/retry/0.12.0:
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
@@ -15251,7 +15339,7 @@ packages:
     resolution: {integrity: sha512-z5xyF6uh8CbjAu9760KDKsH2FcDxZ2tFCsA4HIMWE6IkiYMXfVoa+4f9KX+FN0ZLsaMw1WNG2ETLA6N+/YA+cg==}
     dependencies:
       '@types/mime': 3.0.1
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/sharedworker/0.0.80:
     resolution: {integrity: sha512-xVSMSKP6wufPZ0WKLE175iUiTPYSavdF68e+8bfjAOargnrpAkgGFZMNTC2REQ01plUHZouf652RG6FQZGSmbA==}
@@ -15260,7 +15348,7 @@ packages:
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/sinon/10.0.13:
@@ -15276,7 +15364,7 @@ packages:
   /@types/sockjs/0.3.33:
     resolution: {integrity: sha512-f0KEEe05NvUnat+boPTZ0dgaLZ4SfSouXUgv5noUiefG2ajgKjmETo9ZJyuqsl7dfl2aHlLJUiki6B4ZYldiiw==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/source-list-map/0.1.2:
     resolution: {integrity: sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==}
@@ -15288,7 +15376,7 @@ packages:
   /@types/stream-to-array/2.3.0:
     resolution: {integrity: sha512-s8Y6/EV1LPn9fDlJKSlD8r+14hWXVDn+wPAGwWRzTUq/4MqdoQNEzQxP6Jq91qvFYxR3OlFAPXcv6ToplnAgFQ==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/string-hash/1.1.1:
@@ -15398,13 +15486,13 @@ packages:
   /@types/ws/7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
 
   /@types/yargs-parser/20.2.1:
     resolution: {integrity: sha512-7tFImggNeNBVMsn0vLrpn1H1uPrUBdnARPTpZoitY37ZrdJREzf7I16tMrlK3hen349gr1NYh8CmZQa7CTG6Aw==}
@@ -16910,7 +16998,7 @@ packages:
   /axios/0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.14.6
+      follow-redirects: 1.15.2
     transitivePeerDependencies:
       - debug
 
@@ -17215,7 +17303,7 @@ packages:
     dev: true
 
   /batch/0.6.1:
-    resolution: {integrity: sha1-3DQxT05nkxgJP8dgJyUl+UvyXBY=}
+    resolution: {integrity: sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw==}
 
   /bcrypt-pbkdf/1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
@@ -21462,7 +21550,7 @@ packages:
       minimatch: 3.1.2
       object.values: 1.1.5
       resolve: 1.22.1
-      tsconfig-paths: 3.12.0
+      tsconfig-paths: 3.14.1
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -21921,7 +22009,7 @@ packages:
     resolution: {integrity: sha512-EzV94NYKoO09GLXGjXj9JIlXijVck4ONSr5wiCWDvhsvj5jxSrzTmRU/9C1DyB6uToszLs8aifA6NQ7lEQdvFw==}
     engines: {node: '>= 0.8'}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
       require-like: 0.1.2
 
   /event-target-shim/5.0.1:
@@ -22929,15 +23017,6 @@ packages:
     dependencies:
       from2: 2.3.0
     dev: true
-
-  /follow-redirects/1.14.6:
-    resolution: {integrity: sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
 
   /follow-redirects/1.15.2:
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
@@ -28910,6 +28989,7 @@ packages:
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
+    dev: true
 
   /minimist/1.2.6:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
@@ -31411,7 +31491,7 @@ packages:
     dependencies:
       icss-utils: 5.1.0_postcss@8.4.16
       postcss: 8.4.16
-      postcss-selector-parser: 6.0.7
+      postcss-selector-parser: 6.0.10
       postcss-value-parser: 4.2.0
 
   /postcss-modules-scope/2.2.0:
@@ -31429,7 +31509,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       postcss: 8.4.16
-      postcss-selector-parser: 6.0.7
+      postcss-selector-parser: 6.0.10
 
   /postcss-modules-values/3.0.0:
     resolution: {integrity: sha512-1//E5jCBrZ9DmRX+zCtmQtRSV6PV42Ix7Bzj9GbwJceduuf7IqP8MgeTXuRDHOWj2m0VzZD5+roFWDuU8RQjcg==}
@@ -31580,6 +31660,7 @@ packages:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
+    dev: true
 
   /postcss-sort-media-queries/4.3.0_postcss@8.4.16:
     resolution: {integrity: sha512-jAl8gJM2DvuIJiI9sL1CuiHtKM4s5aEIomkU8G3LFvbP+p8i7Sz8VV63uieTgoewGqKbi+hxBTiOKJlB35upCg==}
@@ -33994,7 +34075,7 @@ packages:
     resolution: {integrity: sha512-pXHfKNP4qujrtteMrSBb0rc8HJ9Ms/GrXwcUtUtD5s4ewDJI8bT3Cz2zTVRMKtri49pLx2e0Ya8ziP5Ya2pZZw==}
     engines: {node: '>= 0.8.0'}
     dependencies:
-      accepts: 1.3.7
+      accepts: 1.3.8
       batch: 0.6.1
       debug: 2.6.9
       escape-html: 1.0.3
@@ -35564,6 +35645,7 @@ packages:
       commander: 2.20.3
       source-map: 0.7.3
       source-map-support: 0.5.21
+    dev: true
 
   /terser/5.15.0:
     resolution: {integrity: sha512-L1BJiXVmheAQQy+as0oF3Pwtlo4s3Wi1X2zNZ2NxOB4wx9bdS9Vk67XQENLFdLYGCK/Z2di53mTj/hBafR+dTA==}
@@ -35696,7 +35778,7 @@ packages:
     resolution: {integrity: sha512-qsdtZH+vMoCARQtyod4imc2nIJwg9Cc7lPRrw9CzF8ZKR0khdr8+2nX80PBhET3tcyTtJDxAffGh2rXH4tyU8A==}
 
   /tiny-each-async/2.0.3:
-    resolution: {integrity: sha1-jru/1tYpXxNwAD+7NxYq/loKUdE=}
+    resolution: {integrity: sha512-5ROII7nElnAirvFn8g7H7MtpfV1daMcyfTGQwsn/x2VtyV+VPiO5CjReCJtWLvoKTDEDmZocf3cNPraiMnBXLA==}
     dev: false
 
   /tiny-invariant/1.2.0:
@@ -36084,6 +36166,7 @@ packages:
       json5: 1.0.1
       minimist: 1.2.5
       strip-bom: 3.0.0
+    dev: true
 
   /tsconfig-paths/3.14.1:
     resolution: {integrity: sha512-fxDhWnFSLt3VuTwtvJt5fpwxBHg5AdKWMsgcPOOIilyjymcYVZoCQF8fvFRezCNfblEXmi+PcM1eYHeOAgXCOQ==}
@@ -37783,8 +37866,8 @@ packages:
     dependencies:
       '@apideck/better-ajv-errors': 0.3.6_ajv@8.11.0
       '@babel/core': 7.18.13
-      '@babel/preset-env': 7.16.4_@babel+core@7.18.13
-      '@babel/runtime': 7.18.9
+      '@babel/preset-env': 7.19.1_@babel+core@7.18.13
+      '@babel/runtime': 7.19.0
       '@rollup/plugin-babel': 5.3.1_nvdofgmkndekaa75mrvcpsebcy
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.77.3
       '@rollup/plugin-replace': 2.4.2_rollup@2.77.3
