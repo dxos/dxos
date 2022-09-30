@@ -4,9 +4,9 @@
   "description": "Protocol plugin replicator.",
   "license": "MIT",
   "author": "DXOS.org",
-  "homepage": "https://github.com/dxos/protocols/tree/main/packages/core/mesh/protocol-plugin-replicator#readme",
-  "bugs": "https://github.com/dxos/protocols/issues",
-  "repository": "github:dxos/protocols",
+  "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator#readme",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {

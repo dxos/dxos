@@ -364,7 +364,7 @@ Internally ECHO Spaces are used to create decentralized HALO databases.
 
 #### 4.3.1. Protocol Definitions
 
-The ECHO protocol definitions are defined by [protobuf schema](https://github.com/dxos/protocols/tree/main/packages/common/protocols/src/proto/dxos/echo).
+The ECHO protocol definitions are defined by [protobuf schema](https://github.com/dxos/dxos/tree/main/packages/common/protocols/src/proto/dxos/echo).
 
 TODO: Add table describing messasges.
 

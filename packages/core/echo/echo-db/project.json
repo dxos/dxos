@@ -19,7 +19,7 @@
         "{options.outputFile}"
       ],
       "options": {
-        "eslintConfig": "packages/core/echo/echo-db/eslintConfig.json",
+        "eslintConfig": "packages/core/echo/echo-db/eslint-config.json",
         "lintFilePatterns": [
           "packages/core/echo/echo-db/src/packlets/**/*.{ts,js}"
         ]

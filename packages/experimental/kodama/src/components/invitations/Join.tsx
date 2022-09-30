@@ -53,7 +53,7 @@ export const Join: FC<{
     try {
       setStatus({ processing: 'Authenticating...' });
       // TODO(burdon): Exceptions not propagated to here (e.g., IDENTITY_NOT_INITIALIZED, ERR_GREET_CONNECTED_TO_SWARM_TIMEOUT)
-      //  https://github.com/dxos/protocols/issues/1423
+      //  https://github.com/dxos/dxos/issues/1423
       await invitation!.authenticate(Buffer.from(secret));
       const party = await invitation!.getParty();
       setInvitation(undefined);

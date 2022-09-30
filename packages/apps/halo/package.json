@@ -4,7 +4,7 @@
   "description": "HALO PWA",
   "license": "MIT",
   "author": "DXOS.org",
-  "repository": "github:dxos/protocols",
+  "repository": "github:dxos/dxos",
   "scripts": {
     "check": "true",
     "preview": "vite preview"

@@ -4,8 +4,8 @@
   "private": true,
   "description": "Browser tests for SDK.",
   "license": "MIT",
-  "bugs": "https://github.com/dxos/protocols/issues",
-  "repository": "github:dxos/protocols",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
   "files": [
     "dist",
     "src"

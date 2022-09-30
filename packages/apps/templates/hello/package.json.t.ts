@@ -19,7 +19,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
   "description": "DXOS 'hello world' application template.",
   "license": "MIT",
   "author": "DXOS.org",
-  "repository": "github:dxos/protocols",
+  "repository": "github:dxos/dxos",
   "scripts": {
     "build": "tsc",
     "bundle": "vite build",

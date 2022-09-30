@@ -74,7 +74,7 @@ const Sender = () => {
 
 /**
  * Test bot.
- * https://github.com/dxos/protocols/tree/main/packages/bot
+ * https://github.com/dxos/dxos/tree/main/packages/bot
  */
 export const Primary = () => {
   const config: ConfigProto = {
