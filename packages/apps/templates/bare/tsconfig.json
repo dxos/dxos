@@ -1,0 +1,35 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "playwright"
+  ],
+  "exclude": [
+    "vite.config.ts",
+    "*.t.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./tsconfig.plate.json"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    }
+  ]
+}

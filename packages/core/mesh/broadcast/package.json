@@ -1,0 +1,36 @@
+{
+  "name": "@dxos/broadcast",
+  "version": "2.33.8",
+  "description": "Abstract module to send broadcast messages.",
+  "license": "MIT",
+  "repository": "github:dxos/dxos",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
+  },
+  "files": [
+    "srd",
+    "dist"
+  ],
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3",
+    "tiny-lru": "^7.0.6"
+  },
+  "devDependencies": {
+    "@dxos/network-generator": "workspace:*",
+    "@types/debug": "^4.1.7"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -25,7 +25,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/random-access-storage"
@@ -43,19 +43,19 @@
       "path": "../../common/feed-store"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../config"

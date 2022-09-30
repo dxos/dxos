@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/core/mesh/protocol-network-generator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/protocol-network-generator/dist",
+        "tsConfig": "packages/core/mesh/protocol-network-generator/tsconfig.json",
+        "main": "packages/core/mesh/protocol-network-generator/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/protocol-network-generator/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/core/mesh/protocol-network-generator/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/core/mesh/protocol-network-generator/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

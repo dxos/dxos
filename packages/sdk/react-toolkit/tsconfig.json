@@ -17,7 +17,7 @@
   ],
   "references": [
     {
-      "path": "../../bot/bot-factory-client"
+      "path": "../../bots/bot-factory-client"
     },
     {
       "path": "../../common/async"
@@ -26,19 +26,19 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
       "path": "../client"

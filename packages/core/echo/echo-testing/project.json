@@ -1,0 +1,37 @@
+{
+  "sourceRoot": "packages/core/echo/echo-testing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/echo/echo-testing/dist",
+        "tsConfig": "packages/core/echo/echo-testing/tsconfig.json",
+        "main": "packages/core/echo/echo-testing/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/echo/echo-testing/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/core/echo/echo-testing/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

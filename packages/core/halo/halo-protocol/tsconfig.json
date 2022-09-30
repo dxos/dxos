@@ -1,0 +1,27 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../credentials"
+    },
+  ],
+  "types": [
+    "mocha",
+    "node"
+  ]
+}
