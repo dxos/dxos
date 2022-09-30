@@ -14,22 +14,22 @@
   ],
   "references": [
     {
-      "path": "../common/crypto"
+      "path": "../../common/crypto"
     },
     {
-      "path": "../core/echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../core/echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../core/halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../core/mesh/signal"
+      "path": "../../core/mesh/signal"
     },
     {
-      "path": "../sdk/client"
+      "path": "../../sdk/client"
     }
   ]
 }
