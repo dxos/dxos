@@ -648,7 +648,6 @@ importers:
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
@@ -693,7 +692,6 @@ importers:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../crypto
-      '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../random-access-storage
       '@types/debug': 4.1.7
       '@types/end-of-stream': 1.4.1

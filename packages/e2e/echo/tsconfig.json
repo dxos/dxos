@@ -29,9 +29,6 @@
       "path": "../../core/mesh/signal"
     },
     {
-      "path": "../../gravity/browser-mocha"
-    },
-    {
       "path": "../../sdk/client"
     }
   ]

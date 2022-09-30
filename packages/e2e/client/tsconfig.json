@@ -26,9 +26,6 @@
       "path": "../core/halo/credentials"
     },
     {
-      "path": "../gravity/browser-mocha"
-    },
-    {
       "path": "../core/mesh/signal"
     },
     {

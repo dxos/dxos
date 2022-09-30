@@ -19,9 +19,6 @@
     },
     {
       "path": "../debug"
-    },
-    {
-      "path": "../../core/protocols"
     }
   ]
 }
