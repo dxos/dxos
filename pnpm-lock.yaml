@@ -600,7 +600,6 @@ importers:
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
       mocha: ^8.4.0
-      typescript: ^4.7.2
     dependencies:
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
@@ -612,7 +611,6 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       mocha: 8.4.0
-      typescript: 4.7.4
 
   packages/common/crypto-names:
     specifiers:
