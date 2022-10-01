@@ -592,6 +592,7 @@ importers:
   packages/common/crypto:
     specifiers:
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@types/crypto-js': ~4.0.2
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
@@ -602,6 +603,7 @@ importers:
       typescript: ^4.7.2
     dependencies:
       '@dxos/keys': link:../keys
+      '@dxos/log': link:../log
       assert: 2.0.0
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
