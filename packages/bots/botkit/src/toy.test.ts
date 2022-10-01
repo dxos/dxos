@@ -18,8 +18,7 @@ import { RegistryClient } from '@dxos/registry-client';
 
 import { InProcessBotContainer, NodeContainer } from './bot-container';
 import { BotController, BotFactory, DXNSContentResolver } from './bot-factory';
-import { EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
-import { Bot as ClientBot } from './bots/client-bot';
+import { Bot as ClientBot, EchoBot, EmptyBot, TEST_ECHO_TYPE } from './bots';
 import { BrokerSetup, ClientSetup, setupBroker, setupClient, setupMockRegistryWithBot } from './testutils';
 
 const signalContext = new MemorySignalManagerContext();
