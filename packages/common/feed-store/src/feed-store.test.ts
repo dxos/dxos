@@ -15,8 +15,8 @@ import tempy from 'tempy';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
-import { createKeyPair } from '@dxos/crypto';
-import { Keyring, verifySignature } from '@dxos/keyring';
+import { createKeyPair, verifySignature } from '@dxos/crypto';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 

@@ -6,6 +6,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
+    "./dist/src/crypto/index.js": "./dist/src/platform/browser.js",
     "node:assert": "assert"
   },
   "files": [
@@ -19,10 +20,9 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/keyring": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",
@@ -39,6 +39,7 @@
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
     "@dxos/browser-runner": "^1.0.0-beta.13",
     "@dxos/crypto": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",

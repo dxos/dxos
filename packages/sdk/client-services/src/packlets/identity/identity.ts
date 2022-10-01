@@ -5,11 +5,11 @@
 import assert from 'assert';
 
 import { failUndefined } from '@dxos/debug';
+import { Signer } from '@dxos/crypto';
 import { Database, Space } from '@dxos/echo-db';
 import {
   createCredentialSignerWithChain, createCredentialSignerWithKey, CredentialSigner, DeviceStateMachine
 } from '@dxos/halo-protocol';
-import { Signer } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 
 export type IdentityParams = {

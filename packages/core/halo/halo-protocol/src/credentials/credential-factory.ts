@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { Signer } from '@dxos/keyring';
+import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { MessageType } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';

@@ -8,8 +8,7 @@ import pify from 'pify';
 import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
-import { sha256 } from '@dxos/crypto';
-import { Signer, verifySignature } from '@dxos/keyring';
+import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import type { Directory } from '@dxos/random-access-storage';
 
