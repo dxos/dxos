@@ -28,9 +28,6 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -50,6 +47,9 @@
     },
     {
       "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../sdk/client"

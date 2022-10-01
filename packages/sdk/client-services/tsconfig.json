@@ -31,9 +31,6 @@
       "path": "../../common/random-access-storage"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../common/testutils"
     },
     {
@@ -56,6 +53,9 @@
     },
     {
       "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../config"

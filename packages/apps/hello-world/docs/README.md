@@ -64,7 +64,7 @@ dxos/hello-world --> dxos/react-toolkit
 | [`@dxos/react-registry-client`](../../../packages/sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../packages/sdk/react-toolkit/docs/README.md) | &check; |
 | [`@dxos/registry-client`](../../../packages/sdk/registry-client/docs/README.md) |  |
-| [`@dxos/rpc`](../../../packages/common/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../packages/common/rpc-tunnel/docs/README.md) |  |
+| [`@dxos/rpc`](../../../packages/core/mesh/rpc/docs/README.md) |  |
+| [`@dxos/rpc-tunnel`](../../../packages/core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/testutils`](../../../packages/common/testutils/docs/README.md) |  |
 | [`@dxos/util`](../../../packages/common/util/docs/README.md) |  |
