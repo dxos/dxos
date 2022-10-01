@@ -4,12 +4,11 @@
 
 import glob from 'glob';
 import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { buildTests } from '../browser';
 import { MochaExecutorOptions } from '../main';
-
-export const TEMP_DIR = 'dist/browser-mocha';
 
 const resolveFiles = async (globs: string[]): Promise<string[]> => {
   const results = await Promise.all(globs.map(pattern => promisify(glob)(pattern)));
@@ -17,13 +16,19 @@ const resolveFiles = async (globs: string[]): Promise<string[]> => {
 };
 
 export const setup = async (options: MochaExecutorOptions) => {
+  const outDir = join(options.outputPath, 'out');
+
   try {
-    await mkdir(TEMP_DIR, { recursive: true });
+    await mkdir(outDir, { recursive: true });
   } catch (e: any) {
     console.error(e);
   }
 
   const files = await resolveFiles(options.testPatterns);
 
-  await buildTests(files, { debug: !!options.debug, outDir: TEMP_DIR, checkLeaks: options.checkLeaks });
+  await buildTests(files, {
+    debug: !!options.debug,
+    outDir,
+    checkLeaks: options.checkLeaks
+  });
 };

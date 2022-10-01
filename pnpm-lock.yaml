@@ -59,6 +59,8 @@ importers:
       '@swc-node/register': ~1.5.1
       '@types/chai': ^4.2.15
       '@types/glob': ~7.1.3
+      '@types/lodash.get': ^4.4.7
+      '@types/lodash.set': ^4.3.7
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
       '@types/react': ^17.0.24
@@ -74,9 +76,14 @@ importers:
       esbuild-node-externals: ^1.4.1
       eslint: ^8.24.0
       expect: ^27.0.2
+      fast-xml-parser: ^4.0.10
       glob: ~7.1.6
       husky: ^8.0.0
+      lodash.get: ^4.4.2
+      lodash.set: ^4.3.2
       mocha: ^8.4.0
+      mocha-junit-reporter: ^2.1.0
+      mocha-multi-reporters: ^1.5.1
       netlify-cli: ^11.5.1
       nx: 14.5.7
       pkg-up: ^3.1.0
@@ -135,6 +142,8 @@ importers:
       '@swc-node/register': 1.5.1_typescript@4.7.4
       '@types/chai': 4.3.0
       '@types/glob': 7.1.4
+      '@types/lodash.get': 4.4.7
+      '@types/lodash.set': 4.3.7
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       '@types/react': 17.0.50
@@ -150,9 +159,14 @@ importers:
       esbuild-node-externals: 1.4.1_esbuild@0.14.49
       eslint: 8.24.0
       expect: 27.5.1
+      fast-xml-parser: 4.0.11
       glob: 7.1.7
       husky: 8.0.1
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
       mocha: 8.4.0
+      mocha-junit-reporter: 2.1.0_mocha@8.4.0
+      mocha-multi-reporters: 1.5.1_mocha@8.4.0
       netlify-cli: 11.5.1
       nx: 14.5.7_@swc-node+register@1.5.1
       pkg-up: 3.1.0
@@ -902,8 +916,8 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/lodash.clonedeep': ^4.5.6
-      '@types/lodash.get': ^4.4.6
-      '@types/lodash.set': ^4.3.6
+      '@types/lodash.get': ^4.4.7
+      '@types/lodash.set': ^4.3.7
       assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
@@ -927,8 +941,8 @@ importers:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/lodash.clonedeep': 4.5.6
-      '@types/lodash.get': 4.4.6
-      '@types/lodash.set': 4.3.6
+      '@types/lodash.get': 4.4.7
+      '@types/lodash.set': 4.3.7
       faker: 5.5.3
 
   packages/core/echo/text-model:
@@ -2750,8 +2764,8 @@ importers:
       '@types/debug': ^4.1.7
       '@types/js-yaml': ^4.0.5
       '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/lodash.get': ^4.4.6
-      '@types/lodash.set': ^4.3.6
+      '@types/lodash.get': ^4.4.7
+      '@types/lodash.set': ^4.3.7
       assert: ^2.0.0
       boolean: ^3.0.1
       debug: ^4.3.3
@@ -2777,8 +2791,8 @@ importers:
       '@types/debug': 4.1.7
       '@types/js-yaml': 4.0.5
       '@types/lodash.defaultsdeep': 4.6.6
-      '@types/lodash.get': 4.4.6
-      '@types/lodash.set': 4.3.6
+      '@types/lodash.get': 4.4.7
+      '@types/lodash.set': 4.3.7
 
   packages/sdk/react-client:
     specifiers:
@@ -15254,10 +15268,10 @@ packages:
       '@types/lodash': 4.14.184
     dev: true
 
-  /@types/lodash.get/4.4.6:
-    resolution: {integrity: sha512-E6zzjR3GtNig8UJG/yodBeJeIOtgPkMgsLjDU3CbgCAPC++vJ0eCMnJhVpRZb/ENqEFlov1+3K9TKtY4UdWKtQ==}
+  /@types/lodash.get/4.4.7:
+    resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.isplainobject/4.0.6:
@@ -15278,10 +15292,10 @@ packages:
       '@types/lodash': 4.14.181
     dev: true
 
-  /@types/lodash.set/4.3.6:
-    resolution: {integrity: sha512-ZeGDDlnRYTvS31Laij0RsSaguIUSBTYIlJFKL3vm3T2OAZAQj2YpSvVWJc0WiG4jqg9fGX6PAPGvDqBcHfSgFg==}
+  /@types/lodash.set/4.3.7:
+    resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
     dependencies:
-      '@types/lodash': 4.14.181
+      '@types/lodash': 4.14.184
     dev: true
 
   /@types/lodash.times/4.3.6:
@@ -18853,6 +18867,10 @@ packages:
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
 
+  /charenc/0.0.2:
+    resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+    dev: true
+
   /check-error/1.0.2:
     resolution: {integrity: sha512-BrgHpW9NURQgzoNyjfq0Wu6VFO6D7IZEmJNdtgNqpzGG8RuNFHt2jQxWlAs4HMe119chBnv+34syEZtc6IhLtA==}
     dev: true
@@ -19942,6 +19960,10 @@ packages:
       commander: 2.20.3
       node-rsa: 1.1.1
       pbf: 3.2.1
+    dev: true
+
+  /crypt/0.0.2:
+    resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
     dev: true
 
   /crypto-browserify/3.12.0:
@@ -23363,6 +23385,13 @@ packages:
     resolution: {integrity: sha512-5jOCVXADYNuRkKFzNJ0dCCewsZiYo0dz8QNYljkOpFC6r2U4OBmKtvm/Tsuh4w1YYdDqDb31a8TVhBJ2OJKdqQ==}
     dependencies:
       punycode: 1.4.1
+    dev: true
+
+  /fast-xml-parser/4.0.11:
+    resolution: {integrity: sha512-4aUg3aNRR/WjQAcpceODG1C3x3lFANXRo8+1biqfieHmg9pyMt7qB4lQV/Ta6sJCTbA5vfD8fnA8S54JATiFUA==}
+    hasBin: true
+    dependencies:
+      strnum: 1.0.5
     dev: true
 
   /fastest-levenshtein/1.0.16:
@@ -28672,7 +28701,6 @@ packages:
 
   /lodash.set/4.3.2:
     resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
-    dev: false
 
   /lodash.sortby/4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
@@ -29091,6 +29119,14 @@ packages:
       hash-base: 3.1.0
       inherits: 2.0.4
       safe-buffer: 5.2.1
+
+  /md5/2.3.0:
+    resolution: {integrity: sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==}
+    dependencies:
+      charenc: 0.0.2
+      crypt: 0.0.2
+      is-buffer: 1.1.6
+    dev: true
 
   /mdast-comment-marker/2.1.0:
     resolution: {integrity: sha512-/+Cfm8A83PjkqjQDB9iYqHESGuXlriCWAwRGPJjkYmxXrF4r6saxeUlOKNrf+SogTwg9E8uyHRCFHLG6/BAAdA==}
@@ -30105,6 +30141,34 @@ packages:
   /mobile-detect/1.4.5:
     resolution: {integrity: sha512-yc0LhH6tItlvfLBugVUEtgawwFU2sIe+cSdmRJJCTMZ5GEJyLxNyC/NIOAOGk67Fa8GNpOttO3Xz/1bHpXFD/g==}
     dev: false
+
+  /mocha-junit-reporter/2.1.0_mocha@8.4.0:
+    resolution: {integrity: sha512-Zhz1J+XqJUaAOuSFtHgi2+b+W3rP1SZtaU3HHNNp1iEKMSeoC1/EQUVkGknkLNOBxJhXJ4xLgOr8TbYAZOkUIw==}
+    peerDependencies:
+      mocha: '>=2.2.5'
+    dependencies:
+      debug: 2.6.9
+      md5: 2.3.0
+      mkdirp: 0.5.5
+      mocha: 8.4.0
+      strip-ansi: 6.0.1
+      xml: 1.0.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /mocha-multi-reporters/1.5.1_mocha@8.4.0:
+    resolution: {integrity: sha512-Yb4QJOaGLIcmB0VY7Wif5AjvLMUFAdV57D2TWEva1Y0kU/3LjKpeRVmlMIfuO1SVbauve459kgtIizADqxMWPg==}
+    engines: {node: '>=6.0.0'}
+    peerDependencies:
+      mocha: '>=3.1.2'
+    dependencies:
+      debug: 4.3.4
+      lodash: 4.17.21
+      mocha: 8.4.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /mocha/8.4.0:
     resolution: {integrity: sha512-hJaO0mwDXmZS4ghXsvPVriOhsxQ7ofcpQdm8dE+jISUOKopitvnXFQmpRR7jd2K6VBG6E26gU3IAbXXGIbu4sQ==}
@@ -36251,6 +36315,10 @@ packages:
     dependencies:
       escape-string-regexp: 1.0.5
 
+  /strnum/1.0.5:
+    resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
+    dev: true
+
   /style-loader/1.3.0_webpack@4.44.2:
     resolution: {integrity: sha512-V7TCORko8rs9rIqkSrlMfkqA63DfoGBBJmK1kKGCcSi+BWb4cqz0SRsnp4l6rU5iwOEd0/2ePv68SV22VXon4Q==}
     engines: {node: '>= 8.9.0'}
@@ -37234,7 +37302,7 @@ packages:
     dependencies:
       '@types/json5': 0.0.29
       json5: 1.0.1
-      minimist: 1.2.5
+      minimist: 1.2.6
       strip-bom: 3.0.0
     dev: true
 
@@ -39357,6 +39425,10 @@ packages:
     resolution: {integrity: sha512-ICP2e+jsHvAj2E2lIHxa5tjXRlKDJo4IdvPvCXbXQGdzSfmSpNVyIKMvoZHjDY9DP0zV17iI85o90vRFXNccRw==}
     engines: {node: '>=12'}
     dev: false
+
+  /xml/1.0.1:
+    resolution: {integrity: sha512-huCv9IH9Tcf95zuYCsQraZtWnJvBtLVE0QHMOs8bWyZAFZNDcYjsPq1nEx8jKA9y+Beo9v+7OBPRisQTjinQMw==}
+    dev: true
 
   /xml2js/0.4.19:
     resolution: {integrity: sha512-esZnJZJOiJR9wWKMyuvSE1y6Dq5LCuJanqhxslH2bxM6duahNZ+HMpCLhBQGZkbX6xRf8x1Y2eJlgt2q3qo49Q==}

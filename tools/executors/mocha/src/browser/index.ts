@@ -4,4 +4,5 @@
 
 export * from './browser';
 export * from './build';
+export * from './output';
 export * from './run-tests';

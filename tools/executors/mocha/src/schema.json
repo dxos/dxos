@@ -7,6 +7,14 @@
       "type": "array",
       "description": "Globs of tests"
     },
+    "outputPath": {
+      "type": "string",
+      "description": "Where to save test outputs"
+    },
+    "resultsPath": {
+      "type": "string",
+      "description": "Where to save test results"
+    },
     "environments": {
       "type": "array",
       "description": "Environments to run tests in",
@@ -65,5 +73,5 @@
       "description": "Glob of files to watch"
     }
   },
-  "required": ["testPatterns"]
+  "required": ["testPatterns", "outputPath", "resultsPath"]
 }

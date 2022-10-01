@@ -5,11 +5,12 @@
 import chalk from 'chalk';
 import { join } from 'node:path';
 
-import { BrowserType, getNewBrowserContext, runTests } from './browser';
-import { TEMP_DIR } from './setup/browser-setup';
+import { BrowserType, getNewBrowserContext, outputResults, runTests } from './browser';
 
 export type BrowserOptions = {
   testPatterns: string[]
+  outputPath: string
+  resultsPath: string
   timeout: number
   signalServer: boolean
   setup?: string
@@ -20,11 +21,12 @@ export type BrowserOptions = {
   browserArgs?: string[]
 }
 
-export const runBrowser = async (browserType: BrowserType, options: BrowserOptions) => {
-  console.log(chalk`Running in {blue {bold ${browserType}}}`);
+export const runBrowser = async (name: string, browserType: BrowserType, options: BrowserOptions) => {
+  console.log(chalk`\nRunning in {blue {bold ${browserType}}}`);
 
   const { page } = await getNewBrowserContext(browserType, options);
-  const exitCode = await runTests(page, browserType, join(TEMP_DIR, 'bundle.js'), options);
+  const results = await runTests(page, browserType, join(options.outputPath, 'out/bundle.js'), options);
+  const exitCode = await outputResults(results, options.resultsPath, name, browserType);
   if (exitCode !== 0) {
     console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
   } else {

@@ -37,6 +37,8 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - store_test_results:
+          path: test-results
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]

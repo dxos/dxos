@@ -24,7 +24,8 @@ export const runTests = async (
   browserType: BrowserType,
   bundleFile: string,
   options: RunTestsOptions
-): Promise<number> => {
+): Promise<string> => {
+  let results: string;
   const lock = new Lock();
 
   page.on('pageerror', async (error) => {
@@ -34,25 +35,30 @@ export const runTests = async (
   });
 
   page.on('console', async msg => {
-    const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
-    await lock.executeSynchronized(async () => {
-      const args = await argsPromise;
-      if (args.length > 0) {
-        console.log(...args);
-      } else {
-        console.log(msg);
-      }
-    });
+    const text = msg.text();
+    if (text.startsWith('{')) {
+      results = text;
+    }
+    // TODO(wittjosiah): Remove?
+    // const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
+    // await lock.executeSynchronized(async () => {
+    //   const args = await argsPromise;
+    //   if (args.length > 0) {
+    //     console.log(...args);
+    //   } else {
+    //     console.log(msg);
+    //   }
+    // });
   });
 
   const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string);
   assert(packageDir);
   await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
-  const [getPromise, resolve] = trigger<number>();
+  const [getPromise, resolve] = trigger<string>();
   await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
     await lock.executeSynchronized(async () => {
-      resolve(exitCode);
+      resolve(results);
     });
   });
 
@@ -71,9 +77,7 @@ export const runTests = async (
 
   await page.exposeFunction('browserMocha__getEnv', () => ({ browserType }));
 
-  await page.addScriptTag({
-    path: bundleFile
-  });
+  await page.addScriptTag({ path: bundleFile });
 
   return getPromise();
 };

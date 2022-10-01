@@ -30,12 +30,15 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   console.info('Executing "mocha"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
+  const name = context.projectName!;
+
   options = {
     ...options,
     testPatterns: options.testPatterns.map(pattern => resolve(context.root, pattern)),
-    watchPatterns: options.watchPatterns?.map(pattern => resolve(context.root, pattern)),
-    headless: options.stayOpen ? true : options.headless,
-    setup: options.setup ? resolve(context.root, options.setup) : options.setup
+    outputPath: resolve(context.root, options.outputPath),
+    headless: options.stayOpen ? false : options.headless,
+    setup: options.setup ? resolve(context.root, options.setup) : options.setup,
+    watchPatterns: options.watchPatterns?.map(pattern => resolve(context.root, pattern))
   };
 
   await setup(options);
@@ -46,10 +49,10 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     });
 
     watcher.on('ready', async () => {
-      await run(options);
+      await run(name, options);
 
       watcher.on('change', async () => {
-        await run(options);
+        await run(name, options);
       });
     });
 
@@ -61,12 +64,12 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     return { success: true };
   }
 
-  const success = await run(options);
+  const success = await run(name, options);
 
   return { success };
 };
 
-const run = async (options: MochaExecutorOptions): Promise<boolean> => {
+const run = async (name: string, options: MochaExecutorOptions): Promise<boolean> => {
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.
   let success = true;
@@ -75,13 +78,12 @@ const run = async (options: MochaExecutorOptions): Promise<boolean> => {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= await runBrowser(env, options);
+        success &&= await runBrowser(name, env, options);
         break;
       }
 
       case 'nodejs': {
-        const failures = await runNode(options);
-        success &&= !failures;
+        success &&= await runNode(name, options);
         break;
       }
     }
@@ -92,7 +94,7 @@ const run = async (options: MochaExecutorOptions): Promise<boolean> => {
 
 const setup = async (options: MochaExecutorOptions): Promise<void> => {
   const runNode = options.environments.includes('nodejs');
-  const runBrowser = options.environments.filter(env => env === 'nodejs').length > 0;
+  const runBrowser = options.environments.filter(env => env !== 'nodejs').length > 0;
 
   const nodeSetup = [
     './setup/mocha-env',

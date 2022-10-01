@@ -44,10 +44,15 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "testPatterns": [
-          "packages/core/protocols/src/**/*.test.{ts,js}"
-        ]
+          "packages/common/protocols/src/**/*.test.{ts,js}"
+        ],
+        "outputPath": "packages/common/protocols/.mocha",
+        "resultsPath": "test-results/common/protocols"
       }
     }
   },

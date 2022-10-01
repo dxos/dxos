@@ -32,7 +32,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
       window.mochaExecutor = { environment: context.browserType };
 
-      mocha.reporter('spec');
+      mocha.reporter('json');
       mocha.setup('bdd');
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
