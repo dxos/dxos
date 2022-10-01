@@ -1559,6 +1559,7 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -1568,6 +1569,7 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/feed-store': link:../../common/feed-store
       '@dxos/keys': link:../../common/keys
       assert: 2.0.0
       randombytes: 2.1.0

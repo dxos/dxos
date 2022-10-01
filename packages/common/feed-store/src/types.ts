@@ -4,6 +4,8 @@
 
 import { PublicKey } from '@dxos/keys';
 
+// TODO(burdon): Move defs to new package `@dxos/feeds`.
+
 export type FeedMeta = {
   feedKey: PublicKey
   seq: number
@@ -14,7 +16,7 @@ export type FeedMeta = {
  * https://github.com/hypercore-protocol/hypercore
  */
 // TODO(burdon): Rename (No I-prefix).
-export interface IFeedGenericBlock<T> {
+export type IFeedGenericBlock<T> = {
   key: PublicKey
   seq: number
   sync: boolean
@@ -22,7 +24,16 @@ export interface IFeedGenericBlock<T> {
   data: T
 }
 
+/**
+ * Constructs a meta object from the raw stream object.
+ * @param block
+ */
+export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
+  feedKey: block.key,
+  seq: block.seq
+});
+
 export type ValueEncoding = string | {
-  encode: (x: any) => Uint8Array
+  encode: (data: any) => Uint8Array
   decode: (data: Uint8Array) => any
-};
+}
