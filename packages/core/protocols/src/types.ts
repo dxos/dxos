@@ -21,8 +21,12 @@ export type MessageType = {
 // TODO(burdon): Conflict with halo-protocol MessageType.
 export type TypedMessage = TypedProtoMessage<TYPES>
 
+// TODO(burdon): Change to Buffer (same as key).
+export type ItemID = string;
+export type ItemType = string;
+
 //
-// Keys.
+// Feeds.
 //
 
 export type FeedMeta = {
@@ -63,7 +67,6 @@ export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
 // TODO(dmaretskyi): Rename to Message.
 export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
-// TODO(burdon): HaloMessageWrapper.
 // TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {
   meta: FeedMeta
@@ -75,8 +78,3 @@ export interface IEchoStream {
   meta: MutationMetaWithTimeframe
   data: EchoEnvelope
 }
-
-// TODO(burdon): Change to Buffer.
-export type ItemID = string;
-
-export type ItemType = string;
