@@ -48,11 +48,11 @@ subgraph common [common]
   dxos/crypto("@dxos/crypto"):::def
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
   dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
   dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
-  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/common/rpc-tunnel/docs"
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
@@ -189,6 +189,6 @@ dxos/registry-client --> dxos/config
 | [`@dxos/react-registry-client`](../../../../packages/sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../../packages/sdk/react-toolkit/docs/README.md) | &check; |
 | [`@dxos/registry-client`](../../../../packages/sdk/registry-client/docs/README.md) |  |
-| [`@dxos/rpc`](../../../../packages/common/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../../packages/common/rpc-tunnel/docs/README.md) |  |
+| [`@dxos/rpc`](../../../../packages/core/mesh/rpc/docs/README.md) |  |
+| [`@dxos/rpc-tunnel`](../../../../packages/core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/util`](../../../../packages/common/util/docs/README.md) |  |

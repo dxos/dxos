@@ -25,9 +25,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -44,6 +41,9 @@
     },
     {
       "path": "../../core/mesh/protocol-plugin-rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/mesh/signal"

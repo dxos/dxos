@@ -18,9 +18,6 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -31,6 +28,9 @@
     },
     {
       "path": "../../core/mesh/protocol-plugin-rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"

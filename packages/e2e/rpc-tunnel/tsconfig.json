@@ -17,13 +17,13 @@
   ],
   "references": [
     {
-      "path": "../../common/rpc"
-    },
-    {
-      "path": "../../common/rpc-tunnel"
-    },
-    {
       "path": "../../../tools/vite-plugin"
+    },
+    {
+      "path": "../../core/mesh/rpc"
+    },
+    {
+      "path": "../../core/mesh/rpc-tunnel"
     }
   ]
 }
