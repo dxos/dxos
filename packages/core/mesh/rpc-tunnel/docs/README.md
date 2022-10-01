@@ -1,6 +1,6 @@
-# @dxos/rpc
+# @dxos/rpc-tunnel
 
-Tiny RPC library.
+RPC ports over various transports.
 
 ## Dependency Graph
 
@@ -17,8 +17,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 subgraph common [common]
   style common fill:#debac2,stroke:#fff
-  dxos/rpc("@dxos/rpc"):::root
-  click dxos/rpc "dxos/dxos/tree/main/packages/common/rpc/docs"
+  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::root
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
@@ -43,6 +45,7 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
+dxos/rpc-tunnel --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
 ```
@@ -51,9 +54,10 @@ dxos/protocols --> dxos/codec-protobuf
 
 | Module | Direct |
 |---|---|
-| [`@dxos/async`](../../async/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) | &check; |
-| [`@dxos/debug`](../../debug/docs/README.md) | &check; |
+| [`@dxos/async`](../../async/docs/README.md) |  |
+| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
+| [`@dxos/debug`](../../debug/docs/README.md) |  |
 | [`@dxos/keys`](../../keys/docs/README.md) |  |
-| [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
-| [`@dxos/util`](../../util/docs/README.md) | &check; |
+| [`@dxos/protocols`](../../../core/protocols/docs/README.md) |  |
+| [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
+| [`@dxos/util`](../../util/docs/README.md) |  |

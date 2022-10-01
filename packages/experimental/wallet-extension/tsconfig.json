@@ -28,13 +28,13 @@
       "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"
