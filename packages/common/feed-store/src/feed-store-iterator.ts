@@ -7,10 +7,10 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
+import { IFeedGenericBlock } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
-import { IFeedGenericBlock } from './types';
 import { createBatchStream } from './create-batch-stream';
 import { FeedDescriptor } from './feed-descriptor';
 

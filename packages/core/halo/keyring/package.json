@@ -1,12 +1,16 @@
 {
   "name": "@dxos/keyring",
   "version": "2.33.8",
-  "description": "DXOS Keyring",
+  "description": "Halo Keyring.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "check": "true"
   },

@@ -1,21 +1,24 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "jest",
+      "node"
+    ]
   },
   "include": [
     "src"
   ],
   "references": [
     {
+      "path": "../async"
+    },
+    {
       "path": "../keys"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../util"
     }
-  ],
-  "types": [
-    "mocha",
-    "node"
   ]
 }

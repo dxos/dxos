@@ -7,13 +7,13 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/crypto';
+import type { ValueEncoding } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 import type { Hypercore } from './hypercore-types';
-import type { ValueEncoding } from './types';
 
 export interface CreateDescriptorOptions {
   key: PublicKey

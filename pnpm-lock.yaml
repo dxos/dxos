@@ -593,9 +593,13 @@ importers:
     specifiers:
       '@dxos/keys': workspace:*
       '@types/crypto-js': ~4.0.2
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
       assert: ^2.0.0
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
+      mocha: ^8.4.0
+      typescript: ^4.7.2
     dependencies:
       '@dxos/keys': link:../keys
       assert: 2.0.0
@@ -603,6 +607,10 @@ importers:
       hypercore-crypto: 2.3.2
     devDependencies:
       '@types/crypto-js': 4.0.2
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      mocha: 8.4.0
+      typescript: 4.7.4
 
   packages/common/crypto-names:
     specifiers:
@@ -645,6 +653,7 @@ importers:
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
+      '@dxos/feeds': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -675,6 +684,7 @@ importers:
       through2: ^3.0.1
     dependencies:
       '@dxos/async': link:../async
+      '@dxos/feeds': link:../feeds
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/util': link:../util
@@ -707,6 +717,23 @@ importers:
       faker: 5.5.3
       hypertrie: 5.1.1
       tempy: 1.0.1
+
+  packages/common/feeds:
+    specifiers:
+      '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/util': workspace:*
+      '@types/debug': ^4.1.7
+      assert: ^2.0.0
+      debug: ^4.3.3
+    dependencies:
+      '@dxos/keys': link:../keys
+      '@dxos/log': link:../log
+      '@dxos/util': link:../util
+      assert: 2.0.0
+      debug: 4.3.4
+    devDependencies:
+      '@types/debug': 4.1.7
 
   packages/common/keys:
     specifiers:
@@ -800,11 +827,10 @@ importers:
       '@types/jest': ^27.4.1
       '@types/node': ^16.11.58
       typescript: ^4.7.2
-    dependencies:
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.62
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/jest': 27.5.2
+      '@types/node': 16.11.62
       typescript: 4.7.4
 
   packages/common/typedoc:
@@ -838,6 +864,7 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/feeds': workspace:*
       '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
@@ -884,6 +911,7 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/feeds': link:../../../common/feeds
       '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
@@ -1134,6 +1162,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
@@ -1148,6 +1177,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/keyring': link:../keyring
       '@dxos/keys': link:../../../common/keys
@@ -1561,7 +1591,7 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/feed-store': workspace:*
+      '@dxos/feeds': workspace:*
       '@dxos/keys': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -1571,7 +1601,7 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/feed-store': link:../../common/feed-store
+      '@dxos/feeds': link:../../common/feeds
       '@dxos/keys': link:../../common/keys
       assert: 2.0.0
       randombytes: 2.1.0
@@ -3285,7 +3315,6 @@ importers:
       '@types/jest': ^27.4.1
       '@types/lodash': ^4.14.182
       '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/madge': ^5.0.0
       '@types/minimatch': ^5.1.2
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
@@ -3323,7 +3352,6 @@ importers:
       '@types/jest': 27.5.2
       '@types/lodash': 4.14.184
       '@types/lodash.defaultsdeep': 4.6.7
-      '@types/madge': 5.0.0
       '@types/minimatch': 5.1.2
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
@@ -15014,12 +15042,6 @@ packages:
 
   /@types/long/4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
-
-  /@types/madge/5.0.0:
-    resolution: {integrity: sha512-Son5Z121knxCXlQM3Q0ivh0OP8Fix4ztGl0VfA9JybQMPQprc2K4jtTaRc3IhGyBy6ku5cWKJxEuj8zePiZbBQ==}
-    dependencies:
-      '@types/node': 17.0.45
-    dev: true
 
   /@types/mdast/3.0.10:
     resolution: {integrity: sha512-W864tg/Osz1+9f4lrGTZpCSO5/z4608eUp19tbozkq2HJK6i3z1kT0H9tlADXuYIb1YYOBByU4Jsqkk75q48qA==}

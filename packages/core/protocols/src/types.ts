@@ -3,6 +3,7 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
+import { FeedMeta, IFeedGenericBlock } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 
 import { TYPES } from './proto';
@@ -26,26 +27,8 @@ export type ItemID = string;
 export type ItemType = string;
 
 //
-// Feeds.
+// TODO(burdon): Clean-up mutations and streams.
 //
-
-export type FeedMeta = {
-  feedKey: PublicKey
-  seq: number
-}
-
-/**
- * Hypercore message.
- * https://github.com/hypercore-protocol/hypercore
- */
-// TODO(burdon): Rename (No I-prefix).
-export interface IFeedGenericBlock<T> {
-  key: PublicKey
-  seq: number
-  sync: boolean
-  path: string
-  data: T
-}
 
 export interface MutationMeta extends FeedMeta {
   memberKey: PublicKey
@@ -54,15 +37,6 @@ export interface MutationMeta extends FeedMeta {
 export interface MutationMetaWithTimeframe extends MutationMeta {
   timeframe: Timeframe
 }
-
-/**
- * Constructs a meta object from the raw stream object.
- * @param block
- */
-export const createFeedMeta = (block: IFeedGenericBlock<any>): FeedMeta => ({
-  feedKey: block.key,
-  seq: block.seq
-});
 
 // TODO(dmaretskyi): Rename to Message.
 export type FeedBlock = IFeedGenericBlock<FeedMessage>

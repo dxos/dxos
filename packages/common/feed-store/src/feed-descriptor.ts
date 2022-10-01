@@ -9,11 +9,11 @@ import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
+import type { ValueEncoding } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 import type { Directory } from '@dxos/random-access-storage';
 
 import type { HypercoreFeed, Hypercore } from './hypercore-types';
-import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
   directory: Directory

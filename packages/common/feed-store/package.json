@@ -6,7 +6,6 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/crypto/index.js": "./dist/src/platform/browser.js",
     "node:assert": "assert"
   },
   "files": [
@@ -21,6 +20,7 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/feeds": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",

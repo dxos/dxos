@@ -22,6 +22,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/feeds": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/halo-protocol": "workspace:*",
     "@dxos/keyring": "workspace:*",

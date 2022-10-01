@@ -31,8 +31,7 @@ interface KeyPair {
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
 const createFeedStore = (storage: Storage, options = {}) => {
-  const feedStore = new FeedStore(storage.createDirectory('feed'), options);
-  return feedStore;
+  return new FeedStore(storage.createDirectory('feed'), options);
 };
 
 const createDefault = async () => {

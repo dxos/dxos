@@ -37,7 +37,6 @@
     "@types/color-hash": "^1.0.1",
     "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.182",
-    "@types/madge": "^5.0.0",
     "@types/minimatch": "^5.1.2",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.58",

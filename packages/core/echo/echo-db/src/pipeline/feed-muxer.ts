@@ -6,7 +6,8 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { checkType } from '@dxos/debug';
-import { createFeedMeta, FeedBlock, IEchoStream } from '@dxos/feed-store';
+import { createFeedMeta, FeedBlock } from '@dxos/feeds';
+import { IEchoStream } from '@dxos/protocols';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
