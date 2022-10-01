@@ -2180,91 +2180,6 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
-  packages/experimental/kodama/dist:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/node-fetch': ^2.5.10
-      '@types/qrcode-terminal': ^0.12.0
-      '@types/react': ^17.0.24
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      clipboardy: ^3.0.0
-      compare-semver: ~1.1.0
-      date-format: ~4.0.11
-      esbuild: ~0.14.1
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ^8.4.0
-      node-fetch: ^2.6.0
-      npm-api: ~1.0.1
-      qrcode-terminal: ~0.12.0
-      react: ^17.0.2
-      supervisor: ~0.12.0
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-testing': link:../../../sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      chalk: 4.1.2
-      clipboardy: 3.0.0
-      compare-semver: 1.1.0
-      date-format: 4.0.11
-      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
-      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
-      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
-      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
-      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
-      js-yaml: 4.1.0
-      node-fetch: 2.6.7
-      npm-api: 1.0.1
-      qrcode-terminal: 0.12.0
-      react: 17.0.2
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/node-fetch': 2.5.12
-      '@types/qrcode-terminal': 0.12.0
-      '@types/react': 17.0.50
-      '@types/yargs': 16.0.4
-      esbuild: 0.14.49
-      mocha: 8.4.0
-      supervisor: 0.12.0
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-
   packages/experimental/lexical-editor:
     specifiers:
       '@babel/core': ^7.18.13
@@ -16998,7 +16913,7 @@ packages:
   /axios/0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
     transitivePeerDependencies:
       - debug
 
