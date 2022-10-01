@@ -18,9 +18,6 @@
       "path": "../../../common/codec-protobuf"
     },
     {
-      "path": "../../../common/rpc"
-    },
-    {
       "path": "../../../common/testutils"
     },
     {
@@ -34,6 +31,9 @@
     },
     {
       "path": "../network-manager"
+    },
+    {
+      "path": "../rpc"
     }
   ]
 }
