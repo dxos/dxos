@@ -8,7 +8,7 @@
   "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
-    "./dist/src/crypto/index.js": "./dist/src/platform/browser.js"
+    "./src/platform/index.ts": "./src/platform/browser.ts"
   },
   "files": [
     "dist",
