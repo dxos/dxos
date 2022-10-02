@@ -6,10 +6,9 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { checkType } from '@dxos/debug';
-import { createFeedMeta, FeedBlock } from '@dxos/feeds';
-import { IEchoStream } from '@dxos/protocols';
+import { FeedMessageBlock } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { IEchoStream, Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
 import { CredentialProcessor, PartyStateProvider } from './party-processor';
@@ -23,7 +22,7 @@ const log = debug('dxos:echo-db:pipeline');
  * For database messages looks up the owning member and updates the clock.
  */
 export const consumePipeline = (
-  iterator: AsyncIterable<FeedBlock>,
+  iterator: AsyncIterable<FeedMessageBlock>,
   haloProcessor: CredentialProcessor & PartyStateProvider,
   processEcho: (msg: IEchoStream) => Promise<void>,
   onError: (err: Error) => Promise<void>
@@ -40,7 +39,10 @@ export const consumePipeline = (
 
         if (message.halo) {
           await haloProcessor.processMessage({
-            meta: createFeedMeta(block),
+            meta: {
+              feedKey: block.key,
+              seq: block.seq
+            },
             data: message.halo
           });
         }
@@ -51,7 +53,7 @@ export const consumePipeline = (
 
         if (message.echo) {
           const memberKey = haloProcessor.getFeedOwningMember(PublicKey.from(block.key));
-          // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+          // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in FeedBlock.
           assert(memberKey, `Ownership of feed ${PublicKey.stringify(block.key as unknown as Buffer)} could not be determined.`);
 
           // Validate messge.

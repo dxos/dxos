@@ -10,7 +10,7 @@ import {
 } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedBlock, Timeframe, TypedMessage } from '@dxos/protocols';
+import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
@@ -133,7 +133,7 @@ export class Pipeline implements PipelineAccessor {
    * Starts to iterate over the ordered messages from the added feeds.
    * Updates the timeframe clock after the message has bee processed.
    */
-  async * consume (): AsyncIterable<FeedBlock> {
+  async * consume (): AsyncIterable<FeedMessageBlock> {
     assert(!this._isOpen, 'Pipeline is already being consumed.');
     this._isOpen = true;
 

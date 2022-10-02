@@ -21,7 +21,7 @@ export const FeedsPanel = () => {
     [remoteParties, selectedPartyKey]
   );
 
-  // TODO(wittjosiah): FeedBlock.
+  // TODO(wittjosiah): FeedMessageBlock.
   const [messages, setMessages] = useState<any[]>([]);
   const { blocks } = useStream(
     () => devtoolsHost.subscribeToFeedBlocks({ partyKey: selectedPartyKey, feedKey: selectedFeed }),

@@ -3,7 +3,7 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
-import { FeedMeta, IFeedGenericBlock } from '@dxos/feeds';
+import { FeedBlock } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 
 import { TYPES } from './proto';
@@ -26,6 +26,15 @@ export type TypedMessage = TypedProtoMessage<TYPES>
 export type ItemID = string;
 export type ItemType = string;
 
+// TODO(burdon): Replace with proto definition.
+export type FeedMeta = {
+  feedKey: PublicKey
+  seq: number
+}
+
+// TODO(dmaretskyi): Rename to Message.
+export type FeedMessageBlock = FeedBlock<FeedMessage>
+
 //
 // TODO(burdon): Clean-up mutations and streams.
 //
@@ -37,9 +46,6 @@ export interface MutationMeta extends FeedMeta {
 export interface MutationMetaWithTimeframe extends MutationMeta {
   timeframe: Timeframe
 }
-
-// TODO(dmaretskyi): Rename to Message.
-export type FeedBlock = IFeedGenericBlock<FeedMessage>
 
 // TODO(burdon): Reconcile HaloMessage with CredentialsMessage.
 export interface IHaloStream {

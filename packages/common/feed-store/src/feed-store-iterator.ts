@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { IFeedGenericBlock } from '@dxos/feeds';
+import { FeedBlock } from '@dxos/feeds';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
@@ -25,7 +25,7 @@ const STALL_TIMEOUT = 1000;
 // - Construction separate from open.
 //
 
-export type MessageSelector<T> = (candidates: IFeedGenericBlock<T>[]) => number | undefined
+export type MessageSelector<T> = (candidates: FeedBlock<T>[]) => number | undefined
 
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
@@ -35,15 +35,15 @@ export type FeedSelector = (descriptor: FeedDescriptor) => boolean
  * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
  */
 // TODO(marik-d): Add stop method.
-export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>> {
+export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
   /** Curent set of active feeds. */
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
 
   /** Feed key as hex => feed state */
   private readonly _openFeeds = new Map<string, {
     descriptor: FeedDescriptor
-    iterator: AsyncIterator<IFeedGenericBlock<T>[]>
-    sendQueue: IFeedGenericBlock<T>[] // TODO(burdon): Why "send"?
+    iterator: AsyncIterator<FeedBlock<T>[]>
+    sendQueue: FeedBlock<T>[] // TODO(burdon): Why "send"?
     frozen: boolean
   }>();
 
@@ -60,7 +60,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>>
 
   private _closed = false;
 
-  public readonly stalled = new Event<IFeedGenericBlock<T>[]>();
+  public readonly stalled = new Event<FeedBlock<T>[]>();
 
   /**
    * @param _feedSelector
@@ -177,7 +177,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<IFeedGenericBlock<T>>
     }
 
     const pickedCandidate = candidates[selected];
-    // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in IFeedGenericBlock.
+    // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in FeedBlock.
     const feed = this._openFeeds.get(pickedCandidate.key.toHex());
     assert(feed);
 
