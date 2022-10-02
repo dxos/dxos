@@ -9,8 +9,8 @@ import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
 import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { ActivationOptions, PartyMember } from '../proxies';
 
+import { ActivationOptions, PartyMember } from '../proxies';
 import { Invitation } from './invitation';
 import { InvitationRequest } from './invitation-request';
 

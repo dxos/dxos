@@ -26,8 +26,8 @@ import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
 import { ClientServiceProxy } from './service-proxy';
-import { DXOS_VERSION } from './version';
 import { OpenProgress } from './stubs';
+import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
 
