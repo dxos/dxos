@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { OpenProgress } from '@dxos/echo-db';
 import { schema } from '@dxos/protocols';
 import { PartyService, ProfileService, SystemService, HaloService } from '@dxos/protocols/proto/dxos/client';
 import { DevtoolsHost, TracingService } from '@dxos/protocols/proto/dxos/devtools';
@@ -35,6 +34,6 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
 
 export interface ClientServiceProvider {
   services: ClientServices
-  open(onProgressCallback?: ((progress: OpenProgress) => void) | undefined): Promise<void>
+  open(onProgressCallback?: ((progress: any) => void) | undefined): Promise<void>
   close(): Promise<void>
 }

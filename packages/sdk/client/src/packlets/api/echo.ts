@@ -3,12 +3,13 @@
 //
 
 import { InvitationDescriptor } from '@dxos/client-services';
-import { ActivationOptions, Database, PartyMember, ResultSet } from '@dxos/echo-db';
+import { Database, ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor } from '@dxos/model-factory';
 import { ObjectProperties } from '@dxos/object-model';
 import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { ActivationOptions, PartyMember } from '../proxies';
 
 import { Invitation } from './invitation';
 import { InvitationRequest } from './invitation-request';
