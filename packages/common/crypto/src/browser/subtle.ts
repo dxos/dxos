@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Comment.
+// Replacement implementation for the browser (see package.json).
 
 export const subtleCrypto = crypto.subtle;
