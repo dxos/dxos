@@ -5,11 +5,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "./src/browser/subtle.ts": "./src/subtle.ts"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -17,6 +17,9 @@
   "scripts": {
     "check": "true"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -30,9 +33,6 @@
     "@types/node": "^16.11.58",
     "mocha": "^8.4.0"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "publishConfig": {
     "access": "public"
   }

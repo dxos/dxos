@@ -12,9 +12,9 @@
     "recursive-readdir": "^2.2.2"
   },
   "devDependencies": {
-    "@types/node": "^16.11.58",
     "@types/lodash.flatten": "^4.4.6",
     "@types/lodash.zip": "^4.2.6",
+    "@types/node": "^16.11.58",
     "@types/prettier": "^2.4.2",
     "@types/recursive-readdir": "^2.2.0",
     "ts-node": "10.9.1",

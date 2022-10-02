@@ -26,13 +26,13 @@
   ],
   "dependencies": {
     "@dxos/gem-core": "workspace:*",
+    "clsx": "^1.1.1",
     "csstype": "^3.0.10",
     "d3": "^7.4.4",
+    "d3-force": "~3.0.0",
     "debug": "^4.3.3",
-    "use-resize-observer": "^9.0.0",
     "immutability-helper": "^3.0.2",
-    "clsx": "^1.1.1",
-    "d3-force": "~3.0.0"
+    "use-resize-observer": "^9.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
