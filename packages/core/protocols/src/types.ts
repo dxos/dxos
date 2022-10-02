@@ -14,7 +14,6 @@ import { Timeframe } from './timeframe';
  * Discriminated union of all protobuf types with the '@type' field included.
  * Useful for typing 'google.protobuf.Any' messages.
  */
-// TODO(burdon): Rename.
 export type MessageType = {
   [K in keyof TYPES]: TYPES[K] & { '@type': K }
 }[keyof TYPES]
