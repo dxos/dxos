@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { Protocol } from '@dxos/mesh-protocol';
 import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
