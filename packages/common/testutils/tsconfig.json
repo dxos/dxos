@@ -12,10 +12,5 @@
   "include": [
     "src",
     "test"
-  ],
-  "references": [],
-  "types": [
-    "jest",
-    "node"
   ]
 }

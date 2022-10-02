@@ -25,8 +25,8 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -49,6 +49,8 @@ subgraph mesh [mesh]
   click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
   dxos/messaging("@dxos/messaging"):::def
   click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/mesh-protocol("@dxos/mesh-protocol"):::def
   click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
 end
@@ -64,6 +66,7 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/bot-factory-client --> dxos/protocol-plugin-rpc
 dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
@@ -77,11 +80,12 @@ dxos/mesh-protocol --> dxos/codec-protobuf
 | [`@dxos/async`](../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) |  |
+| [`@dxos/feeds`](../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../core/mesh/mesh-protocol/docs/README.md) |  |
 | [`@dxos/messaging`](../../../core/mesh/messaging/docs/README.md) |  |
 | [`@dxos/protocol-plugin-rpc`](../../../core/mesh/protocol-plugin-rpc/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../common/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

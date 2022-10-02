@@ -7,9 +7,9 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/browser.js",
     "node:assert": "assert",
-    "node:util": "util"
+    "node:util": "util",
+    "./dist/src/index.js": "./dist/browser.js"
   },
   "scripts": {
     "check": "true",

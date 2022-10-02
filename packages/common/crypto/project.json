@@ -13,6 +13,21 @@
         "main": "packages/common/crypto/src/index.ts"
       }
     },
+    "bundle": {
+      "executor": "@dxos/esbuild:bundle",
+      "outputs": [
+        "{options.outfile}"
+      ],
+      "options": {
+        "entryPoints": [
+          "packages/common/crypto/src/platform/index.ts"
+        ],
+        "outfile": "packages/common/crypto/dist/src/platform/browser.js",
+        "bundlePackages": [
+          "node:crypto"
+        ]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": [

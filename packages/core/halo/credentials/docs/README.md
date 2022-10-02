@@ -19,8 +19,6 @@ subgraph halo [halo]
   style halo fill:#cabade,stroke:#fff
   dxos/credentials("@dxos/credentials"):::root
   click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
 end
 
 subgraph common [common]
@@ -31,8 +29,8 @@ subgraph common [common]
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
   dxos/feed-store("@dxos/feed-store"):::def
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/random-access-storage("@dxos/random-access-storage"):::def
-  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -49,28 +47,28 @@ subgraph common [common]
   end
 end
 
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
-
 subgraph mesh [mesh]
   style mesh fill:#b3e6c0,stroke:#fff
   dxos/mesh-protocol("@dxos/mesh-protocol"):::def
   click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
 end
 
+subgraph core [core]
+  style core fill:#edabb3,stroke:#fff
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+end
+
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/keyring
-dxos/keyring --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
-dxos/keyring --> dxos/random-access-storage
+dxos/feed-store --> dxos/feeds
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/credentials --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
@@ -82,10 +80,9 @@ dxos/mesh-protocol --> dxos/codec-protobuf
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) | &check; |
-| [`@dxos/keyring`](../../keyring/docs/README.md) |  |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
