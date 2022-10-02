@@ -5,7 +5,6 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { GreetingCommandPlugin, ERR_GREET_ALREADY_CONNECTED_TO_SWARM } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
@@ -131,9 +130,7 @@ export class NetworkManager {
 
     log(`Join ${options.topic} as ${options.peerId} with ${options.topology.toString()} topology.`);
     if (this._swarms.has(topic)) {
-      throw new ERR_EXTENSION_RESPONSE_FAILED(
-        GreetingCommandPlugin.EXTENSION_NAME, ERR_GREET_ALREADY_CONNECTED_TO_SWARM, `Already connected to swarm ${topic}`
-      );
+      throw new Error(`Already connected to swarm ${topic}`);
     }
 
     // TODO(burdon): Require factory (i.e., don't make InMemorySignalManager by default).
