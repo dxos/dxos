@@ -7,7 +7,7 @@
   "main": "dist/src/index.js",
   "browser": {
     "node:assert": "assert",
-    "./src/browser/subtle.ts": "./src/subtle.ts"
+    "./src/subtle.ts": "./src/browser/subtle.ts"
   },
   "types": "dist/src/index.d.ts",
   "files": [
