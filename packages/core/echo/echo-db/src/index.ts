@@ -10,15 +10,6 @@ export * from './packlets/space';
 
 export * from './api';
 
-// export * from './echo';
-// export * from './halo';
-// export * from './invitations';
-// export * from './protocol';
-// export * from './parties';
-// export * from './pipeline';
-// export * from './snapshots';
-// export * from './testing';
-
 // Stubs
 export type PartyMember = any
 export type CreateProfileOptions = any
