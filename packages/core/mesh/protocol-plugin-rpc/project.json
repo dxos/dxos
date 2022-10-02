@@ -1,0 +1,39 @@
+{
+  "sourceRoot": "packages/core/mesh/protocol-plugin-rpc/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/protocol-plugin-rpc/dist",
+        "tsConfig": "packages/core/mesh/protocol-plugin-rpc/tsconfig.json",
+        "main": "packages/core/mesh/protocol-plugin-rpc/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/protocol-plugin-rpc/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/core/mesh/protocol-plugin-rpc/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

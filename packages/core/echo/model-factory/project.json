@@ -1,0 +1,39 @@
+{
+  "sourceRoot": "packages/core/echo/model-factory/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/echo/model-factory/dist",
+        "tsConfig": "packages/core/echo/model-factory/tsconfig.json",
+        "main": "packages/core/echo/model-factory/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/echo/model-factory/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "options": {
+        "testPatterns": [
+          "packages/core/echo/model-factory/src/**/*.test.{ts,js}"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

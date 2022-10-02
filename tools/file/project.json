@@ -1,0 +1,23 @@
+{
+  "sourceRoot": "tools/file/src",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "tools/file/dist",
+        "tsConfig": "tools/file/tsconfig.json",
+        "main": "tools/file/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "tools/file/**/*.{ts,js}"
+        ]
+      }
+    }
+  }
+}

@@ -22,34 +22,34 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/react-async"
     },
     {
-      "path": "../../common/rpc"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/messenger-model"
     },
     {
-      "path": "../../echo/messenger-model"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/text-model"
     },
     {
-      "path": "../../echo/text-model"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../sdk/client"

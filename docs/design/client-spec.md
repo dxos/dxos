@@ -122,8 +122,8 @@ However, users may wish to use their same HALO identity across multiple applicat
 
 The following developer tools projects use the DXOS client.
 
-*   [Kodama CLI](https://github.com/dxos/protocols/tree/main/packages/demos/kodama)
-*   [HALO wallet browser extension](https://github.com/dxos/protocols/tree/main/packages/wallet/wallet-extension)
-*   [Devtools browser extension](https://github.com/dxos/protocols/tree/main/packages/devtools/devtools-extension)
+*   [Kodama CLI](https://github.com/dxos/dxos/tree/main/packages/demos/kodama)
+*   [HALO wallet browser extension](https://github.com/dxos/dxos/tree/main/packages/wallet/wallet-extension)
+*   [Devtools browser extension](https://github.com/dxos/dxos/tree/main/packages/devtools/devtools-extension)
 *   [DX CLI](https://github.com/dxos/cli)
 

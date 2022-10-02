@@ -35,13 +35,13 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/halo/credentials"
     },
     {
       "path": "../client"

@@ -1,0 +1,59 @@
+{
+  "sourceRoot": "packages/core/protocols/src",
+  "projectType": "library",
+  "targets": {
+    "proto": {
+      "executor": "@dxos/protobuf-compiler:generate",
+      "outputs": [
+        "{options.basePath}/gen"
+      ],
+      "options": {
+        "basePath": "packages/core/protocols/src/proto"
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/core/protocols/proto"
+      ],
+      "options": {
+        "script": "gen-proto-defs"
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/protocols/dist",
+        "tsConfig": "packages/core/protocols/tsconfig.json",
+        "main": "packages/core/protocols/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/protocols/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/core/protocols/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/core/protocols/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "protobuf-compiler"
+  ]
+}
