@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { subtleCrypto } from './platform';
+import { subtleCrypto } from './subtle';
 
 /**
  * Verify a signature with the given key.

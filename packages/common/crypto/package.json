@@ -8,7 +8,7 @@
   "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
-    "./src/platform/index.ts": "./src/platform/browser.ts"
+    "./src/browser/subtle.ts": "./src/subtle.ts"
   },
   "files": [
     "dist",
