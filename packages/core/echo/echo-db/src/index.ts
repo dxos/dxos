@@ -7,8 +7,7 @@ export * from './packlets/database';
 export * from './packlets/errors';
 export * from './packlets/metadata';
 export * from './packlets/space';
-
-export * from './api';
+export * from './packlets/api';
 
 // Stubs
 export type PartyMember = any
