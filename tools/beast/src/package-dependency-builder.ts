@@ -6,27 +6,30 @@ import ColorHash from 'color-hash';
 import fs from 'fs';
 import path from 'path';
 
-import { Flowchart } from './mermaid';
+import { Flowchart, SubgraphBuilder } from './mermaid';
 import { Project, ProjectMap } from './types';
 import { array } from './util';
 
 const colorHash = new ColorHash({
-  lightness: 0.8
-  // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
+  lightness: 0.95,
+  saturation: 0.6
 });
 
-type GraphBuilderOptions = {
+type PackageDependencyBuilderOptions = {
   verbose?: boolean
 
   // Don't show links for these packages.
   exclude?: string[]
 }
 
-export class GraphBuilder {
+/**
+ * Builder for a package dependency graph.
+ */
+export class PackageDependencyBuilder {
   constructor (
     private readonly _baseDir: string,
     private readonly _projectMap: ProjectMap,
-    private readonly _options: GraphBuilderOptions
+    private readonly _options: PackageDependencyBuilderOptions
   ) {}
 
   /**
@@ -141,76 +144,84 @@ export class GraphBuilder {
     // Subgraphs
     //
     {
-      // TODO(burdon): Get from package.json metadata?
-      const sectionName = (subdir: string): string => {
-        const parts = subdir.split('/');
-        parts.pop();
-        return parts.pop()!; // Second to last.
-      };
+      type Folder = { label: string, folders?: Map<string, Folder>, packages: string[] }
 
-      // Reduce packages into folders.
-      const sectionDefs: Map<string, string[]> = array(visited).reduce((result, project) => {
-        const name = project.package.name;
+      const root = new Map<string, Folder>();
 
-        // Group by folders.
-        const folder = sectionName(project.subdir);
-        let labels = result.get(folder);
-        if (labels) {
-          labels.push(name);
-        } else {
-          labels = [name];
-          result.set(folder, labels);
-        }
+      //
+      // Map projects into folder tree.
+      //
+      {
+        const getOrCreateFolder = (folders: Map<string, Folder>, parts: string[]): Folder => {
+          const [name, ...rest] = parts;
+          let folder = folders.get(name);
+          if (!folder) {
+            folder = {
+              label: name,
+              packages: [],
+              folders: new Map<string, Folder>()
+            };
 
-        return result;
-      }, new Map<string, string[]>());
+            folders.set(name, folder);
+          }
 
-      Array.from(sectionDefs.entries()).forEach(([section, packages]) => {
-        const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], packageName) => {
-          if (this._options.exclude?.includes(packageName)) {
-            excluded.push(packageName);
+          if (rest.length) {
+            return getOrCreateFolder(folder.folders!, rest);
           } else {
-            included.push(packageName);
+            return folder;
           }
-          return [included, excluded];
-        }, [[], []]);
+        };
 
-        // Main graph.
-        const graph = flowchart.addSubgraph({
-          id: section,
-          style: {
-            'fill': colorHash.hex(section),
-            'stroke': '#fff'
+        array(visited).forEach(project => {
+          // Skip top-level "packages" directory.
+          const [, ...parts] = project.subdir.split('/');
+          parts.pop();
+          if (this._options.exclude?.includes(project.package.name)) {
+            parts.push('_');
           }
+
+          const folder = getOrCreateFolder(root, parts);
+          folder.packages.push(project.package.name);
         });
+      }
 
-        included.forEach(packageName => graph.addNode({
-          id: safeName(packageName),
-          label: packageName,
-          className: packageName === project.package.name ? 'root' : 'def',
-          href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
-        }));
+      //
+      // Construct graph tree.
+      //
+      {
+        const process = (graph: SubgraphBuilder, folders: Map<string, Folder>, parent?: Folder) => {
+          array(folders).forEach(folder => {
+            const hidden = parent && folder.label === '_';
+            const sub = graph.addSubgraph({
+              id: folder.label,
+              label: hidden ? ' ' : folder.label,
+              style: hidden ? {
+                'fill': colorHash.hex(parent.label),
+                'stroke': '#333',
+                'stroke-dasharray': '5 5'
+              } : {
+                'fill': colorHash.hex(folder.label),
+                'stroke': '#333'
+              }
+            });
 
-        // Common packages with links removed.
-        if (excluded.length) {
-          const subgraph = graph.addSubgraph({
-            id: `${section}-excluded`,
-            label: ' ',
-            style: {
-              'fill': colorHash.hex(section),
-              'stroke': '#333',
-              'stroke-dasharray': '5 5'
+            folder.packages.forEach(packageName => {
+              sub.addNode({
+                id: safeName(packageName),
+                label: packageName,
+                className: packageName === project.package.name ? 'root' : 'def',
+                href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
+              });
+            });
+
+            if (folder.folders) {
+              process(sub, folder.folders, folder);
             }
           });
+        };
 
-          excluded.forEach(packageName => subgraph.addNode({
-            id: safeName(packageName),
-            label: packageName,
-            className: 'def',
-            href: path.join(baseUrl, this._projectMap.getProjectByPackage(packageName)!.subdir, docsDir)
-          }));
-        }
-      });
+        process(flowchart, root);
+      }
     }
 
     return flowchart.render();
