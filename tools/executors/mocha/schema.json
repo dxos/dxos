@@ -33,6 +33,11 @@
       "type": "string",
       "description": "Where to save test results"
     },
+    "junitReport": {
+      "type": "boolean",
+      "description": "Output xml results in junit format (generally for CI consumption)",
+      "default": false
+    },
     "timeout": {
       "type": "number",
       "description": "Mocha timeout in ms",

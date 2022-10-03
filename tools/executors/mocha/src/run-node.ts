@@ -13,6 +13,7 @@ export type NodeOptions = {
   watch: boolean
   watchPatterns: string[]
   resultsPath: string
+  junitReport: boolean
   timeout: number
   checkLeaks: boolean
   domRequired: boolean
@@ -47,6 +48,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
   if (options.watch) {
     return ['--reporter', 'min'];
+  } else if (!options.junitReport) {
+    return ['--reporter', 'spec'];
   }
 
   const name = context.projectName!;

@@ -35,7 +35,7 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --environments all --junitReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - store_test_results:
           path: test-results

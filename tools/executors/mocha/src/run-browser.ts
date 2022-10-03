@@ -14,6 +14,7 @@ export type BrowserOptions = {
   testPatterns: string[]
   outputPath: string
   resultsPath: string
+  junitReport: boolean
   timeout: number
   checkLeaks: boolean
   stayOpen: boolean
@@ -47,7 +48,11 @@ export const runBrowser = async (
 
   const { page } = await getNewBrowserContext(browserType, options);
   const results = await runTests(page, browserType, join(outDir, 'bundle.js'), options);
-  const exitCode = await outputResults(results, options.resultsPath, name, browserType);
+  const exitCode = await outputResults(results, {
+    name,
+    browserType,
+    outDir: options.junitReport ? options.resultsPath : undefined
+  });
   if (exitCode !== 0) {
     console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
   } else {

@@ -46,7 +46,13 @@ type Results = {
   passes: Test[]
 }
 
-export const outputResults = async (resultString: string, outDir: string, name: string, browserType: BrowserType) => {
+export type OutputResultsOptions = {
+  name: string
+  browserType: BrowserType
+  outDir?: string
+};
+
+export const outputResults = async (resultString: string, options: OutputResultsOptions) => {
   const results = JSON.parse(resultString) as Results;
 
   const suites = results.tests.reduce<Suites>((tests, test) => {
@@ -80,13 +86,14 @@ export const outputResults = async (resultString: string, outDir: string, name: 
     });
   }
 
-  const xml = buildXmlReport(suites, name, browserType, results.stats);
-  await writeFile(join(outDir, `${browserType}.xml`), xml, 'utf-8');
+  if (options.outDir) {
+    const xml = buildXmlReport(suites, results.stats, options);
+    await writeFile(join(options.outDir, `${options.browserType}.xml`), xml, 'utf-8');
+  }
 
   return results.stats.failures > 0 ? 1 : 0;
 };
 
-// TODO(wittjosiah): Color results to match nodejs spec output.
 const logSuites = (suites: Suites, depth = 1, errors: Test[] = []) => {
   Object.entries(suites).forEach(([name, suite]) => {
     console.log('\n', indent(depth), name);
@@ -120,7 +127,7 @@ const status = (value: Status, errorCount: number) => {
   }
 };
 
-const buildXmlReport = (suites: Suites, name: string, browserType: BrowserType, stats: Stats) => {
+const buildXmlReport = (suites: Suites, stats: Stats, options: OutputResultsOptions) => {
   const testsuite = Object.entries(suites).map(([name, suite]) => {
     if (Array.isArray(suite)) {
       return {
@@ -161,7 +168,7 @@ const buildXmlReport = (suites: Suites, name: string, browserType: BrowserType, 
     },
     testsuites: {
       testsuite,
-      '@_name': `${name} ${browserType} Tests`,
+      '@_name': `${options.name} ${options.browserType} Tests`,
       '@_time': stats.duration / 1000,
       '@_tests': stats.tests,
       '@_failures': stats.failures,
