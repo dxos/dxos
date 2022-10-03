@@ -57,9 +57,9 @@ export class WebRTCTransportProxy implements Transport {
     await this._rpc.open();
     this._openedRpc.wake();
 
-    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.BridgeService.sendData({ sessionId: this._params.sessionId, payload: data }));
-
     this._serviceStream = this._rpc.rpc.BridgeService.open({ sessionId: this._params.sessionId, initiator: this._params.initiator });
+    await this._serviceStream.waitUntilReady();
+
     this._serviceStream.subscribe(async (msg: BridgeEvent) => {
       if (msg.connection) {
         await this._handleConnection(msg.connection);
@@ -69,6 +69,8 @@ export class WebRTCTransportProxy implements Transport {
         await this._handleSignal(msg.signal);
       }
     });
+
+    this._params.stream.on('data', async (data: Uint8Array) => await this._rpc.rpc.BridgeService.sendData({ sessionId: this._params.sessionId, payload: data }));
   }
 
   private async _handleConnection (connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
@@ -89,17 +91,20 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private _handleData (dataEvent: BridgeEvent.DataEvent) {
+    console.log('Writing into PROTOCOL stream');
     this._params.stream.write(dataEvent.payload);
   }
 
   private async _handleSignal (signalEvent: BridgeEvent.SignalEvent) {
-    await this._params.sendSignal({
+    const msg = {
       author: this._params.ownId,
       recipient: this._params.remoteId,
       topic: this._params.topic,
       sessionId: this._params.sessionId,
       data: { signal: signalEvent.payload }
-    });
+    }
+    console.log(`Sending signal ${JSON.stringify(msg)}` );
+    await this._params.sendSignal(msg);
   }
 
   async signal (signal: Signal): Promise<void> {

@@ -23,10 +23,10 @@ export class WebRTCTransportService implements BridgeService {
   open (request: ConnectionRequest): Stream<BridgeEvent> {
     return new Stream(({ ready, next, close }) => {
 
-      log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
+      console.log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
       const peer = new SimplePeerConstructor({
         initiator: request.initiator,
-        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
+        wrtc: wrtc,
         config: this._webrtcConfig
       });
 
@@ -36,7 +36,8 @@ export class WebRTCTransportService implements BridgeService {
         }
       });
 
-      peer.on('data', async (payload) => {
+      peer.on('data', async payload => {
+        console.log('WRTC stream data');
         next({
           data: {
             payload
@@ -45,6 +46,7 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('signal', async data => {
+        console.log('WRTC stream signal');
         next({
           signal: {
             payload: { json: JSON.stringify(data) }
@@ -53,6 +55,7 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('connect', () => {
+        console.log('WRTC stream connect');
         next({
           connection: {
             state: ConnectionState.CONNECTED
@@ -61,6 +64,7 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('error', async (err) => {
+        console.log('WRTC stream error');
         next({
           connection: {
             state: ConnectionState.CLOSED,
@@ -71,6 +75,7 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('close', async () => {
+        console.log('WRTC stream close');
         next({
           connection: {
             state: ConnectionState.CLOSED
@@ -88,11 +93,13 @@ export class WebRTCTransportService implements BridgeService {
   async sendSignal ({ sessionId, signal }: SignalRequest): Promise<void> {
     assert(this.peers.has(sessionId), 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
+    console.log(`WRTC received signal ${signal}`);
     this.peers.get(sessionId)!.signal(JSON.parse(signal.json));
   }
 
   async sendData ({ sessionId, payload }: DataRequest): Promise<void> {
     assert(this.peers.has(sessionId));
+    console.log('Writing into WebRTC stream');
     this.peers.get(sessionId)!.write(payload);
   }
 

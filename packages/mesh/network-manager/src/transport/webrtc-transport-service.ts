@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
+// import wrtc from '@koush/wrtc';
 import assert from 'assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
@@ -26,7 +26,7 @@ export class WebRTCTransportService implements BridgeService {
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
       const peer = new SimplePeerConstructor({
         initiator: request.initiator,
-        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
+        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : undefined,
         config: this._webrtcConfig
       });
 

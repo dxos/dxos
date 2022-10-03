@@ -38,6 +38,7 @@
     "@mui/lab": "^5.0.0-alpha.83",
     "@mui/material": "^5.8.1",    
     "@koush/wrtc": "^0.5.3",
+    "assert": "^2.0.0",
     "debug": "^4.3.3",
     "events": "^3.3.0",
     "react": "^17.0.2",

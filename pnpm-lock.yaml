@@ -918,6 +918,7 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/messaging': workspace:*
       '@dxos/network-manager': workspace:*
@@ -927,24 +928,30 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/util': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
+      '@koush/wrtc': ^0.5.3
       '@mui/icons-material': ^5.8.0
       '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
+      '@types/simple-peer': 9.11.3
+      assert: ^2.0.0
       debug: ^4.3.3
       events: ^3.3.0
       react: ^17.0.2
       react-dom: ^17.0.2
+      simple-peer: 9.11.0
       vite: 3.0.9
     dependencies:
       '@dxos/async': link:../../packages/common/async
       '@dxos/codec-protobuf': link:../../packages/common/codec-protobuf
       '@dxos/crypto': link:../../packages/common/crypto
+      '@dxos/log': link:../../packages/common/log
       '@dxos/mesh-protocol': link:../../packages/mesh/mesh-protocol
       '@dxos/messaging': link:../../packages/mesh/messaging
       '@dxos/network-manager': link:../../packages/mesh/network-manager
@@ -954,21 +961,26 @@ importers:
       '@dxos/rpc': link:../../packages/common/rpc
       '@dxos/rpc-tunnel': link:../../packages/common/rpc-tunnel
       '@dxos/signal': link:../../packages/mesh/signal
+      '@dxos/util': link:../../packages/common/util
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
+      '@koush/wrtc': 0.5.3
       '@mui/icons-material': 5.8.4_kx4jrz7uxtfakm4bhxzazify6u
       '@mui/lab': 5.0.0-alpha.89_lpfa3obvm32vmye5t7dr5mvdu4
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
+      assert: 2.0.0
       debug: 4.3.4
       events: 3.3.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+      simple-peer: 9.11.0
     devDependencies:
       '@babel/core': 7.18.13
       '@dxos/vite-plugin': link:../../tools/vite-plugin
       '@types/debug': 4.1.7
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
+      '@types/simple-peer': 9.11.3
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   e2e/protobuf-compiler:
@@ -15134,7 +15146,7 @@ packages:
   /@types/simple-peer/9.11.3:
     resolution: {integrity: sha512-GHrZSrLBqaa/puFQdLnhepOvPiqlDnHXbTbTMx4JdIzhnSJ9tg7iu795aPnMPV9QpQ5h7CR5XqfqORY1P2qehw==}
     dependencies:
-      '@types/node': 16.11.27
+      '@types/node': 17.0.45
     dev: true
 
   /@types/sinon/10.0.13:

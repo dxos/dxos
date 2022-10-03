@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
+// import wrtc from '@koush/wrtc';
 import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
@@ -42,7 +42,7 @@ export class WebRTCTransport implements Transport {
     log(`Creating webrtc connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
     this._peer = new SimplePeerConstructor({
       initiator: this._initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : undefined,
       config: this._webrtcConfig
     });
     this._peer.on('signal', async data => {

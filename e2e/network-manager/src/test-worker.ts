@@ -32,7 +32,6 @@ const setup = async ({
 }: SetupParams) => {
   const plugin = new TestProtocolPlugin(ownId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), ownId.asBuffer(), plugin);
-  const stream = protocolProvider({ channel: discoveryKey(topic), initiator }).stream;
 
   const signal: SignalClient = new SignalClient(
     `ws://localhost:${config.signalPort}/.well-known/dx/signal`,
@@ -43,16 +42,26 @@ const setup = async ({
   const messageRouter: MessageRouter = new MessageRouter({
     sendMessage: async msg => await signal.sendMessage(msg),
     onSignal: async msg => {
-      if (ownId.equals(msg.recipient)) {
-        await transportProxy.signal(msg.data.signal);
-      }
+      console.log(`Received signal ${JSON.stringify(msg)}`);
+      await transportProxy.signal(msg.data.signal);
     },
     onOffer: async () => { return { accept: true }; }
   });
 
+  // {
+  //   const msg = {
+  //     author: ownId,
+  //     recipient: remoteId,
+  //     topic,
+  //     sessionId,
+  //     data: { signal: { json: ' {"message": "Init message"}' } }
+  //   }
+  //   await messageRouter.signal(msg);
+  // }
+  
   const transportProxy = new WebRTCTransportProxy({
     initiator,
-    stream,
+    stream: protocolProvider({ channel: discoveryKey(topic), initiator }).stream,
     ownId,
     remoteId,
     sessionId,
@@ -77,13 +86,14 @@ const setup = async ({
 };
 
 let channel: MessageChannel;
+const trigger = new Trigger();
 
 console.log('Shared worker file imported');
-
-const trigger = new Trigger();
 onconnect = async event => {
-  event.ports[0].addEventListener('message', (ev: MessageEvent) => {
-    if (ev.data.initMessage) {
+  console.log(`OnConnect ${event}`);
+  event.ports[0].onmessage = (ev: MessageEvent) => {
+    console.log(`Port message: ${JSON.stringify(ev.data)}`);
+    if (!!ev.data.initMessage) {
       trigger.wake();
       if (ev.data.peer === '1') {
         channel = new MessageChannel(async (channel, port) => {
@@ -96,23 +106,31 @@ onconnect = async event => {
             port: createWorkerPort({ channel, port, source: 'child', destination: 'parent' })
           });
         });
-      }
-    } else if (ev.data.peer === '2') {
-      channel = new MessageChannel(async (channel, port) => {
-        await setup({
-          initiator: false,
-          ownId: PublicKey.from(config.peer2Id),
-          remoteId: PublicKey.from(config.peer1Id),
-          sessionId: PublicKey.from(config.sessionId),
-          topic: PublicKey.from(config.topic),
-          port: createWorkerPort({ channel, port, source: 'child', destination: 'parent' })
+      } else if (ev.data.peer === '2') {
+        channel = new MessageChannel(async (channel, port) => {
+          await setup({
+            initiator: false,
+            ownId: PublicKey.from(config.peer2Id),
+            remoteId: PublicKey.from(config.peer1Id),
+            sessionId: PublicKey.from(config.sessionId),
+            topic: PublicKey.from(config.topic),
+            port: createWorkerPort({ channel, port, source: 'child', destination: 'parent' })
+          });
         });
-      });
-    } else {
-      throw new Error('Message should contain peer data');
+      } else {
+        throw new Error('Message should contain peer data');
+      }
     }
-  });
+  };
 
-  await trigger.wait();
-  channel.onConnect(event)
+
+  console.log('Waiting for Peer trigger...');
+  trigger.wait().then(
+    () => {
+      console.log('Trigger waked!');
+      channel.onConnect(event);
+    }, error => console.log(error)
+  );
 };
+
+// chrome://inspect/#workers
