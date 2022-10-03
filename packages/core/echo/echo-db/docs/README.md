@@ -16,12 +16,12 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph echo [echo]
-    style echo fill:#b3cae6,stroke:#333
+    style echo fill:#b9b3e6,stroke:#333
     dxos/echo-db("@dxos/echo-db"):::root
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -31,7 +31,7 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
-    style halo fill:#cabade,stroke:#333
+    style halo fill:#bacede,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -41,7 +41,7 @@ subgraph core [core]
   end
 
   subgraph mesh [mesh]
-    style mesh fill:#b3e6c0,stroke:#333
+    style mesh fill:#b3b6e6,stroke:#333
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -62,7 +62,7 @@ subgraph core [core]
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -73,7 +73,7 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/async("@dxos/async"):::def

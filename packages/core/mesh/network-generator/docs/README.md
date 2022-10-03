@@ -16,20 +16,20 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
 
   subgraph mesh [mesh]
-    style mesh fill:#b3e6c0,stroke:#333
+    style mesh fill:#b3b6e6,stroke:#333
     dxos/network-generator("@dxos/network-generator"):::root
     click dxos/network-generator "dxos/dxos/tree/main/packages/core/mesh/network-generator/docs"
   end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def

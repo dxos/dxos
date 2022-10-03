@@ -16,20 +16,20 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph e2e [e2e]
-  style e2e fill:#abcced,stroke:#333
+  style e2e fill:#abbbed,stroke:#333
   dxos/rpc-tunnel-e2e("@dxos/rpc-tunnel-e2e"):::root
   click dxos/rpc-tunnel-e2e "dxos/dxos/tree/main/packages/e2e/rpc-tunnel/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -42,12 +42,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
-    style mesh fill:#b3e6c0,stroke:#333
+    style mesh fill:#b3b6e6,stroke:#333
     dxos/rpc("@dxos/rpc"):::def
     click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
     dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
@@ -56,7 +56,7 @@ subgraph core [core]
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#333
+  style sdk fill:#c0bade,stroke:#333
   dxos/react-components("@dxos/react-components"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs"
 end

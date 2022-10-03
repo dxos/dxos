@@ -16,13 +16,13 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph apps [apps]
-  style apps fill:#abedeb,stroke:#333
+  style apps fill:#abaeed,stroke:#333
   dxos/docs("@dxos/docs"):::root
   click dxos/docs "dxos/dxos/tree/main/packages/apps/docs/docs"
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#333
+  style sdk fill:#c0bade,stroke:#333
   dxos/client("@dxos/client"):::def
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
@@ -38,7 +38,7 @@ subgraph sdk [sdk]
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -53,7 +53,7 @@ subgraph common [common]
   click dxos/typedoc "dxos/dxos/tree/main/packages/common/typedoc/docs"
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -70,12 +70,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph halo [halo]
-    style halo fill:#cabade,stroke:#333
+    style halo fill:#bacede,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
     dxos/keyring("@dxos/keyring"):::def
@@ -85,7 +85,7 @@ subgraph core [core]
   end
 
   subgraph mesh [mesh]
-    style mesh fill:#b3e6c0,stroke:#333
+    style mesh fill:#b3b6e6,stroke:#333
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -107,7 +107,7 @@ subgraph core [core]
   end
 
   subgraph echo [echo]
-    style echo fill:#b3cae6,stroke:#333
+    style echo fill:#b9b3e6,stroke:#333
     dxos/echo-db("@dxos/echo-db"):::def
     click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
     dxos/model-factory("@dxos/model-factory"):::def
@@ -118,13 +118,13 @@ subgraph core [core]
 end
 
 subgraph bots [bots]
-  style bots fill:#babdde,stroke:#333
+  style bots fill:#baded0,stroke:#333
   dxos/bot-factory-client("@dxos/bot-factory-client"):::def
   click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
 end
 
 subgraph undefined [undefined]
-  style undefined fill:#e6dbb3,stroke:#333
+  style undefined fill:#b3c2e6,stroke:#333
   dxos/showcase("@dxos/showcase"):::def
   click dxos/showcase "dxos/dxos/tree/main/tools/showcase/docs"
 end

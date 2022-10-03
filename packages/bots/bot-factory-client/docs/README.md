@@ -16,18 +16,18 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph bots [bots]
-  style bots fill:#babdde,stroke:#333
+  style bots fill:#baded0,stroke:#333
   dxos/bot-factory-client("@dxos/bot-factory-client"):::root
   click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -42,12 +42,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph mesh [mesh]
-    style mesh fill:#b3e6c0,stroke:#333
+    style mesh fill:#b3b6e6,stroke:#333
     dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
     click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
     dxos/messaging("@dxos/messaging"):::def

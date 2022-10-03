@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph undefined [undefined]
-  style undefined fill:#e6dbb3,stroke:#333
+  style undefined fill:#b3c2e6,stroke:#333
   dxos/file("@dxos/file"):::root
   click dxos/file "dxos/dxos/tree/main/tools/file/docs"
 end

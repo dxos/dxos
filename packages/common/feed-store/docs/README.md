@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/feed-store("@dxos/feed-store"):::root
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
@@ -25,7 +25,7 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
-    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/async("@dxos/async"):::def
@@ -40,12 +40,12 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#333
+  style core fill:#abb6ed,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph halo [halo]
-    style halo fill:#cabade,stroke:#333
+    style halo fill:#bacede,stroke:#333
     dxos/keyring("@dxos/keyring"):::def
     click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   end

@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph undefined [undefined]
-  style undefined fill:#e6dbb3,stroke:#333
+  style undefined fill:#b3c2e6,stroke:#333
   dxos/eslint-plugin("@dxos/eslint-plugin"):::root
   click dxos/eslint-plugin "dxos/dxos/tree/main/tools/eslint-plugin/docs"
   dxos/eslint-plugin-rules("@dxos/eslint-plugin-rules"):::def

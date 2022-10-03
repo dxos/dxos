@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph gem [gem]
-  style gem fill:#b3c7e6,stroke:#333
+  style gem fill:#b3c6e6,stroke:#333
   dxos/gem-spore("@dxos/gem-spore"):::root
   click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
   dxos/gem-core("@dxos/gem-core"):::def

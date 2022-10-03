@@ -11,8 +11,12 @@ import { Project, ProjectMap } from './types';
 import { array } from './util';
 
 const colorHash = new ColorHash({
-  lightness: 0.8
-  // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
+  lightness: 0.8,
+  hue: [
+    { min: 100, max: 360 },
+    { min: 200, max: 360 },
+    { min: 200, max: 360 }
+  ]
 });
 
 type PackageDependencyBuilderOptions = {

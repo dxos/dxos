@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#333
+  style common fill:#bad0de,stroke:#333
   dxos/crypto-names("@dxos/crypto-names"):::root
   click dxos/crypto-names "dxos/dxos/tree/main/packages/common/crypto-names/docs"
 end

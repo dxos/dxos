@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph undefined [undefined]
-  style undefined fill:#e6dbb3,stroke:#333
+  style undefined fill:#b3c2e6,stroke:#333
   dxos/protobuf-test("@dxos/protobuf-test"):::root
   click dxos/protobuf-test "dxos/dxos/tree/main/tools/protobuf-test/docs"
 end
