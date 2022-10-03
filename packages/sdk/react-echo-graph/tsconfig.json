@@ -23,13 +23,10 @@
       "path": "../../common/react-async"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
-    },
-    {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
       "path": "../client"

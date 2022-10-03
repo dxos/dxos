@@ -6,8 +6,8 @@ import debug from 'debug';
 
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
-import { defs } from '@dxos/config';
 import { initializeDevtools } from '@dxos/devtools';
+import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 
 const log = debug('dxos:extension:sandbox');
@@ -75,7 +75,7 @@ const init = async () => {
   const client = new Client({
     runtime: {
       client: {
-        mode: defs.Runtime.Client.Mode.REMOTE
+        mode: Runtime.Client.Mode.REMOTE
       },
       // TODO(wittjosiah): Missing config in local client should fallback to remote client.
       services: {

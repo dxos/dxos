@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@1.5.1
+  nx: nrwl/nx@1.6.0
 
 aliases:
   - &docker_image
@@ -21,6 +21,9 @@ aliases:
       key: pnpm-store-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
 
 jobs:
+  #
+  # NOTE: This job is required to complete before ALL PRs can be merged to main.
+  #
   check:
     docker:
       - *docker_image
@@ -28,13 +31,40 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright install
+      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
+      - when:
+          condition:
+            equal: [ main, <<pipeline.git.branch>> ]
+          steps:
+            - run: pnpm nx run-many --target=prerelease
+
+  #
+  # End-to-end integration tests.
+  #
+  e2e:
+    docker:
+      - *docker_image
+    steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - run: pnpx playwright@1.25.1 install
+      - *cache_save
+      - nx/set-shas
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
+
+  #
+  # Create application bundles.
+  #
+  bundle:
+    docker:
+      - *docker_image
+    steps:
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
           environment:
@@ -69,7 +99,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright install
+      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
       - run: pnpm nx run-many --target=test --skip-nx-cache
@@ -80,6 +110,12 @@ workflows:
       - check:
           context:
             - Github
+      - e2e:
+          context:
+            - Github
+#      - bundle:
+#          context:
+#            - Github
 
   deploy:
     jobs:
@@ -95,7 +131,7 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "4 0 * * *"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:

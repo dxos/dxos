@@ -7,11 +7,11 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
+import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxos/client';
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { InvitationRequest, RedeemedInvitation } from './packlets/proto';
-import { Client } from './packlets/proxy';
+import { Client } from './packlets/proxies';
 
 const setup = async () => {
   const client = new Client();
@@ -24,7 +24,7 @@ const setup = async () => {
   };
 };
 
-describe('Client Services', () => {
+describe.skip('Client Services', () => {
   describe('device invitations', () => {
     test('creates and joins a HALO invitation', async () => {
       const inviter = await setup();

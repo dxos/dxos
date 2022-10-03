@@ -7,14 +7,13 @@
   "main": "dist/src/index.js",
   "scripts": {
     "generate": "npm run generate:sdk && npm run generate:echo && npm run generate:mesh && npm run generate:halo",
-    "generate:echo": "typedoc --json src/api/echo.json --entryPointStrategy packages '../../echo/*' --name '@dxos/typedoc'",
-    "generate:halo": "typedoc --json src/api/halo.json --entryPointStrategy packages '../../halo/*' --name '@dxos/typedoc'",
-    "generate:mesh": "typedoc --json src/api/mesh.json --entryPointStrategy packages '../../mesh/*' --name '@dxos/typedoc'",
+    "generate:echo": "typedoc --json src/api/echo.json --entryPointStrategy packages '../../core/echo/*' --name '@dxos/typedoc'",
+    "generate:halo": "typedoc --json src/api/halo.json --entryPointStrategy packages '../../core/halo/*' --name '@dxos/typedoc'",
+    "generate:mesh": "typedoc --json src/api/mesh.json --entryPointStrategy packages '../../core/mesh/*' --name '@dxos/typedoc'",
     "generate:sdk": "typedoc --json src/api/sdk.json --entryPointStrategy packages '../../sdk/*' --name '@dxos/typedoc'",
     "prerelease": "npm run generate 2>&1 && tsc"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
     "typedoc": "^0.22.18",
     "typescript": "^4.7.2"
   }

@@ -1,6 +1,6 @@
-[![build](https://github.com/dxos/protocols/actions/workflows/check.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/check.yaml)
-[![publish](https://github.com/dxos/protocols/actions/workflows/publish.yaml/badge.svg)](https://github.com/dxos/protocols/actions/workflows/publish.yaml)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
+[![DXOS](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
+[![MIT License](https://img.shields.io/npm/l/@dxos/client?style=flat)](https://github.com/dxos/dxos/blob/main/LICENSE)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
 
 ![js-dxos](./docs/assets/images/github-repo-banner.png)
 
@@ -37,7 +37,7 @@ pnpm run demo:grid
 
 ## Deployment
 
-Packages are deployed via [Release Please](https://github.com/dxos/protocols/blob/main/docs/internal/getting-started.md#release-process).
+Packages are deployed via [Release Please](https://github.com/dxos/dxos/blob/main/docs/internal/getting-started.md#release-process).
 
 
 ## Troubleshooting

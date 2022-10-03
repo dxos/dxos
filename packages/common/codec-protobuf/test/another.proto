@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package dxos.test.another;
-
-message AnotherMessage {
-  string foo = 1;
-}

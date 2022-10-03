@@ -2,19 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DeviceInfo, KeyRecord } from '@dxos/credentials';
-import { Contact, CreateProfileOptions, InvitationDescriptor, ResultSet } from '@dxos/echo-db';
-import { PublicKey } from '@dxos/protocols';
+import { InvitationDescriptor } from '@dxos/client-services';
+import { ResultSet } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
+import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
+import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { Profile, SignRequest, SignResponse } from '../proto';
-import { Invitation, InvitationRequest } from './invitations';
-
-/**
- * Signer plugin.
- */
-export interface HaloSigner {
-  sign: (request: SignRequest, key: KeyRecord) => Promise<SignResponse>
-}
+import { Contact, CreateProfileOptions } from '../proxies';
+import { Invitation } from './invitation';
+import { InvitationRequest } from './invitation-request';
 
 /**
  * HALO API.

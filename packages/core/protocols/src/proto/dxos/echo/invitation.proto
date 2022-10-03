@@ -1,0 +1,29 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.invitation;
+
+message InvitationDescriptor {
+  /**
+   * Defines an invitation type.
+   */
+  enum Type {
+    /// Interactive invitation is when both peers are online at the same time.
+    INTERACTIVE = 0;
+    /// Offline is when only a single peer needs to be online at the time.
+    OFFLINE = 1;
+  }
+
+  Type type = 1;
+  bytes swarmKey = 2;
+  bytes invitation = 3;
+
+  /// Only present if type == OFFLINE.
+  optional bytes identityKey = 4;
+
+  /// Must be stripped out when passing to another peer.
+  optional bytes secret = 5;
+}

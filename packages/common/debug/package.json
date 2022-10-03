@@ -20,9 +20,6 @@
     "debug": "^4.3.3",
     "events": "^3.3.0"
   },
-  "devDependencies": {
-    "@dxos/protocols": "workspace:*"
-  },
   "publishConfig": {
     "access": "public"
   }

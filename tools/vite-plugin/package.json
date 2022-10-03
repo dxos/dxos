@@ -4,7 +4,7 @@
   "description": "Plugin to enable Vite to build DXOS apps.",
   "license": "MIT",
   "author": "DXOS.org",
-  "repository": "github:dxos/protocols",
+  "repository": "github:dxos/dxos",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {

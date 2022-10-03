@@ -28,9 +28,9 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/react": "^18.0.9",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "@types/react": "^17.0.24",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "peerDependencies": {
     "react": "*",

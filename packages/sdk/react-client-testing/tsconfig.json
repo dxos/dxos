@@ -29,10 +29,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/echo/object-model"
     },
     {
       "path": "../client"

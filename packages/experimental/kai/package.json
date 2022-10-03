@@ -1,0 +1,50 @@
+{
+  "name": "@dxos/kai",
+  "version": "2.33.8",
+  "description": "Kai Web shell.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "bin",
+    "config",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "toolchain bundle:app",
+    "check": "true",
+    "start": "toolchain start"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-testing": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/react-async": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@emotion/css": "^11.7.1",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/material": "^5.8.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/protocols-toolchain": "workspace:*",
+    "@types/faker": "^5.5.9",
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
+    "faker": "^5.5.3",
+    "supervisor": "~0.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "toolchain": {
+    "forceCloseTests": true,
+    "testingFramework": "mocha"
+  }
+}

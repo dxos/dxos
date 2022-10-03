@@ -18,6 +18,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",
@@ -43,18 +44,18 @@
     "@mui/material": "^5.8.1",
     "@mui/system": "^5.8.1",
     "@types/debug": "^4.1.7",
-    "@types/faker": "^5.5.1",
+    "@types/faker": "^5.5.9",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.isplainobject": "^4.0.6",
-    "@types/react": "^18.0.9",
+    "@types/react": "^17.0.24",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/string-hash": "^1.1.1",
     "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
-    "clsx": "^1.1.0",
-    "faker": "^5.1.0",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "clsx": "^1.1.1",
+    "faker": "^5.5.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
   },
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",

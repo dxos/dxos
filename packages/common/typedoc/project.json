@@ -2,6 +2,20 @@
   "sourceRoot": "packages/common/typedoc/src",
   "projectType": "library",
   "targets": {
+    "prerelease": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "packages/common/typedoc/dist",
+        "packages/common/typedoc/src/api"
+      ],
+      "options": {
+        "script": "prerelease"
+      },
+      "dependsOn": [
+        "^proto",
+        "^build"
+      ]
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
@@ -11,5 +25,53 @@
         ]
       }
     }
-  }
+  },
+  // TODO(wittjosiah): Calculate.
+  "implicitDependencies": [
+    "async",
+    "bot-factory-client",
+    "botkit",
+    "broadcast",
+    "client",
+    "client-testing",
+    "codec-protobuf",
+    "config",
+    "credentials",
+    "crypto",
+    "crypto-names",
+    "debug",
+    "echo-db",
+    "echo-testing",
+    "feed-store",
+    "halo-protocol",
+    "log",
+    "mesh-protocol",
+    "messenger-model",
+    "model-factory",
+    "network-generator",
+    "network-manager",
+    "object-model",
+    "orchestrator",
+    "protocol-network-generator",
+    "protocol-plugin-presence",
+    "protocol-plugin-replicator",
+    "protocol-plugin-rpc",
+    "protocols",
+    "random-access-storage",
+    "react-async",
+    "react-client",
+    "react-client-testing",
+    "react-components",
+    "react-echo-graph",
+    "react-ipfs",
+    "react-registry-client",
+    "react-toolkit",
+    "registry-client",
+    "rpc",
+    "rpc-tunnel",
+    "signal",
+    "testutils",
+    "text-model",
+    "util"
+  ]
 }

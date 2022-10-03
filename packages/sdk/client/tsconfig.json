@@ -12,7 +12,11 @@
     ]
   },
   "include": [
-    "src"
+    "src/experimental",
+    "src/packlets/api",
+    "src/packlets/proxies",
+    "src/packlets/services",
+    "src/*.ts"
   ],
   "references": [
     {
@@ -25,13 +29,10 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
+      "path": "../../core/protocols"
     },
     {
       "path": "../../common/random-access-storage"
-    },
-    {
-      "path": "../../common/rpc"
     },
     {
       "path": "../../common/testutils"
@@ -40,25 +41,25 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../common/feed-store"
     },
     {
-      "path": "../../echo/feed-store"
+      "path": "../../core/echo/model-factory"
     },
     {
-      "path": "../../echo/model-factory"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/halo/credentials"
     },
     {
-      "path": "../../halo/credentials"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../config"

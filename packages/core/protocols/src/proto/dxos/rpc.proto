@@ -1,0 +1,73 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+// TODO(burdon): Move to `dxos.mesh.rpc` (reconcile with @dxos/kube repo).
+package dxos.rpc;
+
+option go_package = "github.com/dxos/kube/go/dxrpc/pb";
+
+message RpcMessage {
+  oneof content {
+    Request request = 1;
+    Response response = 2;
+
+    /// Means that the node is trying to open the connection.
+    bool open = 3;
+    /// Means that the node has received the "open" message and is ready to perform requests.
+    bool openAck = 4;
+
+    StreamClose streamClose = 5;
+  }
+}
+
+message Request {
+  int32 id = 1;
+  string method = 2;
+  google.protobuf.Any payload = 3;
+  bool stream = 4;
+}
+
+message Response {
+  int32 id = 1;
+  oneof content {
+    google.protobuf.Any payload = 2;
+    Error error = 3;
+    /// Sent when stream is closed without an error.
+    bool close = 4;
+
+    /**
+     * Sent when the server has processed a request with a streaming response.
+     * Can be skipped by the server.
+     * In this case the first payload should be treated as the server being ready.
+     */
+    bool stream_ready = 5;
+  }
+}
+
+// TODO(burdon): Generalize to event?
+// Sent by client to end the streaming response.
+message StreamClose {
+  int32 id = 1;
+}
+
+message Error {
+  optional string name = 1;
+  optional string message = 2;
+  optional string stack = 3;
+}
+
+// TODO(burdon): Rename Trace.
+message MessageTrace {
+  enum Direction {
+    INCOMING = 0;
+    OUTGOING = 1;
+  }
+
+  Direction direction = 1;
+  bytes data = 2;
+}

@@ -7,10 +7,9 @@ import React from 'react';
 
 import { TableBody, TableHead, TableRow } from '@mui/material';
 
-import { keyTypeName } from '@dxos/credentials';
+import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { CopyText } from '@dxos/react-components';
 
-import { KeyRecord } from '../../proto/gen/dxos/halo/keys';
 import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
 import { Table, TableCell } from '../Table';
 
@@ -40,7 +39,7 @@ export const KeyTable = ({ keys }: KeyTableProps) => (
         return (
           <TableRow key={key}>
             <TableCell monospace>
-              {keyTypeName(type)}
+              {type}
             </TableCell>
             <TableCell title={key}>
               <CopyText monospace variant='h6' value={key} length={8} />

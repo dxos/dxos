@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "lib": [
       "DOM"
     ],
@@ -16,7 +17,7 @@
   ],
   "references": [
     {
-      "path": "../protocols"
+      "path": "../keys"
     },
     {
       "path": "./tsconfig.spec.json"

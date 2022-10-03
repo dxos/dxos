@@ -1,0 +1,100 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
+import "dxos/halo/signed.proto";
+
+package dxos.echo.snapshot;
+
+//
+// Snapshots define full party state at a given point in time.
+// They must have enough information to be able to recover the party state without reading the feed messages.
+//
+// Each snapshot is identified by a party key and a timeframe.
+// The timeframe defines the set of feed messages that have already been processed.
+// When loading from the snapshot, application would skip all of the feed messages up to (and including) the provided timeframe.
+//
+
+message PartySnapshot {
+  bytes partyKey = 1;
+  optional timeframe.TimeframeVector timeframe = 2;
+
+  // Unix timestamp of the snapshot creation time. For information purposes only.
+  // TODO(dmaretskyi): Convert to google.protobuf.Timestamp.
+  optional int32 timestamp = 3;
+
+  HaloStateSnapshot halo = 11;
+  // TODO(dmaretskyi): Rename to EchoSnapshot.
+  DatabaseSnapshot database = 12;
+}
+
+// TODO(dmaretskyi): Rename to HaloSnapshot.
+// For now we just store and replay a list of all halo messages as thier number is expected to be relatively low.
+message HaloStateSnapshot {
+  repeated dxos.halo.signed.Message messages = 1;
+}
+
+//
+// Database Snapshot
+//
+
+message DatabaseSnapshot {
+  repeated ItemSnapshot items = 1;
+  repeated LinkSnapshot links = 2;
+}
+
+message ItemSnapshot {
+  optional string itemId = 1;
+  optional string itemType = 2;
+  string modelType = 3;
+  optional string modelVersion = 4;
+  optional string parentId = 5;
+  optional ModelSnapshot model = 6;
+}
+
+message LinkSnapshot {
+  optional string linkId = 1;
+  optional string linkType = 2;
+  string modelType = 3;
+  optional string modelVersion = 4;
+  string source = 5;
+  string target = 6;
+  optional ModelSnapshot model = 7;
+}
+
+/**
+ * Represents the reified state of a state machine.
+ * The snapshots make consist of a custom snapshot object and/or a list of mutations
+ * that are applied to the snapshot or the initial state.
+ */
+// TODO(burdon): Rename?
+message ModelSnapshot {
+  /**
+   * Encoded model snapshot (defined by the model's codec).
+   * If undefined the state machine will be initialized with it's default state.
+   */
+  optional bytes snapshot = 1;
+
+  /**
+   * Mutations to be applied on top of the snapshot, or on top of initial state if the snapshot is undefined.
+   */
+  repeated ModelMutation mutations = 2;
+}
+
+message ModelMutation {
+  // TODO(burdon): Remove required.
+  // Encoded model mutation, format is defined by model's codec.
+  bytes mutation = 1;
+  ModelMutationMeta meta = 2;
+}
+
+message ModelMutationMeta {
+  // TODO(burdon): Remove required.
+  dxos.halo.keys.PubKey feedKey = 1;
+  int32 seq = 2;
+  dxos.halo.keys.PubKey memberKey = 3;
+}

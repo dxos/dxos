@@ -5,13 +5,9 @@
 import assert from 'node:assert';
 import pb from 'protobufjs';
 
+import { Any, EncodingOptions } from './common';
 import type { Schema } from './schema';
 import { Stream } from './stream';
-
-export interface Any {
-  'type_url': string
-  value: Uint8Array
-}
 
 export interface ServiceBackend {
   call (method: string, request: Any): Promise<Any>
@@ -28,12 +24,12 @@ export class ServiceDescriptor<S> {
     return this._service;
   }
 
-  createClient (backend: ServiceBackend): Service & S {
-    return new Service(backend, this._service, this._schema) as Service & S;
+  createClient (backend: ServiceBackend, encodingOptions?: EncodingOptions): Service & S {
+    return new Service(backend, this._service, this._schema, encodingOptions) as Service & S;
   }
 
-  createServer (handlers: S): ServiceHandler<S> {
-    return new ServiceHandler(this._service, this._schema, handlers);
+  createServer (handlers: S, encodingOptions?: EncodingOptions): ServiceHandler<S> {
+    return new ServiceHandler(this._service, this._schema, handlers, encodingOptions);
   }
 }
 
@@ -41,7 +37,8 @@ export class Service {
   constructor (
     backend: ServiceBackend,
     service: pb.Service,
-    schema: Schema<any>
+    schema: Schema<any>,
+    encodingOptions?: EncodingOptions
   ) {
     for (const method of service.methodsArray) {
       method.resolve();
@@ -56,21 +53,21 @@ export class Service {
 
       if (!method.responseStream) {
         (this as any)[methodName] = async (request: unknown) => {
-          const encoded = requestCodec.encode(request);
+          const encoded = requestCodec.encode(request, encodingOptions);
           const response = await backend.call(method.name, {
             value: encoded,
             type_url: method.resolvedRequestType!.fullName
           });
-          return responseCodec.decode(response.value);
+          return responseCodec.decode(response.value, encodingOptions);
         };
       } else {
         (this as any)[methodName] = (request: unknown) => {
-          const encoded = requestCodec.encode(request);
+          const encoded = requestCodec.encode(request, encodingOptions);
           const stream = backend.callStream(method.name, {
             value: encoded,
             type_url: method.resolvedRequestType!.fullName
           });
-          return Stream.map(stream, data => responseCodec.decode(data.value!));
+          return Stream.map(stream, data => responseCodec.decode(data.value!, encodingOptions));
         };
       }
 
@@ -84,7 +81,8 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   constructor (
     private readonly _service: pb.Service,
     private readonly _schema: Schema<any>,
-    private readonly _handlers: S
+    private readonly _handlers: S,
+    private readonly _encodingOptions?: EncodingOptions
   ) {}
 
   async call (methodName: string, request: Any): Promise<Any> {
@@ -97,9 +95,9 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const handler = this._handlers[mappedMethodName as keyof S];
     assert(handler, `Handler is missing: ${mappedMethodName}`);
 
-    const requestDecoded = requestCodec.decode(request.value!);
+    const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
     const response = await (handler as any).bind(this._handlers)(requestDecoded);
-    const responseEncoded = responseCodec.encode(response);
+    const responseEncoded = responseCodec.encode(response, this._encodingOptions);
 
     return {
       value: responseEncoded,
@@ -117,10 +115,10 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     const handler = this._handlers[mappedMethodName as keyof S];
     assert(handler, `Handler is missing: ${mappedMethodName}`);
 
-    const requestDecoded = requestCodec.decode(request.value!);
+    const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
     const responseStream = (handler as any).bind(this._handlers)(requestDecoded) as Stream<unknown>;
     return Stream.map(responseStream, (data): Any => ({
-      value: responseCodec.encode(data),
+      value: responseCodec.encode(data, this._encodingOptions),
       type_url: method.resolvedResponseType!.fullName
     }));
   }

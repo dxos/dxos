@@ -4,14 +4,7 @@ function readPackage(packageJson, context) {
   switch (packageJson.name) {
     // Package has an unneccessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      break;
-    }
-
-    // TODO(burdon): Can be removed once tutorials-tasks-app is removed or upgraded to MUI5.
-    case '@mui/styles': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      packageJson.peerDependencies['@types/react'] = '^18.0.0'
+      packageJson.peerDependencies['react'] = '^17.0.0'
       break;
     }
 
@@ -39,22 +32,6 @@ function readPackage(packageJson, context) {
     case 'ink-text-input':
     case 'react-reconciler': {
       packageJson.peerDependencies['react'] = '>=16.0.0'
-      break;
-    }
-
-    // @storybook/react transitive dep
-    case 'react-element-to-jsx-string': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
-      packageJson.peerDependencies['react-dom'] = '^18.0.0'
-      break;
-    }
-
-    // @storybook/addon-essentials transitive deps
-    case 'react-inspector':
-    case '@mdx-js/react':
-    // https://github.com/FezVrasta/react-resize-aware/issues/59
-    case 'react-resize-aware': {
-      packageJson.peerDependencies['react'] = '^18.0.0'
       break;
     }
   }

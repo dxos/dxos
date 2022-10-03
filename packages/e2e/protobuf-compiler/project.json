@@ -1,0 +1,47 @@
+{
+  "sourceRoot": "packages/e2e/protobuf-compiler/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/e2e/protobuf-compiler/dist",
+        "tsConfig": "packages/e2e/protobuf-compiler/tsconfig.json",
+        "main": "packages/e2e/protobuf-compiler/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/e2e/protobuf-compiler/**/*.{ts,js}"
+        ]
+      }
+    }
+    // TODO(wittjosiah): This test is broken.
+    // "e2e": {
+    //   "executor": "@dxos/mocha:browser",
+    //   "options": {
+    //     "testPatterns": [
+    //       "packages/e2e/protobuf-compiler/browser-test/*.test.ts"
+    //     ],
+    //     "browsers": [
+    //       "chromium"
+    //     ],
+    //     "setup": "packages/e2e/protobuf-compiler/browser-test/setup.js"
+    //   },
+    //   "dependsOn": [
+    //     "^build"
+    //   ]
+    // }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
+}

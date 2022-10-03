@@ -1,0 +1,91 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/halo/signed.proto";
+
+package dxos.halo.keys;
+
+// TODO(burdon): Prefix enums (e.g., KEY_TYPE_UNKNOWN).
+// TODO(burdon): CamelCase variables (e.g., public_key).
+
+//
+// The type/use of a public key.
+//
+enum KeyType {
+  UNKNOWN = 0;
+  IDENTITY = 1;
+  DEVICE = 2;
+  PARTY = 3;
+  FEED = 4;
+  DXNS_ADDRESS = 5;
+}
+
+message PubKey {
+  bytes data = 1;
+}
+
+// TODO(burdon): Rename PrivateKey.
+message PrivKey {
+  bytes data = 1;
+}
+
+message KeyRecord {
+  /**
+   * The `KeyType` type of the key. This is often unknown for keys from other sources.
+   */
+  KeyType type = 1;
+
+  /**
+   * The public key as a Buffer (required).
+   */
+  PubKey public_key = 2;
+
+  /**
+   * The secret key as a Buffer (this will never be visible outside the Keyring).
+   */
+  optional PrivKey secretKey = 3;
+
+  /**
+   * Is this key from a Greeting "hint"?
+   */
+  optional bool hint = 4;
+
+  /**
+   * Determines if this is our key?
+   * Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
+   */
+  optional bool own = 5; // TODO(burdon): Rename "local" or "private".
+
+  /**
+   * Is this key to be trusted?
+   */
+  optional bool trusted = 6; // TODO(burdon): Rename "trust". How is this determined?
+
+  /**
+   * An RFC-3339 date/time string for when the key was added to the Keyring.
+   */
+  optional string added = 7;
+
+  /**
+   * An RFC-3339 date/time string for when the key was created.
+   */
+  optional string created = 8;
+}
+
+message KeyRecordList {
+  repeated KeyRecord keys = 1;
+}
+
+//
+// A key which includes its parent keys and SignedMessages leading back to the root of its authority.
+// For example, if IdentityA signed for DeviceA, which signed for DeviceB, which signed for DeviceC the chain
+// would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
+//
+message KeyChain {
+  PubKey publicKey = 1;
+  dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
+  repeated KeyChain parents = 3;
+}

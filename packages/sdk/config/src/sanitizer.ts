@@ -3,13 +3,14 @@
 //
 
 import { sanitize, SanitizeContext } from '@dxos/codec-protobuf';
+import { schema } from '@dxos/protocols';
+import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
 import { InvalidConfigError } from './errors';
-import { schema, ConfigObject } from './proto';
 
 const configRootType = schema.getCodecForType('dxos.config.Config');
 
-export const sanitizeConfig = (value: any): ConfigObject => {
+export const sanitizeConfig = (value: any): ConfigProto => {
   if (!('version' in value)) {
     throw new InvalidConfigError('Version not specified');
   }
