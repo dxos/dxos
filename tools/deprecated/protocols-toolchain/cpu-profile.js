@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const inspector = require('node:inspector');
 const { resolve } = require('node:path');
+
 const session = new inspector.Session();
 session.connect();
 
