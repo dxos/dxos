@@ -19,14 +19,16 @@ subgraph mesh [mesh]
   style mesh fill:#b3e6c0,stroke:#fff
   dxos/messaging("@dxos/messaging"):::root
   click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
 end
 
 subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -52,6 +54,7 @@ end
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 ```
@@ -63,8 +66,9 @@ dxos/rpc --> dxos/protocols
 | [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../../common/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |

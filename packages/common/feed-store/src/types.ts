@@ -4,25 +4,21 @@
 
 import { PublicKey } from '@dxos/keys';
 
-export type FeedMeta = {
-  feedKey: PublicKey
-  seq: number
+// TODO(burdon): Move to codec-protobuf?
+export type ValueEncoding = string | {
+  encode: (data: any) => Uint8Array
+  decode: (data: Uint8Array) => any
 }
 
 /**
- * Hypercore message.
+ * Hypercore message block.
  * https://github.com/hypercore-protocol/hypercore
  */
-// TODO(burdon): Rename (No I-prefix).
-export interface IFeedGenericBlock<T> {
+// TODO(burdon): Reconcile with hypercore-types.ts
+export type FeedBlock<T> = {
   key: PublicKey
   seq: number
   sync: boolean
   path: string
   data: T
 }
-
-export type ValueEncoding = string | {
-  encode: (x: any) => Uint8Array
-  decode: (data: Uint8Array) => any
-};

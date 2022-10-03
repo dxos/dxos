@@ -20,7 +20,7 @@ export interface SubstitutionDescriptor<T> {
 export type Substitutions = Record<string, SubstitutionDescriptor<any>>
 
 export interface Any {
-  'type_url': string
+  type_url: string
   value: Uint8Array
 }
 
@@ -31,8 +31,8 @@ export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name]
 
 /**
  * Returns a discriminated union of all protobuf types with the '@type' field included.
+ * Useful for typing 'google.protobuf.Any' messages.
  */
-// TODO(burdon): Reconcile with dxos/protocols:type.ts
 export type TypedProtoMessage<TYPES extends {}> = {
   [K in keyof TYPES]: TYPES[K] & { '@type': K }
 }[keyof TYPES];

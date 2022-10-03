@@ -29,14 +29,12 @@ subgraph common [common]
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
   dxos/feed-store("@dxos/feed-store"):::def
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/random-access-storage("@dxos/random-access-storage"):::def
-  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
-  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
+  dxos/random-access-storage("@dxos/random-access-storage"):::def
+  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -71,6 +69,8 @@ subgraph mesh [mesh]
   click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
   dxos/messaging("@dxos/messaging"):::def
   click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
   click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
   dxos/broadcast("@dxos/broadcast"):::def
@@ -79,16 +79,18 @@ subgraph mesh [mesh]
   click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
   dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
   click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
+  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
 end
 
 subgraph halo [halo]
   style halo fill:#cabade,stroke:#fff
   dxos/credentials("@dxos/credentials"):::def
   click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   dxos/halo-protocol("@dxos/halo-protocol"):::def
   click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+  dxos/keyring("@dxos/keyring"):::def
+  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
 end
 
 subgraph core [core]
@@ -132,12 +134,12 @@ dxos/gem-spore --> dxos/gem-core
 dxos/network-manager --> dxos/credentials
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/keyring
-dxos/keyring --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
-dxos/keyring --> dxos/random-access-storage
+dxos/feed-store --> dxos/feeds
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/credentials --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 dxos/network-manager --> dxos/messaging
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
@@ -159,7 +161,11 @@ dxos/client-services --> dxos/config
 dxos/client-services --> dxos/echo-db
 dxos/echo-db --> dxos/halo-protocol
 dxos/halo-protocol --> dxos/keyring
+dxos/keyring --> dxos/crypto
+dxos/keyring --> dxos/protocols
+dxos/keyring --> dxos/random-access-storage
 dxos/model-factory --> dxos/feed-store
+dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
 dxos/echo-db --> dxos/object-model
 dxos/object-model --> dxos/model-factory
@@ -188,6 +194,7 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/echo-db`](../../../core/echo/echo-db/docs/README.md) |  |
 | [`@dxos/feed-store`](../../../common/feed-store/docs/README.md) |  |
+| [`@dxos/feeds`](../../../common/feeds/docs/README.md) |  |
 | [`@dxos/gem-core`](../../../gem/gem-core/docs/README.md) | &check; |
 | [`@dxos/gem-spore`](../../../gem/gem-spore/docs/README.md) | &check; |
 | [`@dxos/halo-protocol`](../../../core/halo/halo-protocol/docs/README.md) |  |
@@ -209,7 +216,7 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/react-registry-client`](../../../sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../sdk/react-toolkit/docs/README.md) | &check; |
 | [`@dxos/registry-client`](../../../sdk/registry-client/docs/README.md) |  |
-| [`@dxos/rpc`](../../../common/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../common/rpc-tunnel/docs/README.md) |  |
+| [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) |  |
+| [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/testutils`](../../../common/testutils/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

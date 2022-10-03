@@ -5,12 +5,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/src/browser/index.js",
     "node:assert": "assert",
-    "node:path": "path-browserify"
+    "node:path": "path-browserify",
+    "./dist/src/index.js": "./dist/src/browser/index.js"
   },
+  "types": "./dist/src/index.d.ts",
   "files": [
     "dist",
     "src"

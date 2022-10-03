@@ -592,17 +592,25 @@ importers:
   packages/common/crypto:
     specifiers:
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@types/crypto-js': ~4.0.2
+      '@types/debug': ^4.1.7
+      '@types/node': ^16.11.58
       assert: ^2.0.0
       crypto-js: ^3.1.9-1
       hypercore-crypto: ^2.3.0
+      mocha: ^8.4.0
     dependencies:
       '@dxos/keys': link:../keys
+      '@dxos/log': link:../log
       assert: 2.0.0
       crypto-js: 3.3.0
       hypercore-crypto: 2.3.2
     devDependencies:
       '@types/crypto-js': 4.0.2
+      '@types/debug': 4.1.7
+      '@types/node': 16.11.62
+      mocha: 8.4.0
 
   packages/common/crypto-names:
     specifiers:
@@ -675,7 +683,6 @@ importers:
       through2: ^3.0.1
     dependencies:
       '@dxos/async': link:../async
-      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/util': link:../util
@@ -693,6 +700,7 @@ importers:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
       '@dxos/crypto': link:../crypto
+      '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../random-access-storage
       '@types/debug': 4.1.7
@@ -800,11 +808,10 @@ importers:
       '@types/jest': ^27.4.1
       '@types/node': ^16.11.58
       typescript: ^4.7.2
-    dependencies:
-      '@types/jest': 27.5.2
-      '@types/node': 16.11.62
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/jest': 27.5.2
+      '@types/node': 16.11.62
       typescript: 4.7.4
 
   packages/common/typedoc:
@@ -1134,6 +1141,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
@@ -1148,6 +1156,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/keyring': link:../keyring
       '@dxos/keys': link:../../../common/keys
@@ -1165,6 +1174,7 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -1177,6 +1187,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -3366,7 +3377,6 @@ importers:
       '@types/jest': ^27.4.1
       '@types/lodash': ^4.14.182
       '@types/lodash.defaultsdeep': ^4.6.6
-      '@types/madge': ^5.0.0
       '@types/minimatch': ^5.1.2
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
@@ -3404,7 +3414,6 @@ importers:
       '@types/jest': 27.5.2
       '@types/lodash': 4.14.184
       '@types/lodash.defaultsdeep': 4.6.7
-      '@types/madge': 5.0.0
       '@types/minimatch': 5.1.2
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
@@ -8090,6 +8099,7 @@ packages:
       '@emotion/weak-memoize': 0.2.5
       hoist-non-react-statics: 3.3.2
       react: 17.0.2
+    dev: true
 
   /@emotion/react/11.9.3_uup2uey566i5oc4vbdx2ndyvia:
     resolution: {integrity: sha512-g9Q1GcTOlzOEjqwuLF/Zd9LC+4FljjPjDfxSM7KmEakm+hsHXk+bYZ2q+/hTJzr0OUNkujo72pXLQvXj6H+GJQ==}
@@ -8148,6 +8158,7 @@ packages:
       '@emotion/serialize': 1.0.4
       '@emotion/utils': 1.1.0
       react: 17.0.2
+    dev: true
 
   /@emotion/styled/11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy:
     resolution: {integrity: sha512-o3sBNwbtoVz9v7WB1/Y/AmXl69YHmei2mrVnK7JgyBJ//Rst5yqPZCecEJlMlJrFeWHp+ki/54uN265V2pEcXA==}
@@ -9370,8 +9381,8 @@ packages:
     dependencies:
       '@babel/runtime': 7.17.2
       '@emotion/cache': 11.9.3
-      '@emotion/react': 11.9.3_u2aypivye4tius5ftakppbroiy
-      '@emotion/styled': 11.9.3_2w7x3jlgezktc4gauegs5xdsga
+      '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
+      '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       csstype: 3.1.0
       prop-types: 15.8.1
       react: 17.0.2
@@ -15095,12 +15106,6 @@ packages:
 
   /@types/long/4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
-
-  /@types/madge/5.0.0:
-    resolution: {integrity: sha512-Son5Z121knxCXlQM3Q0ivh0OP8Fix4ztGl0VfA9JybQMPQprc2K4jtTaRc3IhGyBy6ku5cWKJxEuj8zePiZbBQ==}
-    dependencies:
-      '@types/node': 17.0.45
-    dev: true
 
   /@types/mdast/3.0.10:
     resolution: {integrity: sha512-W864tg/Osz1+9f4lrGTZpCSO5/z4608eUp19tbozkq2HJK6i3z1kT0H9tlADXuYIb1YYOBByU4Jsqkk75q48qA==}
