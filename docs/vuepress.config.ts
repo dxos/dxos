@@ -13,6 +13,18 @@ import { apiSidebar, DOCS_PATH, packageToModule, PINNED_PACKAGES, showcasePlugin
 const config: UserConfig = defineUserConfig({
   title: 'DXOS',
   description: 'DXOS is an Operating System for Decentralized Software',
+  pagePatterns: [
+    // Defaults
+    '**/*.md',
+    '!.vuepress',
+    '!node_modules',
+
+    // TODO(wittjosiah): If we want to include these we need to fix links to diagrams to Vuepress can resolve them.
+    '!assets',
+    '!contributing',
+    '!design',
+    '!legacy'
+  ],
   // Config: https://vuepress.github.io/reference/default-theme/config.html
   theme: defaultTheme({
     logo: '/images/dxos.svg',
