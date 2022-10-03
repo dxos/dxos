@@ -16,7 +16,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:37](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L37)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L37)
 
 ## Properties
 
@@ -26,7 +26,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:35](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L35)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L35)
 
 ## Accessors
 
@@ -43,7 +43,7 @@ addPartyFeed functions.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:49](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L49)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L49)
 
 ___
 
@@ -57,7 +57,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:41](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L41)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L41)
 
 ## Methods
 
@@ -71,21 +71,19 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:85](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L85)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:85](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L85)
 
 ___
 
-### addParty
+### addSpace
 
-**addParty**(`partyKey`): `Promise`<`void`\>
-
-Adds new party to store and saves it in persistent storage.
+**addSpace**(`record`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `record` | `PartyMetadata` |
 
 #### Returns
 
@@ -93,31 +91,7 @@ Adds new party to store and saves it in persistent storage.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:122](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L122)
-
-___
-
-### addPartyFeed
-
-**addPartyFeed**(`partyKey`, `feedKey`): `Promise`<`void`\>
-
-Adds feed key to the party specified by public key and saves updated data in persistent storage.
-Creates party if it doesn't exist. Does nothing if party already has feed with given key.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `feedKey` | `PublicKey` |
-
-#### Returns
-
-`Promise`<`void`\>
-
-#### Defined in
-
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:138](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L138)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:130](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L130)
 
 ___
 
@@ -133,52 +107,21 @@ Clears storage - doesn't work for now.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:114](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L114)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:114](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L114)
 
 ___
 
-### getParty
+### getIdentityRecord
 
-**getParty**(`partyKey`): `undefined` \| `PartyMetadata`
-
-Returns party with given public key.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `partyKey` | `PublicKey` |
+**getIdentityRecord**(): `undefined` \| `IdentityRecord`
 
 #### Returns
 
-`undefined` \| `PartyMetadata`
+`undefined` \| `IdentityRecord`
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:178](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L178)
-
-___
-
-### hasFeed
-
-**hasFeed**(`partyKey`, `feedKey`): `boolean`
-
-Checks if a party with given key has a feed with given key.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `feedKey` | `PublicKey` |
-
-#### Returns
-
-`boolean`
-
-#### Defined in
-
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:185](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L185)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:119](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L119)
 
 ___
 
@@ -194,24 +137,19 @@ Loads metadata from persistent storage.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:56](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L56)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:56](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L56)
 
 ___
 
-### setDataFeed
+### setIdentityRecord
 
-**setDataFeed**(`partyKey`, `feedKey`): `Promise`<`void`\>
-
-Sets the data feed key in the party specified by public key and saves updated data in persistent storage.
-Update party's feed list.
-Creates party if it doesn't exist. Does nothing if party already has feed with given key.
+**setIdentityRecord**(`record`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `feedKey` | `PublicKey` |
+| `record` | `IdentityRecord` |
 
 #### Returns
 
@@ -219,46 +157,4 @@ Creates party if it doesn't exist. Does nothing if party already has feed with g
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:168](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L168)
-
-___
-
-### setGenesisFeed
-
-**setGenesisFeed**(`partyKey`, `feedKey`): `Promise`<`void`\>
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `feedKey` | `PublicKey` |
-
-#### Returns
-
-`Promise`<`void`\>
-
-#### Defined in
-
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:155](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L155)
-
-___
-
-### setTimeframe
-
-**setTimeframe**(`partyKey`, `timeframe`): `Promise`<`void`\>
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `timeframe` | `Timeframe` |
-
-#### Returns
-
-`Promise`<`void`\>
-
-#### Defined in
-
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:193](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L193)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:123](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L123)

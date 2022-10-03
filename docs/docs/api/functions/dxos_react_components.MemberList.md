@@ -11,7 +11,7 @@ List of member avatars.
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.members` | `PartyMember`[] |
+| `__namedParameters.members` | `any`[] |
 
 #### Returns
 

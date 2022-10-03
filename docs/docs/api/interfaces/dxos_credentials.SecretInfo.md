@@ -12,7 +12,7 @@ Info required for offline invitations.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:16](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/greet/invitation.ts#L16)
+[packages/core/halo/credentials/src/invitations.ts:11](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/invitations.ts#L11)
 
 ___
 
@@ -22,4 +22,4 @@ ___
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:15](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/greet/invitation.ts#L15)
+[packages/core/halo/credentials/src/invitations.ts:10](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/invitations.ts#L10)

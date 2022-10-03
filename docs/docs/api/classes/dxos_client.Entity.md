@@ -43,7 +43,7 @@ Subclassed by Item and Link.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:16
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:16
 
 ## Properties
 
@@ -53,7 +53,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:16
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:12
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:12
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:15
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:15
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:13
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:13
 
 ## Accessors
 
@@ -107,7 +107,7 @@ packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:13
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ## Methods
 
@@ -179,4 +179,4 @@ Subscribe for updates.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:25
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:25

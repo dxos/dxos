@@ -13,4 +13,4 @@
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:14

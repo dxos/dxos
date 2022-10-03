@@ -2,7 +2,7 @@
 
 [@dxos/react-client](../modules/dxos_react_client.md).useContacts
 
-**useContacts**(): `PartyMember`[]
+**useContacts**(): `any`[]
 
 Returns all known Contacts across all Parties.
 Contacts are known members of a common Party.
@@ -10,7 +10,7 @@ Requires ClientContext to be set via ClientProvider.
 
 #### Returns
 
-`PartyMember`[]
+`any`[]
 
 #### Defined in
 

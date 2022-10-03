@@ -18,7 +18,7 @@ SwarmId => info
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:47](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L47)
+[packages/core/mesh/network-manager/src/connection-log.ts:47](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L47)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:49](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L49)
+[packages/core/mesh/network-manager/src/connection-log.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L49)
 
 ## Accessors
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:55](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L55)
+[packages/core/mesh/network-manager/src/connection-log.ts:55](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L55)
 
 ## Methods
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:51](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L51)
+[packages/core/mesh/network-manager/src/connection-log.ts:51](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L51)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:59](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L59)
+[packages/core/mesh/network-manager/src/connection-log.ts:59](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L59)
 
 ___
 
@@ -102,4 +102,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:120](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L120)
+[packages/core/mesh/network-manager/src/connection-log.ts:120](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L120)

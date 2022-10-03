@@ -33,7 +33,7 @@ Reactive query results.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:14
 
 ## Properties
 
@@ -43,7 +43,7 @@ packages/echo/echo-db/dist/src/api/result-set.d.ts:14
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:9
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:9
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:8
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:8
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:7
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:7
 
 ___
 
@@ -75,7 +75,7 @@ Triggered when `value` updates.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:13
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:13
 
 ## Accessors
 
@@ -89,7 +89,7 @@ packages/echo/echo-db/dist/src/api/result-set.d.ts:13
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:16
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:16
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:15
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:15
 
 ## Methods
 
@@ -133,7 +133,7 @@ Subscribe for updates.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:21
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:21
 
 ___
 
@@ -157,4 +157,4 @@ Current value is also checked.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/result-set.d.ts:27
+packages/core/echo/echo-db/dist/src/packlets/api/result-set.d.ts:27

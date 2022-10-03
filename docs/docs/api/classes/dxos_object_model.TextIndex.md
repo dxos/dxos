@@ -18,7 +18,7 @@ Caching text search.
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:24](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L24)
+[packages/core/echo/object-model/src/text-index.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L24)
 
 ## Properties
 
@@ -28,7 +28,7 @@ Caching text search.
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:20](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L20)
+[packages/core/echo/object-model/src/text-index.ts:20](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L20)
 
 ___
 
@@ -38,7 +38,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:22](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L22)
+[packages/core/echo/object-model/src/text-index.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L22)
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:18](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L18)
+[packages/core/echo/object-model/src/text-index.ts:18](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L18)
 
 ## Methods
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:44](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L44)
+[packages/core/echo/object-model/src/text-index.ts:44](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L44)
 
 ___
 
@@ -88,4 +88,4 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/text-index.ts:35](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/text-index.ts#L35)
+[packages/core/echo/object-model/src/text-index.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/text-index.ts#L35)

@@ -49,7 +49,7 @@ Items are constructed by the `Database` object.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:62](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L62)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:63](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L63)
 
 ## Properties
 
@@ -62,7 +62,7 @@ Item can be restored until garbage collection (e.g., via snapshots).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:33](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L33)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L34)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L29)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L29)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L19)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:19](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L19)
 
 ___
 
@@ -102,7 +102,7 @@ Parent item (or null if this item is a root item).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:27](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L27)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L28)
 
 ## Accessors
 
@@ -116,7 +116,7 @@ Parent item (or null if this item is a root item).
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:90](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L90)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:91](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L91)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:82](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L82)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:83](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L83)
 
 ___
 
@@ -148,7 +148,7 @@ Entity.id
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L41)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L41)
 
 ___
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:94](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L94)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:95](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L95)
 
 ___
 
@@ -180,7 +180,7 @@ Entity.model
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L53)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:53](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L53)
 
 ___
 
@@ -198,7 +198,7 @@ Entity.modelMeta
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L49)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L49)
 
 ___
 
@@ -212,7 +212,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:86](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L86)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:87](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L87)
 
 ___
 
@@ -226,7 +226,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:78](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L78)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:79](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L79)
 
 ___
 
@@ -240,7 +240,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:98](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L98)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:99](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L99)
 
 ___
 
@@ -258,7 +258,7 @@ Entity.type
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L45)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L45)
 
 ## Methods
 
@@ -282,7 +282,7 @@ Process a mutation from the stream.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:184](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L184)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:185](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L185)
 
 ___
 
@@ -304,7 +304,7 @@ Atomically update parent/child relationship.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:214](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L214)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:215](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L215)
 
 ___
 
@@ -320,7 +320,7 @@ Delete the item.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:117](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L117)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:118](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L118)
 
 ___
 
@@ -336,7 +336,7 @@ Restore deleted item.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:140](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L140)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:141](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L141)
 
 ___
 
@@ -352,7 +352,7 @@ Returns a selection context, which can be used to traverse the object graph star
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:105](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L105)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:106](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L106)
 
 ___
 
@@ -372,7 +372,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:161](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L161)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:162](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L162)
 
 ___
 
@@ -410,7 +410,7 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/entity.ts#L65)
+[packages/core/echo/echo-db/src/packlets/database/entity.ts:65](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/entity.ts#L65)
 
 ___
 
@@ -424,4 +424,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item.ts:74](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item.ts#L74)
+[packages/core/echo/echo-db/src/packlets/database/item.ts:75](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item.ts#L75)

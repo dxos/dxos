@@ -16,4 +16,4 @@ Protobuf schema json.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/extension.ts#L35)
+[packages/core/mesh/mesh-protocol/src/extension.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/extension.ts#L35)

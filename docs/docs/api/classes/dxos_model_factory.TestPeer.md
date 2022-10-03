@@ -29,7 +29,7 @@
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:130](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L130)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:131](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L131)
 
 ## Properties
 
@@ -39,7 +39,7 @@
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:132](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L132)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:133](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L133)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:128](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L128)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:129](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L129)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:131](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L131)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:132](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L132)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:126](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L126)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:127](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L127)
 
 ## Accessors
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:135](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L135)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:136](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L136)
 
 ## Methods
 
@@ -103,4 +103,4 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-rig.ts:139](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-rig.ts#L139)
+[packages/core/echo/model-factory/src/testing/test-rig.ts:140](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-rig.ts#L140)

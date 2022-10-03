@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/errors.ts:9](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/errors.ts#L9)
+[packages/core/mesh/mesh-protocol/src/errors.ts:9](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/errors.ts#L9)

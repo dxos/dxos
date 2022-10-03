@@ -29,7 +29,7 @@ Model&lt;Doc, Mutation\&gt;.constructor
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:50](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L50)
+[packages/core/echo/text-model/src/text-model.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L49)
 
 ## Properties
 
@@ -51,7 +51,7 @@ Model.\_getState
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:11
+packages/core/echo/model-factory/dist/src/model.d.ts:11
 
 ___
 
@@ -65,7 +65,7 @@ Model.update
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:13
+packages/core/echo/model-factory/dist/src/model.d.ts:13
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:43](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L43)
+[packages/core/echo/text-model/src/text-model.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L42)
 
 ## Accessors
 
@@ -89,7 +89,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:60](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L60)
+[packages/core/echo/text-model/src/text-model.ts:59](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L59)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:56](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L56)
+[packages/core/echo/text-model/src/text-model.ts:55](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L55)
 
 ___
 
@@ -121,7 +121,7 @@ Model.itemId
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:27
+packages/core/echo/model-factory/dist/src/model.d.ts:27
 
 ___
 
@@ -139,7 +139,7 @@ Model.modelMeta
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:26
+packages/core/echo/model-factory/dist/src/model.d.ts:26
 
 ___
 
@@ -157,7 +157,7 @@ Model.readOnly
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:28
+packages/core/echo/model-factory/dist/src/model.d.ts:28
 
 ___
 
@@ -171,7 +171,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:65](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L65)
+[packages/core/echo/text-model/src/text-model.ts:64](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L64)
 
 ## Methods
 
@@ -192,7 +192,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:69](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L69)
+[packages/core/echo/text-model/src/text-model.ts:68](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L68)
 
 ___
 
@@ -214,7 +214,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:101](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L101)
+[packages/core/echo/text-model/src/text-model.ts:100](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L100)
 
 ___
 
@@ -234,7 +234,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:83](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L83)
+[packages/core/echo/text-model/src/text-model.ts:82](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L82)
 
 ___
 
@@ -254,7 +254,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:79](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L79)
+[packages/core/echo/text-model/src/text-model.ts:78](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L78)
 
 ___
 
@@ -275,7 +275,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:138](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L138)
+[packages/core/echo/text-model/src/text-model.ts:137](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L137)
 
 ___
 
@@ -296,7 +296,7 @@ ___
 
 #### Defined in
 
-[packages/echo/text-model/src/text-model.ts:142](https://github.com/dxos/dxos/blob/main/packages/echo/text-model/src/text-model.ts#L142)
+[packages/core/echo/text-model/src/text-model.ts:141](https://github.com/dxos/dxos/blob/main/packages/core/echo/text-model/src/text-model.ts#L141)
 
 ___
 
@@ -326,7 +326,7 @@ Model.subscribe
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:29
+packages/core/echo/model-factory/dist/src/model.d.ts:29
 
 ___
 
@@ -349,7 +349,7 @@ Model.toJSON
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:22
+packages/core/echo/model-factory/dist/src/model.d.ts:22
 
 ___
 
@@ -367,7 +367,7 @@ Model.toString
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:21
+packages/core/echo/model-factory/dist/src/model.d.ts:21
 
 ___
 
@@ -393,4 +393,4 @@ Model.write
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:33
+packages/core/echo/model-factory/dist/src/model.d.ts:33

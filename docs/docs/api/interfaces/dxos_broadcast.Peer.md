@@ -10,4 +10,4 @@
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:64](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L64)
+[packages/core/mesh/broadcast/src/broadcast.ts:64](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L64)

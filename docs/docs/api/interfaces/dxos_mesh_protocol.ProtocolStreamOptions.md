@@ -20,7 +20,7 @@ ProtocolStream.ProtocolStreamCtorOpts.encrypted
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:32](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L32)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L32)
 
 ___
 
@@ -32,7 +32,7 @@ Match the discoveryKey with a publicKey to do the handshake.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:38](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L38)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L38)
 
 ___
 
@@ -44,7 +44,7 @@ You can use this to detect if you connect to yourself.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:30](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L30)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L30)
 
 ___
 
@@ -65,7 +65,7 @@ ProtocolStream.ProtocolStreamCtorOpts.keyPair
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:38](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L38)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L38)
 
 ___
 
@@ -81,7 +81,7 @@ ProtocolStream.ProtocolStreamCtorOpts.live
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L34)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L34)
 
 ___
 
@@ -95,7 +95,7 @@ ProtocolStream.ProtocolStreamCtorOpts.noise
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L34)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L34)
 
 ___
 
@@ -124,7 +124,7 @@ ProtocolStream.ProtocolStreamCtorOpts.onauthenticate
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:40](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L40)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L40)
 
 ___
 
@@ -153,7 +153,7 @@ ProtocolStream.ProtocolStreamCtorOpts.onchannelclose
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:46](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L46)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:46](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L46)
 
 ___
 
@@ -181,7 +181,7 @@ ProtocolStream.ProtocolStreamCtorOpts.ondiscoverykey
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:44](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L44)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:44](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L44)
 
 ___
 
@@ -209,7 +209,7 @@ ProtocolStream.ProtocolStreamCtorOpts.onhandshake
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:42](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L42)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L42)
 
 ___
 
@@ -223,4 +223,4 @@ ProtocolStream.ProtocolStreamCtorOpts.timeout
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/shims.d.ts:36](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/shims.d.ts#L36)
+[packages/core/mesh/mesh-protocol/src/shims.d.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/shims.d.ts#L36)

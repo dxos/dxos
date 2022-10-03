@@ -14,7 +14,7 @@ Do not return deleted items. Default behaviour.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:31
+packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:31
 
 ___
 
@@ -26,7 +26,7 @@ Return deleted and regular items.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:35
+packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:35
 
 ___
 
@@ -38,4 +38,4 @@ Return only deleted items.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:39
+packages/core/echo/echo-db/dist/src/packlets/database/selection/queries.d.ts:39

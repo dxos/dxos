@@ -24,4 +24,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/subscription.ts:15](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/subscription.ts#L15)
+[packages/core/echo/echo-db/src/packlets/api/subscription.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/subscription.ts#L15)

@@ -16,4 +16,4 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:797
+packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:797

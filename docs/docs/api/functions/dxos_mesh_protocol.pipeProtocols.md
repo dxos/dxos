@@ -20,4 +20,4 @@ If protocol is closed because of an error, this error will be propagated through
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/testing/util.ts:17](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/testing/util.ts#L17)
+[packages/core/mesh/mesh-protocol/src/testing/util.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/testing/util.ts#L17)

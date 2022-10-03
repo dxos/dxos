@@ -12,4 +12,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:25](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L25)
+[packages/core/echo/echo-db/src/packlets/database/selection/queries.ts:25](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/queries.ts#L25)

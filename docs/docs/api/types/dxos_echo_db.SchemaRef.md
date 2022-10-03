@@ -13,4 +13,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:13](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/schema.ts#L13)
+[packages/core/echo/echo-db/src/packlets/api/schema.ts:13](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/schema.ts#L13)

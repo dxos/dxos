@@ -48,7 +48,7 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:16
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:16
 
 ## Properties
 
@@ -62,7 +62,7 @@ packages/echo/echo-db/dist/src/packlets/database/link.d.ts:16
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
 
 ## Accessors
 
@@ -94,7 +94,7 @@ Entity.id
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:17
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:17
 
 ___
 
@@ -126,7 +126,7 @@ Entity.model
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
 
 ___
 
@@ -144,7 +144,7 @@ Entity.modelMeta
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
 
 ___
 
@@ -158,7 +158,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:20
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:20
 
 ___
 
@@ -172,7 +172,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:18
 
 ___
 
@@ -186,7 +186,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:21
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:21
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/link.d.ts:19
+packages/core/echo/echo-db/dist/src/packlets/database/link.d.ts:19
 
 ___
 
@@ -218,7 +218,7 @@ Entity.type
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ## Methods
 
@@ -252,4 +252,4 @@ Subscribe for updates.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:25
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:25

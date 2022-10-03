@@ -20,17 +20,17 @@ Manages key exchange and feed replication.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:66](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L66)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:67](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L67)
 
 ## Properties
 
 ### \_load
 
- `Private` **\_load**: `LoadFunction`
+ `Private` `Readonly` **\_load**: `LoadFunction`
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:62](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L62)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:63](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L63)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:61](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L61)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:62](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L62)
 
 ___
 
@@ -56,27 +56,27 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:60](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L60)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:61](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L61)
 
 ___
 
 ### \_replicate
 
- `Private` **\_replicate**: `ReplicateFunction`
+ `Private` `Readonly` **\_replicate**: `ReplicateFunction`
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:64](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L64)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:65](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L65)
 
 ___
 
 ### \_subscribe
 
- `Private` **\_subscribe**: `SubscribeFunction`
+ `Private` `Readonly` **\_subscribe**: `SubscribeFunction`
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:63](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L63)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:64](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L64)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:59](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L59)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L60)
 
 ## Methods
 
@@ -106,7 +106,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:178](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L178)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:179](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L179)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:174](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L174)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:175](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L175)
 
 ___
 
@@ -149,7 +149,7 @@ Start replicating topics.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:107](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L107)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:108](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L108)
 
 ___
 
@@ -169,7 +169,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:92](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L92)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:93](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L93)
 
 ___
 
@@ -192,7 +192,7 @@ Handles key exchange requests.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:140](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L140)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:141](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L141)
 
 ___
 
@@ -213,7 +213,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:159](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L159)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:160](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L160)
 
 ___
 
@@ -229,4 +229,4 @@ Creates a protocol extension for key exchange.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:80](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L80)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:81](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L81)

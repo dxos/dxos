@@ -26,4 +26,4 @@ Factory for specific item selector.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:60](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L60)
+[packages/core/echo/echo-db/src/packlets/database/selection/selection.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/selection.ts#L60)

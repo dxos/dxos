@@ -31,7 +31,7 @@ Model<Message[], Message\>.constructor
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:20
+packages/core/echo/model-factory/dist/src/model.d.ts:20
 
 ## Properties
 
@@ -53,7 +53,7 @@ Model.\_getState
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:11
+packages/core/echo/model-factory/dist/src/model.d.ts:11
 
 ___
 
@@ -67,7 +67,7 @@ Model.update
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:13
+packages/core/echo/model-factory/dist/src/model.d.ts:13
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/messenger-model/src/model.ts#L34)
+[packages/core/echo/messenger-model/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/echo/messenger-model/src/model.ts#L34)
 
 ## Accessors
 
@@ -95,7 +95,7 @@ Model.itemId
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:27
+packages/core/echo/model-factory/dist/src/model.d.ts:27
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/main/packages/echo/messenger-model/src/model.ts#L40)
+[packages/core/echo/messenger-model/src/model.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/echo/messenger-model/src/model.ts#L40)
 
 ___
 
@@ -127,7 +127,7 @@ Model.modelMeta
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:26
+packages/core/echo/model-factory/dist/src/model.d.ts:26
 
 ___
 
@@ -145,7 +145,7 @@ Model.readOnly
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:28
+packages/core/echo/model-factory/dist/src/model.d.ts:28
 
 ## Methods
 
@@ -165,7 +165,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/main/packages/echo/messenger-model/src/model.ts#L44)
+[packages/core/echo/messenger-model/src/model.ts:44](https://github.com/dxos/dxos/blob/main/packages/core/echo/messenger-model/src/model.ts#L44)
 
 ___
 
@@ -195,7 +195,7 @@ Model.subscribe
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:29
+packages/core/echo/model-factory/dist/src/model.d.ts:29
 
 ___
 
@@ -218,7 +218,7 @@ Model.toJSON
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:22
+packages/core/echo/model-factory/dist/src/model.d.ts:22
 
 ___
 
@@ -236,7 +236,7 @@ Model.toString
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:21
+packages/core/echo/model-factory/dist/src/model.d.ts:21
 
 ___
 
@@ -262,4 +262,4 @@ Model.write
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:33
+packages/core/echo/model-factory/dist/src/model.d.ts:33

@@ -18,7 +18,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:77
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:77
 
 ___
 
@@ -33,7 +33,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:84
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:84
 
 ___
 
@@ -48,7 +48,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:55
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:55
 
 ___
 
@@ -64,19 +64,19 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:63
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:63
 
 ___
 
 ### publicKey
 
- **publicKey**: `PublicKey`
+ **publicKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 The public key as a Buffer (required).
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:41
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:41
 
 ___
 
@@ -91,7 +91,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:48
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:48
 
 ___
 
@@ -106,7 +106,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:70
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:70
 
 ___
 
@@ -118,4 +118,4 @@ The `KeyType` type of the key. This is often unknown for keys from other sources
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:37
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:37

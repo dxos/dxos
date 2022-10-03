@@ -20,7 +20,7 @@ Party API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L35)
+[packages/sdk/client/src/packlets/api/echo.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L31)
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L32)
+[packages/sdk/client/src/packlets/api/echo.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L28)
 
 ___
 
@@ -48,21 +48,21 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L31)
+[packages/sdk/client/src/packlets/api/echo.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L27)
 
 ___
 
 ### key
 
-`get` **key**(): `PublicKey`
+`get` **key**(): [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Returns
 
-`PublicKey`
+[`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:30](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L30)
+[packages/sdk/client/src/packlets/api/echo.ts:26](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L26)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:52](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L52)
+[packages/sdk/client/src/packlets/api/echo.ts:48](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L48)
 
 ___
 
@@ -111,7 +111,7 @@ Returns a reducer selection context.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:37](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L37)
+[packages/sdk/client/src/packlets/api/echo.ts:33](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L33)
 
 ___
 
@@ -139,7 +139,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:36](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L36)
+[packages/sdk/client/src/packlets/api/echo.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L32)
 
 ## Methods
 
@@ -153,7 +153,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L43)
+[packages/sdk/client/src/packlets/api/echo.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L39)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:63](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L63)
+[packages/sdk/client/src/packlets/api/echo.ts:59](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L59)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:65](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L65)
+[packages/sdk/client/src/packlets/api/echo.ts:61](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L61)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:40](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L40)
+[packages/sdk/client/src/packlets/api/echo.ts:36](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L36)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:50](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L50)
+[packages/sdk/client/src/packlets/api/echo.ts:46](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L46)
 
 ___
 
@@ -238,7 +238,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:60](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L60)
+[packages/sdk/client/src/packlets/api/echo.ts:56](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L56)
 
 ___
 
@@ -252,7 +252,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:47](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L47)
+[packages/sdk/client/src/packlets/api/echo.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L43)
 
 ___
 
@@ -266,7 +266,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L39)
+[packages/sdk/client/src/packlets/api/echo.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L35)
 
 ___
 
@@ -280,21 +280,21 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:42](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L42)
+[packages/sdk/client/src/packlets/api/echo.ts:38](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L38)
 
 ___
 
 ### queryMembers
 
-**queryMembers**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+**queryMembers**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<`any`\>
 
 #### Returns
 
-[`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+[`ResultSet`](../classes/dxos_client.ResultSet.md)<`any`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:62](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L62)
+[packages/sdk/client/src/packlets/api/echo.ts:58](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L58)
 
 ___
 
@@ -307,7 +307,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `active` | `boolean` |
-| `options` | `ActivationOptions` |
+| `options` | `any` |
 
 #### Returns
 
@@ -315,7 +315,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L44)
+[packages/sdk/client/src/packlets/api/echo.ts:40](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L40)
 
 ___
 
@@ -338,7 +338,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:56](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L56)
+[packages/sdk/client/src/packlets/api/echo.ts:52](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L52)
 
 ___
 
@@ -358,4 +358,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:46](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L46)
+[packages/sdk/client/src/packlets/api/echo.ts:42](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L42)

@@ -21,7 +21,7 @@ Invitation created by sender.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L39)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:38](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L38)
 
 ## Properties
 
@@ -31,7 +31,7 @@ Invitation created by sender.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:15](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L15)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:14](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L14)
 
 ___
 
@@ -41,7 +41,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:17](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L17)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:16](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L16)
 
 ___
 
@@ -51,7 +51,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:37](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L37)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:36](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L36)
 
 ___
 
@@ -63,7 +63,7 @@ Fired when the remote peer connects.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:24](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L24)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:23](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L23)
 
 ___
 
@@ -75,7 +75,7 @@ Fired when there's an error in the invitation process.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L35)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:34](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L34)
 
 ___
 
@@ -87,7 +87,7 @@ Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L29)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L28)
 
 ## Accessors
 
@@ -101,7 +101,7 @@ Fired when the invitation process completes successfully.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:54](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L54)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:53](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L53)
 
 ___
 
@@ -117,7 +117,7 @@ True if the connected event has been fired.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:65](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L65)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:64](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L64)
 
 ___
 
@@ -131,7 +131,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:58](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L58)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:57](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L57)
 
 ## Methods
 
@@ -147,7 +147,7 @@ Cancel the invitation.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:83](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L83)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:82](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L82)
 
 ___
 
@@ -161,7 +161,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:89](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L89)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:88](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L88)
 
 ___
 
@@ -183,4 +183,4 @@ Wait until connected.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/invitations/invitation-request.ts:72](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitations/invitation-request.ts#L72)
+[packages/sdk/client/src/packlets/api/invitation-request.ts:71](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/invitation-request.ts#L71)
