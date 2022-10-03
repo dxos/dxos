@@ -41,6 +41,9 @@ jobs:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
+            - run: pnpm nx run-many --target=build
+            - run: pnpm nx run-many --target=test
+            - run: pnpm nx run-many --target=lint
             - run:
                 command: pnpm nx run-many --target=prerelease
                 no_output_timeout: 30m
@@ -67,12 +70,20 @@ jobs:
     docker:
       - *docker_image
     steps:
+      - checkout
+      - *cache_restore
+      - run: pnpm install
+      - *cache_save
+      - nx/set-shas
       - run:
           command: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=bundle
           environment:
             # TODO(wittjosiah): Remove. Currently needed for building Vite wallet app.
             NODE_OPTIONS: --max_old_space_size=8198
 
+  #
+  # Deploy applications.
+  #
   deploy:
     docker:
       - *docker_image
@@ -91,6 +102,9 @@ jobs:
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
 
+  #
+  # Nightly test run without Nx cache.
+  #
   full_test:
     docker:
       - image: ghcr.io/dxos/circleci-node:latest
@@ -112,12 +126,13 @@ workflows:
       - check:
           context:
             - Github
+      # TODO(wittjosiah): Move these jobs back into check.
       - e2e:
           context:
             - Github
-#      - bundle:
-#          context:
-#            - Github
+      - bundle:
+          context:
+            - Github
 
   deploy:
     jobs:
