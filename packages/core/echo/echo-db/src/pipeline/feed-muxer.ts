@@ -6,7 +6,7 @@ import debug from 'debug';
 import assert from 'node:assert';
 
 import { checkType } from '@dxos/debug';
-import { FeedMessageBlock } from '@dxos/feeds';
+import { FeedMessageBlock } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { IEchoStream, Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';

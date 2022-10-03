@@ -22,7 +22,6 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/feeds": "workspace:*",
     "@dxos/halo-protocol": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/feeds": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",

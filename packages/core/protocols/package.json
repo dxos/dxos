@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/feeds": "workspace:*",
     "@dxos/keys": "workspace:*",
     "assert": "^2.0.0",
     "randombytes": "^2.1.0",

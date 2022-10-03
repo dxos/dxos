@@ -653,7 +653,6 @@ importers:
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
-      '@dxos/feeds': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -684,7 +683,6 @@ importers:
       through2: ^3.0.1
     dependencies:
       '@dxos/async': link:../async
-      '@dxos/feeds': link:../feeds
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/util': link:../util
@@ -717,23 +715,6 @@ importers:
       faker: 5.5.3
       hypertrie: 5.1.1
       tempy: 1.0.1
-
-  packages/common/feeds:
-    specifiers:
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      assert: ^2.0.0
-      debug: ^4.3.3
-    dependencies:
-      '@dxos/keys': link:../keys
-      '@dxos/log': link:../log
-      '@dxos/util': link:../util
-      assert: 2.0.0
-      debug: 4.3.4
-    devDependencies:
-      '@types/debug': 4.1.7
 
   packages/common/keys:
     specifiers:
@@ -864,7 +845,6 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
-      '@dxos/feeds': workspace:*
       '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
@@ -911,7 +891,6 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
-      '@dxos/feeds': link:../../../common/feeds
       '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
@@ -1591,7 +1570,6 @@ importers:
   packages/core/protocols:
     specifiers:
       '@dxos/codec-protobuf': workspace:*
-      '@dxos/feeds': workspace:*
       '@dxos/keys': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -1601,7 +1579,6 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/feeds': link:../../common/feeds
       '@dxos/keys': link:../../common/keys
       assert: 2.0.0
       randombytes: 2.1.0

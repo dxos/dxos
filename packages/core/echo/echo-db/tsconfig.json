@@ -5,7 +5,7 @@
   },
   "include": [
     "src/packlets",
-    "src/api",
+    "src/packlets/api",
     "src/index.ts"
   ],
   "exclude": [
