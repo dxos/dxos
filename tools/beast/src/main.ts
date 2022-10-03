@@ -14,7 +14,7 @@ import { hideBin } from 'yargs/helpers';
 //     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
 import { log } from '@dxos/log';
 
-import { GraphBuilder } from './graph-builder';
+import { PackageDependencyBuilder } from './package-dependency-builder';
 import { WorkspaceProcessor } from './workspace-processor';
 
 const main = () => {
@@ -140,7 +140,7 @@ const main = () => {
         exclude: string
       }) => {
         const processor = new WorkspaceProcessor(baseDir, { verbose, include }).init();
-        const builder = new GraphBuilder(baseDir, processor, { verbose, exclude: exclude?.split(',') });
+        const builder = new PackageDependencyBuilder(baseDir, processor, { verbose, exclude: exclude?.split(',') });
         processor.getProjects(pattern).forEach(project => {
           if (verbose) {
             console.log(`Updating: ${project.name.padEnd(32)} ${project.subdir}`);

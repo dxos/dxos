@@ -57,48 +57,49 @@ subgraph common [common]
   end
 end
 
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/credentials("@dxos/credentials"):::def
-  click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
-  dxos/halo-protocol("@dxos/halo-protocol"):::def
-  click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
-end
-
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#f5f5f5,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
-  dxos/messaging("@dxos/messaging"):::def
-  click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
-  dxos/network-manager("@dxos/network-manager"):::def
-  click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
-  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
-  dxos/broadcast("@dxos/broadcast"):::def
-  click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
-  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
-  click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
-  click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
-end
+  subgraph halo [halo]
+    style halo fill:#cabade,stroke:#fff
+    dxos/credentials("@dxos/credentials"):::def
+    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+    dxos/halo-protocol("@dxos/halo-protocol"):::def
+    click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+  end
 
-subgraph echo [echo]
-  style echo fill:#b3cae6,stroke:#fff
-  dxos/echo-db("@dxos/echo-db"):::def
-  click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
-  dxos/model-factory("@dxos/model-factory"):::def
-  click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
-  dxos/object-model("@dxos/object-model"):::def
-  click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+  subgraph mesh [mesh]
+    style mesh fill:#b3e6c0,stroke:#fff
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+    dxos/messaging("@dxos/messaging"):::def
+    click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+    dxos/network-manager("@dxos/network-manager"):::def
+    click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
+    dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
+    click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
+    dxos/broadcast("@dxos/broadcast"):::def
+    click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
+    dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
+    click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
+    dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
+    click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+  end
+
+  subgraph echo [echo]
+    style echo fill:#b3cae6,stroke:#fff
+    dxos/echo-db("@dxos/echo-db"):::def
+    click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
+    dxos/model-factory("@dxos/model-factory"):::def
+    click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+    dxos/object-model("@dxos/object-model"):::def
+    click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+  end
+
 end
 
 %% Links

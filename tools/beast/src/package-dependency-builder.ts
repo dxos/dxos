@@ -15,18 +15,21 @@ const colorHash = new ColorHash({
   // hue: [ { min: 30, max: 90 }, { min: 180, max: 210 }, { min: 270, max: 285 } ]
 });
 
-type GraphBuilderOptions = {
+type PackageDependencyBuilderOptions = {
   verbose?: boolean
 
   // Don't show links for these packages.
   exclude?: string[]
 }
 
-export class GraphBuilder {
+/**
+ * Builder for a package dependency graph.
+ */
+export class PackageDependencyBuilder {
   constructor (
     private readonly _baseDir: string,
     private readonly _projectMap: ProjectMap,
-    private readonly _options: GraphBuilderOptions
+    private readonly _options: PackageDependencyBuilderOptions
   ) {}
 
   /**
@@ -148,6 +151,47 @@ export class GraphBuilder {
         return parts.pop()!; // Second to last.
       };
 
+
+
+
+      // TODO(burdon): Create folder hierarchy; create sub group for excluded folders.
+      type Folder = { label?: string, color?: string, folders?: Map<string, Folder>, packages: string[] }
+      const root = new Map<string, Folder>();
+
+      const getOrCreateFolder = (folders: Map<string, Folder>, parts: string[]): Folder => {
+        const [name, ...rest] = parts;
+        let folder = folders.get(name);
+        if (!folder) {
+          folder = {
+            label: name,
+            color: colorHash.hex(name),
+            packages: [],
+            folders: new Map<string, Folder>();
+          };
+
+          folders.set(name, folder);
+        }
+
+        if (rest.length) {
+          return getOrCreateFolder(folder.folders!, rest);
+        } else {
+          return folder;
+        }
+      };
+
+      array(visited).forEach(project => {
+        const parts = project.package.name.split('/');
+        if (this._options.exclude?.includes(project.package.name)) {
+          parts.push('_');
+        }
+
+        const folder = getOrCreateFolder(root, parts);
+        folder.packages.push(project.package.name);
+      });
+
+
+
+
       // Reduce packages into folders.
       const sectionDefs: Map<string, string[]> = array(visited).reduce((result, project) => {
         const name = project.package.name;
@@ -165,6 +209,7 @@ export class GraphBuilder {
         return result;
       }, new Map<string, string[]>());
 
+      // Create sub-graphs.
       Array.from(sectionDefs.entries()).forEach(([section, packages]) => {
         const [included, excluded] = packages.reduce<[string[], string[]]>(([included, excluded], packageName) => {
           if (this._options.exclude?.includes(packageName)) {
