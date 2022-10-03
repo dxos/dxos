@@ -18,7 +18,7 @@ import {
   MenuItem
 } from '@mui/material';
 
-import { clientServiceBundle } from '@dxos/client';
+import { clientServiceBundle } from '@dxos/client-services';
 import { MessengerModel } from '@dxos/messenger-model';
 import { ObjectModel } from '@dxos/object-model';
 import { useAsyncEffect } from '@dxos/react-async';

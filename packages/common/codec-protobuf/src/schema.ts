@@ -37,7 +37,23 @@ export class Schema<T, S = {}> {
 
   }
 
+  hasType (typeName: string): boolean {
+    if (typeName === '') {
+      return false;
+    }
+    try {
+      this._typesRoot.lookupType(typeName);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   tryGetCodecForType (typeName: string): ProtoCodec {
+    if (typeName === '') {
+      throw new Error(`Type not found: "${typeName}"`);
+    }
+
     if (typeof typeName !== 'string') {
       throw new TypeError('Expected `typeName` argument to be a string');
     }

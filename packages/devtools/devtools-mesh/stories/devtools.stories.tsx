@@ -8,6 +8,7 @@ import { MemoryRouter, NavLink, Route, Routes } from 'react-router-dom';
 
 import { Select, SelectChangeEvent, MenuItem } from '@mui/material';
 
+import { PublicKey } from '@dxos/keys';
 import {
   SignalManager,
   CommandTrace,
@@ -28,7 +29,6 @@ import {
   ConnectionLog
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { PublicKey } from '@dxos/protocols';
 import { FullScreen } from '@dxos/react-components';
 
 import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';

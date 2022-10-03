@@ -1,0 +1,37 @@
+{
+  "name": "@dxos/bot-factory-client",
+  "version": "2.33.8",
+  "description": "Bot",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "./dist/src/index.js": "./dist/browser.js",
+    "node:assert": "assert"
+  },
+  "scripts": {
+    "check": "true"
+  },
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/protocol-plugin-rpc": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/rpc": "workspace:*",
+    "assert": "^2.0.0",
+    "debug": "^4.3.3"
+  },
+  "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/messaging": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
+    "@koush/wrtc": "^0.5.3",
+    "@types/debug": "^4.1.7",
+    "jsonify": "^0.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

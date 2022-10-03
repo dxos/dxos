@@ -18,6 +18,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/util": "workspace:*",
     "@emotion/css": "^11.7.1",

@@ -1,0 +1,48 @@
+{
+  "name": "@dxos/hello-template",
+  "version": "2.33.8",
+  "private": true,
+  "description": "DXOS 'hello world' application template.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "repository": "github:dxos/dxos",
+  "scripts": {
+    "build": "tsc",
+    "bundle": "vite build",
+    "preview": "vite preview",
+    "serve": "vite",
+    "storybook": "start-storybook -p 9009 --no-open"
+  },
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-components": "workspace:*",
+    "@dxos/react-toolkit": "workspace:*",
+    "@mui/icons-material": "^5.8.0",
+    "@mui/material": "^5.8.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/react-client-testing": "workspace:*",
+    "@dxos/vite-plugin": "workspace:*",
+    "@storybook/addon-actions": "^6.5.10",
+    "@storybook/addon-essentials": "^6.5.10",
+    "@storybook/addon-interactions": "^6.5.10",
+    "@storybook/addon-links": "^6.5.10",
+    "@storybook/builder-vite": "^0.2.2",
+    "@storybook/mdx2-csf": "^0.0.3",
+    "@storybook/react": "^6.5.10",
+    "@storybook/testing-library": "^0.0.13",
+    "@types/react": "^17.0.24",
+    "@types/react-dom": "^17.0.9",
+    "@vitejs/plugin-react": "^2.0.1",
+    "require-from-string": "^2.0.2",
+    "typescript": "^4.7.2",
+    "vite": "3.0.9",
+    "vite-plugin-pwa": "^0.12.4",
+    "webpack": "^5.74.0"
+  }
+}

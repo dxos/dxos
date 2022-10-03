@@ -15,8 +15,8 @@ module.exports = {
     'dist',
     'out',
     '**/proto/gen/*',
-    'packages/common/protocols/proto/**/*',
-    'packages/sdk/client/src/packlets/proxy/version.ts',
+    'packages/core/protocols/proto/**/*',
+    'packages/sdk/client/src/version.ts',
 
     // Config
     '.eslintrc.js',

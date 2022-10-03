@@ -1,0 +1,51 @@
+//
+// Copyright 2021 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+import "dxos/echo/timeframe.proto";
+import "dxos/halo/keys.proto";
+import "dxos/halo/credentials.proto";
+
+package dxos.echo.metadata;
+
+message EchoMetadata {
+  /**
+   * Version number that is inceremnted every time there's a breaking change to the storage schema.
+   * This is used to detect if the storage schema has changed since the last time the client was run.
+   * Loading data from a different version will might result in an error.
+   */
+  int32 version = 1;
+
+  google.protobuf.Timestamp created = 2;
+  google.protobuf.Timestamp updated = 3;
+
+  // TODO(dmaretskyi): Store the device key associated with the identity.
+  optional dxos.halo.credentials.IdentityRecord identity = 10;
+
+  /// List of the data parties.
+  repeated PartyMetadata parties = 11;
+}
+
+// TODO(dmaretskyi): Cleanup numbering.
+message PartyMetadata {
+  /// Party key.
+  dxos.halo.keys.PubKey key = 1;
+
+  optional dxos.halo.keys.PubKey genesis_feed_key = 6;
+
+  /// Key of the wriatable control feed.
+  optional dxos.halo.keys.PubKey control_feed_key = 4;
+
+  /// List of all feed associated with the party.
+  repeated dxos.halo.keys.PubKey feed_keys = 2;
+
+  /// Key of the wriatable data feed.
+  optional dxos.halo.keys.PubKey data_feed_key = 3;
+
+  // Latest timeframe reached while processing party messages.
+  optional timeframe.TimeframeVector latest_timeframe = 5;
+}

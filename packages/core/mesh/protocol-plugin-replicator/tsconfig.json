@@ -1,0 +1,45 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "jest"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "src/proto/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../mesh-protocol"
+    },
+    {
+      "path": "../protocol-network-generator"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

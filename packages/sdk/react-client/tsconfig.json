@@ -15,7 +15,7 @@
   ],
   "references": [
     {
-      "path": "../../bot/bot-factory-client"
+      "path": "../../bots/bot-factory-client"
     },
     {
       "path": "../../common/async"
@@ -27,19 +27,19 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
-    },
-    {
       "path": "../../common/react-async"
     },
     {
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../client"

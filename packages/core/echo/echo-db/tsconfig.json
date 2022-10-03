@@ -1,0 +1,66 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src/packlets",
+    "src/packlets/api",
+    "src/index.ts"
+  ],
+  "exclude": [
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/codec-protobuf"
+    },
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/random-access-storage"
+    },
+    {
+      "path": "../../../common/testutils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../common/feed-store"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../halo/halo-protocol"
+    },
+    {
+      "path": "../../mesh/network-manager"
+    },
+    {
+      "path": "../../mesh/mesh-protocol"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-presence"
+    },
+    {
+      "path": "../../mesh/protocol-plugin-replicator"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../model-factory"
+    },
+    {
+      "path": "../object-model"
+    }
+  ]
+}

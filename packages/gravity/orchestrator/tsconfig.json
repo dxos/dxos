@@ -12,10 +12,10 @@
   ],
   "references": [
     {
-      "path": "../../bot/bot-factory-client"
+      "path": "../../bots/bot-factory-client"
     },
     {
-      "path": "../../bot/botkit"
+      "path": "../../bots/botkit"
     },
     {
       "path": "../../common/async"
@@ -27,12 +27,6 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/protocols"
-    },
-    {
-      "path": "../../common/rpc"
-    },
-    {
       "path": "../../common/testutils"
     },
     {
@@ -42,22 +36,25 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../echo/echo-db"
+      "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../echo/echo-protocol"
+      "path": "../../core/echo/object-model"
     },
     {
-      "path": "../../echo/object-model"
+      "path": "../../core/mesh/network-manager"
     },
     {
-      "path": "../../mesh/network-manager"
+      "path": "../../core/mesh/protocol-plugin-rpc"
     },
     {
-      "path": "../../mesh/protocol-plugin-rpc"
+      "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../mesh/signal"
+      "path": "../../core/mesh/signal"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../sdk/client"

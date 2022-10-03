@@ -4,11 +4,11 @@
   "private": true,
   "description": "Gravity dashboard.",
   "bugs": {
-    "url": "https://github.com/dxos/protocols/issues"
+    "url": "https://github.com/dxos/dxos/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dxos/protocols.git"
+    "url": "git+https://github.com/dxos/dxos.git"
   },
   "license": "MIT",
   "author": "DXOS.org",

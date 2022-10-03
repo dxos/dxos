@@ -1,0 +1,38 @@
+{
+  "sourceRoot": "packages/core/mesh/protocol-plugin-replicator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/core/mesh/protocol-plugin-replicator/dist",
+        "tsConfig": "packages/core/mesh/protocol-plugin-replicator/tsconfig.json",
+        "main": "packages/core/mesh/protocol-plugin-replicator/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/core/mesh/protocol-plugin-replicator/**/*.{ts,js}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "packages/core/mesh/protocol-plugin-replicator/coverage"
+      ],
+      "options": {
+        "jestConfig": "packages/core/mesh/protocol-plugin-replicator/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}
