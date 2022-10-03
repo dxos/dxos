@@ -25,7 +25,7 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:101](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L101)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:103](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L103)
 
 ## Properties
 
@@ -35,7 +35,7 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:99](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L99)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:101](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L101)
 
 ## Accessors
 
@@ -53,7 +53,7 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:118](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L118)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:108](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L108)
 
 ## Methods
 
@@ -71,7 +71,7 @@ Uses DataMirror to populate entities in ItemManager.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:114](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L114)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:120](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L120)
 
 ___
 
@@ -89,7 +89,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:141](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L141)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:143](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L143)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:137](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L137)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:139](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L139)
 
 ___
 
@@ -125,7 +125,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:122](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L122)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:124](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L124)
 
 ___
 
@@ -150,4 +150,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:106](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L106)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:112](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L112)

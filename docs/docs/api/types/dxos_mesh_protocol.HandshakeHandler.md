@@ -20,4 +20,4 @@
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/extension.ts:41](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/extension.ts#L41)
+[packages/core/mesh/mesh-protocol/src/extension.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/extension.ts#L41)

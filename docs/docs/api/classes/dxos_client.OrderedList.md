@@ -19,7 +19,7 @@ Utility class that wraps an `ObjectModel` and implements a linked list via key-v
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:13
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:13
 
 ## Properties
 
@@ -29,7 +29,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:13
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:8
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:8
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:9
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:9
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:12
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:12
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:10
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:10
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:11
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:11
 
 ## Accessors
 
@@ -83,7 +83,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:11
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:14
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:14
 
 ___
 
@@ -99,7 +99,7 @@ Get ordered values.
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:18
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:18
 
 ## Methods
 
@@ -113,7 +113,7 @@ packages/echo/object-model/dist/src/ordered-list.d.ts:18
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:19
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:19
 
 ___
 
@@ -135,7 +135,7 @@ Clears the ordered set with the optional values.
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:27
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:27
 
 ___
 
@@ -158,7 +158,7 @@ Links the ordered items, possibly linking them to existing items.
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:31
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:31
 
 ___
 
@@ -174,7 +174,7 @@ Refresh list from properties.
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:23
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:23
 
 ___
 
@@ -196,4 +196,4 @@ Removes the given element, possibly linked currently connected items.
 
 #### Defined in
 
-packages/echo/object-model/dist/src/ordered-list.d.ts:35
+packages/core/echo/object-model/dist/src/ordered-list.d.ts:35

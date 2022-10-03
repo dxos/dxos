@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L34)
+[packages/core/mesh/broadcast/src/broadcast.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L34)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L29)
+[packages/core/mesh/broadcast/src/broadcast.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L29)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:30](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L30)
+[packages/core/mesh/broadcast/src/broadcast.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L30)

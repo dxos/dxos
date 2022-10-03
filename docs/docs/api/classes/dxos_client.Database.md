@@ -18,11 +18,11 @@ Creates a new database instance. `database.initialize()` must be called afterwar
 | :------ | :------ |
 | `_modelFactory` | `ModelFactory` |
 | `_backend` | `DatabaseBackend` |
-| `memberKey` | `PublicKey` |
+| `memberKey` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:41
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:41
 
 ## Properties
 
@@ -32,7 +32,7 @@ packages/echo/echo-db/dist/src/packlets/database/database.d.ts:41
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:83
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:83
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:35
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:35
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:36
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:36
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:34
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:34
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:37
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:37
 
 ## Accessors
 
@@ -89,7 +89,7 @@ If the information about which entity got updated is not required prefer using `
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:53
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:53
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:43
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:43
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:42
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:42
 
 ___
 
@@ -134,7 +134,7 @@ Contains a list of all entities changed from the last update.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:48
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:48
 
 ## Methods
 
@@ -148,7 +148,7 @@ packages/echo/echo-db/dist/src/packlets/database/database.d.ts:48
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:82
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:82
 
 ___
 
@@ -176,7 +176,7 @@ Creates a new item with the given queryable type and model.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:59
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:59
 
 ___
 
@@ -204,7 +204,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:60
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:60
 
 ___
 
@@ -218,7 +218,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:81
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:81
 
 ___
 
@@ -232,7 +232,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:55
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:55
 
 ___
 
@@ -254,7 +254,7 @@ Retrieves a item from the index.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:65
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:65
 
 ___
 
@@ -268,7 +268,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:54
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:54
 
 ___
 
@@ -297,7 +297,7 @@ Returns a reducer selection context.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:80
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:80
 
 ___
 
@@ -319,7 +319,7 @@ Returns a selection context, which can be used to traverse the object graph.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:74
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:74
 
 ___
 
@@ -347,4 +347,4 @@ Waits for item matching the filter to be present and returns it.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/database.d.ts:69
+packages/core/echo/echo-db/dist/src/packlets/database/database.d.ts:69

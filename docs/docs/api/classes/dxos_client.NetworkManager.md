@@ -18,7 +18,7 @@ Manages connection to the swarm.
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:34
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:34
 
 ## Properties
 
@@ -28,7 +28,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:34
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:32
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:32
 
 ___
 
@@ -38,7 +38,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:27
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:27
 
 ___
 
@@ -48,7 +48,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:26
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:26
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:30
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:30
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:29
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:29
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:31
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:31
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:28
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:28
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:25
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:25
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:33
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:33
 
 ## Accessors
 
@@ -122,7 +122,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:33
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:37
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:37
 
 ___
 
@@ -136,21 +136,21 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:35
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:35
 
 ___
 
 ### topics
 
-`get` **topics**(): `PublicKey`[]
+`get` **topics**(): [`PublicKey`](dxos_client.PublicKey.md)[]
 
 #### Returns
 
-`PublicKey`[]
+[`PublicKey`](dxos_client.PublicKey.md)[]
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:36
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:36
 
 ## Methods
 
@@ -164,7 +164,7 @@ packages/mesh/network-manager/dist/src/network-manager.d.ts:36
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:46
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:46
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `topic` | `PublicKey` |
+| `topic` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Returns
 
@@ -184,7 +184,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:39
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:39
 
 ___
 
@@ -196,7 +196,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `topic` | `PublicKey` |
+| `topic` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Returns
 
@@ -204,7 +204,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:38
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:38
 
 ___
 
@@ -230,7 +230,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:40
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:40
 
 ___
 
@@ -242,7 +242,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `topic` | `PublicKey` |
+| `topic` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Returns
 
@@ -250,7 +250,7 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:41
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:41
 
 ___
 
@@ -266,4 +266,4 @@ ___
 
 #### Defined in
 
-packages/mesh/network-manager/dist/src/network-manager.d.ts:45
+packages/core/mesh/network-manager/dist/src/network-manager.d.ts:45

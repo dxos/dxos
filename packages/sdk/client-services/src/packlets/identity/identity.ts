@@ -11,6 +11,7 @@ import {
   createCredentialSignerWithChain, createCredentialSignerWithKey, CredentialSigner, DeviceStateMachine
 } from '@dxos/halo-protocol';
 import { PublicKey } from '@dxos/keys';
+import { ComplexSet } from '@dxos/util';
 
 export type IdentityParams = {
   identityKey: PublicKey
@@ -52,7 +53,7 @@ export class Identity {
   }
 
   // TODO(burdon): Expose state object?
-  get authorizedDeviceKeys () {
+  get authorizedDeviceKeys (): ComplexSet<PublicKey> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 

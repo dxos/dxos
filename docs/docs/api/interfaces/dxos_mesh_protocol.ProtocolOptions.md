@@ -12,7 +12,7 @@ Define a codec to encode/decode messages from extensions.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:55](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L55)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:55](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L55)
 
 ___
 
@@ -22,7 +22,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:48](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L48)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:48](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L48)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:42](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L42)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L42)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:50](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L50)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:50](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L50)
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:57](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L57)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:57](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L57)
 
 ___
 
@@ -78,7 +78,7 @@ https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:46](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L46)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:46](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L46)
 
 ___
 
@@ -88,4 +88,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:58](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L58)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:58](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L58)

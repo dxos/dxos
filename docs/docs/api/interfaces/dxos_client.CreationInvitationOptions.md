@@ -6,8 +6,8 @@
 
 ### inviteeKey
 
- `Optional` **inviteeKey**: `PublicKey`
+ `Optional` **inviteeKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:22](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L22)
+[packages/sdk/client/src/packlets/api/echo.ts:18](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L18)

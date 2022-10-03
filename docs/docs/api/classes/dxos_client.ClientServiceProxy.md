@@ -7,7 +7,7 @@ For example, the services can be located in Wallet Extension.
 
 ## Implements
 
-- [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md)
+- `ClientServiceProvider`
 
 ## Constructors
 
@@ -24,31 +24,31 @@ For example, the services can be located in Wallet Extension.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:18](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L18)
+[packages/sdk/client/src/packlets/proxies/service-proxy.ts:16](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L16)
 
 ## Properties
 
 ### \_client
 
- `Private` `Readonly` **\_client**: `ProtoRpcPeer`<[`ClientServices`](../types/dxos_client.ClientServices.md)\>
+ `Private` `Readonly` **\_client**: `ProtoRpcPeer`<`ClientServices`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:16](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L16)
+[packages/sdk/client/src/packlets/proxies/service-proxy.ts:14](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L14)
 
 ___
 
 ### services
 
- `Readonly` **services**: [`ClientServices`](../types/dxos_client.ClientServices.md)
+ `Readonly` **services**: `ClientServices`
 
 #### Implementation of
 
-[ClientServiceProvider](../interfaces/dxos_client.ClientServiceProvider.md).[services](../interfaces/dxos_client.ClientServiceProvider.md#services)
+ClientServiceProvider.services
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxies/service-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L27)
 
 ## Methods
 
@@ -62,11 +62,11 @@ ___
 
 #### Implementation of
 
-[ClientServiceProvider](../interfaces/dxos_client.ClientServiceProvider.md).[close](../interfaces/dxos_client.ClientServiceProvider.md#close)
+ClientServiceProvider.close
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L35)
+[packages/sdk/client/src/packlets/proxies/service-proxy.ts:33](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L33)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `onProgressCallback?` | (`progress`: [`OpenProgress`](../interfaces/dxos_client.OpenProgress.md)) => `void` |
+| `onProgressCallback?` | (`progress`: `any`) => `void` |
 
 #### Returns
 
@@ -86,8 +86,8 @@ ___
 
 #### Implementation of
 
-[ClientServiceProvider](../interfaces/dxos_client.ClientServiceProvider.md).[open](../interfaces/dxos_client.ClientServiceProvider.md#open)
+ClientServiceProvider.open
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/service-proxy.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/service-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxies/service-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/service-proxy.ts#L29)

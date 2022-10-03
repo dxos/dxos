@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:15](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L15)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L15)
 
 ## Properties
 
@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:13](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L13)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:13](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L13)
 
 ## Methods
 
@@ -52,7 +52,7 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:58](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L58)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:58](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L58)
 
 ___
 
@@ -80,7 +80,7 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:23](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L23)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L23)
 
 ___
 
@@ -108,7 +108,7 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:51](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L51)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:51](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L51)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:19](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L19)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:19](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L19)
 
 ___
 
@@ -142,4 +142,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/star-topology.ts:28](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/star-topology.ts#L28)
+[packages/core/mesh/network-manager/src/topology/star-topology.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/star-topology.ts#L28)

@@ -26,4 +26,4 @@ Model configuration.
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:58](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/types.ts#L58)
+[packages/core/echo/model-factory/src/types.ts:59](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/types.ts#L59)

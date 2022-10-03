@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:12](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L12)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:12](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L12)
 
 ## Methods
 
@@ -42,7 +42,7 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:31](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L31)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L31)
 
 ___
 
@@ -70,7 +70,7 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:14](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L14)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:14](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L14)
 
 ___
 
@@ -98,7 +98,7 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:27](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L27)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L27)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L35)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L35)
 
 ___
 
@@ -132,4 +132,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/fully-connected-topology.ts:19](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/fully-connected-topology.ts#L19)
+[packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts:19](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/fully-connected-topology.ts#L19)

@@ -44,7 +44,7 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L23)
+[packages/core/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L23)
 
 ## Properties
 
@@ -62,7 +62,7 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L26)
+[packages/core/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L26)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L15)
+[packages/core/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L15)
 
 ## Accessors
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L45)
+[packages/core/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L45)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L41)
+[packages/core/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L41)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L49)
+[packages/core/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L49)
 
 ## Methods
 
@@ -146,7 +146,7 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L53)
+[packages/core/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L53)
 
 ___
 
@@ -165,7 +165,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L34)
+[packages/core/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L34)
 
 ___
 
@@ -179,7 +179,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L30)
+[packages/core/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L30)
 
 ___
 
@@ -201,4 +201,4 @@ Writes the raw mutation to the output stream.
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L60)
+[packages/core/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L60)

@@ -22,7 +22,7 @@ In memory signal manager for testing.
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:47](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L47)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:47](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L47)
 
 ## Properties
 
@@ -36,7 +36,7 @@ In memory signal manager for testing.
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L35)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L35)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:41](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L41)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L41)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L34)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L34)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:36](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L36)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L36)
 
 ## Methods
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:117](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L117)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:118](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L118)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:53](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L53)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:53](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L53)
 
 ___
 
@@ -142,7 +142,7 @@ SignalManager.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:57](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L57)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:57](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L57)
 
 ___
 
@@ -170,7 +170,7 @@ SignalManager.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:91](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L91)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:91](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L91)
 
 ___
 
@@ -199,7 +199,7 @@ SignalManager.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:107](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L107)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:107](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L107)
 
 ___
 
@@ -225,4 +225,4 @@ SignalManager.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/memory-signal-manager.ts:115](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/memory-signal-manager.ts#L115)
+[packages/core/mesh/messaging/src/memory-signal-manager.ts:116](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L116)

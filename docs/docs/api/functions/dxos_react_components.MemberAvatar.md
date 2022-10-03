@@ -9,7 +9,7 @@
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.member?` | `PartyMember` |
+| `__namedParameters.member?` | `any` |
 
 #### Returns
 

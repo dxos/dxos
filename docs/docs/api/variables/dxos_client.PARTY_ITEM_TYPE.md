@@ -6,4 +6,4 @@
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/parties/data-party.d.ts:17
+[packages/sdk/client/src/packlets/proxies/stubs.ts:9](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/stubs.ts#L9)

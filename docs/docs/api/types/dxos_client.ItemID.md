@@ -6,4 +6,4 @@
 
 #### Defined in
 
-packages/echo/echo-protocol/dist/src/types.d.ts:41
+packages/core/protocols/dist/src/types.d.ts:30

@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:25](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L25)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L26)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:36](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L36)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L37)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:26](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L26)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L27)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:27](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L27)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L28)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:37](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L37)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L38)
 
 ___
 
@@ -78,4 +78,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-manager.ts:38](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-manager.ts#L38)
+[packages/core/echo/echo-db/src/packlets/database/item-manager.ts:39](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-manager.ts#L39)

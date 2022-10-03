@@ -20,4 +20,4 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L45)
+[packages/core/mesh/network-manager/src/transport/transport.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L45)

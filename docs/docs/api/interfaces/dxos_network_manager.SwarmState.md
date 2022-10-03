@@ -12,7 +12,7 @@ Candidates for connection. Does not intersect with a set of already connected pe
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:38](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L38)
+[packages/core/mesh/network-manager/src/topology/topology.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L38)
 
 ___
 
@@ -24,7 +24,7 @@ Peers with established connections.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:33](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L33)
+[packages/core/mesh/network-manager/src/topology/topology.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L33)
 
 ___
 
@@ -36,4 +36,4 @@ This node's peer Id.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:28](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L28)
+[packages/core/mesh/network-manager/src/topology/topology.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L28)

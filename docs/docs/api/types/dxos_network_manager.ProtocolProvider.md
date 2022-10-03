@@ -22,4 +22,4 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:21](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L21)
+[packages/core/mesh/network-manager/src/network-manager.ts:20](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L20)

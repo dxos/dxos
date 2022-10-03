@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:24](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L24)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L24)
 
 ___
 
@@ -20,4 +20,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:23](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L23)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L23)

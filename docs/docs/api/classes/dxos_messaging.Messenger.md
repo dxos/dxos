@@ -16,7 +16,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:44](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L44)
+[packages/core/mesh/messaging/src/messenger.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L45)
 
 ## Properties
 
@@ -26,7 +26,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:36](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L36)
+[packages/core/mesh/messaging/src/messenger.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L37)
 
 ___
 
@@ -36,7 +36,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L35)
+[packages/core/mesh/messaging/src/messenger.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L36)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:40](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L40)
+[packages/core/mesh/messaging/src/messenger.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L41)
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:41](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L41)
+[packages/core/mesh/messaging/src/messenger.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L42)
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:38](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L38)
+[packages/core/mesh/messaging/src/messenger.ts:39](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L39)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L34)
+[packages/core/mesh/messaging/src/messenger.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L35)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:42](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L42)
+[packages/core/mesh/messaging/src/messenger.ts:43](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L43)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:39](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L39)
+[packages/core/mesh/messaging/src/messenger.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L40)
 
 ## Methods
 
@@ -116,7 +116,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:233](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L233)
+[packages/core/mesh/messaging/src/messenger.ts:234](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L234)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:138](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L138)
+[packages/core/mesh/messaging/src/messenger.ts:139](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L139)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:202](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L202)
+[packages/core/mesh/messaging/src/messenger.ts:203](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L203)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:159](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L159)
+[packages/core/mesh/messaging/src/messenger.ts:160](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L160)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:172](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L172)
+[packages/core/mesh/messaging/src/messenger.ts:173](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L173)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:211](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L211)
+[packages/core/mesh/messaging/src/messenger.ts:212](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L212)
 
 ___
 
@@ -247,7 +247,7 @@ Subscribes onMessage function to messages that contains payload with payloadType
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:110](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L110)
+[packages/core/mesh/messaging/src/messenger.ts:111](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L111)
 
 ___
 
@@ -267,4 +267,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:59](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L59)
+[packages/core/mesh/messaging/src/messenger.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L60)

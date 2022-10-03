@@ -18,4 +18,4 @@ Generates a numeric passcode.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/passcode.ts:10](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/greet/passcode.ts#L10)
+[packages/core/halo/credentials/src/passcode.ts:10](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/passcode.ts#L10)

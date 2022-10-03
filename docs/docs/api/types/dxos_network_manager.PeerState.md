@@ -8,4 +8,4 @@ State of the connection to the remote peer with additional info derived from net
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:17](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L17)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L17)

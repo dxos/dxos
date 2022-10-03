@@ -2,7 +2,7 @@
 
 [@dxos/react-client](../modules/dxos_react_client.md).useMembers
 
-**useMembers**(`party`): `PartyMember`[]
+**useMembers**(`party`): `any`[]
 
 #### Parameters
 
@@ -12,7 +12,7 @@
 
 #### Returns
 
-`PartyMember`[]
+`any`[]
 
 #### Defined in
 

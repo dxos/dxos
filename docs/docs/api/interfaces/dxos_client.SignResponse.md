@@ -13,4 +13,4 @@ Defined in:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/client.d.ts:186
+packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts:186

@@ -41,7 +41,7 @@ Each Selection contains a visitor
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:43
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:43
 
 ## Properties
 
@@ -53,7 +53,7 @@ Creates a derrived selection by aplying a mapping function to the result of the 
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:47
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:47
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:36
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:36
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:35
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:35
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:34
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:34
 
 ___
 
@@ -93,7 +93,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:33
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:33
 
 ## Accessors
 
@@ -109,7 +109,7 @@ The root of the selection. Either a database or an item. Must be a stable refere
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:59
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:59
 
 ## Methods
 
@@ -131,7 +131,7 @@ Visitor.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:64
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:64
 
 ___
 
@@ -154,7 +154,7 @@ Select children of the items in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:74
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:74
 
 ___
 
@@ -176,7 +176,7 @@ Finish the selection and return the result.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:51
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:51
 
 ___
 
@@ -199,7 +199,7 @@ Filter entities of this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:69
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:69
 
 **filter**<`U`\>(`this`, `filter`): [`Selection`](dxos_client.Selection.md)<`U`, `R`\>
 
@@ -222,7 +222,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:69
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:70
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:70
 
 ___
 
@@ -245,7 +245,7 @@ Select links sourcing from the items in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:82
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:82
 
 ___
 
@@ -267,7 +267,7 @@ Select parent of the items in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:78
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:78
 
 ___
 
@@ -289,7 +289,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:55
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:55
 
 ___
 
@@ -312,7 +312,7 @@ Select links pointing to items in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:86
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:86
 
 ___
 
@@ -335,7 +335,7 @@ Select sources of links in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:94
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:94
 
 ___
 
@@ -358,4 +358,4 @@ Select targets of links in this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:90
+packages/core/echo/echo-db/dist/src/packlets/database/selection/selection.d.ts:90

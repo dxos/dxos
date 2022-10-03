@@ -24,4 +24,4 @@ Use `createProtocolFactory`.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/protocol-factory.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/protocol-factory.ts#L29)
+[packages/core/mesh/network-manager/src/protocol-factory.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/protocol-factory.ts#L29)

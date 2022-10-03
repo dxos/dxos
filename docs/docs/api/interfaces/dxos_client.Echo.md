@@ -22,7 +22,7 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L82)
+[packages/sdk/client/src/packlets/api/echo.ts:78](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L78)
 
 ## Methods
 
@@ -42,7 +42,7 @@ ECHO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:88](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L88)
+[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L84)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:85](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L85)
+[packages/sdk/client/src/packlets/api/echo.ts:81](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L81)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:84](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L84)
+[packages/sdk/client/src/packlets/api/echo.ts:80](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L80)
 
 ___
 
@@ -88,7 +88,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `partyKey` | [`PublicKey`](../classes/dxos_client.PublicKey.md) |
 
 #### Returns
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:86](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L86)
+[packages/sdk/client/src/packlets/api/echo.ts:82](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L82)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:87](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L87)
+[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L83)
 
 ___
 
@@ -130,4 +130,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/echo.ts:83](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L83)
+[packages/sdk/client/src/packlets/api/echo.ts:79](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/echo.ts#L79)

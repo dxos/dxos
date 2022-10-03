@@ -28,7 +28,7 @@ NetworkGenerator.constructor
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:36](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L36)
+[packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts#L36)
 
 ## Properties
 
@@ -38,7 +38,7 @@ NetworkGenerator.constructor
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L34)
+[packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts#L34)
 
 ___
 
@@ -102,7 +102,7 @@ NetworkGenerator.error
 
 #### Defined in
 
-packages/mesh/network-generator/dist/src/network-generator.d.ts:9
+packages/core/mesh/network-generator/dist/src/network-generator.d.ts:9
 
 ___
 
@@ -172,7 +172,7 @@ ___
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:273
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:291
 
 ___
 
@@ -184,7 +184,7 @@ Sets or gets the default captureRejection value for all emitters.
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:278
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:296
 
 ___
 
@@ -194,7 +194,7 @@ ___
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:279
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:297
 
 ___
 
@@ -212,7 +212,7 @@ regular `'error'` listener is installed.
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:272
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:290
 
 ## Methods
 
@@ -235,7 +235,7 @@ Generate a network based on a ngraph.generator topology
 
 #### Defined in
 
-[packages/mesh/protocol-network-generator/src/protocol-network-generator.ts:56](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-network-generator/src/protocol-network-generator.ts#L56)
+[packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts:56](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-network-generator/src/protocol-network-generator.ts#L56)
 
 ___
 
@@ -262,7 +262,7 @@ v0.1.26
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:299
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:317
 
 ___
 
@@ -287,7 +287,7 @@ NetworkGenerator.createTopology
 
 #### Defined in
 
-packages/mesh/network-generator/dist/src/network-generator.d.ts:12
+packages/core/mesh/network-generator/dist/src/network-generator.d.ts:12
 
 ___
 
@@ -350,7 +350,7 @@ v0.1.26
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:555
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:573
 
 ___
 
@@ -384,7 +384,7 @@ v6.0.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:614
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:632
 
 ___
 
@@ -405,7 +405,7 @@ v1.0.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:471
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:489
 
 ___
 
@@ -431,7 +431,7 @@ v3.2.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:561
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:579
 
 ___
 
@@ -465,7 +465,7 @@ v0.1.26
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:484
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:502
 
 ___
 
@@ -492,7 +492,7 @@ v10.0.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:444
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:462
 
 ___
 
@@ -543,7 +543,7 @@ v0.1.101
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:330
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:348
 
 ___
 
@@ -592,7 +592,7 @@ v0.3.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:359
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:377
 
 ___
 
@@ -630,7 +630,7 @@ v6.0.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:579
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:597
 
 ___
 
@@ -666,7 +666,7 @@ v6.0.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:595
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:613
 
 ___
 
@@ -717,7 +717,7 @@ v9.4.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:514
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:532
 
 ___
 
@@ -749,7 +749,7 @@ v0.1.26
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:455
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:473
 
 ___
 
@@ -851,7 +851,7 @@ v0.1.26
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:439
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:457
 
 ___
 
@@ -882,7 +882,7 @@ v0.3.5
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:465
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:483
 
 ___
 
@@ -932,7 +932,7 @@ v15.2.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:262
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:262
 
 ___
 
@@ -972,7 +972,7 @@ Since v3.2.0 - Use `listenerCount` instead.
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:234
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:234
 
 ___
 
@@ -1054,7 +1054,7 @@ that iterates `eventName` events emitted by the `emitter`
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:217
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:217
 
 ___
 
@@ -1160,7 +1160,7 @@ v11.13.0, v10.16.0
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:157
 
 `Static` **once**(`emitter`, `eventName`, `options?`): `Promise`<`any`[]\>
 
@@ -1178,4 +1178,41 @@ node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:157
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/events.d.ts:158
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:158
+
+___
+
+### setMaxListeners
+
+`Static` **setMaxListeners**(`n?`, ...`eventTargets`): `void`
+
+```js
+const {
+  setMaxListeners,
+  EventEmitter
+} = require('events');
+
+const target = new EventTarget();
+const emitter = new EventEmitter();
+
+setMaxListeners(5, target, emitter);
+```
+
+**`Since`**
+
+v15.4.0
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `n?` | `number` | A non-negative number. The maximum number of listeners per `EventTarget` event. |
+| `...eventTargets` | (`EventEmitter` \| `DOMEventTarget`)[] | - |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/events.d.ts:280

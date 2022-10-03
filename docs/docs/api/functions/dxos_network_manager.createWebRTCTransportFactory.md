@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport.ts:109](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport.ts#L109)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport.ts:106](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport.ts#L106)

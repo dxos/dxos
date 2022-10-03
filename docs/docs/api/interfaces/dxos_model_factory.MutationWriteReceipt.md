@@ -20,7 +20,7 @@ WriteReceipt.feedKey
 
 #### Defined in
 
-packages/echo/echo-protocol/dist/src/feeds/feed-writer.d.ts:7
+packages/common/feed-store/dist/src/feed-writer.d.ts:6
 
 ___
 
@@ -34,7 +34,7 @@ WriteReceipt.seq
 
 #### Defined in
 
-packages/echo/echo-protocol/dist/src/feeds/feed-writer.d.ts:8
+packages/common/feed-store/dist/src/feed-writer.d.ts:7
 
 ## Methods
 
@@ -48,4 +48,4 @@ packages/echo/echo-protocol/dist/src/feeds/feed-writer.d.ts:8
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:31](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/types.ts#L31)
+[packages/core/echo/model-factory/src/types.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/types.ts#L32)

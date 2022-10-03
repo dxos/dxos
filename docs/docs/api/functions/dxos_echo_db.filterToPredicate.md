@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:69](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L69)
+[packages/core/echo/echo-db/src/packlets/database/selection/queries.ts:69](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/queries.ts#L69)

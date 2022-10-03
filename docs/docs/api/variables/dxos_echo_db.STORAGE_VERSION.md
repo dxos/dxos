@@ -5,8 +5,9 @@
  `Const` **STORAGE\_VERSION**: ``1``
 
 Version for the schema of the stored data as defined in dxos.echo.metadata.EchoMetadata.
+
 Should be incremented every time there's a breaking change to the stored data.
 
 #### Defined in
 
-[packages/echo/echo-db/src/pipeline/metadata-store.ts:18](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/pipeline/metadata-store.ts#L18)
+[packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts:20](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/metadata/metadata-store.ts#L20)

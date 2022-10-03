@@ -33,7 +33,7 @@ Reactive query results.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:24](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L24)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L24)
 
 ## Properties
 
@@ -51,7 +51,7 @@ Reactive query results.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:17](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L17)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L17)
 
 ___
 
@@ -61,7 +61,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:16](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L16)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L16)
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:15](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L15)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L15)
 
 ___
 
@@ -83,7 +83,7 @@ Triggered when `value` updates.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:22](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L22)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L22)
 
 ## Accessors
 
@@ -97,7 +97,7 @@ Triggered when `value` updates.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:40](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L40)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L40)
 
 ___
 
@@ -111,7 +111,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:35](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L35)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L35)
 
 ## Methods
 
@@ -145,7 +145,7 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:50](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L50)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:50](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L50)
 
 ___
 
@@ -169,4 +169,4 @@ Current value is also checked.
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/result-set.ts:59](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/result-set.ts#L59)
+[packages/core/echo/echo-db/src/packlets/api/result-set.ts:59](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/result-set.ts#L59)

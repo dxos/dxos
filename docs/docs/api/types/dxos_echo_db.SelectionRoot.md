@@ -8,4 +8,4 @@ Represents where the selection has started.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:16](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/result.ts#L16)
+[packages/core/echo/echo-db/src/packlets/database/selection/result.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/result.ts#L16)

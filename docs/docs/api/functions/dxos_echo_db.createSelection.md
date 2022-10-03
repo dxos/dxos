@@ -28,4 +28,4 @@ Factory for selector that provides a root set of items.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/selection.ts:31](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/selection.ts#L31)
+[packages/core/echo/echo-db/src/packlets/database/selection/selection.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/selection.ts#L31)

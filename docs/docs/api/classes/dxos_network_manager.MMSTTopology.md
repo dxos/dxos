@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:39](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L39)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:39](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L39)
 
 ## Properties
 
@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L35)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L35)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:32](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L32)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L32)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:31](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L31)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L31)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:37](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L37)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L37)
 
 ___
 
@@ -70,7 +70,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:33](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L33)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L33)
 
 ## Methods
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:77](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L77)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:77](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L77)
 
 ___
 
@@ -106,7 +106,7 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:73](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L73)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:73](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L73)
 
 ___
 
@@ -134,7 +134,7 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:49](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L49)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L49)
 
 ___
 
@@ -162,7 +162,7 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:65](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L65)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:65](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L65)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:99](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L99)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:99](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L99)
 
 ___
 
@@ -196,4 +196,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:54](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L54)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:54](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L54)

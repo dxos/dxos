@@ -18,11 +18,11 @@ HALO API.
 
 | Name | Type |
 | :------ | :------ |
-| `key?` | `PublicKey` |
+| `key?` | [`PublicKey`](../classes/dxos_client.PublicKey.md) |
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:25](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L25)
+[packages/sdk/client/src/packlets/api/halo.ts:21](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L21)
 
 ## Accessors
 
@@ -36,7 +36,7 @@ HALO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L27)
+[packages/sdk/client/src/packlets/api/halo.ts:23](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L23)
 
 ## Methods
 
@@ -56,7 +56,7 @@ HALO API.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:41](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L41)
+[packages/sdk/client/src/packlets/api/halo.ts:37](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L37)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L32)
+[packages/sdk/client/src/packlets/api/halo.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L28)
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:40](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L40)
+[packages/sdk/client/src/packlets/api/halo.ts:36](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L36)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `options?` | `CreateProfileOptions` |
+| `options?` | `any` |
 
 #### Returns
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L28)
+[packages/sdk/client/src/packlets/api/halo.ts:24](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L24)
 
 ___
 
@@ -130,7 +130,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:45](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L45)
+[packages/sdk/client/src/packlets/api/halo.ts:41](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L41)
 
 ___
 
@@ -150,21 +150,21 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:48](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L48)
+[packages/sdk/client/src/packlets/api/halo.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L44)
 
 ___
 
 ### queryContacts
 
-**queryContacts**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+**queryContacts**(): [`ResultSet`](../classes/dxos_client.ResultSet.md)<`any`\>
 
 #### Returns
 
-[`ResultSet`](../classes/dxos_client.ResultSet.md)<[`PartyMember`](dxos_client.PartyMember.md)\>
+[`ResultSet`](../classes/dxos_client.ResultSet.md)<`any`\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L39)
+[packages/sdk/client/src/packlets/api/halo.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L35)
 
 ___
 
@@ -178,7 +178,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L43)
+[packages/sdk/client/src/packlets/api/halo.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L39)
 
 ___
 
@@ -198,7 +198,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L29)
+[packages/sdk/client/src/packlets/api/halo.ts:25](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L25)
 
 ___
 
@@ -219,7 +219,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:44](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L44)
+[packages/sdk/client/src/packlets/api/halo.ts:40](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L40)
 
 ___
 
@@ -240,7 +240,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:47](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L47)
+[packages/sdk/client/src/packlets/api/halo.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L43)
 
 ___
 
@@ -260,7 +260,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L31)
+[packages/sdk/client/src/packlets/api/halo.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L27)
 
 ___
 
@@ -282,4 +282,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/api/halo.ts:37](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L37)
+[packages/sdk/client/src/packlets/api/halo.ts:33](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/api/halo.ts#L33)

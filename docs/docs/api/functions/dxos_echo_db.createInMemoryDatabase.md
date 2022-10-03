@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/testing.ts:15](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/testing.ts#L15)
+[packages/core/echo/echo-db/src/packlets/database/testing.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/testing.ts#L16)

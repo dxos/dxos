@@ -25,7 +25,7 @@ Represents a connection to a remote peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:68](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L68)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:68](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L68)
 
 ## Properties
 
@@ -35,7 +35,7 @@ Represents a connection to a remote peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:63](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L63)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:63](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L63)
 
 ___
 
@@ -45,7 +45,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:61](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L61)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:61](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L61)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:62](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L62)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:62](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L62)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:66](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L66)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:66](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L66)
 
 ___
 
@@ -75,7 +75,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:73](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L73)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:73](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L73)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:70](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L70)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:70](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L70)
 
 ___
 
@@ -95,7 +95,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:71](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L71)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:71](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L71)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:72](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L72)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:72](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L72)
 
 ___
 
@@ -115,7 +115,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:65](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L65)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:65](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L65)
 
 ___
 
@@ -125,7 +125,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:69](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L69)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:69](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L69)
 
 ## Accessors
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:87](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L87)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:87](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L87)
 
 ___
 
@@ -153,7 +153,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:79](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L79)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:79](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L79)
 
 ___
 
@@ -167,7 +167,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:83](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L83)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:83](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L83)
 
 ## Methods
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:179](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L179)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:178](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L178)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:184](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L184)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:183](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L183)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:123](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L123)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:123](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L123)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:91](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L91)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:91](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L91)
 
 ___
 
@@ -249,4 +249,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/connection.ts:158](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/connection.ts#L158)
+[packages/core/mesh/network-manager/src/swarm/connection.ts:157](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/connection.ts#L157)

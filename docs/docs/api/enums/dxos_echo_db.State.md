@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:40](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database.ts#L40)
+[packages/core/echo/echo-db/src/packlets/database/database.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database.ts#L40)
 
 ___
 
@@ -20,7 +20,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:39](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database.ts#L39)
+[packages/core/echo/echo-db/src/packlets/database/database.ts:39](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database.ts#L39)
 
 ___
 
@@ -30,4 +30,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database.ts:38](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database.ts#L38)
+[packages/core/echo/echo-db/src/packlets/database/database.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database.ts#L38)

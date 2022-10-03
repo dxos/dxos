@@ -32,4 +32,4 @@ which may be modified and returned.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:38](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L38)
+[packages/core/echo/echo-db/src/packlets/database/selection/queries.ts:38](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/queries.ts#L38)

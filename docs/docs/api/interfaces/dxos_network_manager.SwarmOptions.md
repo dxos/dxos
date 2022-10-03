@@ -12,7 +12,7 @@ Custom label assigned to this swarm. Used in devtools to display human-readable 
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:249](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L249)
+[packages/core/mesh/network-manager/src/network-manager.ts:242](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L242)
 
 ___
 
@@ -24,7 +24,7 @@ This node's peer id.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:229](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L229)
+[packages/core/mesh/network-manager/src/network-manager.ts:222](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L222)
 
 ___
 
@@ -36,7 +36,7 @@ Presence plugin for network mapping, if exists.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:244](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L244)
+[packages/core/mesh/network-manager/src/network-manager.ts:237](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L237)
 
 ___
 
@@ -48,7 +48,7 @@ Protocol to use for every connection.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:239](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L239)
+[packages/core/mesh/network-manager/src/network-manager.ts:232](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L232)
 
 ___
 
@@ -60,7 +60,7 @@ Swarm topic.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:224](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L224)
+[packages/core/mesh/network-manager/src/network-manager.ts:217](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L217)
 
 ___
 
@@ -72,4 +72,4 @@ Requested topology. Must be a new instance for every swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/network-manager.ts:234](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/network-manager.ts#L234)
+[packages/core/mesh/network-manager/src/network-manager.ts:227](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/network-manager.ts#L227)

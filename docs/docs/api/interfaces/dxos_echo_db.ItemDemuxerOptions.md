@@ -10,4 +10,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)
+[packages/core/echo/echo-db/src/packlets/database/item-demuxer.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-demuxer.ts#L22)
