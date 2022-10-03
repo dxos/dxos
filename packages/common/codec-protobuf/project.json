@@ -41,10 +41,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
-          "packages/common/codec-protobuf/**/*.test.{ts,js}"
-        ]
+          "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/codec-protobuf/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/codec-protobuf",
+        "resultsPath": "test-results/codec-protobuf"
       }
     }
   },

@@ -27,16 +27,18 @@
     "test": {
       "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "{options.outputPath}"
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "options": {
         "testPatterns": [
           "packages/common/debug/src/**/*.test.{ts,js}"
         ],
-        "outputPath": ".mocha/common/debug",
         "watchPatterns": [
-          "packages/common/debug/src/**/*.{ts,js}"
-        ]
+          "packages/common/debug/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/debug",
+        "resultsPath": "test-results/debug"
       }
     }
   },

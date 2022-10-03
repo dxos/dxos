@@ -26,10 +26,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/mesh/rpc/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/rpc/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/rpc",
+        "resultsPath": "test-results/rpc"
       }
     }
   },

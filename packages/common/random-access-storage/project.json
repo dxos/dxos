@@ -26,10 +26,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
-          "packages/common/random-access-storage/src/**/*.test.ts"
-        ]
+          "packages/common/random-access-storage/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/random-access-storage/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/random-access-storage",
+        "resultsPath": "test-results/random-access-storage"
       }
     },
     "e2e": {
