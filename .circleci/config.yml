@@ -41,7 +41,9 @@ jobs:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
-            - run: pnpm nx run-many --target=prerelease
+            - run:
+                command: pnpm nx run-many --target=prerelease
+                no_output_timeout: 30m
 
   #
   # End-to-end integration tests.

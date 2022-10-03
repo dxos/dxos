@@ -11,7 +11,7 @@ This monorepo contains the implementation of the DXOS protocols, SDK, and toolch
 
 ## Quick start
 
-[Getting started](./docs/getting-started.md).
+[Getting started](./docs/docs/contributing/getting-started.md).
 
 
 ## Demo

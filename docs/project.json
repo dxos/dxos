@@ -1,0 +1,29 @@
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "docs",
+  "projectType": "application",
+  "targets": {
+    // TODO(wittjosiah): Run as apart of release please to ensure api docs are up to date.
+    "prerelease": {
+      "executor": "nx:run-script",
+      "outputs": [
+        "docs/docs/api",
+        "docs/docs/.vuepress/dist"
+      ],
+      "options": {
+        "script": "prerelease"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "docs/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    }
+  }
+}
