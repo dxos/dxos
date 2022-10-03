@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:43](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L43)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:43](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L43)
 
 ## Properties
 
@@ -27,7 +27,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:33](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L33)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L33)
 
 ___
 
@@ -37,7 +37,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L35)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L35)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:31](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L31)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L31)
 
 ___
 
@@ -57,7 +57,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:41](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L41)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L41)
 
 ## Accessors
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:37](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L37)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L37)
 
 ## Methods
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:67](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L67)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:67](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L67)
 
 ___
 
@@ -99,4 +99,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/swarm/swarm-mapper.ts:106](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/swarm/swarm-mapper.ts#L106)
+[packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts:106](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/swarm/swarm-mapper.ts#L106)

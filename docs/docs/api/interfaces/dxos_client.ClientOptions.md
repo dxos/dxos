@@ -12,27 +12,27 @@ Only used when remote=true.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:52](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L52)
+[packages/sdk/client/src/packlets/proxies/client.ts:56](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L56)
 
 ___
 
 ### serviceProvider
 
- `Optional` **serviceProvider**: [`ClientServiceProvider`](dxos_client.ClientServiceProvider.md)
+ `Optional` **serviceProvider**: `ClientServiceProvider`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:57](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L57)
+[packages/sdk/client/src/packlets/proxies/client.ts:61](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L61)
 
 ___
 
 ### signer
 
- `Optional` **signer**: [`HaloSigner`](dxos_client.HaloSigner.md)
+ `Optional` **signer**: `HaloSigner`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:62](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L62)
+[packages/sdk/client/src/packlets/proxies/client.ts:66](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L66)
 
 ___
 
@@ -42,4 +42,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:67](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L67)
+[packages/sdk/client/src/packlets/proxies/client.ts:71](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L71)

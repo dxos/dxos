@@ -18,4 +18,4 @@ Provides a shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:22](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/greet/invitation.ts#L22)
+[packages/core/halo/credentials/src/invitations.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/invitations.ts#L17)

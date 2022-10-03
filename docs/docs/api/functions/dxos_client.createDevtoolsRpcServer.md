@@ -9,7 +9,7 @@
 | Name | Type |
 | :------ | :------ |
 | `client` | [`Client`](../classes/dxos_client.Client.md) |
-| `serviceHost` | [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md) |
+| `serviceHost` | `ClientServiceProvider` |
 
 #### Returns
 
@@ -17,4 +17,4 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:53](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/devtools.ts#L53)
+[packages/sdk/client/src/packlets/proxies/devtools.ts:53](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L53)

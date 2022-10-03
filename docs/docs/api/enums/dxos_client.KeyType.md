@@ -13,7 +13,7 @@ Defined in:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:10
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:10
 
 ___
 
@@ -23,7 +23,7 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:13
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:13
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:12
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:12
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:9
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:9
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:11
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:11
 
 ___
 
@@ -63,4 +63,4 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:8
+packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:8

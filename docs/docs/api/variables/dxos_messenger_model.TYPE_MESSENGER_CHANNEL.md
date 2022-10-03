@@ -9,4 +9,4 @@ Includes metadata for a message channel (e.g., title).
 
 #### Defined in
 
-[packages/echo/messenger-model/src/types.ts:9](https://github.com/dxos/dxos/blob/main/packages/echo/messenger-model/src/types.ts#L9)
+[packages/core/echo/messenger-model/src/types.ts:9](https://github.com/dxos/dxos/blob/main/packages/core/echo/messenger-model/src/types.ts#L9)

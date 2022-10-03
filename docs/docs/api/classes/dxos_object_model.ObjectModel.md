@@ -35,7 +35,7 @@ Model<ObjectModelState, ObjectMutationSet\>.constructor
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:20
+packages/core/echo/model-factory/dist/src/model.d.ts:20
 
 ## Properties
 
@@ -57,7 +57,7 @@ Model.\_getState
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:11
+packages/core/echo/model-factory/dist/src/model.d.ts:11
 
 ___
 
@@ -71,7 +71,7 @@ Model.update
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:13
+packages/core/echo/model-factory/dist/src/model.d.ts:13
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L79)
+[packages/core/echo/object-model/src/object-model.ts:79](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L79)
 
 ## Accessors
 
@@ -99,7 +99,7 @@ Model.itemId
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:27
+packages/core/echo/model-factory/dist/src/model.d.ts:27
 
 ___
 
@@ -117,7 +117,7 @@ Model.modelMeta
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:26
+packages/core/echo/model-factory/dist/src/model.d.ts:26
 
 ___
 
@@ -135,7 +135,7 @@ Model.readOnly
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:28
+packages/core/echo/model-factory/dist/src/model.d.ts:28
 
 ## Methods
 
@@ -156,7 +156,7 @@ packages/echo/model-factory/dist/src/model.d.ts:28
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L145)
+[packages/core/echo/object-model/src/object-model.ts:145](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L145)
 
 ___
 
@@ -170,7 +170,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L101)
+[packages/core/echo/object-model/src/object-model.ts:101](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L101)
 
 ___
 
@@ -195,7 +195,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L105)
+[packages/core/echo/object-model/src/object-model.ts:105](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L105)
 
 ___
 
@@ -218,7 +218,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L123)
+[packages/core/echo/object-model/src/object-model.ts:123](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L123)
 
 ___
 
@@ -239,7 +239,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L169)
+[packages/core/echo/object-model/src/object-model.ts:169](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L169)
 
 ___
 
@@ -260,7 +260,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L157)
+[packages/core/echo/object-model/src/object-model.ts:157](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L157)
 
 ___
 
@@ -285,7 +285,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L110)
+[packages/core/echo/object-model/src/object-model.ts:110](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L110)
 
 ___
 
@@ -307,7 +307,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L139)
+[packages/core/echo/object-model/src/object-model.ts:139](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L139)
 
 ___
 
@@ -330,7 +330,7 @@ ___
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L131)
+[packages/core/echo/object-model/src/object-model.ts:131](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L131)
 
 ___
 
@@ -360,7 +360,7 @@ Model.subscribe
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:29
+packages/core/echo/model-factory/dist/src/model.d.ts:29
 
 ___
 
@@ -383,7 +383,7 @@ Model.toJSON
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:22
+packages/core/echo/model-factory/dist/src/model.d.ts:22
 
 ___
 
@@ -399,7 +399,7 @@ Returns an immutable object.
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L97)
+[packages/core/echo/object-model/src/object-model.ts:97](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L97)
 
 ___
 
@@ -417,7 +417,7 @@ Model.toString
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:21
+packages/core/echo/model-factory/dist/src/model.d.ts:21
 
 ___
 
@@ -443,4 +443,4 @@ Model.write
 
 #### Defined in
 
-packages/echo/model-factory/dist/src/model.d.ts:33
+packages/core/echo/model-factory/dist/src/model.d.ts:33

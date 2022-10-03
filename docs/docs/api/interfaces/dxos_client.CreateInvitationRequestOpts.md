@@ -10,4 +10,4 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:23](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L23)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:23](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L23)

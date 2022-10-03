@@ -12,7 +12,7 @@ Returns a list of local feeds to replicate.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:41](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L41)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L42)
 
 ___
 
@@ -24,7 +24,7 @@ Maps feed replication requests to a set of feed descriptors to be replicated.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:51](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L51)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:52](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L52)
 
 ___
 
@@ -36,4 +36,4 @@ Subscribe to new local feeds being opened.
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-replicator/src/replicator.ts:46](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-replicator/src/replicator.ts#L46)
+[packages/core/mesh/protocol-plugin-replicator/src/replicator.ts:47](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-replicator/src/replicator.ts#L47)

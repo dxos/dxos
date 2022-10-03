@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:46](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L46)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:46](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L46)
 
 ## Properties
 
@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:31](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L31)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L31)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:30](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L30)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L30)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L29)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L29)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:19](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L19)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:19](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L19)
 
 ___
 
@@ -72,7 +72,7 @@ Topics joined: topic => peerId
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:22](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L22)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L22)
 
 ___
 
@@ -84,7 +84,7 @@ host => topic => peerId
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:27](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L27)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L27)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:34](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L34)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L34)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:40](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L40)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:40](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L40)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:33](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L33)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L33)
 
 ___
 
@@ -140,7 +140,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L35)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L35)
 
 ## Methods
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:123](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L123)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:123](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L123)
 
 ___
 
@@ -168,7 +168,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:110](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L110)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:110](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L110)
 
 ___
 
@@ -182,7 +182,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:88](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L88)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:88](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L88)
 
 ___
 
@@ -200,7 +200,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:199](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L199)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:199](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L199)
 
 ___
 
@@ -218,7 +218,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:68](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L68)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:68](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L68)
 
 ___
 
@@ -246,7 +246,7 @@ SignalManager.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:74](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L74)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:74](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L74)
 
 ___
 
@@ -274,7 +274,7 @@ SignalManager.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:81](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L81)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:81](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L81)
 
 ___
 
@@ -303,7 +303,7 @@ SignalManager.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:171](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L171)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:171](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L171)
 
 ___
 
@@ -329,4 +329,4 @@ SignalManager.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/websocket-signal-manager.ts:190](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/websocket-signal-manager.ts#L190)
+[packages/core/mesh/messaging/src/websocket-signal-manager.ts:190](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/websocket-signal-manager.ts#L190)

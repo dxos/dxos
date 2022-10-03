@@ -18,4 +18,4 @@ Creates a test instance of the signal server with swarming disabled and starts i
 
 #### Defined in
 
-[packages/mesh/signal/src/test-broker.ts:111](https://github.com/dxos/dxos/blob/main/packages/mesh/signal/src/test-broker.ts#L111)
+[packages/core/mesh/signal/src/test-broker.ts:111](https://github.com/dxos/dxos/blob/main/packages/core/mesh/signal/src/test-broker.ts#L111)

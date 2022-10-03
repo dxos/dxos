@@ -24,7 +24,7 @@ This class is analogous to ItemDemuxer but for databases running in remote mode.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:28](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L28)
+[packages/core/echo/echo-db/src/packlets/database/data-mirror.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/data-mirror.ts#L28)
 
 ## Methods
 
@@ -44,7 +44,7 @@ This class is analogous to ItemDemuxer but for databases running in remote mode.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:77](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L77)
+[packages/core/echo/echo-db/src/packlets/database/data-mirror.ts:77](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/data-mirror.ts#L77)
 
 ___
 
@@ -58,4 +58,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/data-mirror.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/data-mirror.ts#L34)
+[packages/core/echo/echo-db/src/packlets/database/data-mirror.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/data-mirror.ts#L34)

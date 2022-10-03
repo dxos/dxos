@@ -22,4 +22,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:11](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/util.ts#L11)
+[packages/core/echo/echo-db/src/packlets/database/selection/util.ts:11](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/util.ts#L11)

@@ -18,12 +18,12 @@ Client proxy to local/remote ECHO service.
 
 | Name | Type |
 | :------ | :------ |
-| `_serviceProvider` | [`ClientServiceProvider`](../interfaces/dxos_client.ClientServiceProvider.md) |
+| `_serviceProvider` | `ClientServiceProvider` |
 | `_haloProxy` | [`HaloProxy`](dxos_client.HaloProxy.md) |
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L32)
 
 ## Properties
 
@@ -33,17 +33,17 @@ Client proxy to local/remote ECHO service.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:30](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L30)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:30](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L30)
 
 ___
 
 ### \_parties
 
- `Private` `Readonly` **\_parties**: `ComplexMap`<`PublicKey`, [`PartyProxy`](dxos_client.PartyProxy.md)\>
+ `Private` `Readonly` **\_parties**: `ComplexMap`<[`PublicKey`](dxos_client.PublicKey.md), [`PartyProxy`](dxos_client.PartyProxy.md)\>
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L27)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L27)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L28)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:28](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L28)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L29)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L29)
 
 ## Accessors
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:61](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L61)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:63](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L63)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:47](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L47)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:49](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L49)
 
 ___
 
@@ -113,7 +113,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:51](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L51)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:53](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L53)
 
 ## Methods
 
@@ -141,7 +141,7 @@ To be used with `party.createInvitation` on the inviter side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:197](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L197)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:199](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L199)
 
 ___
 
@@ -167,7 +167,7 @@ Clones the party from a snapshot.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:158](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L158)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:160](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L160)
 
 ___
 
@@ -187,7 +187,7 @@ Creates a new party.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:135](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L135)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:137](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L137)
 
 ___
 
@@ -201,7 +201,7 @@ Returns an individual party by its key.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `partyKey` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Returns
 
@@ -213,7 +213,7 @@ Returns an individual party by its key.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:181](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L181)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:183](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L183)
 
 ___
 
@@ -231,7 +231,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:188](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L188)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:190](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L190)
 
 ___
 
@@ -255,7 +255,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:67](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L67)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:69](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L69)
 
 ___
 
@@ -269,4 +269,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/echo-proxy.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/echo-proxy.ts#L43)
+[packages/sdk/client/src/packlets/proxies/echo-proxy.ts:45](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/echo-proxy.ts#L45)

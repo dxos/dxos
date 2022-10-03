@@ -26,4 +26,4 @@
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/types.ts#L34)
+[packages/core/echo/model-factory/src/types.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/types.ts#L35)

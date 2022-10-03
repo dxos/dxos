@@ -10,13 +10,23 @@
 
 ## Properties
 
+### \_isClosed
+
+ `Private` **\_isClosed**: `boolean` = `false`
+
+#### Defined in
+
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L41)
+
+___
+
 ### activeInvitations
 
  `Readonly` **activeInvitations**: [`InvitationRequest`](dxos_client.InvitationRequest.md)[] = `[]`
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L38)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:38](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L38)
 
 ___
 
@@ -26,7 +36,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L39)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:39](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L39)
 
 ## Methods
 
@@ -46,7 +56,21 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:88](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L88)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L94)
+
+___
+
+### close
+
+**close**(): `void`
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:43](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L43)
 
 ___
 
@@ -66,7 +90,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:41](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L41)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:47](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L47)
 
 ___
 
@@ -86,4 +110,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/invitation-proxy.ts:94](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/invitation-proxy.ts#L94)
+[packages/sdk/client/src/packlets/proxies/invitation-proxy.ts:100](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/invitation-proxy.ts#L100)

@@ -17,4 +17,4 @@
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L29)
+[packages/core/mesh/protocol-plugin-rpc/src/plugin-rpc.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-rpc/src/plugin-rpc.ts#L29)

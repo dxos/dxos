@@ -17,4 +17,4 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:36](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L36)
+[packages/core/mesh/messaging/src/signal-client.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L36)

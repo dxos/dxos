@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/queries.ts:31](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/queries.ts#L31)
+[packages/core/echo/echo-db/src/packlets/database/selection/queries.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/queries.ts#L31)

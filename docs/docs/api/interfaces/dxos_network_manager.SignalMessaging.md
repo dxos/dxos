@@ -28,7 +28,7 @@ Offer/answer RPC.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:32](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L32)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L32)
 
 ___
 
@@ -50,4 +50,4 @@ Reliably send a signal to a peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:37](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L37)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L37)

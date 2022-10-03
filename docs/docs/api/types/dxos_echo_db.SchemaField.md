@@ -15,4 +15,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/api/schema.ts:18](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/api/schema.ts#L18)
+[packages/core/echo/echo-db/src/packlets/api/schema.ts:18](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/api/schema.ts#L18)

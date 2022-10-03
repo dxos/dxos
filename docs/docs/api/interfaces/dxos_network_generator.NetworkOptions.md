@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:61](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network.ts#L61)
+[packages/core/mesh/network-generator/src/network.ts:61](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network.ts#L61)
 
 ___
 
@@ -20,4 +20,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network.ts:60](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network.ts#L60)
+[packages/core/mesh/network-generator/src/network.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network.ts#L60)

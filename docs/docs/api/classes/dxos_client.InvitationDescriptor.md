@@ -20,24 +20,24 @@ This descriptor might also have a bundled secret for authentication in interacti
 | Name | Type |
 | :------ | :------ |
 | `type` | `Type` |
-| `swarmKey` | `Uint8Array` |
+| `swarmKey` | [`PublicKey`](dxos_client.PublicKey.md) |
 | `invitation` | `Uint8Array` |
-| `identityKey?` | `PublicKey` |
+| `identityKey?` | [`PublicKey`](dxos_client.PublicKey.md) |
 | `secret?` | `Uint8Array` |
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:31
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:30
 
 ## Properties
 
 ### identityKey
 
- `Optional` `Readonly` **identityKey**: `PublicKey`
+ `Optional` `Readonly` **identityKey**: [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:26
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:25
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:25
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:24
 
 ___
 
@@ -57,17 +57,17 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:27
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:26
 
 ___
 
 ### swarmKey
 
- `Readonly` **swarmKey**: `Uint8Array`
+ `Readonly` **swarmKey**: [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:24
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:23
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:23
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:22
 
 ## Accessors
 
@@ -91,7 +91,7 @@ packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:23
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:32
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:31
 
 ## Methods
 
@@ -105,7 +105,7 @@ packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:32
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:38
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:37
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:37
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:36
 
 ___
 
@@ -135,7 +135,7 @@ Exports an InvitationDescriptor to an object suitable for use as query parameter
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:36
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:35
 
 ___
 
@@ -155,7 +155,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:30
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:29
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:29
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:28
 
 ___
 
@@ -195,4 +195,4 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/invitations/invitation-descriptor.d.ts:28
+packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor.d.ts:27

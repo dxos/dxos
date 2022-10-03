@@ -20,7 +20,7 @@ DXOSError.constructor
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/errors/errors.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/errors/errors.ts#L34)
+[packages/core/echo/echo-db/src/packlets/errors/errors.ts:18](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/errors/errors.ts#L18)
 
 ## Properties
 
@@ -139,7 +139,7 @@ DXOSError.prepareStackTrace
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:11
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/globals.d.ts:11
 
 ___
 
@@ -153,7 +153,7 @@ DXOSError.stackTraceLimit
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:13
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/globals.d.ts:13
 
 ## Methods
 
@@ -180,4 +180,4 @@ DXOSError.captureStackTrace
 
 #### Defined in
 
-node_modules/.pnpm/@types+node@16.11.27/node_modules/@types/node/globals.d.ts:4
+node_modules/.pnpm/@types+node@16.11.62/node_modules/@types/node/ts4.8/globals.d.ts:4

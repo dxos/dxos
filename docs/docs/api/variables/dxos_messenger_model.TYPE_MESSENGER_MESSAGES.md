@@ -8,4 +8,4 @@ Standard type of a set of messages as defined by the MessengerModel.
 
 #### Defined in
 
-[packages/echo/messenger-model/src/types.ts:14](https://github.com/dxos/dxos/blob/main/packages/echo/messenger-model/src/types.ts#L14)
+[packages/core/echo/messenger-model/src/types.ts:14](https://github.com/dxos/dxos/blob/main/packages/core/echo/messenger-model/src/types.ts#L14)

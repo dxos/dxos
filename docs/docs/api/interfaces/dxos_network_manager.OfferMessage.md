@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:9](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L9)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:9](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L9)
 
 ___
 
@@ -26,7 +26,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:13](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L13)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:13](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L13)
 
 ___
 
@@ -36,7 +36,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:10](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L10)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:10](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L10)
 
 ___
 
@@ -46,7 +46,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:12](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L12)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:12](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L12)
 
 ___
 
@@ -56,4 +56,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-messaging.ts:11](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-messaging.ts#L11)
+[packages/core/mesh/network-manager/src/signal/signal-messaging.ts:11](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-messaging.ts#L11)

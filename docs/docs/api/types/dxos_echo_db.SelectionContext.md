@@ -15,4 +15,4 @@ Returned from each stage of the visitor.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/result.ts:21](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/result.ts#L21)
+[packages/core/echo/echo-db/src/packlets/database/selection/result.ts:21](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/result.ts#L21)

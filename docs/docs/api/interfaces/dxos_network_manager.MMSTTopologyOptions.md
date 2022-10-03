@@ -12,7 +12,7 @@ Maximum number of connections allowed, all other connections will be dropped.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:22](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L22)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L22)
 
 ___
 
@@ -24,7 +24,7 @@ Number of connections the peer will originate by itself.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:17](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L17)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L17)
 
 ___
 
@@ -36,4 +36,4 @@ Size of random sample from which peer candidates are selected.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/mmst-topology.ts:27](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/mmst-topology.ts#L27)
+[packages/core/mesh/network-manager/src/topology/mmst-topology.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/mmst-topology.ts#L27)

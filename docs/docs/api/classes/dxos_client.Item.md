@@ -49,7 +49,7 @@ Items are constructed by the `Database` object.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:33
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:34
 
 ## Properties
 
@@ -62,7 +62,7 @@ Item can be restored until garbage collection (e.g., via snapshots).
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:23
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:24
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:11
 
 ___
 
@@ -90,7 +90,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:14
 
 ___
 
@@ -102,7 +102,7 @@ Parent item (or null if this item is a root item).
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:19
 
 ___
 
@@ -116,7 +116,7 @@ Atomically update parent/child relationship.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:64
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:65
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:14
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:15
 
 ## Accessors
 
@@ -140,7 +140,7 @@ packages/echo/echo-db/dist/src/packlets/database/item.d.ts:14
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:39
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:40
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:37
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:38
 
 ___
 
@@ -172,7 +172,7 @@ Entity.id
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:17
 
 ___
 
@@ -186,7 +186,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:40
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:41
 
 ___
 
@@ -204,7 +204,7 @@ Entity.model
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:20
 
 ___
 
@@ -222,7 +222,7 @@ Entity.modelMeta
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:19
 
 ___
 
@@ -236,7 +236,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:38
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:39
 
 ___
 
@@ -250,7 +250,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:36
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:37
 
 ___
 
@@ -264,7 +264,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:41
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:42
 
 ___
 
@@ -282,7 +282,7 @@ Entity.type
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:18
 
 ## Methods
 
@@ -306,7 +306,7 @@ Process a mutation from the stream.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:59
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:60
 
 ___
 
@@ -322,7 +322,7 @@ Delete the item.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:49
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:50
 
 ___
 
@@ -338,7 +338,7 @@ Restore deleted item.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:53
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:54
 
 ___
 
@@ -354,7 +354,7 @@ Returns a selection context, which can be used to traverse the object graph star
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:45
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:46
 
 ___
 
@@ -374,7 +374,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:54
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:55
 
 ___
 
@@ -408,7 +408,7 @@ Subscribe for updates.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/entity.d.ts:25
+packages/core/echo/echo-db/dist/src/packlets/database/entity.d.ts:25
 
 ___
 
@@ -422,4 +422,4 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/item.d.ts:35
+packages/core/echo/echo-db/dist/src/packlets/database/item.d.ts:36

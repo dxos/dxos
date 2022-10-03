@@ -6,8 +6,8 @@
 
 ### key
 
- `Optional` **key**: `PublicKey`
+ `Optional` **key**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/halo-proxy.ts:18](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/halo-proxy.ts#L18)
+[packages/sdk/client/src/packlets/proxies/halo-proxy.ts:20](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/halo-proxy.ts#L20)

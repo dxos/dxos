@@ -24,7 +24,7 @@ Any error thrown here will be a critical error for the swarm.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:68](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L68)
+[packages/core/mesh/network-manager/src/topology/topology.ts:68](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L68)
 
 ___
 
@@ -48,7 +48,7 @@ May be used to bind the swarm controller and initialize any asynchronous actions
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:49](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L49)
+[packages/core/mesh/network-manager/src/topology/topology.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L49)
 
 ___
 
@@ -72,7 +72,7 @@ true - to accept the connection, false - to reject.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:61](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L61)
+[packages/core/mesh/network-manager/src/topology/topology.ts:61](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L61)
 
 ___
 
@@ -88,4 +88,4 @@ Called when swarm state is updated.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/topology/topology.ts:54](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/topology/topology.ts#L54)
+[packages/core/mesh/network-manager/src/topology/topology.ts:54](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/topology/topology.ts#L54)

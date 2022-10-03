@@ -18,4 +18,4 @@ Sort based on parents.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/item-demuxer.ts:192](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/item-demuxer.ts#L192)
+[packages/core/echo/echo-db/src/packlets/database/item-demuxer.ts:192](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/item-demuxer.ts#L192)

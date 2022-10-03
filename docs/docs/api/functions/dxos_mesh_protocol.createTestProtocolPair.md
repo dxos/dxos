@@ -19,4 +19,4 @@ Returns a pair of connected protocols.
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/testing/util.ts:23](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/testing/util.ts#L23)
+[packages/core/mesh/mesh-protocol/src/testing/util.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/testing/util.ts#L23)

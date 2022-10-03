@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:24](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network-generator.ts#L24)
+[packages/core/mesh/network-generator/src/network-generator.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network-generator.ts#L24)

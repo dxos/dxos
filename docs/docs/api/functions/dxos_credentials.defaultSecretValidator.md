@@ -10,7 +10,7 @@ Validates the shared secret during an invitation process.
 
 | Name | Type |
 | :------ | :------ |
-| `invitation` | [`Invitation`](../classes/dxos_credentials.Invitation.md) |
+| `invitation` | `never` |
 | `secret` | `Buffer` |
 
 #### Returns
@@ -19,4 +19,4 @@ Validates the shared secret during an invitation process.
 
 #### Defined in
 
-[packages/halo/credentials/src/greet/invitation.ts:27](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/greet/invitation.ts#L27)
+[packages/core/halo/credentials/src/invitations.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/invitations.ts#L22)

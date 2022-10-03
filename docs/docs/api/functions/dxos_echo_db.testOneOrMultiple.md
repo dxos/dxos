@@ -23,4 +23,4 @@
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/selection/util.ts:21](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/selection/util.ts#L21)
+[packages/core/echo/echo-db/src/packlets/database/selection/util.ts:21](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/selection/util.ts#L21)

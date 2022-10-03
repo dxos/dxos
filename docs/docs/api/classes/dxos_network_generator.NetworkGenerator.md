@@ -26,7 +26,7 @@ Record<Topology, Generator\>.constructor
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:35](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network-generator.ts#L35)
+[packages/core/mesh/network-generator/src/network-generator.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network-generator.ts#L35)
 
 ## Properties
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:32](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network-generator.ts#L32)
+[packages/core/mesh/network-generator/src/network-generator.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network-generator.ts#L32)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:33](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network-generator.ts#L33)
+[packages/core/mesh/network-generator/src/network-generator.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network-generator.ts#L33)
 
 ___
 
@@ -177,4 +177,4 @@ Record.wattsStrogatz
 
 #### Defined in
 
-[packages/mesh/network-generator/src/network-generator.ts:62](https://github.com/dxos/dxos/blob/main/packages/mesh/network-generator/src/network-generator.ts#L62)
+[packages/core/mesh/network-generator/src/network-generator.ts:62](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-generator/src/network-generator.ts#L62)

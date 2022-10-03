@@ -12,4 +12,4 @@
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:20](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/types.ts#L20)
+[packages/core/echo/model-factory/src/types.ts:21](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/types.ts#L21)
