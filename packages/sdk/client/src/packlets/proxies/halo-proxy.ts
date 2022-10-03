@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { ClientServiceProvider, InvitationDescriptor } from '@dxos/client-services';
 import { keyPairFromSeedPhrase } from '@dxos/credentials';
-import { Contact, CreateProfileOptions, PartyMember, ResultSet } from '@dxos/echo-db';
+import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Profile, SignRequest } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
@@ -14,6 +14,7 @@ import { SubscriptionGroup } from '@dxos/util';
 
 import { Halo, Invitation, InvitationRequest } from '../api';
 import { InvitationProxy } from './invitation-proxy';
+import { Contact, CreateProfileOptions, PartyMember } from './stubs';
 
 export interface HaloInfo {
   key?: PublicKey
