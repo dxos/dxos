@@ -3,29 +3,50 @@
 //
 
 import chalk from 'chalk';
+import glob from 'glob';
+import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
-import { BrowserType, getNewBrowserContext, outputResults, runTests } from './browser';
+import { BrowserType, buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
 
 export type BrowserOptions = {
   testPatterns: string[]
   outputPath: string
   resultsPath: string
   timeout: number
-  signalServer: boolean
-  setup?: string
+  checkLeaks: boolean
   stayOpen: boolean
   headless: boolean
-  checkLeaks: boolean
   debug: boolean
   browserArgs?: string[]
 }
 
-export const runBrowser = async (name: string, browserType: BrowserType, options: BrowserOptions) => {
+export const runBrowser = async (
+  name: string,
+  browserType: BrowserType,
+  options: BrowserOptions
+) => {
+  const outDir = join(options.outputPath, 'out');
+
+  try {
+    await mkdir(outDir, { recursive: true });
+  } catch (e: any) {
+    console.error(e);
+  }
+
+  const files = await resolveFiles(options.testPatterns);
+
+  await buildTests(files, {
+    debug: !!options.debug,
+    outDir,
+    checkLeaks: options.checkLeaks
+  });
+
   console.log(chalk`\nRunning in {blue {bold ${browserType}}}`);
 
   const { page } = await getNewBrowserContext(browserType, options);
-  const results = await runTests(page, browserType, join(options.outputPath, 'out/bundle.js'), options);
+  const results = await runTests(page, browserType, join(outDir, 'bundle.js'), options);
   const exitCode = await outputResults(results, options.resultsPath, name, browserType);
   if (exitCode !== 0) {
     console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
@@ -44,4 +65,9 @@ export const runBrowser = async (name: string, browserType: BrowserType, options
   }
 
   return !shouldFail;
+};
+
+const resolveFiles = async (globs: string[]): Promise<string[]> => {
+  const results = await Promise.all(globs.map(pattern => promisify(glob)(pattern)));
+  return Array.from(new Set(results.flat(1)));
 };

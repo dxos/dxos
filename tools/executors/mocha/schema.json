@@ -7,57 +7,10 @@
       "type": "array",
       "description": "Globs of tests"
     },
-    "outputPath": {
-      "type": "string",
-      "description": "Where to save test outputs"
-    },
-    "resultsPath": {
-      "type": "string",
-      "description": "Where to save test results"
-    },
     "environments": {
       "type": "array",
       "description": "Environments to run tests in",
-      "default": ["nodejs", "chromium", "firefox", "webkit"]
-    },
-    "domRequired": {
-      "type": "boolean",
-      "description": "Register mock dom environment in Node test process",
-      "default": false
-    },
-    "signalServer": {
-      "type": "boolean",
-      "description": "Start signal server in test process",
-      "default": false
-    },
-    "timeout": {
-      "type": "number",
-      "description": "Mocha timeout in ms",
-      "default": 15000
-    },
-    "stayOpen": {
-      "type": "boolean",
-      "description": "Keep browser window open after tests have completed",
-      "default": false
-    },
-    "headless": {
-      "type": "boolean",
-      "description": "Run browser environments in headless mode",
-      "default": true
-    },
-    "checkLeaks": {
-      "type": "boolean",
-      "description": "Check for global variable leaks",
-      "default": true
-    },
-    "debug": {
-      "type": "boolean",
-      "description": "Enable debug logging",
-      "default": false
-    },
-    "browserArgs": {
-      "type": "array",
-      "description": "Arguments to pass to browser runner"
+      "default": ["nodejs"]
     },
     "setup": {
       "type": "string",
@@ -71,6 +24,48 @@
     "watchFiles": {
       "type": "array",
       "description": "Glob of files to watch"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Where to save test outputs"
+    },
+    "resultsPath": {
+      "type": "string",
+      "description": "Where to save test results"
+    },
+    "timeout": {
+      "type": "number",
+      "description": "Mocha timeout in ms",
+      "default": 15000
+    },
+    "checkLeaks": {
+      "type": "boolean",
+      "description": "Check for global variable leaks",
+      "default": true
+    },
+    "domRequired": {
+      "type": "boolean",
+      "description": "Register mock dom environment in Node test process",
+      "default": false
+    },
+    "stayOpen": {
+      "type": "boolean",
+      "description": "Keep browser window open after tests have completed",
+      "default": false
+    },
+    "headless": {
+      "type": "boolean",
+      "description": "Run browser environments in headless mode",
+      "default": true
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Enable debug logging",
+      "default": false
+    },
+    "browserArgs": {
+      "type": "array",
+      "description": "Arguments to pass to browser runner"
     }
   },
   "required": ["testPatterns", "outputPath", "resultsPath"]

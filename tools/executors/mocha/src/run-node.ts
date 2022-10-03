@@ -2,40 +2,92 @@
 // Copyright 2022 DXOS.org
 //
 
-import glob from 'glob';
-import Mocha from 'mocha';
-import { join } from 'path';
+import { ExecutorContext } from '@nrwl/devkit';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { execTool, getBin } from './util';
 
 export type NodeOptions = {
   testPatterns: string[]
+  watch: boolean
+  watchPatterns: string[]
   resultsPath: string
   timeout: number
-  signalServer: boolean
-  domRequired: boolean
   checkLeaks: boolean
+  domRequired: boolean
 }
 
-export const runNode = async (name: string, options: NodeOptions) => {
-  const mocha = new Mocha({
-    timeout: options.timeout,
-    checkLeaks: options.checkLeaks,
-    reporter: 'mocha-multi-reporters',
-    reporterOptions: {
-      reporterEnabled: 'spec, mocha-junit-reporter',
-      mochaJunitReporterReporterOptions: {
-        mochaFile: join(options.resultsPath, 'nodejs.xml'),
-        testsuitesTitle: `${name} nodejs Tests`
-      }
+export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
+  const reporterArgs = await setupReporter(context, options);
+  const setupArgs = getSetupArgs(context.root, options.domRequired);
+  const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
+
+  const args = [
+    ...options.testPatterns,
+    ...reporterArgs,
+    // NOTE: The import order here is important.
+    //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
+    //   We want the logger preprocessor to be run on typescript source first.
+    //   Then the SWC will transpile the typescript source to javascript.
+    '-r', '@dxos/log-hook/register',
+    '-r', '@swc-node/register',
+    ...setupArgs,
+    ...watchArgs,
+    '-t', String(options.timeout),
+    ...(options.checkLeaks ? ['--checkLeaks'] : [])
+  ];
+
+  const mocha = getBin(context.root, 'mocha');
+  const exitCode = await execTool(mocha, args);
+
+  return !exitCode;
+};
+
+const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
+  if (options.watch) {
+    return ['--reporter', 'min'];
+  }
+
+  const name = context.projectName!;
+  const reporterConfigDir = join(context.root, 'tmp/mocha', name);
+  const reporterConfigFile = join(reporterConfigDir, 'config.json');
+  const reporterConfig = {
+    reporterEnabled: 'spec, mocha-junit-reporter',
+    mochaJunitReporterReporterOptions: {
+      mochaFile: join(options.resultsPath, 'nodejs.xml'),
+      testsuitesTitle: `${name} nodejs Tests`
     }
-  });
+  };
+  await mkdir(reporterConfigDir, { recursive: true });
+  await writeFile(reporterConfigFile, JSON.stringify(reporterConfig), 'utf-8');
 
-  options.testPatterns.forEach(pattern => {
-    glob.sync(pattern).forEach(path => {
-      mocha.addFile(path);
-    });
-  });
+  return [
+    '--reporter', 'mocha-multi-reporters',
+    '--reporter-options', `configFile=${reporterConfigFile}`
+  ];
+};
 
-  const failures = await new Promise(resolve => mocha.run(failures => resolve(failures)));
+const getSetupArgs = (root: string, domRequired: boolean) => {
+  const scripts = [
+    'mocha-env',
+    'catch-unhandled-rejections',
+    ...(domRequired ? ['react-setup', 'dom-setup'] : [])
+  ];
 
-  return !failures;
+  return scripts
+    .map(script => join(root, 'tools/executors/mocha/dist/src/setup', `${script}.js`))
+    .map(script => ['-r', script])
+    .flat();
+};
+
+const getWatchArgs = (watch: boolean, patterns: string[]) => {
+  if (!watch) {
+    return [];
+  }
+
+  return [
+    '--watch',
+    ...patterns.map(pattern => ['--watch-files', pattern]).flat()
+  ];
 };

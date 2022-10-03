@@ -45,14 +45,18 @@
     "test": {
       "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "{options.outputPath}"
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "options": {
         "testPatterns": [
           "packages/common/protocols/src/**/*.test.{ts,js}"
         ],
-        "outputPath": "packages/common/protocols/.mocha",
-        "resultsPath": "test-results/common/protocols"
+        "watchPatterns": [
+          "packages/common/protocols/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/protocols",
+        "resultsPath": "test-results/protocols"
       }
     }
   },

@@ -2,7 +2,7 @@
   "executors": {
     "mocha": {
       "implementation": "./dist/src/main",
-      "schema": "./src/schema.json",
+      "schema": "./schema.json",
       "description": "Runs mocha tests in multiple environments."
     }
   }

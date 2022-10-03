@@ -113,7 +113,7 @@ const status = (value: Status, errorCount: number) => {
       return '✓';
 
     case 'Failed':
-      return `${errorCount})`; // '✖';
+      return `${errorCount})`;
 
     case 'Pending':
       return '-';

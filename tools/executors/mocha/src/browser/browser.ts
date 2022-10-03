@@ -6,10 +6,13 @@ import { mkdir } from 'node:fs/promises';
 import { chromium, firefox, webkit } from 'playwright';
 import { v4 } from 'uuid';
 
-export type BrowserType =
-  'chromium' |
-  'firefox' |
+export const BrowserTypes = [
+  'chromium',
+  'firefox',
   'webkit'
+] as const;
+
+export type BrowserType = typeof BrowserTypes[number];
 
 export type BrowserOptions = {
   headless: boolean
