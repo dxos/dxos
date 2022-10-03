@@ -14,7 +14,7 @@
     "info": "tsc --showConfig | jq",
     "run": "ts-node --esm ./src/main.ts",
     "test": "mocha",
-    "update:docs": "ts-node --esm ./src/main.ts docs"
+    "update-docs": "ts-node --esm ./src/main.ts --base-dir=../../ docs"
   },
   "mocha": {
     "loader": "ts-node/esm",

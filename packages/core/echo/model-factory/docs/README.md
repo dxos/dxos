@@ -15,23 +15,27 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph echo [echo]
-  style echo fill:#b3cae6,stroke:#fff
-  dxos/model-factory("@dxos/model-factory"):::root
-  click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+subgraph core [core]
+  style core fill:#faebec,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph echo [echo]
+    style echo fill:#ebf2fa,stroke:#333
+    dxos/model-factory("@dxos/model-factory"):::root
+    click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/feed-store("@dxos/feed-store"):::def
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/feeds("@dxos/feeds"):::def
-  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -45,19 +49,11 @@ subgraph common [common]
   end
 end
 
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
-
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/model-factory --> dxos/feed-store
-dxos/feed-store --> dxos/feeds
 dxos/model-factory --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
-dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
@@ -68,7 +64,6 @@ dxos/protocols --> dxos/feeds
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) | &check; |
-| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) |  |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
