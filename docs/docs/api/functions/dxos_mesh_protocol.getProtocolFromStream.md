@@ -16,4 +16,4 @@
 
 #### Defined in
 
-[packages/mesh/mesh-protocol/src/protocol.ts:402](https://github.com/dxos/dxos/blob/main/packages/mesh/mesh-protocol/src/protocol.ts#L402)
+[packages/core/mesh/mesh-protocol/src/protocol.ts:402](https://github.com/dxos/dxos/blob/main/packages/core/mesh/mesh-protocol/src/protocol.ts#L402)

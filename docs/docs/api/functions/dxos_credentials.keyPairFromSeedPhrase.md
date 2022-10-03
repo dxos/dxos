@@ -18,4 +18,4 @@ Generate key pair from seed phrase.
 
 #### Defined in
 
-[packages/halo/credentials/src/identity/seedphrase.ts:20](https://github.com/dxos/dxos/blob/main/packages/halo/credentials/src/identity/seedphrase.ts#L20)
+[packages/core/halo/credentials/src/seedphrase.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/halo/credentials/src/seedphrase.ts#L22)

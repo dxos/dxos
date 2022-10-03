@@ -21,7 +21,7 @@ Creates data snapshots.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:32](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L32)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L30)
 
 ## Methods
 
@@ -35,7 +35,7 @@ Creates data snapshots.
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:30](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L30)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:33](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L33)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:35](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L35)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L37)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L34)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:36](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L36)
 
 ___
 
@@ -77,7 +77,7 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:33](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L33)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:35](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L35)
 
 ___
 
@@ -98,4 +98,4 @@ ___
 
 #### Defined in
 
-[packages/echo/echo-db/src/packlets/database/database-backend.ts:29](https://github.com/dxos/dxos/blob/main/packages/echo/echo-db/src/packlets/database/database-backend.ts#L29)
+[packages/core/echo/echo-db/src/packlets/database/database-backend.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/database/database-backend.ts#L32)

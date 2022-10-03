@@ -19,4 +19,4 @@
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/messages.ts:9](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/messages.ts#L9)
+[packages/core/echo/model-factory/src/testing/messages.ts:8](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/messages.ts#L8)

@@ -26,7 +26,7 @@ Join topic on signal network, to be discoverable by other peers.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-connection.ts:14](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-connection.ts#L14)
+[packages/core/mesh/network-manager/src/signal/signal-connection.ts:14](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-connection.ts#L14)
 
 ___
 
@@ -50,4 +50,4 @@ Leave topic on signal network, to stop being discoverable by other peers.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/signal/signal-connection.ts:19](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/signal/signal-connection.ts#L19)
+[packages/core/mesh/network-manager/src/signal/signal-connection.ts:19](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/signal/signal-connection.ts#L19)

@@ -2,8 +2,10 @@
 
 [@dxos/echo-db](../modules/dxos_echo_db.md).codec
 
- `Const` **codec**: `WithTypeUrl`<`any`\>
+ `Const` **codec**: `Codec`<`FeedMessage`\>
+
+Codec for messages written on feeds.
 
 #### Defined in
 
-packages/echo/echo-protocol/dist/src/codec.d.ts:2
+[packages/core/echo/echo-db/src/packlets/common/codec.ts:12](https://github.com/dxos/dxos/blob/main/packages/core/echo/echo-db/src/packlets/common/codec.ts#L12)

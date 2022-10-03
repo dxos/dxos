@@ -12,7 +12,7 @@ A hook bound to window.__DXOS__.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:19](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/devtools.ts#L19)
+[packages/sdk/client/src/packlets/proxies/devtools.ts:19](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L19)
 
 ___
 
@@ -30,4 +30,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/devtools.ts:20](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/devtools.ts#L20)
+[packages/sdk/client/src/packlets/proxies/devtools.ts:20](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/devtools.ts#L20)

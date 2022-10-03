@@ -19,4 +19,4 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:45](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L45)
+[packages/core/mesh/messaging/src/signal-client.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L45)

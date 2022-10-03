@@ -6,7 +6,7 @@
 
 ### member
 
- **member**: `PartyMember`
+ **member**: `any`
 
 #### Defined in
 

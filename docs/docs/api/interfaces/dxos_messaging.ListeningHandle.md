@@ -18,4 +18,4 @@
 
 #### Defined in
 
-[packages/mesh/messaging/src/messenger.ts:247](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/messenger.ts#L247)
+[packages/core/mesh/messaging/src/messenger.ts:248](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/messenger.ts#L248)

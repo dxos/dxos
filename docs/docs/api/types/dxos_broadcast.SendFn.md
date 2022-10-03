@@ -28,4 +28,4 @@
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:17](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L17)
+[packages/core/mesh/broadcast/src/broadcast.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L17)

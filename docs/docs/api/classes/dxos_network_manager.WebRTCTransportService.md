@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:16](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L16)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L16)
 
 ## Properties
 
@@ -30,7 +30,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:14](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L14)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:14](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L14)
 
 ## Methods
 
@@ -54,7 +54,7 @@ BridgeService.close
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:97](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L97)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:97](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L97)
 
 ___
 
@@ -78,7 +78,7 @@ BridgeService.open
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:21](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L21)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:21](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L21)
 
 ___
 
@@ -102,7 +102,7 @@ BridgeService.sendData
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:92](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L92)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:92](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L92)
 
 ___
 
@@ -126,4 +126,4 @@ BridgeService.sendSignal
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-service.ts:86](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-service.ts#L86)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts:86](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-service.ts#L86)

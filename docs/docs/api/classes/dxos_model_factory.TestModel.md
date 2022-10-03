@@ -32,7 +32,7 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L23)
+[packages/core/echo/model-factory/src/model.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L23)
 
 ## Properties
 
@@ -54,7 +54,7 @@ Models define a root message type, which is contained in the parent Item's messa
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L26)
+[packages/core/echo/model-factory/src/model.ts:26](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L26)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L15)
+[packages/core/echo/model-factory/src/model.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L15)
 
 ___
 
@@ -78,7 +78,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:37](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-model.ts#L37)
+[packages/core/echo/model-factory/src/testing/test-model.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-model.ts#L37)
 
 ## Accessors
 
@@ -96,7 +96,7 @@ Model.itemId
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L45)
+[packages/core/echo/model-factory/src/model.ts:45](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L45)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:44](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-model.ts#L44)
+[packages/core/echo/model-factory/src/testing/test-model.ts:44](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-model.ts#L44)
 
 ___
 
@@ -128,7 +128,7 @@ Model.modelMeta
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L41)
+[packages/core/echo/model-factory/src/model.ts:41](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L41)
 
 ___
 
@@ -142,7 +142,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:48](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-model.ts#L48)
+[packages/core/echo/model-factory/src/testing/test-model.ts:48](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-model.ts#L48)
 
 ___
 
@@ -160,7 +160,7 @@ Model.readOnly
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L49)
+[packages/core/echo/model-factory/src/model.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L49)
 
 ## Methods
 
@@ -180,7 +180,7 @@ Model.readOnly
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:52](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-model.ts#L52)
+[packages/core/echo/model-factory/src/testing/test-model.ts:52](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-model.ts#L52)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/testing/test-model.ts:56](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/testing/test-model.ts#L56)
+[packages/core/echo/model-factory/src/testing/test-model.ts:56](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/testing/test-model.ts#L56)
 
 ___
 
@@ -237,7 +237,7 @@ function that unsubscribes this event listener
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L53)
+[packages/core/echo/model-factory/src/model.ts:53](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L53)
 
 ___
 
@@ -260,7 +260,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L34)
+[packages/core/echo/model-factory/src/model.ts:34](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L34)
 
 ___
 
@@ -278,7 +278,7 @@ ___
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L30)
+[packages/core/echo/model-factory/src/model.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L30)
 
 ___
 
@@ -304,4 +304,4 @@ Writes the raw mutation to the output stream.
 
 #### Defined in
 
-[packages/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/model.ts#L60)
+[packages/core/echo/model-factory/src/model.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/model.ts#L60)

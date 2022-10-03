@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/echo/object-model/src/object-model.ts:16](https://github.com/dxos/dxos/blob/main/packages/echo/object-model/src/object-model.ts#L16)
+[packages/core/echo/object-model/src/object-model.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/echo/object-model/src/object-model.ts#L16)

@@ -40,7 +40,7 @@ ___
 
 ### members
 
- `Optional` **members**: `PartyMember`[]
+ `Optional` **members**: `any`[]
 
 #### Defined in
 

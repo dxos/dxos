@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L29)
+[packages/core/mesh/network-manager/src/connection-log.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L29)

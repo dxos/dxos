@@ -16,7 +16,7 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:72](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L72)
+[packages/sdk/client/src/packlets/proxies/client.ts:76](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L76)
 
 ___
 
@@ -26,7 +26,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:73](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L73)
+[packages/sdk/client/src/packlets/proxies/client.ts:77](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L77)
 
 ___
 
@@ -36,4 +36,4 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/client.ts:71](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/client.ts#L71)
+[packages/sdk/client/src/packlets/proxies/client.ts:75](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/client.ts#L75)

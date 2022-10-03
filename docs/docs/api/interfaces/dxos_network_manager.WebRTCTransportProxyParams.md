@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:21](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L21)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:22](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L22)
 
 ___
 
@@ -20,7 +20,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:23](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L23)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L24)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:28](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L28)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L29)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:24](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L24)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:25](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L25)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L27)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:28](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L28)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:25](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L25)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:26](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L26)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:22](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L22)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L23)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:26](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L26)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L27)
 
 ___
 
@@ -104,4 +104,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L29)
+[packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/webrtc-transport-proxy.ts#L30)

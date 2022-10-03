@@ -6,4 +6,4 @@
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/version.ts:1](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/version.ts#L1)
+[packages/sdk/client/src/packlets/proxies/version.ts:5](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/version.ts#L5)

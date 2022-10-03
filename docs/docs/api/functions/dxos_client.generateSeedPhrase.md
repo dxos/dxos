@@ -12,4 +12,4 @@ Generate bip39 seed phrase (aka mnemonic).
 
 #### Defined in
 
-packages/halo/credentials/dist/src/identity/seedphrase.d.ts:4
+packages/core/halo/credentials/dist/src/seedphrase.d.ts:5

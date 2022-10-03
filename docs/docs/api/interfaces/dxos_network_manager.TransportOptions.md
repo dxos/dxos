@@ -12,7 +12,7 @@ Did local node initiate this connection.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:27](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L27)
+[packages/core/mesh/network-manager/src/transport/transport.ts:27](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L27)
 
 ___
 
@@ -22,7 +22,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:29](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L29)
+[packages/core/mesh/network-manager/src/transport/transport.ts:29](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L29)
 
 ___
 
@@ -32,7 +32,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:30](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L30)
+[packages/core/mesh/network-manager/src/transport/transport.ts:30](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L30)
 
 ___
 
@@ -58,7 +58,7 @@ Send a signal message to remote peer.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:42](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L42)
+[packages/core/mesh/network-manager/src/transport/transport.ts:42](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L42)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:31](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L31)
+[packages/core/mesh/network-manager/src/transport/transport.ts:31](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L31)
 
 ___
 
@@ -80,7 +80,7 @@ Wire protocol.
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:37](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L37)
+[packages/core/mesh/network-manager/src/transport/transport.ts:37](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L37)
 
 ___
 
@@ -90,4 +90,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/transport/transport.ts:32](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/transport/transport.ts#L32)
+[packages/core/mesh/network-manager/src/transport/transport.ts:32](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/transport/transport.ts#L32)

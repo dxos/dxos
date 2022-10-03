@@ -36,7 +36,7 @@ Represents a live-query (subscription) that can notify about future updates to t
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:27
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:27
 
 ## Properties
 
@@ -46,7 +46,7 @@ packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:27
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:17
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:17
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:26
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:26
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:20
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:20
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:19
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:19
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:18
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:18
 
 ___
 
@@ -99,7 +99,7 @@ Only update that are relevant to the selection cause the update.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:25
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:25
 
 ## Accessors
 
@@ -115,7 +115,7 @@ Get the result of this selection.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:40
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:40
 
 ___
 
@@ -131,7 +131,7 @@ The root of the selection. Either a database or an item. Must be a stable refere
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:36
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:36
 
 ___
 
@@ -147,7 +147,7 @@ Returns the selection or reducer result.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:44
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:44
 
 ## Methods
 
@@ -163,7 +163,7 @@ Return the first element if the set has exactly one element.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:48
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:48
 
 ___
 
@@ -179,7 +179,7 @@ Re-run query.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:32
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:32
 
 ___
 
@@ -193,4 +193,4 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:28
+packages/core/echo/echo-db/dist/src/packlets/database/selection/result.d.ts:28

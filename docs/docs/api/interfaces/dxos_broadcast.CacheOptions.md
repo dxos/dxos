@@ -20,7 +20,7 @@ Default: 10000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L43)
+[packages/core/mesh/broadcast/src/broadcast.ts:43](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L43)
 
 ___
 
@@ -34,4 +34,4 @@ Default: 1000.
 
 #### Defined in
 
-[packages/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/main/packages/mesh/broadcast/src/broadcast.ts#L49)
+[packages/core/mesh/broadcast/src/broadcast.ts:49](https://github.com/dxos/dxos/blob/main/packages/core/mesh/broadcast/src/broadcast.ts#L49)

@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:23](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L23)
+[packages/core/mesh/protocol-plugin-presence/src/presence-plugin.ts:24](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-presence/src/presence-plugin.ts#L24)
 
 ___
 
@@ -20,4 +20,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/protocol-plugin-presence/src/presence-plugin.ts:22](https://github.com/dxos/dxos/blob/main/packages/mesh/protocol-plugin-presence/src/presence-plugin.ts#L22)
+[packages/core/mesh/protocol-plugin-presence/src/presence-plugin.ts:23](https://github.com/dxos/dxos/blob/main/packages/core/mesh/protocol-plugin-presence/src/presence-plugin.ts#L23)

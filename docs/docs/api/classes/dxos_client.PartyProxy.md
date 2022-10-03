@@ -17,7 +17,7 @@ Proxies requests to local/remove services.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L31)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:26](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L26)
 
 ___
 
@@ -27,7 +27,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L32)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:27](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L27)
 
 ___
 
@@ -37,7 +37,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:36](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L36)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:31](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L31)
 
 ___
 
@@ -47,7 +47,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:35](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L35)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:30](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L30)
 
 ___
 
@@ -57,17 +57,17 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:37](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L37)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:32](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L32)
 
 ___
 
 ### \_key
 
- `Private` **\_key**: `PublicKey`
+ `Private` **\_key**: [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:34](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L34)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:29](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L29)
 
 ## Accessors
 
@@ -85,7 +85,7 @@ Party.database
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:88](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L88)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:83](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L83)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:71](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L71)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:66](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L66)
 
 ___
 
@@ -117,7 +117,7 @@ Party.isActive
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:83](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L83)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:78](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L78)
 
 ___
 
@@ -135,17 +135,17 @@ Party.isOpen
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:79](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L79)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:74](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L74)
 
 ___
 
 ### key
 
-`get` **key**(): `PublicKey`
+`get` **key**(): [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Returns
 
-`PublicKey`
+[`PublicKey`](dxos_client.PublicKey.md)
 
 #### Implementation of
 
@@ -153,13 +153,15 @@ Party.key
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:75](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L75)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:70](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L70)
 
 ___
 
 ### properties
 
 `get` **properties**(): `ObjectProperties`
+
+TODO: Currently broken.
 
 #### Returns
 
@@ -171,7 +173,7 @@ Party.properties
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:161](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L161)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:159](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L159)
 
 ___
 
@@ -212,7 +214,7 @@ Party.reduce
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:106](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L106)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:101](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L101)
 
 ___
 
@@ -246,7 +248,7 @@ Party.select
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:99](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L99)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:94](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L94)
 
 ## Methods
 
@@ -266,7 +268,7 @@ Party.select
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:143](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L143)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:138](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L138)
 
 ___
 
@@ -284,7 +286,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:135](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L135)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:130](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L130)
 
 ___
 
@@ -315,7 +317,7 @@ To be used with `client.echo.acceptInvitation` on the invitee side.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:215](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L215)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:214](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L214)
 
 ___
 
@@ -335,7 +337,7 @@ Implementation method.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:223](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L223)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:222](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L222)
 
 ___
 
@@ -355,7 +357,7 @@ Called by EchoProxy close.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:125](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L125)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:120](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L120)
 
 ___
 
@@ -373,7 +375,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:139](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L139)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:134](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L134)
 
 ___
 
@@ -402,13 +404,13 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:189](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L189)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:188](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L188)
 
 ___
 
 ### getTitle
 
-**getTitle**(): `any`
+**getTitle**(): `never`
 
 **`Deprecated`**
 
@@ -416,7 +418,7 @@ Use party.properties.
 
 #### Returns
 
-`any`
+`never`
 
 #### Implementation of
 
@@ -424,7 +426,7 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:175](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L175)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:173](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L173)
 
 ___
 
@@ -444,7 +446,7 @@ Called by EchoProxy open.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:113](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L113)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:108](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L108)
 
 ___
 
@@ -462,7 +464,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:131](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L131)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:126](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L126)
 
 ___
 
@@ -482,7 +484,7 @@ Return set of party members.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:197](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L197)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:196](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L196)
 
 ___
 
@@ -495,7 +497,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `active` | `boolean` |
-| `options` | `ActivationOptions` |
+| `options` | `any` |
 
 #### Returns
 
@@ -507,7 +509,7 @@ ___
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:151](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L151)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:146](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L146)
 
 ___
 
@@ -536,7 +538,7 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:182](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L182)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:181](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L181)
 
 ___
 
@@ -564,4 +566,4 @@ Use party.properties.
 
 #### Defined in
 
-[packages/sdk/client/src/packlets/proxy/party-proxy.ts:168](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxy/party-proxy.ts#L168)
+[packages/sdk/client/src/packlets/proxies/party-proxy.ts:166](https://github.com/dxos/dxos/blob/main/packages/sdk/client/src/packlets/proxies/party-proxy.ts#L166)

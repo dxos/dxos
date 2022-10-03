@@ -16,4 +16,4 @@ asserts model is ModelConstructor<any\>
 
 #### Defined in
 
-[packages/echo/model-factory/src/types.ts:100](https://github.com/dxos/dxos/blob/main/packages/echo/model-factory/src/types.ts#L100)
+[packages/core/echo/model-factory/src/types.ts:101](https://github.com/dxos/dxos/blob/main/packages/core/echo/model-factory/src/types.ts#L101)

@@ -18,7 +18,7 @@ Wrapper for ECHO Item that represents an `ObjectModel` schema.
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:23
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:23
 
 ## Properties
 
@@ -28,7 +28,7 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:23
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:22
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:22
 
 ## Accessors
 
@@ -42,7 +42,7 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:22
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:25
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:25
 
 ___
 
@@ -56,7 +56,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:24
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:24
 
 ## Methods
 
@@ -76,7 +76,7 @@ packages/echo/echo-db/dist/src/api/schema.d.ts:24
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:28
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:28
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:30
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:30
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:29
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:29
 
 ___
 
@@ -137,7 +137,7 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:26
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:26
 
 ___
 
@@ -157,4 +157,4 @@ ___
 
 #### Defined in
 
-packages/echo/echo-db/dist/src/api/schema.d.ts:27
+packages/core/echo/echo-db/dist/src/packlets/api/schema.d.ts:27

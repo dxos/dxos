@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prerelease": "pnpm run generate:api && pnpm run cleanup:api && vuepress build docs",
-    "generate:api": "typedoc --tsconfig ../../tsconfig.json --plugin typedoc-plugin-markdown --out docs/api --gitRevision main --githubPages false --hideBreadcrumbs true --hideInPageTOC true --allReflectionsHaveOwnDocument true --hideMembersSymbol true --entryPointStrategy packages --entryPoints ../../packages/echo/* --entryPoints ../../packages/halo/* --entryPoints ../../packages/mesh/* --entryPoints ../../packages/sdk/*",
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
     "cleanup:api": "rm docs/api/README.md",
+    "docs:build": "vuepress build docs",
+    "generate:api": "typedoc --tsconfig ../tsconfig.json --plugin typedoc-plugin-markdown --out docs/api --gitRevision main --githubPages false --hideBreadcrumbs true --hideInPageTOC true --allReflectionsHaveOwnDocument true --hideMembersSymbol true --entryPointStrategy packages --entryPoints ../packages/core/**/* --entryPoints ../packages/sdk/*",
+    "prerelease": "pnpm run generate:api && pnpm run cleanup:api && pnpm run docs:build",
     "serve": "vuepress dev docs"
   },
   "devDependencies": {

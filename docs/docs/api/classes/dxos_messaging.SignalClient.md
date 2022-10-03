@@ -23,7 +23,7 @@ Establishes a websocket connection to signal server and provides RPC methods.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:104](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L104)
+[packages/core/mesh/messaging/src/signal-client.ts:104](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L104)
 
 ## Properties
 
@@ -33,7 +33,7 @@ Establishes a websocket connection to signal server and provides RPC methods.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:83](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L83)
+[packages/core/mesh/messaging/src/signal-client.ts:83](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L83)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:81](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L81)
+[packages/core/mesh/messaging/src/signal-client.ts:81](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L81)
 
 ___
 
@@ -55,7 +55,7 @@ Timestamp of when the connection attempt was began.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:72](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L72)
+[packages/core/mesh/messaging/src/signal-client.ts:72](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L72)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:62](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L62)
+[packages/core/mesh/messaging/src/signal-client.ts:62](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L62)
 
 ___
 
@@ -77,7 +77,7 @@ Timestamp of last state change.
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:77](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L77)
+[packages/core/mesh/messaging/src/signal-client.ts:77](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L77)
 
 ___
 
@@ -87,7 +87,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:97](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L97)
+[packages/core/mesh/messaging/src/signal-client.ts:97](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L97)
 
 ___
 
@@ -99,7 +99,7 @@ Number of milliseconds after which the connection will be attempted again in cas
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:67](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L67)
+[packages/core/mesh/messaging/src/signal-client.ts:67](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L67)
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:79](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L79)
+[packages/core/mesh/messaging/src/signal-client.ts:79](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L79)
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:60](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L60)
+[packages/core/mesh/messaging/src/signal-client.ts:60](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L60)
 
 ___
 
@@ -129,7 +129,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:92](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L92)
+[packages/core/mesh/messaging/src/signal-client.ts:92](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L92)
 
 ___
 
@@ -139,7 +139,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:86](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L86)
+[packages/core/mesh/messaging/src/signal-client.ts:86](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L86)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:84](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L84)
+[packages/core/mesh/messaging/src/signal-client.ts:84](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L84)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:87](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L87)
+[packages/core/mesh/messaging/src/signal-client.ts:87](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L87)
 
 ## Methods
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:127](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L127)
+[packages/core/mesh/messaging/src/signal-client.ts:127](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L127)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:188](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L188)
+[packages/core/mesh/messaging/src/signal-client.ts:188](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L188)
 
 ___
 
@@ -207,7 +207,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:120](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L120)
+[packages/core/mesh/messaging/src/signal-client.ts:120](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L120)
 
 ___
 
@@ -228,7 +228,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:266](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L266)
+[packages/core/mesh/messaging/src/signal-client.ts:266](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L266)
 
 ___
 
@@ -242,7 +242,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:211](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L211)
+[packages/core/mesh/messaging/src/signal-client.ts:211](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L211)
 
 ___
 
@@ -256,7 +256,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:223](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L223)
+[packages/core/mesh/messaging/src/signal-client.ts:223](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L223)
 
 ___
 
@@ -282,7 +282,7 @@ SignalMethods.join
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:234](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L234)
+[packages/core/mesh/messaging/src/signal-client.ts:234](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L234)
 
 ___
 
@@ -308,7 +308,7 @@ SignalMethods.leave
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:246](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L246)
+[packages/core/mesh/messaging/src/signal-client.ts:246](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L246)
 
 ___
 
@@ -332,7 +332,7 @@ SignalMethods.sendMessage
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:262](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L262)
+[packages/core/mesh/messaging/src/signal-client.ts:262](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L262)
 
 ___
 
@@ -356,4 +356,4 @@ SignalMethods.subscribeMessages
 
 #### Defined in
 
-[packages/mesh/messaging/src/signal-client.ts:291](https://github.com/dxos/dxos/blob/main/packages/mesh/messaging/src/signal-client.ts#L291)
+[packages/core/mesh/messaging/src/signal-client.ts:291](https://github.com/dxos/dxos/blob/main/packages/core/mesh/messaging/src/signal-client.ts#L291)

@@ -18,4 +18,4 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/protocol-factory.ts:58](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/protocol-factory.ts#L58)
+[packages/core/mesh/network-manager/src/protocol-factory.ts:58](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/protocol-factory.ts#L58)

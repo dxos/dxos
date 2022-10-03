@@ -10,7 +10,7 @@
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:17](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L17)
+[packages/core/mesh/network-manager/src/connection-log.ts:17](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L17)
 
 ___
 
@@ -20,7 +20,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:13](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L13)
+[packages/core/mesh/network-manager/src/connection-log.ts:13](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L13)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:16](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L16)
+[packages/core/mesh/network-manager/src/connection-log.ts:16](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L16)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:15](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L15)
+[packages/core/mesh/network-manager/src/connection-log.ts:15](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L15)
 
 ___
 
@@ -50,4 +50,4 @@ ___
 
 #### Defined in
 
-[packages/mesh/network-manager/src/connection-log.ts:14](https://github.com/dxos/dxos/blob/main/packages/mesh/network-manager/src/connection-log.ts#L14)
+[packages/core/mesh/network-manager/src/connection-log.ts:14](https://github.com/dxos/dxos/blob/main/packages/core/mesh/network-manager/src/connection-log.ts#L14)

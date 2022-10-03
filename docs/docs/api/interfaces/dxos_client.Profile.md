@@ -9,11 +9,11 @@ Defined in:
 
 ### publicKey
 
- **publicKey**: `PublicKey`
+ **publicKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/client.d.ts:86
+packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts:86
 
 ___
 
@@ -26,4 +26,4 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/client.d.ts:91
+packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts:91

@@ -16,7 +16,7 @@ Options:
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:32
+packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:32
 
 ___
 
@@ -26,7 +26,7 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:34
+packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:34
 
 ___
 
@@ -36,4 +36,4 @@ ___
 
 #### Defined in
 
-packages/common/protocols/dist/src/proto/gen/dxos/config.d.ts:33
+packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:33
