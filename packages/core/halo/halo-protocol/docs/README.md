@@ -27,6 +27,10 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/crypto("@dxos/crypto"):::def
+  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
@@ -54,8 +58,10 @@ end
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/halo-protocol --> dxos/keyring
+dxos/keyring --> dxos/crypto
 dxos/keyring --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 dxos/keyring --> dxos/random-access-storage
 ```
 
@@ -65,7 +71,9 @@ dxos/keyring --> dxos/random-access-storage
 |---|---|
 | [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keyring`](../../keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |

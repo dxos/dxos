@@ -23,7 +23,7 @@ Install pnpm and its dependencies:
 ```bash
 npm install -g pnpm@7.9.0
 nodenv rehash
-alias pnx = 'pnpm nx'
+alias px="pnpm -w nx"
 ```
 
 ### Building

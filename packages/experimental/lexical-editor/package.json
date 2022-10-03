@@ -15,6 +15,9 @@
     "test": "toolchain test",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -67,9 +70,6 @@
     "react": "*",
     "react-dom": "*"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "publishConfig": {
     "access": "restricted"
   },

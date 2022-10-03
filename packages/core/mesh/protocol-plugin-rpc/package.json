@@ -5,18 +5,18 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/messaging": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0"

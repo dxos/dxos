@@ -15,14 +15,20 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+subgraph mesh [mesh]
+  style mesh fill:#b3e6c0,stroke:#fff
   dxos/rpc-tunnel("@dxos/rpc-tunnel"):::root
   click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
   dxos/rpc("@dxos/rpc"):::def
   click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+end
+
+subgraph common [common]
+  style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -32,6 +38,8 @@ subgraph common [common]
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
@@ -48,16 +56,19 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/rpc-tunnel --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
 
 | Module | Direct |
 |---|---|
-| [`@dxos/async`](../../async/docs/README.md) |  |
-| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) |  |
-| [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/keys`](../../keys/docs/README.md) |  |
-| [`@dxos/protocols`](../../../core/protocols/docs/README.md) |  |
+| [`@dxos/async`](../../../../common/async/docs/README.md) |  |
+| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) |  |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md) |  |
+| [`@dxos/log`](../../../../common/log/docs/README.md) |  |
+| [`@dxos/protocols`](../../../protocols/docs/README.md) |  |
 | [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
-| [`@dxos/util`](../../util/docs/README.md) |  |
+| [`@dxos/util`](../../../../common/util/docs/README.md) |  |

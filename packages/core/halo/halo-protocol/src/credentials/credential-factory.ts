@@ -4,9 +4,9 @@
 
 import assert from 'assert';
 
-import { Signer } from '@dxos/keyring';
+import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { MessageType } from '@dxos/protocols';
+import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { getSignaturePayload } from './signing';
@@ -14,7 +14,7 @@ import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerParams = {
   subject: PublicKey
-  assertion: MessageType
+  assertion: TypedMessage
   nonce?: Uint8Array
 }
 
@@ -27,7 +27,7 @@ export type CreateCredentialParams = {
   chain?: Chain
 
   subject: PublicKey
-  assertion: MessageType
+  assertion: TypedMessage
   nonce?: Uint8Array
 }
 

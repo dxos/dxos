@@ -19,9 +19,5 @@
     {
       "path": "../credentials"
     },
-  ],
-  "types": [
-    "mocha",
-    "node"
   ]
 }
