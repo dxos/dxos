@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from 'path';
 import * as process from 'process';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -69,7 +68,7 @@ const main = () => {
         verbose,
         baseDir,
         project: name,
-        filter,
+        filter
       }: {
         json?: boolean
         verbose?: boolean

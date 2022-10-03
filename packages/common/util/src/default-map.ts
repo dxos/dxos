@@ -13,4 +13,4 @@ export const defaultMap = <K, V> (map: Map<K, V>, def: () => V) => (key: K) => {
   }
 
   return value;
-}
+};

@@ -12,12 +12,7 @@ import { array } from './util';
 
 const colorHash = new ColorHash({
   lightness: 0.95,
-  saturation: 0.6,
-  // hue: [
-  //   { min: 100, max: 360 },
-  //   { min: 200, max: 360 },
-  //   { min: 200, max: 360 }
-  // ]
+  saturation: 0.6
 });
 
 type PackageDependencyBuilderOptions = {
@@ -149,13 +144,6 @@ export class PackageDependencyBuilder {
     // Subgraphs
     //
     {
-      // TODO(burdon): Get from package.json metadata?
-      const sectionName = (subdir: string): string => {
-        const parts = subdir.split('/');
-        parts.pop();
-        return parts.pop()!; // Second to last.
-      };
-
       type Folder = { label: string, folders?: Map<string, Folder>, packages: string[] }
 
       const root = new Map<string, Folder>();
@@ -185,8 +173,8 @@ export class PackageDependencyBuilder {
         };
 
         array(visited).forEach(project => {
-          // TODO(burdon): Better way to remove "packages/".
-          const [ignore, ...parts] = project.subdir.split('/');
+          // Skip top-level "packages" directory.
+          const [, ...parts] = project.subdir.split('/');
           parts.pop();
           if (this._options.exclude?.includes(project.package.name)) {
             parts.push('_');
@@ -230,7 +218,7 @@ export class PackageDependencyBuilder {
               process(sub, folder.folders, folder);
             }
           });
-        }
+        };
 
         process(flowchart, root);
       }
