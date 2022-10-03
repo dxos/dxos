@@ -106,3 +106,7 @@ storybook-static
 # Generated Docusaurus files
 .docusaurus/
 .cache-loader/
+
+# Generated Vuepress Files
+.temp
+.cache

@@ -27,6 +27,12 @@ module.exports = {
     'brace-style': ['error', '1tbs'],
     'func-call-spacing': 'off',
     'import/export': 'off',
+    'import/newline-after-import': ['error', {
+      count: 1
+      // TODO(wittjosiah): This option exists but seems unreleased.
+      //   https://github.com/import-js/eslint-plugin-import/pull/2399#issuecomment-1103636483
+      // considerComments: true
+    }],
     'import/order': ['error', {
       pathGroups: [
         {
