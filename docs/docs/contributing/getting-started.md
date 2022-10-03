@@ -1,8 +1,3 @@
----
-title: Getting started
-description: DXOS SDK
----
-
 ## Nx Monorepos
 
 The project is developed using [Nx](https://nx.dev/) and NodeJS version `16.14.0`.

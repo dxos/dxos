@@ -18,8 +18,8 @@ const config: UserConfig = defineUserConfig({
     logo: '/images/dxos.svg',
     logoDark: '/images/dxos-white.svg',
     docsRepo: 'dxos/dxos',
-    docsBranch: 'wittjosiah/09-23-docs_Vuepress',
-    docsDir: 'apps/vuepress/docs',
+    docsBranch: 'main',
+    docsDir: 'docs/docs',
     navbar: [
       {
         text: 'Guide',

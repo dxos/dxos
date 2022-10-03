@@ -1,14 +1,14 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "root": "packages/apps/docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "root": "docs",
   "projectType": "application",
   "targets": {
     // TODO(wittjosiah): Run as apart of release please to ensure api docs are up to date.
     "prerelease": {
       "executor": "nx:run-script",
       "outputs": [
-        "packages/apps/docs/docs/api",
-        "packages/apps/docs/docs/.vuepress/dist"
+        "docs/docs/api",
+        "docs/docs/.vuepress/dist"
       ],
       "options": {
         "script": "prerelease"
@@ -21,7 +21,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/apps/docs/**/*.{ts,tsx,js,jsx}"
+          "docs/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }

@@ -21,7 +21,7 @@
     "devtools": "packages/devtools/devtools",
     "devtools-extension": "packages/devtools/devtools-extension",
     "devtools-mesh": "packages/devtools/devtools-mesh",
-    "docs": "packages/apps/docs",
+    "docs": "docs",
     "dx-cli": "packages/apps/dx-cli",
     "echo-db": "packages/core/echo/echo-db",
     "echo-testing": "packages/core/echo/echo-testing",

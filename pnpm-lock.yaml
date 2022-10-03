@@ -172,7 +172,7 @@ importers:
       wait-for-expect: 3.0.2
       webpack: 5.74.0_esbuild@0.14.49
 
-  packages/apps/docs:
+  docs:
     specifiers:
       '@dxos/react-components': workspace:*
       '@types/eslint': ^8.4.6
@@ -196,7 +196,7 @@ importers:
       vue: ^3.2.39
       vuepress: ^2.0.0-beta.51
     devDependencies:
-      '@dxos/react-components': link:../../sdk/react-components
+      '@dxos/react-components': link:../packages/sdk/react-components
       '@types/eslint': 8.4.6
       '@types/markdown-it': 12.2.3
       '@types/markdown-it-container': 2.0.5
@@ -3513,7 +3513,7 @@ importers:
       '@types/lodash.flatten': ^4.4.6
       '@types/lodash.zip': ^4.2.6
       '@types/node': ^16.11.58
-      '@types/prettier': ^2.4.2
+      '@types/prettier': ^2.7.1
       '@types/recursive-readdir': ^2.2.0
       esbuild: ~0.14.1
       lodash.flatten: ^4.4.0
@@ -3533,7 +3533,7 @@ importers:
       '@types/lodash.flatten': 4.4.7
       '@types/lodash.zip': 4.2.7
       '@types/node': 16.11.62
-      '@types/prettier': 2.4.2
+      '@types/prettier': 2.7.1
       '@types/recursive-readdir': 2.2.1
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
@@ -35474,7 +35474,7 @@ packages:
     resolution: {integrity: sha512-EugY9VASFuDqOexOgXR18ZV+TbFrQHeCpEYaXamO+SZlsnT/2LxuLBX25GGtIrwaEVFXUAbUQ601SWE2rMwWHA==}
     dependencies:
       jsonc-parser: 3.0.0
-      vscode-oniguruma: 1.6.1
+      vscode-oniguruma: 1.6.2
       vscode-textmate: 6.0.0
     dev: true
 
@@ -38474,8 +38474,8 @@ packages:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
     dev: true
 
-  /vscode-oniguruma/1.6.1:
-    resolution: {integrity: sha512-vc4WhSIaVpgJ0jJIejjYxPvURJavX6QG41vu0mGhqywMkQqulezEqEQ3cO3gc8GvcOpX6ycmKGqRoROEMBNXTQ==}
+  /vscode-oniguruma/1.6.2:
+    resolution: {integrity: sha512-KH8+KKov5eS/9WhofZR8M8dMHWN2gTxjMsG4jd04YhpbPR91fUj7rYQ2/XjeHCJWbg7X++ApRIU9NUwM2vTvLA==}
     dev: true
 
   /vscode-textmate/6.0.0:
