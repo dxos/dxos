@@ -44,10 +44,10 @@ subgraph common [common]
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
-    dxos/log("@dxos/log"):::def
-    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/testutils("@dxos/testutils"):::def
     click dxos/testutils "dxos/dxos/tree/main/packages/common/testutils/docs"
   end
@@ -62,10 +62,10 @@ subgraph core [core]
     style halo fill:#f1ebfa,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-    dxos/keyring("@dxos/keyring"):::def
-    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
     dxos/halo-protocol("@dxos/halo-protocol"):::def
     click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   end
 
   subgraph mesh [mesh]
@@ -104,22 +104,24 @@ end
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/client --> dxos/client-services
-dxos/credentials --> dxos/crypto
-dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/keyring
-dxos/keyring --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
-dxos/keyring --> dxos/random-access-storage
-dxos/credentials --> dxos/mesh-protocol
-dxos/mesh-protocol --> dxos/codec-protobuf
 dxos/client-services --> dxos/config
 dxos/config --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/credentials --> dxos/crypto
+dxos/credentials --> dxos/feed-store
+dxos/credentials --> dxos/mesh-protocol
+dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/credentials --> dxos/protocols
 dxos/client-services --> dxos/echo-db
 dxos/echo-db --> dxos/halo-protocol
 dxos/halo-protocol --> dxos/keyring
+dxos/keyring --> dxos/crypto
+dxos/keyring --> dxos/protocols
+dxos/keyring --> dxos/random-access-storage
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/model-factory --> dxos/feed-store
+dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
 dxos/network-manager --> dxos/credentials
 dxos/network-manager --> dxos/messaging
@@ -134,8 +136,8 @@ dxos/echo-db --> dxos/protocol-plugin-replicator
 dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 dxos/echo-db --> dxos/protocol-plugin-rpc
-dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
+dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/client --> dxos/rpc-tunnel
 dxos/rpc-tunnel --> dxos/rpc
 ```

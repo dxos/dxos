@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#bad0de,stroke:#333
+  style common fill:#faebee,stroke:#333
   dxos/typedoc("@dxos/typedoc"):::root
   click dxos/typedoc "dxos/dxos/tree/main/packages/common/typedoc/docs"
 end

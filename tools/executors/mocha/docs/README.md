@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph executors [executors]
-  style executors fill:#b1abed,stroke:#333
+  style executors fill:#faebec,stroke:#333
   dxos/mocha("@dxos/mocha"):::root
   click dxos/mocha "dxos/dxos/tree/main/tools/executors/mocha/docs"
 end

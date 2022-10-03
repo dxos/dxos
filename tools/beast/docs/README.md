@@ -16,16 +16,16 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph undefined [undefined]
-  style undefined fill:#b3c2e6,stroke:#333
+  style undefined fill:#faf7eb,stroke:#333
   dxos/beast("@dxos/beast"):::root
   click dxos/beast "dxos/dxos/tree/main/tools/beast/docs"
 end
 
 subgraph common [common]
-  style common fill:#bad0de,stroke:#333
+  style common fill:#faebee,stroke:#333
 
   subgraph _ [ ]
-    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/log("@dxos/log"):::def
     click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end

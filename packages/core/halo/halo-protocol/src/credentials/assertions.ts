@@ -3,10 +3,10 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { MessageType } from '@dxos/protocols';
+import { TypedMessage } from '@dxos/protocols';
 import { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-export const getCredentialAssertion = (credential: Credential): MessageType => credential.subject.assertion;
+export const getCredentialAssertion = (credential: Credential): TypedMessage => credential.subject.assertion;
 
 export const isValidAuthorizedDeviceCredential = (
   credential: Credential,

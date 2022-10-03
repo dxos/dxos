@@ -20,8 +20,5 @@
     {
       "path": "../../protocols"
     }
-  ],
-  "types": [
-    "mocha"
   ]
 }

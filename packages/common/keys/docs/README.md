@@ -16,10 +16,10 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#bad0de,stroke:#333
+  style common fill:#faebee,stroke:#333
 
   subgraph _ [ ]
-    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::root
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
   end

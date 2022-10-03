@@ -16,18 +16,18 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph sdk [sdk]
-  style sdk fill:#c0bade,stroke:#333
+  style sdk fill:#f9faeb,stroke:#333
   dxos/config("@dxos/config"):::root
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
 end
 
 subgraph common [common]
-  style common fill:#bad0de,stroke:#333
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
   subgraph _ [ ]
-    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
@@ -38,7 +38,7 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#abb6ed,stroke:#333
+  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end

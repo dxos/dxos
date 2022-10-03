@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph executors [executors]
-  style executors fill:#b1abed,stroke:#333
+  style executors fill:#faebec,stroke:#333
   dxos/protobuf-compiler("@dxos/protobuf-compiler"):::root
   click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
 end

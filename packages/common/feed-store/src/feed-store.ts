@@ -6,7 +6,7 @@ import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
-import type { Signer } from '@dxos/keyring';
+import type { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';

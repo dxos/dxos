@@ -4,17 +4,25 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/browser.js",
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/src/index.js": "./dist/browser.js"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
     "check": "true"
+  },
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "test/gen",
+      "dist"
+    ],
+    "preset": "ts-jest/presets/default",
+    "testEnvironment": "node"
   },
   "dependencies": {
     "assert": "^2.0.0",
@@ -25,14 +33,6 @@
     "@types/debug": "^4.1.7",
     "@types/lodash.merge": "^4.6.6",
     "protobufjs": "^6.9.0"
-  },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "test/gen",
-      "dist"
-    ],
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
   },
   "publishConfig": {
     "access": "public"

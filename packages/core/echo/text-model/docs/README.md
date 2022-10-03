@@ -16,12 +16,12 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph core [core]
-  style core fill:#abb6ed,stroke:#333
+  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 
   subgraph echo [echo]
-    style echo fill:#b9b3e6,stroke:#333
+    style echo fill:#ebf2fa,stroke:#333
     dxos/text-model("@dxos/text-model"):::root
     click dxos/text-model "dxos/dxos/tree/main/packages/core/echo/text-model/docs"
     dxos/echo-db("@dxos/echo-db"):::def
@@ -33,17 +33,17 @@ subgraph core [core]
   end
 
   subgraph halo [halo]
-    style halo fill:#bacede,stroke:#333
+    style halo fill:#f1ebfa,stroke:#333
     dxos/credentials("@dxos/credentials"):::def
     click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-    dxos/keyring("@dxos/keyring"):::def
-    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
     dxos/halo-protocol("@dxos/halo-protocol"):::def
     click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
   end
 
   subgraph mesh [mesh]
-    style mesh fill:#b3b6e6,stroke:#333
+    style mesh fill:#ebfaef,stroke:#333
     dxos/mesh-protocol("@dxos/mesh-protocol"):::def
     click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
     dxos/messaging("@dxos/messaging"):::def
@@ -64,7 +64,7 @@ subgraph core [core]
 end
 
 subgraph common [common]
-  style common fill:#bad0de,stroke:#333
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -75,15 +75,15 @@ subgraph common [common]
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
   subgraph _ [ ]
-    style _ fill:#bad0de,stroke:#333,stroke-dasharray:5 5
-    dxos/log("@dxos/log"):::def
-    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
@@ -94,17 +94,19 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/text-model --> dxos/echo-db
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/keyring
-dxos/keyring --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
-dxos/keyring --> dxos/random-access-storage
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/credentials --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
 dxos/echo-db --> dxos/halo-protocol
 dxos/halo-protocol --> dxos/keyring
+dxos/keyring --> dxos/crypto
+dxos/keyring --> dxos/protocols
+dxos/keyring --> dxos/random-access-storage
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
 dxos/model-factory --> dxos/feed-store
+dxos/model-factory --> dxos/protocols
 dxos/echo-db --> dxos/network-manager
 dxos/network-manager --> dxos/credentials
 dxos/network-manager --> dxos/messaging
@@ -119,8 +121,8 @@ dxos/echo-db --> dxos/protocol-plugin-replicator
 dxos/protocol-plugin-replicator --> dxos/keyring
 dxos/protocol-plugin-replicator --> dxos/mesh-protocol
 dxos/echo-db --> dxos/protocol-plugin-rpc
-dxos/protocol-plugin-rpc --> dxos/messaging
 dxos/protocol-plugin-rpc --> dxos/mesh-protocol
+dxos/protocol-plugin-rpc --> dxos/messaging
 ```
 
 ## Dependencies

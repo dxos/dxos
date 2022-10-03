@@ -5,11 +5,11 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { Keyring } from './keyring';
-import { verifySignature } from './verify';
 
 describe('Keyring', () => {
   test('sign & verify', async () => {

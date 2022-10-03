@@ -4,13 +4,13 @@
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
-  "bin": {
-    "bot-factory": "bin/main.js"
-  },
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
+  },
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "bot-factory": "bin/main.js"
   },
   "files": [
     "bin",
@@ -26,12 +26,12 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/protocol-plugin-rpc": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/registry-client": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/messaging": "workspace:*",
     "abort-controller": "~3.0.0",
     "assert": "^2.0.0",
     "debug": "^4.3.3",

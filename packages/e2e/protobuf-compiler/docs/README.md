@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph e2e [e2e]
-  style e2e fill:#abbbed,stroke:#333
+  style e2e fill:#ebf2fa,stroke:#333
   dxos/protobuf-compiler-e2e("@dxos/protobuf-compiler-e2e"):::root
   click dxos/protobuf-compiler-e2e "dxos/dxos/tree/main/packages/e2e/protobuf-compiler/docs"
 end
