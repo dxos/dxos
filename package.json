@@ -18,6 +18,11 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@nrwl/jest": "14.5.7",
+    "@types/jest": "^27.4.1",
+    "jest": "27.5.1",
+    "ts-jest": "27.1.4",
+
     "@babel/core": "^7.18.13",
     "@docusaurus/module-type-aliases": "2.1.0",
     "@docusaurus/theme-classic": "2.1.0",
