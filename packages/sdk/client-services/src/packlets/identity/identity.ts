@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { failUndefined } from '@dxos/debug';
 import { Signer } from '@dxos/crypto';
+import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
 import {
   createCredentialSignerWithChain, createCredentialSignerWithKey, CredentialSigner, DeviceStateMachine
