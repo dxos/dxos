@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph executors [executors]
-  style executors fill:#edabb0,stroke:#fff
+  style executors fill:#faebec,stroke:#333
   dxos/esbuild("@dxos/esbuild"):::root
   click dxos/esbuild "dxos/dxos/tree/main/tools/executors/esbuild/docs"
 end

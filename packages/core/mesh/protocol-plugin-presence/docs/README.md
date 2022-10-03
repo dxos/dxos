@@ -15,27 +15,31 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::root
-  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
-  dxos/broadcast("@dxos/broadcast"):::def
-  click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+subgraph core [core]
+  style core fill:#faebec,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph mesh [mesh]
+    style mesh fill:#ebfaef,stroke:#333
+    dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::root
+    click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
+    dxos/broadcast("@dxos/broadcast"):::def
+    click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
-  dxos/feeds("@dxos/feeds"):::def
-  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -49,19 +53,12 @@ subgraph common [common]
   end
 end
 
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
-
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/protocol-plugin-presence --> dxos/broadcast
 dxos/broadcast --> dxos/crypto
 dxos/broadcast --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
-dxos/protocols --> dxos/feeds
 dxos/protocol-plugin-presence --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
 ```
@@ -75,7 +72,6 @@ dxos/mesh-protocol --> dxos/codec-protobuf
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md) |  |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
-| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) |  |
 | [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |

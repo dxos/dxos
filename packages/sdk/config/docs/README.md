@@ -16,33 +16,29 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#f9faeb,stroke:#333
   dxos/config("@dxos/config"):::root
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/feeds("@dxos/feeds"):::def
-  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
-    dxos/log("@dxos/log"):::def
-    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
@@ -51,7 +47,6 @@ end
 linkStyle default stroke:#333,stroke-width:1px
 dxos/config --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
-dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
@@ -60,8 +55,6 @@ dxos/protocols --> dxos/feeds
 |---|---|
 | [`@dxos/codec-protobuf`](../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../common/debug/docs/README.md) | &check; |
-| [`@dxos/feeds`](../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../common/keys/docs/README.md) |  |
-| [`@dxos/log`](../../../common/log/docs/README.md) |  |
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

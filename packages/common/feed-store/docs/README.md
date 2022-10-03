@@ -16,14 +16,12 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/feed-store("@dxos/feed-store"):::root
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/feeds("@dxos/feeds"):::def
-  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -39,7 +37,6 @@ end
 
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
-dxos/feed-store --> dxos/feeds
 ```
 
 ## Dependencies
@@ -48,7 +45,6 @@ dxos/feed-store --> dxos/feeds
 |---|---|
 | [`@dxos/async`](../../async/docs/README.md) | &check; |
 | [`@dxos/debug`](../../debug/docs/README.md) |  |
-| [`@dxos/feeds`](../../feeds/docs/README.md) | &check; |
 | [`@dxos/keys`](../../keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../log/docs/README.md) | &check; |
 | [`@dxos/util`](../../util/docs/README.md) | &check; |

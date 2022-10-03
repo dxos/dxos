@@ -16,11 +16,11 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
-    dxos/util("@dxos/util"):::def
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
+    dxos/util("@dxos/util"):::root
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
