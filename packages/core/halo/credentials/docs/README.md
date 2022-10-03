@@ -15,16 +15,28 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/credentials("@dxos/credentials"):::root
-  click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+subgraph core [core]
+  style core fill:#edabb3,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph halo [halo]
+    style halo fill:#cabade,stroke:#333
+    dxos/credentials("@dxos/credentials"):::root
+    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+  end
+
+  subgraph mesh [mesh]
+    style mesh fill:#b3e6c0,stroke:#333
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#debac2,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -34,8 +46,8 @@ subgraph common [common]
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -47,18 +59,6 @@ subgraph common [common]
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
-end
-
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
-
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
 end
 
 %% Links

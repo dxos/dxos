@@ -16,20 +16,18 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph bots [bots]
-  style bots fill:#babdde,stroke:#fff
+  style bots fill:#babdde,stroke:#333
   dxos/bot-factory-client("@dxos/bot-factory-client"):::root
   click dxos/bot-factory-client "dxos/dxos/tree/main/packages/bots/bot-factory-client/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#debac2,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -43,20 +41,22 @@ subgraph common [common]
   end
 end
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
-  click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
-  dxos/messaging("@dxos/messaging"):::def
-  click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
-end
-
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#edabb3,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph mesh [mesh]
+    style mesh fill:#b3e6c0,stroke:#333
+    dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
+    click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/messaging("@dxos/messaging"):::def
+    click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+    dxos/rpc("@dxos/rpc"):::def
+    click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+  end
 end
 
 %% Links
@@ -83,5 +83,5 @@ dxos/mesh-protocol --> dxos/codec-protobuf
 | [`@dxos/messaging`](../../../core/mesh/messaging/docs/README.md) |  |
 | [`@dxos/protocol-plugin-rpc`](../../../core/mesh/protocol-plugin-rpc/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../common/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

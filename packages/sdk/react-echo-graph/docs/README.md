@@ -16,13 +16,13 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#dddeba,stroke:#333
   dxos/react-echo-graph("@dxos/react-echo-graph"):::root
   click dxos/react-echo-graph "dxos/dxos/tree/main/packages/sdk/react-echo-graph/docs"
 end
 
 subgraph gem [gem]
-  style gem fill:#b3c7e6,stroke:#fff
+  style gem fill:#b3c7e6,stroke:#333
   dxos/gem-core("@dxos/gem-core"):::def
   click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
   dxos/gem-spore("@dxos/gem-spore"):::def

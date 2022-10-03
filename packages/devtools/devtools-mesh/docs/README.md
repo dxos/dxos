@@ -16,13 +16,13 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph devtools [devtools]
-  style devtools fill:#badade,stroke:#fff
+  style devtools fill:#badade,stroke:#333
   dxos/devtools-mesh("@dxos/devtools-mesh"):::root
   click dxos/devtools-mesh "dxos/dxos/tree/main/packages/devtools/devtools-mesh/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#debac2,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -31,15 +31,11 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
-  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
@@ -56,49 +52,63 @@ subgraph common [common]
 end
 
 subgraph gem [gem]
-  style gem fill:#b3c7e6,stroke:#fff
+  style gem fill:#b3c7e6,stroke:#333
   dxos/gem-core("@dxos/gem-core"):::def
   click dxos/gem-core "dxos/dxos/tree/main/packages/gem/gem-core/docs"
   dxos/gem-spore("@dxos/gem-spore"):::def
   click dxos/gem-spore "dxos/dxos/tree/main/packages/gem/gem-spore/docs"
 end
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/network-manager("@dxos/network-manager"):::def
-  click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
-  dxos/messaging("@dxos/messaging"):::def
-  click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
-  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
-  dxos/broadcast("@dxos/broadcast"):::def
-  click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
-  dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
-  click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
-  dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
-  click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
-end
-
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/credentials("@dxos/credentials"):::def
-  click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
-  dxos/halo-protocol("@dxos/halo-protocol"):::def
-  click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
-end
-
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#edabb3,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph mesh [mesh]
+    style mesh fill:#b3e6c0,stroke:#333
+    dxos/network-manager("@dxos/network-manager"):::def
+    click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+    dxos/messaging("@dxos/messaging"):::def
+    click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+    dxos/rpc("@dxos/rpc"):::def
+    click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+    dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
+    click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
+    dxos/broadcast("@dxos/broadcast"):::def
+    click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
+    dxos/protocol-plugin-replicator("@dxos/protocol-plugin-replicator"):::def
+    click dxos/protocol-plugin-replicator "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator/docs"
+    dxos/protocol-plugin-rpc("@dxos/protocol-plugin-rpc"):::def
+    click dxos/protocol-plugin-rpc "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-rpc/docs"
+    dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
+    click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
+  end
+
+  subgraph halo [halo]
+    style halo fill:#cabade,stroke:#333
+    dxos/credentials("@dxos/credentials"):::def
+    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+    dxos/halo-protocol("@dxos/halo-protocol"):::def
+    click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+  end
+
+  subgraph echo [echo]
+    style echo fill:#b3cae6,stroke:#333
+    dxos/echo-db("@dxos/echo-db"):::def
+    click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
+    dxos/model-factory("@dxos/model-factory"):::def
+    click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+    dxos/object-model("@dxos/object-model"):::def
+    click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
+  end
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#dddeba,stroke:#333
   dxos/react-components("@dxos/react-components"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs"
   dxos/react-toolkit("@dxos/react-toolkit"):::def
@@ -113,16 +123,6 @@ subgraph sdk [sdk]
   click dxos/client "dxos/dxos/tree/main/packages/sdk/client/docs"
   dxos/client-services("@dxos/client-services"):::def
   click dxos/client-services "dxos/dxos/tree/main/packages/sdk/client-services/docs"
-end
-
-subgraph echo [echo]
-  style echo fill:#b3cae6,stroke:#fff
-  dxos/echo-db("@dxos/echo-db"):::def
-  click dxos/echo-db "dxos/dxos/tree/main/packages/core/echo/echo-db/docs"
-  dxos/model-factory("@dxos/model-factory"):::def
-  click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
-  dxos/object-model("@dxos/object-model"):::def
-  click dxos/object-model "dxos/dxos/tree/main/packages/core/echo/object-model/docs"
 end
 
 %% Links
@@ -209,7 +209,7 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/react-registry-client`](../../../sdk/react-registry-client/docs/README.md) |  |
 | [`@dxos/react-toolkit`](../../../sdk/react-toolkit/docs/README.md) | &check; |
 | [`@dxos/registry-client`](../../../sdk/registry-client/docs/README.md) |  |
-| [`@dxos/rpc`](../../../common/rpc/docs/README.md) |  |
-| [`@dxos/rpc-tunnel`](../../../common/rpc-tunnel/docs/README.md) |  |
+| [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) |  |
+| [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) |  |
 | [`@dxos/testutils`](../../../common/testutils/docs/README.md) |  |
 | [`@dxos/util`](../../../common/util/docs/README.md) | &check; |

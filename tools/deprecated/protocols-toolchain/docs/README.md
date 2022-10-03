@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph deprecated [deprecated]
-  style deprecated fill:#bac5de,stroke:#fff
+  style deprecated fill:#bac5de,stroke:#333
   dxos/protocols-toolchain("@dxos/protocols-toolchain"):::root
   click dxos/protocols-toolchain "dxos/dxos/tree/main/tools/deprecated/protocols-toolchain/docs"
   dxos/toolchain-node-library("@dxos/toolchain-node-library"):::def
@@ -24,7 +24,7 @@ subgraph deprecated [deprecated]
 end
 
 subgraph executors [executors]
-  style executors fill:#edabb0,stroke:#fff
+  style executors fill:#edabb0,stroke:#333
   dxos/protobuf-compiler("@dxos/protobuf-compiler"):::def
   click dxos/protobuf-compiler "dxos/dxos/tree/main/tools/executors/protobuf-compiler/docs"
 end

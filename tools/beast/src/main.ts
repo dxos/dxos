@@ -19,8 +19,6 @@ import { WorkspaceProcessor } from './workspace-processor';
 
 const main = () => {
   log.info('Started');
-  const baseDir = path.join(__dirname, '../../..');
-  console.log(baseDir);
 
   yargs(hideBin(process.argv))
     .scriptName('beast')
@@ -30,15 +28,21 @@ const main = () => {
     .option('verbose', {
       type: 'boolean'
     })
+    .option('base-dir', {
+      type: 'string',
+      default: process.cwd()
+    })
 
     .command({
       command: 'list',
       handler: ({
         json,
-        verbose
+        verbose,
+        baseDir
       }: {
         json: boolean
         verbose?: boolean
+        baseDir: string
       }) => {
         const processor = new WorkspaceProcessor(baseDir, { verbose }).init();
         const projects = processor.getProjects().map(p => p.package.name);
@@ -61,15 +65,17 @@ const main = () => {
           default: '@dxos/*'
         }),
       handler: ({
+        json,
+        verbose,
+        baseDir,
         project: name,
         filter,
-        json,
-        verbose
       }: {
-        project?: string
-        filter?: string
         json?: boolean
         verbose?: boolean
+        baseDir: string
+        project?: string
+        filter?: string
       }) => {
         if (!name) {
           process.exit(1);
@@ -118,6 +124,7 @@ const main = () => {
           default: [
             '@dxos/async',
             '@dxos/debug',
+            '@dxos/feeds',
             '@dxos/keys',
             '@dxos/log',
             '@dxos/testutils',
@@ -126,6 +133,7 @@ const main = () => {
         }),
       handler: ({
         verbose,
+        baseDir,
         pattern = '*',
         baseUrl,
         outDir,
@@ -133,6 +141,7 @@ const main = () => {
         exclude = ''
       }: {
         verbose?: boolean
+        baseDir: string
         pattern?: string
         baseUrl : string
         outDir: string

@@ -15,8 +15,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
+subgraph undefined [undefined]
+  style undefined fill:#e6dbb3,stroke:#333
   dxos/log-hook("@dxos/log-hook"):::root
   click dxos/log-hook "dxos/dxos/tree/main/tools/log-hook/docs"
 end

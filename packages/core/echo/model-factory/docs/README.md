@@ -15,14 +15,26 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph echo [echo]
-  style echo fill:#b3cae6,stroke:#fff
-  dxos/model-factory("@dxos/model-factory"):::root
-  click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+subgraph core [core]
+  style core fill:#edabb3,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph echo [echo]
+    style echo fill:#b3cae6,stroke:#333
+    dxos/model-factory("@dxos/model-factory"):::root
+    click dxos/model-factory "dxos/dxos/tree/main/packages/core/echo/model-factory/docs"
+  end
+
+  subgraph halo [halo]
+    style halo fill:#cabade,stroke:#333
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#debac2,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/feed-store("@dxos/feed-store"):::def
@@ -30,8 +42,8 @@ subgraph common [common]
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -43,18 +55,6 @@ subgraph common [common]
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
-end
-
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
-end
-
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
 
 %% Links

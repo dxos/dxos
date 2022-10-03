@@ -15,22 +15,38 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph mesh [mesh]
-  style mesh fill:#b3e6c0,stroke:#fff
-  dxos/network-manager("@dxos/network-manager"):::root
-  click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
-  dxos/mesh-protocol("@dxos/mesh-protocol"):::def
-  click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
-  dxos/messaging("@dxos/messaging"):::def
-  click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
-  dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
-  click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
-  dxos/broadcast("@dxos/broadcast"):::def
-  click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
+subgraph core [core]
+  style core fill:#edabb3,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph mesh [mesh]
+    style mesh fill:#b3e6c0,stroke:#333
+    dxos/network-manager("@dxos/network-manager"):::root
+    click dxos/network-manager "dxos/dxos/tree/main/packages/core/mesh/network-manager/docs"
+    dxos/mesh-protocol("@dxos/mesh-protocol"):::def
+    click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
+    dxos/messaging("@dxos/messaging"):::def
+    click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+    dxos/rpc("@dxos/rpc"):::def
+    click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+    dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
+    click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
+    dxos/broadcast("@dxos/broadcast"):::def
+    click dxos/broadcast "dxos/dxos/tree/main/packages/core/mesh/broadcast/docs"
+  end
+
+  subgraph halo [halo]
+    style halo fill:#cabade,stroke:#333
+    dxos/credentials("@dxos/credentials"):::def
+    click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#debac2,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
@@ -39,11 +55,9 @@ subgraph common [common]
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#debac2,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -55,20 +69,6 @@ subgraph common [common]
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
-end
-
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/credentials("@dxos/credentials"):::def
-  click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
-end
-
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
 
 %% Links
@@ -111,5 +111,5 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 | [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
 | [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/rpc`](../../../../common/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |

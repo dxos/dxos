@@ -31,7 +31,7 @@ type Subgraph = {
   readonly style?: any
 }
 
-interface SubgraphBuilder {
+export interface SubgraphBuilder {
   addNode (node: Node): SubgraphBuilder
   addSubgraph (subgraph: Subgraph): SubgraphBuilder
   build (indent?: number): string[]

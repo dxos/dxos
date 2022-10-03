@@ -16,7 +16,7 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#dddeba,stroke:#333
   dxos/react-client-testing("@dxos/react-client-testing"):::root
   click dxos/react-client-testing "dxos/dxos/tree/main/packages/sdk/react-client-testing/docs"
 end

@@ -15,8 +15,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
+subgraph undefined [undefined]
+  style undefined fill:#e6dbb3,stroke:#333
   dxos/plate("@dxos/plate"):::root
   click dxos/plate "dxos/dxos/tree/main/tools/plate/docs"
   dxos/file("@dxos/file"):::def
