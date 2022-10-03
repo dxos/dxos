@@ -47,6 +47,8 @@ jobs:
             - run:
                 command: pnpm nx run-many --target=prerelease
                 no_output_timeout: 30m
+                environment:
+                  NODE_OPTIONS: --max_old_space_size=8198
 
   #
   # End-to-end integration tests.
