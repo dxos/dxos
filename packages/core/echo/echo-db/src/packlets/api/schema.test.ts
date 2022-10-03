@@ -9,7 +9,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { createInMemoryDatabase, Database } from '../packlets/database';
+import { createInMemoryDatabase, Database } from '../database';
 import { Schema, TYPE_SCHEMA } from './schema';
 
 const SCHEMA = 'example:type/schema/organization';

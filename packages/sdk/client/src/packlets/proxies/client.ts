@@ -16,7 +16,6 @@ import {
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { OpenProgress } from '@dxos/echo-db';
 import { ModelConstructor } from '@dxos/model-factory';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
@@ -27,6 +26,7 @@ import { createDevtoolsRpcServer } from './devtools';
 import { EchoProxy } from './echo-proxy';
 import { HaloProxy } from './halo-proxy';
 import { ClientServiceProxy } from './service-proxy';
+import { OpenProgress } from './stubs';
 import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');

@@ -3,12 +3,13 @@
 //
 
 import { InvitationDescriptor } from '@dxos/client-services';
-import { Contact, CreateProfileOptions, ResultSet } from '@dxos/echo-db';
+import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/client';
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
+import { Contact, CreateProfileOptions } from '../proxies';
 import { Invitation } from './invitation';
 import { InvitationRequest } from './invitation-request';
 

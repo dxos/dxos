@@ -11,3 +11,4 @@ export * from './party-proxy';
 export * from './serializer';
 export * from './service-proxy';
 export * from './version';
+export * from './stubs';

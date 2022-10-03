@@ -4,7 +4,7 @@
 
 import { ClientServiceProvider } from '@dxos/client-services';
 import { todo } from '@dxos/debug';
-import { Database, Item, PARTY_ITEM_TYPE, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
+import { Database, Item, RemoteDatabaseBackend, streamToResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel, ObjectProperties } from '@dxos/object-model';
@@ -14,6 +14,7 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
 import { InvitationProxy } from './invitation-proxy';
 import { ClientServiceProxy } from './service-proxy';
+import { PARTY_ITEM_TYPE } from './stubs';
 
 export type ActivationOptions = any
 
