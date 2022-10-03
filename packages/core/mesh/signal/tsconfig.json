@@ -13,8 +13,5 @@
     {
       "path": "../../protocols"
     }
-  ],
-  "types": [
-    "jest"
   ]
 }

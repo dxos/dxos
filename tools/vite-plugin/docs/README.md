@@ -31,6 +31,8 @@ subgraph common [common]
   style common fill:#debac2,stroke:#fff
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -38,6 +40,8 @@ subgraph common [common]
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
     dxos/util("@dxos/util"):::def
     click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
@@ -54,6 +58,7 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/vite-plugin --> dxos/config
 dxos/config --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
@@ -63,6 +68,8 @@ dxos/protocols --> dxos/codec-protobuf
 | [`@dxos/codec-protobuf`](../../../packages/common/codec-protobuf/docs/README.md) |  |
 | [`@dxos/config`](../../../packages/sdk/config/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../packages/common/debug/docs/README.md) |  |
+| [`@dxos/feeds`](../../../packages/common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../packages/common/keys/docs/README.md) |  |
+| [`@dxos/log`](../../../packages/common/log/docs/README.md) |  |
 | [`@dxos/protocols`](../../../packages/core/protocols/docs/README.md) |  |
 | [`@dxos/util`](../../../packages/common/util/docs/README.md) |  |

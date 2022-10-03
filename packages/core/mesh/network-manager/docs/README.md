@@ -23,6 +23,8 @@ subgraph mesh [mesh]
   click dxos/mesh-protocol "dxos/dxos/tree/main/packages/core/mesh/mesh-protocol/docs"
   dxos/messaging("@dxos/messaging"):::def
   click dxos/messaging "dxos/dxos/tree/main/packages/core/mesh/messaging/docs"
+  dxos/rpc("@dxos/rpc"):::def
+  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
   dxos/protocol-plugin-presence("@dxos/protocol-plugin-presence"):::def
   click dxos/protocol-plugin-presence "dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-presence/docs"
   dxos/broadcast("@dxos/broadcast"):::def
@@ -37,10 +39,8 @@ subgraph common [common]
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
   dxos/feed-store("@dxos/feed-store"):::def
   click dxos/feed-store "dxos/dxos/tree/main/packages/common/feed-store/docs"
-  dxos/random-access-storage("@dxos/random-access-storage"):::def
-  click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -61,8 +61,6 @@ subgraph halo [halo]
   style halo fill:#cabade,stroke:#fff
   dxos/credentials("@dxos/credentials"):::def
   click dxos/credentials "dxos/dxos/tree/main/packages/core/halo/credentials/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
 end
 
 subgraph core [core]
@@ -76,12 +74,12 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/network-manager --> dxos/credentials
 dxos/credentials --> dxos/crypto
 dxos/credentials --> dxos/feed-store
-dxos/feed-store --> dxos/keyring
-dxos/keyring --> dxos/protocols
-dxos/protocols --> dxos/codec-protobuf
-dxos/keyring --> dxos/random-access-storage
+dxos/feed-store --> dxos/feeds
 dxos/credentials --> dxos/mesh-protocol
 dxos/mesh-protocol --> dxos/codec-protobuf
+dxos/credentials --> dxos/protocols
+dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 dxos/network-manager --> dxos/messaging
 dxos/messaging --> dxos/rpc
 dxos/rpc --> dxos/protocols
@@ -103,13 +101,12 @@ dxos/protocol-plugin-presence --> dxos/mesh-protocol
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) |  |
-| [`@dxos/keyring`](../../../halo/keyring/docs/README.md) |  |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
 | [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
 | [`@dxos/mesh-protocol`](../../mesh-protocol/docs/README.md) | &check; |
 | [`@dxos/messaging`](../../messaging/docs/README.md) | &check; |
 | [`@dxos/protocol-plugin-presence`](../../protocol-plugin-presence/docs/README.md) | &check; |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/rpc`](../../../../common/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../rpc/docs/README.md) | &check; |
 | [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |

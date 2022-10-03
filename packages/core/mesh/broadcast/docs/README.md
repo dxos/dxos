@@ -27,6 +27,8 @@ subgraph common [common]
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/crypto("@dxos/crypto"):::def
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
+  dxos/feeds("@dxos/feeds"):::def
+  click dxos/feeds "dxos/dxos/tree/main/packages/common/feeds/docs"
 
   subgraph common-excluded [ ]
     style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
@@ -36,6 +38,10 @@ subgraph common [common]
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
+    dxos/util("@dxos/util"):::def
+    click dxos/util "dxos/dxos/tree/main/packages/common/util/docs"
   end
 end
 
@@ -50,6 +56,7 @@ linkStyle default stroke:#333,stroke-width:1px
 dxos/broadcast --> dxos/crypto
 dxos/broadcast --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
+dxos/protocols --> dxos/feeds
 ```
 
 ## Dependencies
@@ -60,5 +67,8 @@ dxos/protocols --> dxos/codec-protobuf
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
 | [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) |  |
+| [`@dxos/feeds`](../../../../common/feeds/docs/README.md) |  |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
+| [`@dxos/log`](../../../../common/log/docs/README.md) |  |
 | [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
+| [`@dxos/util`](../../../../common/util/docs/README.md) |  |

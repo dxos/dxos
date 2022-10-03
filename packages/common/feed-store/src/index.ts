@@ -9,3 +9,4 @@ export * from './feed-descriptor';
 export * from './feed-writer';
 export * from './hypercore-types';
 export * from './stream';
+export * from './types';
