@@ -263,7 +263,7 @@ export class ItemManager {
    */
   @timed(5_000)
   async constructLink ({
-    itemId, // TODO(burdon): linkId?
+    itemId, // TODO(burdon): link_id?
     itemType,
     modelType,
     snapshot,

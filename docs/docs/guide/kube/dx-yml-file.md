@@ -19,7 +19,7 @@ package:
   modules:
     - type: dxos:type/app
       name: app-for-test
-      displayName: Tasks List
+      display_name: Tasks List
       description: Mock application
       tags:
         - tasks

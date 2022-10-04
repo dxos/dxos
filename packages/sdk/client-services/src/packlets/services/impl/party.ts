@@ -55,12 +55,12 @@ export class PartyService implements PartyServiceRpc {
     });
     // const update = (next: (message: SubscribePartyResponse) => void) => {
     //   try {
-    //     const party = this.echo.getParty(request.partyKey);
+    //     const party = this.echo.getParty(request.party_key);
     //     next({
     //       party: party && {
-    //         publicKey: party.key,
-    //         isOpen: party.isOpen,
-    //         isActive: party.isActive,
+    //         public_key: party.key,
+    //         is_open: party.is_open,
+    //         is_active: party.is_active,
     //         members: party.queryMembers().value
     //       }
     //     });
@@ -73,14 +73,14 @@ export class PartyService implements PartyServiceRpc {
     //   }
     // };
 
-    // const party = this.serviceContext.brane.getParty(request.partyKey);
+    // const party = this.serviceContext.brane.getParty(request.party_key);
     // if (party) {
     //   return new Stream(({ next }) => party.update.on(() => update(next)));
     // } else {
     //   return new Stream(({ next }) => {
     //     let unsubscribeParty: () => void;
     //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const party = parties.find((party) => party.key.equals(request.partyKey));
+    //       const party = parties.find((party) => party.key.equals(request.party_key));
     //       if (party && !unsubscribeParty) {
     //         unsubscribeParty = party.update.on(() => update(next));
     //       }
@@ -123,7 +123,7 @@ export class PartyService implements PartyServiceRpc {
 
   async getPartyDetails (request: GetPartyDetailsRequest): Promise<PartyDetails> {
     return todo();
-    // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
     // return {
     //   processedTimeframe: party.timeframe
     // };
@@ -143,15 +143,15 @@ export class PartyService implements PartyServiceRpc {
     return todo();
     // const party = await this.echo.cloneParty(snapshot);
     // return {
-    //   publicKey: party.key,
-    //   isOpen: party.isOpen,
-    //   isActive: party.isActive
+    //   public_key: party.key,
+    //   is_open: party.is_open,
+    //   is_active: party.is_active
     // };
   }
 
   async setPartyState (request: SetPartyStateRequest) {
     return todo();
-    // const party = this.echo.getParty(request.partyKey);
+    // const party = this.echo.getParty(request.party_key);
     // if (!party) {
     //   throw new Error('Party not found');
     // }
@@ -162,21 +162,21 @@ export class PartyService implements PartyServiceRpc {
     //   await party.close();
     // } // Undefined preserves previous state.
 
-    // if (request.activeGlobal === true) {
+    // if (request.active_global === true) {
     //   await party.activate({ global: true });
-    // } else if (request.activeGlobal === false) {
+    // } else if (request.active_global === false) {
     //   await party.deactivate({ global: true });
     // } // Undefined preserves previous state.
 
-    // if (request.activeDevice === true) {
+    // if (request.active_device === true) {
     //   await party.activate({ device: true });
-    // } else if (request.activeDevice === false) {
+    // } else if (request.active_device === false) {
     //   await party.deactivate({ device: true });
     // } // Undefined preserves previous state.
     // return {
-    //   publicKey: party.key,
-    //   isOpen: party.isOpen,
-    //   isActive: party.isActive
+    //   public_key: party.key,
+    //   is_open: party.is_open,
+    //   is_active: party.is_active
     // };
   }
 
@@ -200,7 +200,7 @@ export class PartyService implements PartyServiceRpc {
             // invitation.secret = Buffer.from(secret);
           } else {
             todo();
-            // invitation = await party.invitationManager.createOfflineInvitation(request.inviteeKey);
+            // invitation = await party.invitationManager.createOfflineInvitation(request.invitee_key);
           }
 
           next({ state: InvitationState.WAITING_FOR_CONNECTION, descriptor: invitation.toProto() });
@@ -267,14 +267,14 @@ export class PartyService implements PartyServiceRpc {
         members: []
       });
     });
-    // const party = this.echo.getParty(request.partyKey);
+    // const party = this.echo.getParty(request.party_key);
     // if (party) {
     //   return resultSetToStream(party.queryMembers(), (members): SubscribeMembersResponse => ({ members }));
     // } else {
     //   return new Stream(({ next }) => {
     //     let unsubscribeMembers: () => void;
     //     const unsubscribeParties = this.echo.queryParties().subscribe((parties) => {
-    //       const party = parties.find((party) => party.key.equals(request.partyKey));
+    //       const party = parties.find((party) => party.key.equals(request.party_key));
     //       if (!unsubscribeMembers && party) {
     //         const resultSet = party.queryMembers();
     //         next({ members: resultSet.value });
@@ -292,8 +292,8 @@ export class PartyService implements PartyServiceRpc {
 
   async createSnapshot (request: CreateSnaspotRequest): Promise<PartySnapshot> {
     return todo();
-    // assert(request.partyKey);
-    // const party = this.echo.getParty(request.partyKey) ?? raise(new SpaceNotFoundError(request.partyKey));
+    // assert(request.party_key);
+    // const party = this.echo.getParty(request.party_key) ?? raise(new SpaceNotFoundError(request.party_key));
     // return party.createSnapshot();
   }
 }

@@ -20,7 +20,6 @@ package dxos.echo.feed;
  */
 message FeedMessage {
   dxos.echo.timeframe.TimeframeVector timeframe = 1;
-
   google.protobuf.Any payload = 2;
 }
 
@@ -36,13 +35,13 @@ message CredentialsMessage {
  */
 // TODO(burdon): Reconcile with HaloMessage (and other "Message" types).
 message EchoEnvelope {
-  string itemId = 1;
+  string item_id = 1;
 
   // Create item.
   optional ItemGenesis genesis = 10;
 
   // Item system mutations.
-  optional ItemMutation itemMutation = 11;
+  optional ItemMutation item_mutation = 11;
 
   // Model-specific mutations.
   optional bytes mutation = 12;
@@ -63,9 +62,9 @@ message LinkData {
  */
 // TODO(burdon): EntityGenesis?
 message ItemGenesis {
-  optional string itemType = 1;
-  string modelType = 2;
-  optional string modelVersion = 3;
+  optional string item_type = 1;
+  string model_type = 2;
+  optional string model_version = 3;
   optional LinkData link = 4;
 }
 
@@ -79,6 +78,6 @@ message ItemMutation {
     RESTORE = 2;
   }
 
-  optional string parentId = 1;  // TODO(burdon): Define Action type?
+  optional string parent_id = 1;  // TODO(burdon): Define Action type?
   optional Action action = 2;
 }

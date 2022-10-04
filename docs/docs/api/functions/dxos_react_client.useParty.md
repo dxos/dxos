@@ -2,7 +2,7 @@
 
 [@dxos/react-client](../modules/dxos_react_client.md).useParty
 
-**useParty**(`partyKey?`): `undefined` \| `Party`
+**useParty**(`party_key?`): `undefined` \| `Party`
 
 Get a specific Party.
 Requires ClientContext to be set via ClientProvider.
@@ -11,7 +11,7 @@ Requires ClientContext to be set via ClientProvider.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey?` | `PublicKeyLike` |
+| `party_key?` | `PublicKeyLike` |
 
 #### Returns
 

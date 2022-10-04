@@ -8,7 +8,7 @@ package dxos.echo.model.text;
 
 message Mutation {
   bytes update = 1;
-  int32 clientId = 2;
+  int32 client_id = 2;
 }
 
 message Snapshot {

@@ -27,7 +27,7 @@ ___
 
 ### join
 
- **join**: (`params`: { `peerId`: `PublicKey` ; `topic`: `PublicKey`  }) => `Promise`<`void`\>
+ **join**: (`params`: { `peer_id`: `PublicKey` ; `topic`: `PublicKey`  }) => `Promise`<`void`\>
 
 #### Type declaration
 
@@ -40,7 +40,7 @@ Join topic on signal network, to be discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `params` | `Object` |
-| `params.peerId` | `PublicKey` |
+| `params.peer_id` | `PublicKey` |
 | `params.topic` | `PublicKey` |
 
 ##### Returns
@@ -59,7 +59,7 @@ ___
 
 ### leave
 
- **leave**: (`params`: { `peerId`: `PublicKey` ; `topic`: `PublicKey`  }) => `Promise`<`void`\>
+ **leave**: (`params`: { `peer_id`: `PublicKey` ; `topic`: `PublicKey`  }) => `Promise`<`void`\>
 
 #### Type declaration
 
@@ -72,7 +72,7 @@ Leave topic on signal network, to stop being discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `params` | `Object` |
-| `params.peerId` | `PublicKey` |
+| `params.peer_id` | `PublicKey` |
 | `params.topic` | `PublicKey` |
 
 ##### Returns
@@ -141,11 +141,11 @@ ___
 
 ### subscribeMessages
 
- **subscribeMessages**: (`peerId`: `PublicKey`) => `Promise`<`void`\>
+ **subscribeMessages**: (`peer_id`: `PublicKey`) => `Promise`<`void`\>
 
 #### Type declaration
 
-(`peerId`): `Promise`<`void`\>
+(`peer_id`): `Promise`<`void`\>
 
 Start receiving messages from
 
@@ -153,7 +153,7 @@ Start receiving messages from
 
 | Name | Type |
 | :------ | :------ |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 
 ##### Returns
 

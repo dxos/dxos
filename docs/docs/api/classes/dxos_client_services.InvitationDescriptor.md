@@ -13,16 +13,16 @@ This descriptor might also have a bundled secret for authentication in interacti
 
 ### constructor
 
-**new InvitationDescriptor**(`type`, `swarmKey`, `invitation`, `identityKey?`, `secret?`)
+**new InvitationDescriptor**(`type`, `swarm_key`, `invitation`, `identity_key?`, `secret?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `type` | `Type` |
-| `swarmKey` | `PublicKey` |
+| `swarm_key` | `PublicKey` |
 | `invitation` | `Uint8Array` |
-| `identityKey?` | `PublicKey` |
+| `identity_key?` | `PublicKey` |
 | `secret?` | `Uint8Array` |
 
 #### Defined in
@@ -31,9 +31,9 @@ This descriptor might also have a bundled secret for authentication in interacti
 
 ## Properties
 
-### identityKey
+### identity_key
 
- `Optional` `Readonly` **identityKey**: `PublicKey`
+ `Optional` `Readonly` **identity_key**: `PublicKey`
 
 #### Defined in
 
@@ -61,9 +61,9 @@ ___
 
 ___
 
-### swarmKey
+### swarm_key
 
- `Readonly` **swarmKey**: `PublicKey`
+ `Readonly` **swarm_key**: `PublicKey`
 
 #### Defined in
 

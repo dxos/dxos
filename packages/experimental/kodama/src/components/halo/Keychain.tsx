@@ -51,7 +51,7 @@ export const Keychain = () => {
             value: date => formatDate(date)
           },
           {
-            key: 'publicKey',
+            key: 'public_key',
             width: 20,
             color: 'green',
             value: key => truncateKey(key, 4)

@@ -52,9 +52,9 @@ ___
 
 ___
 
-### deviceKey
+### device_key
 
- `Readonly` **deviceKey**: `PublicKey`
+ `Readonly` **device_key**: `PublicKey`
 
 #### Defined in
 
@@ -62,9 +62,9 @@ ___
 
 ___
 
-### identityKey
+### identity_key
 
- `Readonly` **identityKey**: `PublicKey`
+ `Readonly` **identity_key**: `PublicKey`
 
 #### Defined in
 
@@ -130,9 +130,9 @@ ___
 
 ___
 
-### haloSpaceKey
+### halo_space_key
 
-`get` **haloSpaceKey**(): `PublicKey`
+`get` **halo_space_key**(): `PublicKey`
 
 #### Returns
 

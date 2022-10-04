@@ -68,7 +68,7 @@ ___
 
 ### \_discoveryToPublicKey
 
- `Private` `Readonly` **\_discoveryToPublicKey**: `undefined` \| (`discoveryKey`: `Buffer`) => `undefined` \| `Buffer`
+ `Private` `Readonly` **\_discoveryToPublicKey**: `undefined` \| (`discovery_key`: `Buffer`) => `undefined` \| `Buffer`
 
 #### Defined in
 

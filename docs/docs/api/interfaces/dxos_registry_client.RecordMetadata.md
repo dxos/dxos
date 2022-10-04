@@ -22,9 +22,9 @@ Record metadata provided by the user.
 
 ___
 
-### displayName
+### display_name
 
- `Optional` **displayName**: `string`
+ `Optional` **display_name**: `string`
 
 #### Defined in
 

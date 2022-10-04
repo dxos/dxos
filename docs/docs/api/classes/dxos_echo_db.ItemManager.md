@@ -206,7 +206,7 @@ ___
 
 ### createItem
 
-**createItem**(`modelType`, `itemType?`, `parentId?`, `initProps?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`Model`<`unknown`, `any`\>\>\>
+**createItem**(`model_type`, `item_type?`, `parent_id?`, `initProps?`): `Promise`<[`Item`](dxos_echo_db.Item.md)<`Model`<`unknown`, `any`\>\>\>
 
 Creates an item and writes the genesis message.
 
@@ -214,9 +214,9 @@ Creates an item and writes the genesis message.
 
 | Name | Type |
 | :------ | :------ |
-| `modelType` | `string` |
-| `itemType?` | `string` |
-| `parentId?` | `string` |
+| `model_type` | `string` |
+| `item_type?` | `string` |
+| `parent_id?` | `string` |
 | `initProps?` | `any` |
 
 #### Returns
@@ -231,14 +231,14 @@ ___
 
 ### createLink
 
-**createLink**(`modelType`, `itemType`, `source`, `target`, `initProps?`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
+**createLink**(`model_type`, `item_type`, `source`, `target`, `initProps?`): `Promise`<[`Link`](dxos_echo_db.Link.md)<`any`, `any`, `any`\>\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `modelType` | `string` |
-| `itemType` | `undefined` \| `string` |
+| `model_type` | `string` |
+| `item_type` | `undefined` \| `string` |
 | `source` | `string` |
 | `target` | `string` |
 | `initProps?` | `any` |
@@ -255,7 +255,7 @@ ___
 
 ### deconstructItem
 
-**deconstructItem**(`itemId`): `void`
+**deconstructItem**(`item_id`): `void`
 
 Recursive method to unlink and remove items from the active set.
 
@@ -263,7 +263,7 @@ Recursive method to unlink and remove items from the active set.
 
 | Name | Type |
 | :------ | :------ |
-| `itemId` | `string` |
+| `item_id` | `string` |
 
 #### Returns
 
@@ -277,7 +277,7 @@ ___
 
 ### getItem
 
-**getItem**<`M`\>(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`M`\>
+**getItem**<`M`\>(`item_id`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`M`\>
 
 Retrieves a item from the index.
 
@@ -291,7 +291,7 @@ Retrieves a item from the index.
 
 | Name | Type |
 | :------ | :------ |
-| `itemId` | `string` |
+| `item_id` | `string` |
 
 #### Returns
 
@@ -319,7 +319,7 @@ ___
 
 ### initializeModel
 
-**initializeModel**(`itemId`): `Promise`<`void`\>
+**initializeModel**(`item_id`): `Promise`<`void`\>
 
 Reconstruct an item with a default model when that model becomes registered.
 New model instance is created and streams are reconnected.
@@ -328,7 +328,7 @@ New model instance is created and streams are reconnected.
 
 | Name | Type |
 | :------ | :------ |
-| `itemId` | `string` |
+| `item_id` | `string` |
 
 #### Returns
 
@@ -342,7 +342,7 @@ ___
 
 ### processModelMessage
 
-**processModelMessage**(`itemId`, `message`): `Promise`<`void`\>
+**processModelMessage**(`item_id`, `message`): `Promise`<`void`\>
 
 Process a message directed to a specific model.
 
@@ -350,7 +350,7 @@ Process a message directed to a specific model.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `itemId` | `string` | Id of the item containing the model. |
+| `item_id` | `string` | Id of the item containing the model. |
 | `message` | `ModelMessage`<`Uint8Array`\> | Encoded model message |
 
 #### Returns

@@ -40,7 +40,7 @@ message App {
   message Web {
     /// Relative path in resource to entrypoint, defaults to index.html.
     optional string index_file = 1;
-  
+
     /// Relative path in resource to entrypoint, defaults to main.js.
     optional string entry_point = 2;
   }

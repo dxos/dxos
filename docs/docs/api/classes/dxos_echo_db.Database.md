@@ -8,7 +8,7 @@ Represents a shared dataset containing queryable Items that are constructed from
 
 ### constructor
 
-**new Database**(`_modelFactory`, `_backend`, `memberKey`)
+**new Database**(`_modelFactory`, `_backend`, `member_key`)
 
 Creates a new database instance. `database.initialize()` must be called afterwards to complete the initialization.
 
@@ -18,7 +18,7 @@ Creates a new database instance. `database.initialize()` must be called afterwar
 | :------ | :------ |
 | `_modelFactory` | `ModelFactory` |
 | `_backend` | [`DatabaseBackend`](../interfaces/dxos_echo_db.DatabaseBackend.md) |
-| `memberKey` | `PublicKey` |
+| `member_key` | `PublicKey` |
 
 #### Defined in
 
@@ -222,7 +222,7 @@ ___
 
 ### getItem
 
-**getItem**(`itemId`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
+**getItem**(`item_id`): `undefined` \| [`Item`](dxos_echo_db.Item.md)<`any`\>
 
 Retrieves a item from the index.
 
@@ -230,7 +230,7 @@ Retrieves a item from the index.
 
 | Name | Type |
 | :------ | :------ |
-| `itemId` | `string` |
+| `item_id` | `string` |
 
 #### Returns
 

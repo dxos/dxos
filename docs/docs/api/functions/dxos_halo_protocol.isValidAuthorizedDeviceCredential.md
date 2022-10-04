@@ -2,15 +2,15 @@
 
 [@dxos/halo-protocol](../modules/dxos_halo_protocol.md).isValidAuthorizedDeviceCredential
 
-**isValidAuthorizedDeviceCredential**(`credential`, `identityKey`, `deviceKey`): `boolean`
+**isValidAuthorizedDeviceCredential**(`credential`, `identity_key`, `device_key`): `boolean`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `credential` | `Credential` |
-| `identityKey` | `PublicKey` |
-| `deviceKey` | `PublicKey` |
+| `identity_key` | `PublicKey` |
+| `device_key` | `PublicKey` |
 
 #### Returns
 

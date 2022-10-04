@@ -238,9 +238,9 @@ ___
 
 ___
 
-### isOpen
+### is_open
 
-`get` **isOpen**(): `boolean`
+`get` **is_open**(): `boolean`
 
 #### Returns
 

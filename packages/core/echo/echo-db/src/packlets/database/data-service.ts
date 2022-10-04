@@ -29,7 +29,7 @@ const log = debug('dxos:echo-db:data-service-router');
  */
 // TODO(burdon): Move service definition to client-services.
 export class DataService implements DataServiceRpc {
-  private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(x => x.toHex());
+  private readonly _trackedParties = new ComplexMap<PublicKey, DataServiceHost>(key => key.toHex());
 
   // TODO(burdon): Register party.
   trackParty (key: PublicKey, host: DataServiceHost) {

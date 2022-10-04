@@ -13,16 +13,16 @@ This descriptor might also have a bundled secret for authentication in interacti
 
 ### constructor
 
-**new InvitationDescriptor**(`type`, `swarmKey`, `invitation`, `identityKey?`, `secret?`)
+**new InvitationDescriptor**(`type`, `swarm_key`, `invitation`, `identity_key?`, `secret?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `type` | `Type` |
-| `swarmKey` | [`PublicKey`](dxos_client.PublicKey.md) |
+| `swarm_key` | [`PublicKey`](dxos_client.PublicKey.md) |
 | `invitation` | `Uint8Array` |
-| `identityKey?` | [`PublicKey`](dxos_client.PublicKey.md) |
+| `identity_key?` | [`PublicKey`](dxos_client.PublicKey.md) |
 | `secret?` | `Uint8Array` |
 
 #### Defined in
@@ -31,9 +31,9 @@ packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor
 
 ## Properties
 
-### identityKey
+### identity_key
 
- `Optional` `Readonly` **identityKey**: [`PublicKey`](dxos_client.PublicKey.md)
+ `Optional` `Readonly` **identity_key**: [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Defined in
 
@@ -61,9 +61,9 @@ packages/sdk/client-services/dist/src/packlets/invitations/invitation-descriptor
 
 ___
 
-### swarmKey
+### swarm_key
 
- `Readonly` **swarmKey**: [`PublicKey`](dxos_client.PublicKey.md)
+ `Readonly` **swarm_key**: [`PublicKey`](dxos_client.PublicKey.md)
 
 #### Defined in
 
