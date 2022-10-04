@@ -6,7 +6,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -59,7 +59,7 @@ export class TestAgent {
       dataFeed,
       feedProvider: key => this.feedStore.openReadOnlyFeed(key),
       initialTimeframe: new Timeframe(),
-      networkManager: new NetworkManager({ signalManager: this._signalManager }),
+      networkManager: new NetworkManager({ signalManager: this._signalManager, transportFactory: inMemoryTransportFactory }),
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,

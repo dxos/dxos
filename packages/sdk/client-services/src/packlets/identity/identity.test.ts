@@ -11,7 +11,7 @@ import { createCredentialSignerWithKey, verifyCredential, CredentialGenerator } 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -44,7 +44,8 @@ describe('halo/identity', () => {
       initialTimeframe: new Timeframe(),
       feedProvider: key => feedStore.openReadOnlyFeed(key),
       networkManager: new NetworkManager({
-        signalManager: new MemorySignalManager(new MemorySignalManagerContext())
+        signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
+        transportFactory: inMemoryTransportFactory
       }),
       networkPlugins: [],
       swarmIdentity: {
@@ -136,7 +137,8 @@ describe('halo/identity', () => {
         initialTimeframe: new Timeframe(),
         feedProvider: key => feedStore.openReadOnlyFeed(key),
         networkManager: new NetworkManager({
-          signalManager: new MemorySignalManager(signalContext)
+          signalManager: new MemorySignalManager(signalContext),
+          transportFactory: inMemoryTransportFactory
         }),
         networkPlugins: [],
         swarmIdentity: {
@@ -203,7 +205,8 @@ describe('halo/identity', () => {
         initialTimeframe: new Timeframe(),
         feedProvider: key => feedStore.openReadOnlyFeed(key),
         networkManager: new NetworkManager({
-          signalManager: new MemorySignalManager(signalContext)
+          signalManager: new MemorySignalManager(signalContext),
+          transportFactory: inMemoryTransportFactory
         }),
         networkPlugins: [],
         swarmIdentity: {

@@ -7,7 +7,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -21,7 +21,8 @@ describe('space-manager', () => {
       new MetadataStore(storage.createDirectory('metadata')),
       new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec }),
       new NetworkManager({
-        signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal'])
+        signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal']),
+        transportFactory: createWebRTCTransportFactory()
       }),
       keyring,
       new DataService(),

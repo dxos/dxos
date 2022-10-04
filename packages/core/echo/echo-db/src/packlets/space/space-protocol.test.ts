@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { afterTest } from '@dxos/testutils';
 
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
@@ -21,7 +21,10 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+    const networkManager1 = new NetworkManager({
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: inMemoryTransportFactory
+    });
     const protocol1 = new SpaceProtocol(
       networkManager1,
       topic,
@@ -34,7 +37,7 @@ describe('space/space-protocol', () => {
     );
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,
@@ -62,7 +65,7 @@ describe('space/space-protocol', () => {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
-    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+    const networkManager1 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
     const protocol1 = new SpaceProtocol(
       networkManager1,
       topic,
@@ -77,7 +80,7 @@ describe('space/space-protocol', () => {
     const pAuthFailed = protocol1.authenticationFailed.waitForCount(1);
 
     const peerId2 = PublicKey.random();
-    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+    const networkManager2 = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
     const protocol2 = new SpaceProtocol(
       networkManager2,
       topic,

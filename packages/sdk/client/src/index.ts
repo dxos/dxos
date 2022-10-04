@@ -51,7 +51,8 @@ export {
 
 // TODO(wittjosiah): Remove.
 export {
-  NetworkManager
+  NetworkManager,
+  createWebRTCTransportFactory
 } from '@dxos/network-manager';
 
 export * from './packlets/api';
