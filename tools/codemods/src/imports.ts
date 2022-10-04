@@ -28,9 +28,6 @@ const transform: Transform = (fileInfo, api, options) => {
       } else {
         j(path).remove()
       }
-
-      
-      console.log({ path: path.parent.value })
     })
 
   return root.toSource()
