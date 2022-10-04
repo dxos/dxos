@@ -1,0 +1,17 @@
+{
+  "sourceRoot": "packages/experimental/spyglass/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/experimental/spyglass/dist",
+        "tsConfig": "packages/experimental/spyglass/tsconfig.json",
+        "main": "packages/experimental/spyglass/src/index.ts"
+      }
+    }
+  }
+}
