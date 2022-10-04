@@ -68,7 +68,6 @@ describe('WebRTCTransportProxy', () => {
       sendSignal,
       port: port2
     });
-    await webRTCTransportProxy.init();
     afterTest(async () => await webRTCTransportProxy.close());
 
     return { webRTCService, webRTCTransportProxy };
