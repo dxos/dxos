@@ -22,7 +22,7 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 
 ### constructor
 
-**new Link**<`M`, `L`, `R`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `link`)
+**new Link**<`M`, `L`, `R`\>(`itemManager`, `item_id`, `item_type`, `stateManager`, `link`)
 
 #### Type parameters
 
@@ -37,8 +37,8 @@ Link variant of an item. Link two objects together. Can hold a custom model.
 | Name | Type |
 | :------ | :------ |
 | `itemManager` | [`ItemManager`](dxos_echo_db.ItemManager.md) |
-| `itemId` | `string` |
-| `itemType` | `undefined` \| `string` |
+| `item_id` | `string` |
+| `item_type` | `undefined` \| `string` |
 | `stateManager` | `StateManager`<`NonNullable`<`M`\>\> |
 | `link` | [`LinkData`](../interfaces/dxos_echo_db.LinkData.md) |
 

@@ -8,13 +8,13 @@ In order to fetch information from the party, we need to make use of `useSelecti
 import { useParty, useSelection } from '@dxos/react-client';
 
 const Component = () => {
-  const party = useParty(partyKey);
+  const party = useParty(party_key);
 
   const items = useSelection(
     party.database.select(
       (s) => s.filter({ type: EXAMPLE_TYPE }).filter((item) => !item.model.getProperty('deleted')).items
     ),
-    [partyKey]
+    [party_key]
   );
 
   // ...

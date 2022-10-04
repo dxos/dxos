@@ -17,12 +17,12 @@ export const Contacts = () => {
       rows={contacts}
       columns={[
         {
-          key: 'publicKey',
+          key: 'public_key',
           color: 'blue',
           value: key => truncateKey(key, 4)
         },
         {
-          key: 'displayName'
+          key: 'display_name'
         }
       ]}
     />

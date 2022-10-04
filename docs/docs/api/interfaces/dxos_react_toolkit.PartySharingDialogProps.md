@@ -124,9 +124,9 @@ Omit.open
 
 ___
 
-### partyKey
+### party_key
 
- **partyKey**: `PublicKey`
+ **party_key**: `PublicKey`
 
 #### Defined in
 

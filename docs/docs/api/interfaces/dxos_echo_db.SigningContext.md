@@ -34,9 +34,9 @@ ___
 
 ___
 
-### deviceKey
+### device_key
 
- **deviceKey**: `PublicKey`
+ **device_key**: `PublicKey`
 
 #### Defined in
 
@@ -44,9 +44,9 @@ ___
 
 ___
 
-### identityKey
+### identity_key
 
- **identityKey**: `PublicKey`
+ **identity_key**: `PublicKey`
 
 #### Defined in
 

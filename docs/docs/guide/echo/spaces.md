@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 
 export const App = () => {
   const client = useClient();
-  const [partyKey, setPartyKey] = useMemo<Party>();
+  const [party_key, setPartyKey] = useMemo<Party>();
   const [party, setParty] = useMemo<Party>();
 
   useEffect(() => {

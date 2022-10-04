@@ -59,7 +59,7 @@ export class ProfileService implements ProfileServiceRpc {
       throw new Error('Recovery SeedPhrase not provided.');
     }
     // await this.echo.open();
-    // await this.echo.halo.recover(request.seedPhrase);
+    // await this.echo.halo.recover(request.seed_phrase);
     // const profile = this.echo.halo.getProfile();
     // assert(profile, 'Recovering profile failed.');
     // return profile;

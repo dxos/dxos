@@ -10,8 +10,8 @@ import { ObjectModel } from '@dxos/object-model';
 
 const EXAMPLE_TYPE = 'example.com/type/item';
 
-const Component = ({ partyKey }) => {
-  const party = useParty(partyKey);
+const Component = ({ party_key }) => {
+  const party = useParty(party_key);
 
   const handleCreateItem = async () => {
     await party.database.createItem({

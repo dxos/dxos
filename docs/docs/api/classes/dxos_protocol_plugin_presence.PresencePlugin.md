@@ -261,9 +261,9 @@ ___
 
 ___
 
-### peerId
+### peer_id
 
-`get` **peerId**(): `Buffer`
+`get` **peer_id**(): `Buffer`
 
 #### Returns
 

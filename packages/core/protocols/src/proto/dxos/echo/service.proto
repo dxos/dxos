@@ -7,12 +7,12 @@ syntax = "proto3";
 import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 
 package dxos.echo.service;
 
 message SubscribeEntitySetRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message SubscribeEntitySetResponse {
@@ -22,15 +22,15 @@ message SubscribeEntitySetResponse {
 }
 
 message SubscribeEntityStreamRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
-  string itemId = 2;
+  dxos.keys.PublicKey party_key = 1;
+  string item_id = 2;
 }
 
 message SubscribeEntityStreamResponse {
   message Mutation {
     message Metadata {
-     dxos.halo.keys.PubKey feedKey = 1;
-     dxos.halo.keys.PubKey memberKey = 2;
+     dxos.keys.PublicKey feed_key = 1;
+     dxos.keys.PublicKey member_key = 2;
       int32 seq = 3;
       timeframe.TimeframeVector timeframe = 4;
     }
@@ -47,12 +47,12 @@ message SubscribeEntityStreamResponse {
 }
 
 message WriteRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
   feed.EchoEnvelope mutation = 2;
 }
 
 message MutationReceipt {
-  dxos.halo.keys.PubKey feedKey = 1;
+  dxos.keys.PublicKey feed_key = 1;
   int32 seq = 2;
 }
 

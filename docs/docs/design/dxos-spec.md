@@ -111,9 +111,9 @@ describe.skip('Experimental API', () => {
     //
     {
       // Create profile.
-      const privateKey = await client1.halo.createProfile();
-      const publicKey = client1.halo.profile.identityKey;
-      expect(validateKeyPair(publicKey, privateKey)).toBeTruthy();
+      const private_key = await client1.halo.createProfile();
+      const public_key = client1.halo.profile.identity_key;
+      expect(validateKeyPair(public_key, private_key)).toBeTruthy();
       expect(client1.halo.device).toBeDefined();
 
       // Recover profile.
@@ -121,8 +121,8 @@ describe.skip('Experimental API', () => {
       {
         const client2 = createClient();
         expect(client2.halo.profile).not.toBeDefined();
-        const profile = await client2.halo.recoverProfile(privateKey);
-        expect(PublicKey.equals(profile.identityKey, client2.halo.profile.identityKey)).toBeTruthy();
+        const profile = await client2.halo.recoverProfile(private_key);
+        expect(PublicKey.equals(profile.identity_key, client2.halo.profile.identity_key)).toBeTruthy();
       }
     }
 
@@ -150,8 +150,8 @@ describe.skip('Experimental API', () => {
         // Accept new device.
         const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
         setImmediate(async () => {
-          const deviceKey = await challenge.wait();
-          expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
+          const device_key = await challenge.wait();
+          expect(PublicKey.equals(device_key, client2.halo.device.device_key)).toBeTruthy();
         });
 
         // Authenticate.
@@ -167,8 +167,8 @@ describe.skip('Experimental API', () => {
     {
       const contacts = client1.circle.queryContacts();
       await Promise.all(contacts.elements.map(async contact => {
-        const receipt = await client1.messenger.send(contact.identityKey, { message: `Hello ${contact.username}!` });
-        expect(receipt.recipient).toBe(contact.identityKey);
+        const receipt = await client1.messenger.send(contact.identity_key, { message: `Hello ${contact.username}!` });
+        expect(receipt.recipient).toBe(contact.identity_key);
       }));
     }
 
@@ -189,9 +189,9 @@ describe.skip('Experimental API', () => {
         // Accept invitation.
         const client2 = createClient();
         const offer = client2.brane.createInvitationOffer(invitation.offerKey);
-        const spaceKey = await offer.accept(invitation.secret);
+        const space_key = await offer.accept(invitation.secret);
 
-        const space = await client2.brane.getSpace(spaceKey);
+        const space = await client2.brane.getSpace(space_key);
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
       }
@@ -203,8 +203,8 @@ describe.skip('Experimental API', () => {
     {
       const space = await client1.brane.createSpace();
       const contacts = client1.circle.queryContacts({ name: 'alice' });
-      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].identityKey);
-      await client1.messenger.send(contacts.elements[0].identityKey, invitation);
+      const invitation = space.createInvitation(Role.ADMIN, contacts.elements[0].identity_key);
+      await client1.messenger.send(contacts.elements[0].identity_key, invitation);
       await invitation.wait();
 
       const members = space.queryMembers({ role: Role.ADMIN });
@@ -218,8 +218,8 @@ describe.skip('Experimental API', () => {
       const invitations = client1.circle.queryInvitations();
       const subscription = invitations.onUpdate(async (invitations: InvitationOffer[]) => {
         if (invitations.length) {
-          const spaceKey = await invitations[0].accept();
-          expect(spaceKey).toBeDefined();
+          const space_key = await invitations[0].accept();
+          expect(space_key).toBeDefined();
           subscription.cancel();
         }
       });
@@ -243,7 +243,7 @@ describe.skip('Experimental API', () => {
 
       // Create item.
       const item = await space.database.createItem({ type: 'org.dxos.contact' });
-      expect(item.publicKey).toBeDefined();
+      expect(item.public_key).toBeDefined();
 
       // Query items across all spaces.
       const items = client1.brane.queryItems({ type: 'org.dxos.contact' });

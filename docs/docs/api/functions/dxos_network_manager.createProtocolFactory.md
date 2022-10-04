@@ -2,14 +2,14 @@
 
 [@dxos/network-manager](../modules/dxos_network_manager.md).createProtocolFactory
 
-**createProtocolFactory**(`topic`, `peerId`, `plugins`): [`ProtocolProvider`](../types/dxos_network_manager.ProtocolProvider.md)
+**createProtocolFactory**(`topic`, `peer_id`, `plugins`): [`ProtocolProvider`](../types/dxos_network_manager.ProtocolProvider.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `topic` | `PublicKey` |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 | `plugins` | [`Plugin`](../interfaces/dxos_network_manager.Plugin.md)[] |
 
 #### Returns

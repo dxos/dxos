@@ -4,9 +4,9 @@
 
 ## Properties
 
-### genesisFeed
+### genesis_feed
 
- **genesisFeed**: `PublicKey`
+ **genesis_feed**: `PublicKey`
 
 #### Defined in
 

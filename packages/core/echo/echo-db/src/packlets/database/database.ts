@@ -123,7 +123,7 @@ export class Database {
       throw new TypeError('Optional parent item id must be a string id of an existing item.');
     }
 
-    // TODO(burdon): Get modelType from somewhere other than `ObjectModel.meta.type`.
+    // TODO(burdon): Get model_type from somewhere other than `ObjectModel.meta.type`.
     return await this._itemManager.createItem(
       options.model.meta.type, options.type, options.parent, options.props) as any;
   }

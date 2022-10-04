@@ -68,7 +68,7 @@ ___
 
  `Private` `Readonly` **\_topicsJoined**: `ComplexMap`<`PublicKey`, `PublicKey`\>
 
-Topics joined: topic => peerId
+Topics joined: topic => peer_id
 
 #### Defined in
 
@@ -80,7 +80,7 @@ ___
 
  `Private` `Readonly` **\_topicsJoinedPerSignal**: `Map`<`string`, `ComplexMap`<`PublicKey`, `PublicKey`\>\>
 
-host => topic => peerId
+host => topic => peer_id
 
 #### Defined in
 
@@ -233,7 +233,7 @@ Join topic on signal network, to be discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.peerId` | `PublicKey` |
+| `__namedParameters.peer_id` | `PublicKey` |
 | `__namedParameters.topic` | `PublicKey` |
 
 #### Returns
@@ -261,7 +261,7 @@ Leave topic on signal network, to stop being discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.peerId` | `PublicKey` |
+| `__namedParameters.peer_id` | `PublicKey` |
 | `__namedParameters.topic` | `PublicKey` |
 
 #### Returns
@@ -309,7 +309,7 @@ ___
 
 ### subscribeMessages
 
-**subscribeMessages**(`peerId`): `Promise`<`void`\>
+**subscribeMessages**(`peer_id`): `Promise`<`void`\>
 
 Start receiving messages from
 
@@ -317,7 +317,7 @@ Start receiving messages from
 
 | Name | Type |
 | :------ | :------ |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 
 #### Returns
 

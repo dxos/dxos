@@ -8,7 +8,7 @@ import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxo
 
 import { createCredential } from './credential-factory';
 
-// TODO(burdon): Normalize partyKey, spaceKey (args, proto).
+// TODO(burdon): Normalize party_key, space_key (args, proto).
 
 /**
  * Utility class for generating credential messages, where the issuer is the current identity or device.

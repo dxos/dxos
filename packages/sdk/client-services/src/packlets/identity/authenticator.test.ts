@@ -18,7 +18,7 @@ describe('identity/authenticator', () => {
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);
     const authProvider = createHaloAuthProvider(signer);
-    const authVerifier = createHaloAuthVerifier(() => new ComplexSet(x => x.toHex(), [deviceKey]));
+    const authVerifier = createHaloAuthVerifier(() => new ComplexSet(key => key.toHex(), [deviceKey]));
 
     const nonce = new Uint8Array([2, 1, 3, 7]);
 

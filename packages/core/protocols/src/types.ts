@@ -13,7 +13,7 @@ export type TypedMessage = TypedProtoMessage<TYPES>
 
 // TODO(burdon): Replace with proto definition.
 export type FeedMeta = {
-  feedKey: PublicKey // TODO(burdon): Rename key.
+  feedKey: PublicKey
   seq: number
 }
 

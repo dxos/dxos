@@ -4,9 +4,9 @@
 
 ## Properties
 
-### inviteeKey
+### invitee_key
 
- `Optional` **inviteeKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
+ `Optional` **invitee_key**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 

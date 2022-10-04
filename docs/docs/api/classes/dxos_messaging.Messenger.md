@@ -214,7 +214,7 @@ ___
 | :------ | :------ |
 | `__namedParameters` | `Object` |
 | `__namedParameters.author` | `PublicKey` |
-| `__namedParameters.messageId` | `PublicKey` |
+| `__namedParameters.message_id` | `PublicKey` |
 | `__namedParameters.recipient` | `PublicKey` |
 
 #### Returns
