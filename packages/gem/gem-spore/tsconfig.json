@@ -8,8 +8,16 @@
     "outDir": "dist",
     "strict": false
   },
+  "exclude": [
+    "**/*.test.ts"
+  ],
   "include": [
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
   ]
 }

@@ -18,26 +18,15 @@
       "options": {
         "lintFilePatterns": ["packages/gem/gem-core/**/*.{ts,tsx,js,jsx}"]
       }
+    },
+    // TODO(wittjosiah): Mocha fails because of ESM import issue with D3.
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["packages/gem/gem-core/coverage"],
+      "options": {
+        "jestConfig": "packages/gem/gem-core/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
-    // "test": {
-    //   "executor": "@dxos/mocha:mocha",
-    //   "outputs": [
-    //     "{options.outputPath}",
-    //     "{options.resultsPath}"
-    //   ],
-    //   "options": {
-    //     "testPatterns": [
-    //       "packages/gem/gem-core/src/**/*.test.{ts,js}"
-    //     ],
-    //     "watchPatterns": [
-    //       "packages/gem/gem-core/src/**/*"
-    //     ],
-    //     "outputPath": "tmp/mocha/gem/gem-core",
-    //     "resultsPath": "test-results/gem/gem-core"
-    //   }
-    // }
-  },
-  "implicitDependencies": [
-    "mocha"
-  ]
+  }
 }

@@ -6,13 +6,18 @@
       "ESNext"
     ],
     "outDir": "dist",
-    "strict": false,
-    "types": [
-      "mocha"
-    ]
+    "strict": false
   },
+  "exclude": [
+    "**/*.test.ts"
+  ],
   "include": [
     "src",
     "stories"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
   ]
 }

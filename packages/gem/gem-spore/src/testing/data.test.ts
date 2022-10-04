@@ -8,5 +8,5 @@ import { convertTreeToGraph, createTree } from './data';
 
 it('createTree', function () {
   const data = convertTreeToGraph(createTree());
-  expect(data).to.be.true; // TODO(burdon): Test lengths.
+  expect(data).to.exist; // TODO(burdon): Test lengths.
 });

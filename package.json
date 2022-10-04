@@ -35,6 +35,7 @@
     "@mdx-js/react": "^2.1.3",
     "@nrwl/devkit": "14.5.7",
     "@nrwl/eslint-plugin-nx": "14.5.7",
+    "@nrwl/jest": "14.5.7",
     "@nrwl/js": "14.5.7",
     "@nrwl/linter": "14.5.7",
     "@nrwl/nx-cloud": "^14.3.0",
