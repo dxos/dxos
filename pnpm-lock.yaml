@@ -639,6 +639,7 @@ importers:
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/keys': link:../keys
@@ -650,6 +651,7 @@ importers:
       hypercore: 9.12.0
       pify: 5.0.0
       readable-stream: 3.6.0
+      util: 0.12.4
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
@@ -2076,91 +2078,6 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
-  packages/experimental/kodama/dist:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/node-fetch': ^2.5.10
-      '@types/qrcode-terminal': ^0.12.0
-      '@types/react': ^17.0.24
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      clipboardy: ^3.0.0
-      compare-semver: ~1.1.0
-      date-format: ~4.0.11
-      esbuild: ~0.14.1
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ^8.4.0
-      node-fetch: ^2.6.0
-      npm-api: ~1.0.1
-      qrcode-terminal: ~0.12.0
-      react: ^17.0.2
-      supervisor: ~0.12.0
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-testing': link:../../../sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      chalk: 4.1.2
-      clipboardy: 3.0.0
-      compare-semver: 1.1.0
-      date-format: 4.0.11
-      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
-      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
-      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
-      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
-      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
-      js-yaml: 4.1.0
-      node-fetch: 2.6.7
-      npm-api: 1.0.1
-      qrcode-terminal: 0.12.0
-      react: 17.0.2
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/node-fetch': 2.5.12
-      '@types/qrcode-terminal': 0.12.0
-      '@types/react': 17.0.50
-      '@types/yargs': 16.0.4
-      esbuild: 0.14.49
-      mocha: 8.4.0
-      supervisor: 0.12.0
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-
   packages/experimental/lexical-editor:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2739,7 +2656,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -2773,7 +2689,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
