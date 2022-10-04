@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { sleep, synchronized, Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -15,7 +15,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Timeframe, TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AsyncCallback, Callback } from '@dxos/util';
+import { AsyncCallback, Callback, humanize } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
@@ -51,6 +51,7 @@ export class Space {
   private readonly _controlPipeline: ControlPipeline;
   private readonly _replicator = new ReplicatorPlugin();
   private readonly _protocol: SpaceProtocol;
+  private readonly _identityAdmittedTrigger = new Trigger();
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
@@ -75,6 +76,13 @@ export class Space {
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
 
+    console.log({
+      'key     ': humanize(this._key),
+      'genesis ': humanize(genesisFeed.key),
+      'control ': humanize(controlFeed.key),
+      'data    ': humanize(dataFeed.key),
+    })
+
     this._controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
@@ -96,6 +104,9 @@ export class Space {
       if (!info.key.equals(genesisFeed.key)) {
         this._replicator.addFeed(await feedProvider(info.key));
       }
+    });
+    this._controlPipeline.onMemberAdmitted.set(async info => {
+      
     });
 
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
@@ -152,6 +163,8 @@ export class Space {
       return;
     }
 
+    console.log('OPEN', humanize(this.key))
+
     // Order is important.
     await this._controlPipeline.start();
     await this._openDataPipeline();
@@ -173,6 +186,13 @@ export class Space {
     await this._closeDataPipeline();
 
     this._isOpen = false;
+  }
+
+  async ready() {
+    // await sleep(1000);
+    // You are a member of the space.
+    // Control pipeline is writable.
+    // Data pipeline is writable.
   }
 
   // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?

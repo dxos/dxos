@@ -30,7 +30,10 @@
         "testPatterns": [
           "packages/e2e/client/browser-test/**/*.test.ts"
         ],
-        "setup": "packages/e2e/client/browser-test/setup.js"
+        "setup": "packages/e2e/client/browser-test/setup.js",
+        "stayOpen": true,
+        "headless": false,
+        "browsers": ["chromium"]
       }
     }
   },

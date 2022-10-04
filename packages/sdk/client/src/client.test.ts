@@ -112,7 +112,7 @@ describe('Client', () => {
         return { inviter, invitee };
       };
 
-      test('creates and joins a Party invitation', async () => {
+      test.only('creates and joins a Party invitation', async () => {
         const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();

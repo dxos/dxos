@@ -319,6 +319,7 @@ export class Protocol {
   }
 
   private async _handshakeExtensions () {
+    console.log('_handshakeExtensions');
     for (const handshake of this._handshakes) {
       await handshake(this);
     }

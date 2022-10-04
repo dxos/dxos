@@ -12,19 +12,21 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, humanize } from '@dxos/util';
 
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
+import { inspect } from 'util';
 
 const STALL_TIMEOUT = 1000;
 
 const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
   const writer = createFeedWriter<FeedMessage>(feed);
-  return mapFeedWriter(payload => ({
+  return mapFeedWriter(payload => {
+    return ({
     payload,
     timeframe: getTimeframe()
-  }), writer);
+  })}, writer);
 };
 
 export type PipelineState = {
@@ -84,7 +86,7 @@ export class Pipeline implements PipelineAccessor {
   private readonly _state: PipelineState;
 
   private _writer: FeedWriter<TypedMessage> | undefined;
-  private _isOpen = false;
+  private _isConsuming = false;
 
   constructor (
     private readonly _initialTimeframe: Timeframe
@@ -134,16 +136,17 @@ export class Pipeline implements PipelineAccessor {
    * Updates the timeframe clock after the message has bee processed.
    */
   async * consume (): AsyncIterable<FeedMessageBlock> {
-    assert(!this._isOpen, 'Pipeline is already being consumed.');
-    this._isOpen = true;
+    assert(!this._isConsuming, 'Pipeline is already being consumed.');
+    this._isConsuming = true;
 
     for await (const block of this._iterator) {
+      // console.log(`R ${humanize(block.key).padEnd(40)} ${block.seq}`)
       yield block;
       this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
     }
 
     // TODO(burdon): Test re-entrant?
-    this._isOpen = false;
+    this._isConsuming = false;
   }
 
   async stop () {

@@ -111,6 +111,7 @@ export class PartyProxy implements Party {
     // }
 
     // Root item for properties.
+    // TODO(dmaretskyi): This will create a new item every time PartyProxy is initialized!!!
     this._item = await this._database?.createItem({ type: PARTY_ITEM_TYPE });
   }
 

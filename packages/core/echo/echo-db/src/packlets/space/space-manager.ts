@@ -119,6 +119,8 @@ export class SpaceManager {
 
     await space.open();
 
+    await space.ready();
+
     this._insertSpace(space);
     return space;
   }

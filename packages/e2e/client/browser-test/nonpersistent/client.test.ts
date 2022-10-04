@@ -53,7 +53,7 @@ describe('Client - nonpersistent', () => {
     await client.destroy();
   }).timeout(10_000).retries(10);
 
-  it('invitations', async function () {
+  it.only('invitations', async function () {
     if (browserMocha.context.browser === 'webkit') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
@@ -86,7 +86,7 @@ describe('Client - nonpersistent', () => {
 
     await client.destroy();
     await otherClient.destroy();
-  }).timeout(10_000).retries(10);
+  }).timeout(10_000);
 
   it.skip('offline invitations', async function () {
     if (browserMocha.context.browser === 'webkit' || browserMocha.context.browser === 'chromium') {

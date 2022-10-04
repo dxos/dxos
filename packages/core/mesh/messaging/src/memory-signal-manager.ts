@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -62,27 +62,31 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarms.get(topic)!.add(peerId);
     this._context.connections.set(peerId, this);
 
-    this._context.swarmEvent.emit({
-      topic,
-      swarmEvent: {
-        peerAvailable: {
-          peer: peerId.asUint8Array(),
-          since: new Date()
+    randomDelay(() => {
+      this._context.swarmEvent.emit({
+        topic,
+        swarmEvent: {
+          peerAvailable: {
+            peer: peerId.asUint8Array(),
+            since: new Date()
+          }
         }
-      }
-    });
+      });
+    })
 
     // Emitting swarm events for each peer.
     for (const [topic, peerIds] of this._context.swarms) {
       Array.from(peerIds).forEach((peerId) => {
-        this.swarmEvent.emit({
-          topic,
-          swarmEvent: {
-            peerAvailable: {
-              peer: peerId.asUint8Array(),
-              since: new Date()
+        randomDelay(() => {
+          this.swarmEvent.emit({
+            topic,
+            swarmEvent: {
+              peerAvailable: {
+                peer: peerId.asUint8Array(),
+                since: new Date()
+              }
             }
-          }
+          });
         });
       });
     }
@@ -101,19 +105,28 @@ export class MemorySignalManager implements SignalManager {
       }
     };
 
-    this._context.swarmEvent.emit({ topic, swarmEvent });
+    randomDelay(() => {
+      this._context.swarmEvent.emit({ topic, swarmEvent });
+    });
   }
 
   async sendMessage ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
     assert(recipient);
     assert(this._context.connections.get(recipient), 'Peer not connected');
-    this._context.connections
-      .get(recipient)!
-      .onMessage.emit({ author, recipient, payload });
+    randomDelay(() => {
+      this._context.connections
+        .get(recipient)!
+        .onMessage.emit({ author, recipient, payload });
+    })
   }
 
   // TODO(mykola): Delete this.
   async subscribeMessages (peerId: PublicKey): Promise<void> {}
 
   async destroy () {}
+}
+
+const randomDelay = (cb: () => void) => {
+  const delay = Math.random() * 200;
+  sleep(delay).then(() => cb());
 }

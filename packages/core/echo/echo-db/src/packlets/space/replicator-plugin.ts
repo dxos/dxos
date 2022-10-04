@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { humanize } from '@dxos/util';
 
 /**
  * Protocol plugin for feed replication.
@@ -36,7 +37,7 @@ export class ReplicatorPlugin extends Replicator {
 
       replicate: async (remoteFeeds, info) => {
         const feeds = Array.from(this._feeds);
-        log('Replicating', { peerId: info.session, feeds: feeds.map(feed => feed.key) });
+        console.log('Replicating', { peerId: info.session, feeds: feeds.map(feed => humanize(feed.key)) });
         return feeds.map(feed => feed.feed);
       }
     });
