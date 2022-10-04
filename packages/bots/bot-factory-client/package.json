@@ -5,11 +5,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
-    "./dist/src/index.js": "./dist/browser.js",
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "./dist/src/index.js": "./dist/browser.js"
   },
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true"
   },

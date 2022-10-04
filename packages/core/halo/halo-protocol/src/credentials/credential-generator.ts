@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Signer } from '@dxos/keyring';
+import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 

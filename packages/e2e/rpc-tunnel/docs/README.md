@@ -16,24 +16,20 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph e2e [e2e]
-  style e2e fill:#abcced,stroke:#fff
+  style e2e fill:#ebf2fa,stroke:#333
   dxos/rpc-tunnel-e2e("@dxos/rpc-tunnel-e2e"):::root
   click dxos/rpc-tunnel-e2e "dxos/dxos/tree/main/packages/e2e/rpc-tunnel/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
   dxos/react-async("@dxos/react-async"):::def
   click dxos/react-async "dxos/dxos/tree/main/packages/common/react-async/docs"
-  dxos/rpc("@dxos/rpc"):::def
-  click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
-  dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
-  click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -46,13 +42,21 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph mesh [mesh]
+    style mesh fill:#ebfaef,stroke:#333
+    dxos/rpc("@dxos/rpc"):::def
+    click dxos/rpc "dxos/dxos/tree/main/packages/core/mesh/rpc/docs"
+    dxos/rpc-tunnel("@dxos/rpc-tunnel"):::def
+    click dxos/rpc-tunnel "dxos/dxos/tree/main/packages/core/mesh/rpc-tunnel/docs"
+  end
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#f9faeb,stroke:#333
   dxos/react-components("@dxos/react-components"):::def
   click dxos/react-components "dxos/dxos/tree/main/packages/sdk/react-components/docs"
 end
@@ -78,6 +82,6 @@ dxos/rpc-tunnel --> dxos/rpc
 | [`@dxos/protocols`](../../../core/protocols/docs/README.md) | &check; |
 | [`@dxos/react-async`](../../../common/react-async/docs/README.md) | &check; |
 | [`@dxos/react-components`](../../../sdk/react-components/docs/README.md) | &check; |
-| [`@dxos/rpc`](../../../common/rpc/docs/README.md) | &check; |
-| [`@dxos/rpc-tunnel`](../../../common/rpc-tunnel/docs/README.md) | &check; |
+| [`@dxos/rpc`](../../../core/mesh/rpc/docs/README.md) | &check; |
+| [`@dxos/rpc-tunnel`](../../../core/mesh/rpc-tunnel/docs/README.md) | &check; |
 | [`@dxos/util`](../../../common/util/docs/README.md) |  |

@@ -5,11 +5,11 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:util": "util"
   },
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -23,9 +23,7 @@
     "util": "^0.12.4"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
-    "@types/randombytes": "^2.0.0",
-    "debug": "^4.3.3"
+    "@types/randombytes": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"

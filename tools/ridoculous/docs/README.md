@@ -15,8 +15,8 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
+subgraph undefined [undefined]
+  style undefined fill:#faf7eb,stroke:#333
   dxos/ridoculous("@dxos/ridoculous"):::root
   click dxos/ridoculous "dxos/dxos/tree/main/tools/ridoculous/docs"
 end

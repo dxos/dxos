@@ -5,15 +5,13 @@
 import assert from 'node:assert';
 
 import { synchronized } from '@dxos/async';
+import { subtleCrypto, Signer } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
-
-import { subtleCrypto } from './crypto';
-import { Signer } from './signer';
 
 /**
  * Manages keys.
@@ -74,7 +72,8 @@ export class Keyring implements Signer {
 
       this._keyCache.set(publicKey, keyPair);
     }
-    return this._keyCache.get(key)!;
+
+    return this._keyCache.get(key)!; // TODO(burdon): Fail if null?
   }
 
   @synchronized
@@ -103,5 +102,6 @@ export class Keyring implements Signer {
   }
 }
 
-const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> =>
-  PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
+const keyPairToPublicKey = async (keyPair: CryptoKeyPair): Promise<PublicKey> => {
+  return PublicKey.from(new Uint8Array(await subtleCrypto.exportKey('raw', keyPair.publicKey)));
+};

@@ -1,10 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "lib": [
-      "DOM"
-    ]
+    "outDir": "dist"
   },
   "include": [
     "src"
@@ -22,9 +19,5 @@
     {
       "path": "../credentials"
     },
-  ],
-  "types": [
-    "mocha",
-    "node"
   ]
 }

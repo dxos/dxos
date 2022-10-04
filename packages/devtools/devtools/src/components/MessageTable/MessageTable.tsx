@@ -16,7 +16,7 @@ import {
   useTheme
 } from '@mui/material';
 
-import { IFeedGenericBlock } from '@dxos/protocols';
+import { FeedBlock } from '@dxos/feed-store';
 import { JsonTreeView } from '@dxos/react-components';
 
 import { Table, TableCell } from '../Table';
@@ -52,7 +52,7 @@ const defaultGetType = (message: any) => {
 };
 
 export interface MessageTableProps {
-  messages: IFeedGenericBlock<any>[]
+  messages: FeedBlock<any>[]
   getType?: (message: any) => string
   onSelect?: (data: any) => {}
 }

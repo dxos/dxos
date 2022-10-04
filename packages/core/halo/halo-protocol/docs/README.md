@@ -15,23 +15,31 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph halo [halo]
-  style halo fill:#cabade,stroke:#fff
-  dxos/halo-protocol("@dxos/halo-protocol"):::root
-  click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
-  dxos/keyring("@dxos/keyring"):::def
-  click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+subgraph core [core]
+  style core fill:#faebec,stroke:#333
+  dxos/protocols("@dxos/protocols"):::def
+  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
+
+  subgraph halo [halo]
+    style halo fill:#f1ebfa,stroke:#333
+    dxos/halo-protocol("@dxos/halo-protocol"):::root
+    click dxos/halo-protocol "dxos/dxos/tree/main/packages/core/halo/halo-protocol/docs"
+    dxos/keyring("@dxos/keyring"):::def
+    click dxos/keyring "dxos/dxos/tree/main/packages/core/halo/keyring/docs"
+  end
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
+  dxos/crypto("@dxos/crypto"):::def
+  click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
   dxos/random-access-storage("@dxos/random-access-storage"):::def
   click dxos/random-access-storage "dxos/dxos/tree/main/packages/common/random-access-storage/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/async("@dxos/async"):::def
     click dxos/async "dxos/dxos/tree/main/packages/common/async/docs"
     dxos/debug("@dxos/debug"):::def
@@ -45,15 +53,10 @@ subgraph common [common]
   end
 end
 
-subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
-  dxos/protocols("@dxos/protocols"):::def
-  click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
-end
-
 %% Links
 linkStyle default stroke:#333,stroke-width:1px
 dxos/halo-protocol --> dxos/keyring
+dxos/keyring --> dxos/crypto
 dxos/keyring --> dxos/protocols
 dxos/protocols --> dxos/codec-protobuf
 dxos/keyring --> dxos/random-access-storage
@@ -65,6 +68,7 @@ dxos/keyring --> dxos/random-access-storage
 |---|---|
 | [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
 | [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
 | [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
 | [`@dxos/keyring`](../../keyring/docs/README.md) | &check; |
 | [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |

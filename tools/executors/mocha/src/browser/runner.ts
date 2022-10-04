@@ -32,7 +32,6 @@ export const run = async (options: BrowserExecutorOptions) => {
   }
 
   const files = await resolveFiles(options.testPatterns);
-
   await buildTests(files, { debug: !!options.debug, outDir: tempDir, checkLeaks: options.checkLeaks });
 
   let shouldFail = false;

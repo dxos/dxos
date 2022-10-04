@@ -1,6 +1,6 @@
 # @dxos/crypto
 
-Basic crypto key utils
+Basic cross-platform crypto utils.
 
 ## Dependency Graph
 
@@ -16,14 +16,16 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 %% Nodes
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/crypto("@dxos/crypto"):::root
   click dxos/crypto "dxos/dxos/tree/main/packages/common/crypto/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/keys("@dxos/keys"):::def
     click dxos/keys "dxos/dxos/tree/main/packages/common/keys/docs"
+    dxos/log("@dxos/log"):::def
+    click dxos/log "dxos/dxos/tree/main/packages/common/log/docs"
   end
 end
 
@@ -36,3 +38,4 @@ linkStyle default stroke:#333,stroke-width:1px
 | Module | Direct |
 |---|---|
 | [`@dxos/keys`](../../keys/docs/README.md) | &check; |
+| [`@dxos/log`](../../log/docs/README.md) | &check; |

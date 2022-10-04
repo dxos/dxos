@@ -15,25 +15,25 @@ classDef root fill:#fff,stroke:#333,stroke-width:4px
 
 %% Nodes
 
-subgraph tools [tools]
-  style tools fill:#bbabed,stroke:#fff
+subgraph undefined [undefined]
+  style undefined fill:#faf7eb,stroke:#333
   dxos/vite-plugin("@dxos/vite-plugin"):::root
   click dxos/vite-plugin "dxos/dxos/tree/main/tools/vite-plugin/docs"
 end
 
 subgraph sdk [sdk]
-  style sdk fill:#dddeba,stroke:#fff
+  style sdk fill:#f9faeb,stroke:#333
   dxos/config("@dxos/config"):::def
   click dxos/config "dxos/dxos/tree/main/packages/sdk/config/docs"
 end
 
 subgraph common [common]
-  style common fill:#debac2,stroke:#fff
+  style common fill:#faebee,stroke:#333
   dxos/codec-protobuf("@dxos/codec-protobuf"):::def
   click dxos/codec-protobuf "dxos/dxos/tree/main/packages/common/codec-protobuf/docs"
 
-  subgraph common-excluded [ ]
-    style common-excluded fill:#debac2,stroke:#333,stroke-dasharray:5 5
+  subgraph _ [ ]
+    style _ fill:#faebee,stroke:#333,stroke-dasharray:5 5
     dxos/debug("@dxos/debug"):::def
     click dxos/debug "dxos/dxos/tree/main/packages/common/debug/docs"
     dxos/keys("@dxos/keys"):::def
@@ -44,7 +44,7 @@ subgraph common [common]
 end
 
 subgraph core [core]
-  style core fill:#edabb3,stroke:#fff
+  style core fill:#faebec,stroke:#333
   dxos/protocols("@dxos/protocols"):::def
   click dxos/protocols "dxos/dxos/tree/main/packages/core/protocols/docs"
 end
