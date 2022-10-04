@@ -391,7 +391,7 @@ export class Protocol {
 
     const extension = this._extensionMap.get(name);
     if (!extension) {
-      process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
+      this._handleError(new ERR_PROTOCOL_EXTENSION_MISSING(name));
       return;
     }
 
