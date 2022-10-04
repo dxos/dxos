@@ -10,6 +10,7 @@
     "client": "packages/sdk/client",
     "echo-e2e": "packages/e2e/echo",
     "client-e2e": "packages/e2e/client",
+    "codemods": "tools/codemods",
     "client-services": "packages/sdk/client-services",
     "client-testing": "packages/sdk/client-testing",
     "codec-protobuf": "packages/common/codec-protobuf",
