@@ -1,6 +1,10 @@
 import { Transform } from 'jscodeshift'
 
 const transform: Transform = (fileInfo, api, options) => {
+  if(fileInfo.path.includes('dist/') || fileInfo.path.includes('node_modules/')) { 
+    return null
+  }
+
   const j = api.jscodeshift;
   const replaceList = [options.replace].flat()
   const root = j(fileInfo.source)
