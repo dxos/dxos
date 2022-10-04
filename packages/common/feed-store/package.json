@@ -24,15 +24,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
-    "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
-    "end-of-stream": "^1.4.1",
     "from2": "^2.3.0",
     "hypercore": "^9.10.0",
     "pify": "~5.0.0",
-    "pump": "^3.0.0",
-    "readable-stream": "^3.6.0",
-    "through2": "^3.0.1"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
@@ -43,16 +39,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/end-of-stream": "^1.4.0",
     "@types/faker": "^5.5.9",
     "@types/from2": "~2.3.1",
     "@types/pify": "^3.0.2",
-    "@types/pump": "^1.1.0",
     "@types/readable-stream": "^2.3.9",
-    "@types/through2": "^2.0.36",
-    "end-of-stream-promise": "^1.0.0",
     "faker": "^5.5.3",
-    "hypertrie": "5.1.1",
     "tempy": "~1.0.1"
   },
   "publishConfig": {
