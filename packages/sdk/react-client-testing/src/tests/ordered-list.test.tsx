@@ -79,7 +79,6 @@ describe('OrderedList', function () {
 
     await userEvent.click(screen.getByTestId('click'));
     await waitFor(() => {
-      console.log(orderedList);
       screen.getAllByTestId('item').forEach((node, i) => {
         expect(node.textContent).toBe(orderedList.values[i]);
       });

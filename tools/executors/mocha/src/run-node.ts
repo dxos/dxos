@@ -34,6 +34,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     //   Then the SWC will transpile the typescript source to javascript.
     '-r', '@dxos/log-hook/register',
     '-r', '@swc-node/register',
+    ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
     '-t', String(options.timeout),
@@ -77,7 +78,7 @@ const getSetupArgs = (root: string, domRequired: boolean) => {
   const scripts = [
     'mocha-env',
     'catch-unhandled-rejections',
-    ...(domRequired ? ['react-setup', 'dom-setup'] : [])
+    ...(domRequired ? ['react-setup'] : [])
   ];
 
   return scripts
