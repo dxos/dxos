@@ -36,7 +36,7 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     const networkManager = new NetworkManager(this._config.get('runtime.services.signal.server') ? {
       signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
-      transportFactory: createWebRTCTransportFactory(this._config.get('runtime.services.ice')),
+      transportFactory: createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') }),
       log: true
     } : {
       signalManager: new MemorySignalManager(SIGNAL_CONTEXT),
