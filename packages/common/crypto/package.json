@@ -22,16 +22,13 @@
   ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
     "assert": "^2.0.0",
     "crypto-js": "^3.1.9-1",
     "hypercore-crypto": "^2.3.0"
   },
   "devDependencies": {
     "@types/crypto-js": "~4.0.2",
-    "@types/debug": "^4.1.7",
-    "@types/node": "^16.11.58",
-    "mocha": "^8.4.0"
+    "@types/node": "^16.11.58"
   },
   "publishConfig": {
     "access": "public"
