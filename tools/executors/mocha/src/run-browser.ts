@@ -59,17 +59,17 @@ export const runBrowser = async (
     console.log(chalk`\n{green Passed in {blue {bold ${browserType}}}}\n`);
   }
 
-  const shouldFail = (exitCode !== 0);
+  const success = (exitCode === 0);
 
   if (options.stayOpen) {
-    console.log(`\nCompleted with ${shouldFail ? 'failure' : 'success'}. Browser window stays open.`);
+    console.log(`\nCompleted with ${success ? 'success' : 'failure'}. Browser window stays open.`);
 
     await new Promise(resolve => {
       page.on('close', resolve);
     });
   }
 
-  return !shouldFail;
+  return success;
 };
 
 const resolveFiles = async (globs: string[]): Promise<string[]> => {

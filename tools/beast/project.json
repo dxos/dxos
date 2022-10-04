@@ -10,6 +10,23 @@
           "tools/beast/**/*.{ts,js}"
         ]
       }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "tools/beast/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "tools/beast/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/tools/beast",
+        "resultsPath": "test-results/tools/beast"
+      }
     }
   }
 }

@@ -37,7 +37,6 @@
     "@babel/core": "^7.18.13",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/color-hash": "^1.0.1",
-    "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.182",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/minimatch": "^5.1.2",
