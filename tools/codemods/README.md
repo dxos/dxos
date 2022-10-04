@@ -1,16 +1,37 @@
-# Ridoculous
+# Codemods
 
-Has the same [meaning](https://www.urbandictionary.com/define.php?term=ridoculous) as ridiculous only cooler people say this word.
+Scripts for bulk code refactoring.
 
-## ESM
+## Running codemods
 
-This package uses ESM with minimal `tsc` and `mocha` configurations.
+```bash
+# From "tools/codemods" directory:
+./scripts/run.sh -t src/codemod.ts
 
-## Remark
+# Lint changed packages.
+px affected --target=lint --fix
+```
 
-Ridoculous uses the following technologies to parse and update Markdown documents.
+> It is recommended that codemods are executed in clean git state (with no uncommitted changes)
+> so that the changed files are easy to review.
 
-- [Remark](https://github.com/remarkjs/remark) - Mardown parser built on unified.
-- [unified](https://github.com/unifiedjs/unified) - AST parser.
-- [mdast](https://github.com/syntax-tree/mdast) - Markdown AST.
-- [Rehype](https://github.com/rehypejs/rehype) - Transforms AST to HTML.
+## Updating imports
+
+Command:
+
+```bash
+ ./scripts/run.sh -t src/imports.ts --replace=@dxos/async#Event:@dxos/foo 
+```
+
+Before:
+
+```typescript
+import { Event, until } from '@dxos/async';
+```
+
+After:
+
+```typescript
+import { until } from '@dxos/async';
+import { Event } from '@dxos/foo';
+```
