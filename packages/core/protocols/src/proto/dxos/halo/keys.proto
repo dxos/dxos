@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 
+import "dxos/keys.proto";
 import "dxos/halo/signed.proto";
 
 package dxos.halo.keys;
@@ -23,15 +24,6 @@ enum KeyType {
   DXNS_ADDRESS = 5;
 }
 
-message PubKey {
-  bytes data = 1;
-}
-
-// TODO(burdon): Rename PrivateKey.
-message PrivKey {
-  bytes data = 1;
-}
-
 message KeyRecord {
   /**
    * The `KeyType` type of the key. This is often unknown for keys from other sources.
@@ -41,12 +33,12 @@ message KeyRecord {
   /**
    * The public key as a Buffer (required).
    */
-  PubKey public_key = 2;
+  dxos.keys.PublicKey public_key = 2;
 
   /**
    * The secret key as a Buffer (this will never be visible outside the Keyring).
    */
-  optional PrivKey secretKey = 3;
+  optional dxos.keys.PrivateKey secretKey = 3;
 
   /**
    * Is this key from a Greeting "hint"?
@@ -85,7 +77,7 @@ message KeyRecordList {
 // would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
 //
 message KeyChain {
-  PubKey publicKey = 1;
+  dxos.keys.PublicKey publicKey = 1;
   dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
   repeated KeyChain parents = 3;
 }

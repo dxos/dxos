@@ -54,7 +54,7 @@ message RedeemedInvitation {
   optional string error = 3;
 
   /// Only on party invitations that are finished.
-  optional dxos.halo.keys.PubKey partyKey = 4;
+  optional dxos.keys.PublicKey partyKey = 4;
 }
 
 message AuthenticateInvitationRequest {
@@ -68,7 +68,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  dxos.halo.keys.PubKey publicKey = 1;
+  dxos.keys.PublicKey publicKey = 1;
   optional string username = 2;
 }
 
@@ -86,7 +86,7 @@ message RecoverProfileRequest {
   string seedPhrase = 1;
 }
 message Contact {
-  dxos.halo.keys.PubKey publicKey = 1;
+  dxos.keys.PublicKey publicKey = 1;
   optional string displayName = 2;
 }
 
@@ -112,7 +112,7 @@ message SignRequest {
   /**
    * - The public key of the key that is supposed to be used for signing.
    */
-  dxos.halo.keys.PubKey publicKey = 1;
+  dxos.keys.PublicKey publicKey = 1;
 
   bytes payload = 2;
 }
@@ -154,11 +154,11 @@ service HaloService {
 
 message Party {
   message Member {
-    dxos.halo.keys.PubKey publicKey = 1;
+    dxos.keys.PublicKey publicKey = 1;
     optional string displayName = 2;
   }
 
-  dxos.halo.keys.PubKey publicKey = 1;
+  dxos.keys.PublicKey publicKey = 1;
   bool isOpen = 2;
   bool isActive = 3;
 
@@ -166,11 +166,11 @@ message Party {
 }
 
 message SubscribePartyRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 message GetPartyDetailsRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 message PartyDetails {
@@ -187,10 +187,10 @@ message SubscribePartiesResponse {
 }
 
 message CreateInvitationRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
-  optional dxos.halo.keys.PubKey inviteeKey = 2;
+  optional dxos.keys.PublicKey inviteeKey = 2;
 }
 
 message PartyActivationOptions {
@@ -199,7 +199,7 @@ message PartyActivationOptions {
 }
 
 message SetPartyStateRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 
   optional bool open = 2;
   optional bool activeGlobal = 3;
@@ -207,12 +207,12 @@ message SetPartyStateRequest {
 }
 
 message SubscribeMembersRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 message SubscribeMembersResponse {
   message PartyMember {
-    dxos.halo.keys.PubKey publicKey = 1;
+    dxos.keys.PublicKey publicKey = 1;
     optional string displayName = 2;
   }
 
@@ -220,7 +220,7 @@ message SubscribeMembersResponse {
 }
 
 message CreateSnaspotRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 

@@ -94,7 +94,7 @@ message ModelMutation {
 
 message ModelMutationMeta {
   // TODO(burdon): Remove required.
-  dxos.halo.keys.PubKey feedKey = 1;
+  dxos.keys.PublicKey feedKey = 1;
   int32 seq = 2;
-  dxos.halo.keys.PubKey memberKey = 3;
+  dxos.keys.PublicKey memberKey = 3;
 }

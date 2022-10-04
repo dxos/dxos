@@ -20,7 +20,6 @@ package dxos.echo.feed;
  */
 message FeedMessage {
   dxos.echo.timeframe.TimeframeVector timeframe = 1;
-
   google.protobuf.Any payload = 2;
 }
 

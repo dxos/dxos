@@ -111,7 +111,7 @@ message SubscribeToKeyringKeysResponse {
 // SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
-  optional dxos.halo.keys.PubKey partyKey = 1;
+  optional dxos.keys.PublicKey partyKey = 1;
 }
 
 message SubscribeToCredentialMessagesResponse {
@@ -130,7 +130,7 @@ message GetNetworkPeersRequest {
 
 message GetNetworkPeersResponse {
   message PeerInfo {
-   dxos.halo.keys.PubKey id = 1;
+   dxos.keys.PublicKey id = 1;
 
     // PeerState enum.
     string state = 2;
@@ -144,16 +144,16 @@ message GetNetworkPeersResponse {
 // SubscribeToParties
 
 message SubscribeToPartiesRequest {
-  repeated dxos.halo.keys.PubKey partyKeys = 1;
+  repeated dxos.keys.PublicKey partyKeys = 1;
 }
 
 message SubscribeToPartiesResponse {
   message PartyInfo {
-   dxos.halo.keys.PubKey key = 1;
+   dxos.keys.PublicKey key = 1;
     bool isOpen = 2;
     bool isActive = 3;
     dxos.echo.timeframe.TimeframeVector timeframe = 4;
-    repeated dxos.halo.keys.PubKey feeds = 5;
+    repeated dxos.keys.PublicKey feeds = 5;
     map<string, string> properties = 6;
   }
 
@@ -172,13 +172,13 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
-  repeated dxos.halo.keys.PubKey feedKeys = 2;
+  dxos.keys.PublicKey partyKey = 1;
+  repeated dxos.keys.PublicKey feedKeys = 2;
 }
 
 message SubscribeToFeedsResponse {
   message Feed {
-   dxos.halo.keys.PubKey feedKey = 1;
+   dxos.keys.PublicKey feedKey = 1;
     int32 length = 2;
   }
 
@@ -188,8 +188,8 @@ message SubscribeToFeedsResponse {
 // SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
-  optional dxos.halo.keys.PubKey partyKey = 1;
-  optional dxos.halo.keys.PubKey feedKey = 2;
+  optional dxos.keys.PublicKey partyKey = 1;
+  optional dxos.keys.PublicKey feedKey = 2;
   optional int32 maxBlocks = 3;
 }
 
@@ -208,7 +208,7 @@ message SubscribeToFeedBlocksResponse {
 // GetPartySnapshot
 
 message GetPartySnapshotRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 message GetPartySnapshotResponse {
@@ -218,7 +218,7 @@ message GetPartySnapshotResponse {
 // SavePartySnapshot
 
 message SavePartySnapshotRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey partyKey = 1;
 }
 
 message SavePartySnapshotResponse {
@@ -233,7 +233,7 @@ message ClearSnapshotsRequest {}
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
-   dxos.halo.keys.PubKey topic = 1;
+   dxos.keys.PublicKey topic = 1;
     optional string label = 2;
   }
 
@@ -277,8 +277,8 @@ message SubscribeToSwarmInfoRequest {}
 message SubscribeToSwarmInfoResponse {
   // TODO(yivlad): Move these types to @dxos/network-manager and import them from there.
   message SwarmInfo {
-    dxos.halo.keys.PubKey id = 1;
-    dxos.halo.keys.PubKey topic = 2;
+    dxos.keys.PublicKey id = 1;
+    dxos.keys.PublicKey topic = 2;
     optional string label = 3;
     bool isActive = 4;
     message ConnectionInfo {
@@ -286,8 +286,8 @@ message SubscribeToSwarmInfoResponse {
         optional string data = 1;
       }
       string state = 1;
-      dxos.halo.keys.PubKey sessionId = 2;
-      dxos.halo.keys.PubKey remotePeerId = 3;
+      dxos.keys.PublicKey sessionId = 2;
+      dxos.keys.PublicKey remotePeerId = 3;
       optional string transport = 4;
       repeated string protocolExtensions = 5;
       repeated Json events = 6;

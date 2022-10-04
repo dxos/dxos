@@ -11,9 +11,9 @@ package dxos.halo.invitations;
 // Mock invitation process
 
 message AdmitDeviceRequest {
-  dxos.halo.keys.PubKey deviceKey = 1;
-  dxos.halo.keys.PubKey controlFeedKey = 2;
-  dxos.halo.keys.PubKey dataFeedKey = 3;
+  dxos.keys.PublicKey deviceKey = 1;
+  dxos.keys.PublicKey controlFeedKey = 2;
+  dxos.keys.PublicKey dataFeedKey = 3;
 }
 
 // Inviter verbs
@@ -22,9 +22,9 @@ service InviterInvitationService {
 }
 
 message AcceptIdenityRequest {
-  dxos.halo.keys.PubKey identityKey = 1;
-  dxos.halo.keys.PubKey haloSpaceKey = 2;
-  dxos.halo.keys.PubKey genesisFeedKey = 3;
+  dxos.keys.PublicKey identityKey = 1;
+  dxos.keys.PublicKey haloSpaceKey = 2;
+  dxos.keys.PublicKey genesisFeedKey = 3;
 }
 
 // Invitee verbs

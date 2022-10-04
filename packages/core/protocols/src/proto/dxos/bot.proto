@@ -47,7 +47,7 @@ message Bot {
 
   optional BotPackageSpecifier package_specifier = 3;
   optional google.protobuf.Timestamp last_start = 4;
-  optional dxos.halo.keys.PubKey party_key = 5;
+  optional dxos.keys.PublicKey party_key = 5;
 
   message Runtime {
     optional int32 exit_code = 1;
@@ -70,7 +70,7 @@ message SpawnBotRequest {
   optional dxos.echo.invitation.InvitationDescriptor invitation = 2;
 
   /// Key of the party bot is invited to.
-  optional dxos.halo.keys.PubKey party_key = 3;
+  optional dxos.keys.PublicKey party_key = 3;
 }
 
 message SendCommandRequest {
