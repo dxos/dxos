@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { clientServiceBundle } from '@dxos/client-services';
+import { clientServiceBundle } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';

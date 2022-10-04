@@ -24,6 +24,7 @@
         ],
         "outdir": "packages/sdk/client/dist/browser",
         "bundlePackages": [
+          "@dxos/client-services",
           "@dxos/credentials",
           "@dxos/crypto",
           "@dxos/echo-db",

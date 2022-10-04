@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import { Readable, Transform, Writable } from 'stream';
+import { Readable, Transform, Writable } from 'readable-stream';
 
 import type { HypercoreFeed } from './hypercore-types';
 
@@ -61,7 +61,7 @@ export const createTransform = <R, W>(callback: (message: R) => Promise<W | unde
   transform: async (message: R, _, next) => {
     try {
       const response = await callback(message);
-      next(null, response);
+      next(undefined, response);
     } catch (err: any) {
       error(err);
       next(err);
