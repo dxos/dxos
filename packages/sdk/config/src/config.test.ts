@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
@@ -11,14 +10,14 @@ import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 import defaults from './testing/defaults.json';
 import envmap from './testing/envs-map.json';
 
-test('Empty config', () => {
+it('Empty config', function () {
   const config = new Config({});
 
   expect(config.values).toBeTruthy();
   expect(config.get('runtime.props.title')).toBeUndefined();
 });
 
-test('Basic config', () => {
+it('Basic config', function () {
   const config = new Config({
     runtime: {
       props: {
@@ -46,7 +45,7 @@ test('Basic config', () => {
   });
 });
 
-test('Runtime and module config', () => {
+it('Runtime and module config', function () {
   const config = new Config({
     package: {
       modules: [{
@@ -90,7 +89,7 @@ test('Runtime and module config', () => {
   });
 });
 
-test.skip('Mapping', () => {
+it.skip('Mapping', function () {
   process.env.TEST_CLIENT_ID = '900';
   process.env.TEST_SERVER_ENDPOINT = 'http://localhost';
 
@@ -123,7 +122,7 @@ test.skip('Mapping', () => {
   });
 });
 
-test.skip('mapToKeyValuesping', () => {
+it.skip('mapToKeyValuesping', function () {
   const config = new Config({
     client: {
       tag: 'testing'
@@ -138,7 +137,7 @@ test.skip('mapToKeyValuesping', () => {
   });
 });
 
-test('string values for enums are parsed', () => {
+it('string values for enums are parsed', function () {
   const config = new Config({
     version: 1,
     runtime: {

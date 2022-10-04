@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { it as test } from 'mocha';
-
 import { until } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
@@ -12,8 +10,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { ClientServiceHost } from './service-host';
 
-describe('ServiceHost', () => {
-  test('device invitations', async () => {
+describe('ServiceHost', function () {
+  it('device invitations', async function () {
     const peer1 = new ClientServiceHost(new Config({}));
     await peer1.open();
     afterTest(() => peer1.close());

@@ -17,14 +17,6 @@
   "scripts": {
     "check": "true"
   },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "test/gen",
-      "dist"
-    ],
-    "preset": "ts-jest/presets/default",
-    "testEnvironment": "node"
-  },
   "dependencies": {
     "assert": "^2.0.0",
     "debug": "^4.3.3",

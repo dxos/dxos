@@ -13,10 +13,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
-          "packages/experimental/kai/src/**/*.test.{ts,tsx,js,jsx}"
-        ]
+          "packages/experimental/kai/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kai/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/experimental/kai",
+        "resultsPath": "test-results/experimental/kai"
       }
     }
   },

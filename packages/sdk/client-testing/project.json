@@ -26,10 +26,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/client-testing/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/sdk/client-testing/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/sdk/client-testing",
+        "resultsPath": "test-results/sdk/client-testing"
       }
     }
   },

@@ -60,8 +60,8 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
   );
 };
 
-describe('OrderedList', () => {
-  it('reorders', async () => {
+describe('OrderedList', function () {
+  it('reorders', async function () {
     const { party, items } = await createTestComponents();
     const list = await party.database.createItem({
       model: ObjectModel,
@@ -79,6 +79,7 @@ describe('OrderedList', () => {
 
     await userEvent.click(screen.getByTestId('click'));
     await waitFor(() => {
+      console.log(orderedList);
       screen.getAllByTestId('item').forEach((node, i) => {
         expect(node.textContent).toBe(orderedList.values[i]);
       });

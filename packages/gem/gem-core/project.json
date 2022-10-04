@@ -18,24 +18,24 @@
       "options": {
         "lintFilePatterns": ["packages/gem/gem-core/**/*.{ts,tsx,js,jsx}"]
       }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ],
-      "options": {
-        "testPatterns": [
-          "packages/gem/gem-core/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/gem/gem-core/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/gem/gem-core",
-        "resultsPath": "test-results/gem/gem-core"
-      }
     }
+    // "test": {
+    //   "executor": "@dxos/mocha:mocha",
+    //   "outputs": [
+    //     "{options.outputPath}",
+    //     "{options.resultsPath}"
+    //   ],
+    //   "options": {
+    //     "testPatterns": [
+    //       "packages/gem/gem-core/src/**/*.test.{ts,js}"
+    //     ],
+    //     "watchPatterns": [
+    //       "packages/gem/gem-core/src/**/*"
+    //     ],
+    //     "outputPath": "tmp/mocha/gem/gem-core",
+    //     "resultsPath": "test-results/gem/gem-core"
+    //   }
+    // }
   },
   "implicitDependencies": [
     "mocha"

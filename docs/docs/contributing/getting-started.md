@@ -89,7 +89,7 @@ Add TS config to support browser globals.
       "DOM"
     ]
   },
-  "types": ["jest", "node"],
+  "types": ["mocha", "node"],
 ```
 
 ### Upgrading packages across the monorepo

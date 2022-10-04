@@ -3,18 +3,17 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { waitForCondition } from '@dxos/async';
 import { ConfigProto } from '@dxos/config';
 
 import { Client } from './packlets/proxies';
 
-describe('Client', () => {
-  describe('Local-only tests', () => {});
+describe('Client', function () {
+  describe('Local-only tests', function () {});
 
-  describe('With persistent storage', () => {
-    test('persistent storage', async () => {
+  describe('With persistent storage', function () {
+    it('persistent storage', async function () {
       const config: ConfigProto = {
         version: 1,
         runtime: {

@@ -26,11 +26,20 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/react-client-testing/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
+        "watchPatterns": [
+          "packages/sdk/react-client-testing/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/sdk/react-client-testing",
+        "resultsPath": "test-results/sdk/react-client-testing",
+        "domRequired": true
       }
     }
   },

@@ -12,15 +12,15 @@ import { ConfigProto } from '@dxos/config';
 import { ClientProvider } from '../../containers';
 import { useClient } from './useClient';
 
-describe('Client hook', () => {
+describe('Client hook', function () {
   const render = () => useClient();
 
-  it('should throw when used outside a context', () => {
+  it('should throw when used outside a context', function () {
     const { result } = renderHook(render);
     expect(result.error?.message).toBeDefined();
   });
 
-  it('should return client when used properly in a context', () => {
+  it('should return client when used properly in a context', function () {
     const config: ConfigProto = {
       version: 1,
       runtime: {

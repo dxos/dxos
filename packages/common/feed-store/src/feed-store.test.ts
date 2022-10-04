@@ -2,8 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-/* eslint-disable jest/no-done-callback */
-
 import expect from 'expect';
 import hypercore from 'hypercore';
 import { it as test } from 'mocha';

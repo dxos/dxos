@@ -47,10 +47,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/client/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/sdk/client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/sdk/client",
+        "resultsPath": "test-results/sdk/client"
       }
     }
   },

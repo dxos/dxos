@@ -18,24 +18,24 @@
       "options": {
         "lintFilePatterns": ["packages/gem/gem-spore/**/*.{ts,tsx,js,jsx}"]
       }
-    },
-    "test": {
-      "executor": "@dxos/mocha:mocha",
-      "outputs": [
-        "{options.outputPath}",
-        "{options.resultsPath}"
-      ],
-      "options": {
-        "testPatterns": [
-          "packages/gem/gem-spore/src/**/*.test.{ts,js}"
-        ],
-        "watchPatterns": [
-          "packages/gem/gem-spore/src/**/*"
-        ],
-        "outputPath": "tmp/mocha/gem/gem-spore",
-        "resultsPath": "test-results/gem/gem-spore"
-      }
     }
+    // "test": {
+    //   "executor": "@dxos/mocha:mocha",
+    //   "outputs": [
+    //     "{options.outputPath}",
+    //     "{options.resultsPath}"
+    //   ],
+    //   "options": {
+    //     "testPatterns": [
+    //       "packages/gem/gem-spore/src/**/*.test.{ts,js}"
+    //     ],
+    //     "watchPatterns": [
+    //       "packages/gem/gem-spore/src/**/*"
+    //     ],
+    //     "outputPath": "tmp/mocha/gem/gem-spore",
+    //     "resultsPath": "test-results/gem/gem-spore"
+    //   }
+    // }
   },
   "implicitDependencies": [
     "mocha"

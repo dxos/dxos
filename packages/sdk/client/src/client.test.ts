@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
@@ -20,20 +19,20 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './packlets/proxies';
 
-describe('Client', () => {
+describe('Client', function () {
   //
   // Suite is called for local and remote client configurations.
   //
   const testSuite = (createClient: () => Promise<Client>) => {
-    describe('initialization', () => {
+    describe('initialization', function () {
       // TODO(wittjosiah): Review timeout.
-      test('initialize and destroy', async () => {
+      it('initialize and destroy', async function () {
         const client = await createClient();
         await client.initialize();
         await client.destroy();
       }).timeout(500);
 
-      test('initialize and destroy are idempotent', async () => {
+      it('initialize and destroy are idempotent', async function () {
         const client = await createClient();
         await client.initialize();
         await client.initialize();
@@ -45,8 +44,8 @@ describe('Client', () => {
       });
     });
 
-    describe('profile', () => {
-      test('creates a profile', async () => {
+    describe('profile', function () {
+      it('creates a profile', async function () {
         const client = await createClient();
 
         await client.initialize();
@@ -58,7 +57,7 @@ describe('Client', () => {
         expect(client.halo.profile).toBeDefined();
       }).timeout(500);
 
-      test('creating profile twice throws an error', async () => {
+      it('creating profile twice throws an error', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -70,7 +69,7 @@ describe('Client', () => {
         expect(!!client.halo.profile).toBeTruthy();
       });
 
-      test.skip('Recovers a profile with a seed phrase', async () => {
+      it.skip('Recovers a profile with a seed phrase', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -96,7 +95,7 @@ describe('Client', () => {
       }).timeout(2000);
     });
 
-    describe('party invitations', () => {
+    describe('party invitations', function () {
       const prepareInvitations = async () => {
         const inviter = await createClient();
         await inviter.initialize();
@@ -112,7 +111,7 @@ describe('Client', () => {
         return { inviter, invitee };
       };
 
-      test('creates and joins a Party invitation', async () => {
+      it('creates and joins a Party invitation', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
@@ -125,7 +124,7 @@ describe('Client', () => {
         // expect(members.length).toEqual(2);
       }).timeout(5000);
 
-      test.skip('invitation callbacks are fired', async () => {
+      it.skip('invitation callbacks are fired', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
@@ -145,7 +144,7 @@ describe('Client', () => {
         expect(inviteeParty.key).toEqual(party.key);
       }).timeout(5000);
 
-      test.skip('creates and joins an offline Party invitation', async () => {
+      it.skip('creates and joins an offline Party invitation', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
         const party = await inviter.echo.createParty();
@@ -161,7 +160,7 @@ describe('Client', () => {
         expect(members.length).toEqual(2);
       }).timeout(5000);
 
-      test.skip('creates and joins more than 1 Party', async () => {
+      it.skip('creates and joins more than 1 Party', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
         for (let i = 0; i < 3; i++) {
@@ -175,7 +174,7 @@ describe('Client', () => {
       }).timeout(5000);
     });
 
-    describe('HALO invitations', () => {
+    describe('HALO invitations', function () {
       const prepareInvitations = async () => {
         const inviter = await createClient();
         await inviter.initialize();
@@ -191,7 +190,7 @@ describe('Client', () => {
         return { inviter, invitee };
       };
 
-      test('creates and joins a HALO invitation', async () => {
+      it('creates and joins a HALO invitation', async function () {
         const { inviter, invitee } = await prepareInvitations();
         expect(invitee.halo.profile).toBeUndefined();
 
@@ -202,7 +201,7 @@ describe('Client', () => {
         expect(invitee.halo.profile).not.toBeUndefined();
       }).timeout(5000);
 
-      test.skip('DXNS Account is synced between devices', async () => {
+      it.skip('DXNS Account is synced between devices', async function () {
         const { inviter, invitee } = await prepareInvitations();
 
         const DXNSAccount = 'd3abd23e3f36a61a9e5d58e4b6286f89649594eedbd096b3a6e256ca1fe4c147';
@@ -223,8 +222,8 @@ describe('Client', () => {
       }).timeout(10_000);
     });
 
-    describe('data', () => {
-      test('create and list parties', async () => {
+    describe('data', function () {
+      it('create and list parties', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -237,7 +236,7 @@ describe('Client', () => {
         expect(parties).toEqual([party]);
       });
 
-      test('create party and item', async () => {
+      it('create party and item', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -251,7 +250,7 @@ describe('Client', () => {
         expect(item.model.get('foo')).toEqual('bar');
       });
 
-      test.skip('set party properties', async () => {
+      it.skip('set party properties', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -264,7 +263,7 @@ describe('Client', () => {
         expect(title).toEqual('test-party');
       });
 
-      test.skip('Properly creates multiple items in a party', async () => {
+      it.skip('Properly creates multiple items in a party', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -280,7 +279,7 @@ describe('Client', () => {
         expect(item1.model.get('prop1')).toEqual('x');
       });
 
-      test.skip('party timeframe is incremented after creating ECHO mutations', async () => {
+      it.skip('party timeframe is incremented after creating ECHO mutations', async function () {
         const client = await createClient();
         await client.initialize();
         afterTest(() => client.destroy());
@@ -300,11 +299,11 @@ describe('Client', () => {
     });
   };
 
-  describe('local', () => {
+  describe('local', function () {
     testSuite(async () => new Client());
   });
 
-  describe('remote', () => {
+  describe('remote', function () {
     testSuite(async () => {
       const [proxyPort, hostPort] = createLinkedPorts();
 
@@ -327,7 +326,7 @@ describe('Client', () => {
 
   // TODO(burdon): Factor out tests.
 
-  test.skip('late-register models after refresh', async () => {
+  it.skip('late-register models after refresh', async function () {
     const config: ConfigProto = {
       version: 1,
       runtime: {
