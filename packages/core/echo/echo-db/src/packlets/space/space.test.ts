@@ -4,7 +4,6 @@
 
 import assert from 'assert';
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { CredentialGenerator } from '@dxos/halo-protocol';
 import { ObjectModel } from '@dxos/object-model';
@@ -13,8 +12,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { TestAgentFactory } from './testing';
 
-describe('space/space', () => {
-  test('database', async () => {
+describe('space/space', function () {
+  it('database', async function () {
     const agentFactory = new TestAgentFactory();
     const agent = await agentFactory.createAgent();
     const spaceContext = await agent.createSpace(agent.identityKey);
@@ -63,7 +62,7 @@ describe('space/space', () => {
     }
   });
 
-  test('2 spaces replicating', async () => {
+  it('2 spaces replicating', async function () {
     const agentFactory = new TestAgentFactory();
 
     // TODO(burdon): Factor out?

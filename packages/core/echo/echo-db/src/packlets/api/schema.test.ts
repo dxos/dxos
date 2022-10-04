@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
@@ -24,23 +23,23 @@ const createTestSchema = async (database: Database) => {
   return new Schema(schemaItem.model);
 };
 
-describe('Schema', () => {
-  const setup = async () => {
+describe('Schema', function () {
+  const setupDatabase = async () => {
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const backend = await createInMemoryDatabase(modelFactory);
     afterTest(() => backend.destroy());
     return backend;
   };
 
-  test('class creation', async () => {
-    const database = await setup();
+  it('class creation', async function () {
+    const database = await setupDatabase();
     const schema = await createTestSchema(database);
     expect(schema).toBeTruthy();
     expect(schema.name).toBeTruthy();
   });
 
-  test('add and delete field', async () => {
-    const database = await setup();
+  it('add and delete field', async function () {
+    const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
@@ -54,8 +53,8 @@ describe('Schema', () => {
     expect(schema.fields.length).toBe(0);
   });
 
-  test('edit field', async () => {
-    const database = await setup();
+  it('edit field', async function () {
+    const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
     const newField = {
@@ -68,8 +67,8 @@ describe('Schema', () => {
     expect(schema.getField(key)?.required).toBeFalsy();
   });
 
-  test('validate data item', async () => {
-    const database = await setup();
+  it('validate data item', async function () {
+    const database = await setupDatabase();
     const key = 'name';
     const schema = await createTestSchema(database);
     const firstField = {

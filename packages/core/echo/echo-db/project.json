@@ -27,10 +27,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/echo/echo-db/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-db/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/core/echo/echo-db",
+        "resultsPath": "test-results/core/echo/echo-db"
       }
     }
   },

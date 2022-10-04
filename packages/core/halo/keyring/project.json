@@ -26,10 +26,19 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/halo/keyring/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/halo/keyring/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/core/halo/keyring",
+        "resultsPath": "test-results/core/halo/keyring"
       }
     }
   },

@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { FeedStore } from '@dxos/feed-store';
 import { createCredential, CredentialGenerator } from '@dxos/halo-protocol';
@@ -18,8 +17,8 @@ import { afterTest } from '@dxos/testutils';
 import { codec } from '../common';
 import { ControlPipeline } from './control-pipeline';
 
-describe('space/control-pipeline', () => {
-  test('admits feeds', async () => {
+describe('space/control-pipeline', function () {
+  it('admits feeds', async function () {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
