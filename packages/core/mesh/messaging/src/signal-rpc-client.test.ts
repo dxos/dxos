@@ -10,25 +10,25 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
-describe('SignalRPCClient', () => {
+describe('SignalRPCClient', function () {
   let broker: TestBroker;
 
-  before(async () => {
+  before(async function () {
     broker = await createTestBroker();
   });
 
-  after(() => {
+  after(function () {
     broker.stop();
   });
 
-  const setup = async () => {
+  const setupClient = async () => {
     const client = new SignalRPCClient(broker.url());
     return client;
   };
 
-  it('signal between 2 peers', async () => {
-    const client1 = await setup();
-    const client2 = await setup();
+  it('signal between 2 peers', async function () {
+    const client1 = await setupClient();
+    const client2 = await setupClient();
 
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -55,9 +55,9 @@ describe('SignalRPCClient', () => {
     stream1.close();
   }).timeout(10000);
 
-  it('join', async () => {
-    const client1 = await setup();
-    const client2 = await setup();
+  it('join', async function () {
+    const client1 = await setupClient();
+    const client2 = await setupClient();
 
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();

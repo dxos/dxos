@@ -64,6 +64,6 @@ describe('PublicKey', function () {
 
   it('expect equality', function () {
     const key = PublicKey.random();
-    expect(key).to.equal(PublicKey.from(key.toHex()));
+    expect(PublicKey.equals(key, PublicKey.from(key.toHex()))).to.be.true;
   });
 });

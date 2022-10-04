@@ -35,6 +35,7 @@ export const runTests = async (
   });
 
   page.on('console', async msg => {
+    // TODO(wittjosiah): Make more robust.
     const text = msg.text();
     if (text.startsWith('{')) {
       results = text;

@@ -25,14 +25,24 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/core/mesh/broadcast/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "options": {
-        "jestConfig": "packages/core/mesh/broadcast/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/core/mesh/broadcast/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/broadcast/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/core/mesh/broadcast",
+        "resultsPath": "test-results/core/mesh/broadcast"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

@@ -2,9 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { convertTreeToGraph, createTree } from './data';
 
-test('createTree', () => {
+it('createTree', function () {
   const data = convertTreeToGraph(createTree());
-  expect(data).toBeTruthy(); // TODO(burdon): Test lengths.
+  expect(data).to.be.true; // TODO(burdon): Test lengths.
 });

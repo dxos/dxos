@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/react-async/src/**/*"
         ],
-        "outputPath": "tmp/mocha/react-async",
-        "resultsPath": "test-results/react-async",
+        "outputPath": "tmp/mocha/common/react-async",
+        "resultsPath": "test-results/common/react-async",
         "domRequired": true
       }
     }

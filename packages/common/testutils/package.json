@@ -11,12 +11,9 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "devDependencies": {
-    "@dxos/protocols-toolchain": "workspace:*",
-    "@types/jest": "^27.4.1",
     "@types/node": "^16.11.58",
     "typescript": "^4.7.2"
   },

@@ -26,11 +26,23 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/common/feed-store/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/common/feed-store/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/common/feed-store",
+        "resultsPath": "test-results/common/feed-store"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

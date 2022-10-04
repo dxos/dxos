@@ -8,6 +8,8 @@ module.exports = {
   ],
   rules: {
     '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': 'off',
-    'mocha/max-top-level-suites': 'off'
+    'mocha/max-top-level-suites': 'off',
+    'mocha/no-global-tests': 'off',
+    'mocha/no-setup-in-describe': 'off'
   }
 };

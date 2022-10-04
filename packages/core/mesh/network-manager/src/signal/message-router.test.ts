@@ -3,7 +3,7 @@
 //
 
 import { expect } from 'earljs';
-import { it as test, describe } from 'mocha';
+import { it, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
@@ -21,15 +21,15 @@ describe('MessageRouter', () => {
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;
 
-  before(async () => {
+  before(async function () {
     broker1 = await createTestBroker();
   });
 
-  beforeEach(() => {
+  beforeEach(function () {
     topic = PublicKey.random();
   });
 
-  after(() => {
+  after(function () {
     broker1.stop();
   });
 
@@ -70,7 +70,7 @@ describe('MessageRouter', () => {
     };
   };
 
-  test('signaling between 2 clients', async () => {
+  it('signaling between 2 clients', async () => {
     const received: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received.push(msg);
@@ -104,7 +104,7 @@ describe('MessageRouter', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test('offer/answer', async () => {
+  it('offer/answer', async () => {
     const { signalManager: signalManager1, router: router1, peerId: peer1 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),
@@ -131,7 +131,7 @@ describe('MessageRouter', () => {
     expect(answer.accept).toEqual(true);
   }).timeout(5_000);
 
-  test('signaling between 3 clients', async () => {
+  it('signaling between 3 clients', async () => {
     const received1: SignalMessage[] = [];
     const signalMock1 = async (msg: SignalMessage) => {
       received1.push(msg);
@@ -210,7 +210,7 @@ describe('MessageRouter', () => {
     }, 4_000);
   }).timeout(5_000);
 
-  test('two offers', async () => {
+  it('two offers', async () => {
     const { signalManager: signalManager1, router: router1, peerId: peer1 } =
       await createSignalClientAndMessageRouter({
         signalApiUrl: broker1.url(),

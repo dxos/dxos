@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import { Duplex } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
@@ -16,9 +15,12 @@ import { afterTest } from '@dxos/testutils';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
 import { WebRTCTransport } from './webrtc-transport';
 
-describe('WebRTCTransport', () => {
+describe('WebRTCTransport', function () {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  test('open and close', async () => {
+  it('open and close', async function () {
+    this.timeout(1_000);
+    this.retries(3);
+
     const connection = new WebRTCTransport(
       true,
       new Duplex(),
@@ -41,9 +43,12 @@ describe('WebRTCTransport', () => {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  }).timeout(1_000).retries(3);
+  });
 
-  test('establish connection and send data through with protocol', async () => {
+  it('establish connection and send data through with protocol', async function () {
+    this.timeout(2_000);
+    this.retries(3);
+
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -99,5 +104,5 @@ describe('WebRTCTransport', () => {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('Foo');
     });
-  }).timeout(2_000).retries(3);
+  });
 });

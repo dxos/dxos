@@ -52,8 +52,8 @@
         "watchPatterns": [
           "packages/common/codec-protobuf/src/**/*"
         ],
-        "outputPath": "tmp/mocha/codec-protobuf",
-        "resultsPath": "test-results/codec-protobuf"
+        "outputPath": "tmp/mocha/common/codec-protobuf",
+        "resultsPath": "test-results/common/codec-protobuf"
       }
     }
   },

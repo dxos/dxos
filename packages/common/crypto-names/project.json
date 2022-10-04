@@ -25,14 +25,24 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/common/crypto-names/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "options": {
-        "jestConfig": "packages/common/crypto-names/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/common/crypto-names/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/crypto-names/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/common/crypto-names",
+        "resultsPath": "test-results/common/crypto-names"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

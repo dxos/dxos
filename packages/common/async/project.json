@@ -37,9 +37,12 @@
         "watchPatterns": [
           "packages/common/async/src/**/*"
         ],
-        "outputPath": "tmp/mocha/async",
-        "resultsPath": "test-results/async"
+        "outputPath": "tmp/mocha/common/async",
+        "resultsPath": "test-results/common/async"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

@@ -25,14 +25,24 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/core/mesh/network-generator/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}"
       ],
       "options": {
-        "jestConfig": "packages/core/mesh/network-generator/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/core/mesh/network-generator/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/network-generator/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/core/mesh/network-generator",
+        "resultsPath": "test-results/core/mesh/network-generator"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

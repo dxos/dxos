@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "jest"
+      "mocha"
     ]
   },
   "include": [
@@ -37,9 +37,6 @@
     },
     {
       "path": "../protocol-network-generator"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

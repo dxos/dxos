@@ -16,9 +16,6 @@
     },
     {
       "path": "../keys"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

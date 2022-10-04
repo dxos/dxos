@@ -20,12 +20,24 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["packages/gem/gem-spore/coverage"],
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}"
+      ],
       "options": {
-        "jestConfig": "packages/gem/gem-spore/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/gem/gem-spore/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gem/gem-spore/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/gem/gem-spore",
+        "resultsPath": "test-results/gem/gem-spore"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

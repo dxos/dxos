@@ -50,10 +50,10 @@
       ],
       "options": {
         "testPatterns": [
-          "packages/common/protocols/src/**/*.test.{ts,js}"
+          "packages/core/protocols/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/common/protocols/src/**/*"
+          "packages/core/protocols/src/**/*"
         ],
         "outputPath": "tmp/mocha/protocols",
         "resultsPath": "test-results/protocols"

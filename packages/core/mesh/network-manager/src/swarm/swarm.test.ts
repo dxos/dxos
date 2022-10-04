@@ -3,7 +3,6 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
@@ -17,10 +16,10 @@ import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
 
-describe('Swarm', () => {
+describe('Swarm', function () {
   const context = new MemorySignalManagerContext();
 
-  const setup = () => {
+  const setupSwarm = () => {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -53,8 +52,8 @@ describe('Swarm', () => {
     return { swarm1, swarm2, peerId1, peerId2 };
   };
 
-  test('connects two peers in a swarm', async () => {
-    const { swarm1, swarm2, peerId1, peerId2 } = setup();
+  it('connects two peers in a swarm', async function () {
+    const { swarm1, swarm2, peerId1, peerId2 } = setupSwarm();
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -95,8 +94,8 @@ describe('Swarm', () => {
     });
   }).timeout(5_000);
 
-  test('two peers try to originate connections to each other simultaneously', async () => {
-    const { swarm1, swarm2, peerId1, peerId2 } = setup();
+  it('two peers try to originate connections to each other simultaneously', async function () {
+    const { swarm1, swarm2, peerId1, peerId2 } = setupSwarm();
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -121,8 +120,8 @@ describe('Swarm', () => {
     ]);
   }).timeout(5_000);
 
-  test('second peer discovered after delay', async () => {
-    const { swarm1, swarm2, peerId1, peerId2 } = setup();
+  it('second peer discovered after delay', async function () {
+    const { swarm1, swarm2, peerId1, peerId2 } = setupSwarm();
 
     expect(swarm1.connections.length).toEqual(0);
     expect(swarm2.connections.length).toEqual(0);
@@ -158,8 +157,8 @@ describe('Swarm', () => {
     });
   }).timeout(10_000);
 
-  test('swarming with message router', async () => {
-    const { swarm1, swarm2, peerId2 } = setup();
+  test('swarming with message router', async function () {
+    const { swarm1, swarm2, peerId2 } = setupSwarm();
 
     const promise = Promise.all([
       promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),

@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-// DXOS testing browser.
+import { expect } from 'chai';
 
 import { createId } from './keys';
 
-test('Create id is unique', () => {
-  expect(createId()).not.toEqual(createId());
+it('Create id is unique', function () {
+  expect(createId()).not.to.equal(createId());
 });
