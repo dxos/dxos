@@ -38,7 +38,8 @@
           "packages/sdk/client-services/src/**/*"
         ],
         "outputPath": "tmp/mocha/sdk/client-services",
-        "resultsPath": "test-results/sdk/client-services"
+        "resultsPath": "test-results/sdk/client-services",
+        "forceExit": true
       }
     },
     "e2e": {

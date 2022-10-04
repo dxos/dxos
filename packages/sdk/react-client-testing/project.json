@@ -39,7 +39,8 @@
         ],
         "outputPath": "tmp/mocha/sdk/react-client-testing",
         "resultsPath": "test-results/sdk/react-client-testing",
-        "domRequired": true
+        "domRequired": true,
+        "forceExit": true
       }
     }
   },

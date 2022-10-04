@@ -48,6 +48,11 @@
       "description": "Check for global variable leaks",
       "default": true
     },
+    "forceExit": {
+      "type": "boolean",
+      "description": "Force Moch to quit after tests complete",
+      "default": false
+    },
     "domRequired": {
       "type": "boolean",
       "description": "Register mock dom environment in Node test process",

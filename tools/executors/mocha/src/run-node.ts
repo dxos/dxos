@@ -16,6 +16,7 @@ export type NodeOptions = {
   junitReport: boolean
   timeout: number
   checkLeaks: boolean
+  forceExit: boolean
   domRequired: boolean
 }
 
@@ -36,7 +37,8 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     ...setupArgs,
     ...watchArgs,
     '-t', String(options.timeout),
-    ...(options.checkLeaks ? ['--checkLeaks'] : [])
+    ...(options.checkLeaks ? ['--checkLeaks'] : []),
+    ...(options.forceExit ? ['--exit'] : [])
   ];
 
   const mocha = getBin(context.root, 'mocha');

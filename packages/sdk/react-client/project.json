@@ -39,7 +39,8 @@
         ],
         "outputPath": "tmp/mocha/sdk/react-client",
         "resultsPath": "test-results/sdk/react-client",
-        "domRequired": true
+        "domRequired": true,
+        "forceExit": true
       }
     },
     "e2e": {
