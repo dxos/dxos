@@ -1,4 +1,4 @@
 #!/usr/bin/env zsh
 set -euxo pipefail
 
-pnpm jscodeshift --parser=ts --extensions=ts ../../**/src/**/*.ts "$@"
+pnpm jscodeshift --parser=ts --extensions=ts ../../**/*.ts "$@"
