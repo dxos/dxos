@@ -9,16 +9,18 @@ import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 import { Stream } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ComplexMap } from '@dxos/util';
+import { PublicKey } from '@dxos/keys';
 
 export class WebRTCTransportService implements BridgeService {
-  protected peers = new Map<number, SimplePeer>();
+  protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());
 
-  constructor (
+  constructor(
     private readonly _webrtcConfig?: any
   ) {
   }
 
-  open (request: ConnectionRequest): Stream<BridgeEvent> {
+  open(request: ConnectionRequest): Stream<BridgeEvent> {
     return new Stream(({ ready, next, close }) => {
 
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
@@ -77,25 +79,25 @@ export class WebRTCTransportService implements BridgeService {
         close();
       });
 
-      this.peers.set(request.connectionId, peer);
+      this.peers.set(request.sessionId, peer);
 
       ready();
     });
   }
 
-  async sendSignal ({ connectionId, signal }: SignalRequest): Promise<void> {
-    assert(this.peers.has(connectionId), 'Connection not ready to accept signals.');
+  async sendSignal({ sessionId, signal }: SignalRequest): Promise<void> {
+    assert(this.peers.has(sessionId), 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
-    this.peers.get(connectionId)!.signal(JSON.parse(signal.json));
+    this.peers.get(sessionId)!.signal(JSON.parse(signal.json));
   }
 
-  async sendData ({ connectionId, payload }: DataRequest): Promise<void> {
-    assert(this.peers.has(connectionId));
-    this.peers.get(connectionId)!.write(payload);
+  async sendData({ sessionId, payload }: DataRequest): Promise<void> {
+    assert(this.peers.has(sessionId));
+    this.peers.get(sessionId)!.write(payload);
   }
 
-  async close ({ connectionId }: CloseRequest) {
-    this.peers.get(connectionId)?.destroy();
+  async close({ sessionId }: CloseRequest) {
+    this.peers.get(sessionId)?.destroy();
     this.peers.delete;
     log('Closed.');
   }

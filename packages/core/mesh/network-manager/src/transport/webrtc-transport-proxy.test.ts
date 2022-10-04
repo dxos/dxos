@@ -14,7 +14,6 @@ import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
-import { randomInt } from '@dxos/util';
 
 import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
@@ -60,7 +59,6 @@ describe('WebRTCTransportProxy', () => {
     afterTest(() => webRTCService.close());
 
     const webRTCTransportProxy = new WebRTCTransportProxy({
-      webRTCConnectionId: randomInt(0, 1000),
       initiator,
       stream,
       ownId,

@@ -12,7 +12,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { SignalMessage } from '../signal';
-import { Transport } from './transport';
+import { Transport, TransportFactory, TransportOptions } from './transport';
 
 interface Services {
   BridgeService: BridgeService
@@ -27,7 +27,6 @@ export interface WebRTCTransportProxyParams {
   topic: PublicKey
   sendSignal: (msg: SignalMessage) => void
   port: RpcPort
-  webRTCConnectionId: number
 }
 
 export class WebRTCTransportProxy implements Transport {
@@ -59,9 +58,8 @@ export class WebRTCTransportProxy implements Transport {
     await this._rpc.open();
     this._openedRpc.wake();
 
-    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.BridgeService.sendData({ connectionId: this._params.webRTCConnectionId, payload: data }));
-
-    this._serviceStream = this._rpc.rpc.BridgeService.open({ connectionId: this._params.webRTCConnectionId, initiator: this._params.initiator });
+    this._serviceStream = this._rpc.rpc.BridgeService.open({ sessionId: this._params.sessionId, initiator: this._params.initiator });
+    await this._serviceStream.waitUntilReady();
     this._serviceStream.subscribe(async (msg: BridgeEvent) => {
       if (msg.connection) {
         await this._handleConnection(msg.connection);
@@ -71,6 +69,8 @@ export class WebRTCTransportProxy implements Transport {
         await this._handleSignal(msg.signal);
       }
     });
+
+    this._params.stream.on('data', async (data: Uint8Array) => this._rpc.rpc.BridgeService.sendData({ sessionId: this._params.sessionId, payload: data }));
   }
 
   private async _handleConnection (connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
@@ -106,7 +106,7 @@ export class WebRTCTransportProxy implements Transport {
 
   async signal (signal: Signal): Promise<void> {
     await this._openedRpc.wait();
-    await this._rpc.rpc.BridgeService.sendSignal({ connectionId: this._params.webRTCConnectionId, signal });
+    await this._rpc.rpc.BridgeService.sendSignal({ sessionId: this._params.sessionId, signal });
   }
 
   async close (): Promise<void> {
@@ -114,9 +114,16 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
     this._serviceStream.close();
-    await this._rpc.rpc.BridgeService.close({ connectionId: this._params.webRTCConnectionId });
+    await this._rpc.rpc.BridgeService.close({ sessionId: this._params.sessionId });
     this._rpc.close();
     this.closed.emit();
     this._closed = true;
   }
 }
+
+export const createWebRTCTransportProxyFactory = ({ port }: { port: RpcPort }): TransportFactory => {
+  return (params: TransportOptions) => new WebRTCTransportProxy({
+    port,
+    ...params
+  });
+};
