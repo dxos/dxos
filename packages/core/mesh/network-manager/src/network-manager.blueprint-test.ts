@@ -250,7 +250,7 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
 };
 
 // eslint-disable-next-line jest/no-export
-export function inMemoryTests() {
+export function inMemoryTests () {
   sharedTests({ inMemory: true });
 
   it('two swarms at the same time', async () => {
@@ -373,11 +373,11 @@ export function inMemoryTests() {
     };
 
     class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor(readonly peerId: PublicKey) { }
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => !model.peers.has(this.peerId);
 
-      async run(model: Model, real: Real) {
+      async run (model: Model, real: Real) {
         model.peers.add(this.peerId);
 
         const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
@@ -394,11 +394,11 @@ export function inMemoryTests() {
     }
 
     class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor(readonly peerId: PublicKey) { }
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId);
 
-      async run(model: Model, real: Real) {
+      async run (model: Model, real: Real) {
         model.peers.delete(this.peerId);
         model.joinedPeers.delete(this.peerId);
 
@@ -413,11 +413,11 @@ export function inMemoryTests() {
     }
 
     class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor(readonly peerId: PublicKey) { }
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
 
-      async run(model: Model, real: Real) {
+      async run (model: Model, real: Real) {
         model.joinedPeers.add(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
@@ -443,11 +443,11 @@ export function inMemoryTests() {
     }
 
     class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor(readonly peerId: PublicKey) { }
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
 
-      async run(model: Model, real: Real) {
+      async run (model: Model, real: Real) {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
