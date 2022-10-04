@@ -1,7 +1,7 @@
 import { Transform } from 'jscodeshift'
 
 const transform: Transform = (fileInfo, api, options) => {
-  if(fileInfo.path.includes('dist/') || fileInfo.path.includes('node_modules/')) { 
+  if (fileInfo.path.includes('dist/') || fileInfo.path.includes('node_modules/')) {
     return null
   }
 
@@ -45,7 +45,7 @@ const transform: Transform = (fileInfo, api, options) => {
     firstNode2.comments = comments;
   }
 
-  return root.toSource()
+  return root.toSource({ quote: 'single' })
 }
 
 const getReplaceTarget = (replaceList: string[], source: string, identifier: string): string | undefined => {
