@@ -17,8 +17,6 @@ const transform: Transform = (fileInfo, api, options) => {
         return
       }
 
-      console.log({ identifier, source, replaceTarget })
-
       path.parent.insertAfter(j.importDeclaration(
         [j.importSpecifier(j.identifier(identifier))],
         j.literal(replaceTarget)
