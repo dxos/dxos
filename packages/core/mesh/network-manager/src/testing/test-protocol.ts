@@ -146,7 +146,7 @@ export class TestProtocolPlugin extends EventEmitter {
 /**
  * @return {ProtocolProvider}
  */
-// TODO(dboreham): Try to encapsulate swarmKey, nodeId.
+// TODO(dboreham): Try to encapsulate swarm_key, nodeId.
 export const testProtocolProvider = (swarmKey: Buffer, nodeId: Buffer, protocolPlugin: any) => protocolFactory({
   getTopics: () => [swarmKey],
   session: { peerId: PublicKey.stringify(nodeId) },

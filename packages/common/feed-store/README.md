@@ -35,8 +35,8 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
   // Create a writebale feed.
   const keypair1 = createKeyPair();
   const foo = await feedStore.createReadWriteFeed({
-    key: PublicKey.from(keypair1.publicKey),
-    secretKey: keypair1.secretKey
+    key: PublicKey.from(keypair1.public_key),
+    secret_key: keypair1.secret_key
   });
 
   foo.append('foo', () => {
@@ -46,8 +46,8 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
   // You can open a feed with custom hypercore options.
   const keypair2 = createKeyPair();
   const bar = await feedStore.createReadWriteFeed({
-    key: PublicKey.from(keypair2.publicKey),
-    secretKey: keypair2.secretKey
+    key: PublicKey.from(keypair2.public_key),
+    secret_key: keypair2.secret_key
     valueEncoding: 'json',
     metadata: { tag: 'bar' } // Save serializable feed metadata.
   });
@@ -113,8 +113,8 @@ For each feed created, FeedStore maintain `FeedDescriptor` object.
 A `FeedDescriptor` provides the next information:
 
 - `key: PublicKey`
-- `secretKey: Buffer`
-- `discoveryKey: Buffer`
+- `secret_key: Buffer`
+- `discovery_key: Buffer`
 - `feed: (Hypercore|null)`
 - `opened: Boolean`
 - `valueEncoding: string|Codec`
@@ -124,7 +124,7 @@ A `FeedDescriptor` provides the next information:
 
 Returns a list of descriptors.
 
-#### `feedStore.getDescriptorByDiscoveryKey(discoveryKey) -> FeedDescriptor`
+#### `feedStore.getDescriptorByDiscoveryKey(discovery_key) -> FeedDescriptor`
 
 Fast access to get a descriptor.
 

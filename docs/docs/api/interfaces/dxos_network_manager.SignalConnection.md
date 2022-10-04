@@ -17,7 +17,7 @@ Join topic on signal network, to be discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `params` | `Object` |
-| `params.peerId` | `PublicKey` |
+| `params.peer_id` | `PublicKey` |
 | `params.topic` | `PublicKey` |
 
 #### Returns
@@ -41,7 +41,7 @@ Leave topic on signal network, to stop being discoverable by other peers.
 | Name | Type |
 | :------ | :------ |
 | `params` | `Object` |
-| `params.peerId` | `PublicKey` |
+| `params.peer_id` | `PublicKey` |
 | `params.topic` | `PublicKey` |
 
 #### Returns

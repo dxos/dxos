@@ -33,7 +33,7 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
    */
   live?: boolean
   /**
-   * Match the discoveryKey with a publicKey to do the handshake.
+   * Match the discovery_key with a public_key to do the handshake.
    */
   expectedFeeds?: number
 }

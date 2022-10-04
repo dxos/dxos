@@ -39,9 +39,9 @@ Uses a DXNS key stored in HALO.
 
 ___
 
-### publicKey
+### public_key
 
- `Private` `Readonly` **publicKey**: `PublicKey`
+ `Private` `Readonly` **public_key**: `PublicKey`
 
 #### Defined in
 

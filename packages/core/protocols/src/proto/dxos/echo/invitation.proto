@@ -18,11 +18,11 @@ message InvitationDescriptor {
   }
 
   Type type = 1;
-  bytes swarmKey = 2;
+  bytes swarm_key = 2;
   bytes invitation = 3;
 
   /// Only present if type == OFFLINE.
-  optional bytes identityKey = 4;
+  optional bytes identity_key = 4;
 
   /// Must be stripped out when passing to another peer.
   optional bytes secret = 5;

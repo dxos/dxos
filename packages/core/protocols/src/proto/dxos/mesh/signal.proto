@@ -41,7 +41,7 @@ message SwarmEvent {
     optional google.protobuf.Timestamp until = 3;
 
     /// Only relevant in Pub/Sub. Optional, the host topic to eagerly send PeerAvailable messages back to.
-    optional bytes announceBackToHost = 4;
+    optional bytes announce_back_to_host = 4;
   }
 
   message PeerLeft {
@@ -50,16 +50,16 @@ message SwarmEvent {
 
   oneof event {
     /// The peer was announced as available on the swarm.
-    PeerAvailable peerAvailable = 1;
+    PeerAvailable peer_available = 1;
     /// The peer left, or their announcement timed out.
-    PeerLeft peerLeft = 2;
+    PeerLeft peer_left = 2;
   }
 }
 
 /// Goes on a Pub/Sub host topic.
 message HostEvent {
   oneof event {
-    SwarmEvent.PeerAvailable peerAvailable = 1;
+    SwarmEvent.PeerAvailable peer_available = 1;
   }
 }
 

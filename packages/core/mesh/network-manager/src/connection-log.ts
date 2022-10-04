@@ -44,7 +44,7 @@ export class ConnectionLog {
   /**
    * SwarmId => info
    */
-  private readonly _swarms = new ComplexMap<PublicKey, SwarmInfo>(x => x.toHex());
+  private readonly _swarms = new ComplexMap<PublicKey, SwarmInfo>(key => key.toHex());
 
   readonly update = new Event();
 

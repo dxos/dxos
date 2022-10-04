@@ -33,7 +33,7 @@ export class HaloService implements HaloServiceRpc {
   // TODO(burdon): Why is this part of the interface? (Can it be factored out completely?)
   async sign (request: SignRequest): Promise<SignResponse> {
     assert(this.signer, 'Signer not set.');
-    assert(request.publicKey, 'Provide a publicKey of the key that should be used for signing.');
+    assert(request.publicKey, 'Provide a public_key of the key that should be used for signing.');
     const key = await this.echo.halo.keyring.getFullKey(request.publicKey);
     assert(key, 'Key not found.');
     return this.signer.sign(request, key);

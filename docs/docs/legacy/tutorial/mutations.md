@@ -14,7 +14,7 @@ import { useParty, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
 
-const TaskList = ({ partyKey }) => {
+const TaskList = ({ party_key }) => {
   // ...
 
   const handleToggleComplete = (item) => async (event) => {
@@ -62,7 +62,7 @@ import { useParty, useSelection } from '@dxos/react-client';
 
 const TASK_TYPE = 'example.com/type/task';
 
-const TaskList = ({ partyKey }) => {
+const TaskList = ({ party_key }) => {
   // ...
 
   const handleDeleteTask = (item) => async () => {

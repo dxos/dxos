@@ -35,7 +35,7 @@ const defaultGetType = (message: any) => {
     if (message.echo.genesis) {
       return 'echo.genesis';
     } else if (message.echo.itemMutation) {
-      return 'echo.itemMutation';
+      return 'echo.item_mutation';
     } else if (message.echo.mutation) {
       return 'echo.mutation';
     }

@@ -12,13 +12,13 @@
 
 ### constructor
 
-**new SpaceNotFoundError**(`partyKey`)
+**new SpaceNotFoundError**(`party_key`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `party_key` | `PublicKey` |
 
 #### Overrides
 

@@ -16,9 +16,9 @@ Custom label assigned to this swarm. Used in devtools to display human-readable 
 
 ___
 
-### peerId
+### peer_id
 
- **peerId**: `PublicKey`
+ **peer_id**: `PublicKey`
 
 This node's peer id.
 

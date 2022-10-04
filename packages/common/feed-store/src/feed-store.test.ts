@@ -247,8 +247,8 @@ describe.skip('FeedStore', () => {
     const publicKey = (await keyring.createKey()).asBuffer().slice(1);
     const secretKey = Buffer.from('secret');
 
-    // const { publicKey, secretKey } = { publicKey: randomBytes(64), secretKey: Buffer.from('secret') };
-    // const { publicKey, secretKey } = createKeyPair();
+    // const { public_key, secret_key } = { public_key: randomBytes(64), secret_key: Buffer.from('secret') };
+    // const { public_key, secret_key } = createKeyPair();
 
     const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey, crypto: MOCK_CRYPTO });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { crypto: MOCK_CRYPTO });

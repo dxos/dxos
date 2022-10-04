@@ -11,7 +11,7 @@ then
 fi
 
 # Create Profile
-PUBLIC_KEY=$($dx halo --json | jq --raw-output '.publicKey' 2>/dev/null)
+PUBLIC_KEY=$($dx halo --json | jq --raw-output '.public_key' 2>/dev/null)
 if [ "$PUBLIC_KEY" = 'null' ];
 then
   # TODO(burdon): Error attempt to create space with null halo before creating profile.

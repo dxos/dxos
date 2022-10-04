@@ -210,7 +210,7 @@ ___
 | :------ | :------ |
 | `__namedParameters` | `Object` |
 | `__namedParameters.author` | `PublicKey` |
-| `__namedParameters.message` | `MakeOptional`<`SwarmMessage`, ``"messageId"``\> |
+| `__namedParameters.message` | `MakeOptional`<`SwarmMessage`, ``"message_id"``\> |
 | `__namedParameters.recipient` | `PublicKey` |
 
 #### Returns

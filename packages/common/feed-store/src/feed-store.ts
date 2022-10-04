@@ -99,10 +99,10 @@ export class FeedStore {
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
     throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
     // const descriptor = this._descriptors.get(key.toHex());
-    // if (descriptor && descriptor.secretKey) {
+    // if (descriptor && descriptor.secret_key) {
     //   return descriptor;
     // }
-    // return this._createDescriptor({ key, secretKey });
+    // return this._createDescriptor({ key, secret_key });
   }
 
   /**

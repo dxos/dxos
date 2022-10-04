@@ -1539,13 +1539,13 @@ node_modules/.pnpm/@types+react@17.0.50/node_modules/@types/react/index.d.ts:185
 
 ___
 
-### itemType
+### item_type
 
- `Optional` **itemType**: `string`
+ `Optional` **item_type**: `string`
 
 #### Inherited from
 
-BaseTextFieldProps.itemType
+BaseTextFieldProps.item_type
 
 #### Defined in
 

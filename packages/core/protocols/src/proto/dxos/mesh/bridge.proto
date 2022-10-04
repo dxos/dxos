@@ -46,7 +46,7 @@ message BridgeEvent {
   }
 
   message SignalEvent {
-    Signal payload = 1;
+    dxos.mesh.swarm.Signal payload = 1;
   }
 
   message DataEvent {
@@ -62,7 +62,7 @@ message BridgeEvent {
 
 message SignalRequest {
   int32 connection_id = 1;
-  Signal signal = 2;
+  dxos.mesh.swarm.Signal signal = 2;
 }
 
 message DataRequest {
