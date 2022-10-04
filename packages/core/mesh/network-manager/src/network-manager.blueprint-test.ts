@@ -20,6 +20,7 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
+import { createWebRTCTransportFactory, inMemoryTransportFactory, TransportFactory } from './transport';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -40,7 +41,11 @@ const createPeer = async ({
 }: CreatePeerOptions) => {
   const signalManager = signalHosts ? new WebsocketSignalManager(signalHosts!) : new MemorySignalManager(signalContext);
   await signalManager.subscribeMessages(peerId);
-  const networkManager = new NetworkManager({ signalManager, ice });
+  const transportFactory: TransportFactory = signalManager instanceof MemorySignalManager
+    ? inMemoryTransportFactory
+    : createWebRTCTransportFactory({ iceServers: ice });
+
+  const networkManager = new NetworkManager({ signalManager, transportFactory });
   afterTest(() => networkManager.destroy());
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
@@ -53,7 +58,7 @@ const createPeer = async ({
   };
 };
 
-const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: string }) => {
+const sharedTests = ({ inMemory, signalUrl }: { inMemory: boolean, signalUrl?: string }) => {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
@@ -170,7 +175,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
 };
 
 // eslint-disable-next-line jest/no-export
-export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
+export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -193,8 +198,7 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
     await sleep(3000);
     const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
       topic,
-      peerId:
-      peer2Id,
+      peerId: peer2Id,
       signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'],
       ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
     });
@@ -246,7 +250,7 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
 };
 
 // eslint-disable-next-line jest/no-export
-export function inMemoryTests () {
+export function inMemoryTests() {
   sharedTests({ inMemory: true });
 
   it('two swarms at the same time', async () => {
@@ -369,14 +373,14 @@ export function inMemoryTests () {
     };
 
     class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor(readonly peerId: PublicKey) { }
 
       check = (model: Model) => !model.peers.has(this.peerId);
 
-      async run (model: Model, real: Real) {
+      async run(model: Model, real: Real) {
         model.peers.add(this.peerId);
 
-        const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+        const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
         afterTest(() => networkManager.destroy());
 
         real.peers.set(this.peerId, {
@@ -390,11 +394,11 @@ export function inMemoryTests () {
     }
 
     class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor(readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId);
 
-      async run (model: Model, real: Real) {
+      async run(model: Model, real: Real) {
         model.peers.delete(this.peerId);
         model.joinedPeers.delete(this.peerId);
 
@@ -409,11 +413,11 @@ export function inMemoryTests () {
     }
 
     class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor(readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
 
-      async run (model: Model, real: Real) {
+      async run(model: Model, real: Real) {
         model.joinedPeers.add(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
@@ -439,11 +443,11 @@ export function inMemoryTests () {
     }
 
     class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor(readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
 
-      async run (model: Model, real: Real) {
+      async run(model: Model, real: Real) {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;

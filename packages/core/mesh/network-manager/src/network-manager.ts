@@ -7,15 +7,15 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Protocol } from '@dxos/mesh-protocol';
-import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
+import { Protocol, ERR_EXTENSION_RESPONSE_FAILED } from '@dxos/mesh-protocol';
+import { Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
 import { OfferMessage, MessageRouter, SignalConnection } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
-import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
+import { TransportFactory } from './transport';
 
 export type ProtocolProvider = (opts: {
   channel: Buffer
@@ -23,8 +23,8 @@ export type ProtocolProvider = (opts: {
 }) => Protocol;
 
 export interface NetworkManagerOptions {
+  transportFactory: TransportFactory
   signalManager: SignalManager
-  ice?: any[]
   /**
    * Enable connection logging for devtools.
    */
@@ -35,10 +35,11 @@ export interface NetworkManagerOptions {
  * Manages connection to the swarm.
  */
 export class NetworkManager {
+  private readonly _transportFactory: TransportFactory;
+
   private readonly _swarms = new ComplexMap<PublicKey, Swarm>(key => key.toHex());
   private readonly _maps = new ComplexMap<PublicKey, SwarmMapper>(key => key.toHex());
 
-  private readonly _ice?: any[];
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
   private readonly _messageRouter: MessageRouter;
@@ -48,11 +49,11 @@ export class NetworkManager {
   public readonly topicsUpdated = new Event<void>();
 
   constructor ({
+    transportFactory,
     signalManager,
-    ice,
     log
   }: NetworkManagerOptions) {
-    this._ice = ice ?? [];
+    this._transportFactory = transportFactory;
 
     // Listen for signal manager events.
     {
@@ -133,20 +134,13 @@ export class NetworkManager {
       throw new Error(`Already connected to swarm ${topic}`);
     }
 
-    // TODO(burdon): Require factory (i.e., don't make InMemorySignalManager by default).
-    // TODO(burdon): Bundle common transport related classes.
-    const transportFactory =
-      this._signalManager instanceof MemorySignalManager
-        ? inMemoryTransportFactory
-        : createWebRTCTransportFactory({ iceServers: this._ice });
-
     const swarm = new Swarm(
       topic,
       peerId,
       topology,
       protocol,
       this._messageRouter,
-      transportFactory,
+      this._transportFactory,
       options.label
     );
 
