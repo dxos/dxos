@@ -82,9 +82,9 @@ ___
 
 ## Accessors
 
-### itemId
+### item_id
 
-`get` **itemId**(): `string`
+`get` **item_id**(): `string`
 
 #### Returns
 
@@ -92,7 +92,7 @@ ___
 
 #### Inherited from
 
-Model.itemId
+Model.item_id
 
 #### Defined in
 

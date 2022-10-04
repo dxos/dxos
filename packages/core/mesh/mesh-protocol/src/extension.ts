@@ -154,7 +154,7 @@ export class Extension extends Nanomessage {
 
   /**
    * Sets the message handler.
-   * @param {Function<{protocol, discoveryKey}>} feedHandler - Async feed handler.
+   * @param {Function<{protocol, discovery_key}>} feedHandler - Async feed handler.
    * @returns {Extension}
    */
   setFeedHandler (feedHandler: FeedHandler) {

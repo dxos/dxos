@@ -94,7 +94,7 @@ export class EchoProxy implements Echo {
           //   }
           // });
 
-          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ partyKey: party.publicKey });
+          // const partyStream = this._serviceProvider.services.PartyService.subscribeToParty({ party_key: party.public_key });
           // partyStream.subscribe(async ({ party }) => {
           //   if (!party) {
           //     return;

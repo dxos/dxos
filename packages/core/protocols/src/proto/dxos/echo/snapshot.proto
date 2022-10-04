@@ -5,8 +5,8 @@
 syntax = "proto3";
 
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/keys.proto";
 import "dxos/halo/signed.proto";
+import "dxos/keys.proto";
 
 package dxos.echo.snapshot;
 
@@ -20,7 +20,7 @@ package dxos.echo.snapshot;
 //
 
 message PartySnapshot {
-  bytes partyKey = 1;
+  bytes party_key = 1;
   optional timeframe.TimeframeVector timeframe = 2;
 
   // Unix timestamp of the snapshot creation time. For information purposes only.
@@ -48,19 +48,19 @@ message DatabaseSnapshot {
 }
 
 message ItemSnapshot {
-  optional string itemId = 1;
-  optional string itemType = 2;
-  string modelType = 3;
-  optional string modelVersion = 4;
-  optional string parentId = 5;
+  optional string item_id = 1;
+  optional string item_type = 2;
+  string model_type = 3;
+  optional string model_version = 4;
+  optional string parent_id = 5;
   optional ModelSnapshot model = 6;
 }
 
 message LinkSnapshot {
-  optional string linkId = 1;
-  optional string linkType = 2;
-  string modelType = 3;
-  optional string modelVersion = 4;
+  optional string link_id = 1;
+  optional string link_type = 2;
+  string model_type = 3;
+  optional string model_version = 4;
   string source = 5;
   string target = 6;
   optional ModelSnapshot model = 7;
@@ -86,15 +86,13 @@ message ModelSnapshot {
 }
 
 message ModelMutation {
-  // TODO(burdon): Remove required.
   // Encoded model mutation, format is defined by model's codec.
   bytes mutation = 1;
   ModelMutationMeta meta = 2;
 }
 
 message ModelMutationMeta {
-  // TODO(burdon): Remove required.
-  dxos.keys.PublicKey feedKey = 1;
+  dxos.keys.PublicKey feed_key = 1;
   int32 seq = 2;
-  dxos.keys.PublicKey memberKey = 3;
+  dxos.keys.PublicKey member_key = 3;
 }

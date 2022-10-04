@@ -158,9 +158,9 @@ ___
 
 ___
 
-### modelType
+### model_type
 
-`get` **modelType**(): `string`
+`get` **model_type**(): `string`
 
 #### Returns
 

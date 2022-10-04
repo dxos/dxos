@@ -34,7 +34,7 @@ ___
 
 ### createModel
 
-**createModel**<`M`\>(`modelType`, `itemId`, `snapshot`, `memberKey`, `writeStream?`): [`StateManager`](dxos_model_factory.StateManager.md)<`M`\>
+**createModel**<`M`\>(`model_type`, `item_id`, `snapshot`, `member_key`, `writeStream?`): [`StateManager`](dxos_model_factory.StateManager.md)<`M`\>
 
 Instantiates new StateManager with the underlying model.
 
@@ -48,10 +48,10 @@ Instantiates new StateManager with the underlying model.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `modelType` | `string` | Model type DXN. |
-| `itemId` | `string` | Id of the item holding the model. |
+| `model_type` | `string` | Model type DXN. |
+| `item_id` | `string` | Id of the item holding the model. |
 | `snapshot` | `ModelSnapshot` | Snapshot defining the intial state. `{}` can be provided for empty state. |
-| `memberKey` | `PublicKey` | IDENTITY key of the member authoring the model's mutations. |
+| `member_key` | `PublicKey` | IDENTITY key of the member authoring the model's mutations. |
 | `writeStream?` | `FeedWriter`<`Uint8Array`\> | Stream for outbound messages. |
 
 #### Returns
@@ -66,13 +66,13 @@ ___
 
 ### getModel
 
-**getModel**(`modelType`): `undefined` \| { `constructor`: [`ModelConstructor`](../types/dxos_model_factory.ModelConstructor.md)<`any`\> ; `meta`: [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>  }
+**getModel**(`model_type`): `undefined` \| { `constructor`: [`ModelConstructor`](../types/dxos_model_factory.ModelConstructor.md)<`any`\> ; `meta`: [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>  }
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `modelType` | `string` |
+| `model_type` | `string` |
 
 #### Returns
 
@@ -86,13 +86,13 @@ ___
 
 ### getModelMeta
 
-**getModelMeta**(`modelType`): [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>
+**getModelMeta**(`model_type`): [`ModelMeta`](../types/dxos_model_factory.ModelMeta.md)<`any`, `any`, `any`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `modelType` | `string` |
+| `model_type` | `string` |
 
 #### Returns
 
@@ -120,13 +120,13 @@ ___
 
 ### hasModel
 
-**hasModel**(`modelType`): `boolean`
+**hasModel**(`model_type`): `boolean`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `modelType` | `string` |
+| `model_type` | `string` |
 
 #### Returns
 

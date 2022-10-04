@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 
 package dxos.mesh.swarm;
 
@@ -12,11 +12,11 @@ message SwarmMessage {
   /// Swarm identefier.
   dxos.keys.PublicKey topic = 3;
   /// Unique connection identifier.
-  dxos.keys.PublicKey sessionId = 4;
+  dxos.keys.PublicKey session_id = 4;
   /// Message payload.
   MessageData data = 5;
   /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
-  dxos.keys.PublicKey messageId = 6;
+  dxos.keys.PublicKey message_id = 6;
 }
 
 message MessageData {
@@ -33,7 +33,7 @@ message Offer {
 message Answer {
   bool accept = 1;
   /// MessageId of the Offer being answered.
-  optional dxos.keys.PublicKey offerMessageId = 2;
+  optional dxos.keys.PublicKey offer_message_id = 2;
 }
 
 message Signal {

@@ -10,13 +10,13 @@
 
 ## Properties
 
-### itemId
+### item_id
 
- **itemId**: `string`
+ **item_id**: `string`
 
 #### Inherited from
 
-[ModelConstructionOptions](dxos_echo_db.ModelConstructionOptions.md).[itemId](dxos_echo_db.ModelConstructionOptions.md#itemid)
+[ModelConstructionOptions](dxos_echo_db.ModelConstructionOptions.md).[item_id](dxos_echo_db.ModelConstructionOptions.md#itemid)
 
 #### Defined in
 
@@ -24,9 +24,9 @@
 
 ___
 
-### itemType
+### item_type
 
- **itemType**: `undefined` \| `string`
+ **item_type**: `undefined` \| `string`
 
 #### Defined in
 
@@ -34,13 +34,13 @@ ___
 
 ___
 
-### modelType
+### model_type
 
- **modelType**: `string`
+ **model_type**: `string`
 
 #### Inherited from
 
-[ModelConstructionOptions](dxos_echo_db.ModelConstructionOptions.md).[modelType](dxos_echo_db.ModelConstructionOptions.md#modeltype)
+[ModelConstructionOptions](dxos_echo_db.ModelConstructionOptions.md).[model_type](dxos_echo_db.ModelConstructionOptions.md#modeltype)
 
 #### Defined in
 
@@ -48,9 +48,9 @@ ___
 
 ___
 
-### parentId
+### parent_id
 
- `Optional` **parentId**: `string`
+ `Optional` **parent_id**: `string`
 
 #### Defined in
 

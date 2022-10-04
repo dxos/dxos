@@ -38,7 +38,7 @@ message KeyRecord {
   /**
    * The secret key as a Buffer (this will never be visible outside the Keyring).
    */
-  optional dxos.keys.PrivateKey secretKey = 3;
+  optional dxos.keys.PrivateKey secret_key = 3;
 
   /**
    * Is this key from a Greeting "hint"?
@@ -47,7 +47,7 @@ message KeyRecord {
 
   /**
    * Determines if this is our key?
-   * Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
+   * Usually true if `secret_key` is present; may be false for "inception keys" such as the Party key.
    */
   optional bool own = 5; // TODO(burdon): Rename "local" or "private".
 
@@ -77,7 +77,7 @@ message KeyRecordList {
 // would comprised: DeviceC->DeviceB->DeviceA->IdentityA moving from tip to root.
 //
 message KeyChain {
-  dxos.keys.PublicKey publicKey = 1;
+  dxos.keys.PublicKey public_key = 1;
   dxos.halo.signed.SignedMessage message = 2; // TODO(burdon): Circular dep.
   repeated KeyChain parents = 3;
 }

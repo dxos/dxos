@@ -8,8 +8,8 @@
 
 | Name | Type |
 | :------ | :------ |
-| `deviceKey` | `PublicKey` |
-| `identityKey` | `PublicKey` |
+| `device_key` | `PublicKey` |
+| `identity_key` | `PublicKey` |
 | `signer` | `Signer` |
 | `space` | `Space` |
 

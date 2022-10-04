@@ -18,12 +18,12 @@ import { SignalManager } from './signal-manager';
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
-  /** Topics joined: topic => peerId */
+  /** Topics joined: topic => peer_id */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(
     (topic) => topic.toHex()
   );
 
-  /** host => topic => peerId */
+  /** host => topic => peer_id */
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconciling?: boolean = false;

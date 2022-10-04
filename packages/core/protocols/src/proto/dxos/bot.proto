@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "dxos/client.proto";
 import "dxos/config.proto";
 import "dxos/echo/invitation.proto";
-import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 
 package dxos.bot;
 

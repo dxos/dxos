@@ -82,13 +82,13 @@ ___
 
 ### getParty
 
-**getParty**(`partyKey`): `undefined` \| [`Party`](dxos_client.Party.md)
+**getParty**(`party_key`): `undefined` \| [`Party`](dxos_client.Party.md)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | [`PublicKey`](../classes/dxos_client.PublicKey.md) |
+| `party_key` | [`PublicKey`](../classes/dxos_client.PublicKey.md) |
 
 #### Returns
 

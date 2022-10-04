@@ -2,13 +2,13 @@
 
 [@dxos/react-client](../modules/dxos_react_client.md).usePartyInvitations
 
-**usePartyInvitations**(`partyKey?`): `InvitationRequest`[]
+**usePartyInvitations**(`party_key?`): `InvitationRequest`[]
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey?` | `PublicKey` |
+| `party_key?` | `PublicKey` |
 
 #### Returns
 

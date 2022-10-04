@@ -19,9 +19,9 @@ message RpcMessage {
     /// Means that the node is trying to open the connection.
     bool open = 3;
     /// Means that the node has received the "open" message and is ready to perform requests.
-    bool openAck = 4;
+    bool open_ack = 4;
 
-    StreamClose streamClose = 5;
+    StreamClose stream_close = 5;
   }
 }
 

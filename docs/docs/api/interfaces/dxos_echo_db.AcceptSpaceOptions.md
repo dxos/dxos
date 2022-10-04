@@ -14,9 +14,9 @@
 
 ___
 
-### spaceKey
+### space_key
 
- **spaceKey**: `PublicKey`
+ **space_key**: `PublicKey`
 
 #### Defined in
 

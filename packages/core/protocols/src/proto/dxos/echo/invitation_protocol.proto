@@ -4,17 +4,19 @@
 
 syntax = "proto3";
 
-import "dxos/halo/keys.proto";
+import "google/protobuf/empty.proto";
+
+import "dxos/keys.proto";
 
 package dxos.echo.invitation_protocol;
 
 // Mock invitation process for data spaces
 
 message AdmitRequest {
-  dxos.keys.PublicKey identityKey = 1;
-  dxos.keys.PublicKey deviceKey = 2;
-  dxos.keys.PublicKey controlFeedKey = 3;
-  dxos.keys.PublicKey dataFeedKey = 4;
+  dxos.keys.PublicKey identity_key = 1;
+  dxos.keys.PublicKey device_key = 2;
+  dxos.keys.PublicKey control_feed_key = 3;
+  dxos.keys.PublicKey data_feed_key = 4;
 }
 
 // Inviter verbs
@@ -23,8 +25,8 @@ service InviterInvitationService {
 }
 
 message AcceptRequest {
-  dxos.keys.PublicKey spaceKey = 1;
-  dxos.keys.PublicKey genesisFeedKey = 3;
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey genesis_feed_key = 3;
 }
 
 // Invitee verbs

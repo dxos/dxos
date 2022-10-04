@@ -11,6 +11,7 @@ import "google/protobuf/empty.proto";
 
 import "dxos/config.proto";
 import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 
 package dxos.client;
 
@@ -54,12 +55,12 @@ message RedeemedInvitation {
   optional string error = 3;
 
   /// Only on party invitations that are finished.
-  optional dxos.keys.PublicKey partyKey = 4;
+  optional dxos.keys.PublicKey party_key = 4;
 }
 
 message AuthenticateInvitationRequest {
   /// Id from corresponding RedeemedInvitation.
-  string processId = 1;
+  string process_id = 1;
   bytes secret = 2;
 }
 
@@ -68,7 +69,7 @@ message AuthenticateInvitationRequest {
 //
 
 message Profile {
-  dxos.keys.PublicKey publicKey = 1;
+  dxos.keys.PublicKey public_key = 1;
   optional string username = 2;
 }
 
@@ -78,16 +79,16 @@ message SubscribeProfileResponse {
 
 message CreateProfileRequest {
   optional string username = 1;
-  optional bytes publicKey = 2;
-  optional bytes secretKey = 3;
+  optional bytes public_key = 2;
+  optional bytes secret_key = 3;
 }
 
 message RecoverProfileRequest {
-  string seedPhrase = 1;
+  string seed_phrase = 1;
 }
 message Contact {
-  dxos.keys.PublicKey publicKey = 1;
-  optional string displayName = 2;
+  dxos.keys.PublicKey public_key = 1;
+  optional string display_name = 2;
 }
 
 message Contacts {
@@ -105,14 +106,14 @@ service ProfileService {
 }
 
 message AddKeyRecordRequest {
-  dxos.halo.keys.KeyRecord keyRecord = 1;
+  dxos.halo.keys.KeyRecord key_record = 1;
 }
 
 message SignRequest {
   /**
    * - The public key of the key that is supposed to be used for signing.
    */
-  dxos.keys.PublicKey publicKey = 1;
+  dxos.keys.PublicKey public_key = 1;
 
   bytes payload = 2;
 }
@@ -154,23 +155,23 @@ service HaloService {
 
 message Party {
   message Member {
-    dxos.keys.PublicKey publicKey = 1;
-    optional string displayName = 2;
+    dxos.keys.PublicKey public_key = 1;
+    optional string display_name = 2;
   }
 
-  dxos.keys.PublicKey publicKey = 1;
-  bool isOpen = 2;
-  bool isActive = 3;
+  dxos.keys.PublicKey public_key = 1;
+  bool is_open = 2;
+  bool is_active = 3;
 
   repeated Member members = 4;
 }
 
 message SubscribePartyRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message GetPartyDetailsRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message PartyDetails {
@@ -187,10 +188,10 @@ message SubscribePartiesResponse {
 }
 
 message CreateInvitationRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 
   /// When specified the invitation will be of OFFLINE type, not requiring secret exchange.
-  optional dxos.keys.PublicKey inviteeKey = 2;
+  optional dxos.keys.PublicKey invitee_key = 2;
 }
 
 message PartyActivationOptions {
@@ -199,28 +200,28 @@ message PartyActivationOptions {
 }
 
 message SetPartyStateRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 
   optional bool open = 2;
-  optional bool activeGlobal = 3;
-  optional bool activeDevice = 4;
+  optional bool active_global = 3;
+  optional bool active_device = 4;
 }
 
 message SubscribeMembersRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message SubscribeMembersResponse {
   message PartyMember {
-    dxos.keys.PublicKey publicKey = 1;
-    optional string displayName = 2;
+    dxos.keys.PublicKey public_key = 1; // TODO(burdon): Rename key (replace all "public_key").
+    optional string display_name = 2;
   }
 
   repeated PartyMember members = 1;
 }
 
 message CreateSnaspotRequest {
-  dxos.keys.PublicKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 

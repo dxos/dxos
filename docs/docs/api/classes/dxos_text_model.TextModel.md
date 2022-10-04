@@ -12,14 +12,14 @@
 
 ### constructor
 
-**new TextModel**(`meta`, `itemId`, `getState`, `writeStream?`)
+**new TextModel**(`meta`, `item_id`, `getState`, `writeStream?`)
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `meta` | `ModelMeta`<`any`, `any`, `any`\> |
-| `itemId` | `string` |
+| `item_id` | `string` |
 | `getState` | () => `Doc` |
 | `writeStream?` | `MutationWriter`<`Mutation`\> |
 
@@ -107,9 +107,9 @@ ___
 
 ___
 
-### itemId
+### item_id
 
-`get` **itemId**(): `string`
+`get` **item_id**(): `string`
 
 #### Returns
 
@@ -117,7 +117,7 @@ ___
 
 #### Inherited from
 
-Model.itemId
+Model.item_id
 
 #### Defined in
 

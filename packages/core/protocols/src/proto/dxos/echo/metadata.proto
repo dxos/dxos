@@ -7,8 +7,8 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/keys.proto";
 import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
 
 package dxos.echo.metadata;
 

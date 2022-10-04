@@ -193,7 +193,7 @@ ___
 
 ### getParty
 
-**getParty**(`partyKey`): `undefined` \| [`Party`](../interfaces/dxos_client.Party.md)
+**getParty**(`party_key`): `undefined` \| [`Party`](../interfaces/dxos_client.Party.md)
 
 Returns an individual party by its key.
 
@@ -201,7 +201,7 @@ Returns an individual party by its key.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | [`PublicKey`](dxos_client.PublicKey.md) |
+| `party_key` | [`PublicKey`](dxos_client.PublicKey.md) |
 
 #### Returns
 

@@ -2,7 +2,7 @@
 
 [@dxos/credentials](../modules/dxos_credentials.md).keyPairFromSeedPhrase
 
-**keyPairFromSeedPhrase**(`seedPhrase`): `KeyPair`
+**keyPairFromSeedPhrase**(`seed_phrase`): `KeyPair`
 
 Generate key pair from seed phrase.
 
@@ -10,7 +10,7 @@ Generate key pair from seed phrase.
 
 | Name | Type |
 | :------ | :------ |
-| `seedPhrase` | `string` |
+| `seed_phrase` | `string` |
 
 #### Returns
 

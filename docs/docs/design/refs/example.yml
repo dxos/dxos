@@ -13,8 +13,8 @@ feed:
       data:
         # Self-signed Credential by the Party.
         @type: dxos.halo.party.PartyGenesis
-        partyKey: Alice-Halo # ISSUE: Different from IdentityKey?
-        identityKey: Alice
+        party_key: Alice-Halo # ISSUE: Different from IdentityKey?
+        identity_key: Alice
     - id: 2
       data:
         # Authorizes device to sign on behalf of Identity
@@ -25,7 +25,7 @@ feed:
           id: Alice/Device-1
           assertion:
             @type: halo.credentials.AuthorizedDevice
-            identityKey: Alice
+            identity_key: Alice
     - id: 3
       data:
         # Admits the feed to the feed graph.
@@ -35,8 +35,8 @@ feed:
           id: Alice/Device-1/Feed-1
           assertion:
             @type halo.credentials.AdmittedFeed
-            partyKey: Alice-Halo
-            deviceKey: Alice/Device-1
+            party_key: Alice-Halo
+            device_key: Alice/Device-1
 
 #
 # Device Admission: Adding a new Device to a HALO.
@@ -54,7 +54,7 @@ feed:
           id: Alice/Device-2
           assertion:
             @type halo.credentials.AuthorizedDevice
-            identityKey: Alice
+            identity_key: Alice
     - id: 101
       data:
         # NOTE: This MUST have been Presented from an authorized Device.
@@ -64,8 +64,8 @@ feed:
           id: Alice/Device-2/Feed-2 # New Feed.
           assertion:
             @type halo.credentials.AdmittedFeed
-            partyKey: Alice-Halo
-            deviceKey: Alice/Device-2
+            party_key: Alice-Halo
+            device_key: Alice/Device-2
 
 #
 # ECHO Genesis: Creating a new Space.
@@ -78,8 +78,8 @@ feed:
       data:
         # Self-signed Credential by the Party.
         @type halo.party.Genesis # NOTE: Same as HALO.
-        partyKey: Party-1
-        identityKey: Alice
+        party_key: Party-1
+        identity_key: Alice
     - id: 2
       data:
         # Authorizes Agent.
@@ -89,7 +89,7 @@ feed:
           id: Alice
           assertion:
             @type halo.credentials.PartyMember
-            partyKey: Party-1
+            party_key: Party-1
             role: ADMIN
 
 #
@@ -110,14 +110,14 @@ feed:
           id: Alice/Device-2/Feed-3 # NOTE: This Feed.
           assertion:
             @type: halo.credentials.AdmittedFeed
-            partyKey: Party-1
-            identityKey: Alice
-            deviceKey: Alice/Device-1
+            party_key: Party-1
+            identity_key: Alice
+            device_key: Alice/Device-1
         proofs:
           - type: 'ECDSASignature'
             value: 0x1ba37..3125ab
             signer: Alice/Device-2
-            # Mapping from the signing key to the credential that establishes it's authority 
+            # Mapping from the signing key to the credential that establishes it's authority
             chain:
               Alice/Device-2:
                 @type: halo.credential.Credential
@@ -126,7 +126,7 @@ feed:
                   id: Alice/Device-2
                   assertion:
                     @type halo.credentials.AuthorizedDevice
-                    identityKey: Alice
+                    identity_key: Alice
                 proof:
                   - type: 'ECDSASignature'
                     value: eyJhbGci...yHUdBBPM
@@ -136,7 +136,7 @@ feed:
                     id: Alice/Device-1
                     assertion:
                       @type halo.credentials.AuthorizedDevice
-                      identityKey: Alice
+                      identity_key: Alice
                   proof:
                     - type: 'ECDSASignature'
                       value: eyJhbGci...yHUdBBPM
@@ -157,6 +157,6 @@ feed:
           id: Bob
           assertion:
             @type halo.credentials.PartyMember
-            partyKey: Party-1
+            party_key: Party-1
             role: WRITER
 
