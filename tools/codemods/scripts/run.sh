@@ -1,8 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -euxo pipefail
 
 SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 
-for FILE in $SCRIPT_DIR/../../../**/*.ts; do 
-  [ -f "$FILE" ] && pnpm jscodeshift --parser=ts --extensions=ts "$FILE" "$@";
-done
+pnpm jscodeshift --parser=ts --extensions=ts $SCRIPT_DIR/../../../**/*.ts "$@"
