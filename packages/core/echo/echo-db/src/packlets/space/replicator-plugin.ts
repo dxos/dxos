@@ -37,7 +37,10 @@ export class ReplicatorPlugin extends Replicator {
 
       replicate: async (remoteFeeds, info) => {
         const feeds = Array.from(this._feeds);
-        console.log('Replicating', { peerId: info.session, feeds: feeds.map(feed => humanize(feed.key)) });
+        console.log('Replicating', JSON.stringify({
+          peer: humanize(String(info.session)),
+          feeds: feeds.map(feed => humanize(feed.key))
+        }, undefined, 2));
         return feeds.map(feed => feed.feed);
       }
     });

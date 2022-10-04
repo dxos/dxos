@@ -26,9 +26,9 @@ export class ControlPipeline {
   private readonly _pipeline: Pipeline;
   private readonly _partyStateMachine: PartyStateMachine;
 
-  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
+  public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   constructor ({
     spaceKey,
@@ -54,8 +54,8 @@ export class ControlPipeline {
       await this.onFeedAdmitted.callIfSet(info);
     });
 
-    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
     this.onMemberAdmitted = this._partyStateMachine.onMemberAdmitted;
+    this.onCredentialProcessed = this._partyStateMachine.onCredentialProcessed;
   }
 
   get partyState (): PartyState {
