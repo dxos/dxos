@@ -23,42 +23,38 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (params: {
+  sendMessage: (params: {
     author: PublicKey
     recipient: PublicKey
     payload: Any
   }) => Promise<void>
-  onOffer?: (message: OfferMessage) => Promise<Answer>
-  onSignal?: (message: SignalMessage) => Promise<void>
+  onOffer: (message: OfferMessage) => Promise<Answer>
+  onSignal: (message: SignalMessage) => Promise<void>
+  topic: PublicKey
 }
 
 /**
- * Adds offer/answer RPC and reliable messaging.
+ * Adds offer/answer and signal interfaces.
  */
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: ({
-    author,
-    recipient,
-    payload
-  }: {
+  private readonly _sendMessage: (msg: {
     author: PublicKey
     recipient: PublicKey
     payload: Any
   }) => Promise<void>;
 
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
+  private readonly _topic: PublicKey;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
     new ComplexMap((key) => key.toHex());
 
-  constructor ({ sendMessage, onSignal, onOffer }: MessageRouterOptions = {}) {
-    assert(sendMessage);
+  constructor ({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
-    assert(onSignal);
     this._onSignal = onSignal;
-    assert(onOffer);
     this._onOffer = onOffer;
+    this._topic = topic;
   }
 
   async receiveMessage ({
@@ -77,6 +73,11 @@ export class MessageRouter implements SignalMessaging {
     const message: SwarmMessage = schema
       .getCodecForType('dxos.mesh.swarm.SwarmMessage')
       .decode(payload.value);
+
+    if (!this._topic.equals(message.topic)) {
+      // Ignore messages from wrong topics.
+      return;
+    }
 
     log(
       `receive message: ${JSON.stringify(

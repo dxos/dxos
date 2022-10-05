@@ -50,7 +50,7 @@ export class SpaceProtocol {
 
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
       peerId: this._peerId,
       topic: this._discoveryKey,
