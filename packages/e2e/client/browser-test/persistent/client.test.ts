@@ -14,7 +14,7 @@ describe('Client - persistent', () => {
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'Reset test 1'
+      username: 'test-user-1'
     });
 
     expect(client.echo.queryParties().value.length).toBe(0);
@@ -41,7 +41,7 @@ describe('Client - persistent', () => {
       await client2.initialize();
       await client2.halo.createProfile({
         ...createKeyPair(),
-        username: 'Reset test 2'
+        username: 'test-user-2'
       });
       expect(client2.echo.queryParties().value.length).toBe(0);
     }

@@ -21,7 +21,7 @@ export const Primary = () => {
     <HashRouter>
       <Box>
         <AppToolbar
-          profile={{ username: 'DXOS User' }}
+          profile={{ username: 'test-user' }}
           dense
           options={[
             {

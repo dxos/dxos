@@ -21,7 +21,7 @@ describe('Client - nonpersistent', () => {
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user'
     });
 
     // const profile = client.halo.profile;
@@ -35,7 +35,7 @@ describe('Client - nonpersistent', () => {
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user'
     });
 
     const party = await client.echo.createParty();
@@ -57,7 +57,7 @@ describe('Client - nonpersistent', () => {
     await clientA.initialize();
     await clientA.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user-1'
     });
 
     const party1 = await clientA.echo.createParty();
@@ -68,7 +68,7 @@ describe('Client - nonpersistent', () => {
     await clientB.initialize();
     await clientB.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test 2'
+      username: 'test-user-2'
     });
 
     const invite = await party1.createInvitation();
@@ -90,11 +90,11 @@ describe('Client - nonpersistent', () => {
 
     const clientA = new Client(defaultTestingConfig);
     await clientA.initialize();
-    await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
+    await clientA.halo.createProfile({ ...createKeyPair(), username: 'test-user-1' });
 
     const clientB = new Client(defaultTestingConfig);
     await clientB.initialize();
-    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
+    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'test-user-2' });
 
     // Wait for invited person to arrive.
     // TODO(marik-d): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.
