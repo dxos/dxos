@@ -49,7 +49,7 @@ switch (cmd) {
 
       if (faker.datatype.boolean()) {
         const a = {};
-        spy.bind2(key, a);
+        spy.bind(key, a);
 
         await spy.log(a, {
           num: faker.datatype.number()

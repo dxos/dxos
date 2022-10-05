@@ -89,7 +89,7 @@ export class Space {
       feedProvider,
       initialTimeframe
     });
-    spy.bind2(this._key, this._controlPipeline.pipeline, 'control');
+    spy.bind(this._key, this._controlPipeline.pipeline, 'control');
 
     this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async info => {
@@ -205,7 +205,7 @@ export class Space {
     // Create pipeline.
     {
       this._dataPipeline = new Pipeline(new Timeframe());
-      spy.bind2(this._key, this._dataPipeline, 'data');
+      spy.bind(this._key, this._dataPipeline, 'data');
 
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {

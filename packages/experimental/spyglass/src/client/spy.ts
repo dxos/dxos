@@ -17,16 +17,18 @@ import { defaultConfig, Command } from '../common';
  * Posts logs to server.
  */
 export class Spy {
-  private static _count = 0;
+  private readonly id = PublicKey.random();
+  get info () {
+    return `${this.id.toHex().slice(0, 4)}[${this._bindings.size}]`;
+  }
 
-  private readonly id = Spy._count++;
   private _bindings = new Map<string, Set<any>>();
   private _enabled = true;
 
   constructor (
     private readonly _config = defaultConfig
   ) {
-    console.log('### SPY ###', this.id);
+    console.log('### SPY ###', this.info);
   }
 
   humanize (key: PublicKey) {
@@ -42,7 +44,7 @@ export class Spy {
   /**
    * Bind the object instance to the key.
    */
-  bind2 (key: PublicKey | string, object: any, label?: string) {
+  bind (key: PublicKey | string, object: any, label?: string) {
     const keyString = (typeof key === 'string') ? key : humanize(key);
     let bindings = this._bindings.get(keyString);
     if (!bindings) {
@@ -51,7 +53,7 @@ export class Spy {
     }
 
     bindings.add(object);
-    console.log(`### BIND(${this.id}:${this._bindings.size}) ###`, object.id);
+    console.log(`### BIND(${this.info}) ###`, object.id);
     return this;
   }
 
@@ -72,7 +74,7 @@ export class Spy {
           return bindings.has(key);
         });
 
-        assert(value, `### Object not bound: ${key} (${this.id}:${this._bindings.size}) ### ${key.id}`);
+        assert(value, `### Object not bound (${this.info}) ### ${key.id}`);
         keyValue = value[0];
       }
 
@@ -94,7 +96,7 @@ export class Spy {
    * Clear the log.
    */
   async clear () {
-    console.log(`### RESET(${this.id}:${this._bindings.size}) ###`);
+    console.log(`### RESET(${this.info}) ###`);
     this._bindings.clear();
     if (this._enabled) {
       await this._post({ cmd: Command.CLEAR });
