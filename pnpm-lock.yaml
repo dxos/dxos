@@ -639,6 +639,7 @@ importers:
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/keys': link:../keys
@@ -650,6 +651,7 @@ importers:
       hypercore: 9.12.0
       pify: 5.0.0
       readable-stream: 3.6.0
+      util: 0.12.4
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
@@ -2780,7 +2782,6 @@ importers:
       '@dxos/async': workspace:*
       '@dxos/bot-factory-client': workspace:*
       '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
@@ -2814,7 +2815,6 @@ importers:
       '@dxos/async': link:../../common/async
       '@dxos/bot-factory-client': link:../../bots/bot-factory-client
       '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
       '@dxos/config': link:../config
       '@dxos/debug': link:../../common/debug
