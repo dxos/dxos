@@ -398,7 +398,7 @@ export class Protocol {
     extension.emit('extension-message', message);
   };
 
-  private _handleError(error: Error) {
+  private _handleError (error: Error) {
     console.error(error);
     process.nextTick(() => this._stream.destroy(error));
   }
