@@ -5,9 +5,9 @@
 import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
-import { log } from '@dxos/log';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -45,17 +45,17 @@ export class MemorySignalManager implements SignalManager {
     payload: Any
   }>();
 
-  constructor(
+  constructor (
     private readonly _context: MemorySignalManagerContext
   ) {
     this._context.swarmEvent.on((data) => this.swarmEvent.emit(data));
   }
 
-  getStatus(): SignalStatus[] {
+  getStatus (): SignalStatus[] {
     return [];
   }
 
-  async join({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
+  async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
@@ -87,7 +87,7 @@ export class MemorySignalManager implements SignalManager {
     }
   }
 
-  async leave({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
+  async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
       this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
@@ -103,7 +103,7 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async sendMessage({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
+  async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
     assert(recipient);
     if (!this._context.connections.has(recipient)) {
       log.warn('Recipient is not subscribed for messages.', { author, recipient });
@@ -114,10 +114,10 @@ export class MemorySignalManager implements SignalManager {
       .onMessage.emit({ author, recipient, payload });
   }
 
-  async subscribeMessages(peerId: PublicKey): Promise<void> {
+  async subscribeMessages (peerId: PublicKey): Promise<void> {
     log(`Subscribing ${peerId} for messages`);
     this._context.connections.set(peerId, this);
   }
 
-  async destroy() { }
+  async destroy () { }
 }

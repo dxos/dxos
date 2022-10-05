@@ -33,7 +33,9 @@ export interface MessengerOptions {
 
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  private readonly _listeners = new ComplexMap<PublicKey, Map<string, Set<OnMessage>>>(key => key.toHex());
+  //* * { peerId, payloadType } => listeners set */
+  private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(({ peerId, payloadType }) => peerId.toHex() + payloadType);
+  //* * peerId => listeners set */
   private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
 
   private readonly _retryDelay: number;
@@ -127,14 +129,10 @@ export class Messenger {
       }
 
     } else {
-      if (!this._listeners.has(peerId)) {
-        this._listeners.set(peerId, new Map());
-      }
-
-      if (this._listeners.get(peerId)!.has(payloadType)) {
-        this._listeners.get(peerId)!.get(payloadType)!.add(onMessage);
+      if (this._listeners.has({ peerId, payloadType })) {
+        this._listeners.get({ peerId, payloadType })!.add(onMessage);
       } else {
-        this._listeners.get(peerId)!.set(payloadType, new Set([onMessage]));
+        this._listeners.set({ peerId, payloadType }, new Set([onMessage]));
       }
     }
 
@@ -143,7 +141,7 @@ export class Messenger {
         if (!payloadType) {
           this._defaultListeners.get(peerId)?.delete(onMessage);
         } else {
-          this._listeners.get(peerId)?.get(payloadType)?.delete(onMessage);
+          this._listeners.get({ peerId, payloadType })?.delete(onMessage);
         }
       }
     };
@@ -244,16 +242,21 @@ export class Messenger {
   }
 
   private async _callListeners (message: Message): Promise<void> {
-
-    if (this._defaultListeners.has(message.recipient)) {
-      for (const listener of this._defaultListeners.get(message.recipient)!.values()) {
-        await listener(message);
+    {
+      const defaultListenerMap = this._defaultListeners.get(message.recipient);
+      if (defaultListenerMap) {
+        for (const listener of defaultListenerMap) {
+          await listener(message);
+        }
       }
     }
 
-    if (this._listeners.get(message.recipient)?.has(message.payload.type_url)) {
-      for (const listener of this._listeners.get(message.recipient)!.get(message.payload.type_url)!) {
-        await listener(message);
+    {
+      const listenerMap = this._listeners.get({ peerId: message.recipient, payloadType: message.payload.type_url });
+      if (listenerMap) {
+        for (const listener of listenerMap) {
+          await listener(message);
+        }
       }
     }
   }
