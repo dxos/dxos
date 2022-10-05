@@ -12,7 +12,7 @@ import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { OfferMessage, MessageRouter, SignalConnection } from './signal';
+import { SignalConnection } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';

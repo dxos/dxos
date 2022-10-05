@@ -29,7 +29,7 @@ interface MessageRouterOptions {
     payload: Any
   }) => Promise<void>
   onOffer: (message: OfferMessage) => Promise<Answer>
-  onSignal: (message: SignalMessage) => Promise<void>,
+  onSignal: (message: SignalMessage) => Promise<void>
   topic: PublicKey
 }
 
@@ -50,14 +50,14 @@ export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
     new ComplexMap((key) => key.toHex());
 
-  constructor({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
+  constructor ({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
     this._onOffer = onOffer;
-    this._topic = topic
+    this._topic = topic;
   }
 
-  async receiveMessage({
+  async receiveMessage ({
     author,
     recipient,
     payload
@@ -94,7 +94,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  async signal(message: SignalMessage): Promise<void> {
+  async signal (message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
     await this._sendReliableMessage({
       author: message.author,
@@ -103,7 +103,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  async offer(message: OfferMessage): Promise<Answer> {
+  async offer (message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
       messageId: PublicKey.random()
@@ -118,7 +118,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _sendReliableMessage({
+  private async _sendReliableMessage ({
     author,
     recipient,
     message
@@ -141,7 +141,7 @@ export class MessageRouter implements SignalMessaging {
     await this._encodeAndSend({ author, recipient, message: networkMessage });
   }
 
-  private async _encodeAndSend({
+  private async _encodeAndSend ({
     author,
     recipient,
     message
@@ -162,7 +162,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _resolveAnswers(message: SwarmMessage): Promise<void> {
+  private async _resolveAnswers (message: SwarmMessage): Promise<void> {
     assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(
       message.data.answer.offerMessageId
@@ -175,7 +175,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  private async _handleOffer({
+  private async _handleOffer ({
     author,
     recipient,
     message
@@ -204,7 +204,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _handleSignal({
+  private async _handleSignal ({
     author,
     recipient,
     message

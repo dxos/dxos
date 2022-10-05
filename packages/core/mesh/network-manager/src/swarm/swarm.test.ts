@@ -10,14 +10,12 @@ import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
-import { OfferMessage, SignalMessage, SignalMessaging } from '../signal';
-import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
-import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 
 describe('Swarm', () => {
   const context = new MemorySignalManagerContext();
@@ -26,12 +24,8 @@ describe('Swarm', () => {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
-    // eslint-disable-next-line prefer-const
-    let swarm1: Swarm;
-    // eslint-disable-next-line prefer-const
-    let swarm2: Swarm;
 
-    swarm1 = new Swarm(
+    const swarm1 = new Swarm(
       topic,
       peerId1,
       new FullyConnectedTopology(),
@@ -41,7 +35,7 @@ describe('Swarm', () => {
       undefined
     );
 
-    swarm2 = new Swarm(
+    const swarm2 = new Swarm(
       topic,
       peerId2,
       new FullyConnectedTopology(),

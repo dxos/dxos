@@ -41,7 +41,7 @@ describe('MessageRouter', () => {
   }: {
     signalApiUrl: string
     onSignal?: (msg: SignalMessage) => Promise<void>
-    onOffer?: (msg: OfferMessage) => Promise<Answer>,
+    onOffer?: (msg: OfferMessage) => Promise<Answer>
     topic: PublicKey
   }) => {
     const peerId = PublicKey.random();
@@ -110,7 +110,7 @@ describe('MessageRouter', () => {
         signalApiUrl: broker1.url(),
         onSignal: (async () => {}) as any,
         onOffer: async () => ({ accept: true }),
-        topic,
+        topic
       });
     const { signalManager: signalManager2, peerId: peer2 } = await createSignalClientAndMessageRouter({
       signalApiUrl: broker1.url(),
