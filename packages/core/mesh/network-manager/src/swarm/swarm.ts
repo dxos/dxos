@@ -195,7 +195,13 @@ export class Swarm {
     };
   }
 
-  private _initiateConnection (remoteId: PublicKey) {
+  private async _initiateConnection (remoteId: PublicKey) {
+    // It is likely that the other peer will also try to connect to us at the same time.
+    // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
+    if (remoteId.toHex() < this._ownPeerId.toHex()) {
+      await sleep(100);
+    }
+
     if (this._connections.has(remoteId)) {
       // Do nothing if peer is already connected.
       return;
