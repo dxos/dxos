@@ -10,7 +10,7 @@ import { Substitutions } from './common';
 import { BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
 import { ServiceDescriptor } from './service';
 
-export class Schema<T, S = {}> {
+export class Schema<T, S = any> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}> (schema: any, substitutions: Substitutions = {}): Schema<T, S> {
     const root = protobufjs.Root.fromJSON(schema);
     return new Schema(root, substitutions);
