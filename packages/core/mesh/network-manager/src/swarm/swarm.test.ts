@@ -156,7 +156,7 @@ describe('Swarm', () => {
     await waitForExpect(() => {
       expect(onData).toHaveBeenCalledWith([data]);
     });
-  }).timeout(5_000);
+  }).timeout(10_000);
 
   test('swarming with message router', async () => {
     const { swarm1, swarm2, peerId2 } = setup();
