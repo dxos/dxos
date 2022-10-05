@@ -38,11 +38,11 @@ export class Messenger {
   //* * peerId => listeners set */
   private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
 
-  private readonly _retryDelay: number;
-  private readonly _timeout: number;
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _retryDelay: number;
+  private readonly _timeout: number;
 
   constructor ({
     signalManager,
