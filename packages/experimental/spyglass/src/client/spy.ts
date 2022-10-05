@@ -80,7 +80,7 @@ export class Spy {
       }
 
       const payload = { key: keyValue, data };
-      console.log('Logging:', JSON.stringify(payload));
+      // console.log('Logging:', JSON.stringify(payload));
       await this._post({ cmd: Command.LOG, data: payload });
     }
 
@@ -112,15 +112,20 @@ export class Spy {
     const { hostname, port, path } = this._config;
     const url = urljoin(`http://${hostname}:${port}`, path);
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-    await fetch(url, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
+    try {
+
+      // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+      await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+    } catch(err) {
+      // Silently ignore.
+    }
   }
 }
 
