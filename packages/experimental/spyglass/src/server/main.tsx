@@ -20,6 +20,7 @@ import { Deck } from './Deck.tsx';
 // https://medium.com/deno-the-complete-reference/json-modules-in-deno-5ecd137a5edc
 // https://deno.land/x/oak@v11.1.0/mod.ts
 
+// TODO(burdon): Collapsible hierarchical context and view (e.g., Client > Space > Pipeline)
 // TODO(burdon): Server JS app that polls for data (rather than rerendering each time).
 
 // TODO(burdon): Npm.

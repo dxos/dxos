@@ -34,7 +34,7 @@ switch (cmd) {
   }
 
   case Command.MARK: {
-    void spy.mark(Spy.humanize(PublicKey.random()));
+    void spy.mark(spy.humanize(PublicKey.random()));
     break;
   }
 

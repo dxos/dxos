@@ -14,6 +14,9 @@ import { Log, Message } from '../common/types.ts';
 // TODO(burdon): https://deno.land/manual@v1.26.0/jsx_dom/css
 // TODO(burdon): https://preactjs.com/guide/v10/differences-to-react#features-exclusive-to-preactcompat
 
+// TODO(burdon): Pretty print.
+const JSONStringify = (data: any) => JSON.stringify(data);
+
 export const LogTable = ({
   log,
   compact = false
@@ -92,7 +95,7 @@ export const Compact = ({
                   padding: '4px 8px'
                 }}
               >
-                {JSON.stringify(data)}
+                {JSONStringify(data)}
               </div>
             ))}
           </div>
@@ -144,7 +147,7 @@ export const Timeline = ({
               key={id}
               style={{ padding: '4px 8px' }}
             >
-              {id === key ? JSON.stringify(data) : ''}
+              {id === key ? JSONStringify(data) : ''}
             </td>
           ))}
         </tr>

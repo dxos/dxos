@@ -17,16 +17,32 @@ import { defaultConfig, Command } from '../common';
  * Posts logs to server.
  */
 export class Spy {
-  static humanize (key: PublicKey) {
-    return humanize(key);
-  }
+  private readonly id = PublicKey.random();
 
+  // TODO(dmaretskyi): Use WeakMap so that references can get garbage-collected.
   private _bindings = new Map<string, Set<any>>();
   private _enabled = true;
 
+  private _count = 0;
+
   constructor (
     private readonly _config = defaultConfig
-  ) {}
+  ) {
+    console.log(`### SPY(${this.info}) ###`);
+  }
+
+  get size () {
+    return Array.from(this._bindings.values()).reduce((count, set) => count + set.size, 0);
+  }
+
+  get info () {
+    return `${this.id.toHex().slice(0, 4)}[${this.size}]`;
+  }
+
+  humanize (key: PublicKey) {
+    assert(key);
+    return humanize(key);
+  }
 
   enable (enable = true) {
     this._enabled = enable;
@@ -36,7 +52,7 @@ export class Spy {
   /**
    * Bind the object instance to the key.
    */
-  bind (key: PublicKey | string, object: any) {
+  bind (key: PublicKey | string, object: any, label?: string) {
     const keyString = (typeof key === 'string') ? key : humanize(key);
     let bindings = this._bindings.get(keyString);
     if (!bindings) {
@@ -44,16 +60,21 @@ export class Spy {
       this._bindings.set(keyString, bindings);
     }
 
+    // TODO(burdon): Check not bound to other key.
+    assert(!bindings.has(object), 'Already bound.');
     bindings.add(object);
+    object.__spy = ++this._count;
+    console.log(`### Bind(${this.info}) ###`, object.__spy, label);
     return this;
   }
 
   /**
    * Log the message with the given key or bound object.
    */
-  async log (key: any, data: any) {
+  async log (key: any, data: any, tmp?: string) {
     assert(key);
     if (this._enabled) {
+      let label;
       let keyValue: string;
       if (typeof key === 'string') {
         keyValue = key;
@@ -64,11 +85,12 @@ export class Spy {
           return bindings.has(key);
         });
 
-        assert(value);
+        assert(value, `### Object not bound (${this.info}) ### ${key.__spy}:${tmp}`);
         keyValue = value[0];
       }
 
-      await this._post({ cmd: Command.LOG, data: { key: keyValue, data } });
+      const payload = { key: keyValue, data };
+      await this._post({ cmd: Command.LOG, data: payload });
     }
 
     return this;
@@ -98,15 +120,20 @@ export class Spy {
     const { hostname, port, path } = this._config;
     const url = urljoin(`http://${hostname}:${port}`, path);
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-    await fetch(url, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
+    try {
+
+      // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+      await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+    } catch (err) {
+      // Silently ignore.
+    }
   }
 }
 
