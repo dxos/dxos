@@ -2,6 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+import get from 'lodash.get';
+import set from 'lodash.set';
+import { Stats } from 'mocha';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -9,9 +12,26 @@ import { Page } from 'playwright';
 
 import { Lock, trigger } from '../util';
 import { BrowserType } from './browser';
+import { TestResult } from './reporter';
 
 export type RunTestsOptions = {
   debug: boolean
+}
+
+export type Suites = {
+  suites?: {
+    [key: string]: Suites
+  }
+  tests: TestResult[]
+}
+
+export type SuitesWithErrors = Suites & {
+  errors: TestResult[]
+}
+
+export type RunTestsResults = {
+  suites: SuitesWithErrors
+  stats: Stats
 }
 
 /**
@@ -19,14 +39,44 @@ export type RunTestsOptions = {
  */
 const INIT_TIMEOUT = 10_000;
 
+const parseTestResult = ([arg]: any[]) => {
+  try {
+    const result = JSON.parse(arg);
+    if (result.event === 'test end') {
+      return result.test as TestResult;
+    } else if (result.event === 'end') {
+      return result.stats as Stats;
+    } else {
+      return undefined;
+    }
+  } catch {
+    return undefined;
+  }
+};
+
 export const runTests = async (
   page: Page,
   browserType: BrowserType,
   bundleFile: string,
   options: RunTestsOptions
-): Promise<string> => {
-  let results: string;
+) => {
+  let stats: Stats;
+  const suites: SuitesWithErrors = { suites: {}, tests: [], errors: [] };
   const lock = new Lock();
+
+  const handleResult = (result: TestResult | Stats) => {
+    if ('title' in result) {
+      const suiteSelector = result.suite
+        .map(suite => ['suites', suite])
+        .flat();
+      suiteSelector.push('tests');
+      const tests: TestResult[] = get(suites, suiteSelector) ?? [];
+      set(suites, suiteSelector, [...tests, result]);
+      result.error && suites.errors.push(result);
+    } else {
+      stats = result;
+    }
+  };
 
   page.on('pageerror', async (error) => {
     await lock.executeSynchronized(async () => {
@@ -35,31 +85,32 @@ export const runTests = async (
   });
 
   page.on('console', async msg => {
-    // TODO(wittjosiah): Make more robust.
-    const text = msg.text();
-    if (text.startsWith('{')) {
-      results = text;
-    }
-    // TODO(wittjosiah): Remove?
-    // const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
-    // await lock.executeSynchronized(async () => {
-    //   const args = await argsPromise;
-    //   if (args.length > 0) {
-    //     console.log(...args);
-    //   } else {
-    //     console.log(msg);
-    //   }
-    // });
+    const argsPromise = Promise.all(msg.args().map(x => x.jsonValue()));
+    await lock.executeSynchronized(async () => {
+      const args = await argsPromise;
+
+      const result = parseTestResult(args);
+      if (result) {
+        handleResult(result);
+        return;
+      }
+
+      if (args.length > 0) {
+        console.log(...args);
+      } else {
+        console.log(msg);
+      }
+    });
   });
 
   const packageDir = dirname(await pkgUp({ cwd: __dirname }) as string);
   assert(packageDir);
   await page.goto(`file://${join(packageDir, './src/browser/index.html')}`);
 
-  const [getPromise, resolve] = trigger<string>();
+  const [getPromise, resolve] = trigger<RunTestsResults>();
   await page.exposeFunction('browserMocha__testsDone', async (exitCode: number) => {
     await lock.executeSynchronized(async () => {
-      resolve(results);
+      resolve({ suites, stats });
     });
   });
 

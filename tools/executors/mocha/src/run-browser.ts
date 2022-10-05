@@ -3,12 +3,11 @@
 //
 
 import chalk from 'chalk';
-import glob from 'glob';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 
 import { BrowserType, buildTests, getNewBrowserContext, outputResults, runTests } from './browser';
+import { mochaComment, resolveFiles } from './util';
 
 export type BrowserOptions = {
   testPatterns: string[]
@@ -36,15 +35,18 @@ export const runBrowser = async (
     console.error(e);
   }
 
-  const files = await resolveFiles(options.testPatterns);
+  const allFiles = await resolveFiles(options.testPatterns);
+  const testFiles = allFiles
+    .filter(([, contents]) => !contents.includes(mochaComment('nodejs')))
+    .map(([filename]) => filename);
 
-  await buildTests(files, {
+  await buildTests(testFiles, {
     debug: !!options.debug,
     outDir,
     checkLeaks: options.checkLeaks
   });
 
-  console.log(chalk`\nRunning in {blue {bold ${browserType}}}`);
+  console.log(chalk`\nRunning in {blue {bold ${browserType}}}\n`);
 
   const { page } = await getNewBrowserContext(browserType, options);
   const results = await runTests(page, browserType, join(outDir, 'bundle.js'), options);
@@ -70,9 +72,4 @@ export const runBrowser = async (
   }
 
   return success;
-};
-
-const resolveFiles = async (globs: string[]): Promise<string[]> => {
-  const results = await Promise.all(globs.map(pattern => promisify(glob)(pattern)));
-  return Array.from(new Set(results.flat(1)));
 };

@@ -6,7 +6,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { execTool, getBin } from './util';
+import { execTool, getBin, mochaComment, resolveFiles } from './util';
 
 export type NodeOptions = {
   testPatterns: string[]
@@ -22,11 +22,13 @@ export type NodeOptions = {
 
 export const runNode = async (context: ExecutorContext, options: NodeOptions) => {
   const reporterArgs = await setupReporter(context, options);
+  const ignoreArgs = await getIgnoreArgs(options.testPatterns);
   const setupArgs = getSetupArgs(context.root, options.domRequired);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
 
   const args = [
     ...options.testPatterns,
+    ...ignoreArgs,
     ...reporterArgs,
     // NOTE: The import order here is important.
     //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
@@ -72,6 +74,14 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
     '--reporter', 'mocha-multi-reporters',
     '--reporter-options', `configFile=${reporterConfigFile}`
   ];
+};
+
+const getIgnoreArgs = async (testPatterns: string[]) => {
+  const allFiles = await resolveFiles(testPatterns);
+  return allFiles
+    .filter(([, contents]) => contents.includes(mochaComment('browser')))
+    .map(([filename]) => ['--ignore', filename])
+    .flat();
 };
 
 const getSetupArgs = (root: string, domRequired: boolean) => {

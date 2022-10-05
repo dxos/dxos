@@ -27,12 +27,14 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
     import { mocha } from 'mocha';
 
+    import { BrowserReporter } from '@dxos/mocha/reporter';
+
     async function run() {
       const context = await window.browserMocha__getEnv();
 
       window.mochaExecutor = { environment: context.browserType };
 
-      mocha.reporter('json');
+      mocha.reporter(BrowserReporter);
       mocha.setup('bdd');
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
@@ -61,6 +63,15 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
       FixMemdownPlugin(),
       NodeGlobalsPolyfillPlugin(),
       NodeModulesPlugin()
+      // {
+      //   name: 'test',
+      //   setup: ({ onResolve }) => {
+      //     onResolve({ filter: /@dxos\/mocha\/reporter/ }, args => {
+      //       console.log(args, require.resolve('@dxos/mocha/reporter'));
+      //       return { path: require.resolve('@dxos/mocha/reporter') };
+      //     });
+      //   }
+      // }
     ]
   });
 };
