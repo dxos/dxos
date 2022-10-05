@@ -3219,7 +3219,6 @@ importers:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/log': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@types/color-hash': ^1.0.1
       '@types/lodash': ^4.14.182
       '@types/lodash.defaultsdeep': ^4.6.6
@@ -3253,7 +3252,6 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@babel/core': 7.18.13
-      '@dxos/protocols-toolchain': link:../deprecated/protocols-toolchain
       '@types/color-hash': 1.0.2
       '@types/lodash': 4.14.184
       '@types/lodash.defaultsdeep': 4.6.7
