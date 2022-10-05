@@ -14,12 +14,13 @@ import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { SignalMessaging } from '../signal';
+import { MessageRouter, SignalMessaging } from '../signal';
 import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
+import { Messenger } from '@dxos/messaging';
 
 /**
  * A single peer's view of the swarm.
@@ -35,7 +36,7 @@ export class Swarm {
   private readonly _connections = new ComplexMap<PublicKey, Connection>(key => key.toHex());
   private readonly _discoveredPeers = new ComplexSet<PublicKey>(key => key.toHex());
 
-  get connections () {
+  get connections() {
     return Array.from(this._connections.values());
   }
 
@@ -56,36 +57,51 @@ export class Swarm {
 
   readonly errors = new ErrorStream();
 
+  private readonly _swarmMessenger: MessageRouter;
+
   // TODO(burdon): Split up properties.
-  constructor (
+  constructor(
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
     private readonly _protocolProvider: ProtocolProvider,
-    private readonly _signalMessaging: SignalMessaging,
+    private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
     log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
     _topology.init(this._getSwarmController());
+
+    this._swarmMessenger = new MessageRouter({
+      sendMessage: async msg => await this._messenger.sendMessage(msg),
+      onSignal: async msg => await this.onSignal(msg),
+      onOffer: async msg => await this.onOffer(msg),
+      topic: this._topic
+    })
+    console.log('Swarm constructor');
+    this._messenger.listen({
+      peerId: this._ownPeerId,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async message => { console.log('Listener call'); await this._swarmMessenger.receiveMessage(message) }
+    }).catch((error) => log.catch(error));
   }
 
-  get ownPeerId () {
+  get ownPeerId() {
     return this._ownPeerId;
   }
 
   /**
    * Custom label assigned to this swarm. Used in devtools to display human-readable names for swarms.
    */
-  get label (): string | undefined {
+  get label(): string | undefined {
     return this._label;
   }
 
-  get topic (): Topic {
+  get topic(): Topic {
     return this._topic;
   }
 
-  onSwarmEvent (swarmEvent: SwarmEvent) {
+  onSwarmEvent(swarmEvent: SwarmEvent) {
     log(`Swarm event ${JSON.stringify(swarmEvent)}`);
     if (swarmEvent.peerAvailable) {
       const peerId = PublicKey.from(swarmEvent.peerAvailable.peer);
@@ -99,7 +115,7 @@ export class Swarm {
     this._topology.update();
   }
 
-  async onOffer (message: OfferMessage): Promise<Answer> {
+  async onOffer(message: OfferMessage): Promise<Answer> {
     log(`Offer from ${JSON.stringify(message)}`);
     // Id of the peer offering us the connection.
     assert(message.author);
@@ -145,7 +161,7 @@ export class Swarm {
     return { accept };
   }
 
-  async onSignal (message: SignalMessage): Promise<void> {
+  async onSignal(message: SignalMessage): Promise<void> {
     log(`Signal ${this._topic} ${JSON.stringify(message)}`);
     assert(message.recipient?.equals(this._ownPeerId), `Invalid signal peer id expected=${this.ownPeerId}, actual=${message.recipient}`);
     assert(message.topic?.equals(this._topic));
@@ -159,7 +175,7 @@ export class Swarm {
     await connection.signal(message);
   }
 
-  async setTopology (newTopology: Topology) {
+  async setTopology(newTopology: Topology) {
     log(`Set topology for ${this._topic} ${Object.getPrototypeOf(this._topology).constructor.name} ${Object.getPrototypeOf(newTopology).constructor.name}`);
     if (newTopology === this._topology) {
       return;
@@ -170,13 +186,13 @@ export class Swarm {
     this._topology.update();
   }
 
-  async destroy () {
+  async destroy() {
     log(`Destroy swarm ${this._topic}`);
     await this._topology.destroy();
     await Promise.all(Array.from(this._connections.keys()).map(key => this._closeConnection(key)));
   }
 
-  private _getSwarmController (): SwarmController {
+  private _getSwarmController(): SwarmController {
     return {
       getState: () => ({
         ownPeerId: this._ownPeerId,
@@ -195,7 +211,7 @@ export class Swarm {
     };
   }
 
-  private _initiateConnection (remoteId: PublicKey) {
+  private _initiateConnection(remoteId: PublicKey) {
     if (this._connections.has(remoteId)) {
       // Do nothing if peer is already connected.
       return;
@@ -210,7 +226,7 @@ export class Swarm {
     this._topology.update();
   }
 
-  private _createConnection (initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
+  private _createConnection(initiator: boolean, remoteId: PublicKey, sessionId: PublicKey) {
     log(`Create connection topic=${this._topic} ownId=${this._ownPeerId} remoteId=${remoteId} initiator=${initiator}`);
     assert(!this._connections.has(remoteId), 'Peer already connected.');
 
@@ -220,7 +236,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      this._signalMessaging,
+      this._swarmMessenger,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );
@@ -263,7 +279,7 @@ export class Swarm {
     return connection;
   }
 
-  private async _closeConnection (peerId: PublicKey) {
+  private async _closeConnection(peerId: PublicKey) {
     log(`Close connection topic=${this._topic} remoteId=${peerId}`);
     const connection = this._connections.get(peerId);
     if (!connection) {

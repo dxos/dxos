@@ -41,7 +41,6 @@ export class NetworkManager {
   private readonly _ice?: any[];
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
-  private readonly _messageRouter: MessageRouter;
   private readonly _signalConnection: SignalConnection;
   private readonly _connectionLog?: ConnectionLog;
 
@@ -62,26 +61,12 @@ export class NetworkManager {
         this._swarms.get(topic)?.onSwarmEvent(event)
       );
     }
+    this._messenger = new Messenger({ signalManager: this._signalManager });
 
-    {
-      this._messenger = new Messenger({ signalManager: this._signalManager });
-
-      const onOffer = async (message: OfferMessage) =>
-        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? { accept: false };
-
-      this._messageRouter = new MessageRouter({
-        sendMessage: (message) => this._messenger.sendMessage(message),
-        onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
-        onOffer: (msg) => onOffer(msg)
-      });
-    }
-
-    {
-      this._signalConnection = {
-        join: (opts) => this._signalManager.join(opts),
-        leave: (opts) => this._signalManager.leave(opts)
-      };
-    }
+    this._signalConnection = {
+      join: (opts) => this._signalManager.join(opts),
+      leave: (opts) => this._signalManager.leave(opts)
+    };
 
     if (log) {
       this._connectionLog = new ConnectionLog();
@@ -131,18 +116,12 @@ export class NetworkManager {
         ? inMemoryTransportFactory
         : createWebRTCTransportFactory({ iceServers: this._ice });
 
-    await this._messenger.listen({
-      peerId,
-      payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: (message) => this._messageRouter.receiveMessage(message)
-    });
-
     const swarm = new Swarm(
       topic,
       peerId,
       topology,
       protocol,
-      this._messageRouter,
+      this._messenger,
       transportFactory,
       options.label
     );
