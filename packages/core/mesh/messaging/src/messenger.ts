@@ -196,7 +196,7 @@ export class Messenger {
     log(`Handling message with ${reliablePayload.messageId}`);
 
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
-      log(`Already received ${reliablePayload.messageId}`);
+      log.warn(`Already received ${reliablePayload.messageId}`);
       return;
     }
     this._receivedMessages.add(reliablePayload.messageId!);
@@ -219,7 +219,7 @@ export class Messenger {
       schema
         .getCodecForType('dxos.mesh.messaging.Acknowledgement')
         .decode(payload.value).messageId
-    )!();
+    )?.();
   }
 
   private async _sendAcknowledgement ({
