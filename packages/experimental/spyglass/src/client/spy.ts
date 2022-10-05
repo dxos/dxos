@@ -18,18 +18,25 @@ import { defaultConfig, Command } from '../common';
  */
 export class Spy {
   private readonly id = PublicKey.random();
-  get info () {
-    return `${this.id.toHex().slice(0, 4)}[${this._bindings.size}]`;
-  }
 
   // TODO(dmaretskyi): Use WeakMap so that references can get garbage-collected.
   private _bindings = new Map<string, Set<any>>();
   private _enabled = true;
 
+  private _count = 0;
+
   constructor (
     private readonly _config = defaultConfig
   ) {
-    console.log('### SPY ###', this.info);
+    console.log(`### SPY(${this.info}) ###`);
+  }
+
+  get size () {
+    return Array.from(this._bindings.values()).reduce((count, set) => count + set.size, 0);
+  }
+
+  get info () {
+    return `${this.id.toHex().slice(0, 4)}[${this.size}]`;
   }
 
   humanize (key: PublicKey) {
@@ -53,15 +60,18 @@ export class Spy {
       this._bindings.set(keyString, bindings);
     }
 
+    // TODO(burdon): Check not bound to other key.
+    assert(!bindings.has(object), 'Already bound.');
     bindings.add(object);
-    console.log(`### BIND(${this.info}) ###`, object.id);
+    object.__spy = ++this._count;
+    console.log(`### Bind(${this.info}) ###`, object.__spy, label);
     return this;
   }
 
   /**
    * Log the message with the given key or bound object.
    */
-  async log (key: any, data: any) {
+  async log (key: any, data: any, tmp?: string) {
     assert(key);
     if (this._enabled) {
       let label;
@@ -75,12 +85,11 @@ export class Spy {
           return bindings.has(key);
         });
 
-        assert(value, `### Object not bound (${this.info}) ### ${key.id}`);
+        assert(value, `### Object not bound (${this.info}) ### ${key.__spy}:${tmp}`);
         keyValue = value[0];
       }
 
       const payload = { key: keyValue, data };
-      // console.log('Logging:', JSON.stringify(payload));
       await this._post({ cmd: Command.LOG, data: payload });
     }
 
@@ -99,7 +108,6 @@ export class Spy {
    * Clear the log.
    */
   async clear () {
-    console.log(`### RESET(${this.info}) ###`);
     this._bindings.clear();
     if (this._enabled) {
       await this._post({ cmd: Command.CLEAR });
@@ -123,7 +131,7 @@ export class Spy {
         },
         body: JSON.stringify(data)
       });
-    } catch(err) {
+    } catch (err) {
       // Silently ignore.
     }
   }

@@ -10,9 +10,9 @@ import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 import { spy } from '@dxos/spyglass';
 
-spy.clear();
-
 describe('Client - nonpersistent', () => {
+  before(() => spy.clear());
+
   it('open & close', async () => {
     const client = new Client();
     await client.initialize();
@@ -93,7 +93,8 @@ describe('Client - nonpersistent', () => {
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(10_000);
+    expect(true).toBeFalsy();
+  }).timeout(10_000).retries(3);
 
   it.skip('offline invitations', async function () {
     if (browserMocha.context.browser === 'webkit' || browserMocha.context.browser === 'chromium') {

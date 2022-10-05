@@ -90,6 +90,7 @@ export class Space {
       initialTimeframe
     });
     spy.bind(this._key, this._controlPipeline.pipeline, 'control');
+    (this._controlPipeline.pipeline as any).__spy = 'CONTROL';
 
     this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async info => {
@@ -166,7 +167,7 @@ export class Space {
       return;
     }
 
-    spy.log(this.key, 'open');
+    spy.log(this._key, 'open');
 
     // Order is important.
     await this._controlPipeline.start();
@@ -206,6 +207,7 @@ export class Space {
     {
       this._dataPipeline = new Pipeline(new Timeframe());
       spy.bind(this._key, this._dataPipeline, 'data');
+      (this._dataPipeline as any).__spy = 'DATA';
 
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {

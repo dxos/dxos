@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { sleep, Event } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';

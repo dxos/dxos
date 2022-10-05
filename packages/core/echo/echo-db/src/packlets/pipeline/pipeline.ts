@@ -39,7 +39,6 @@ export type PipelineState = {
 }
 
 export interface PipelineAccessor {
-  id: string
   state: PipelineState
   writer: FeedWriter<TypedMessage>
 }
@@ -76,10 +75,7 @@ export interface PipelineAccessor {
  * 4. Generate the writable feed key.
  * 5. Wait for the writable feed to be added.
  */
-let count = 0;
 export class Pipeline implements PipelineAccessor {
-  public readonly id = String(count++); // TODO(burdon): ???
-
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
   private readonly _iterator = new FeedStoreIterator(
