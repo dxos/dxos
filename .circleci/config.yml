@@ -132,9 +132,9 @@ workflows:
       - e2e:
           context:
             - Github
-      - bundle:
-          context:
-            - Github
+#      - bundle:
+#          context:
+#            - Github
 
   deploy:
     jobs:
