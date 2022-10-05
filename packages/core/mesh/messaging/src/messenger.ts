@@ -36,11 +36,11 @@ export class Messenger {
   private readonly _listeners = new Map<string, Set<OnMessage>>();
   private readonly _defaultListeners = new Set<OnMessage>();
 
-  private readonly _retryDelay: number;
-  private readonly _timeout: number;
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _retryDelay: number;
+  private readonly _timeout: number;
 
   constructor ({
     signalManager,
@@ -202,10 +202,9 @@ export class Messenger {
 
   private async _handleAcknowledgement ({ payload }: { payload: Any }) {
     assert(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
-    this._onAckCallbacks.get(
-      schema
-        .getCodecForType('dxos.mesh.messaging.Acknowledgement')
-        .decode(payload.value).messageId
+    this._onAckCallbacks.get(schema
+      .getCodecForType('dxos.mesh.messaging.Acknowledgement')
+      .decode(payload.value).messageId
     )!();
   }
 
