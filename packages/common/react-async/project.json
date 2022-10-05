@@ -39,7 +39,8 @@
         ],
         "outputPath": "tmp/mocha/common/react-async",
         "resultsPath": "test-results/common/react-async",
-        "domRequired": true
+        "domRequired": true,
+        "forceExit": true
       }
     }
   },

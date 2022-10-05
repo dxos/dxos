@@ -40,9 +40,16 @@ export const runBrowser = async (
     .filter(([, contents]) => !contents.includes(mochaComment('nodejs')))
     .map(([filename]) => filename);
 
+  if (testFiles.length === 0) {
+    console.log(chalk`\n{white No tests to run in {blue {bold ${browserType}}}}\n`);
+    return true;
+  }
+
+  // TODO(wittjosiah): Factor out (only build tests once for all browser envs).
   await buildTests(testFiles, {
     debug: !!options.debug,
     outDir,
+    timeout: options.timeout,
     checkLeaks: options.checkLeaks
   });
 
@@ -55,13 +62,13 @@ export const runBrowser = async (
     browserType,
     outDir: options.junitReport ? options.resultsPath : undefined
   });
-  if (exitCode !== 0) {
-    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
-  } else {
-    console.log(chalk`\n{green Passed in {blue {bold ${browserType}}}}\n`);
-  }
 
-  const success = (exitCode === 0);
+  const success = exitCode === 0;
+  if (success) {
+    console.log(chalk`\n{green Passed in {blue {bold ${browserType}}}}\n`);
+  } else {
+    console.log(chalk`\n{red Failed with exit code ${exitCode} in {blue {bold ${browserType}}}}\n`);
+  }
 
   if (options.stayOpen) {
     console.log(`\nCompleted with ${success ? 'success' : 'failure'}. Browser window stays open.`);

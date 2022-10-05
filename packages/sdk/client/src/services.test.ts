@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import assert from 'node:assert';
 
 import { latch } from '@dxos/async';

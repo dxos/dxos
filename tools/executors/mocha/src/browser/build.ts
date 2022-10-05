@@ -13,6 +13,7 @@ import {
 export interface BuildTestsOpts {
   outDir: string
   debug: boolean
+  timeout: number
   checkLeaks: boolean
 }
 
@@ -36,6 +37,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
       mocha.reporter(BrowserReporter);
       mocha.setup('bdd');
+      mocha.timeout(${opts.timeout})
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
       ${files.map(file => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
@@ -63,15 +65,6 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
       FixMemdownPlugin(),
       NodeGlobalsPolyfillPlugin(),
       NodeModulesPlugin()
-      // {
-      //   name: 'test',
-      //   setup: ({ onResolve }) => {
-      //     onResolve({ filter: /@dxos\/mocha\/reporter/ }, args => {
-      //       console.log(args, require.resolve('@dxos/mocha/reporter'));
-      //       return { path: require.resolve('@dxos/mocha/reporter') };
-      //     });
-      //   }
-      // }
     ]
   });
 };

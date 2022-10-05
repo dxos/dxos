@@ -31,6 +31,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs", "chromium", "firefox"],
         "testPatterns": [
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
         ],
@@ -39,16 +40,8 @@
         ],
         "outputPath": "tmp/mocha/sdk/client-services",
         "resultsPath": "test-results/sdk/client-services",
+        "setup": "packages/core/mesh/signal/setup.js",
         "forceExit": true
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/mocha:browser",
-      "options": {
-        "testPatterns": [
-          "packages/sdk/client-services/browser-test/**/*.test.ts"
-        ],
-        "setup": "packages/sdk/client-services/browser-test/setup.js"
       }
     }
   },

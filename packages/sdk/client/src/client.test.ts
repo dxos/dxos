@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import expect from 'expect';
 import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';

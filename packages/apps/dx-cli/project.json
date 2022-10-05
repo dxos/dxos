@@ -18,6 +18,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/apps/dx-cli/src/**/*.test.{ts,js}"
         ],

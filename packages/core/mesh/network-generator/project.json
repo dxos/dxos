@@ -31,6 +31,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/core/mesh/network-generator/src/**/*.test.{ts,js}"
         ],

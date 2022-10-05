@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests } from './network-manager.blueprint-test';

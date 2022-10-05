@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+// @dxos/mocha browser
+
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol, ReplicatorPlugin, codec } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -15,10 +16,15 @@ import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
+import { codec } from '../common';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
+import { ReplicatorPlugin } from './replicator-plugin';
+import { SpaceProtocol } from './space-protocol';
+
 const signalContext = new MemorySignalManagerContext();
 
-describe('space/space-protocol', () => {
-  it('two peers discover each other', async () => {
+describe('space/space-protocol', function () {
+  it('two peers discover each other', async function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
@@ -59,7 +65,7 @@ describe('space/space-protocol', () => {
     });
   });
 
-  it('replicates a feed', async () => {
+  it('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 
@@ -127,7 +133,11 @@ describe('space/space-protocol', () => {
     });
   });
 
-  it('replicates a feed through a webrtc connection', async () => {
+  it('replicates a feed through a webrtc connection', async function () {
+    if (mochaExecutor.environment === 'webkit') {
+      this.skip();
+    }
+
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
 

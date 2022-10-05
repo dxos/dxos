@@ -818,6 +818,7 @@ importers:
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
+      source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
     dependencies:
       '@dxos/async': link:../../../common/async
@@ -844,6 +845,7 @@ importers:
     devDependencies:
       '@dxos/testutils': link:../../../common/testutils
       '@types/debug': 4.1.7
+      source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
   packages/core/echo/echo-testing:
@@ -1735,74 +1737,6 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
 
-  packages/e2e/client:
-    specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/spyglass': workspace:*
-      source-map-support: ^0.5.12
-    dependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/credentials': link:../../core/halo/credentials
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/keys': link:../../common/keys
-      '@dxos/object-model': link:../../core/echo/object-model
-      source-map-support: 0.5.21
-    devDependencies:
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@dxos/signal': link:../../core/mesh/signal
-      '@dxos/spyglass': link:../../experimental/spyglass
-
-  packages/e2e/echo:
-    specifiers:
-      '@dxos/crypto': workspace:*
-      '@dxos/echo-db': workspace:*
-      '@dxos/feed-store': workspace:*
-      '@dxos/halo-protocol': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/messaging': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/object-model': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/random-access-storage': workspace:*
-      '@dxos/signal': workspace:*
-      '@dxos/testutils': workspace:*
-      source-map-support: ^0.5.12
-    dependencies:
-      '@dxos/crypto': link:../../common/crypto
-      '@dxos/echo-db': link:../../core/echo/echo-db
-      '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/halo-protocol': link:../../core/halo/halo-protocol
-      '@dxos/keyring': link:../../core/halo/keyring
-      '@dxos/keys': link:../../common/keys
-      '@dxos/messaging': link:../../core/mesh/messaging
-      '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/object-model': link:../../core/echo/object-model
-      '@dxos/random-access-storage': link:../../common/random-access-storage
-      '@dxos/testutils': link:../../common/testutils
-      source-map-support: 0.5.21
-    devDependencies:
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/signal': link:../../core/mesh/signal
-
-  packages/e2e/protobuf-compiler:
-    specifiers:
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/protobuf-compiler': workspace:*
-    devDependencies:
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/protobuf-compiler': link:../../../tools/executors/protobuf-compiler
-
   packages/e2e/rpc-tunnel:
     specifiers:
       '@babel/core': ^7.18.13
@@ -2618,6 +2552,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       readable-stream: ^3.6.0
+      source-map-support: ^0.5.12
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client-services': link:../client-services
@@ -2646,6 +2581,7 @@ importers:
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/readable-stream': 2.3.9
+      source-map-support: 0.5.21
 
   packages/sdk/client-services:
     specifiers:

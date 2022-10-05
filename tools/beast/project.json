@@ -18,6 +18,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "tools/beast/src/**/*.test.{ts,js}"
         ],

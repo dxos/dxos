@@ -2,7 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { codec, DataService, MetadataStore, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager } from '@dxos/echo-db';
+// @dxos/mocha browser
+
 import { FeedStore } from '@dxos/feed-store';
 import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
@@ -11,7 +12,13 @@ import { NetworkManager } from '@dxos/network-manager';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-describe('space-manager', () => {
+import { codec } from '../common';
+import { DataService } from '../database';
+import { MetadataStore } from '../metadata';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
+import { SpaceManager } from './space-manager';
+
+describe('space-manager', function () {
   const createPeer = async () => {
     const storage = createStorage();
     const keyring = new Keyring(storage.createDirectory('keyring'));
@@ -35,7 +42,7 @@ describe('space-manager', () => {
     );
   };
 
-  it.skip('invitations', async () => {
+  it.skip('invitations', async function () {
     const peer1 = await createPeer();
     await peer1.open();
     afterTest(() => peer1.close());

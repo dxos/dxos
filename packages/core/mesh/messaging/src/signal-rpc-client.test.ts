@@ -1,6 +1,7 @@
 //
 // Copyright 2022 DXOS.org
 //
+
 import { expect } from 'earljs';
 
 import { Any } from '@dxos/codec-protobuf';

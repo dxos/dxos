@@ -14,7 +14,6 @@ export type TestResult = {
   duration?: number
   speed?: Test['speed']
   currentRetry: number
-  error?: Error
 }
 
 export class BrowserReporter {
@@ -37,6 +36,15 @@ export class BrowserReporter {
         if (suite.title) {
           this._currentSuite.pop();
         }
+      })
+      .on('fail', (test, error) => {
+        console.log(JSON.stringify({
+          event: 'fail',
+          suite: this._currentSuite,
+          test: test.title,
+          message: error.message,
+          stack: error.stack
+        }));
       })
       .on('test end', test => {
         console.log(JSON.stringify({
@@ -69,8 +77,7 @@ export class BrowserReporter {
       status: test.isPassed() ? 'passed' : test.isFailed() ? 'failed' : 'pending',
       duration: test.duration,
       speed: test.speed,
-      currentRetry: this.getRetry(fullTitle),
-      error: test.err
+      currentRetry: this.getRetry(fullTitle)
     };
   }
 }

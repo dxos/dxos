@@ -98,6 +98,10 @@ describe('WebRTCTransportProxy', function () {
   });
 
   it('establish connection and send data through with protocol', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     this.timeout(2_000);
     this.retries(3);
 
@@ -119,8 +123,7 @@ describe('WebRTCTransportProxy', function () {
         await sleep(10);
         await connection2.signal(msg.data.signal);
       }
-    }
-    );
+    });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());

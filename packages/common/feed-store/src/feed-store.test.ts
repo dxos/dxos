@@ -2,9 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import expect from 'expect';
 import hypercore from 'hypercore';
-import { it as test } from 'mocha';
 import assert from 'node:assert';
 import { randomBytes } from 'node:crypto';
 import { callbackify } from 'node:util';
@@ -57,14 +58,14 @@ const createKeyPairs = async () => Object.fromEntries<KeyPair>(await Promise.all
   return [feed, { key: publicKey }] as const;
 })));
 
-describe.skip('FeedStore', () => {
+describe.skip('FeedStore', function () {
   let keys: Record<string, KeyPair>;
 
-  before(async () => {
+  before(async function () {
     keys = await createKeyPairs();
   });
 
-  test('Config default', async () => {
+  it('Config default', async function () {
     const feedStore = await createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
@@ -72,7 +73,7 @@ describe.skip('FeedStore', () => {
     expect(feedStore2).toBeInstanceOf(FeedStore);
   });
 
-  test('Create feed', async () => {
+  it('Create feed', async function () {
     const { feedStore } = await createDefault();
     const { booksFeed: descriptor } = await defaultFeeds(feedStore, keys);
     const { feed: booksFeed } = descriptor;
@@ -89,7 +90,7 @@ describe.skip('FeedStore', () => {
     await expect(feedStore.openReadOnlyFeed(PublicKey.from(booksFeed.key))).resolves.toBe(booksFeedDescriptor);
   });
 
-  test.skip('Create duplicate feed', async () => {
+  it.skip('Create duplicate feed', async function () {
     const { feedStore } = await createDefault();
 
     const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
@@ -105,7 +106,7 @@ describe.skip('FeedStore', () => {
     await expect(head(usersFeed.feed)).resolves.toBe('alice');
   });
 
-  test('Create and close a feed', async () => {
+  it('Create and close a feed', async function () {
     const { feedStore } = await createDefault();
     const publicKey = PublicKey.random();
 
@@ -116,7 +117,7 @@ describe.skip('FeedStore', () => {
     expect(foo.opened).toBeFalsy();
   });
 
-  test('Descriptors', async () => {
+  it('Descriptors', async function () {
     const { feedStore } = await createDefault();
     await defaultFeeds(feedStore, keys);
 
@@ -125,7 +126,7 @@ describe.skip('FeedStore', () => {
       );
   });
 
-  test('Feeds', async () => {
+  it('Feeds', async function () {
     const { feedStore } = await createDefault();
     const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore, keys);
 
@@ -133,7 +134,7 @@ describe.skip('FeedStore', () => {
       .toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
   });
 
-  test('Close feedStore and their feeds', async () => {
+  it('Close feedStore and their feeds', async function () {
     const { feedStore } = await createDefault();
     await defaultFeeds(feedStore, keys);
 
@@ -142,7 +143,7 @@ describe.skip('FeedStore', () => {
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(0);
   });
 
-  test.skip('Default codec: binary', async () => {
+  it.skip('Default codec: binary', async function () {
     const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }));
     expect(feedStore).toBeInstanceOf(FeedStore);
 
@@ -153,7 +154,7 @@ describe.skip('FeedStore', () => {
     await expect(head(feed)).resolves.toBeInstanceOf(Buffer);
   });
 
-  test.skip('on close error should unlock the descriptor', async () => {
+  it.skip('on close error should unlock the descriptor', async function () {
     const feedStore = createFeedStore(createStorage({ type: StorageType.RAM }), {
       hypercore: () => ({
         opened: true,
@@ -173,7 +174,7 @@ describe.skip('FeedStore', () => {
     await expect(feedStore.close()).rejects.toThrow(/close error/);
   });
 
-  test('feed event does not get called twice', async () => {
+  it('feed event does not get called twice', async function () {
     const { feedStore } = await createDefault();
 
     let timesCalled = 0;
@@ -193,7 +194,7 @@ describe.skip('FeedStore', () => {
     expect(timesCalled).toEqual(1);
   });
 
-  test('Two feeds replicating', async () => {
+  it('Two feeds replicating', async function () {
     const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'));
     const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed2'));
 
@@ -214,7 +215,7 @@ describe.skip('FeedStore', () => {
     });
   });
 
-  test('Two hypercores replicating', async () => {
+  it('Two hypercores replicating', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { });
@@ -231,7 +232,7 @@ describe.skip('FeedStore', () => {
     });
   });
 
-  test('Two hypercores replicating with fake crypto', async () => {
+  it('Two hypercores replicating with fake crypto', async function () {
     const MOCK_CRYPTO = {
       sign: (data: any, secretKey: any, cb: any) => {
         cb(null, randomBytes(64));
@@ -263,7 +264,7 @@ describe.skip('FeedStore', () => {
     });
   });
 
-  test('Two hypercores replicating with keyring', async () => {
+  it('Two hypercores replicating with keyring', async function () {
     const keyring = new Keyring();
     const key = await keyring.createKey();
     const hypercoreKey = key.asBuffer().slice(1);

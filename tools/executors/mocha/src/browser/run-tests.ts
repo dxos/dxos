@@ -25,8 +25,15 @@ export type Suites = {
   tests: TestResult[]
 }
 
+export type TestError = {
+  suite: string[]
+  test: string
+  message: string
+  stack: string
+}
+
 export type SuitesWithErrors = Suites & {
-  errors: TestResult[]
+  errors: TestError[]
 }
 
 export type RunTestsResults = {
@@ -44,6 +51,9 @@ const parseTestResult = ([arg]: any[]) => {
     const result = JSON.parse(arg);
     if (result.event === 'test end') {
       return result.test as TestResult;
+    } else if (result.event === 'fail') {
+      delete result.event;
+      return result as TestError;
     } else if (result.event === 'end') {
       return result.stats as Stats;
     } else {
@@ -64,7 +74,7 @@ export const runTests = async (
   const suites: SuitesWithErrors = { suites: {}, tests: [], errors: [] };
   const lock = new Lock();
 
-  const handleResult = (result: TestResult | Stats) => {
+  const handleResult = (result: TestResult | TestError | Stats) => {
     if ('title' in result) {
       const suiteSelector = result.suite
         .map(suite => ['suites', suite])
@@ -72,7 +82,8 @@ export const runTests = async (
       suiteSelector.push('tests');
       const tests: TestResult[] = get(suites, suiteSelector) ?? [];
       set(suites, suiteSelector, [...tests, result]);
-      result.error && suites.errors.push(result);
+    } else if ('stack' in result) {
+      suites.errors.push(result);
     } else {
       stats = result;
     }

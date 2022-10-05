@@ -2,9 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import expect from 'expect';
 import defaultHypercore from 'hypercore';
-import { it as test } from 'mocha';
 import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
@@ -16,10 +17,10 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import FeedDescriptor from './feed-descriptor';
 
-describe('FeedDescriptor', () => {
+describe('FeedDescriptor', function () {
   let fd: FeedDescriptor;
 
-  beforeEach(async () => {
+  beforeEach(async function () {
     const keyring = new Keyring();
     fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
@@ -29,16 +30,16 @@ describe('FeedDescriptor', () => {
     });
   });
 
-  afterEach(async () => {
+  afterEach(async function () {
     await fd.close();
   });
 
-  test('Create', () => {
+  it('Create', function () {
     expect(fd).toBeInstanceOf(FeedDescriptor);
     expect(fd.key).toBeDefined();
   });
 
-  test('Can create feed descriptor with public key but without private key', async () => {
+  it('Can create feed descriptor with public key but without private key', async function () {
     // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
@@ -51,7 +52,7 @@ describe('FeedDescriptor', () => {
     expect(fd.secretKey).toBeUndefined();
   });
 
-  test('Create custom options', () => {
+  it('Create custom options', function () {
     const { publicKey, secretKey } = createKeyPair();
 
     const fd = new FeedDescriptor({
@@ -68,7 +69,7 @@ describe('FeedDescriptor', () => {
     expect(fd.valueEncoding).toBe('json');
   });
 
-  test('Open', async () => {
+  it('Open', async function () {
     expect(fd.opened).toBe(false);
 
     // Opening multiple times should actually open once.
@@ -82,7 +83,7 @@ describe('FeedDescriptor', () => {
     expect(fd.opened).toBe(true);
   });
 
-  test('Close', async () => {
+  it('Close', async function () {
     await fd.open();
     // Closing multiple times should actually close once.
     await Promise.all([fd.close(), fd.close()]);
@@ -108,7 +109,7 @@ describe('FeedDescriptor', () => {
     expect(fd.opened).toBe(false);
   });
 
-  test.skip('Close and open again', async () => {
+  it.skip('Close and open again', async function () {
     const root = tempy.directory();
 
     const { publicKey, secretKey } = createKeyPair();
@@ -137,7 +138,7 @@ describe('FeedDescriptor', () => {
     expect(msg).toBe('test');
   });
 
-  test('on open error should unlock the resource', async () => {
+  it('on open error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
@@ -151,7 +152,7 @@ describe('FeedDescriptor', () => {
     await expect(fd.open()).rejects.toThrow(/open error/);
   });
 
-  test.skip('on close error should unlock the resource', async () => {
+  it.skip('on close error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),

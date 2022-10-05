@@ -2,14 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
+// @dxos/mocha browser
+
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 
-describe('Client - persistent', () => {
-  it.skip('reset storage', async () => {
+import { Client } from './packlets/proxies';
+
+describe('Client - persistent', function () {
+  it.skip('reset storage', async function () {
     const client = new Client();
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
@@ -26,7 +29,7 @@ describe('Client - persistent', () => {
     // We create another client instance after reset here because the first one becomes unusable.
     // In a browser this would be modeled as a page reload.
     // TODO(marik-d): Second client fails to initialize in firefox.
-    if (browserMocha.context.browser !== 'firefox') {
+    if (mochaExecutor.environment !== 'firefox') {
       const client2 = new Client({
         version: 1,
         runtime: {

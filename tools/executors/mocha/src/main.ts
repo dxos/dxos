@@ -11,7 +11,6 @@ import { NodeOptions, runNode } from './run-node';
 import { runSetup } from './util';
 
 export const TestEnvironments = [
-  'all',
   'nodejs',
   ...BrowserTypes
 ] as const;
@@ -19,7 +18,9 @@ export const TestEnvironments = [
 export type TestEnvironment = typeof TestEnvironments[number];
 
 export type MochaExecutorOptions = NodeOptions & BrowserOptions & {
-  environments: TestEnvironment[]
+  environments?: (TestEnvironment | 'all')[]
+  devEnvironments: TestEnvironment[]
+  ciEnvironments: TestEnvironment[]
   setup?: string
 };
 
@@ -27,9 +28,9 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
   console.info('Executing "mocha"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  options = {
+  const resolvedOptions = {
     ...options,
-    environments: options.environments.includes('all') ? TestEnvironments.slice(1) : options.environments,
+    environments: getEnvironments(options),
     setup: options.setup ? resolve(context.root, options.setup) : options.setup,
     testPatterns: options.testPatterns.map(pattern => resolve(context.root, pattern)),
     watchPatterns: options.watchPatterns?.map(pattern => resolve(context.root, pattern)),
@@ -38,26 +39,38 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     headless: options.stayOpen ? false : options.headless
   };
 
-  options.setup && await runSetup(options.setup);
+  resolvedOptions.setup && await runSetup(resolvedOptions.setup);
 
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.
   let success = true;
-  for (const env of options.environments) {
+  for (const env of resolvedOptions.environments) {
     switch (env) {
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= await runBrowser(context.projectName!, env, options);
+        success &&= await runBrowser(context.projectName!, env, resolvedOptions);
         break;
       }
 
       case 'nodejs': {
-        success &&= await runNode(context, options);
+        success &&= await runNode(context, resolvedOptions);
         break;
       }
     }
   }
 
   return { success };
+};
+
+const getEnvironments = (options: MochaExecutorOptions) => {
+  if (options.environments) {
+    return options.environments.includes('all')
+      ? TestEnvironments
+      : options.environments as TestEnvironment[];
+  } else if (process.env.CI) {
+    return options.ciEnvironments;
+  }
+
+  return options.devEnvironments;
 };

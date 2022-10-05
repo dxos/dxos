@@ -2,21 +2,24 @@
 // Copyright 2021 DXOS.org
 //
 
+// @dxos/mocha browser
+
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { defaultTestingConfig, Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-describe('Client - nonpersistent', () => {
-  it('open & close', async () => {
+import { Client, defaultTestingConfig } from './packlets/proxies';
+
+describe('Client - nonpersistent', function () {
+  it('open & close', async function () {
     const client = new Client();
     await client.initialize();
     await client.destroy();
   }).retries(10);
 
-  it('create profile', async () => {
+  it('create profile', async function () {
     const client = new Client();
     await client.initialize();
     await client.halo.createProfile({
@@ -30,7 +33,7 @@ describe('Client - nonpersistent', () => {
     await client.destroy();
   }).retries(10);
 
-  it('create party', async () => {
+  it('create party', async function () {
     const client = new Client();
     await client.initialize();
     await client.halo.createProfile({
@@ -48,7 +51,7 @@ describe('Client - nonpersistent', () => {
   }).timeout(10_000).retries(10);
 
   it('invitations', async function () {
-    if (browserMocha.context.browser === 'webkit') {
+    if (mochaExecutor.environment === 'webkit') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }
@@ -83,7 +86,7 @@ describe('Client - nonpersistent', () => {
   }).timeout(10_000).retries(10);
 
   it.skip('offline invitations', async function () {
-    if (browserMocha.context.browser === 'webkit' || browserMocha.context.browser === 'chromium') {
+    if (mochaExecutor.environment === 'webkit' || mochaExecutor.environment === 'chromium') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
       this.skip();
     }

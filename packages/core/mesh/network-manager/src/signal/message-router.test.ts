@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @dxos/mocha nodejs
+
 import { expect } from 'earljs';
 import { it, describe } from 'mocha';
 import waitForExpect from 'wait-for-expect';

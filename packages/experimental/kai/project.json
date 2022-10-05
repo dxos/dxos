@@ -18,6 +18,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/experimental/kai/src/**/*.test.{ts,js}"
         ],

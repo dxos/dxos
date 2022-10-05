@@ -13,6 +13,10 @@ import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator'
 
 describe('identity/authenticator', function () {
   it('verifies credentials', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);

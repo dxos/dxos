@@ -9,8 +9,17 @@
     },
     "environments": {
       "type": "array",
-      "description": "Environments to run tests in",
+      "description": "Override which environments to run tests in"
+    },
+    "devEnvironments": {
+      "type": "array",
+      "description": "Environments to run tests in during development",
       "default": ["nodejs"]
+    },
+    "ciEnvironments": {
+      "type": "array",
+      "description": "Environments to run tests in CI",
+      "default": ["nodejs", "chromium", "firefox", "webkit"]
     },
     "setup": {
       "type": "string",

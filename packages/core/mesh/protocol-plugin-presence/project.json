@@ -31,6 +31,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/core/mesh/protocol-plugin-presence/src/**/*.test.{ts,js}"
         ],

@@ -31,6 +31,7 @@
         "{options.resultsPath}"
       ],
       "options": {
+        "ciEnvironments": ["nodejs", "chromium", "firefox"],
         "testPatterns": [
           "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
         ],
@@ -38,20 +39,8 @@
           "packages/core/mesh/network-manager/src/**/*"
         ],
         "outputPath": "tmp/mocha/core/mesh/network-manager",
-        "resultsPath": "test-results/core/mesh/network-manager"
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/mocha:browser",
-      "options": {
-        "testPatterns": [
-          "packages/core/mesh/network-manager/src/network-manager.browser-test.ts"
-        ],
-        "browsers": [
-          "chromium",
-          "firefox"
-        ],
-        "setup": "packages/core/mesh/network-manager/tests-setup.js"
+        "resultsPath": "test-results/core/mesh/network-manager",
+        "setup": "packages/core/mesh/signal/setup.js"
       }
     }
   },
