@@ -34,7 +34,7 @@ export enum ConnectionState {
   WAITING_FOR_CONNECTION = 'WAITING_FOR_CONNECTION',
 
   /**
-   * Peer rejected offer.
+   * Peer accepted offer.
    */
   ACCEPTED = 'ACCEPTED',
 
@@ -132,10 +132,14 @@ export class Connection {
       sessionId: this.sessionId,
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: this._signalMessaging.signal.bind(this._signalMessaging)
+      sendSignal: msg => {
+        // console.log(`Send signal ${this.sessionId}`, msg);
+        return this._signalMessaging.signal(msg)
+      }
     });
 
     this._transport.connected.once(() => {
+      // console.log('CONNECTED');
       this._changeState(ConnectionState.CONNECTED);
     });
 
@@ -155,6 +159,8 @@ export class Connection {
   }
 
   async signal (msg: SignalMessage) {
+    // console.log(`Signal ${this.sessionId}`, msg);
+
     assert(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('Dropping signal for incorrect session id.');
@@ -176,6 +182,7 @@ export class Connection {
   }
 
   private _changeState (state: ConnectionState): void {
+    console.log(`Connection state ${this.sessionId}: ${this._state} -> ${state}`);
     this._state = state;
     this.stateChanged.emit(state);
   }
