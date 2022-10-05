@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, MakeOptional } from '@dxos/util';
+import { ComplexMap, ComplexSet, MakeOptional } from '@dxos/util';
 
 import {
   OfferMessage,
@@ -52,6 +52,10 @@ export class MessageRouter implements SignalMessaging {
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
     new ComplexMap((key) => key.toHex());
 
+  // NOTE: Potential memory leak: This will grow indefinitely for long-lived sessions.
+  // TODO(dmaretskyi): Clean old records from the set with some timeout.
+  private readonly _receivedMessages = new ComplexSet<PublicKey>(key => key.toHex());
+
   constructor ({ sendMessage, onSignal, onOffer }: MessageRouterOptions = {}) {
     assert(sendMessage);
     this._sendMessage = sendMessage;
@@ -77,6 +81,11 @@ export class MessageRouter implements SignalMessaging {
     const message: SwarmMessage = schema
       .getCodecForType('dxos.mesh.swarm.SwarmMessage')
       .decode(payload.value);
+
+    if(this._receivedMessages.has(message.messageId)) {
+      return; // Ignore duplicate messages.
+    }
+    this._receivedMessages.add(message.messageId);
 
     log(
       `receive message: ${JSON.stringify(
@@ -212,6 +221,7 @@ export class MessageRouter implements SignalMessaging {
     recipient: PublicKey
     message: SwarmMessage
   }): Promise<void> {
+    // console.log('handle signal', { author, recipient, message });
     assert(message.messageId);
     assert(message.data.signal, 'No Signal');
     const signalMessage: SignalMessage = {
