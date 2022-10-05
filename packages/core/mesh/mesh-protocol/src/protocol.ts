@@ -319,31 +319,35 @@ export class Protocol {
   }
 
   private async _handshakeExtensions () {
-    console.log('_handshakeExtensions');
-    for (const handshake of this._handshakes) {
-      await handshake(this);
-    }
-
-    for (const [name, extension] of this._extensionMap) {
-      log(`handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
-      await extension.onHandshake();
-    }
-
-    log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
-    this.handshake.emit(this);
-    this._connected = true;
-
-    // TODO: Redo this.
-    this._stream.on('feed', async (discoveryKey: Buffer) => {
-      try {
-        for (const [name, extension] of this._extensionMap) {
-          log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
-          await extension.onFeed(discoveryKey);
-        }
-      } catch (err: any) {
-        this._handleError(err);
+    try {
+      console.log('_handshakeExtensions');
+      for (const handshake of this._handshakes) {
+        await handshake(this);
       }
-    });
+
+      for (const [name, extension] of this._extensionMap) {
+        log(`handshake extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+        await extension.onHandshake();
+      }
+
+      log(`handshake: ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+      this.handshake.emit(this);
+      this._connected = true;
+
+      // TODO: Redo this.
+      this._stream.on('feed', async (discoveryKey: Buffer) => {
+        try {
+          for (const [name, extension] of this._extensionMap) {
+            log(`feed extension "${name}": ${keyToHuman(this._stream.publicKey)} <=> ${keyToHuman(this._stream.remotePublicKey)}`);
+            await extension.onFeed(discoveryKey);
+          }
+        } catch (err: any) {
+          this._handleError(err);
+        }
+      });
+    } catch (err: any) {
+      console.error(err)
+    }
   }
 
   private _openConnection () {
