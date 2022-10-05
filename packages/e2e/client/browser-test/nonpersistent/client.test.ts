@@ -93,7 +93,7 @@ describe('Client - nonpersistent', () => {
 
     await clientA.destroy();
     await clientB.destroy();
-  }).timeout(10_000).retries(1);
+  }).timeout(10_000);
 
   it.skip('offline invitations', async function () {
     if (browserMocha.context.browser === 'webkit' || browserMocha.context.browser === 'chromium') {

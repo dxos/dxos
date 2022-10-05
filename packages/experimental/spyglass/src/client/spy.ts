@@ -22,6 +22,7 @@ export class Spy {
     return `${this.id.toHex().slice(0, 4)}[${this._bindings.size}]`;
   }
 
+  // TODO(dmaretskyi): Use WeakMap so that references can get garbage-collected.
   private _bindings = new Map<string, Set<any>>();
   private _enabled = true;
 
