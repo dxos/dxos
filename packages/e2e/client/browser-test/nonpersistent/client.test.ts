@@ -8,21 +8,18 @@ import 'source-map-support/register';
 import { defaultTestingConfig, Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
+import { spy } from '@dxos/spyglass';
 
 describe('Client - nonpersistent', () => {
   it('open & close', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.destroy();
   }).retries(10);
 
   it('create profile', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
@@ -36,9 +33,7 @@ describe('Client - nonpersistent', () => {
 
   it('create party', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
@@ -59,33 +54,43 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const client = new Client(defaultTestingConfig);
-    await client.initialize();
-    await client.halo.createProfile({
+    const clientA = new Client(defaultTestingConfig);
+    await clientA.initialize();
+    await clientA.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test'
     });
 
-    const party = await client.echo.createParty();
-    const item = await party.database.createItem({ model: ObjectModel, type: 'example:item/test' });
+    const party1 = await clientA.echo.createParty();
+    const item = await party1.database.createItem({ model: ObjectModel, type: 'example:item/test' });
     await item.model.set('foo', 'bar');
 
-    const otherClient = new Client(defaultTestingConfig);
-    await otherClient.initialize();
-    await otherClient.halo.createProfile({
+    const clientB = new Client(defaultTestingConfig);
+    await clientB.initialize();
+    await clientB.halo.createProfile({
       ...createKeyPair(),
       username: 'DXOS test 2'
     });
 
-    const invite = await party.createInvitation();
-    const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
+    void spy.clear();
 
-    await otherParty.database.waitForItem({ type: 'example:item/test' });
-    const otherItem = otherParty.database.select({ type: 'example:item/test' }).exec().entities[0];
+    const invite = await party1.createInvitation();
+
+    void spy.log(clientA.halo.profile!.publicKey, {
+      action: 'invite'
+    });
+
+    const party2 = await clientB.echo.acceptInvitation(invite.descriptor).getParty();
+    void spy.log(clientB.halo.profile!.publicKey, {
+      action: 'accept'
+    });
+
+    await party2.database.waitForItem({ type: 'example:item/test' });
+    const otherItem = party2.database.select({ type: 'example:item/test' }).exec().entities[0];
     expect(otherItem.model.get('foo')).toEqual('bar');
 
-    await client.destroy();
-    await otherClient.destroy();
+    await clientA.destroy();
+    await clientB.destroy();
   }).timeout(10_000).retries(10);
 
   it.skip('offline invitations', async function () {

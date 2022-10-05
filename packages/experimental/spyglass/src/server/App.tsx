@@ -21,6 +21,21 @@ export const App = ({
   log: Log
   compact: boolean
 }) => {
+  const { messages } = log;
+  if (!messages.length) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: 8
+        }}
+      >
+        EMPTY
+      </div>
+    );
+  }
+
   return compact ? (
     <Compact log={log} />
   ) : (

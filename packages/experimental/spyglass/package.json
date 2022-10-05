@@ -25,12 +25,17 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "isomorphic-fetch": "^3.0.0",
+    "assert": "^2.0.0",
     "preact": "^10.11.0",
-    "preact-render-to-string": "^5.2.4"
+    "preact-render-to-string": "^5.2.4",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/faker": "^5.5.9",
+    "@types/isomorphic-fetch": "^0.0.36",
+    "@types/url-join": "~4.0.1",
     "@types/node": "^16.11.58",
     "faker": "^5.5.3",
     "mocha": "^8.4.0",

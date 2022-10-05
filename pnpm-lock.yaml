@@ -1727,6 +1727,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/spyglass': workspace:*
       source-map-support: ^0.5.12
     dependencies:
       '@dxos/client': link:../../sdk/client
@@ -1740,6 +1741,7 @@ importers:
       '@dxos/protocols': link:../../core/protocols
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/signal': link:../../core/mesh/signal
+      '@dxos/spyglass': link:../../experimental/spyglass
 
   packages/e2e/echo:
     specifiers:
@@ -2253,23 +2255,33 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/util': workspace:*
       '@types/faker': ^5.5.9
+      '@types/isomorphic-fetch': ^0.0.36
       '@types/node': ^16.11.58
+      '@types/url-join': ~4.0.1
+      assert: ^2.0.0
       faker: ^5.5.3
+      isomorphic-fetch: ^3.0.0
       mocha: ^8.4.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
       typescript: ^4.7.2
+      url-join: ^4.0.1
     dependencies:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/util': link:../../common/util
+      assert: 2.0.0
+      isomorphic-fetch: 3.0.0
       preact: 10.11.0
       preact-render-to-string: 5.2.4_preact@10.11.0
+      url-join: 4.0.1
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/faker': 5.5.9
+      '@types/isomorphic-fetch': 0.0.36
       '@types/node': 16.11.62
+      '@types/url-join': 4.0.1
       faker: 5.5.3
       mocha: 8.4.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
@@ -15105,6 +15117,10 @@ packages:
     resolution: {integrity: sha512-A79HEEiwXTFtfY+Bcbo58M2GRYzCr9itHWzbzHVFNEYCcoU/MMGwYYf721gBrnhpj1s6RGVVha/IgNFnR0Iw/Q==}
     dev: true
 
+  /@types/isomorphic-fetch/0.0.36:
+    resolution: {integrity: sha512-ulw4d+vW1HKn4oErSmNN2HYEcHGq0N1C5exlrMM0CRqX1UUpFhGb5lwiom5j9KN3LBJJDLRmYIZz1ghm7FIzZw==}
+    dev: true
+
   /@types/istanbul-lib-coverage/2.0.3:
     resolution: {integrity: sha512-sz7iLqvVUg1gIedBOvlkxPlc8/uVzyS5OwGz1cKjXzkl3FpL3al0crU8YGU1WoHkxn0Wxbw5tyi6hvzJKNzFsw==}
 
@@ -26887,6 +26903,15 @@ packages:
     resolution: {integrity: sha512-S/2fF5wH8SJA/kmwr6HYhK/RI/OkhD84k8ntalo0iJjZikgq1XFvR5M8NPT1x5F7fBwCG3qHfnzeP/Vh/ZxCUA==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /isomorphic-fetch/3.0.0:
+    resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
+    dependencies:
+      node-fetch: 2.6.7
+      whatwg-fetch: 3.6.2
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /isomorphic-unfetch/3.1.0:
     resolution: {integrity: sha512-geDJjpoZ8N0kWexiwkX8F9NkTsXhetLPVbZFQ+JTW239QNOwvB0gniuR1Wc6f0AMTn7/mFGyXvHTifrCp/GH8Q==}
@@ -38746,6 +38771,10 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       iconv-lite: 0.6.3
+
+  /whatwg-fetch/3.6.2:
+    resolution: {integrity: sha512-bJlen0FcuU/0EMLrdbJ7zOnW6ITZLrZMIarMUVmdKtsGvZna8vxKYaexICWPfZ8qwf9fzNq+UEIZrnSaApt6RA==}
+    dev: false
 
   /whatwg-mimetype/2.3.0:
     resolution: {integrity: sha512-M4yMwr6mAnQz76TbJm914+gPpB/nCwvZbJU28cUD6dR004SAxDLOOSUaB1JDRqLtaOV/vi0IC5lEAGFgrjGv/g==}

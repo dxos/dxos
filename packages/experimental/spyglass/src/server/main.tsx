@@ -6,6 +6,7 @@
 // @ts-nocheck
 
 /** @jsx h */
+import { oakCors } from 'https://deno.land/x/cors/mod.ts';
 import { Application, Context, Router } from 'https://deno.land/x/oak/mod.ts';
 import parseUrl from 'https://esm.sh/parse-url';
 import { h } from 'https://esm.sh/preact';
@@ -120,10 +121,21 @@ router.post(config.path, async (ctx: Context) => {
 //
 
 const app = new Application();
+
+const url = `http://${config.hostname}:${config.port}`;
+
+// https://deno.land/x/cors@v1.2.2
+app.use(
+  oakCors({
+    origin: '*' // Allow any origin (e.g., e2e test server).
+  })
+);
+
 app.use(router.routes());
 app.use(router.allowedMethods());
+
 app.addEventListener('listen', ({ port }) => {
-  console.log(`Listening on: http://localhost:${port}`);
+  console.log(`Listening: ${url}`);
 });
 
 await app.listen({ port: config.port });

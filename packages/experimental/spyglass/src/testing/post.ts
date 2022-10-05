@@ -23,11 +23,19 @@ const clear = process.argv.some(arg => arg === '--clear');
 if (clear) {
   void spy.clear();
 } else {
-  void spy.log({
-    key: Spy.humanize(PublicKey.from(faker.random.arrayElement(keys))),
-    data: {
-      num: faker.datatype.number(),
-      text: faker.lorem.paragraph()
-    }
+  const key = PublicKey.from(faker.random.arrayElement(keys));
+
+  void spy.log(key, {
+    num: faker.datatype.number(),
+    text: faker.lorem.paragraph()
   });
+
+  if (faker.datatype.boolean()) {
+    const a = {};
+    spy.bind(key, a);
+
+    void spy.log(a, {
+      num: faker.datatype.number()
+    });
+  }
 }
