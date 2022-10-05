@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-env --allow-net --allow-read --no-check --watch src/server/main.tsx"
+  }
+}
