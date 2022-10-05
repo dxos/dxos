@@ -13,12 +13,14 @@ import { h } from 'https://esm.sh/preact';
 import { render } from 'https://esm.sh/preact-render-to-string';
 
 import { defaultConfig } from '../common/config.ts';
-import { Log, Command, Message, Post } from '../common/types.ts';
-import { App } from './App.tsx';
+import { Command, Log, Message, Post } from '../common/types.ts';
+import { Deck } from './Deck.tsx';
 
 // https://github.com/denoland/examples/tree/main/with-preact
 // https://medium.com/deno-the-complete-reference/json-modules-in-deno-5ecd137a5edc
 // https://deno.land/x/oak@v11.1.0/mod.ts
+
+// TODO(burdon): Server JS app that polls for data (rather than rerendering each time).
 
 // TODO(burdon): Npm.
 //  https://deno.land/manual@v1.26.0/node
@@ -32,7 +34,7 @@ import { App } from './App.tsx';
 
 const config = defaultConfig;
 
-export const makeHtml = (log, compact, title = 'Spyglass') => {
+export const makeHtml = (logs, compact, title = 'Spyglass') => {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -43,7 +45,7 @@ export const makeHtml = (log, compact, title = 'Spyglass') => {
         <script src="/refresh.js"></script>
       </head>
       <body style="margin: 0">
-        ${render(<App log={log} compact={compact} />, {}, { pretty: true })}
+        ${render(<Deck logs={logs} compact={compact} />)}
       </body>
     </html>
   `;
@@ -64,7 +66,7 @@ router.get('/refresh.js', async (ctx: Context) => {
 
 router.get('/', async (ctx: Context) => {
   const { query: { compact = '' } } = parseUrl(String(ctx.request.url));
-  ctx.response.body = makeHtml(log, compact === '1' || compact === 'true');
+  ctx.response.body = makeHtml(logs, compact === '1' || compact === 'true');
   ctx.response.type = 'text/html';
 });
 
@@ -72,8 +74,14 @@ router.get('/', async (ctx: Context) => {
 // Refresh middleware
 //
 
-const log: Log = {
-  messages: []
+const logs: Log[] = [];
+
+const clear = () => {
+  logs.length = 0;
+  logs.push({
+    label: 'Default',
+    messages: []
+  });
 };
 
 const sockets: Set<WebSocket> = new Set();
@@ -97,15 +105,21 @@ router.get('/refresh', async (ctx: Context) => {
 
 router.post(config.path, async (ctx: Context) => {
   const post = await ctx.request.body().value as Post;
-  const { cmd, data } = post;
+  const { cmd, data, label } = post;
   switch (cmd) {
     case Command.CLEAR: {
-      log.messages.length = 0;
+      clear();
       break;
     }
 
     case Command.LOG: {
+      const log = logs[logs.length - 1];
       log.messages.push(data as Message);
+      break;
+    }
+
+    case Command.MARK: {
+      logs.push({ label, messages: [] });
       break;
     }
   }
@@ -138,4 +152,5 @@ app.addEventListener('listen', ({ port }) => {
   console.log(`Listening: ${url}`);
 });
 
+clear();
 await app.listen({ port: config.port });

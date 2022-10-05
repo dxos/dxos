@@ -4,7 +4,8 @@
 
 export enum Command {
   CLEAR,
-  LOG
+  LOG,
+  MARK
 }
 
 export type Message = {
@@ -13,10 +14,12 @@ export type Message = {
 }
 
 export type Log = {
+  label?: string
   messages: Message[]
 }
 
 export type Post = {
   cmd: Command
   data?: any
+  label?: string
 }

@@ -13,9 +13,10 @@
     "build": "toolchain build",
     "check": "true",
     "info": "tsc --showConfig | jq",
-    "log:clear": "ts-node ./src/testing/post.ts --clear",
-    "log:test": "ts-node ./src/testing/post.ts",
-    "test": "mocha"
+    "test": "mocha",
+    "test:log": "ts-node ./src/testing/post.ts",
+    "test:mark": "ts-node ./src/testing/post.ts --mark",
+    "test:clear": "ts-node ./src/testing/post.ts --clear"
   },
   "mocha": {
     "loader": "ts-node/esm",

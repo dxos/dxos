@@ -7,6 +7,7 @@ import faker from 'faker';
 import { PublicKey } from '@dxos/keys';
 
 import { Spy } from '../client';
+import { Command } from '../common';
 
 const keys = [
   'c5c0b3b2c174ad3306d7a2c2f8b0df1698eba0ef6b86070cfae730f68c8fefc2',
@@ -18,24 +19,44 @@ const keys = [
 
 const spy = new Spy();
 
-const clear = process.argv.some(arg => arg === '--clear');
+let cmd: Command = Command.LOG;
+if (process.argv.some(arg => arg === '--clear')) {
+  cmd = Command.CLEAR;
+}
+if (process.argv.some(arg => arg === '--mark')) {
+  cmd = Command.MARK;
+}
 
-if (clear) {
-  void spy.clear();
-} else {
-  const key = PublicKey.from(faker.random.arrayElement(keys));
+switch (cmd) {
+  case Command.CLEAR: {
+    void spy.clear();
+    break;
+  }
 
-  void spy.log(key, {
-    num: faker.datatype.number(),
-    text: faker.lorem.paragraph()
-  });
+  case Command.MARK: {
+    void spy.mark(Spy.humanize(PublicKey.random()));
+    break;
+  }
 
-  if (faker.datatype.boolean()) {
-    const a = {};
-    spy.bind(key, a);
+  case Command.LOG:
+  default: {
+    const init = async () => {
+      const key = PublicKey.from(faker.random.arrayElement(keys));
+      await spy.log(key, {
+        num: faker.datatype.number(),
+        text: faker.lorem.paragraph()
+      });
 
-    void spy.log(a, {
-      num: faker.datatype.number()
-    });
+      if (faker.datatype.boolean()) {
+        const a = {};
+        spy.bind(key, a);
+
+        await spy.log(a, {
+          num: faker.datatype.number()
+        });
+      }
+    };
+
+    void init();
   }
 }

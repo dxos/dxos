@@ -11,6 +11,8 @@ import { humanize } from '@dxos/util';
 
 import { defaultConfig, Command } from '../common';
 
+// TODO(burdon): Integrate with @dxos/log
+
 /**
  * Posts logs to server.
  */
@@ -67,6 +69,14 @@ export class Spy {
       }
 
       await this._post({ cmd: Command.LOG, data: { key: keyValue, data } });
+    }
+
+    return this;
+  }
+
+  async mark (label: string) {
+    if (this._enabled) {
+      await this._post({ cmd: Command.MARK, label: label.replace(/\W+/g, '-') });
     }
 
     return this;
