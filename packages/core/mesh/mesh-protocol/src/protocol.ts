@@ -123,7 +123,7 @@ export class Protocol {
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {
-          process.nextTick(() => this._stream.destroy(err));
+          this._handleError(err);
         }
       }
     });
@@ -247,7 +247,7 @@ export class Protocol {
     assert(!this._init);
 
     this._init = true;
-    this.open().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
+    this.open().catch((err: any) => this._handleError(err));
 
     return this;
   }
@@ -276,10 +276,10 @@ export class Protocol {
 
     this._connected = false;
     this._stream.finalize();
-    await this._extensionInit.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
+    await this._extensionInit.close().catch((err: any) => this._handleError(err));
     for (const [name, extension] of this._extensionMap) {
       log(`close extension "${name}"`);
-      await extension.close().catch((err: any) => process.nextTick(() => this._stream.destroy(err)));
+      await extension.close().catch((err: any) => this._handleError(err));
     }
 
     this._isOpen = false;
@@ -340,7 +340,7 @@ export class Protocol {
           await extension.onFeed(discoveryKey);
         }
       } catch (err: any) {
-        process.nextTick(() => this._stream.destroy(err));
+        this._handleError(err);
       }
     });
   }
@@ -365,7 +365,7 @@ export class Protocol {
         if (!ERR_PROTOCOL_CONNECTION_INVALID.equals(newErr)) {
           newErr = ERR_PROTOCOL_CONNECTION_INVALID.from(newErr);
         }
-        process.nextTick(() => this._stream.destroy(newErr));
+        this._handleError(newErr);
       }
     };
 
@@ -391,12 +391,17 @@ export class Protocol {
 
     const extension = this._extensionMap.get(name);
     if (!extension) {
-      process.nextTick(() => this._stream.destroy(new ERR_PROTOCOL_EXTENSION_MISSING(name)));
+      this._handleError(new ERR_PROTOCOL_EXTENSION_MISSING(name));
       return;
     }
 
     extension.emit('extension-message', message);
   };
+
+  private _handleError (error: Error) {
+    console.error(error);
+    process.nextTick(() => this._stream.destroy(error));
+  }
 }
 
 export const getProtocolFromStream = (stream: any): Protocol => {
