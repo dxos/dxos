@@ -1,0 +1,16 @@
+{
+  "name": "@dxos/ui-theme",
+  "version": "1.0.0",
+  "description": "Low-level design system for DXOS.",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

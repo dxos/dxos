@@ -1,0 +1,5 @@
+{
+  "sourceRoot": "packages/experimental/ui-consumer/src",
+  "projectType": "application",
+  "targets": {}
+}
