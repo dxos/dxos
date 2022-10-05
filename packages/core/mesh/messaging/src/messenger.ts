@@ -35,6 +35,7 @@ export class Messenger {
   private readonly _signalManager: SignalManager;
   private readonly _listeners = new Map<string, Set<OnMessage>>();
   private readonly _defaultListeners = new Set<OnMessage>();
+
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
