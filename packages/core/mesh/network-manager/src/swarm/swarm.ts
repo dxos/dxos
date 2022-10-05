@@ -4,7 +4,7 @@
 
 import assert from 'node:assert';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -20,6 +20,8 @@ import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
 import { Topic } from '../types';
 import { Connection, ConnectionState } from './connection';
+
+const INITIATION_DELAY = 100;
 
 /**
  * A single peer's view of the swarm.
@@ -199,7 +201,7 @@ export class Swarm {
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
-      await sleep(100);
+      await sleep(INITIATION_DELAY);
     }
 
     if (this._connections.has(remoteId)) {
