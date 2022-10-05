@@ -6,7 +6,7 @@ import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'node:path';
 
 import { BrowserTypes } from './browser';
-import { BrowserOptions, runBrowser } from './run-browser';
+import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
 import { NodeOptions, runNode } from './run-node';
 import { runSetup } from './util';
 
@@ -39,7 +39,13 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     headless: options.stayOpen ? false : options.headless
   };
 
-  resolvedOptions.setup && await runSetup(resolvedOptions.setup);
+  const includesBrowserEnv = resolvedOptions.environments
+    .filter(environment => ([...BrowserTypes.values()] as string[]).includes(environment))
+    .length > 0;
+  const [skipBrowserTests] = await Promise.all([
+    includesBrowserEnv && runBrowserBuild(resolvedOptions),
+    resolvedOptions.setup && runSetup(resolvedOptions.setup)
+  ]);
 
   // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
   // TODO(wittjosiah): Run all even if there are failures.
@@ -49,7 +55,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= await runBrowser(context.projectName!, env, resolvedOptions);
+        success &&= skipBrowserTests || await runBrowser(context.projectName!, env, resolvedOptions);
         break;
       }
 

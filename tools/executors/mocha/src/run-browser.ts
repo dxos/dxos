@@ -27,36 +27,10 @@ export const runBrowser = async (
   browserType: BrowserType,
   options: BrowserOptions
 ) => {
-  const outDir = join(options.outputPath, 'out');
-
-  try {
-    await mkdir(outDir, { recursive: true });
-  } catch (e: any) {
-    console.error(e);
-  }
-
-  const allFiles = await resolveFiles(options.testPatterns);
-  const testFiles = allFiles
-    .filter(([, contents]) => !contents.includes(mochaComment('nodejs')))
-    .map(([filename]) => filename);
-
-  if (testFiles.length === 0) {
-    console.log(chalk`\n{white No tests to run in {blue {bold ${browserType}}}}\n`);
-    return true;
-  }
-
-  // TODO(wittjosiah): Factor out (only build tests once for all browser envs).
-  await buildTests(testFiles, {
-    debug: !!options.debug,
-    outDir,
-    timeout: options.timeout,
-    checkLeaks: options.checkLeaks
-  });
-
   console.log(chalk`\nRunning in {blue {bold ${browserType}}}\n`);
 
   const { page } = await getNewBrowserContext(browserType, options);
-  const results = await runTests(page, browserType, join(outDir, 'bundle.js'), options);
+  const results = await runTests(page, browserType, join(options.outputPath, 'out/bundle.js'), options);
   const exitCode = await outputResults(results, {
     name,
     browserType,
@@ -79,4 +53,34 @@ export const runBrowser = async (
   }
 
   return success;
+};
+
+export const runBrowserBuild = async (options: BrowserOptions) => {
+  const outDir = join(options.outputPath, 'out');
+
+  try {
+    await mkdir(outDir, { recursive: true });
+  } catch (e: any) {
+    console.error(e);
+  }
+
+  const allFiles = await resolveFiles(options.testPatterns);
+  const testFiles = allFiles
+    .filter(([, contents]) => !contents.includes(mochaComment('nodejs')))
+    .map(([filename]) => filename);
+
+  if (testFiles.length === 0) {
+    console.log(chalk`\n{yellow Warning: No browser tests to run.}\n`);
+    return true;
+  }
+
+  // TODO(wittjosiah): Factor out (only build tests once for all browser envs).
+  await buildTests(testFiles, {
+    debug: !!options.debug,
+    outDir,
+    timeout: options.timeout,
+    checkLeaks: options.checkLeaks
+  });
+
+  return false;
 };
