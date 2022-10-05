@@ -38,7 +38,6 @@ const createPeer = (topic: PublicKey) => {
 describe('Presence', () => {
   it('sees connected peers', async () => {
     const topic = PublicKey.random();
-
     const peer1 = createPeer(topic);
     const peer2 = createPeer(topic);
 
@@ -53,7 +52,6 @@ describe('Presence', () => {
 
   it('removes disconnected peers', async () => {
     const topic = PublicKey.random();
-
     const peer1 = createPeer(topic);
     const peer2 = createPeer(topic);
 
