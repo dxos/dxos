@@ -45,7 +45,7 @@ const createPeer = async ({
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -53,7 +53,7 @@ const createPeer = async ({
   };
 };
 
-const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: string }) => {
+const sharedTests = ({ inMemory, signalUrl }: { inMemory: boolean, signalUrl?: string }) => {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
@@ -151,7 +151,7 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    networkManager2.joinProtocolSwarm({
+    await networkManager2.joinProtocolSwarm({
       topic,
       peerId: newPeer2Id,
       protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
@@ -167,10 +167,43 @@ const sharedTests = ({ inMemory, signalUrl } : { inMemory: boolean, signalUrl?: 
     await networkManager2.destroy();
     log('Peer2 destroyed');
   }).timeout(10_000).retries(10);
+
+  it('join 2 swarms', async () => {
+    const peerId = PublicKey.random();
+    const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
+    const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
+
+    const signalManager = inMemory ? new MemorySignalManager(signalContext) : new WebsocketSignalManager([signalUrl!]);
+    const networkManager = new NetworkManager({ signalManager });
+    afterTest(() => networkManager.destroy());
+
+    // Joining first swarm.
+    {
+      const topic = PublicKey.random();
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
+      await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+    }
+
+    // Joining second swarm with same peerId.
+    {
+      const topic = PublicKey.random();
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
+      await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+    }
+
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
+  });
 };
 
 // eslint-disable-next-line jest/no-export
-export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
+export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
   let topic: PublicKey;
   let peer1Id: PublicKey;
   let peer2Id: PublicKey;
@@ -194,7 +227,7 @@ export const webRTCTests = ({ signalUrl } : { signalUrl?: string } = {}) => {
     const { networkManager: networkManager2, plugin: plugin2 } = await createPeer({
       topic,
       peerId:
-      peer2Id,
+        peer2Id,
       signalHosts: ['wss://apollo2.kube.moon.dxos.network/dxos/signal'],
       ice: [{ urls: 'turn:apollo2.kube.moon.dxos.network:3478', username: 'dxos', credential: 'dxos' }]
     });
@@ -369,7 +402,7 @@ export function inMemoryTests () {
     };
 
     class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => !model.peers.has(this.peerId);
 
@@ -390,7 +423,7 @@ export function inMemoryTests () {
     }
 
     class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId);
 
@@ -409,7 +442,7 @@ export function inMemoryTests () {
     }
 
     class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
 
@@ -422,7 +455,7 @@ export function inMemoryTests () {
         afterTest(() => presence.stop());
         const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-        peer.networkManager.joinProtocolSwarm({
+        await peer.networkManager.joinProtocolSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
           protocol,
@@ -439,7 +472,7 @@ export function inMemoryTests () {
     }
 
     class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
-      constructor (readonly peerId: PublicKey) {}
+      constructor (readonly peerId: PublicKey) { }
 
       check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
 

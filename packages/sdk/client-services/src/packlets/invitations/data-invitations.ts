@@ -34,7 +34,7 @@ export class DataInvitations {
     log('Create invitation');
 
     const swarmKey = PublicKey.random();
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: swarmKey,
       topology: new StarTopology(swarmKey),
@@ -119,7 +119,7 @@ export class DataInvitations {
 
     const done = new Trigger();
     let space: Space;
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),
