@@ -1,0 +1,20 @@
+{
+  "sourceRoot": "packages/ui/theme-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/ui/theme-plugin/dist",
+        "tsConfig": "packages/ui/theme-plugin/tsconfig.json",
+        "main": "packages/ui/theme-plugin/src/index.ts",
+        "assets": [
+          "packages/ui/theme-plugin/src/theme.css"
+        ]
+      }
+    }
+  }
+}

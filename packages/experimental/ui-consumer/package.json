@@ -18,14 +18,14 @@
   },
   "dependencies": {
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "@dxos/ui-theme": "workspace:*"
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
     "vite": "3.0.9",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "vite-plugin-pwa": "^0.12.4",
-    "@vitejs/plugin-react": "^2.0.1"
+    "@vitejs/plugin-react": "^2.0.1",
+    "@dxos/ui-theme-plugin": "workspace:*"
   }
 }

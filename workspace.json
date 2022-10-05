@@ -84,7 +84,7 @@
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
-    "ui-theme": "packages/ui/theme",
+    "ui-theme-plugin": "packages/ui/theme-plugin",
     "ui-theme-consumer": "packages/experimental/ui-consumer",
     "util": "packages/common/util",
     "vite-plugin": "tools/vite-plugin",
