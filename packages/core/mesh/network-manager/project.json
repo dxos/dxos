@@ -40,7 +40,8 @@
         ],
         "outputPath": "tmp/mocha/core/mesh/network-manager",
         "resultsPath": "test-results/core/mesh/network-manager",
-        "setup": "packages/core/mesh/signal/setup.js"
+        "setup": "packages/core/mesh/signal/setup.js",
+        "forceExit": true
       }
     }
   },

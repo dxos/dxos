@@ -159,7 +159,7 @@ describe('Swarm', function () {
     });
   }).timeout(10_000);
 
-  test('swarming with message router', async function () {
+  it('swarming with message router', async function () {
     const { swarm1, swarm2, peerId2 } = setupSwarm();
 
     const promise = Promise.all([

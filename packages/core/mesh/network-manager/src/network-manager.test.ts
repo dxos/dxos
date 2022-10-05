@@ -23,7 +23,7 @@ describe('Network manager', function () {
     });
 
     webRTCTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal` });
-  });
+  }).timeout(10_000);
 
   describe('In-memory transport', function () {
     inMemoryTests();

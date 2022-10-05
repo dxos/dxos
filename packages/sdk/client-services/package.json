@@ -13,8 +13,7 @@
     "src"
   ],
   "scripts": {
-    "check": "true",
-    "test": "toolchain test"
+    "check": "true"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

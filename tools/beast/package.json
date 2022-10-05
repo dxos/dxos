@@ -13,7 +13,6 @@
     "build": "toolchain build",
     "check": "true",
     "info": "tsc --showConfig | jq",
-    "test": "mocha",
     "update-docs": "ts-node --esm ./src/main.ts --base-dir=../../ docs"
   },
   "mocha": {

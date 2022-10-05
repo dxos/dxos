@@ -16,8 +16,7 @@
   ],
   "scripts": {
     "check": "true",
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-    "test": "toolchain test"
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

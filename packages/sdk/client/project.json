@@ -61,7 +61,8 @@
         "outputPath": "tmp/mocha/sdk/client",
         "resultsPath": "test-results/sdk/client",
         "setup": "packages/core/mesh/signal/setup.js",
-        "checkLeaks": false
+        "checkLeaks": false,
+        "forceExit": true
       }
     }
   },

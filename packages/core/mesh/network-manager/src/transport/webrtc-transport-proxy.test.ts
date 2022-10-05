@@ -78,9 +78,6 @@ describe('WebRTCTransportProxy', function () {
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   it('open and close', async function () {
-    this.timeout(1_000);
-    this.retries(3);
-
     const { webRTCTransportProxy: connection } = await setupProxy();
 
     let callsCounter = 0;
@@ -95,15 +92,12 @@ describe('WebRTCTransportProxy', function () {
     await sleep(1); // Process events.
 
     expect(callsCounter).toEqual(1);
-  });
+  }).timeout(1_000).retries(3);
 
   it('establish connection and send data through with protocol', async function () {
     if (mochaExecutor.environment !== 'nodejs') {
       this.skip();
     }
-
-    this.timeout(2_000);
-    this.retries(3);
 
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
@@ -139,8 +133,7 @@ describe('WebRTCTransportProxy', function () {
         await sleep(10);
         await connection1.signal(msg.data.signal);
       }
-    }
-    );
+    });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     const received: any[] = [];
@@ -159,5 +152,5 @@ describe('WebRTCTransportProxy', function () {
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('Foo');
     });
-  });
+  }).timeout(2_000).retries(3);
 });
