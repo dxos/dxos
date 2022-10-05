@@ -168,30 +168,31 @@ const sharedTests = ({ inMemory, signalUrl }: { inMemory: boolean, signalUrl?: s
     log('Peer2 destroyed');
   }).timeout(10_000).retries(10);
 
-  it.only('join 2 swarms', async () => {
+  it('join 2 swarms', async () => {
     const peerId = PublicKey.random();
     const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
     const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
 
     const signalManager = inMemory ? new MemorySignalManager(signalContext) : new WebsocketSignalManager([signalUrl!]);
-    await signalManager.subscribeMessages(peerId);
     const networkManager = new NetworkManager({ signalManager });
     afterTest(() => networkManager.destroy());
-
+    
+    // Joining first swarm.
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
       await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
-
-      const { } = await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
     }
 
+    // Joining second swarm with same peerId.
     {
       const topic = PublicKey.random();
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
       await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
-
-      const { } = await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
     }
 
     await Promise.all([

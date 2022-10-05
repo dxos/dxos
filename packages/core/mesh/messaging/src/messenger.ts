@@ -196,7 +196,6 @@ export class Messenger {
     log(`Handling message with ${reliablePayload.messageId}`);
 
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
-      log.warn(`Already received ${reliablePayload.messageId}`);
       return;
     }
     this._receivedMessages.add(reliablePayload.messageId!);

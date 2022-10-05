@@ -23,45 +23,41 @@ interface OfferRecord {
 }
 
 interface MessageRouterOptions {
-  sendMessage?: (params: {
+  sendMessage: (params: {
     author: PublicKey
     recipient: PublicKey
     payload: Any
   }) => Promise<void>
-  onOffer?: (message: OfferMessage) => Promise<Answer>
-  onSignal?: (message: SignalMessage) => Promise<void>
+  onOffer: (message: OfferMessage) => Promise<Answer>
+  onSignal: (message: SignalMessage) => Promise<void>,
+  topic: PublicKey
 }
 
 /**
- * Adds offer/answer RPC and reliable messaging.
+ * Adds offer/answer and signal interfaces.
  */
 export class MessageRouter implements SignalMessaging {
   private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _sendMessage: ({
-    author,
-    recipient,
-    payload
-  }: {
+  private readonly _sendMessage: (msg: {
     author: PublicKey
     recipient: PublicKey
     payload: Any
   }) => Promise<void>;
 
   private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
+  private readonly _topic: PublicKey;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> =
     new ComplexMap((key) => key.toHex());
 
-  constructor ({ sendMessage, onSignal, onOffer }: MessageRouterOptions = {}) {
-    assert(sendMessage);
+  constructor({ sendMessage, onSignal, onOffer, topic }: MessageRouterOptions) {
     this._sendMessage = sendMessage;
-    assert(onSignal);
     this._onSignal = onSignal;
-    assert(onOffer);
     this._onOffer = onOffer;
+    this._topic = topic
   }
 
-  async receiveMessage ({
+  async receiveMessage({
     author,
     recipient,
     payload
@@ -78,6 +74,11 @@ export class MessageRouter implements SignalMessaging {
       .getCodecForType('dxos.mesh.swarm.SwarmMessage')
       .decode(payload.value);
 
+    if (!this._topic.equals(message.topic)) {
+      // Ignore messages from wrong topics.
+      return;
+    }
+
     log(
       `receive message: ${JSON.stringify(
         message
@@ -93,7 +94,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  async signal (message: SignalMessage): Promise<void> {
+  async signal(message: SignalMessage): Promise<void> {
     assert(message.data?.signal);
     await this._sendReliableMessage({
       author: message.author,
@@ -102,7 +103,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  async offer (message: OfferMessage): Promise<Answer> {
+  async offer(message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
       messageId: PublicKey.random()
@@ -117,7 +118,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _sendReliableMessage ({
+  private async _sendReliableMessage({
     author,
     recipient,
     message
@@ -140,7 +141,7 @@ export class MessageRouter implements SignalMessaging {
     await this._encodeAndSend({ author, recipient, message: networkMessage });
   }
 
-  private async _encodeAndSend ({
+  private async _encodeAndSend({
     author,
     recipient,
     message
@@ -161,7 +162,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _resolveAnswers (message: SwarmMessage): Promise<void> {
+  private async _resolveAnswers(message: SwarmMessage): Promise<void> {
     assert(message.data?.answer?.offerMessageId, 'No offerMessageId');
     const offerRecord = this._offerRecords.get(
       message.data.answer.offerMessageId
@@ -174,7 +175,7 @@ export class MessageRouter implements SignalMessaging {
     }
   }
 
-  private async _handleOffer ({
+  private async _handleOffer({
     author,
     recipient,
     message
@@ -203,7 +204,7 @@ export class MessageRouter implements SignalMessaging {
     });
   }
 
-  private async _handleSignal ({
+  private async _handleSignal({
     author,
     recipient,
     message

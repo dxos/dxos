@@ -78,11 +78,11 @@ export class Swarm {
       onOffer: async msg => await this.onOffer(msg),
       topic: this._topic
     })
-    console.log('Swarm constructor');
+    
     this._messenger.listen({
       peerId: this._ownPeerId,
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
-      onMessage: async message => { console.log('Listener call'); await this._swarmMessenger.receiveMessage(message) }
+      onMessage: async message => await this._swarmMessenger.receiveMessage(message)
     }).catch((error) => log.catch(error));
   }
 

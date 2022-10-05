@@ -17,26 +17,12 @@ import { MessageRouter } from '../signal/message-router';
 import { FullyConnectedTopology } from '../topology';
 import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
 import { Swarm } from './swarm';
+import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 
 describe('Swarm', () => {
-  class MockSignalConnection implements SignalMessaging {
-    constructor (
-      readonly _swarm: () => Swarm,
-      readonly _delay = 10
-    ) {}
+  const context = new MemorySignalManagerContext();
 
-    async offer (msg: OfferMessage) {
-      await sleep(this._delay);
-      return this._swarm().onOffer(msg);
-    }
-
-    async signal (msg: SignalMessage) {
-      await sleep(this._delay);
-      await this._swarm().onSignal(msg);
-    }
-  }
-
-  const setup = ({ router = false } = {}) => {
+  const setup = () => {
     const topic = PublicKey.random();
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -45,28 +31,12 @@ describe('Swarm', () => {
     // eslint-disable-next-line prefer-const
     let swarm2: Swarm;
 
-    const mr1: MessageRouter = new MessageRouter({
-      sendMessage: (...data) => mr2.receiveMessage(...data),
-      onSignal: msg => swarm1.onSignal(msg),
-      onOffer: msg => swarm1.onOffer(msg)
-    });
-
-    const mr2: MessageRouter = new MessageRouter({
-      sendMessage: (...data) => mr1.receiveMessage(...data),
-      onSignal: msg => swarm2.onSignal(msg),
-      onOffer: msg => swarm2.onOffer(msg)
-    });
-
-    const sm1: SignalMessaging = router ? mr1 : new MockSignalConnection(() => swarm2);
-
-    const sm2: SignalMessaging = router ? mr2 : new MockSignalConnection(() => swarm1);
-
     swarm1 = new Swarm(
       topic,
       peerId1,
       new FullyConnectedTopology(),
       () => new Protocol(),
-      sm1,
+      new Messenger({ signalManager: new MemorySignalManager(context) }),
       createWebRTCTransportFactory(),
       undefined
     );
@@ -76,7 +46,7 @@ describe('Swarm', () => {
       peerId2,
       new FullyConnectedTopology(),
       () => new Protocol(),
-      sm2,
+      new Messenger({ signalManager: new MemorySignalManager(context) }),
       createWebRTCTransportFactory(),
       undefined
     );
@@ -195,7 +165,7 @@ describe('Swarm', () => {
   }).timeout(5_000);
 
   test('swarming with message router', async () => {
-    const { swarm1, swarm2, peerId2 } = setup({ router: true });
+    const { swarm1, swarm2, peerId2 } = setup();
 
     const promise = Promise.all([
       promiseTimeout(swarm1.connected.waitForCount(1), 3000, new Error('Swarm1 connect timeout.')),
