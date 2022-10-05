@@ -8,7 +8,7 @@ import 'source-map-support/register';
 import { defaultTestingConfig, Client } from '@dxos/client';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
-import { spy } from '@dxos/spyglass';
+// import { spy } from '@dxos/spyglass';
 
 describe('Client - nonpersistent', () => {
   it('open & close', async () => {
@@ -48,8 +48,8 @@ describe('Client - nonpersistent', () => {
     await client.destroy();
   }).timeout(10_000).retries(10);
 
-  it.only('invitations', async function () {
-    void spy.mark('invitations');
+  it('invitations', async function () {
+    // void spy.mark('invitations');
 
     if (browserMocha.context.browser === 'webkit') {
       // TODO(unknown): Doesn't work on CI for unknown reason.
@@ -75,10 +75,10 @@ describe('Client - nonpersistent', () => {
     });
 
     const invite = await party1.createInvitation();
-    void spy.log(clientA.halo.profile!.publicKey, { action: 'invite' });
+    // void spy.log(clientA.halo.profile!.publicKey, { action: 'invite' });
 
     const party2 = await clientB.echo.acceptInvitation(invite.descriptor).getParty();
-    void spy.log(clientB.halo.profile!.publicKey, { action: 'accept' });
+    // void spy.log(clientB.halo.profile!.publicKey, { action: 'accept' });
 
     await party2.database.waitForItem({ type: 'example:item/test' });
     const otherItem = party2.database.select({ type: 'example:item/test' }).exec().entities[0];
