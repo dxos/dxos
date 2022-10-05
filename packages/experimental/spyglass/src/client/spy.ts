@@ -78,7 +78,9 @@ export class Spy {
         keyValue = value[0];
       }
 
-      await this._post({ cmd: Command.LOG, data: { key: keyValue, data } });
+      const payload = { key: keyValue, data };
+      console.log('Logging:', JSON.stringify(payload));
+      await this._post({ cmd: Command.LOG, data: payload });
     }
 
     return this;
