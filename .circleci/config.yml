@@ -37,20 +37,20 @@ jobs:
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --junitReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
-      - store_test_results:
-          path: test-results
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test
+            - run: pnpm nx run-many --target=test --junitReport
             - run: pnpm nx run-many --target=lint
             - run:
                 command: pnpm nx run-many --target=prerelease
                 no_output_timeout: 30m
                 environment:
                   NODE_OPTIONS: --max_old_space_size=8198
+      - store_test_results:
+          path: test-results
 
   #
   # End-to-end integration tests.
