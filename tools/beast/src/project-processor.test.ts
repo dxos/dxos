@@ -86,5 +86,5 @@ describe('Code analysis', () => {
     }
 
     console.log(flowchart.render());
-  });
+  }).timeout(5_000);
 });
