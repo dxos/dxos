@@ -36,17 +36,17 @@ ___
 
 ### onComplete
 
- **onComplete**: (`seedPhrase`: `string`, `username`: `string`) => `void`
+ **onComplete**: (`seed_phrase`: `string`, `username`: `string`) => `void`
 
 #### Type declaration
 
-(`seedPhrase`, `username`): `void`
+(`seed_phrase`, `username`): `void`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `seedPhrase` | `string` |
+| `seed_phrase` | `string` |
 | `username` | `string` |
 
 ##### Returns
@@ -79,17 +79,17 @@ ___
 
 ### onRestore
 
- **onRestore**: (`seedPhrase`: `string`) => `void`
+ **onRestore**: (`seed_phrase`: `string`) => `void`
 
 #### Type declaration
 
-(`seedPhrase`): `void`
+(`seed_phrase`): `void`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `seedPhrase` | `string` |
+| `seed_phrase` | `string` |
 
 ##### Returns
 

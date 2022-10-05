@@ -57,7 +57,7 @@ ___
  `Optional` **own**: `boolean`
 
 Determines if this is our key?
-Usually true if `secretKey` is present; may be false for "inception keys" such as the Party key.
+Usually true if `secret_key` is present; may be false for "inception keys" such as the Party key.
 
 Options:
   - proto3_optional = true
@@ -68,9 +68,9 @@ packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:63
 
 ___
 
-### publicKey
+### public_key
 
- **publicKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
+ **public_key**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 The public key as a Buffer (required).
 
@@ -80,9 +80,9 @@ packages/core/protocols/dist/src/proto/gen/dxos/halo/keys.d.ts:41
 
 ___
 
-### secretKey
+### secret_key
 
- `Optional` **secretKey**: `Buffer`
+ `Optional` **secret_key**: `Buffer`
 
 The secret key as a Buffer (this will never be visible outside the Keyring).
 

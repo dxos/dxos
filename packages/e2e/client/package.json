@@ -25,6 +25,7 @@
   "devDependencies": {
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/signal": "workspace:*"
+    "@dxos/signal": "workspace:*",
+    "@dxos/spyglass": "workspace:*"
   }
 }

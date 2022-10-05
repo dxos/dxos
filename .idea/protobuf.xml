@@ -3,7 +3,7 @@
   <component name="ProtobufSettings">
     <option name="autoDecompile" value="true" />
     <roots>
-      <entry common="false" path="file://$PROJECT_DIR$/packages/common/protocols/src/proto" />
+      <entry path="file://$PROJECT_DIR$/packages/core/protocols/src/proto" />
     </roots>
   </component>
 </project>

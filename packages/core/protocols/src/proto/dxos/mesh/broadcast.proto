@@ -8,8 +8,8 @@ package dxos.mesh.broadcast;
 
 message Packet {
   // Id message.
-  bytes seqno = 1;
-  
+  bytes seq = 1;
+
   // Represents the author's ID of the message. To identify a message in the network you should check for the: `seqno + origin`.
   bytes origin = 2;
 

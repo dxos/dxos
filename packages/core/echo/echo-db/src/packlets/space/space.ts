@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { sleep, synchronized, Trigger } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -15,6 +15,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { Timeframe, TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { spy } from '@dxos/spyglass';
 import { AsyncCallback, Callback, humanize } from '@dxos/util';
 
 import { Database, FeedDatabaseBackend } from '../database';
@@ -76,12 +77,11 @@ export class Space {
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
 
-    console.log({
-      'key     ': humanize(this._key),
-      'genesis ': humanize(genesisFeed.key),
-      'control ': humanize(controlFeed.key),
-      'data    ': humanize(dataFeed.key),
-    })
+    spy.log(this._key, {
+      genesis: humanize(genesisFeed.key),
+      control: humanize(controlFeed.key),
+      data: humanize(dataFeed.key)
+    });
 
     this._controlPipeline = new ControlPipeline({
       spaceKey,
@@ -89,6 +89,7 @@ export class Space {
       feedProvider,
       initialTimeframe
     });
+    spy.bind2(this._key, this._controlPipeline.pipeline, 'control');
 
     this._controlPipeline.setWriteFeed(controlFeed);
     this._controlPipeline.onFeedAdmitted.set(async info => {
@@ -105,8 +106,10 @@ export class Space {
         this._replicator.addFeed(await feedProvider(info.key));
       }
     });
+
+    // TODO(burdon): ???
     this._controlPipeline.onMemberAdmitted.set(async info => {
-      
+
     });
 
     this.onCredentialProcessed = this._controlPipeline.onCredentialProcessed;
@@ -163,7 +166,7 @@ export class Space {
       return;
     }
 
-    console.log('OPEN', humanize(this.key))
+    spy.log(this.key, 'open');
 
     // Order is important.
     await this._controlPipeline.start();
@@ -188,7 +191,7 @@ export class Space {
     this._isOpen = false;
   }
 
-  async ready() {
+  async ready () {
     // await sleep(1000);
     // You are a member of the space.
     // Control pipeline is writable.
@@ -202,6 +205,8 @@ export class Space {
     // Create pipeline.
     {
       this._dataPipeline = new Pipeline(new Timeframe());
+      spy.bind2(this._key, this._dataPipeline, 'data');
+
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {
         this._dataPipeline.addFeed(await this._feedProvider(feed.key));

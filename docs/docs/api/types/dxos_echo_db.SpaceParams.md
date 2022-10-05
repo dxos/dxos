@@ -11,11 +11,11 @@
 | `controlFeed` | `FeedDescriptor` |
 | `dataFeed` | `FeedDescriptor` |
 | `feedProvider` | (`feedKey`: `PublicKey`) => `Promise`<`FeedDescriptor`\> |
-| `genesisFeed` | `FeedDescriptor` |
+| `genesis_feed` | `FeedDescriptor` |
 | `initialTimeframe` | `Timeframe` |
 | `networkManager` | `NetworkManager` |
 | `networkPlugins` | `Plugin`[] |
-| `spaceKey` | `PublicKey` |
+| `space_key` | `PublicKey` |
 | `swarmIdentity` | [`SwarmIdentity`](../interfaces/dxos_echo_db.SwarmIdentity.md) |
 
 #### Defined in

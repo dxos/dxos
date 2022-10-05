@@ -143,8 +143,8 @@ export class IdentityManager {
       }
     }
 
-    // await this._keyring.deleteKey(identityRecord.identityKey);
-    // await this._keyring.deleteKey(identityRecord.haloSpace.spaceKey);
+    // await this._keyring.deleteKey(identityRecord.identity_key);
+    // await this._keyring.deleteKey(identityRecord.halo_space.space_key);
 
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;

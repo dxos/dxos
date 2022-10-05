@@ -11,6 +11,7 @@ import "dxos/echo/feed.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/halo/keys.proto";
 import "dxos/halo/signed.proto";
+import "dxos/keys.proto";
 import "dxos/rpc.proto";
 
 package dxos.devtools;
@@ -87,7 +88,7 @@ message EnableDebugLoggingRequest {
 }
 
 message EnableDebugLoggingResponse {
-  optional string enabledNamespaces = 1;
+  optional string enabled_namespaces = 1;
 }
 
 // DisableDebugLogging
@@ -97,7 +98,7 @@ message DisableDebugLoggingRequest {
 }
 
 message DisableDebugLoggingResponse {
-  optional string enabledNamespaces = 1;
+  optional string enabled_namespaces = 1;
 }
 
 // SubscribeToKeyringKeys
@@ -111,7 +112,7 @@ message SubscribeToKeyringKeysResponse {
 // SubscribeToCredential
 
 message SubscribeToCredentialMessagesRequest {
-  optional dxos.halo.keys.PubKey partyKey = 1;
+  optional dxos.keys.PublicKey party_key = 1;
 }
 
 message SubscribeToCredentialMessagesResponse {
@@ -130,7 +131,7 @@ message GetNetworkPeersRequest {
 
 message GetNetworkPeersResponse {
   message PeerInfo {
-   dxos.halo.keys.PubKey id = 1;
+   dxos.keys.PublicKey id = 1;
 
     // PeerState enum.
     string state = 2;
@@ -144,16 +145,16 @@ message GetNetworkPeersResponse {
 // SubscribeToParties
 
 message SubscribeToPartiesRequest {
-  repeated dxos.halo.keys.PubKey partyKeys = 1;
+  repeated dxos.keys.PublicKey party_keys = 1;
 }
 
 message SubscribeToPartiesResponse {
   message PartyInfo {
-   dxos.halo.keys.PubKey key = 1;
-    bool isOpen = 2;
-    bool isActive = 3;
+    dxos.keys.PublicKey key = 1;
+    bool is_open = 2;
+    bool is_active = 3;
     dxos.echo.timeframe.TimeframeVector timeframe = 4;
-    repeated dxos.halo.keys.PubKey feeds = 5;
+    repeated dxos.keys.PublicKey feeds = 5;
     map<string, string> properties = 6;
   }
 
@@ -172,13 +173,13 @@ message SubscribeToItemsResponse {
 // SubscribeToFeeds
 
 message SubscribeToFeedsRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
-  repeated dxos.halo.keys.PubKey feedKeys = 2;
+  dxos.keys.PublicKey party_key = 1;
+  repeated dxos.keys.PublicKey feed_keys = 2;
 }
 
 message SubscribeToFeedsResponse {
   message Feed {
-   dxos.halo.keys.PubKey feedKey = 1;
+   dxos.keys.PublicKey feed_key = 1;
     int32 length = 2;
   }
 
@@ -188,9 +189,9 @@ message SubscribeToFeedsResponse {
 // SubscribeToFeedMessages
 
 message SubscribeToFeedBlocksRequest {
-  optional dxos.halo.keys.PubKey partyKey = 1;
-  optional dxos.halo.keys.PubKey feedKey = 2;
-  optional int32 maxBlocks = 3;
+  optional dxos.keys.PublicKey party_key = 1;
+  optional dxos.keys.PublicKey feed_key = 2;
+  optional int32 max_blocks = 3;
 }
 
 message SubscribeToFeedBlocksResponse {
@@ -208,7 +209,7 @@ message SubscribeToFeedBlocksResponse {
 // GetPartySnapshot
 
 message GetPartySnapshotRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message GetPartySnapshotResponse {
@@ -218,7 +219,7 @@ message GetPartySnapshotResponse {
 // SavePartySnapshot
 
 message SavePartySnapshotRequest {
-  dxos.halo.keys.PubKey partyKey = 1;
+  dxos.keys.PublicKey party_key = 1;
 }
 
 message SavePartySnapshotResponse {
@@ -233,7 +234,7 @@ message ClearSnapshotsRequest {}
 
 message SubscribeToNetworkTopicsResponse {
   message Topic {
-   dxos.halo.keys.PubKey topic = 1;
+   dxos.keys.PublicKey topic = 1;
     optional string label = 2;
   }
 
@@ -253,11 +254,11 @@ message SubscribeToSignalStatusResponse {
 
     // Number of milliseconds before reconnection.
     // TODO(dmaretskyi): Represent as absolute timestamp.
-    int32 reconnectIn = 4;
+    int32 reconnect_in = 4;
 
     // TODO(dmaretskyi): Change to timestamp.
-    int32 connectionStarted = 5;
-    int32 lastStateChange = 6;
+    int32 connection_started = 5;
+    int32 last_state_change = 6;
   }
 
   repeated SignalServer servers = 1;
@@ -277,19 +278,19 @@ message SubscribeToSwarmInfoRequest {}
 message SubscribeToSwarmInfoResponse {
   // TODO(yivlad): Move these types to @dxos/network-manager and import them from there.
   message SwarmInfo {
-    dxos.halo.keys.PubKey id = 1;
-    dxos.halo.keys.PubKey topic = 2;
+    dxos.keys.PublicKey id = 1;
+    dxos.keys.PublicKey topic = 2;
     optional string label = 3;
-    bool isActive = 4;
+    bool is_active = 4;
     message ConnectionInfo {
       message Json {
         optional string data = 1;
       }
       string state = 1;
-      dxos.halo.keys.PubKey sessionId = 2;
-      dxos.halo.keys.PubKey remotePeerId = 3;
+      dxos.keys.PublicKey session_id = 2;
+      dxos.keys.PublicKey remote_peer_id = 3;
       optional string transport = 4;
-      repeated string protocolExtensions = 5;
+      repeated string protocol_extensions = 5;
       repeated Json events = 6;
     }
     repeated ConnectionInfo connections = 5;

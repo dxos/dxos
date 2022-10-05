@@ -145,12 +145,12 @@ export class PartyProxy implements Party {
 
   // TODO(burdon): Requires comment.
   async setActive (active: boolean, options: ActivationOptions) {
-    // const activeGlobal = options.global ? active : undefined;
-    // const activeDevice = options.device ? active : undefined;
+    // const active_global = options.global ? active : undefined;
+    // const active_device = options.device ? active : undefined;
     // await this._serviceProvider.services.PartyService.setPartyState({
-    //   partyKey: this.key,
-    //   activeGlobal,
-    //   activeDevice
+    //   party_key: this.key,
+    //   active_global,
+    //   active_device
     // });
   }
 
@@ -204,7 +204,7 @@ export class PartyProxy implements Party {
   /**
    * Creates an invitation to a given party.
    * The Invitation flow requires the inviter and invitee to be online at the same time.
-   * If the invitee is known ahead of time, `inviteeKey` can be provide to not require the secret exchange.
+   * If the invitee is known ahead of time, `invitee_key` can be provide to not require the secret exchange.
    * The invitation flow is protected by a generated pin code.
    *
    * To be used with `client.echo.acceptInvitation` on the invitee side.
@@ -222,7 +222,7 @@ export class PartyProxy implements Party {
    */
   createSnapshot (): Promise<PartySnapshot> {
     return todo();
-    // return this._serviceProvider.services.PartyService.createSnapshot({ partyKey: this.key });
+    // return this._serviceProvider.services.PartyService.createSnapshot({ party_key: this.key });
   }
 
   /**

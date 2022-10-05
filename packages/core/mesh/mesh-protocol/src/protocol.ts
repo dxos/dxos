@@ -33,7 +33,7 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
    */
   live?: boolean
   /**
-   * Match the discoveryKey with a publicKey to do the handshake.
+   * Match the discovery_key with a public_key to do the handshake.
    */
   expectedFeeds?: number
 }
@@ -320,7 +320,6 @@ export class Protocol {
 
   private async _handshakeExtensions () {
     try {
-      console.log('_handshakeExtensions');
       for (const handshake of this._handshakes) {
         await handshake(this);
       }
@@ -346,7 +345,7 @@ export class Protocol {
         }
       });
     } catch (err: any) {
-      console.error(err)
+      console.error(err);
     }
   }
 
@@ -403,7 +402,7 @@ export class Protocol {
     extension.emit('extension-message', message);
   };
 
-  private _handleError(error: Error) {
+  private _handleError (error: Error) {
     console.error(error);
     process.nextTick(() => this._stream.destroy(error));
   }

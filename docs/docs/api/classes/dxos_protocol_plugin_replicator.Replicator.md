@@ -112,14 +112,14 @@ ___
 
 ### \_feedHandler
 
-**_feedHandler**(`protocol`, `discoveryKey`): `Promise`<`void`\>
+**_feedHandler**(`protocol`, `discovery_key`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `protocol` | `Protocol` |
-| `discoveryKey` | `PublicKeyLike` |
+| `discovery_key` | `PublicKeyLike` |
 
 #### Returns
 

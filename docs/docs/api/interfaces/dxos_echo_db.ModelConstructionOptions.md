@@ -12,9 +12,9 @@
 
 ## Properties
 
-### itemId
+### item_id
 
- **itemId**: `string`
+ **item_id**: `string`
 
 #### Defined in
 
@@ -22,9 +22,9 @@
 
 ___
 
-### modelType
+### model_type
 
- **modelType**: `string`
+ **model_type**: `string`
 
 #### Defined in
 

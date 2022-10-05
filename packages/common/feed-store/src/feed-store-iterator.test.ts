@@ -116,7 +116,6 @@ describe('feed store iterator', () => {
       await pify(feed.append.bind(feed))(message);
       log('Write:', PublicKey.stringify(feed.key), value, timeframe);
     }
-
   });
 
   test.skip('skipping initial messages', async () => {

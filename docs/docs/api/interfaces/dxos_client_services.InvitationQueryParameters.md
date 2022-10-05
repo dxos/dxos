@@ -16,9 +16,9 @@ A serialized version of InvitationDescriptor that's suitable to be encoded as an
 
 ___
 
-### identityKey
+### identity_key
 
- `Optional` **identityKey**: `string`
+ `Optional` **identity_key**: `string`
 
 #### Defined in
 
@@ -36,9 +36,9 @@ ___
 
 ___
 
-### swarmKey
+### swarm_key
 
- **swarmKey**: `string`
+ **swarm_key**: `string`
 
 #### Defined in
 

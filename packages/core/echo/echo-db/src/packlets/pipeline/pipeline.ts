@@ -12,11 +12,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { ComplexMap, humanize } from '@dxos/util';
+import { spy } from '@dxos/spyglass';
+import { ComplexMap } from '@dxos/util';
 
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
-import { inspect } from 'util';
 
 const STALL_TIMEOUT = 1000;
 
@@ -24,9 +24,10 @@ const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () =>
   const writer = createFeedWriter<FeedMessage>(feed);
   return mapFeedWriter(payload => {
     return ({
-    payload,
-    timeframe: getTimeframe()
-  })}, writer);
+      payload,
+      timeframe: getTimeframe()
+    });
+  }, writer);
 };
 
 export type PipelineState = {
@@ -38,6 +39,7 @@ export type PipelineState = {
 }
 
 export interface PipelineAccessor {
+  id: string
   state: PipelineState
   writer: FeedWriter<TypedMessage>
 }
@@ -74,7 +76,10 @@ export interface PipelineAccessor {
  * 4. Generate the writable feed key.
  * 5. Wait for the writable feed to be added.
  */
+let count = 0;
 export class Pipeline implements PipelineAccessor {
+  public readonly id = String(count++); // TODO(burdon): ???
+
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
   private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
   private readonly _iterator = new FeedStoreIterator(
@@ -122,11 +127,13 @@ export class Pipeline implements PipelineAccessor {
 
   setWriteFeed (feed: FeedDescriptor) {
     assert(!this._writer, 'Writer already set.');
+    spy.log(this, { setWriteFeed: spy.humanize(feed.key) });
     this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
   }
 
   addFeed (feed: FeedDescriptor) {
     assert(!this._feeds.has(feed.key), 'Feed already added.');
+    spy.log(this, { addFeed: spy.humanize(feed.key) });
     this._feeds.set(feed.key, feed);
     this._iterator.addFeedDescriptor(feed);
   }
@@ -140,7 +147,7 @@ export class Pipeline implements PipelineAccessor {
     this._isConsuming = true;
 
     for await (const block of this._iterator) {
-      // console.log(`R ${humanize(block.key).padEnd(40)} ${block.seq}`)
+      spy.log(this, { consume: { block: block.seq } });
       yield block;
       this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
     }

@@ -56,7 +56,7 @@ export class MemorySignalManager implements SignalManager {
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
 
     this._context.swarms.get(topic)!.add(peerId);
@@ -94,7 +94,7 @@ export class MemorySignalManager implements SignalManager {
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
 
     this._context.swarms.get(topic)!.delete(peerId);

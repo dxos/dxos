@@ -50,7 +50,7 @@ describe('Filtering', () => {
     // const types: RegistryType[] = [
     //   {
     //     cid: appTypeCID,
-    //     displayName: 'appType',
+    //     display_name: 'appType',
     //     type: {
     //       messageName: '.dxos.type.App',
     //       protobufDefs: null as any
@@ -58,7 +58,7 @@ describe('Filtering', () => {
     //   },
     //   {
     //     cid: botTypeCID,
-    //     displayName: 'botType',
+    //     display_name: 'botType',
     //     type: {
     //       messageName: '.dxos.type.Bot',
     //       protobufDefs: null as any

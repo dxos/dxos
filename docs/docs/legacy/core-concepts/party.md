@@ -2,7 +2,7 @@
 title: Parties
 ---
 
-A Party is the DXOS element responsible for sharing content among the invited members. Each Party is identified by a `publicKey`.
+A Party is the DXOS element responsible for sharing content among the invited members. Each Party is identified by a `public_key`.
 
 ## Create a Party
 
@@ -34,8 +34,8 @@ To be able to access a specific Party, you should use the `useParty` hook from `
 ```jsx
 import { useParty } from '@dxos/react-client';
 
-const Component = ({ partyKey }) => {
-  const party = useParty(partyKey);
+const Component = ({ party_key }) => {
+  const party = useParty(party_key);
 
   // ...
 };

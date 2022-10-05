@@ -16,9 +16,9 @@ Define a codec to encode/decode messages from extensions.
 
 ___
 
-### discoveryKey
+### discovery_key
 
- `Optional` **discoveryKey**: `Buffer`
+ `Optional` **discovery_key**: `Buffer`
 
 #### Defined in
 
@@ -28,17 +28,17 @@ ___
 
 ### discoveryToPublicKey
 
- `Optional` **discoveryToPublicKey**: (`discoveryKey`: `Buffer`) => `undefined` \| `Buffer`
+ `Optional` **discoveryToPublicKey**: (`discovery_key`: `Buffer`) => `undefined` \| `Buffer`
 
 #### Type declaration
 
-(`discoveryKey`): `undefined` \| `Buffer`
+(`discovery_key`): `undefined` \| `Buffer`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `discoveryKey` | `Buffer` |
+| `discovery_key` | `Buffer` |
 
 ##### Returns
 

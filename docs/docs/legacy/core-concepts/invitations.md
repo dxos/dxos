@@ -9,8 +9,8 @@ To create an invitation, we first need to call to `useSecretGenerator` hook prov
 ```jsx
 import { useParty, useSecretGenerator } from '@dxos/react-client';
 
-const Component = ({ partyKey }) => {
-  const party = useParty(partyKey);
+const Component = ({ party_key }) => {
+  const party = useParty(party_key);
 
   const [secretProvider, pin, resetPin] = useSecretGenerator();
 
@@ -35,8 +35,8 @@ As a user invited to a party, you need to validate both the `inviteCode` and the
 ```jsx
 import { useParty, useSecretProvider } from '@dxos/react-client';
 
-const Component = ({ partyKey }) => {
-  const party = useParty(partyKey);
+const Component = ({ party_key }) => {
+  const party = useParty(party_key);
 
   const [secretProvider, secretResolver] = useSecretProvider<Buffer>();
 

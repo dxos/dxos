@@ -7,6 +7,7 @@ syntax = "proto3";
 import "google/protobuf/any.proto";
 
 import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 
 package dxos.halo.signed;
 
@@ -36,11 +37,11 @@ message SignedMessage {
   //
   message Signature {
     /// The publicKey of the keypair that made this signature.
-    keys.PubKey key = 1;
+    dxos.keys.PublicKey key = 1;
     /// The bytes of the signature.
     bytes signature = 2;
     /// The certification chain of SignedMessages for this key.
-    optional keys.KeyChain keyChain = 3;
+    optional keys.KeyChain key_chain = 3;
   }
 
   /// The signed message contents.
