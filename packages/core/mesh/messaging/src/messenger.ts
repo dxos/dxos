@@ -120,29 +120,27 @@ export class Messenger {
     onMessage: OnMessage
   }): Promise<ListeningHandle> {
     await this._signalManager.subscribeMessages(peerId);
+    let listeners: Set<OnMessage> | undefined;
 
     if (!payloadType) {
-      if (this._defaultListeners.has(peerId)) {
-        this._defaultListeners.get(peerId)!.add(onMessage);
-      } else {
-        this._defaultListeners.set(peerId, new Set([onMessage]));
+      listeners = this._defaultListeners.get(peerId);
+      if (!listeners) {
+        listeners = new Set();
+        this._defaultListeners.set(peerId, listeners);
       }
-
     } else {
-      if (this._listeners.has({ peerId, payloadType })) {
-        this._listeners.get({ peerId, payloadType })!.add(onMessage);
-      } else {
-        this._listeners.set({ peerId, payloadType }, new Set([onMessage]));
+      listeners = this._listeners.get({ peerId, payloadType });
+      if (!listeners) {
+        listeners = new Set();
+        this._listeners.set({ peerId, payloadType }, listeners);
       }
     }
 
+    listeners.add(onMessage);
+
     return {
       unsubscribe: async () => {
-        if (!payloadType) {
-          this._defaultListeners.get(peerId)?.delete(onMessage);
-        } else {
-          this._listeners.get({ peerId, payloadType })?.delete(onMessage);
-        }
+        listeners!.delete(onMessage);
       }
     };
   }
