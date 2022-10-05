@@ -3,7 +3,10 @@
 //
 
 import { FeedDescriptor } from '@dxos/feed-store';
-import { FeedInfo, MemberInfo, PartyState, PartyStateMachine } from '@dxos/halo-protocol';
+import { PartyStateMachine } from '@dxos/credentials';
+import { PartyState } from '@dxos/credentials';
+import { MemberInfo } from '@dxos/credentials';
+import { FeedInfo } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';

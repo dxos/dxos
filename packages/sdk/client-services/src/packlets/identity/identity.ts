@@ -7,9 +7,10 @@ import assert from 'assert';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
-import {
-  createCredentialSignerWithChain, createCredentialSignerWithKey, CredentialSigner, DeviceStateMachine
-} from '@dxos/halo-protocol';
+import { DeviceStateMachine } from '@dxos/credentials';
+import { CredentialSigner } from '@dxos/credentials';
+import { createCredentialSignerWithKey } from '@dxos/credentials';
+import { createCredentialSignerWithChain } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
 

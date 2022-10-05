@@ -4,7 +4,7 @@
 
 import { codec, DataService, MetadataStore, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
+import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';

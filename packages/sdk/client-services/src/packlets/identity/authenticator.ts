@@ -3,7 +3,8 @@
 //
 
 import { AuthProvider, AuthVerifier } from '@dxos/echo-db';
-import { CredentialSigner, verifyCredential } from '@dxos/halo-protocol';
+import { verifyCredential } from '@dxos/credentials';
+import { CredentialSigner } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';

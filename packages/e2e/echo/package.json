@@ -17,7 +17,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/halo-protocol": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/messaging": "workspace:*",
