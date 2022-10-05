@@ -2,11 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedDescriptor } from '@dxos/feed-store';
-import { PartyStateMachine } from '@dxos/credentials';
-import { PartyState } from '@dxos/credentials';
-import { MemberInfo } from '@dxos/credentials';
-import { FeedInfo } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';

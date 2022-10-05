@@ -5,9 +5,9 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { CredentialGenerator } from '@dxos/credentials';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
-import { CredentialGenerator } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

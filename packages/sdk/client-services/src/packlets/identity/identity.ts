@@ -4,13 +4,10 @@
 
 import assert from 'assert';
 
+import { DeviceStateMachine, CredentialSigner, createCredentialSignerWithKey, createCredentialSignerWithChain } from '@dxos/credentials';
 import { Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { Database, Space } from '@dxos/echo-db';
-import { DeviceStateMachine } from '@dxos/credentials';
-import { CredentialSigner } from '@dxos/credentials';
-import { createCredentialSignerWithKey } from '@dxos/credentials';
-import { createCredentialSignerWithChain } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { ComplexSet } from '@dxos/util';
 

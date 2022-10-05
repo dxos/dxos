@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { verifyCredential, CredentialSigner } from '@dxos/credentials';
 import { AuthProvider, AuthVerifier } from '@dxos/echo-db';
-import { verifyCredential } from '@dxos/credentials';
-import { CredentialSigner } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';

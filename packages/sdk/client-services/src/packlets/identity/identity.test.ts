@@ -5,11 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
 import { codec, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
-import { CredentialGenerator } from '@dxos/credentials';
-import { verifyCredential } from '@dxos/credentials';
-import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';

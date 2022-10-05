@@ -3,10 +3,9 @@
 //
 
 import { Event } from '@dxos/async';
+import { CredentialSigner, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
-import { CredentialSigner } from '@dxos/credentials';
-import { CredentialGenerator } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
