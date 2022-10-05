@@ -42,7 +42,7 @@ export class Builder {
     // TODO(burdon): Party and Database doesn't match.
     //  party.destroy not called until ClientServiceProxy.
     // console.log(party.database.state);
-    // expect(party.isActive).toBeFalsy();
+    // expect(party.is_active).toBeFalsy();
 
     await this._client.destroy();
     expect(this._client.initialized).toBeFalsy();

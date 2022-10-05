@@ -103,9 +103,9 @@ ___
 
 ___
 
-### isActive
+### is_active
 
-`get` **isActive**(): `boolean`
+`get` **is_active**(): `boolean`
 
 #### Returns
 
@@ -113,7 +113,7 @@ ___
 
 #### Implementation of
 
-Party.isActive
+Party.is_active
 
 #### Defined in
 
@@ -121,9 +121,9 @@ Party.isActive
 
 ___
 
-### isOpen
+### is_open
 
-`get` **isOpen**(): `boolean`
+`get` **is_open**(): `boolean`
 
 #### Returns
 
@@ -131,7 +131,7 @@ ___
 
 #### Implementation of
 
-Party.isOpen
+Party.is_open
 
 #### Defined in
 
@@ -292,11 +292,11 @@ ___
 
 ### createInvitation
 
-**createInvitation**(`inviteeKey?`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
+**createInvitation**(`invitee_key?`): `Promise`<[`InvitationRequest`](dxos_client.InvitationRequest.md)\>
 
 Creates an invitation to a given party.
 The Invitation flow requires the inviter and invitee to be online at the same time.
-If the invitee is known ahead of time, `inviteeKey` can be provide to not require the secret exchange.
+If the invitee is known ahead of time, `invitee_key` can be provide to not require the secret exchange.
 The invitation flow is protected by a generated pin code.
 
 To be used with `client.echo.acceptInvitation` on the invitee side.
@@ -305,7 +305,7 @@ To be used with `client.echo.acceptInvitation` on the invitee side.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `inviteeKey` | [`CreationInvitationOptions`](../interfaces/dxos_client.CreationInvitationOptions.md) | Public key of the invitee. In this case no secret exchange is required,   but only the specified recipient can accept the invitation. |
+| `invitee_key` | [`CreationInvitationOptions`](../interfaces/dxos_client.CreationInvitationOptions.md) | Public key of the invitee. In this case no secret exchange is required,   but only the specified recipient can accept the invitation. |
 
 #### Returns
 

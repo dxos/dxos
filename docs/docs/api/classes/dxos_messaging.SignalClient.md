@@ -213,14 +213,14 @@ ___
 
 ### \_subscribeSwarmEvents
 
-`Private` **_subscribeSwarmEvents**(`topic`, `peerId`): `Promise`<`void`\>
+`Private` **_subscribeSwarmEvents**(`topic`, `peer_id`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `topic` | `PublicKey` |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 
 #### Returns
 
@@ -269,7 +269,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.peerId` | `PublicKey` |
+| `__namedParameters.peer_id` | `PublicKey` |
 | `__namedParameters.topic` | `PublicKey` |
 
 #### Returns
@@ -295,7 +295,7 @@ ___
 | Name | Type |
 | :------ | :------ |
 | `__namedParameters` | `Object` |
-| `__namedParameters.peerId` | `PublicKey` |
+| `__namedParameters.peer_id` | `PublicKey` |
 | `__namedParameters.topic` | `PublicKey` |
 
 #### Returns
@@ -338,13 +338,13 @@ ___
 
 ### subscribeMessages
 
-**subscribeMessages**(`peerId`): `Promise`<`void`\>
+**subscribeMessages**(`peer_id`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 
 #### Returns
 

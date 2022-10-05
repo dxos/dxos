@@ -77,7 +77,7 @@ export class NetworkManager {
     return this._signalManager;
   }
 
-  // TODO(burdon): Reconcile with "discoveryKey".
+  // TODO(burdon): Reconcile with "discovery_key".
   get topics () {
     return Array.from(this._swarms.keys());
   }

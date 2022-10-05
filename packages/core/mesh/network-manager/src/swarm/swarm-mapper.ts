@@ -30,9 +30,9 @@ type Unsubscribe = () => void;
 export class SwarmMapper {
   private readonly _subscriptions = new SubscriptionGroup();
 
-  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(x => x.toHex());
+  private readonly _connectionSubscriptions = new ComplexMap<PublicKey, Unsubscribe>(key => key.toHex());
 
-  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(x => x.toHex());
+  private readonly _peers = new ComplexMap<PublicKey, PeerInfo>(key => key.toHex());
 
   get peers (): PeerInfo[] {
     return Array.from(this._peers.values());

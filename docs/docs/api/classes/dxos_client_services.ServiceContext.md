@@ -175,13 +175,13 @@ ___
 
 ### createInvitation
 
-**createInvitation**(`spaceKey`, `onFinish?`): `Promise`<[`InvitationDescriptor`](dxos_client_services.InvitationDescriptor.md)\>
+**createInvitation**(`space_key`, `onFinish?`): `Promise`<[`InvitationDescriptor`](dxos_client_services.InvitationDescriptor.md)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `spaceKey` | `PublicKey` |
+| `space_key` | `PublicKey` |
 | `onFinish?` | () => `void` |
 
 #### Returns

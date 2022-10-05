@@ -8,7 +8,7 @@ import { NetworkGenerator } from '@dxos/network-generator';
 
 import { Broadcast, Middleware } from './broadcast';
 
-const packetId = (packet: any) => packet.seqno.toString('hex') + packet.origin.toString('hex');
+const packetId = (packet: any) => packet.seq.toString('hex') + packet.origin.toString('hex');
 
 class Peer extends EventEmitter {
   public id: any;
@@ -107,8 +107,8 @@ test('balancedBinTree: broadcast a message.', async () => {
   const network = await generator.balancedBinTree(2);
   await publishAndSync(network.peers, Buffer.from('message1'));
 
-  const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seqno: Buffer.from('custom-seqno') });
-  expect(packet.seqno.toString()).toBe('custom-seqno');
+  const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seq: Buffer.from('custom-seqno') });
+  expect(packet.seq.toString()).toBe('custom-seqno');
 
   network.peers.forEach((peer: any) => peer.close());
 });

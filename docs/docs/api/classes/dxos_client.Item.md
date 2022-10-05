@@ -22,7 +22,7 @@ The Item data structure is governed by a Model class, which implements data cons
 
 ### constructor
 
-**new Item**<`M`\>(`itemManager`, `itemId`, `itemType`, `stateManager`, `_writeStream?`, `parent?`)
+**new Item**<`M`\>(`itemManager`, `item_id`, `item_type`, `stateManager`, `_writeStream?`, `parent?`)
 
 Items are constructed by the `Database` object.
 
@@ -37,8 +37,8 @@ Items are constructed by the `Database` object.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `itemManager` | `ItemManager` |  |
-| `itemId` | `string` | Addressable ID. |
-| `itemType` | `undefined` \| `string` | User defined type (DXN). |
+| `item_id` | `string` | Addressable ID. |
+| `item_type` | `undefined` \| `string` | User defined type (DXN). |
 | `stateManager` | `StateManager`<`NonNullable`<`M`\>\> | Data model (provided by `ModelFactory`). |
 | `_writeStream?` | `FeedWriter`<`EchoEnvelope`\> | Write stream (if not read-only). |
 | `parent?` | ``null`` \| [`Item`](dxos_client.Item.md)<`any`\> | Parent Item (if not a root Item). |
@@ -298,7 +298,7 @@ Process a mutation from the stream.
 | Name | Type |
 | :------ | :------ |
 | `mutation` | `ItemMutation` |
-| `getItem` | (`itemId`: `string`) => `undefined` \| [`Item`](dxos_client.Item.md)<`any`\> |
+| `getItem` | (`item_id`: `string`) => `undefined` \| [`Item`](dxos_client.Item.md)<`any`\> |
 
 #### Returns
 
@@ -360,13 +360,13 @@ ___
 
 ### setParent
 
-**setParent**(`parentId`): `Promise`<`void`\>
+**setParent**(`parent_id`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `parentId` | `string` |
+| `parent_id` | `string` |
 
 #### Returns
 

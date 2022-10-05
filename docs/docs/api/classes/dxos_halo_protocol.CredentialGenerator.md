@@ -26,7 +26,7 @@ Utility class for generating credential messages, where the issuer is the curren
 
 ### createDeviceAuthorization
 
-**createDeviceAuthorization**(`deviceKey`): `Promise`<`Credential`\>
+**createDeviceAuthorization**(`device_key`): `Promise`<`Credential`\>
 
 Add device to space.
 
@@ -34,7 +34,7 @@ Add device to space.
 
 | Name | Type |
 | :------ | :------ |
-| `deviceKey` | `PublicKey` |
+| `device_key` | `PublicKey` |
 
 #### Returns
 
@@ -48,7 +48,7 @@ ___
 
 ### createFeedAdmission
 
-**createFeedAdmission**(`partyKey`, `feedKey`, `designation`): `Promise`<`Credential`\>
+**createFeedAdmission**(`party_key`, `feedKey`, `designation`): `Promise`<`Credential`\>
 
 Add feed to space.
 
@@ -56,7 +56,7 @@ Add feed to space.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `party_key` | `PublicKey` |
 | `feedKey` | `PublicKey` |
 | `designation` | `Designation` |
 
@@ -72,7 +72,7 @@ ___
 
 ### createMemberInvitation
 
-**createMemberInvitation**(`partyKey`, `identityKey`, `deviceKey`, `controlKey`, `dataKey`): `Promise`<`Credential`[]\>
+**createMemberInvitation**(`party_key`, `identity_key`, `device_key`, `controlKey`, `dataKey`): `Promise`<`Credential`[]\>
 
 Create invitation.
 Admit identity and control and data feeds.
@@ -81,9 +81,9 @@ Admit identity and control and data feeds.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
-| `identityKey` | `PublicKey` |
-| `deviceKey` | `PublicKey` |
+| `party_key` | `PublicKey` |
+| `identity_key` | `PublicKey` |
+| `device_key` | `PublicKey` |
 | `controlKey` | `PublicKey` |
 | `dataKey` | `PublicKey` |
 
@@ -99,7 +99,7 @@ ___
 
 ### createSpaceGenesis
 
-**createSpaceGenesis**(`partyKey`, `controlKey`): `Promise`<`Credential`[]\>
+**createSpaceGenesis**(`party_key`, `controlKey`): `Promise`<`Credential`[]\>
 
 Create genesis messages for new Space.
 
@@ -107,7 +107,7 @@ Create genesis messages for new Space.
 
 | Name | Type |
 | :------ | :------ |
-| `partyKey` | `PublicKey` |
+| `party_key` | `PublicKey` |
 | `controlKey` | `PublicKey` |
 
 #### Returns

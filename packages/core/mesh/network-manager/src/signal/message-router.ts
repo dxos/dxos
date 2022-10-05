@@ -129,7 +129,7 @@ export class MessageRouter implements SignalMessaging {
   }): Promise<void> {
     const networkMessage: SwarmMessage = {
       ...message,
-      // Setting unique messageId if it not specified yet.
+      // Setting unique message_id if it not specified yet.
       messageId: message.messageId ?? PublicKey.random()
     };
     log(

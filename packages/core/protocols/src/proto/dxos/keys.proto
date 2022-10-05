@@ -1,0 +1,15 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.keys;
+
+message PublicKey {
+  bytes data = 1;
+}
+
+message PrivateKey {
+  bytes data = 1;
+}

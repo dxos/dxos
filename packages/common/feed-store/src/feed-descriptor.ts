@@ -4,8 +4,8 @@
 
 import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
+import { callbackify } from 'node:util';
 import pify from 'pify';
-import { callbackify } from 'util';
 
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
@@ -52,7 +52,7 @@ export class FeedDescriptor {
       disableSigning = false,
       signer
     } = options;
-    assert(!signer || !secretKey, 'Cannot use signer and secretKey at the same time.');
+    assert(!signer || !secretKey, 'Cannot use signer and secret_key at the same time.');
     assert(!signer || !disableSigning, 'Signing cannot be disabled when signer is provided');
 
     this._directory = directory;

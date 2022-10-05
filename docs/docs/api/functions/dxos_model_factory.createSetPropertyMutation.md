@@ -2,13 +2,13 @@
 
 [@dxos/model-factory](../modules/dxos_model_factory.md).createSetPropertyMutation
 
-**createSetPropertyMutation**(`itemId`, `key`, `value`, `timeframe?`): `FeedMessage`
+**createSetPropertyMutation**(`item_id`, `key`, `value`, `timeframe?`): `FeedMessage`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `itemId` | `string` |
+| `item_id` | `string` |
 | `key` | `string` |
 | `value` | `string` |
 | `timeframe` | `Timeframe` |

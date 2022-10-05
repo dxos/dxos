@@ -17,7 +17,7 @@ export const PartyFeeds: FC<{
   return null;
   // TODO(dmaretskyi): Not working currently.
   // const devtoolsHost = useDevtools();
-  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ partyKey }), {});
+  const { feeds = [] } = {}; // useStream(() => devtoolsHost.subscribeToFeeds({ party_key }), {});
 
   return (
     <Table

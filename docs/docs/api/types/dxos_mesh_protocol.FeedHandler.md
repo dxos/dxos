@@ -2,18 +2,18 @@
 
 [@dxos/mesh-protocol](../modules/dxos_mesh_protocol.md).FeedHandler
 
- **FeedHandler**: (`protocol`: [`Protocol`](../classes/dxos_mesh_protocol.Protocol.md), `discoveryKey`: `Buffer`) => `Promise`<`void`\> \| `void`
+ **FeedHandler**: (`protocol`: [`Protocol`](../classes/dxos_mesh_protocol.Protocol.md), `discovery_key`: `Buffer`) => `Promise`<`void`\> \| `void`
 
 #### Type declaration
 
-(`protocol`, `discoveryKey`): `Promise`<`void`\> \| `void`
+(`protocol`, `discovery_key`): `Promise`<`void`\> \| `void`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `protocol` | [`Protocol`](../classes/dxos_mesh_protocol.Protocol.md) |
-| `discoveryKey` | `Buffer` |
+| `discovery_key` | `Buffer` |
 
 ##### Returns
 

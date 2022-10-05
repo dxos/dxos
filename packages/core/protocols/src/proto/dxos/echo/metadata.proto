@@ -7,8 +7,8 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/echo/timeframe.proto";
-import "dxos/halo/keys.proto";
 import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
 
 package dxos.echo.metadata;
 
@@ -33,18 +33,18 @@ message EchoMetadata {
 // TODO(dmaretskyi): Cleanup numbering.
 message PartyMetadata {
   /// Party key.
-  dxos.halo.keys.PubKey key = 1;
+  dxos.keys.PublicKey key = 1;
 
-  optional dxos.halo.keys.PubKey genesis_feed_key = 6;
+  optional dxos.keys.PublicKey genesis_feed_key = 6;
 
   /// Key of the wriatable control feed.
-  optional dxos.halo.keys.PubKey control_feed_key = 4;
+  optional dxos.keys.PublicKey control_feed_key = 4;
 
   /// List of all feed associated with the party.
-  repeated dxos.halo.keys.PubKey feed_keys = 2;
+  repeated dxos.keys.PublicKey feed_keys = 2;
 
   /// Key of the wriatable data feed.
-  optional dxos.halo.keys.PubKey data_feed_key = 3;
+  optional dxos.keys.PublicKey data_feed_key = 3;
 
   // Latest timeframe reached while processing party messages.
   optional timeframe.TimeframeVector latest_timeframe = 5;

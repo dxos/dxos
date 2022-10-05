@@ -506,11 +506,11 @@ export function inMemoryTests () {
         const s: ModelRunSetup<Model, Real> = () => ({
           model: {
             topic: PublicKey.random(),
-            peers: new ComplexSet(x => x.toHex()),
-            joinedPeers: new ComplexSet(x => x.toHex())
+            peers: new ComplexSet(key => key.toHex()),
+            joinedPeers: new ComplexSet(key => key.toHex())
           },
           real: {
-            peers: new ComplexMap(x => x.toHex())
+            peers: new ComplexMap(key => key.toHex())
           }
 
         });

@@ -281,9 +281,9 @@ The HALO protocol definitions are defined in the [References](#8-appendix) secti
 message Credential {
   optional PubKey id = 1;
   optional PubKey issuer = 2;
-  optional Timestamp issuanceDate = 3;
-  optional Timestamp expirationDate = 4;
-  optional bytes expirationRef = 5;
+  optional Timestamp issuance_date = 3;
+  optional Timestamp expiration_date = 4;
+  optional bytes expiration_ref = 5;
   optional Claim subject = 10;
   optional Proof proof = 11;
 }
@@ -616,7 +616,7 @@ import "@dxos/protocols/src/proto/dxos/halo/keys.proto";
 //
 
 message PartyGenesis {
-  PubKey partyKey = 1; // Feeds belong to Parties.
+  PubKey party_key = 1; // Feeds belong to Parties.
 }
 
 //
@@ -638,15 +638,15 @@ message PartyMember {
     READER = 3;
   }
 
-  PubKey partyKey = 1;
+  PubKey party_key = 1;
   Role role = 2;
 }
 
 // Device is authorized to sign messages for a given Agent (Identity).
 // NOTE: Devices are Admitted to Identities.
 message AuthorizedDevice {
-  PubKey identityKey = 1;
-  PubKey deviceKey = 2; // Existing authorized device.
+  PubKey identity_key = 1;
+  PubKey device_key = 2; // Existing authorized device.
 }
 
 // Feed is admitted to the Party for replication.
@@ -661,12 +661,12 @@ message AdmittedFeed {
     DATA = 2;
   }
 
-  PubKey partyKey = 1;
+  PubKey party_key = 1;
 
   /// Owning identity.
-  PubKey identityKey = 2; // Could be derived.
+  PubKey identity_key = 2; // Could be derived.
   /// Owning device.
-  PubKey deviceKey = 3;
+  PubKey device_key = 3;
 
   /// Controls sets the feed designation. Feeds with different designations are consumed by separate pipelines.
   Designation designation = 4;
@@ -674,23 +674,23 @@ message AdmittedFeed {
 
 /// Associtaes a space that will implement Agent's HALO with an Identity.
 message HaloSpace {
-  PubKey identityKey = 1;
+  PubKey identity_key = 1;
   /// Space key.
-  PubKey haloKey = 2;
+  PubKey halo_key = 2;
 }
 
 /// Grants recovery permissions to a recovery key.
 message IdentityRecovery {
-  PubKey identityKey = 1;
+  PubKey identity_key = 1;
   /// Public key derrived from the recovery seedphrase.
-  PubKey recoveryKey = 2;
+  PubKey recovery_key = 2;
 }
 
 /// Sets profile information.
 message IdentityProfile {
   message ProfileDocument {
-    optional string displayName = 1;
-    optional string avatarCID = 2;
+    optional string display_name = 1;
+    optional string avatar_cid = 2;
   }
 
   // TODO(dmaretskyi): This could also be a DXNS link or stored in user's public HALO (we could also index the public HALO in the DMG).
@@ -723,7 +723,7 @@ message Claim {
 
 message Proof {
   string type = 1;              // Type of proof (e.g., "Ed25519Signature2020").
-  Timestamp creationDate = 2;
+  Timestamp creation_date = 2;
   PubKey signer = 3;            // Entity that created the proof (e.g., Agent, Device, Party).
   optional bytes nonce = 4;     // Used in Presentations to protect against replay attacks.
 
@@ -764,9 +764,9 @@ message Chain {
 message Credential {
   optional PubKey id = 1;                 // Credential identifier (e.g., for storage indexing).
   PubKey issuer = 2;                      // key = { Party (genesis) | Identity (genesis) | (authorized) Device }
-  Timestamp issuanceDate = 3;
-  optional Timestamp expirationDate = 4;
-  optional bytes expirationRef = 5;       // Could reference blockchain or epoch number.
+  Timestamp issuance_date = 3;
+  optional Timestamp expiration_date = 4;
+  optional bytes expiration_ref = 5;       // Could reference blockchain or epoch number.
   Claim subject = 10;
   Proof proof = 11;
 }
@@ -790,7 +790,7 @@ message Presentation {
 
 /// Information needed to bootstrap a Space.
 message SpaceRecord {
-  PubKey spaceKey = 1;
+  PubKey space_key = 1;
 
   /// All feeds in the space must form a DAG (or a tree?). This is the root feed of that structure.
   PubKey genesisFeedKey = 2;
@@ -798,13 +798,13 @@ message SpaceRecord {
 
 /// Information needed to bootstrap an Identity.
 message IdentityRecord {
-  PubKey identityKey = 1;
+  PubKey identity_key = 1;
 
-  SpaceRecord haloSpace = 2;
+  SpaceRecord halo_space = 2;
 
   /// Public profile information.
   /// Not yet implemented. Must be null.
-  optional SpaceRecord profileSpace = 3;
+  optional SpaceRecord profile_space = 3;
 
   /// Cached profile.
   optional IdentityProfile.ProfileDocument profile = 4;
@@ -831,8 +831,8 @@ feed:
       data:
         # Self-signed Credential by the Party.
         @type: dxos.halo.party.PartyGenesis
-        partyKey: Alice-Halo # ISSUE: Different from IdentityKey?
-        identityKey: Alice
+        party_key: Alice-Halo # ISSUE: Different from IdentityKey?
+        identity_key: Alice
     - id: 2
       data:
         # Authorizes device to sign on behalf of Identity
@@ -843,7 +843,7 @@ feed:
           id: Alice/Device-1
           assertion:
             @type: halo.credentials.AuthorizedDevice
-            identityKey: Alice
+            identity_key: Alice
     - id: 3
       data:
         # Admits the feed to the feed graph.
@@ -853,8 +853,8 @@ feed:
           id: Alice/Device-1/Feed-1
           assertion:
             @type halo.credentials.AdmittedFeed
-            partyKey: Alice-Halo
-            deviceKey: Alice/Device-1
+            party_key: Alice-Halo
+            device_key: Alice/Device-1
 
 #
 # Device Admission: Adding a new Device to a HALO.
@@ -872,7 +872,7 @@ feed:
           id: Alice/Device-2
           assertion:
             @type halo.credentials.AuthorizedDevice
-            identityKey: Alice
+            identity_key: Alice
     - id: 101
       data:
         # NOTE: This MUST have been Presented from an authorized Device.
@@ -882,8 +882,8 @@ feed:
           id: Alice/Device-2/Feed-2 # New Feed.
           assertion:
             @type halo.credentials.AdmittedFeed
-            partyKey: Alice-Halo
-            deviceKey: Alice/Device-2
+            party_key: Alice-Halo
+            device_key: Alice/Device-2
 
 #
 # ECHO Genesis: Creating a new Space.
@@ -896,8 +896,8 @@ feed:
       data:
         # Self-signed Credential by the Party.
         @type halo.party.Genesis # NOTE: Same as HALO.
-        partyKey: Party-1
-        identityKey: Alice
+        party_key: Party-1
+        identity_key: Alice
     - id: 2
       data:
         # Authorizes Agent.
@@ -907,7 +907,7 @@ feed:
           id: Alice
           assertion:
             @type halo.credentials.PartyMember
-            partyKey: Party-1
+            party_key: Party-1
             role: ADMIN
 
 #
@@ -928,9 +928,9 @@ feed:
           id: Alice/Device-2/Feed-3 # NOTE: This Feed.
           assertion:
             @type: halo.credentials.AdmittedFeed
-            partyKey: Party-1
-            identityKey: Alice
-            deviceKey: Alice/Device-1
+            party_key: Party-1
+            identity_key: Alice
+            device_key: Alice/Device-1
         proofs:
           - type: 'ECDSASignature'
             value: 0x1ba37..3125ab
@@ -944,7 +944,7 @@ feed:
                   id: Alice/Device-2
                   assertion:
                     @type halo.credentials.AuthorizedDevice
-                    identityKey: Alice
+                    identity_key: Alice
                 proof:
                   - type: 'ECDSASignature'
                     value: eyJhbGci...yHUdBBPM
@@ -954,7 +954,7 @@ feed:
                     id: Alice/Device-1
                     assertion:
                       @type halo.credentials.AuthorizedDevice
-                      identityKey: Alice
+                      identity_key: Alice
                   proof:
                     - type: 'ECDSASignature'
                       value: eyJhbGci...yHUdBBPM
@@ -975,7 +975,7 @@ feed:
           id: Bob
           assertion:
             @type halo.credentials.PartyMember
-            partyKey: Party-1
+            party_key: Party-1
             role: WRITER
 ```
 

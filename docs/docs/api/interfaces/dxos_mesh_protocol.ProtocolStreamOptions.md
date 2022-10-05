@@ -28,7 +28,7 @@ ___
 
  `Optional` **expectedFeeds**: `number`
 
-Match the discoveryKey with a publicKey to do the handshake.
+Match the discovery_key with a public_key to do the handshake.
 
 #### Defined in
 
@@ -56,8 +56,8 @@ ___
 
 | Name | Type |
 | :------ | :------ |
-| `publicKey` | `any` |
-| `secretKey` | `any` |
+| `public_key` | `any` |
+| `secret_key` | `any` |
 
 #### Inherited from
 
@@ -130,18 +130,18 @@ ___
 
 ### onchannelclose
 
- `Optional` **onchannelclose**: (`discoveryKey`: `any`, `publicKey`: `any`) => `any`
+ `Optional` **onchannelclose**: (`discovery_key`: `any`, `public_key`: `any`) => `any`
 
 #### Type declaration
 
-(`discoveryKey`, `publicKey`): `any`
+(`discovery_key`, `public_key`): `any`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `discoveryKey` | `any` |
-| `publicKey` | `any` |
+| `discovery_key` | `any` |
+| `public_key` | `any` |
 
 ##### Returns
 
@@ -159,17 +159,17 @@ ___
 
 ### ondiscoverykey
 
- `Optional` **ondiscoverykey**: (`discoveryKey`: `any`) => `any`
+ `Optional` **ondiscoverykey**: (`discovery_key`: `any`) => `any`
 
 #### Type declaration
 
-(`discoveryKey`): `any`
+(`discovery_key`): `any`
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `discoveryKey` | `any` |
+| `discovery_key` | `any` |
 
 ##### Returns
 

@@ -17,9 +17,9 @@ packages/core/protocols/dist/src/proto/gen/dxos/client.d.ts:179
 
 ___
 
-### publicKey
+### public_key
 
- **publicKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
+ **public_key**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 - The public key of the key that is supposed to be used for signing.
 

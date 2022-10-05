@@ -158,7 +158,7 @@ export class Item<M extends Model | null = Model> extends Entity<M> {
     await onUpdate;
   }
 
-  // TODO(telackey): This does not allow null or undefined as a parentId, but should it since we allow a null parent?
+  // TODO(telackey): This does not allow null or undefined as a parent_id, but should it since we allow a null parent?
   async setParent (parentId: ItemID): Promise<void> {
     if (!this._writeStream || this.readOnly) {
       throw new Error(`Item is read-only: ${this.id}`);

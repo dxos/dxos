@@ -11,7 +11,7 @@
 | `error?` | `string` |
 | `host` | `string` |
 | `incoming` | `boolean` |
-| `messageId` | `string` |
+| `message_id` | `string` |
 | `method` | `string` |
 | `payload` | `any` |
 | `response?` | `any` |

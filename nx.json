@@ -24,6 +24,9 @@
       }
     }
   },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"]
+  },
   "targetDefaults": {
     "build": {
       "dependsOn": [
@@ -35,6 +38,8 @@
     },
     "bundle": {
       "inputs": [
+        "default",
+        "^default",
         {
           "env": "CONFIG_DYNAMIC"
         }
@@ -80,6 +85,8 @@
     },
     "test": {
       "inputs": [
+        "default",
+        "^default",
         {
           "env": "LOG_FILTER"
         },

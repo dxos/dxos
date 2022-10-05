@@ -24,9 +24,9 @@ ___
 
 ___
 
-### isActive
+### is_active
 
- **isActive**: `boolean`
+ **is_active**: `boolean`
 
 #### Defined in
 
