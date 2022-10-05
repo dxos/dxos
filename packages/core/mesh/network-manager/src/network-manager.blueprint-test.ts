@@ -389,7 +389,7 @@ export function inMemoryTests () {
 
               const actuallyConnectedPeers = peer.presence!.peers;
               if (!actuallyConnectedPeers.some(x => PublicKey.equals(expectedJoinedPeer, x))) {
-                throw new Error(`Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(x => x.toString('hex'))}`);
+                throw new Error(`Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(key => key.toString('hex'))}`);
               }
             }
           }
