@@ -9,12 +9,13 @@ import { discoveryKey } from '@dxos/crypto';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Messenger } from '@dxos/messaging';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { ProtocolProvider } from '../network-manager';
-import { SignalMessaging } from '../signal';
+import { MessageRouter } from '../signal';
 import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
 import { SwarmController, Topology } from '../topology';
 import { TransportFactory } from '../transport';
@@ -58,18 +59,33 @@ export class Swarm {
 
   readonly errors = new ErrorStream();
 
+  private readonly _swarmMessenger: MessageRouter;
+
   // TODO(burdon): Split up properties.
   constructor (
     private readonly _topic: PublicKey,
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
     private readonly _protocolProvider: ProtocolProvider,
-    private readonly _signalMessaging: SignalMessaging,
+    private readonly _messenger: Messenger,
     private readonly _transportFactory: TransportFactory,
     private readonly _label: string | undefined
   ) {
     log(`Creating swarm topic=${_topic} peerId=${_ownPeerId}`);
     _topology.init(this._getSwarmController());
+
+    this._swarmMessenger = new MessageRouter({
+      sendMessage: async msg => await this._messenger.sendMessage(msg),
+      onSignal: async msg => await this.onSignal(msg),
+      onOffer: async msg => await this.onOffer(msg),
+      topic: this._topic
+    });
+
+    this._messenger.listen({
+      peerId: this._ownPeerId,
+      payloadType: 'dxos.mesh.swarm.SwarmMessage',
+      onMessage: async message => await this._swarmMessenger.receiveMessage(message)
+    }).catch((error) => log.catch(error));
   }
 
   get ownPeerId () {
@@ -228,7 +244,7 @@ export class Swarm {
       remoteId,
       sessionId,
       initiator,
-      this._signalMessaging,
+      this._swarmMessenger,
       this._protocolProvider({ channel: discoveryKey(this._topic), initiator }),
       this._transportFactory
     );

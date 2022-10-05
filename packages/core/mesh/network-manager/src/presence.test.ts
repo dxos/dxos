@@ -16,7 +16,7 @@ import { FullyConnectedTopology } from './topology';
 
 const signalContext = new MemorySignalManagerContext();
 
-const createPeer = (topic: PublicKey) => {
+const createPeer = async (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
   const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
@@ -25,7 +25,7 @@ const createPeer = (topic: PublicKey) => {
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   afterTest(() => presencePlugin.stop());
 
-  networkManager.joinProtocolSwarm({
+  await networkManager.joinProtocolSwarm({
     peerId,
     protocol: createProtocolFactory(topic, peerId, [presencePlugin]),
     topic,
@@ -39,8 +39,8 @@ describe('Presence', () => {
   it('sees connected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic);
-    const peer2 = createPeer(topic);
+    const peer1 = await createPeer(topic);
+    const peer2 = await createPeer(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
@@ -54,8 +54,8 @@ describe('Presence', () => {
   it('removes disconnected peers', async () => {
     const topic = PublicKey.random();
 
-    const peer1 = createPeer(topic);
-    const peer2 = createPeer(topic);
+    const peer1 = await createPeer(topic);
+    const peer2 = await createPeer(topic);
 
     await waitForExpect(() => {
       expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
