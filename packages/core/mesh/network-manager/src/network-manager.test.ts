@@ -3,9 +3,9 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-import { createTestBroker, TestBroker } from '@dxos/signal';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests, webRTCProxyTests } from './network-manager.blueprint-test';
 import { WebRTCTransportService } from './transport';
@@ -55,7 +55,7 @@ describe('Network manager', () => {
       broker?.stop();
       service?.close();
     });
-  
+
     webRTCProxyTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal`, port: rpcPortB });
   });
 

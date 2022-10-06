@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
 import { SignalMessage } from '../signal';
@@ -201,7 +201,7 @@ describe('WebRTCTransportProxy', () => {
     after(async () => {
       service?.close();
       rpcClient?.close();
-    })
+    });
 
     it('establish connection and send data through with protocol', async () => {
       const topic = PublicKey.random();
@@ -262,5 +262,5 @@ describe('WebRTCTransportProxy', () => {
         expect(received[1]).toBe('Foo');
       });
     }).timeout(2_000);
-  })
+  });
 });
