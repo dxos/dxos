@@ -21,6 +21,7 @@ export {
 } from '@dxos/echo-db';
 
 export {
+  clientServiceBundle,
   InvitationDescriptor
 } from '@dxos/client-services';
 

@@ -85,9 +85,9 @@ packages/core/echo/object-model/dist/src/object-model.d.ts:25
 
 ## Accessors
 
-### itemId
+### item_id
 
-`get` **itemId**(): `string`
+`get` **item_id**(): `string`
 
 #### Returns
 
@@ -95,7 +95,7 @@ packages/core/echo/object-model/dist/src/object-model.d.ts:25
 
 #### Inherited from
 
-Model.itemId
+Model.item_id
 
 #### Defined in
 

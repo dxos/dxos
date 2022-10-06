@@ -158,6 +158,7 @@ message Runtime {
       /// Seconds
       optional int64 interval = 2;
     }
+
     message Https {
       optional bool enabled = 1;
       optional string port = 2;
@@ -165,11 +166,13 @@ message Runtime {
       optional string certfile = 4;
       optional string keyfile = 5;
     }
+
     message P2P {
-      optional string privatekey = 1;
+      optional string private_key = 1;
       optional string port = 2;
       repeated string bootstrap = 3;
     }
+
     optional string host = 1;
     optional string port = 2;
     optional Autoupdate autoupdate = 3;

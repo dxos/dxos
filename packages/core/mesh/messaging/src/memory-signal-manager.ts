@@ -7,6 +7,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -56,12 +57,10 @@ export class MemorySignalManager implements SignalManager {
 
   async join ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
 
     this._context.swarms.get(topic)!.add(peerId);
-    this._context.connections.set(peerId, this);
-
     this._context.swarmEvent.emit({
       topic,
       swarmEvent: {
@@ -90,7 +89,7 @@ export class MemorySignalManager implements SignalManager {
 
   async leave ({ topic, peerId }: { topic: PublicKey, peerId: PublicKey }) {
     if (!this._context.swarms.has(topic)) {
-      this._context.swarms.set(topic, new ComplexSet((x) => x.toHex()));
+      this._context.swarms.set(topic, new ComplexSet(key => key.toHex()));
     }
 
     this._context.swarms.get(topic)!.delete(peerId);
@@ -104,16 +103,21 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit({ topic, swarmEvent });
   }
 
-  async sendMessage ({ author, recipient, payload }: {author: PublicKey, recipient: PublicKey, payload: Any}) {
+  async sendMessage ({ author, recipient, payload }: { author: PublicKey, recipient: PublicKey, payload: Any }) {
     assert(recipient);
-    assert(this._context.connections.get(recipient), 'Peer not connected');
+    if (!this._context.connections.has(recipient)) {
+      log.warn('Recipient is not subscribed for messages.', { author, recipient });
+      return;
+    }
     this._context.connections
       .get(recipient)!
       .onMessage.emit({ author, recipient, payload });
   }
 
-  // TODO(mykola): Delete this.
-  async subscribeMessages (peerId: PublicKey): Promise<void> {}
+  async subscribeMessages (peerId: PublicKey): Promise<void> {
+    log(`Subscribing ${peerId} for messages`);
+    this._context.connections.set(peerId, this);
+  }
 
-  async destroy () {}
+  async destroy () { }
 }

@@ -2,7 +2,7 @@
 
 [@dxos/network-manager](../modules/dxos_network_manager.md).transportProtocolProvider
 
-**transportProtocolProvider**(`rendezvousKey`, `peerId`, `protocolPlugin`): [`ProtocolProvider`](../types/dxos_network_manager.ProtocolProvider.md)
+**transportProtocolProvider**(`rendezvous_key`, `peer_id`, `protocolPlugin`): [`ProtocolProvider`](../types/dxos_network_manager.ProtocolProvider.md)
 
 Creates a ProtocolProvider for simple transport connections with only one protocol plugin.
 
@@ -14,8 +14,8 @@ Use `createProtocolFactory`.
 
 | Name | Type |
 | :------ | :------ |
-| `rendezvousKey` | `Buffer` |
-| `peerId` | `Buffer` |
+| `rendezvous_key` | `Buffer` |
+| `peer_id` | `Buffer` |
 | `protocolPlugin` | `any` |
 
 #### Returns

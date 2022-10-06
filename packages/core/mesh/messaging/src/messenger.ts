@@ -33,14 +33,16 @@ export interface MessengerOptions {
 
 export class Messenger {
   private readonly _signalManager: SignalManager;
-  private readonly _listeners = new Map<string, Set<OnMessage>>();
-  private readonly _defaultListeners = new Set<OnMessage>();
+  //* * { peerId, payloadType } => listeners set */
+  private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(({ peerId, payloadType }) => peerId.toHex() + payloadType);
+  //* * peerId => listeners set */
+  private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(key => key.toHex());
 
-  private readonly _retryDelay: number;
-  private readonly _timeout: number;
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(key => key.toHex());
   private readonly _receivedMessages = new ComplexSet<PublicKey>((key) => key.toHex());
   private readonly _subscriptions = new SubscriptionGroup();
+  private readonly _retryDelay: number;
+  private readonly _timeout: number;
 
   constructor ({
     signalManager,
@@ -108,30 +110,37 @@ export class Messenger {
    * Subscribes onMessage function to messages that contains payload with payloadType.
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
-  listen ({
+  async listen ({
+    peerId,
     payloadType,
     onMessage
   }: {
+    peerId: PublicKey
     payloadType?: string
     onMessage: OnMessage
-  }): ListeningHandle {
+  }): Promise<ListeningHandle> {
+    await this._signalManager.subscribeMessages(peerId);
+    let listeners: Set<OnMessage> | undefined;
+
     if (!payloadType) {
-      this._defaultListeners.add(onMessage);
+      listeners = this._defaultListeners.get(peerId);
+      if (!listeners) {
+        listeners = new Set();
+        this._defaultListeners.set(peerId, listeners);
+      }
     } else {
-      if (this._listeners.has(payloadType)) {
-        this._listeners.get(payloadType)!.add(onMessage);
-      } else {
-        this._listeners.set(payloadType, new Set([onMessage]));
+      listeners = this._listeners.get({ peerId, payloadType });
+      if (!listeners) {
+        listeners = new Set();
+        this._listeners.set({ peerId, payloadType }, listeners);
       }
     }
 
+    listeners.add(onMessage);
+
     return {
       unsubscribe: async () => {
-        if (!payloadType) {
-          this._defaultListeners.delete(onMessage);
-        } else {
-          this._listeners.get(payloadType)?.delete(onMessage);
-        }
+        listeners!.delete(onMessage);
       }
     };
   }
@@ -183,7 +192,6 @@ export class Messenger {
     log(`Handling message with ${reliablePayload.messageId}`);
 
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
-      log(`Already received ${reliablePayload.messageId}`);
       return;
     }
     this._receivedMessages.add(reliablePayload.messageId!);
@@ -206,7 +214,7 @@ export class Messenger {
       schema
         .getCodecForType('dxos.mesh.messaging.Acknowledgement')
         .decode(payload.value).messageId
-    )!();
+    )?.();
   }
 
   private async _sendAcknowledgement ({
@@ -232,13 +240,21 @@ export class Messenger {
   }
 
   private async _callListeners (message: Message): Promise<void> {
-    for (const listener of this._defaultListeners.values()) {
-      await listener(message);
+    {
+      const defaultListenerMap = this._defaultListeners.get(message.recipient);
+      if (defaultListenerMap) {
+        for (const listener of defaultListenerMap) {
+          await listener(message);
+        }
+      }
     }
 
-    if (this._listeners.has(message.payload.type_url)) {
-      for (const listener of this._listeners.get(message.payload.type_url)!) {
-        await listener(message);
+    {
+      const listenerMap = this._listeners.get({ peerId: message.recipient, payloadType: message.payload.type_url });
+      if (listenerMap) {
+        for (const listener of listenerMap) {
+          await listener(message);
+        }
       }
     }
   }

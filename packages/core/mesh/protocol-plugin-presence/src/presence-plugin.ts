@@ -309,7 +309,7 @@ export class PresencePlugin {
     log(`_addPeer ${peerId}`);
 
     if (!peerId) {
-      this._error.emit(new Error('peerId not found'));
+      this._error.emit(new Error('peer_id not found'));
       return;
     }
 

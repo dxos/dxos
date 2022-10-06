@@ -9,8 +9,8 @@
 | Name | Type |
 | :------ | :------ |
 | `haloGenesisFeedKey` | `PublicKey` |
-| `haloSpaceKey` | `PublicKey` |
-| `identityKey` | `PublicKey` |
+| `halo_space_key` | `PublicKey` |
+| `identity_key` | `PublicKey` |
 
 #### Defined in
 

@@ -24,9 +24,9 @@ Party API.
 
 ___
 
-### isActive
+### is_active
 
-`get` **isActive**(): `boolean`
+`get` **is_active**(): `boolean`
 
 #### Returns
 
@@ -38,9 +38,9 @@ ___
 
 ___
 
-### isOpen
+### is_open
 
-`get` **isOpen**(): `boolean`
+`get` **is_open**(): `boolean`
 
 #### Returns
 

@@ -62,13 +62,13 @@ ___
 
 ### addKeyRecord
 
-**addKeyRecord**(`keyRecord`): `Promise`<`void`\>
+**addKeyRecord**(`key_record`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `keyRecord` | [`KeyRecord`](dxos_client.KeyRecord.md) |
+| `key_record` | [`KeyRecord`](dxos_client.KeyRecord.md) |
 
 #### Returns
 
@@ -184,13 +184,13 @@ ___
 
 ### recoverProfile
 
-**recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
+**recoverProfile**(`seed_phrase`): `Promise`<[`Profile`](dxos_client.Profile.md)\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `seedPhrase` | `string` |
+| `seed_phrase` | `string` |
 
 #### Returns
 

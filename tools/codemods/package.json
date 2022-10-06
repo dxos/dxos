@@ -10,8 +10,12 @@
   },
   "scripts": {},
   "dependencies": {
+    "jscodeshift": "^0.13.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.19.3",
     "@types/jscodeshift": "^0.11.5",
-    "jscodeshift": "^0.13.1",
     "typescript": "^4.7.2"
   }
 }

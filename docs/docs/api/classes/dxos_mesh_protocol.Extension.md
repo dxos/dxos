@@ -344,7 +344,7 @@ ___
 
 ### onFeed
 
-**onFeed**(`discoveryKey`): `Promise`<`void`\>
+**onFeed**(`discovery_key`): `Promise`<`void`\>
 
 Feed event.
 
@@ -352,7 +352,7 @@ Feed event.
 
 | Name | Type |
 | :------ | :------ |
-| `discoveryKey` | `Buffer` |
+| `discovery_key` | `Buffer` |
 
 #### Returns
 

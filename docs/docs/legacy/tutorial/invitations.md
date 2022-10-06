@@ -15,8 +15,8 @@ We will then create a new component `src/components/TaskList.js` that will handl
 ```jsx:title=src/components/TaskList.js
 import { useParty } from '@dxos/react-client';
 
-const TaskList = ({ partyKey }) => {
-  const party = useParty(partyKey);
+const TaskList = ({ party_key }) => {
+  const party = useParty(party_key);
 
   // ...
 
@@ -57,7 +57,7 @@ const Main = () => {
     <div className={classes.root}>
       {/* ... */}
 
-      <main className={classes.main}>{partyKey && <TaskList partyKey={partyKey} />}</main>
+      <main className={classes.main}>{party_key && <TaskList party_key={party_key} />}</main>
     </div>
   );
 };

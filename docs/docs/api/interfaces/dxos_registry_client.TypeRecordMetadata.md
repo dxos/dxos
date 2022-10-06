@@ -26,13 +26,13 @@ Record metadata provided by the user.
 
 ___
 
-### displayName
+### display_name
 
- `Optional` **displayName**: `string`
+ `Optional` **display_name**: `string`
 
 #### Inherited from
 
-[RecordMetadata](dxos_registry_client.RecordMetadata.md).[displayName](dxos_registry_client.RecordMetadata.md#displayname)
+[RecordMetadata](dxos_registry_client.RecordMetadata.md).[display_name](dxos_registry_client.RecordMetadata.md#displayname)
 
 #### Defined in
 

@@ -168,13 +168,13 @@ ___
 
 ### \_closeConnection
 
-`Private` **_closeConnection**(`peerId`): `Promise`<`void`\>
+`Private` **_closeConnection**(`peer_id`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `peerId` | `PublicKey` |
+| `peer_id` | `PublicKey` |
 
 #### Returns
 

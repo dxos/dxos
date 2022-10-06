@@ -48,7 +48,7 @@ const createPeer = async ({
 
   const plugin = new TestProtocolPlugin(peerId.asBuffer());
   const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin);
-  networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
+  await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology });
 
   return {
     networkManager,
@@ -154,7 +154,7 @@ export const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemor
 
     log('Reconnecting peer2');
     const newPeer2Id = PublicKey.random();
-    networkManager2.joinProtocolSwarm({
+    await networkManager2.joinProtocolSwarm({
       topic,
       peerId: newPeer2Id,
       protocol: testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2),
@@ -170,6 +170,39 @@ export const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemor
     await networkManager2.destroy();
     log('Peer2 destroyed');
   }).timeout(10_000).retries(10);
+
+  it('join 2 swarms', async () => {
+    const peerId = PublicKey.random();
+    const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
+    const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
+
+    const signalManager = inMemory ? new MemorySignalManager(signalContext) : new WebsocketSignalManager([signalUrl!]);
+    const networkManager = new NetworkManager({ signalManager });
+    afterTest(() => networkManager.destroy());
+
+    // Joining first swarm.
+    {
+      const topic = PublicKey.random();
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
+      await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+    }
+
+    // Joining second swarm with same peerId.
+    {
+      const topic = PublicKey.random();
+      const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
+      await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
+      // Creating and joining second peer.
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined });
+    }
+
+    await Promise.all([
+      Event.wrap(plugin1, 'connect').waitForCount(1),
+      Event.wrap(plugin2, 'connect').waitForCount(1)
+    ]);
+  });
 };
 
 // eslint-disable-next-line jest/no-export
@@ -366,7 +399,7 @@ export function inMemoryTests() {
 
               const actuallyConnectedPeers = peer.presence!.peers;
               if (!actuallyConnectedPeers.some(x => PublicKey.equals(expectedJoinedPeer, x))) {
-                throw new Error(`Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(x => x.toString('hex'))}`);
+                throw new Error(`Expected ${expectedJoinedPeer} to be in the list of joined peers of peer ${peer.presence.peerId.toString('hex')}, actually connected peers: ${actuallyConnectedPeers.map(key => key.toString('hex'))}`);
               }
             }
           }
@@ -432,7 +465,7 @@ export function inMemoryTests() {
         afterTest(() => presence.stop());
         const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-        peer.networkManager.joinProtocolSwarm({
+        await peer.networkManager.joinProtocolSwarm({
           peerId: this.peerId, // TODO(burdon): `this`?
           topic: model.topic,
           protocol,
@@ -483,11 +516,11 @@ export function inMemoryTests() {
         const s: ModelRunSetup<Model, Real> = () => ({
           model: {
             topic: PublicKey.random(),
-            peers: new ComplexSet(x => x.toHex()),
-            joinedPeers: new ComplexSet(x => x.toHex())
+            peers: new ComplexSet(key => key.toHex()),
+            joinedPeers: new ComplexSet(key => key.toHex())
           },
           real: {
-            peers: new ComplexMap(x => x.toHex())
+            peers: new ComplexMap(key => key.toHex())
           }
 
         });

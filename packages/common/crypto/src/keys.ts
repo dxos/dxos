@@ -39,7 +39,7 @@ export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(
 export const randomBytes = (length = 32): Buffer => crypto.randomBytes(length);
 
 /**
- * Sign the contents of message with secretKey
+ * Sign the contents of message with secret_key
  * @param {Buffer} message
  * @param {Buffer} secretKey
  * @returns {Buffer} signature
@@ -52,7 +52,7 @@ export const sign = (message: Buffer, secretKey: Buffer): Buffer => {
 };
 
 /**
- * Verifies the signature against the message and publicKey.
+ * Verifies the signature against the message and public_key.
  * @param {Buffer} message
  * @param {Buffer} publicKey
  * @param {Buffer} signature

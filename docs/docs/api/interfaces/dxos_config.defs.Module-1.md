@@ -46,9 +46,9 @@ packages/core/protocols/dist/src/proto/gen/dxos/config.d.ts:81
 
 ___
 
-### displayName
+### display_name
 
- `Optional` **displayName**: `string`
+ `Optional` **display_name**: `string`
 
 Options:
   - proto3_optional = true

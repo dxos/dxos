@@ -7,9 +7,9 @@ Defined in:
 
 ## Properties
 
-### publicKey
+### public_key
 
- **publicKey**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
+ **public_key**: [`PublicKey`](../classes/dxos_client.PublicKey.md)
 
 #### Defined in
 

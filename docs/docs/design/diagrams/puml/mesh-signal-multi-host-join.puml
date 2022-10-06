@@ -19,7 +19,7 @@ fkube -[#green]> psn: Sub(topic:peer/bob)
 bob -> fkube:         Join(swarm:s0 peer:bob)
 fkube -[#green]> psn: Sub(topic:host/fkube)
 fkube -[#green]> psn: Sub(topic:swarm/s0)
-fkube -[#blue]> psn:  Pub(topic:swarm/s0 peerAvailable:bob timeout:600 announceBackTo:fkube)
+fkube -[#blue]> psn:  Pub(topic:swarm/s0 peer_available:bob timeout:600 announceBackTo:fkube)
 ...later on...
 autonumber inc A
 == Alice joins ==
@@ -33,8 +33,8 @@ akube -[#green]> psn: Sub(topic:swarm/s0)
 fkube -[#blue]> psn:  Pub(topic:host/akube peer:bob)
 psn -[#blue]> akube:  Pub(topic:host/akube peer:bob)
 akube -> alice:       Join(s:s0 p:alice).PeerAvailable(peer:bob)
-akube -[#blue]> psn:  Pub(topic:swarm/s0 peerAvailable:alice timeout:600)
-psn   -[#blue]> fkube:Pub(topic:swarm/s0 peerAvailable:alice timeout:600)
+akube -[#blue]> psn:  Pub(topic:swarm/s0 peer_available:alice timeout:600)
+psn   -[#blue]> fkube:Pub(topic:swarm/s0 peer_available:alice timeout:600)
 fkube -> bob:         Join(s:s0 p:bob).PeerAvailable(peer:alice)
 
 == Alice messages Bob to connect ==
@@ -62,8 +62,8 @@ autonumber inc A
 alice -> akube:       Join(s:s0 p:alice).close()
 akube -[#red]> psn:   Unsub(topic:swarm/s0)
 akube -[#red]> psn:   Unsub(topic:host/akube)
-akube -[#blue]> psn:  Pub(topic:swarm/s0 peerLeft:alice)
-psn -[#blue]> fkube:  Pub(topic:swarm/s0 peerLeft:alice)
+akube -[#blue]> psn:  Pub(topic:swarm/s0 peer_left:alice)
+psn -[#blue]> fkube:  Pub(topic:swarm/s0 peer_left:alice)
 fkube -> bob:         Join(s:s0 p:bob).PeerLeft(peer:alice)
 alice -> akube:       Subscribe(p:alice).close()
 akube -[#red]> psn:   Unsub(topic:peer/alice)
@@ -74,27 +74,27 @@ autonumber inc A
 charlie -> fkube:     ReceiveMessages(key:charlie)
 fkube -[#green]> psn: Sub(topic:peer/charlie)
 charlie -> fkube:     Join(swarm:s0 peer:charlie)
-fkube -[#blue]> psn:  Pub(topic:swarm/s0 peerAvailable:charlie timeout:600 announceBackTo:fkube)
+fkube -[#blue]> psn:  Pub(topic:swarm/s0 peer_available:charlie timeout:600 announceBackTo:fkube)
 fkube -> bob:         Join(s:s0 p:bob).PeerAvailable(peer:charlie)
 ...eventually...
 == The family's kube reannounces Bob ==
 autonumber inc A
 fkube -> fkube:       <i>previous announcement times out</i>
-fkube -[#blue]> psn:  Pub(topic:swarm/s0 peerAvailable:bob timeout:600)
+fkube -[#blue]> psn:  Pub(topic:swarm/s0 peer_available:bob timeout:600)
 ...eventually...
 == Bob leaves unexpectedly ==
 autonumber inc A
 bob X-X fkube:       <i>disconnect</i>
 fkube -> fkube:      <i>timeout waiting for return</i>
 fkube -[#red]> psn:  Unsub(topic:peer/bob)
-fkube -[#blue]> psn: Pub(topic:swarm/s0 peerLeft:bob)
+fkube -[#blue]> psn: Pub(topic:swarm/s0 peer_left:bob)
 fkube -> charlie:    Join(s:s0 p:charlie).PeerLeft(peer:bob)
 ...eventually...
 == The family's kube shuts down ==
 autonumber inc A
 fkube -> charlie:    Join(s:s0 p:charlie).Close()
 fkube -[#red]> psn:  Unsub(topic:swarm/s0)
-fkube -[#blue]> psn: Pub(topic:swarm/s0 peerLeft:charlie)
+fkube -[#blue]> psn: Pub(topic:swarm/s0 peer_left:charlie)
 fkube -> charlie:    ReceiveMessages(key:charlie).Close()
 fkube -[#red]> psn:  Unsub(topic:peer/charlie)
 fkube X-X charlie:   <i>disconnect</i>

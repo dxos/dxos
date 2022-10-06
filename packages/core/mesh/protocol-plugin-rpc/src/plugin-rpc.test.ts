@@ -19,7 +19,7 @@ import { PluginRpc } from './plugin-rpc';
 
 const signalContext = new MemorySignalManagerContext();
 
-const createPeer = (
+const createPeer = async (
   topic: PublicKey,
   peerId: PublicKey,
   onConnect: (port: RpcPort, peerId: string) => void
@@ -27,7 +27,7 @@ const createPeer = (
   const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
   afterTest(() => networkManager.destroy());
   const plugin = new PluginRpc(onConnect);
-  networkManager.joinProtocolSwarm({
+  await networkManager.joinProtocolSwarm({
     topic,
     peerId,
     protocol: createProtocolFactory(
@@ -50,11 +50,11 @@ describe('Protocol plugin rpc', () => {
     const serverConnected = connected.waitFor(() => !!clientPort);
     const clientConnected = connected.waitFor(() => !!serverPort);
 
-    const { plugin: server } = createPeer(topic, topic, (port) => {
+    const { plugin: server } = await createPeer(topic, topic, (port) => {
       serverPort = port;
       connected.emit();
     });
-    const { plugin: client } = createPeer(topic, clientId, (port) => {
+    const { plugin: client } = await createPeer(topic, clientId, (port) => {
       clientPort = port;
       connected.emit();
     });
@@ -89,7 +89,7 @@ describe('Protocol plugin rpc', () => {
     const serverConnected = connected.waitFor(() => !!server);
     const clientConnected = connected.waitFor(() => !!client);
 
-    createPeer(topic, topic, async (port) => {
+    await createPeer(topic, topic, async (port) => {
       server = createRpcServer({
         service,
         handlers: {
@@ -103,7 +103,7 @@ describe('Protocol plugin rpc', () => {
       });
       connected.emit();
     });
-    createPeer(topic, clientId, async (port) => {
+    await createPeer(topic, clientId, async (port) => {
       client = createRpcClient(service, { port });
       connected.emit();
     });
@@ -136,7 +136,7 @@ describe('Protocol plugin rpc', () => {
     const client1Connected = connected.waitFor(() => !!client1);
     const client2Connected = connected.waitFor(() => !!client2);
 
-    createPeer(topic, topic, async (port, peerId) => {
+    await createPeer(topic, topic, async (port, peerId) => {
       const server = createRpcServer({
         service,
         handlers: {
@@ -151,12 +151,12 @@ describe('Protocol plugin rpc', () => {
       await server.open();
     });
 
-    createPeer(topic, client1Id, async (port) => {
+    await createPeer(topic, client1Id, async (port) => {
       client1 = createRpcClient(service, { port });
       await client1.open();
       connected.emit();
     });
-    createPeer(topic, client2Id, async (port) => {
+    await createPeer(topic, client2Id, async (port) => {
       client2 = createRpcClient(service, { port });
       await client2.open();
       connected.emit();

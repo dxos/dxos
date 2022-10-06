@@ -19,7 +19,7 @@ Let's create a new dialog component to handle this logic:
 ```jsx:title=src/components/PartySettings.js
 import { useClient } from '@dxos/react-client';
 
-const PartySettings = ({ partyKey = undefined, onClose }) => {
+const PartySettings = ({ party_key = undefined, onClose }) => {
   const client = useClient();
   const [title, setTitle] = useState('');
 
@@ -117,9 +117,9 @@ Take a look at the code below, we are using the `useParty` hook to be able to ju
 ```jsx:title=src/components/PartySettings.js
 import { useClient, useParty } from '@dxos/react-client';
 
-const PartySettings = ({ partyKey = undefined, onClose }) => {
+const PartySettings = ({ party_key = undefined, onClose }) => {
   const client = useClient();
-  const party = useParty(partyKey);
+  const party = useParty(party_key);
 
   const [title, setTitle] = useState(party ? party.getProperty('title') : '');
 
@@ -131,14 +131,14 @@ const PartySettings = ({ partyKey = undefined, onClose }) => {
       await party.setProperty('title', title);
     }
 
-    onClose({ partyKey });
+    onClose({ party_key });
   };
 
   return <Dialog />;
 };
 ```
 
-You are going to need to add a button to each party to trigger the dialog and send the `partyKey` of the selected party to the `PartySettings` dialog.
+You are going to need to add a button to each party to trigger the dialog and send the `party_key` of the selected party to the `PartySettings` dialog.
 
 ```jsx:title=src/components/PartyList.js
 import { useParties } from '@dxos/react-client';
@@ -152,7 +152,7 @@ const PartyList = ({ onSelectParty }) => {
 
   return (
     <div>
-      {settingsDialog && <PartySettings partyKey={settingsPartyKey} onClose={() => setSettingsDialog({})} />}
+      {settingsDialog && <PartySettings party_key={settingsPartyKey} onClose={() => setSettingsDialog({})} />}
 
       <List disablePadding>
         {parties.map((party) => (

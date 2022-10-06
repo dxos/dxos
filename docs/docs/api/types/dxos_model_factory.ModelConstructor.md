@@ -2,7 +2,7 @@
 
 [@dxos/model-factory](../modules/dxos_model_factory.md).ModelConstructor
 
- **ModelConstructor**<`M`\>: (`meta`: [`ModelMeta`](dxos_model_factory.ModelMeta.md), `itemId`: `ItemID`, `getState`: () => [`StateOf`](dxos_model_factory.StateOf.md)<`M`\>, `MutationWriter?`: [`MutationWriter`](dxos_model_factory.MutationWriter.md)<[`MutationOf`](dxos_model_factory.MutationOf.md)<`M`\>\>) => `M` & { `meta`: [`ModelMeta`](dxos_model_factory.ModelMeta.md)  }
+ **ModelConstructor**<`M`\>: (`meta`: [`ModelMeta`](dxos_model_factory.ModelMeta.md), `item_id`: `ItemID`, `getState`: () => [`StateOf`](dxos_model_factory.StateOf.md)<`M`\>, `MutationWriter?`: [`MutationWriter`](dxos_model_factory.MutationWriter.md)<[`MutationOf`](dxos_model_factory.MutationOf.md)<`M`\>\>) => `M` & { `meta`: [`ModelMeta`](dxos_model_factory.ModelMeta.md)  }
 
 #### Type parameters
 

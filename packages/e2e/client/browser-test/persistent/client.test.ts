@@ -14,7 +14,7 @@ describe('Client - persistent', () => {
     await client.initialize(); // TODO(marik-d): This line does not work.
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'Reset test 1'
+      username: 'test-user-1'
     });
 
     expect(client.echo.queryParties().value.length).toBe(0);
@@ -41,7 +41,7 @@ describe('Client - persistent', () => {
       await client2.initialize();
       await client2.halo.createProfile({
         ...createKeyPair(),
-        username: 'Reset test 2'
+        username: 'test-user-2'
       });
       expect(client2.echo.queryParties().value.length).toBe(0);
     }
@@ -51,20 +51,20 @@ describe('Client - persistent', () => {
   it('MetadataStore save/load', async () => {
     const storage = createStorage({ type: StorageType.IDB });
     const directory = storage.createDirectory('metadata');
-    const partyKey = PublicKey.random();
+    const party_key = PublicKey.random();
 
     // Create a new metadata store. And adding party.
     {
       const metadataStore = new MetadataStore(directory);
-      await metadataStore.addParty(partyKey);
+      await metadataStore.addParty(party_key);
     }
 
     // Create a new metadata store in same directory. And check if loads party.
     {
       const metadataStore = new MetadataStore(directory);
       await metadataStore.load();
-      const partyLoaded = metadataStore.getParty(partyKey);
-      expect(partyLoaded?.key).toEqual(partyKey);
+      const partyLoaded = metadataStore.getParty(party_key);
+      expect(partyLoaded?.key).toEqual(party_key);
     }
   }).retries(10);
   */

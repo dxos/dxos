@@ -18,12 +18,12 @@ import { SignalManager } from './signal-manager';
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClient>();
 
-  /** Topics joined: topic => peerId */
+  /** Topics joined: topic => peer_id */
   private readonly _topicsJoined = new ComplexMap<PublicKey, PublicKey>(
     (topic) => topic.toHex()
   );
 
-  /** host => topic => peerId */
+  /** host => topic => peer_id */
   private readonly _topicsJoinedPerSignal = new Map<string, ComplexMap<PublicKey, PublicKey>>();
 
   private _reconciling?: boolean = false;
@@ -61,7 +61,7 @@ export class WebsocketSignalManager implements SignalManager {
 
       this._servers.set(host, server);
       server.commandTrace.on((trace) => this.commandTrace.emit(trace));
-      this._topicsJoinedPerSignal.set(host, new ComplexMap((x) => x.toHex()));
+      this._topicsJoinedPerSignal.set(host, new ComplexMap(key => key.toHex()));
     }
   }
 
@@ -182,7 +182,7 @@ export class WebsocketSignalManager implements SignalManager {
       [...this._servers.values()].map((server: SignalClient) =>
         server
           .sendMessage({ author, recipient, payload })
-          .catch((err) => log.error(`Error signaling: ${err}`))
+          .catch((err) => log(err))
       )
     );
   }

@@ -143,7 +143,7 @@ describe('halo/identity', () => {
         networkPlugins: [],
         swarmIdentity: {
           peerKey: deviceKey,
-          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
+          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         }
       });
@@ -211,7 +211,7 @@ describe('halo/identity', () => {
         networkPlugins: [],
         swarmIdentity: {
           peerKey: deviceKey,
-          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
+          credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         }
       });

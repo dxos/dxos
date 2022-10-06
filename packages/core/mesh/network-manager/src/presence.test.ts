@@ -17,7 +17,7 @@ import { inMemoryTransportFactory } from './transport';
 
 const signalContext = new MemorySignalManagerContext();
 
-const createPeer = (topic: PublicKey) => {
+const createPeer = async (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
   const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
@@ -26,7 +26,7 @@ const createPeer = (topic: PublicKey) => {
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
   afterTest(() => presencePlugin.stop());
 
-  networkManager.joinProtocolSwarm({
+  await networkManager.joinProtocolSwarm({
     peerId,
     protocol: createProtocolFactory(topic, peerId, [presencePlugin]),
     topic,
@@ -39,34 +39,32 @@ const createPeer = (topic: PublicKey) => {
 describe('Presence', () => {
   it('sees connected peers', async () => {
     const topic = PublicKey.random();
-
-    const peer1 = createPeer(topic);
-    const peer2 = createPeer(topic);
+    const peer1 = await createPeer(topic);
+    const peer2 = await createPeer(topic);
 
     await waitForExpect(() => {
-      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
-        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+      expect(peer1.presence.peers.map(key => key.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(key => key.peerId.toHex()).sort());
 
-      expect(peer2.presence.peers.map(x => x.toString('hex')).sort())
-        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+      expect(peer2.presence.peers.map(key => key.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(key => key.peerId.toHex()).sort());
     });
   });
 
   it('removes disconnected peers', async () => {
     const topic = PublicKey.random();
-
-    const peer1 = createPeer(topic);
-    const peer2 = createPeer(topic);
+    const peer1 = await createPeer(topic);
+    const peer2 = await createPeer(topic);
 
     await waitForExpect(() => {
-      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
-        .toEqual([peer1, peer2].map(x => x.peerId.toHex()).sort());
+      expect(peer1.presence.peers.map(key => key.toString('hex')).sort())
+        .toEqual([peer1, peer2].map(key => key.peerId.toHex()).sort());
     });
 
     await peer2.networkManager.leaveProtocolSwarm(topic);
 
     await waitForExpect(() => {
-      expect(peer1.presence.peers.map(x => x.toString('hex')).sort())
+      expect(peer1.presence.peers.map(key => key.toString('hex')).sort())
         .toEqual([peer1].map(x => x.peerId.toHex()).sort());
     });
   });

@@ -53,7 +53,6 @@ const main = async () => {
   const signal = config.get('runtime.services.signal.server');
   assert(signal, 'Signal server must be provided');
   const networkManager = new NetworkManager({
-    // TODO(mykola): SignalManager should be subscribed for message receiving first.
     signalManager: new WebsocketSignalManager([signal]),
     transportFactory: createWebRTCTransportFactory()
   });

@@ -171,13 +171,13 @@ ___
 
 ### addKeyRecord
 
-**addKeyRecord**(`keyRecord`): `Promise`<`void`\>
+**addKeyRecord**(`key_record`): `Promise`<`void`\>
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `keyRecord` | [`KeyRecord`](../interfaces/dxos_client.KeyRecord.md) |
+| `key_record` | [`KeyRecord`](../interfaces/dxos_client.KeyRecord.md) |
 
 #### Returns
 
@@ -338,7 +338,7 @@ ___
 
 ### recoverProfile
 
-**recoverProfile**(`seedPhrase`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
+**recoverProfile**(`seed_phrase`): `Promise`<[`Profile`](../interfaces/dxos_client.Profile.md)\>
 
 Joins an existing identity HALO from a recovery seed phrase.
 
@@ -346,7 +346,7 @@ Joins an existing identity HALO from a recovery seed phrase.
 
 | Name | Type |
 | :------ | :------ |
-| `seedPhrase` | `string` |
+| `seed_phrase` | `string` |
 
 #### Returns
 

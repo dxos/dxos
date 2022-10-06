@@ -13,7 +13,7 @@ message TimeframeVector {
   message Frame {
     // TODO(marik-d): Compress using numeric feed indexes.
     // TODO(burdon): Determine if admit DAG can be ordered. Requires party messages to be ordered (by lexical feed key).
-    bytes feedKey = 1;
+    bytes feed_key = 1;
     int32 seq = 3;
   }
 

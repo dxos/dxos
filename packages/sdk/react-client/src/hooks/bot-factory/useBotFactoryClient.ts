@@ -26,7 +26,6 @@ const signalContext = new MemorySignalManagerContext();
 export const createBotFactoryClient = async (config: Config): Promise<BotFactoryClient> => {
   const signal = config.get('runtime.services.signal.server');
   const networkManager = new NetworkManager({
-    // TODO(mykola): SignalManager need to be subscribed for message receiving first.
     signalManager: signal ? new WebsocketSignalManager([signal]) : new MemorySignalManager(signalContext),
     transportFactory: createWebRTCTransportFactory({ iceServers: config.get('runtime.services.ice') }),
     log: true

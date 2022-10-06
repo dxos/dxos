@@ -57,7 +57,7 @@ export interface Options extends CacheOptions {
 }
 
 export interface PublishOptions {
-  seqno?: Buffer
+  seq?: Buffer
 }
 
 export interface Peer {
@@ -110,13 +110,13 @@ export class Broadcast<P extends Peer = Peer> {
    * Broadcast a flooding message to the peers neighbors.
    */
   async publish (data: Uint8Array, options: PublishOptions = {}): Promise<Packet | undefined> {
-    const { seqno = randomBytes(32) } = options;
+    const { seq = randomBytes(32) } = options;
 
     assert(Buffer.isBuffer(data));
-    assert(Buffer.isBuffer(seqno));
+    assert(Buffer.isBuffer(seq));
 
     return this._publish({
-      seqno,
+      seq,
       origin: this._id,
       data
     });
@@ -225,7 +225,7 @@ export class Broadcast<P extends Peer = Peer> {
 
     try {
       const packet = this._codec.decode(packetEncoded);
-      if (!packet || !packet.seqno || !packet.origin || !packet.from) {
+      if (!packet || !packet.seq || !packet.origin || !packet.from) {
         return;
       }
 
@@ -234,7 +234,7 @@ export class Broadcast<P extends Peer = Peer> {
         return;
       }
 
-      const packetId = Buffer.from(packet.origin).toString('hex') + ':' + Buffer.from(packet.seqno).toString('hex');
+      const packetId = Buffer.from(packet.origin).toString('hex') + ':' + Buffer.from(packet.seq).toString('hex');
 
       // Check if I already see this packet.
       if (this._seenSeqs.get(packetId)) {
