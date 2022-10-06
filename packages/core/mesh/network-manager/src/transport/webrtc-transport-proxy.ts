@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -34,25 +35,28 @@ export class WebRTCTransportProxy implements Transport {
   private _serviceStream!: Stream<BridgeEvent>;
   private readonly _proxyId = PublicKey.random();
 
-  constructor (private readonly _params: WebRTCTransportProxyParams) {
+  constructor(private readonly _params: WebRTCTransportProxyParams) {
     this._serviceStream = this._params.bridgeService.open({ proxyId: this._proxyId, initiator: this._params.initiator });
 
-    this._serviceStream.waitUntilReady().then(() => {
-      this._serviceStream.subscribe(async (msg: BridgeEvent) => {
-        if (msg.connection) {
-          await this._handleConnection(msg.connection);
-        } else if (msg.data) {
-          this._handleData(msg.data);
-        } else if (msg.signal) {
-          await this._handleSignal(msg.signal);
-        }
-      });
+    this._serviceStream.waitUntilReady().then(
+      () => {
+        this._serviceStream.subscribe(async (msg: BridgeEvent) => {
+          if (msg.connection) {
+            await this._handleConnection(msg.connection);
+          } else if (msg.data) {
+            this._handleData(msg.data);
+          } else if (msg.signal) {
+            await this._handleSignal(msg.signal);
+          }
+        });
 
-      this._params.stream.on('data', async (data: Uint8Array) => this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data }));
-    });
+        this._params.stream.on('data', async (data: Uint8Array) => this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data }));
+      },
+      (error) => log.catch(error)
+    );
   }
 
-  private async _handleConnection (connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
+  private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
       this.errors.raise(new Error(connectionEvent.error));
     }
@@ -69,11 +73,11 @@ export class WebRTCTransportProxy implements Transport {
     }
   }
 
-  private _handleData (dataEvent: BridgeEvent.DataEvent) {
+  private _handleData(dataEvent: BridgeEvent.DataEvent) {
     this._params.stream.write(dataEvent.payload);
   }
 
-  private async _handleSignal (signalEvent: BridgeEvent.SignalEvent) {
+  private async _handleSignal(signalEvent: BridgeEvent.SignalEvent) {
     await this._params.sendSignal({
       author: this._params.ownId,
       recipient: this._params.remoteId,
@@ -83,11 +87,11 @@ export class WebRTCTransportProxy implements Transport {
     });
   }
 
-  async signal (signal: Signal): Promise<void> {
+  async signal(signal: Signal): Promise<void> {
     await this._params.bridgeService.sendSignal({ proxyId: this._proxyId, signal });
   }
 
-  async close (): Promise<void> {
+  async close(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -111,7 +115,7 @@ export const createWebRTCTransportProxyFactory = ({ port }: { port: RpcPort }): 
       preserveAny: true
     }
   });
-  rpc.open();
+  rpc.open().catch(error => log.catch(error));
 
   return (params: TransportOptions) => new WebRTCTransportProxy({
     bridgeService: rpc.rpc.BridgeService,

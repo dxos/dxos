@@ -62,9 +62,9 @@ const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemory: bool
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
-    const { plugin: plugin1, networkManager: nm1 } =
+    const { plugin: plugin1 } =
       await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory });
-    const { plugin: plugin2, networkManager: nm2 } =
+    const { plugin: plugin2 } =
       await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory });
 
     const received: any[] = [];
