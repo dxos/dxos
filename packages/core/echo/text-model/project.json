@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/core/echo/text-model/src/**/*"
         ],
-        "outputPath": "tmp/mocha/core/echo/text-model",
-        "resultsPath": "test-results/core/echo/text-model"
+        "outputPath": "tmp/mocha/packages/core/echo/text-model",
+        "resultsPath": "test-results/packages/core/echo/text-model"
       }
     }
   },

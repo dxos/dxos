@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/crypto/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/crypto",
-        "resultsPath": "test-results/common/crypto"
+        "outputPath": "tmp/mocha/packages/common/crypto",
+        "resultsPath": "test-results/packages/common/crypto"
       }
     }
   },

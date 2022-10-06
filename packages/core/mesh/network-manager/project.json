@@ -38,9 +38,9 @@
         "watchPatterns": [
           "packages/core/mesh/network-manager/src/**/*"
         ],
-        "outputPath": "tmp/mocha/core/mesh/network-manager",
-        "resultsPath": "test-results/core/mesh/network-manager",
-        "setup": "packages/core/mesh/signal/setup.js",
+        "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
+        "resultsPath": "test-results/packages/core/mesh/network-manager",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "forceExit": true
       }
     }

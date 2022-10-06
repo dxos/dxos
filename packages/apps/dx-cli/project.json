@@ -25,8 +25,8 @@
         "watchPatterns": [
           "packages/apps/dx-cli/src/**/*"
         ],
-        "outputPath": "tmp/mocha/apps/dx-cli",
-        "resultsPath": "test-results/apps/dx-cli",
+        "outputPath": "tmp/mocha/packages/apps/dx-cli",
+        "resultsPath": "test-results/packages/apps/dx-cli",
         "checkLeaks": false
       },
       "dependsOn": [

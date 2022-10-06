@@ -38,8 +38,8 @@
         "watchPatterns": [
           "packages/core/mesh/rpc/src/**/*"
         ],
-        "outputPath": "tmp/mocha/rpc",
-        "resultsPath": "test-results/rpc"
+        "outputPath": "tmp/mocha/packages/rpc",
+        "resultsPath": "test-results/packages/rpc"
       }
     }
   },

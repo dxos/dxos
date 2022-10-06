@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/core/halo/halo-protocol/src/**/*"
         ],
-        "outputPath": "tmp/mocha/core/halo/halo-protocol",
-        "resultsPath": "test-results/core/halo/halo-protocol"
+        "outputPath": "tmp/mocha/packages/core/halo/halo-protocol",
+        "resultsPath": "test-results/packages/core/halo/halo-protocol"
       }
     }
   },

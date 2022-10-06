@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/sdk/config/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/config",
-        "resultsPath": "test-results/sdk/config"
+        "outputPath": "tmp/mocha/packages/sdk/config",
+        "resultsPath": "test-results/packages/sdk/config"
       }
     }
   },

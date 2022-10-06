@@ -12,6 +12,7 @@ export type NodeOptions = {
   testPatterns: string[]
   watch: boolean
   watchPatterns: string[]
+  outputPath: string
   resultsPath: string
   junitReport: boolean
   timeout: number
@@ -58,8 +59,7 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
   }
 
   const name = context.projectName!;
-  const reporterConfigDir = join(context.root, 'tmp/mocha', name);
-  const reporterConfigFile = join(reporterConfigDir, 'config.json');
+  const reporterConfigFile = join(options.outputPath, 'config.json');
   const reporterConfig = {
     reporterEnabled: 'spec, mocha-junit-reporter',
     mochaJunitReporterReporterOptions: {
@@ -67,7 +67,7 @@ const setupReporter = async (context: ExecutorContext, options: NodeOptions) => 
       testsuitesTitle: `${name} nodejs Tests`
     }
   };
-  await mkdir(reporterConfigDir, { recursive: true });
+  await mkdir(options.outputPath, { recursive: true });
   await writeFile(reporterConfigFile, JSON.stringify(reporterConfig), 'utf-8');
 
   return [

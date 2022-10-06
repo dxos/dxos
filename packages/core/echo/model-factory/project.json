@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/core/echo/model-factory/src/**/*"
         ],
-        "outputPath": "tmp/mocha/core/echo/model-factory",
-        "resultsPath": "test-results/core/echo/model-factory"
+        "outputPath": "tmp/mocha/packages/core/echo/model-factory",
+        "resultsPath": "test-results/packages/core/echo/model-factory"
       }
     }
   },

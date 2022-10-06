@@ -34,8 +34,8 @@
         "watchPatterns": [
           "tools/beast/src/**/*"
         ],
-        "outputPath": "tmp/mocha/tools/beast",
-        "resultsPath": "test-results/tools/beast"
+        "outputPath": "tmp/mocha/packages/tools/beast",
+        "resultsPath": "test-results/packages/tools/beast"
       }
     }
   }

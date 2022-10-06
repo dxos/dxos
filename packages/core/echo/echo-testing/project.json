@@ -35,8 +35,8 @@
         "watchPatterns": [
           "packages/core/echo/echo-testing/src/**/*"
         ],
-        "outputPath": "tmp/mocha/core/echo/echo-testing",
-        "resultsPath": "test-results/core/echo/echo-testing"
+        "outputPath": "tmp/mocha/packages/core/echo/echo-testing",
+        "resultsPath": "test-results/packages/core/echo/echo-testing"
       }
     }
   },

@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/feed-store/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/feed-store",
-        "resultsPath": "test-results/common/feed-store"
+        "outputPath": "tmp/mocha/packages/common/feed-store",
+        "resultsPath": "test-results/packages/common/feed-store"
       }
     }
   },

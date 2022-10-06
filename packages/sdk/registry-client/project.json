@@ -58,8 +58,8 @@
         "watchPatterns": [
           "packages/sdk/registry-client/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/registry-client",
-        "resultsPath": "test-results/sdk/registry-client"
+        "outputPath": "tmp/mocha/packages/sdk/registry-client",
+        "resultsPath": "test-results/packages/sdk/registry-client"
       }
     }
   },

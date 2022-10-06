@@ -38,8 +38,8 @@
         "watchPatterns": [
           "packages/sdk/client-testing/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/client-testing",
-        "resultsPath": "test-results/sdk/client-testing"
+        "outputPath": "tmp/mocha/packages/sdk/client-testing",
+        "resultsPath": "test-results/packages/sdk/client-testing"
       }
     }
   },

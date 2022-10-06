@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/keys/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/keys",
-        "resultsPath": "test-results/common/keys"
+        "outputPath": "tmp/mocha/packages/common/keys",
+        "resultsPath": "test-results/packages/common/keys"
       }
     }
   },

@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/async/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/async",
-        "resultsPath": "test-results/common/async"
+        "outputPath": "tmp/mocha/packages/common/async",
+        "resultsPath": "test-results/packages/common/async"
       }
     }
   },

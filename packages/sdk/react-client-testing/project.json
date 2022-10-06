@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/sdk/react-client-testing/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/react-client-testing",
-        "resultsPath": "test-results/sdk/react-client-testing",
+        "outputPath": "tmp/mocha/packages/sdk/react-client-testing",
+        "resultsPath": "test-results/packages/sdk/react-client-testing",
         "domRequired": true,
         "checkLeaks": false,
         "forceExit": true

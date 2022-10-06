@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/random-access-storage/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/random-access-storage",
-        "resultsPath": "test-results/common/random-access-storage"
+        "outputPath": "tmp/mocha/packages/common/random-access-storage",
+        "resultsPath": "test-results/packages/common/random-access-storage"
       }
     }
   },

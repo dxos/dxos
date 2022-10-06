@@ -38,9 +38,9 @@
         "watchPatterns": [
           "packages/sdk/client-services/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/client-services",
-        "resultsPath": "test-results/sdk/client-services",
-        "setup": "packages/core/mesh/signal/setup.js",
+        "outputPath": "tmp/mocha/packages/sdk/client-services",
+        "resultsPath": "test-results/packages/sdk/client-services",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
         "forceExit": true
       }
     }

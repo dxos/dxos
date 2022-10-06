@@ -37,8 +37,8 @@
         "watchPatterns": [
           "packages/common/log/src/**/*"
         ],
-        "outputPath": "tmp/mocha/common/log",
-        "resultsPath": "test-results/common/log"
+        "outputPath": "tmp/mocha/packages/common/log",
+        "resultsPath": "test-results/packages/common/log"
       }
     }
   },

@@ -55,8 +55,8 @@
         "watchPatterns": [
           "packages/core/protocols/src/**/*"
         ],
-        "outputPath": "tmp/mocha/protocols",
-        "resultsPath": "test-results/protocols"
+        "outputPath": "tmp/mocha/packages/protocols",
+        "resultsPath": "test-results/packages/protocols"
       }
     }
   },

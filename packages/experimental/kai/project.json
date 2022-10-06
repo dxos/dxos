@@ -25,8 +25,8 @@
         "watchPatterns": [
           "packages/experimental/kai/src/**/*"
         ],
-        "outputPath": "tmp/mocha/experimental/kai",
-        "resultsPath": "test-results/experimental/kai"
+        "outputPath": "tmp/mocha/packages/experimental/kai",
+        "resultsPath": "test-results/packages/experimental/kai"
       }
     }
   },

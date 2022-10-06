@@ -38,8 +38,8 @@
         "watchPatterns": [
           "packages/sdk/react-client/src/**/*"
         ],
-        "outputPath": "tmp/mocha/sdk/react-client",
-        "resultsPath": "test-results/sdk/react-client",
+        "outputPath": "tmp/mocha/packages/sdk/react-client",
+        "resultsPath": "test-results/packages/sdk/react-client",
         "domRequired": true,
         "forceExit": true
       }
