@@ -17,5 +17,6 @@ shasum -a 256 -c codecov.SHA256SUM
 chmod +x codecov
 
 for file in `find ./coverage -name 'clover.xml'`; do
+  echo "Uploading $file"
   ./codecov -t $CODECOV_TOKEN -f $file
 done

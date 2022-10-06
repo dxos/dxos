@@ -52,6 +52,7 @@ jobs:
       - run:
           name: Upload Code Coverage
           command: ./.circleci/upload-coverage.sh
+          when: always
       - store_test_results:
           path: test-results
 
