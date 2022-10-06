@@ -24,7 +24,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/halo-protocol": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

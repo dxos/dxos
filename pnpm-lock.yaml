@@ -797,10 +797,10 @@ importers:
     specifiers:
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/credentials': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
-      '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -823,10 +823,10 @@ importers:
     dependencies:
       '@dxos/async': link:../../../common/async
       '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/credentials': link:../../halo/credentials
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
-      '@dxos/halo-protocol': link:../../halo/halo-protocol
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/log': link:../../../common/log
@@ -983,7 +983,9 @@ importers:
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
       '@dxos/feed-store': workspace:*
+      '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/mesh-protocol': workspace:*
       '@dxos/protocol-plugin-replicator': workspace:*
       '@dxos/protocols': workspace:*
@@ -1020,7 +1022,9 @@ importers:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/debug': link:../../../common/debug
       '@dxos/feed-store': link:../../../common/feed-store
+      '@dxos/keyring': link:../keyring
       '@dxos/keys': link:../../../common/keys
+      '@dxos/log': link:../../../common/log
       '@dxos/mesh-protocol': link:../../mesh/mesh-protocol
       '@dxos/protocols': link:../../protocols
       '@dxos/util': link:../../../common/util
@@ -1052,31 +1056,6 @@ importers:
       '@types/pify': 3.0.2
       '@types/pump': 1.1.1
       '@types/stream-to-array': 2.3.0
-
-  packages/core/halo/halo-protocol:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/crypto': workspace:*
-      '@dxos/keyring': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/util': workspace:*
-      '@types/debug': ^4.1.7
-      '@types/json-stable-stringify': ^1.0.32
-      json-stable-stringify: ^1.0.1
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/crypto': link:../../../common/crypto
-      '@dxos/keyring': link:../keyring
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/log': link:../../../common/log
-      '@dxos/protocols': link:../../protocols
-      '@dxos/util': link:../../../common/util
-      '@types/json-stable-stringify': 1.0.33
-      json-stable-stringify: 1.0.1
-    devDependencies:
-      '@types/debug': 4.1.7
 
   packages/core/halo/keyring:
     specifiers:
@@ -2593,7 +2572,6 @@ importers:
       '@dxos/debug': workspace:*
       '@dxos/echo-db': workspace:*
       '@dxos/feed-store': workspace:*
-      '@dxos/halo-protocol': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -2626,7 +2604,6 @@ importers:
       '@dxos/debug': link:../../common/debug
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/feed-store': link:../../common/feed-store
-      '@dxos/halo-protocol': link:../../core/halo/halo-protocol
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
@@ -15109,6 +15086,7 @@ packages:
 
   /@types/json-stable-stringify/1.0.33:
     resolution: {integrity: sha512-qEWiQff6q2tA5gcJGWwzplQcXdJtm+0oy6IHGHzlOf3eFAkGE/FIPXZK9ofWgNSHVp8AFFI33PJJshS0ei3Gvw==}
+    dev: true
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}

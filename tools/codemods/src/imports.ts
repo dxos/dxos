@@ -54,7 +54,7 @@ const getReplaceTarget = (replaceList: string[], source: string, identifier: str
     const [from, to] = replace.split(':')
     const [pkg, id] = from.split('#')
 
-    if (source === pkg && identifier === id) {
+    if (source === pkg && (identifier === id || id === '*')) {
       return to
     }
   }

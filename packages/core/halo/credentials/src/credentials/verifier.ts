@@ -45,7 +45,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
   }
 
   const signData = getSignaturePayload(credential);
-  if (!await verifySignature(credential.proof.signer, signData, credential.proof.value)) {
+  if (!(await verifySignature(credential.proof.signer, signData, credential.proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 

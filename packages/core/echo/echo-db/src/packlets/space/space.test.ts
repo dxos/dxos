@@ -5,7 +5,7 @@
 import assert from 'assert';
 import expect from 'expect';
 
-import { CredentialGenerator } from '@dxos/halo-protocol';
+import { CredentialGenerator } from '@dxos/credentials';
 import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest } from '@dxos/testutils';
@@ -27,7 +27,7 @@ describe('space/space', function () {
       // Genesis
       const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
       const credentials = [
-        ...await generator.createSpaceGenesis(space.key, controlKey),
+        ...(await generator.createSpaceGenesis(space.key, controlKey)),
         await generator.createFeedAdmission(
           spaceContext.space.key,
           spaceContext.dataKey,
@@ -84,7 +84,7 @@ describe('space/space', function () {
         // Genesis
         const generator = new CredentialGenerator(agent.keyring, agent.identityKey, agent.deviceKey);
         const credentials = [
-          ...await generator.createSpaceGenesis(space.key, controlKey),
+          ...(await generator.createSpaceGenesis(space.key, controlKey)),
           await generator.createFeedAdmission(
             spaceContext.space.key,
             spaceContext.dataKey,

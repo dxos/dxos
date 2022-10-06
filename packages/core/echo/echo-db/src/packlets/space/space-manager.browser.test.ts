@@ -4,8 +4,8 @@
 
 // @dxos/mocha platform=browser
 
+import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
