@@ -4,7 +4,7 @@
 
 import { Flags } from '@oclif/core';
 import { exec } from 'node:child_process';
-import { mkdir, copyFile, rm } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { cwd } from 'process';
 
@@ -55,13 +55,6 @@ export default class Create extends BaseCommand {
           git sparse-checkout set --cone tsconfig.json patches apps/templates/${template} &&
           git checkout ${tag}
       `);
-
-      // Copy vite patch.
-      await mkdir(`${templateDirectory}/patches`);
-      await copyFile(
-        `${tmpDirectory}/patches/vite@3.0.9.patch`,
-        `${templateDirectory}/patches/vite@3.0.9.patch`
-      );
 
       // Remove unneccessary files.
       await rm(`${templateDirectory}/project.json`);

@@ -58,12 +58,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "vite": "^3.2.0-beta.0",
     "vite-plugin-pwa": "^0.12.4",
     "webpack": "^5.74.0"
-  }${input.monorepo ? '' : `,
-  "pnpm": {
-    "patchedDependencies": {
-      "vite@3.0.9": "patches/vite@3.0.9.patch"
-    }
-  }`}
+  }
 }`;
 
 export default template;

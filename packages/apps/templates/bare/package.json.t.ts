@@ -34,12 +34,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@dxos/vite-plugin": "${input.monorepo ? 'workspace:*' : packageJson.version}",
     "typescript": "^4.7.2",
     "vite": "^3.2.0-beta.0"
-  }${input.monorepo ? '' : `,
-  "pnpm": {
-    "patchedDependencies": {
-      "vite@3.0.9": "patches/vite@3.0.9.patch"
-    }
-  }`}
+  }
 }`;
 
 export default template;
