@@ -1,7 +1,7 @@
 [![DXOS](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
 [![MIT License](https://img.shields.io/npm/l/@dxos/client?style=flat)](https://github.com/dxos/dxos/blob/main/LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
-
+[![codecov](https://codecov.io/gh/dxos/dxos/branch/main/graph/badge.svg?token=CLO9PHX2PQ)](https://codecov.io/gh/dxos/dxos)
 ![js-dxos](./docs/assets/images/github-repo-banner.png)
 
 ## DXOS Monorepo
@@ -44,6 +44,11 @@ Packages are deployed via [Release Please](https://github.com/dxos/dxos/blob/mai
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
 Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
+
+
+## Coverage
+
+![Coverage](https://codecov.io/gh/dxos/dxos/branch/main/graphs/tree.svg?token=CLO9PHX2PQ)
 
 
 ## Contributing
