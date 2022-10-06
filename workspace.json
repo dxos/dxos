@@ -81,6 +81,7 @@
     "rpc-tunnel-e2e": "packages/e2e/rpc-tunnel",
     "showcase": "tools/showcase",
     "signal": "packages/core/mesh/signal",
+    "spyglass": "packages/experimental/spyglass",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
