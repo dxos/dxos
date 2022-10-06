@@ -18,7 +18,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { HypercoreFeed } from './hypercore-types';
+import { HypercoreFeed } from './hypercore';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 

@@ -21,7 +21,7 @@ import { Storage, StorageType, createStorage } from '@dxos/random-access-storage
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore-types';
+import { HypercoreFeed } from './hypercore';
 
 interface KeyPair {
   key: PublicKey

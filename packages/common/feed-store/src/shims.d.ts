@@ -3,10 +3,9 @@
 //
 
 declare module 'buffer-json-encoding'
-declare module 'hypertrie'
 declare module 'end-of-stream-promise'
 declare module 'hypercore'
+declare module 'hypertrie'
 
+// TODO(burdon): Update to TS.
 declare module '@dxos/benchmark-suite'
-
-type ReadableStream = any

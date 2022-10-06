@@ -10,9 +10,9 @@ import pify from 'pify';
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import type { Directory } from '@dxos/random-access-storage';
+import type { Directory, RandomAccessFile } from '@dxos/random-access-storage';
 
-import type { HypercoreFeed, Hypercore } from './hypercore-types';
+import type { Hypercore, HypercoreFeed } from './hypercore';
 import type { ValueEncoding } from './types';
 
 interface FeedDescriptorOptions {
@@ -125,13 +125,13 @@ export class FeedDescriptor {
   }
 
   /**
-   * Defines the real path where the Hypercore is going
-   * to work with the RandomAccessStorage specified.
+   * Defines the real path where the Hypercore is going to work with the RandomAccessStorage specified.
    */
-
-  private _createStorage (dir = ''): (name: string) => HypercoreFile {
+  private _createStorage (dir = ''): (name: string) => RandomAccessFile {
     return (name) => {
       const file = this._directory.createOrOpenFile(`${dir}/${name}`);
+
+      // TODO(burdon): Here we are wrapping our own File class.
       // Separation between our internal File API and Hypercore's.
       return {
         read: callbackify(file.read.bind(file)),
@@ -140,7 +140,7 @@ export class FeedDescriptor {
         stat: callbackify(file.stat.bind(file)),
         close: callbackify(file.close.bind(file)),
         destroy: callbackify(file.delete.bind(file))
-      } as HypercoreFile;
+      } as RandomAccessFile;
     };
   }
 
@@ -191,15 +191,3 @@ export class FeedDescriptor {
 }
 
 export default FeedDescriptor;
-
-/**
- * File API that hypercore uses to read/write from storage.
- */
-interface HypercoreFile {
-  read(offset: number, size: number, cb?: (err: Error | null, data?: Buffer) => void): void
-  write(offset: number, data: Buffer, cb?: (err: Error | null) => void): void
-  del(offset: number, size: number, cb?: (err: Error | null) => void): void
-  stat(cb: (err: Error | null, data?: { size: number }) => void): void
-  close(cb?: (err: Error | null) => void): void
-  destroy(cb?: (err: Error | null) => void): void
-}

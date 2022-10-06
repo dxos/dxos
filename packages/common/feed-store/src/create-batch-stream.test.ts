@@ -12,7 +12,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createBatchStream } from './create-batch-stream';
 import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore-types';
+import { HypercoreFeed } from './hypercore';
 
 const createFeed = async () => {
   const keyring = new Keyring();

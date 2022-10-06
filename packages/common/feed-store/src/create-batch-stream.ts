@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/keys';
 
-import { HypercoreFeed } from './hypercore-types';
+import { HypercoreFeed } from './hypercore';
 
 export interface CreateBatchStreamOptions {
   start?: number
