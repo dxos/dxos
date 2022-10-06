@@ -279,7 +279,7 @@ export class RegistryClient {
 
   private async _fetchRecord (cid: CID): Promise<RegistryRecord | undefined> {
     const rawRecord = await this._backend.getRecord(cid);
-    const record = rawRecord && await this._decodeRecord(cid, rawRecord);
+    const record = rawRecord && (await this._decodeRecord(cid, rawRecord));
     return record;
   }
 
@@ -289,7 +289,7 @@ export class RegistryClient {
     }
 
     const payload = await decodeExtensionPayload(rawRecord.payload, async (cid: CID) =>
-      await this.getTypeRecord(cid) ?? raise(new Error(`Type not found: ${cid}`))
+      (await this.getTypeRecord(cid)) ?? raise(new Error(`Type not found: ${cid}`))
     );
 
     return {

@@ -216,7 +216,7 @@ export class Network extends EventEmitter {
     const fromPeer = await this._getPeerOrCreate(from);
     const toPeer = await this._getPeerOrCreate(to);
 
-    const connection = (async () => conn || await this._createConnection(fromPeer, toPeer) || new PassThrough())()
+    const connection = (async () => conn || (await this._createConnection(fromPeer, toPeer)) || new PassThrough())()
       .then(stream => {
         if (!(typeof stream === 'object' && typeof (stream as any).pipe === 'function')) {
           throw new Error('createConnection expect to return a stream');
