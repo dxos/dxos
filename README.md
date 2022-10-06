@@ -35,10 +35,6 @@ pnpm run demo:grid
 ## Installation and usage
 
 
-## Deployment
-
-Packages are deployed via [Release Please](https://github.com/dxos/dxos/blob/main/docs/internal/getting-started.md#release-process).
-
 
 ## Troubleshooting
 
