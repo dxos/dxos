@@ -17,7 +17,6 @@
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
     "autoprefixer": "^10.4.12",
-    "daisyui": "^2.31.0",
     "postcss": "^8.4.17",
     "tailwindcss": "^3.1.8"
   }
