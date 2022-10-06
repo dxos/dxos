@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { createId } from '@dxos/crypto';
 import { MockFeedWriter } from '@dxos/feed-store';
@@ -13,9 +12,9 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { ItemManager } from './item-manager';
 
-describe('ItemManager', () => {
-  describe('basic', () => {
-    test('item construction', async () => {
+describe('ItemManager', function () {
+  describe('basic', function () {
+    it('item construction', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -35,7 +34,7 @@ describe('ItemManager', () => {
       expect(itemManager.entities.get(itemId)).toEqual(item);
     });
 
-    test('item deconstruction', async () => {
+    it('item deconstruction', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -47,8 +46,8 @@ describe('ItemManager', () => {
     });
   });
 
-  describe('parent-child relationship', () => {
-    test('can be constructed and will have correct references', async () => {
+  describe('parent-child relationship', function () {
+    it('can be constructed and will have correct references', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -59,7 +58,7 @@ describe('ItemManager', () => {
       expect(parent.children).toEqual([child]);
     });
 
-    test('when child is deleted parent no longer references it', async () => {
+    it('when child is deleted parent no longer references it', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -72,7 +71,7 @@ describe('ItemManager', () => {
       expect(parent.children.length).toEqual(0);
     });
 
-    test('when parent is deleted children are deleted as well', async () => {
+    it('when parent is deleted children are deleted as well', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -89,8 +88,8 @@ describe('ItemManager', () => {
     });
   });
 
-  describe('links', () => {
-    test('can be constructed and will have correct references', async () => {
+  describe('links', function () {
+    it('can be constructed and will have correct references', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -113,7 +112,7 @@ describe('ItemManager', () => {
       expect(target.refs[0]).toStrictEqual(link);
     });
 
-    test('target can be dangling', async () => {
+    it('target can be dangling', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -129,7 +128,7 @@ describe('ItemManager', () => {
       expect(source.links).toEqual([]);
     });
 
-    test('source can be dangling', async () => {
+    it('source can be dangling', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -145,7 +144,7 @@ describe('ItemManager', () => {
       expect(target.refs).toEqual([]);
     });
 
-    test('can become dangling', async () => {
+    it('can become dangling', async function () {
       const modelFactory = new ModelFactory().registerModel(ObjectModel);
       const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 
@@ -165,7 +164,7 @@ describe('ItemManager', () => {
     });
   });
 
-  test('item can be created and the model registered later', async () => {
+  it('item can be created and the model registered later', async function () {
     const modelFactory = new ModelFactory();
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), new MockFeedWriter());
 

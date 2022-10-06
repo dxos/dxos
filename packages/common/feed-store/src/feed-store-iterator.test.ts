@@ -5,7 +5,6 @@
 import debug from 'debug';
 import expect from 'expect';
 import faker from 'faker';
-import { it as test } from 'mocha';
 import assert from 'node:assert';
 import pify from 'pify';
 
@@ -27,8 +26,8 @@ const log = debug('dxos:echo:feed-store-iterator:test');
 
 faker.seed(1);
 
-describe('feed store iterator', () => {
-  test('message order', async () => {
+describe('feed store iterator', function () {
+  it('message order', async function () {
     const config = {
       numFeeds: 2,
       numMessages: 10
@@ -119,7 +118,7 @@ describe('feed store iterator', () => {
 
   });
 
-  test.skip('skipping initial messages', async () => {
+  it.skip('skipping initial messages', async function () {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), {
       valueEncoding: schema.getCodecForType('example.testing.data.TestItemMutation')
     });

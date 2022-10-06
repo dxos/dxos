@@ -3,8 +3,8 @@
 //
 
 import { build } from 'esbuild';
-import { promises as fs } from 'fs';
-import { join, resolve, relative } from 'path';
+import { writeFile } from 'node:fs/promises';
+import { join, resolve, relative } from 'node:path';
 
 import {
   NodeGlobalsPolyfillPlugin, FixMemdownPlugin, FixGracefulFsPlugin, NodeModulesPlugin
@@ -13,6 +13,7 @@ import {
 export interface BuildTestsOpts {
   outDir: string
   debug: boolean
+  timeout: number
   checkLeaks: boolean
 }
 
@@ -27,13 +28,16 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
 
     import { mocha } from 'mocha';
 
+    import { BrowserReporter } from '@dxos/mocha/reporter';
+
     async function run() {
       const context = await window.browserMocha__getEnv();
 
-      window.browserMocha = { context };
+      window.mochaExecutor = { environment: context.browserType };
 
-      mocha.reporter('spec');
+      mocha.reporter(BrowserReporter);
       mocha.setup('bdd');
+      mocha.timeout(${opts.timeout})
       ${opts.checkLeaks ? 'mocha.checkLeaks();' : ''}
 
       ${files.map(file => `require("${relative(opts.outDir, resolve(file))}");`).join('\n')}
@@ -46,7 +50,7 @@ export const buildTests = async (files: string[], opts: BuildTestsOpts) => {
     run();
   `;
 
-  await fs.writeFile(mainFile, mainContents);
+  await writeFile(mainFile, mainContents);
 
   await build({
     entryPoints: [mainFile],

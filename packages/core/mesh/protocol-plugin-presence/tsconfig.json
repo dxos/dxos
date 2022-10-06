@@ -25,9 +25,6 @@
     },
     {
       "path": "../protocol-network-generator"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

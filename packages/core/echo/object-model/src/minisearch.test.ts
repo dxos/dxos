@@ -4,10 +4,9 @@
 
 import expect from 'expect';
 import MiniSearch from 'minisearch';
-import { it as test } from 'mocha';
 
-describe('Search', () => {
-  test('minisearch', async () => {
+describe('Search', function () {
+  it('minisearch', async function () {
     // https://lucaong.github.io/minisearch/classes/_minisearch_.minisearch.html
     const miniSearch = new MiniSearch({
       idField: 'id',

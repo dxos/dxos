@@ -7,8 +7,9 @@
     ],
     "outDir": "dist",
     "types": [
-      "node",
+      "@dxos/mocha",
       "mocha",
+      "node"
     ]
   },
   "include": [

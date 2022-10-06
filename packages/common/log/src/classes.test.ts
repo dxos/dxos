@@ -5,8 +5,8 @@
 import { log } from './log';
 import { debugInfo, ownershipClass } from './ownership';
 
-describe('classes', () => {
-  it('field instance', () => {
+describe('classes', function () {
+  it('field instance', function () {
     @ownershipClass
     class Inner {
       run () {
@@ -39,7 +39,7 @@ describe('classes', () => {
     bar.run();
   });
 
-  it('return values', async () => {
+  it('return values', async function () {
     @ownershipClass
     class Instance {
       run () {

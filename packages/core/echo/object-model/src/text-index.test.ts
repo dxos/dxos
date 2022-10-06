@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
@@ -51,8 +50,8 @@ const items = [
   }
 ];
 
-describe('TextIndex', () => {
-  test('indexer query', async () => {
+describe('TextIndex', function () {
+  it('indexer query', async function () {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -61,7 +60,7 @@ describe('TextIndex', () => {
     expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  test('indexer query with update cache', async () => {
+  it('indexer query with update cache', async function () {
     const getter = (item: any, key: string) => item[key];
     const indexer = new TextIndex({ fields: ['title', 'description'], getter });
 
@@ -78,7 +77,7 @@ describe('TextIndex', () => {
     }
   });
 
-  test('simple text query', () => {
+  it('simple text query', function () {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
     const matcher = new Matcher({ getter, textIndex });
@@ -97,7 +96,7 @@ describe('TextIndex', () => {
     expect(results.filter(item => ['item-0', 'item-1', 'item-2', 'item-3'].indexOf(item.id) !== -1)).toHaveLength(4);
   });
 
-  test('complex text query', () => {
+  it('complex text query', function () {
     const getter = (item: any, key: string) => item[key];
     const textIndex = new TextIndex({ fields: ['title', 'description'], getter });
     const matcher = new Matcher({ getter, textIndex });

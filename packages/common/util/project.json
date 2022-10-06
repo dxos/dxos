@@ -25,14 +25,26 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/common/util/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
       ],
       "options": {
-        "jestConfig": "packages/common/util/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/common/util/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/util/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/util",
+        "resultsPath": "test-results/packages/common/util",
+        "coveragePath": "coverage/packages/common/util"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

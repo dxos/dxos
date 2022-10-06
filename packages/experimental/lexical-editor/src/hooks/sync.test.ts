@@ -13,7 +13,7 @@ import { TextModel } from '@dxos/text-model';
 
 const log = debug('dxos:lexical-editor:test');
 
-describe('YJS sync', () => {
+describe('YJS sync', function () {
   // https://docs.yjs.dev/api/delta-format
   // https://docs.yjs.dev/api/document-updates
   // https://docs.yjs.dev/api/shared-types/y.text
