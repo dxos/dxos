@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/ui-theme-plugin",
+  "name": "@dxos/react-ui",
   "version": "1.0.0",
   "description": "Vite plugin which configures a low-level design system for DXOS.",
   "license": "MIT",

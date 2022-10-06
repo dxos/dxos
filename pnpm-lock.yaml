@@ -2291,7 +2291,7 @@ importers:
 
   packages/experimental/ui-consumer:
     specifiers:
-      '@dxos/ui-theme-plugin': workspace:*
+      '@dxos/react-ui': workspace:*
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
       '@vitejs/plugin-react': ^2.0.1
@@ -2303,7 +2303,7 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
-      '@dxos/ui-theme-plugin': link:../../ui/theme-plugin
+      '@dxos/react-ui': link:../../sdk/react-ui
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9
@@ -3214,6 +3214,20 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
 
+  packages/sdk/react-ui:
+    specifiers:
+      '@fontsource/fira-code': ^4.5.12
+      '@fontsource/roboto-flex': ^4.5.2
+      autoprefixer: ^10.4.12
+      postcss: ^8.4.17
+      tailwindcss: ^3.1.8
+    dependencies:
+      '@fontsource/fira-code': 4.5.12
+      '@fontsource/roboto-flex': 4.5.2
+      autoprefixer: 10.4.12_postcss@8.4.17
+      postcss: 8.4.17
+      tailwindcss: 3.1.8
+
   packages/sdk/registry-client:
     specifiers:
       '@dxos/client': workspace:*
@@ -3280,20 +3294,6 @@ importers:
       chai: 4.3.4
       chai-as-promised: 7.1.1_chai@4.3.4
       protobufjs: 6.11.2
-
-  packages/ui/theme-plugin:
-    specifiers:
-      '@fontsource/fira-code': ^4.5.12
-      '@fontsource/roboto-flex': ^4.5.2
-      autoprefixer: ^10.4.12
-      postcss: ^8.4.17
-      tailwindcss: ^3.1.8
-    dependencies:
-      '@fontsource/fira-code': 4.5.12
-      '@fontsource/roboto-flex': 4.5.2
-      autoprefixer: 10.4.12_postcss@8.4.17
-      postcss: 8.4.17
-      tailwindcss: 3.1.8
 
   tools/beast:
     specifiers:

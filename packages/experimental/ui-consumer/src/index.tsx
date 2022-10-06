@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxosUiTheme';
+import '@dxosTheme';
 import React from 'react';
 import { render } from 'react-dom';
 

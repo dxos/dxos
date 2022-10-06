@@ -19,7 +19,7 @@ const themePlugin = (options: VitePluginTailwindOptions) => {
   const config: VitePluginTailwindOptions = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
-    virtualFileId: '@dxosUiTheme',
+    virtualFileId: '@dxosTheme',
     ...options
   };
 

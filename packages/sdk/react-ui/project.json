@@ -1,0 +1,20 @@
+{
+  "sourceRoot": "packages/sdk/react-ui/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/react-ui/dist",
+        "tsConfig": "packages/sdk/react-ui/tsconfig.json",
+        "main": "packages/sdk/react-ui/src/index.ts",
+        "assets": [
+          "packages/sdk/react-ui/src/theme.css"
+        ]
+      }
+    }
+  }
+}
