@@ -125,7 +125,7 @@ export class Replicator {
       const unsubscribe = this._subscribe(share, info);
       peer?.closed.on(unsubscribe);
 
-      const feeds = await this._load(info) || [];
+      const feeds = (await this._load(info)) || [];
       await share(feeds);
       // Necessary to avoid deadlocks.
       await this._replicateHandler(protocol, []);
@@ -165,7 +165,7 @@ export class Replicator {
     const info = { context, session };
 
     try {
-      const feeds = await this._replicate(data, info) || [];
+      const feeds = (await this._replicate(data, info)) || [];
       peer?.replicate(feeds);
     } catch (err: any) {
       console.warn('Replicate feeds error', err);

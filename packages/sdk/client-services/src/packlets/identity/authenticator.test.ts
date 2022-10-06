@@ -6,7 +6,7 @@ import assert from 'assert';
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
+import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { ComplexSet } from '@dxos/util';
 

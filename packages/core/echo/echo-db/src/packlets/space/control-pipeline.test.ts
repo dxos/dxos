@@ -5,8 +5,8 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { CredentialGenerator, createCredential } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredential, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -126,7 +126,7 @@ export class FeedStore {
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
     log('Open read-only feed', { key });
-    const descriptor = this._descriptors.get(key.toHex()) ?? await this._createDescriptor({ key });
+    const descriptor = this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
     return descriptor;
   }
 
