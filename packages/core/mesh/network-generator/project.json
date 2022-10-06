@@ -39,7 +39,8 @@
           "packages/core/mesh/network-generator/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/mesh/network-generator",
-        "resultsPath": "test-results/packages/core/mesh/network-generator"
+        "resultsPath": "test-results/packages/core/mesh/network-generator",
+        "coveragePath": "coverage/packages/core/mesh/network-generator"
       }
     }
   },

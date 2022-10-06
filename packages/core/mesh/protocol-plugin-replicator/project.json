@@ -39,7 +39,8 @@
           "packages/core/mesh/protocol-plugin-replicator/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/mesh/protocol-plugin-replicator",
-        "resultsPath": "test-results/packages/core/mesh/protocol-plugin-replicator"
+        "resultsPath": "test-results/packages/core/mesh/protocol-plugin-replicator",
+        "coveragePath": "coverage/packages/core/mesh/protocol-plugin-replicator"
       }
     }
   },

@@ -38,7 +38,8 @@
           "packages/core/echo/messenger-model/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
-        "resultsPath": "test-results/packages/core/echo/messenger-model"
+        "resultsPath": "test-results/packages/core/echo/messenger-model",
+        "coveragePath": "coverage/packages/core/echo/messenger-model"
       }
     }
   },

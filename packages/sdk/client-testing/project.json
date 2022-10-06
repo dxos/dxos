@@ -39,7 +39,8 @@
           "packages/sdk/client-testing/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/sdk/client-testing",
-        "resultsPath": "test-results/packages/sdk/client-testing"
+        "resultsPath": "test-results/packages/sdk/client-testing",
+        "coveragePath": "coverage/packages/sdk/client-testing"
       }
     }
   },

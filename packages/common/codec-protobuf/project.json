@@ -53,7 +53,8 @@
           "packages/common/codec-protobuf/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/common/codec-protobuf",
-        "resultsPath": "test-results/packages/common/codec-protobuf"
+        "resultsPath": "test-results/packages/common/codec-protobuf",
+        "coveragePath": "coverage/packages/common/codec-protobuf"
       }
     }
   },

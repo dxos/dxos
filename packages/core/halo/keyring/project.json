@@ -38,7 +38,8 @@
           "packages/core/halo/keyring/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/halo/keyring",
-        "resultsPath": "test-results/packages/core/halo/keyring"
+        "resultsPath": "test-results/packages/core/halo/keyring",
+        "coveragePath": "coverage/packages/core/halo/keyring"
       }
     }
   },

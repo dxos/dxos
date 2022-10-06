@@ -38,7 +38,8 @@
           "packages/common/keys/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/common/keys",
-        "resultsPath": "test-results/packages/common/keys"
+        "resultsPath": "test-results/packages/common/keys",
+        "coveragePath": "coverage/packages/common/keys"
       }
     }
   },

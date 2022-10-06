@@ -38,7 +38,8 @@
           "packages/common/log/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/common/log",
-        "resultsPath": "test-results/packages/common/log"
+        "resultsPath": "test-results/packages/common/log",
+        "coveragePath": "coverage/packages/common/log"
       }
     }
   },

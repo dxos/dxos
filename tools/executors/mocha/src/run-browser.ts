@@ -13,7 +13,7 @@ export type BrowserOptions = {
   testPatterns: string[]
   outputPath: string
   resultsPath: string
-  junitReport: boolean
+  xmlReport: boolean
   timeout: number
   checkLeaks: boolean
   stayOpen: boolean
@@ -34,7 +34,7 @@ export const runBrowser = async (
   const exitCode = await outputResults(results, {
     name,
     browserType,
-    outDir: options.junitReport ? options.resultsPath : undefined
+    outDir: options.xmlReport ? options.resultsPath : undefined
   });
 
   const success = exitCode === 0;

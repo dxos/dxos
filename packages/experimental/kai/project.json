@@ -26,7 +26,8 @@
           "packages/experimental/kai/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/experimental/kai",
-        "resultsPath": "test-results/packages/experimental/kai"
+        "resultsPath": "test-results/packages/experimental/kai",
+        "coveragePath": "coverage/packages/experimental/kai"
       }
     }
   },

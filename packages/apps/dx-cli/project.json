@@ -27,6 +27,7 @@
         ],
         "outputPath": "tmp/mocha/packages/apps/dx-cli",
         "resultsPath": "test-results/packages/apps/dx-cli",
+        "coveragePath": "coverage/packages/apps/dx-cli",
         "checkLeaks": false
       },
       "dependsOn": [

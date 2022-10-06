@@ -36,6 +36,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
     watchPatterns: options.watchPatterns?.map(pattern => resolve(context.root, pattern)),
     outputPath: resolve(context.root, options.outputPath),
     resultsPath: resolve(context.root, options.resultsPath),
+    coveragePath: resolve(context.root, options.coveragePath),
     headless: options.stayOpen ? false : options.headless
   };
 
