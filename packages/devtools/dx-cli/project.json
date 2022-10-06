@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/dx-cli/src",
+  "sourceRoot": "packages/devtools/dx-cli/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "packages/apps/dx-cli/**/*.{ts,js}"
+          "packages/devtools/dx-cli/**/*.{ts,js}"
         ]
       }
     },
@@ -21,14 +21,14 @@
       "options": {
         "ciEnvironments": ["nodejs"],
         "testPatterns": [
-          "packages/apps/dx-cli/src/**/*.test.{ts,js}"
+          "packages/devtools/dx-cli/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/apps/dx-cli/src/**/*"
+          "packages/devtools/dx-cli/src/**/*"
         ],
-        "outputPath": "tmp/mocha/packages/apps/dx-cli",
-        "resultsPath": "test-results/packages/apps/dx-cli",
-        "coveragePath": "coverage/packages/apps/dx-cli",
+        "outputPath": "tmp/mocha/packages/devtools/dx-cli",
+        "resultsPath": "test-results/packages/devtools/dx-cli",
+        "coveragePath": "coverage/packages/devtools/dx-cli",
         "checkLeaks": false
       },
       "dependsOn": [
