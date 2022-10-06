@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import { rmSync } from 'fs';
-import { it as test } from 'mocha';
 
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
@@ -36,7 +35,7 @@ const createData = async (storagePath: string) => {
   // TODO(dmaretskyi): Invitations do not work.
   // const otherPeer = new ECHO();
   // await otherPeer.open();
-  // await otherPeer.halo.createProfile({ username: 'Other profile' });
+  // await otherPeer.halo.createProfile({ username: 'test-user-2' });
   // const invitation = await party.createInvitation();
   // await otherPeer.joinParty(invitation);
   // await otherPeer.close();
@@ -52,7 +51,7 @@ const createData = async (storagePath: string) => {
   await echo.close();
 };
 
-test.skip('can load from saved state', async () => {
+it.skip('can load from saved state', async function () {
   const storagePath = `/tmp/dxos/test-${Date.now()}`;
   await createData(storagePath);
 

@@ -33,17 +33,17 @@ const Test = () => {
 
 let rootContainer: HTMLElement;
 
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
+describe('useAsyncEffect', function () {
+  beforeEach(function () {
+    rootContainer = document.createElement('div');
+    document.body.appendChild(rootContainer);
+  });
 
-afterEach(() => {
-  document.body.removeChild(rootContainer!);
-});
+  afterEach(function () {
+    document.body.removeChild(rootContainer!);
+  });
 
-describe('useAsyncEffect', () => {
-  it('gets async value.', async () => {
+  it('gets async value.', async function () {
     act(() => {
       render(<Test />, rootContainer);
     });

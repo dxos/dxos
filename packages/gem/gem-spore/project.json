@@ -19,6 +19,7 @@
         "lintFilePatterns": ["packages/gem/gem-spore/**/*.{ts,tsx,js,jsx}"]
       }
     },
+    // TODO(wittjosiah): Mocha fails because of ESM import issue with D3.
     "test": {
       "executor": "@nrwl/jest:jest",
       "outputs": ["packages/gem/gem-spore/coverage"],

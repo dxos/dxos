@@ -21,8 +21,8 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protoc
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe('WebRTCTransportProxy', () => {
-  const setup = async ({
+describe('WebRTCTransportProxy', function () {
+  const setupProxy = async ({
     initiator = true,
     ownId = PublicKey.random(),
     remoteId = PublicKey.random(),
@@ -77,8 +77,8 @@ describe('WebRTCTransportProxy', () => {
   };
 
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  it('open and close', async () => {
-    const { webRTCTransportProxy: connection } = await setup();
+  it('open and close', async function () {
+    const { webRTCTransportProxy: connection } = await setupProxy();
 
     let callsCounter = 0;
     const closedCb = () => {
@@ -94,7 +94,11 @@ describe('WebRTCTransportProxy', () => {
     expect(callsCounter).toEqual(1);
   }).timeout(1_000).retries(3);
 
-  it('establish connection and send data through with protocol', async () => {
+  it('establish connection and send data through with protocol', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -102,7 +106,7 @@ describe('WebRTCTransportProxy', () => {
 
     const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
     const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
-    const { webRTCTransportProxy: connection1 } = await setup({
+    const { webRTCTransportProxy: connection1 } = await setupProxy({
       initiator: true,
       stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
       ownId: peer1Id,
@@ -113,13 +117,12 @@ describe('WebRTCTransportProxy', () => {
         await sleep(10);
         await connection2.signal(msg.data.signal);
       }
-    }
-    );
+    });
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
     const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
-    const { webRTCTransportProxy: connection2 } = await setup({
+    const { webRTCTransportProxy: connection2 } = await setupProxy({
       initiator: false,
       stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
       ownId: peer2Id,
@@ -130,8 +133,7 @@ describe('WebRTCTransportProxy', () => {
         await sleep(10);
         await connection1.signal(msg.data.signal);
       }
-    }
-    );
+    });
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     const received: any[] = [];

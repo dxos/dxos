@@ -2,23 +2,31 @@
 // Copyright 2022 DXOS.org
 //
 
-import { it as test } from 'mocha';
-
 import { until } from '@dxos/async';
-import { Config } from '@dxos/config';
+import { Config, ConfigProto } from '@dxos/config';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { afterTest } from '@dxos/testutils';
 
 import { ClientServiceHost } from './service-host';
 
-describe('ServiceHost', () => {
-  test('device invitations', async () => {
-    const peer1 = new ClientServiceHost(new Config({}));
+const defaultTestingConfig: ConfigProto = {
+  version: 1,
+  runtime: {
+    services: {
+      signal: {
+        server: 'ws://localhost:4000/.well-known/dx/signal'
+      }
+    }
+  }
+};
+
+describe('ServiceHost', function () {
+  it('device invitations', async function () {
+    const peer1 = new ClientServiceHost(new Config(defaultTestingConfig));
     await peer1.open();
     afterTest(() => peer1.close());
-
-    const peer2 = new ClientServiceHost(new Config({}));
+    const peer2 = new ClientServiceHost(new Config(defaultTestingConfig));
     await peer2.open();
     afterTest(() => peer2.close());
 

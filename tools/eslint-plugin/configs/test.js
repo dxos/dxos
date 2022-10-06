@@ -4,13 +4,12 @@
 
 module.exports = {
   extends: [
-    'plugin:jest/recommended'
+    'plugin:mocha/recommended'
   ],
   rules: {
-    'jest/no-conditional-expect': 'off',
-    'jest/no-done-callback': 'off',
-    'jest/no-standalone-expect': 'off',
-    'jest/valid-describe-callback': 'off',
-    'jest/valid-expect': 'off'
+    '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': 'off',
+    'mocha/max-top-level-suites': 'off',
+    'mocha/no-global-tests': 'off',
+    'mocha/no-setup-in-describe': 'off'
   }
 };

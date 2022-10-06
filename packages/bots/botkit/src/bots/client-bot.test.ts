@@ -7,8 +7,8 @@ import { PublicKey } from '@dxos/keys';
 import { setupBroker, setupClient } from '../testutils';
 import { Bot } from './client-bot';
 
-describe('Client Bot', () => {
-  it('Starts a bot', async () => {
+describe('Client Bot', function () {
+  it('Starts a bot', async function () {
     const { client, invitation } = await setupClient();
     const bot = new Bot();
 
@@ -22,7 +22,7 @@ describe('Client Bot', () => {
     await client.destroy();
   });
 
-  it('Starts a bot with a remote signal server', async () => {
+  it('Starts a bot with a remote signal server', async function () {
     const { broker, config } = await setupBroker();
     const { client, invitation } = await setupClient(config);
     const bot = new Bot();

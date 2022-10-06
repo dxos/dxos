@@ -5,9 +5,9 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
+import { CredentialGenerator } from '@dxos/credentials';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
-import { CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -128,7 +128,7 @@ export class IdentityManager {
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
       const credentials = [
-        ...await generator.createSpaceGenesis(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey),
+        ...(await generator.createSpaceGenesis(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey)),
         await generator.createFeedAdmission(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
 
         // Write device chain

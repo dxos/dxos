@@ -17,6 +17,13 @@ export const register = () => {
   addHook((code, filename) => {
     try {
       const output = preprocess(code, filename);
+
+      // Clear the source map in case we are running the tests in watch mode.
+      // Otherwise, it will compose new source maps on top of the ones from the previous compilation round.
+      //
+      // NOTE: We are assuming that this is the first compilation step.
+      SourcemapMap.delete(filename);
+
       if (output.map) {
         SourcemapMap.set(filename, output.map);
       }
@@ -110,20 +117,29 @@ function patchSourceMaps () {
 const combineSourceMaps = (prevMap: string, nextMap: string) => {
   const prev = JSON.parse(prevMap);
   const newMap = JSON.parse(nextMap);
+  try {
 
-  newMap.sources[0] = '/prev';
-  const generated = loadSync('/new', {
-    content: {
-      '/new': newMap.sourcesContent[0],
-      '/prev': prev.sourcesContent[0]
-    },
-    sourcemaps: {
-      '/new': newMap,
-      '/prev': prev
-    }
-  }).apply();
+    newMap.sources[0] = '/prev';
+    const generated = loadSync('/new', {
+      content: {
+        '/new': newMap.sourcesContent[0],
+        '/prev': prev.sourcesContent[0]
+      },
+      sourcemaps: {
+        '/new': newMap,
+        '/prev': prev
+      }
+    }).apply();
 
-  generated.sources[0] = '/' + generated.sources[0];
+    generated.sources[0] = '/' + generated.sources[0];
 
-  return JSON.stringify(generated);
+    return JSON.stringify(generated);
+  } catch (err) {
+    console.error(err);
+    console.log({
+      prev,
+      newMap
+    });
+    throw err;
+  }
 };

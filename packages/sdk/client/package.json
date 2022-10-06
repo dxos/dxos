@@ -16,8 +16,7 @@
   ],
   "scripts": {
     "check": "true",
-    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
-    "test": "toolchain test"
+    "prebuild": "node -p \"'export const DXOS_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -48,7 +47,8 @@
     "@dxos/testutils": "workspace:*",
     "@koush/wrtc": "^0.5.3",
     "@types/debug": "^4.1.7",
-    "@types/readable-stream": "^2.3.9"
+    "@types/readable-stream": "^2.3.9",
+    "source-map-support": "^0.5.12"
   },
   "publishConfig": {
     "access": "public"

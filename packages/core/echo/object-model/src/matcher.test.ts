@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
 
@@ -14,8 +13,8 @@ import { Matcher } from './matcher';
 // TODO(burdon): Indexed properties? (schema?)
 const getter = (item: any, key: string) => item[key];
 
-describe('Matcher', () => {
-  test('Basic queries', () => {
+describe('Matcher', function () {
+  it('Basic queries', function () {
     const queries: Query[] = [
       {
         root: {
@@ -208,7 +207,6 @@ describe('Matcher', () => {
     const results = queries.map(query => matcher.matchItems(query, items));
 
     results.forEach((result, i) => {
-      // eslint-disable-next-line jest/valid-expect
       expect(result).toEqual(expected[i]);
     });
   });

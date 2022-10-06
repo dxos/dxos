@@ -181,7 +181,7 @@ export const execBuildBook = async (config: Config, options: BuildOptions = {}) 
  * Runs the storybook for the current package.
  */
 export const execBook = async (userArgs?: string[]) => {
-  await execTool('esbuild-server', ['book', ...userArgs ?? []]);
+  await execTool('esbuild-server', ['book', ...(userArgs ?? [])]);
 };
 
 /**
@@ -189,7 +189,7 @@ export const execBook = async (userArgs?: string[]) => {
  */
 export const execServer = async (userArgs?: string[]) => {
   // TODO(burdon): esbuild-server should warn if local public/html files (staticDir) are missing.
-  await execTool('esbuild-server', ['server', ...userArgs ?? []]);
+  await execTool('esbuild-server', ['server', ...(userArgs ?? [])]);
 };
 
 /**

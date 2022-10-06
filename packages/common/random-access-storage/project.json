@@ -26,18 +26,21 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
-          "packages/common/random-access-storage/src/**/*.test.ts"
-        ]
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/mocha:browser",
-      "options": {
-        "testPatterns": [
-          "packages/common/random-access-storage/src/**/*.browser-test.ts"
-        ]
+          "packages/common/random-access-storage/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/random-access-storage/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/random-access-storage",
+        "resultsPath": "test-results/packages/common/random-access-storage",
+        "coveragePath": "coverage/packages/common/random-access-storage"
       }
     }
   },

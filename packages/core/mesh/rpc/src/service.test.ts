@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'earljs';
-import { it as test } from 'mocha';
 
 import { sleep, latch } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
@@ -14,8 +13,8 @@ import { SerializedRpcError } from './errors';
 import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts } from './testutil';
 
-describe('Protobuf service', () => {
-  test('Works with protobuf service', async () => {
+describe('Protobuf service', function () {
+  it('Works with protobuf service', async function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
@@ -54,7 +53,7 @@ describe('Protobuf service', () => {
     expect(response.data).toEqual('responseData');
   });
 
-  test('Errors are serialized', async () => {
+  it('Errors are serialized', async function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
@@ -105,7 +104,7 @@ describe('Protobuf service', () => {
     expect(error.stack?.includes('TestCall')).toEqual(true);
   });
 
-  test('calls methods with google.protobuf.Empty parameters and return values', async () => {
+  it('calls methods with google.protobuf.Empty parameters and return values', async function () {
     const [alicePort, bobPort] = createLinkedPorts();
 
     const server = createProtoRpcPeer({
@@ -142,11 +141,11 @@ describe('Protobuf service', () => {
     await client.rpc.TestService.voidCall();
   });
 
-  describe('streams', () => {
+  describe('streams', function () {
     let server: ProtoRpcPeer<{}>;
     let client: ProtoRpcPeer<{ TestStreamService: TestStreamService }>;
 
-    beforeEach(async () => {
+    beforeEach(async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       server = createProtoRpcPeer({
@@ -189,7 +188,7 @@ describe('Protobuf service', () => {
       ]);
     });
 
-    test('consumed stream', async () => {
+    it('consumed stream', async function () {
       const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
 
       expect(await Stream.consume(stream)).toEqual([
@@ -201,7 +200,7 @@ describe('Protobuf service', () => {
       ]);
     });
 
-    test('subscribed stream', async () => {
+    it('subscribed stream', async function () {
       const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
 
       let lastData: string | undefined;
@@ -215,8 +214,8 @@ describe('Protobuf service', () => {
     });
   });
 
-  describe('multiple services', () => {
-    it('call different services', async () => {
+  describe('multiple services', function () {
+    it('call different services', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const TestService = schema.getService('example.testing.rpc.TestService');
@@ -264,7 +263,7 @@ describe('Protobuf service', () => {
       expect(ping.nonce).toEqual(5);
     });
 
-    it('services exposed by both peers', async () => {
+    it('services exposed by both peers', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = createProtoRpcPeer({
@@ -314,8 +313,8 @@ describe('Protobuf service', () => {
     });
   });
 
-  describe('google.protobuf.Any encoding', () => {
-    test('recursively encodes google.protobuf.Any by default', async () => {
+  describe('google.protobuf.Any encoding', function () {
+    it('recursively encodes google.protobuf.Any by default', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({
@@ -365,7 +364,7 @@ describe('Protobuf service', () => {
       expect(response.payload.nonce).toEqual(10);
     });
 
-    test('any encoding can be disabled', async () => {
+    it('any encoding can be disabled', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const server = createProtoRpcPeer({

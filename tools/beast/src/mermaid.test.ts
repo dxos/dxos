@@ -3,12 +3,11 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Flowchart } from './mermaid';
 
-describe('Mermaid builder', () => {
-  test('Flowchart', () => {
+describe('Mermaid builder', function () {
+  it('Flowchart', function () {
     const flowchart = new Flowchart({
       linkStyle: { 'stroke': 'green' }
     });

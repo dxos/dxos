@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
@@ -24,8 +23,8 @@ const createFeed = async () => {
 
 const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
-describe('Batch stream', () => {
-  test('Single message', async () => {
+describe('Batch stream', function () {
+  it('Single message', async function () {
     const feed = await createFeed();
     const stream = createBatchStream(feed, { live: true });
     const messages: any[] = [];
@@ -41,7 +40,7 @@ describe('Batch stream', () => {
     });
   });
 
-  test('Five messages', async () => {
+  it('Five messages', async function () {
     const feed = await createFeed();
     const stream = createBatchStream(feed, { live: true });
     const messages: any[] = [];

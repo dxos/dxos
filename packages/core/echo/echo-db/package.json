@@ -21,7 +21,7 @@
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/feed-store": "workspace:*",
-    "@dxos/halo-protocol": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@dxos/testutils": "workspace:*",
     "@types/debug": "^4.1.7",
+    "source-map-support": "^0.5.12",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

@@ -1,7 +1,10 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "@dxos/mocha"
+    ]
   },
   "include": [
     "src/packlets",
@@ -37,9 +40,6 @@
     },
     {
       "path": "../../halo/credentials"
-    },
-    {
-      "path": "../../halo/halo-protocol"
     },
     {
       "path": "../../mesh/network-manager"

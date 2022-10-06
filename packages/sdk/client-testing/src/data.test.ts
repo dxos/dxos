@@ -7,7 +7,6 @@ import columnify from 'columnify';
 import debug from 'debug';
 import fs from 'fs';
 import yaml from 'js-yaml';
-import { it as test } from 'mocha';
 
 import { truncate, truncateKey } from '@dxos/debug';
 
@@ -36,35 +35,37 @@ type DataType = {
 const logKey = (id: string) => truncateKey(id, 4);
 const logString = (value?: string) => truncate(value, 24, true);
 
-describe('Builders', async () => {
-  test('Sanity.', async () => {
+describe('Builders', function () {
+  it('Sanity.', async function () {
     const builder = new Builder();
     await builder.initialize();
     const party = await builder.createParty();
     await builder.destroyParty(party);
   });
 
-  test('Tree logger.', () => handler(async (client, party) => {
-    await buildTestParty(new PartyBuilder(party));
+  it('Tree logger.', function () {
+    return handler(async (client, party) => {
+      await buildTestParty(new PartyBuilder(party));
 
-    const { entities } = await party.database.select()
-      .filter(({ type }) => type === TestType.Org)
-      .exec();
+      const { entities } = await party.database.select()
+        .filter(({ type }) => type === TestType.Org)
+        .exec();
 
-    {
-      log('Party:', party.key.toHex());
-      const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
-      log(output, '\n');
-    }
+      {
+        log('Party:', party.key.toHex());
+        const output = treeLogger(new TreeRoot(party.key.toHex(), entities));
+        log(output, '\n');
+      }
 
-    {
-      log('Item:', entities[0].id);
-      const output = treeLogger(entities[0]);
-      log(output, '\n');
-    }
-  }));
+      {
+        log('Item:', entities[0].id);
+        const output = treeLogger(entities[0]);
+        log(output, '\n');
+      }
+    });
+  });
 
-  test('Import/export.', async () => {
+  it('Import/export.', async function () {
     const dir = `/tmp/dxos/testing/${Date.now()}`;
     fs.mkdirSync(dir, { recursive: true });
     const filename = `${dir}/data.yml`;

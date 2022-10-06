@@ -39,8 +39,8 @@ const UseSelectionTestComponent = ({ party }: { party: Party}) => {
   );
 };
 
-describe('useSelection', () => {
-  it('gets updated items selection', async () => {
+describe('useSelection', function () {
+  it('gets updated items selection', async function () {
     const { party } = await createTestComponents();
     render(<UseSelectionTestComponent party={party} />);
 

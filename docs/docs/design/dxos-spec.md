@@ -101,7 +101,6 @@ import { Client, InvitationOffer, Item, Role } from './api';
 
 const createClient = () => ({} as Client);
 
-// eslint-disable-next-line jest/no-disabled-tests
 describe.skip('Experimental API', () => {
   test('All aspects', async () => {
     const client1 = createClient();

@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Event, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -86,16 +85,16 @@ const links: Link<any>[] = [
 
 // TODO(burdon): Test subscriptions/reactivity.
 
-describe('Selection', () => {
-  describe('root', () => {
-    test('all', () => {
+describe('Selection', function () {
+  describe('root', function () {
+    it('all', function () {
       expect(
         createRootSelection()
           .exec().entities
       ).toHaveLength(items.length);
     });
 
-    test('by id', () => {
+    it('by id', function () {
       expect(
         createRootSelection({ id: org1.id })
           .exec().entities
@@ -107,14 +106,14 @@ describe('Selection', () => {
       ).toEqual([org2]);
     });
 
-    test('single type', () => {
+    it('single type', function () {
       expect(
         createRootSelection({ type: ITEM_PROJECT })
           .exec().entities
       ).toHaveLength(3);
     });
 
-    test('multiple types', () => {
+    it('multiple types', function () {
       expect(
         createRootSelection({ type: [ITEM_ORG, ITEM_PROJECT] })
           .exec().entities
@@ -122,8 +121,8 @@ describe('Selection', () => {
     });
   });
 
-  describe('filter', () => {
-    test('invalid', () => {
+  describe('filter', function () {
+    it('invalid', function () {
       expect(
         createRootSelection()
           .filter({ type: 'dxos:type/invalid' })
@@ -131,7 +130,7 @@ describe('Selection', () => {
       ).toHaveLength(0);
     });
 
-    test('single type', () => {
+    it('single type', function () {
       expect(
         createRootSelection()
           .filter({ type: ITEM_PROJECT })
@@ -139,7 +138,7 @@ describe('Selection', () => {
       ).toHaveLength(3);
     });
 
-    test('multiple types', () => {
+    it('multiple types', function () {
       expect(
         createRootSelection()
           .filter({ type: [ITEM_ORG, ITEM_PROJECT] })
@@ -147,7 +146,7 @@ describe('Selection', () => {
       ).toHaveLength(5);
     });
 
-    test('by function', () => {
+    it('by function', function () {
       expect(
         createRootSelection()
           .filter(item => item.type === ITEM_ORG)
@@ -156,8 +155,8 @@ describe('Selection', () => {
     });
   });
 
-  describe('children', () => {
-    test('from multiple items', () => {
+  describe('children', function () {
+    it('from multiple items', function () {
       expect(ids(
         createRootSelection()
           .filter({ type: ITEM_ORG })
@@ -170,7 +169,7 @@ describe('Selection', () => {
       ]));
     });
 
-    test('from single item', () => {
+    it('from single item', function () {
       expect(ids(
         createRootSelection({ id: org1.id })
           .children()
@@ -184,8 +183,8 @@ describe('Selection', () => {
     });
   });
 
-  describe('parent', () => {
-    test('from multiple items', () => {
+  describe('parent', function () {
+    it('from multiple items', function () {
       expect(ids(
         createRootSelection()
           .filter({ type: ITEM_PROJECT })
@@ -197,7 +196,7 @@ describe('Selection', () => {
       ]));
     });
 
-    test('from single item', () => {
+    it('from single item', function () {
       expect(ids(
         createRootSelection({ id: project1.id })
           .parent()
@@ -207,7 +206,7 @@ describe('Selection', () => {
       ]));
     });
 
-    test('is empty', () => {
+    it('is empty', function () {
       expect(
         createRootSelection({ id: org1.id })
           .parent()
@@ -216,8 +215,8 @@ describe('Selection', () => {
     });
   });
 
-  describe('links', () => {
-    test('links from single item', () => {
+  describe('links', function () {
+    it('links from single item', function () {
       expect(ids(
         createRootSelection({ id: project1.id })
           .links()
@@ -229,7 +228,7 @@ describe('Selection', () => {
       ]));
     });
 
-    test('links from multiple items', () => {
+    it('links from multiple items', function () {
       expect(
         createRootSelection({ type: ITEM_PROJECT })
           .links()
@@ -237,7 +236,7 @@ describe('Selection', () => {
       ).toHaveLength(links.length);
     });
 
-    test('sources', () => {
+    it('sources', function () {
       expect(ids(
         createRootSelection({ type: ITEM_PERSON })
           .refs()
@@ -250,14 +249,14 @@ describe('Selection', () => {
     });
   });
 
-  describe('reducer', () => {
-    test('simple reducer', () => {
+  describe('reducer', function () {
+    it('simple reducer', function () {
       const query = createReducer(0).call((items, count) => count + items.length).exec();
       expect(query.value).toEqual(items.length);
     });
 
     // TODO(burdon): Support nested traverals (context as third arg?)
-    test('complex reducer', () => {
+    it('complex reducer', function () {
       const query = createReducer({ numItems: 0, numLinks: 0 })
         .filter({ type: ITEM_ORG })
         .call((items: Item[], { numItems, ...rest }) => ({ ...rest, numItems: numItems + items.length, stage: 'a' }))
@@ -272,8 +271,8 @@ describe('Selection', () => {
     });
   });
 
-  describe('events', () => {
-    test('events get filtered correctly', async () => {
+  describe('events', function () {
+    it('events get filtered correctly', async function () {
       const update = new Event<Entity[]>();
 
       const query = createSelection<void>(() => items, () => update, null as any, { type: ITEM_ORG }, undefined)

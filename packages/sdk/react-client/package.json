@@ -41,7 +41,6 @@
     "@types/level-js": "~4.0.1",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
-    "@types/testing-library__jest-dom": "^5.14.5",
     "@types/use-subscription": "^1.0.0",
     "level-js": "^5.0.2",
     "react": "^17.0.2",

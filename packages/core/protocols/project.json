@@ -43,17 +43,27 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/core/protocols/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
       ],
       "options": {
-        "jestConfig": "packages/core/protocols/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/core/protocols/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/protocols/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/protocols",
+        "resultsPath": "test-results/packages/core/protocols",
+        "coveragePath": "coverage/packages/core/protocols"
       }
     }
   },
   "implicitDependencies": [
+    "mocha",
     "protobuf-compiler"
   ]
 }

@@ -7,7 +7,6 @@ import assert from 'node:assert';
 
 import { File, Storage, StorageType } from '../common';
 
-// eslint-disable-next-line jest/no-export
 export function storageTests (testGroupName: string, createStorage: () => Storage) {
   const randomText = () => Math.random().toString(36).substring(2);
 
@@ -18,7 +17,6 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
     expect(result).toBeTruthy();
   };
 
-  // eslint-disable-next-line jest/valid-title
   describe(testGroupName, () => {
     it('open & close', async () => {
       const storage = createStorage();
