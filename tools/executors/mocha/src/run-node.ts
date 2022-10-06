@@ -36,6 +36,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     //   Then the SWC will transpile the typescript source to javascript.
     '-r', '@dxos/log-hook/register',
     '-r', '@swc-node/register',
+    '-r', require.resolve('./colors'),
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
@@ -45,7 +46,12 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   ];
 
   const mocha = getBin(context.root, 'mocha');
-  const exitCode = await execTool(mocha, args);
+  const exitCode = await execTool(mocha, args, {
+    env: {
+      ...process.env,
+      'FORCE_COLOR': '2'
+    }
+  });
 
   return !exitCode;
 };
