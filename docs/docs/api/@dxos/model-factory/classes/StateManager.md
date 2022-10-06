@@ -1,5 +1,6 @@
-# Class StateManager
+# Class `StateManager`
 > Declared in package `@dxos/model-factory`
+
 Manages the state machine lifecycle.
 
 Snapshots represent the reified state of a set of mutations up until at a particular Timeframe.
@@ -15,6 +16,22 @@ The state of the model is formed from the following components (in order):
 - The mutatation queue.
 - Optimistic mutations.
 
-## Fields
-
-## Methods
+## Members
+- @dxos/model-factory.StateManager.M
+- @dxos/model-factory.StateManager.constructor
+- @dxos/model-factory.StateManager._model
+- @dxos/model-factory.StateManager._modelMeta
+- @dxos/model-factory.StateManager._mutationProcessed
+- @dxos/model-factory.StateManager._mutations
+- @dxos/model-factory.StateManager._optimisticMutations
+- @dxos/model-factory.StateManager._stateMachine
+- @dxos/model-factory.StateManager.initialized
+- @dxos/model-factory.StateManager.model
+- @dxos/model-factory.StateManager.modelMeta
+- @dxos/model-factory.StateManager.modelType
+- @dxos/model-factory.StateManager._resetStateMachine
+- @dxos/model-factory.StateManager._write
+- @dxos/model-factory.StateManager.createSnapshot
+- @dxos/model-factory.StateManager.initialize
+- @dxos/model-factory.StateManager.processMessage
+- @dxos/model-factory.StateManager.resetToSnapshot

@@ -1,6 +1,8 @@
-# Class PortTracer
+# Class `PortTracer`
 > Declared in package `@dxos/rpc`
 
-## Fields
-
-## Methods
+## Members
+- @dxos/rpc.PortTracer.constructor
+- @dxos/rpc.PortTracer._port
+- @dxos/rpc.PortTracer.message
+- @dxos/rpc.PortTracer.port
