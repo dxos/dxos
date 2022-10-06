@@ -46,7 +46,8 @@
       "executor": "@dxos/mocha:mocha",
       "outputs": [
         "{options.outputPath}",
-        "{options.resultsPath}"
+        "{options.resultsPath}",
+        "{options.coveragePath}"
       ],
       "options": {
         "testPatterns": [
