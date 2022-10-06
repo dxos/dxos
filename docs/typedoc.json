@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "tsconfig": "../tsconfig.json",
-  "plugin": ["typedoc-plugin-plate"],
+  "plugin": ["@dxos/typedoc-plugin-plate"],
   "out": "docs/api",
   "gitRevision": "main",
   "githubPages": false,

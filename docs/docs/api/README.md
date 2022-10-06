@@ -1,0 +1,23 @@
+# DXOS
+project.reflections[module]:
+- @dxos/protocols
+- @dxos/echo-db
+- @dxos/messenger-model
+- @dxos/model-factory
+- @dxos/object-model
+- @dxos/text-model
+- @dxos/credentials
+- @dxos/halo-protocol
+- @dxos/keyring
+- @dxos/broadcast
+- @dxos/mesh-protocol
+- @dxos/messaging
+- @dxos/network-generator
+- @dxos/network-manager
+- @dxos/protocol-network-generator
+- @dxos/protocol-plugin-presence
+- @dxos/protocol-plugin-replicator
+- @dxos/protocol-plugin-rpc
+- @dxos/rpc
+- @dxos/rpc-tunnel
+- @dxos/signal

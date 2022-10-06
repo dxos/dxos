@@ -16,6 +16,9 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
+  typedoc@0.23.15:
+    hash: k4qfemgm4ttpeeuk35ye3qqa2i
+    path: patches/typedoc@0.23.15.patch
 
 importers:
 
@@ -35,6 +38,7 @@ importers:
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
       '@dxos/signal': workspace:*
+      '@dxos/typedoc-plugin-plate': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
       '@nrwl/eslint-plugin-nx': 14.5.7
@@ -120,6 +124,7 @@ importers:
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
       '@dxos/signal': link:packages/core/mesh/signal
+      '@dxos/typedoc-plugin-plate': link:tools/typedoc-plugin-plate
       '@mdx-js/react': 2.1.3_react@17.0.2
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
       '@nrwl/eslint-plugin-nx': 14.5.7_7qzfn3d2xjbaccibm3hyl7xehm
@@ -230,7 +235,7 @@ importers:
       prettier: 2.7.1
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
-      typedoc: 0.23.15_typescript@4.7.4
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4
       typedoc-plugin-markdown: 3.13.6_typedoc@0.23.15
       typescript: 4.7.4
       vue: 3.2.40
@@ -3555,11 +3560,10 @@ importers:
       '@types/node': ^16.11.58
       typedoc: ^0.23.15
       typescript: ^4.7.2
-    dependencies:
-      '@dxos/plate': link:../plate
     devDependencies:
+      '@dxos/plate': link:../plate
       '@types/node': 16.11.62
-      typedoc: 0.23.15_typescript@4.7.4
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4
       typescript: 4.7.4
 
   tools/vite-plugin:
@@ -37060,10 +37064,10 @@ packages:
       typedoc: '>=0.23.0'
     dependencies:
       handlebars: 4.7.7
-      typedoc: 0.23.15_typescript@4.7.4
+      typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4
     dev: true
 
-  /typedoc/0.23.15_typescript@4.7.4:
+  /typedoc/0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4:
     resolution: {integrity: sha512-x9Zu+tTnwxb9YdVr+zvX7LYzyBl1nieOr6lrSHbHsA22/RJK2m4Y525WIg5Mj4jWCmfL47v6f4hUzY7EIuwS5w==}
     engines: {node: '>= 14.14'}
     hasBin: true
@@ -37076,6 +37080,7 @@ packages:
       shiki: 0.11.1
       typescript: 4.7.4
     dev: true
+    patched: true
 
   /typescript/4.7.4:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
