@@ -5,7 +5,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import {dxosUiPlugin} from '@dxos/ui-theme-plugin'
+import themePlugin from '@dxos/ui-theme-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,7 +24,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    dxosUiPlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
+    themePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
