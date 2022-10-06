@@ -182,7 +182,7 @@ export class WebsocketSignalManager implements SignalManager {
       [...this._servers.values()].map((server: SignalClient) =>
         server
           .sendMessage({ author, recipient, payload })
-          .catch((err) => log.error(`Error signaling: ${err}`))
+          .catch((err) => log(err))
       )
     );
   }

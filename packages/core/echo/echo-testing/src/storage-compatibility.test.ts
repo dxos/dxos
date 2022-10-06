@@ -36,7 +36,7 @@ const createData = async (storagePath: string) => {
   // TODO(dmaretskyi): Invitations do not work.
   // const otherPeer = new ECHO();
   // await otherPeer.open();
-  // await otherPeer.halo.createProfile({ username: 'Other profile' });
+  // await otherPeer.halo.createProfile({ username: 'test-user-2' });
   // const invitation = await party.createInvitation();
   // await otherPeer.joinParty(invitation);
   // await otherPeer.close();

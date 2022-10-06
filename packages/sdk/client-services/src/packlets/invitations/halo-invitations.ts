@@ -35,7 +35,7 @@ export class HaloInvitations {
     const identity = this._identityManager.identity ?? failUndefined();
 
     const swarmKey = PublicKey.random();
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: swarmKey,
       topology: new StarTopology(swarmKey),
@@ -93,7 +93,7 @@ export class HaloInvitations {
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
     const done = new Trigger();
-    this._networkManager.joinProtocolSwarm({
+    await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),

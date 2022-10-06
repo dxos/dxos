@@ -23,7 +23,7 @@ describe('Signal Integration Test', () => {
     broker.stop();
   });
 
-  const setup = () => {
+  const setup = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
     signalManager.onMessage.on((message) =>
       messageRouter.receiveMessage(message)
@@ -36,7 +36,8 @@ describe('Signal Integration Test', () => {
     const messageRouter = new MessageRouter({
       sendMessage: signalManager.sendMessage.bind(signalManager),
       onSignal: signalMock,
-      onOffer: async () => ({ accept: true })
+      onOffer: async () => ({ accept: true }),
+      topic
     });
 
     return {
@@ -47,12 +48,12 @@ describe('Signal Integration Test', () => {
   };
 
   it('two peers connecting', async () => {
-    const peerNetworking1 = setup();
-    const peerNetworking2 = setup();
-
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
+
+    const peerNetworking1 = setup({ topic });
+    const peerNetworking2 = setup({ topic });
 
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
       ({ swarmEvent }) =>
