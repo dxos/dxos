@@ -69,19 +69,30 @@ const themePlugin = (options: VitePluginTailwindOptions) => {
                     }
                   }, {
                     dark: {
-                      primary: '#661AE6',
-                      'primary-content': '#ffffff',
-                      secondary: '#D926AA',
-                      'secondary-content': '#ffffff',
-                      accent: '#1FB2A5',
-                      'accent-content': '#ffffff',
-                      neutral: '#191D24',
-                      'neutral-content': '#dddddd',
+                      'base-100': '#0c0e10',
+                      'base-200': '#131517',
+                      'base-300': '#191b1e',
+                      'base-content': '#ebeff0',
+                      neutral: '#191b1e',
                       'neutral-focus': '#ffffff',
-                      'base-100': '#2A303C',
-                      'base-200': '#242933',
-                      'base-300': '#20252E',
-                      'base-content': '#dddddd'
+                      'neutral-content': '#ebeff0',
+                      primary: '#00b5e6',
+                      'primary-focus': '#ffffff',
+                      'primary-content': '#1d0200',
+                      accent: '#00b5e6',
+                      'accent-focus': '#ffffff',
+                      'accent-content': '#1d0200',
+                      secondary: '#00b5e6',
+                      'secondary-focus': '#ffffff',
+                      'secondary-content': '#1d0200',
+                      info: '#00b5e6',
+                      'info-content': '#1d0200',
+                      success: '#53bb5d',
+                      'success-content': '#1d0200',
+                      warning: '#da9f00',
+                      'warning-content': '#1d0200',
+                      error: '#ff7f6f',
+                      'error-content': '#1d0200'
                     }
                   }]
                 }

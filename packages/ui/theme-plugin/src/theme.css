@@ -10,8 +10,12 @@
   --rounded-box: 0.66rem;
 }
 
+.input-bordered, .toggle, .checkbox, .radio {
+  --tw-border-opacity: .88;
+}
+
 .btn {
   text-transform: inherit;
-  font-variation-settings: "wdth" 122;
+  font-variation-settings: "wdth" 112, "wght" 800, "YTLC" 560;
   letter-spacing: .06em;
 }
