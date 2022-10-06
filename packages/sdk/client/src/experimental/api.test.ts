@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { validateKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
@@ -12,9 +11,8 @@ import { Client, InvitationOffer, Item, Role } from './api';
 
 const createClient = () => ({} as Client);
 
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('Experimental API', () => {
-  test('All aspects', async () => {
+describe.skip('Experimental API', function () {
+  it('All aspects', async function () {
     const client1 = createClient();
 
     //

@@ -11,8 +11,8 @@ const VALID_AUTHORITY = 'example';
 const VALID_PATH = 'valid/path';
 const VALID_TAG = 'valid-tag';
 
-describe('DXN', () => {
-  it('validates domain name', () => {
+describe('DXN', function () {
+  it('validates domain name', function () {
     // Valid.
     [
       'dxos',
@@ -33,7 +33,7 @@ describe('DXN', () => {
     ].forEach(domainName => expect(() => DXN.fromDomainName(domainName, VALID_PATH)).to.throw());
   });
 
-  it('validates path', () => {
+  it('validates path', function () {
     // Valid.
     [
       'x',
@@ -63,12 +63,12 @@ describe('DXN', () => {
     ].forEach(path => expect(() => DXN.fromDomainName(VALID_AUTHORITY, path)).to.throw());
   });
 
-  it('fromDomainKey', () => {
+  it('fromDomainKey', function () {
     const key = DomainKey.random();
     expect(DXN.fromDomainKey(key, VALID_PATH).authority).not.to.be.undefined;
   });
 
-  it('parse', () => {
+  it('parse', function () {
     // Valid.
     [
       `${VALID_AUTHORITY}:${VALID_PATH}@${VALID_TAG}`,
@@ -86,7 +86,7 @@ describe('DXN', () => {
     ].forEach(dxn => expect(() => DXN.parse(dxn), dxn).to.throw());
   });
 
-  it('urlencode/urldecode', () => {
+  it('urlencode/urldecode', function () {
     [
       'example:app/path@2.0.1',
       'example:app/path@2-alpha',

@@ -4,7 +4,6 @@
 
 import debug from 'debug';
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
@@ -22,8 +21,8 @@ import { ItemManager } from './item-manager';
 
 const log = debug('dxos:echo:item-demuxer:test');
 
-describe('Item demuxer', () => {
-  test('set-up', async () => {
+describe('Item demuxer', function () {
+  it('set-up', async function () {
     const memberKey = PublicKey.random();
 
     const modelFactory = new ModelFactory()
@@ -94,7 +93,7 @@ describe('Item demuxer', () => {
     unsubscribe();
   });
 
-  it('models can be registered after item was already created', async () => {
+  it('models can be registered after item was already created', async function () {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 

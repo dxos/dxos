@@ -10,8 +10,8 @@ import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/hal
 import { createCredential, verifyCredential } from '../credentials';
 import { PartyStateMachine } from './party-state-machine';
 
-describe('PartyStateMachine', () => {
-  it('basic party creation', async () => {
+describe('PartyStateMachine', function () {
+  it('basic party creation', async function () {
     const keyring = new Keyring();
     const party = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -93,7 +93,7 @@ describe('PartyStateMachine', () => {
     expect(partyState.credentials).toHaveLength(3);
   });
 
-  it('admitting a member', async () => {
+  it('admitting a member', async function () {
     const keyring = new Keyring();
     const party = await keyring.createKey();
     const identity = await keyring.createKey();
@@ -173,7 +173,7 @@ describe('PartyStateMachine', () => {
     expect(partyState.credentials).toHaveLength(3);
   });
 
-  it('storing device credentials and building a chain', async () => {
+  it('storing device credentials and building a chain', async function () {
     const keyring = new Keyring();
     const haloParty = await keyring.createKey();
     const identity = await keyring.createKey();

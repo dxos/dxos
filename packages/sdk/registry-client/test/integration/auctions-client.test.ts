@@ -8,11 +8,11 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import { AccountsClient, AccountKey, AuctionsClient, PolkadotAuctions } from '../../src';
-import { setup } from './utils';
+import { setupRegistryClient } from './utils';
 
 chai.use(chaiAsPromised);
 
-describe('Auctions Client', () => {
+describe('Auctions Client', function () {
   let auctionsApi: AuctionsClient;
   let apiPromise: ApiPromise;
   let sudoer: KeyringPair;
@@ -21,8 +21,8 @@ describe('Auctions Client', () => {
   let account: AccountKey;
   let accountApi: AccountsClient;
 
-  before(async () => {
-    const setupResult = await setup();
+  before(async function () {
+    const setupResult = await setupRegistryClient();
     apiPromise = setupResult.apiPromise;
     auctionsApi = setupResult.auctionsClient;
     accountApi = setupResult.accountsClient;
@@ -32,18 +32,18 @@ describe('Auctions Client', () => {
     account = await accountApi.createAccount();
   });
 
-  after(async () => {
+  after(async function () {
     await apiPromise.disconnect();
   });
 
-  describe('Auction', () => {
-    it('Creates an auction', async () => {
+  describe('Auction', function () {
+    it('Creates an auction', async function () {
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
     });
 
-    it('Does not allow to create already created auction', async () => {
+    it('Does not allow to create already created auction', async function () {
       const auctionName = Math.random().toString(36).substring(2);
       const expectedError = apiPromise.errors.registry.AuctionAlreadyCreated.meta.name.toString();
 
@@ -52,22 +52,22 @@ describe('Auctions Client', () => {
     });
   });
 
-  describe('Auction Bid', () => {
-    it('Allows to bid on name', async () => {
+  describe('Auction Bid', function () {
+    it('Allows to bid on name', async function () {
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
       await expect(auctionsApi.bidAuction(auctionName, 1000001)).to.be.fulfilled;
     });
 
-    it('Does not allow to bid on non-existing name', async () => {
+    it('Does not allow to bid on non-existing name', async function () {
       const auctionName = Math.random().toString(36).substring(2);
       const expectedError = apiPromise.errors.registry.AuctionNotFound.meta.name.toString();
 
       await expect(auctionsApi.bidAuction(auctionName, 1000000)).to.be.rejectedWith(expectedError);
     });
 
-    it('Does not allow to bid too small value', async () => {
+    it('Does not allow to bid too small value', async function () {
       const auctionName = Math.random().toString(36).substring(2);
       const expectedError = apiPromise.errors.registry.BidTooSmall.meta.name.toString();
 
@@ -78,8 +78,8 @@ describe('Auctions Client', () => {
     });
   });
 
-  describe('Auction closing and claiming', () => {
-    it('Cannot close or claim an unfinished auction', async () => {
+  describe('Auction closing and claiming', function () {
+    it('Cannot close or claim an unfinished auction', async function () {
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -88,7 +88,7 @@ describe('Auctions Client', () => {
       await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.rejected;
     });
 
-    it('Can claim an auction (after force-closing it)', async () => {
+    it('Can claim an auction (after force-closing it)', async function () {
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
@@ -98,7 +98,7 @@ describe('Auctions Client', () => {
       await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
-    it('Only the winner can claim an auction', async () => {
+    it('Only the winner can claim an auction', async function () {
       const winner = new AuctionsClient(new PolkadotAuctions(apiPromise, bob));
       const loser = new AuctionsClient(new PolkadotAuctions(apiPromise, alice));
       await accountApi.addDevice(account, bob.address);
@@ -114,7 +114,7 @@ describe('Auctions Client', () => {
       await expect(winner.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
-    it('Auction winner has a domain registered', async () => {
+    it('Auction winner has a domain registered', async function () {
       const winner = new AuctionsClient(new PolkadotAuctions(apiPromise, bob));
       await accountApi.addDevice(account, bob.address);
       const auctionName = Math.random().toString(36).substring(2);

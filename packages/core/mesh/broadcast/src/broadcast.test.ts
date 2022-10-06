@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { EventEmitter } from 'events';
+import { expect } from 'chai';
+import { EventEmitter } from 'node:events';
 
 import { NetworkGenerator } from '@dxos/network-generator';
 
@@ -88,11 +89,11 @@ const publishAndSync = async (peers: any, message: any, opts?: any) => {
   const sync = Promise.all(peersTarget.map((peer: any) => new Promise<void>(resolve => peer.once('packet', () => resolve()))));
   const packet = await peerOrigin.publish(message, opts);
   await sync;
-  expect(peersTarget.reduce((prev: any, curr: any) => prev && curr.messages.has(packetId(packet)), true)).toBe(true);
+  expect(peersTarget.reduce((prev: any, curr: any) => prev && curr.messages.has(packetId(packet)), true)).to.be.true;
   return packet;
 };
 
-test('balancedBinTree: broadcast a message.', async () => {
+it('balancedBinTree: broadcast a message.', async function () {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id),
     createConnection: (peerFrom: any, peerTo: any) => {
@@ -108,12 +109,12 @@ test('balancedBinTree: broadcast a message.', async () => {
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   const packet = await publishAndSync(network.peers, Buffer.from('message1'), { seq: Buffer.from('custom-seqno') });
-  expect(packet.seq.toString()).toBe('custom-seqno');
+  expect(packet.seq.toString()).to.equal('custom-seqno');
 
   network.peers.forEach((peer: any) => peer.close());
 });
 
-test('complete: broadcast a message.', async () => {
+it('complete: broadcast a message.', async function () {
   const generator = new NetworkGenerator({
     createPeer: async (id) => new Peer(id, { maxAge: 1000, maxSize: 2 }),
     createConnection: (peerFrom: any, peerTo: any) => {
@@ -134,7 +135,7 @@ test('complete: broadcast a message.', async () => {
   await publishAndSync(network.peers, Buffer.from('message1'));
 
   // The cache should have always the limit of 100.
-  expect(network.peers.slice(1).reduce((prev: any, next: any) => prev && next.seenMessagesSize === 2, true)).toBeTruthy();
+  expect(network.peers.slice(1).reduce((prev: any, next: any) => prev && next.seenMessagesSize === 2, true)).to.be.true;
 
   time = Date.now() - time;
   if (time < 2000) {
@@ -142,7 +143,7 @@ test('complete: broadcast a message.', async () => {
   }
 
   network.peers.forEach((peer: any) => peer.prune());
-  expect(network.peers.reduce((prev: any, next: any) => prev && next.seenMessagesSize === 0, true)).toBeTruthy();
+  expect(network.peers.reduce((prev: any, next: any) => prev && next.seenMessagesSize === 0, true)).to.be.true;
 
   network.peers.forEach((peer: any) => peer.close());
 });

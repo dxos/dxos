@@ -3,7 +3,6 @@
 //
 
 import { expect } from 'earljs';
-import { it as test } from 'mocha';
 
 import { sleep } from '@dxos/async';
 import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
@@ -19,9 +18,9 @@ const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => 
   value: Buffer.from(value)
 });
 
-describe('RpcPeer', () => {
-  describe('handshake', () => {
-    test('can open', async () => {
+describe('RpcPeer', function () {
+  describe('handshake', function () {
+    it('can open', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -39,7 +38,7 @@ describe('RpcPeer', () => {
       ]);
     });
 
-    test('open waits for the other peer to call open', async () => {
+    it('open waits for the other peer to call open', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
       const alice: RpcPeer = new RpcPeer({
         messageHandler: async msg => createPayload(),
@@ -66,7 +65,7 @@ describe('RpcPeer', () => {
       await promise;
     });
 
-    test('one peer can open before the other is created', async () => {
+    it('one peer can open before the other is created', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -88,7 +87,7 @@ describe('RpcPeer', () => {
       ]);
     });
 
-    test('handshake works with a port that is open later', async () => {
+    it('handshake works with a port that is open later', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let portOpen = false;
@@ -125,7 +124,7 @@ describe('RpcPeer', () => {
       await openPromise;
     });
 
-    test('open hangs on half-open streams', async () => {
+    it('open hangs on half-open streams', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -158,8 +157,8 @@ describe('RpcPeer', () => {
     });
   });
 
-  describe('one-off requests', () => {
-    test('can send a request', async () => {
+  describe('one-off requests', function () {
+    it('can send a request', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -184,7 +183,7 @@ describe('RpcPeer', () => {
       expect(response).toEqual(createPayload('response'));
     });
 
-    test('can send multiple requests', async () => {
+    it('can send multiple requests', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -223,7 +222,7 @@ describe('RpcPeer', () => {
       await expect(error).toBeRejected();
     });
 
-    test('errors get serialized', async () => {
+    it('errors get serialized', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -260,7 +259,7 @@ describe('RpcPeer', () => {
       expect(error.stack?.includes('RpcMethodName')).toEqual(true);
     });
 
-    test('closing local endpoint stops pending requests', async () => {
+    it('closing local endpoint stops pending requests', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -287,7 +286,7 @@ describe('RpcPeer', () => {
       await expect(req).toBeRejected();
     });
 
-    test('closing remote endpoint stops pending requests on timeout', async () => {
+    it('closing remote endpoint stops pending requests on timeout', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -315,7 +314,7 @@ describe('RpcPeer', () => {
       await expect(req).toBeRejected();
     });
 
-    test('requests failing on timeout', async () => {
+    it('requests failing on timeout', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice: RpcPeer = new RpcPeer({
@@ -343,8 +342,8 @@ describe('RpcPeer', () => {
 
   });
 
-  describe('streaming responses', () => {
-    test('can transport multiple messages', async () => {
+  describe('streaming responses', function () {
+    it('can transport multiple messages', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -381,7 +380,7 @@ describe('RpcPeer', () => {
       ]);
     });
 
-    test('server closes with an error', async () => {
+    it('server closes with an error', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -416,7 +415,7 @@ describe('RpcPeer', () => {
       expect((msgs[0] as any).error.message).toEqual('Test error');
     });
 
-    test('client closes the stream', async () => {
+    it('client closes the stream', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       let closeCalled = false;
@@ -446,7 +445,7 @@ describe('RpcPeer', () => {
       expect(closeCalled).toEqual(true);
     });
 
-    test('reports stream being ready', async () => {
+    it('reports stream being ready', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -483,8 +482,8 @@ describe('RpcPeer', () => {
     });
   });
 
-  describe('with disabled handshake', () => {
-    test('opens immediately', async () => {
+  describe('with disabled handshake', function () {
+    it('opens immediately', async function () {
       const [alicePort] = createLinkedPorts();
 
       const alice = new RpcPeer({
@@ -496,7 +495,7 @@ describe('RpcPeer', () => {
       await alice.open();
     });
 
-    test('can send a request', async () => {
+    it('can send a request', async function () {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const alice = new RpcPeer({

@@ -3,15 +3,14 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
 import { ObjectModel } from './object-model';
 import { OrderedList } from './ordered-list';
 
-describe('OrderedList', () => {
-  test('refresh', async () => {
+describe('OrderedList', function () {
+  it('refresh', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -43,7 +42,7 @@ describe('OrderedList', () => {
     }
   });
 
-  test('clear', async () => {
+  it('clear', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 
@@ -63,7 +62,7 @@ describe('OrderedList', () => {
     expect(list.values).toEqual(['a', 'b', 'c']);
   });
 
-  test('set and remove', async () => {
+  it('set and remove', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(ObjectModel), ObjectModel);
     const { model } = rig.createPeer();
 

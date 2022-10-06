@@ -26,19 +26,24 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
+        "ciEnvironments": ["nodejs", "chromium", "firefox"],
         "testPatterns": [
           "packages/sdk/client-services/src/**/*.test.{ts,js}"
-        ]
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/mocha:browser",
-      "options": {
-        "testPatterns": [
-          "packages/sdk/client-services/browser-test/**/*.test.ts"
         ],
-        "setup": "packages/sdk/client-services/browser-test/setup.js"
+        "watchPatterns": [
+          "packages/sdk/client-services/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/client-services",
+        "resultsPath": "test-results/packages/sdk/client-services",
+        "coveragePath": "coverage/packages/sdk/client-services",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "forceExit": true
       }
     }
   },

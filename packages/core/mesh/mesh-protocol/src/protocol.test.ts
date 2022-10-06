@@ -5,7 +5,6 @@
 import crypto from 'crypto';
 import debug from 'debug';
 import expect from 'expect';
-import { it as test } from 'mocha';
 import pump from 'pump';
 
 import { sleep } from '@dxos/async';
@@ -17,8 +16,8 @@ import { pipeProtocols } from './testing';
 
 const log = debug('dxos:protocol:test');
 
-describe('Protocol', () => {
-  test('protocol sessions', async () => {
+describe('Protocol', function () {
+  it('protocol sessions', async function () {
     const topic = crypto.randomBytes(32);
 
     const protocol1 = new Protocol({
@@ -51,7 +50,7 @@ describe('Protocol', () => {
     pump(protocol1.stream as any, protocol2.stream as any, protocol1.stream as any);
   }).timeout(1 * 1000);
 
-  test('basic without extensions', async () => {
+  it('basic without extensions', async function () {
     const topic = crypto.randomBytes(32);
     let onInitCalled = 0;
     const onInit = () => onInitCalled++;
@@ -92,7 +91,7 @@ describe('Protocol', () => {
     expect(onInitCalled).toBe(2);
   }).timeout(1 * 1000);
 
-  test('basic with a buffer ping-pong extension', async () => {
+  it('basic with a buffer ping-pong extension', async function () {
     const topic = crypto.randomBytes(32);
     const bufferExtension = 'buffer';
     const timeout = 1000;
@@ -152,7 +151,7 @@ describe('Protocol', () => {
     await pipeProtocols(protocol1, protocol2);
   }).timeout(1 * 1000);
 
-  test('basic with a uint8array ping-pong extension', async () => {
+  it('basic with a uint8array ping-pong extension', async function () {
     const topic = crypto.randomBytes(32);
     const extension = 'uint8array';
     const timeout = 1000;
@@ -212,7 +211,7 @@ describe('Protocol', () => {
     await pipeProtocols(protocol1, protocol2);
   }).timeout(1 * 1000);
 
-  test('basic ping and oneway', async () => {
+  it('basic ping and oneway', async function () {
     expect.assertions(9);
 
     const bufferExtension = 'buffer';
@@ -325,7 +324,7 @@ describe('Protocol', () => {
     await pipeProtocols(protocol1, protocol2);
   });
 
-  test('protocol init error', async () => {
+  it('protocol init error', async function () {
     expect.assertions(1);
 
     const bufferExtension = 'buffer';

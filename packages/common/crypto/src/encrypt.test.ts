@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// DXOS testing browser.
+import { expect } from 'chai';
 
 import { decrypt, encrypt } from './encrypt';
 
@@ -38,11 +38,11 @@ Key":"4f5e87626c62c5f61873d1e7c995c1b7e7e66e7600b454fa370a93d18f4a9a6f","secretK
 8c13d81376b61fb252db32d1002bba4f5e87626c62c5f61873d1e7c995c1b7e7e66e7600b454fa370a93d18f4a9a6f","trusted":true,"type":"
 UNKNOWN"}]}';`;
 
-test('Bulk encryption/decryption', () => {
+it('Bulk encryption/decryption', function () {
   const original = testJsonData;
 
   const origCrypt = encrypt(original, 'secret12');
   const copy = decrypt(origCrypt, 'secret12');
 
-  expect(original).toEqual(copy);
+  expect(original).to.equal(copy);
 });

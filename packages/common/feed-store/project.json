@@ -26,11 +26,25 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/common/feed-store/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/common/feed-store/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/feed-store",
+        "resultsPath": "test-results/packages/common/feed-store",
+        "coveragePath": "coverage/packages/common/feed-store"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

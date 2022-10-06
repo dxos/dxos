@@ -26,10 +26,21 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/config/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/sdk/config/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/config",
+        "resultsPath": "test-results/packages/sdk/config",
+        "coveragePath": "coverage/packages/sdk/config"
       }
     }
   },

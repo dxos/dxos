@@ -40,17 +40,27 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "coverage/packages/common/codec-protobuf"
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
       ],
       "options": {
-        "jestConfig": "packages/common/codec-protobuf/jest.config.ts",
-        "passWithNoTests": true
+        "testPatterns": [
+          "packages/common/codec-protobuf/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/common/codec-protobuf/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/codec-protobuf",
+        "resultsPath": "test-results/packages/common/codec-protobuf",
+        "coveragePath": "coverage/packages/common/codec-protobuf"
       }
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "mocha"
   ]
 }

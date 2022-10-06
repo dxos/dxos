@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @dxos/mocha platform=nodejs
+
 import { expect } from 'earljs';
 import waitForExpect from 'wait-for-expect';
 
@@ -12,18 +14,18 @@ import { createTestBroker, TestBroker } from '@dxos/signal';
 import { MessageRouter } from './message-router';
 import { SignalMessage } from './signal-messaging';
 
-describe('Signal Integration Test', () => {
+describe('Signal Integration Test', function () {
   let broker: TestBroker;
 
-  before(async () => {
+  before(async function () {
     broker = await createTestBroker();
   });
 
-  after(() => {
+  after(function () {
     broker.stop();
   });
 
-  const setup = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
+  const setupPeer = ({ topic = PublicKey.random() }: { topic?: PublicKey } = {}) => {
     const signalManager = new WebsocketSignalManager([broker.url()]);
     signalManager.onMessage.on((message) =>
       messageRouter.receiveMessage(message)
@@ -47,13 +49,13 @@ describe('Signal Integration Test', () => {
     };
   };
 
-  it('two peers connecting', async () => {
+  it('two peers connecting', async function () {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const topic = PublicKey.random();
 
-    const peerNetworking1 = setup({ topic });
-    const peerNetworking2 = setup({ topic });
+    const peerNetworking1 = setupPeer({ topic });
+    const peerNetworking2 = setupPeer({ topic });
 
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
       ({ swarmEvent }) =>

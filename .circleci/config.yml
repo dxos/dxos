@@ -35,20 +35,26 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test
+            - run: pnpm nx run-many --target=test --coverage --xmlReport
             - run: pnpm nx run-many --target=lint
             - run:
                 command: pnpm nx run-many --target=prerelease
                 no_output_timeout: 30m
                 environment:
                   NODE_OPTIONS: --max_old_space_size=8198
+      - run:
+          name: Upload Code Coverage
+          command: ./.circleci/upload-coverage.sh
+          when: always
+      - store_test_results:
+          path: test-results
 
   #
   # End-to-end integration tests.

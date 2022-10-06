@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'chai';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
@@ -18,8 +19,6 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
 import { Replicator, ReplicatorMiddleware } from './replicator';
-
-jest.setTimeout(30000);
 
 const noop = () => {};
 
@@ -118,28 +117,30 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 });
 
 // Skipped until better times.
-describe.skip('test data replication in a balanced network graph of 15 peers', () => {
+describe.skip('test data replication in a balanced network graph of 15 peers', function () {
+  this.timeout(30000);
+
   const topic = crypto.randomBytes(32);
   let network: any;
 
-  beforeAll(async () => {
+  before(async function () {
     network = await generator.balancedBinTree({
       topic,
       parameters: [3]
     });
   });
 
-  test('feed synchronization', async () => {
-    expect(network.peers.length).toBe(15);
+  it('feed synchronization', async function () {
+    expect(network.peers.length).to.equal(15);
 
     await waitForExpect(() => {
       const result = network.peers.reduce((prev: boolean, peer: any) => prev && peer.getFeedsNum() === network.peers.length, true);
 
-      expect(result).toBe(true);
+      expect(result).to.be.true;
     }, 4500, 1000);
   });
 
-  test('message synchronization', async () => {
+  it('message synchronization', async function () {
     const messages: any[] = [];
     const wait: any[] = [];
     network.peers.forEach((peer: any) => {
@@ -157,7 +158,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', (
         results.push(peer.getMessages());
       });
       for await (const nodeMessages of results) {
-        expect(nodeMessages).toEqual(messages);
+        expect(nodeMessages).to.deep.equal(messages);
       }
     }, 15 * 1000, 5 * 1000);
 
@@ -171,7 +172,7 @@ describe.skip('test data replication in a balanced network graph of 15 peers', (
           break;
         }
       }
-      expect(closed).toBe(true);
+      expect(closed).to.be.true;
     });
 
     await end;

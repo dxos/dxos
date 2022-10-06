@@ -26,23 +26,24 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
+        "ciEnvironments": ["nodejs", "chromium", "firefox"],
         "testPatterns": [
           "packages/core/mesh/network-manager/src/**/*.test.{ts,js}"
-        ]
-      }
-    },
-    "e2e": {
-      "executor": "@dxos/mocha:browser",
-      "options": {
-        "testPatterns": [
-          "packages/core/mesh/network-manager/src/network-manager.browser-test.ts"
         ],
-        "browsers": [
-          "chromium",
-          "firefox"
+        "watchPatterns": [
+          "packages/core/mesh/network-manager/src/**/*"
         ],
-        "setup": "packages/core/mesh/network-manager/tests-setup.js"
+        "outputPath": "tmp/mocha/packages/core/mesh/network-manager",
+        "resultsPath": "test-results/packages/core/mesh/network-manager",
+        "coveragePath": "coverage/packages/core/mesh/network-manager",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "forceExit": true
       }
     }
   },

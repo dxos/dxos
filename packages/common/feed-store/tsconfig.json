@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "jest",
+      "mocha",
       "node"
     ]
   },

@@ -12,22 +12,22 @@ import { ConfigProto } from '@dxos/config';
 import { ClientProvider } from '../../containers';
 import { useConfig } from './useConfig';
 
-describe('Config hook', () => {
+describe('Config hook', function () {
   const render = () => useConfig();
 
-  it('should throw when used outside a context', () => {
+  it('should throw when used outside a context', function () {
     const { result } = renderHook(render);
     expect(result.error?.message).toBeDefined();
   });
 
-  it('should return default client config when no config is passed in a context', () => {
+  it('should return default client config when no config is passed in a context', function () {
     const client = new Client({});
     const wrapper = ({ children }: any) => <ClientProvider client={client}>{children}</ClientProvider>;
     const { result } = renderHook(render, { wrapper });
     expect(Object.entries(result.current).length).toBeGreaterThan(0);
   });
 
-  it('should return custom client config when used properly in a context', () => {
+  it('should return custom client config when used properly in a context', function () {
     const config: ConfigProto = {
       version: 1,
       runtime: {

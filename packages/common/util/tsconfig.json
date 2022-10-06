@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": [
+      "@dxos/mocha"
+    ]
   },
   "include": [
     "src",
@@ -16,9 +19,6 @@
     },
     {
       "path": "../keys"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

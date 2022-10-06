@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// DXOS testing browser.
+import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
 
@@ -22,29 +22,29 @@ const timeout = (f: Function, timeout = 0) => new Promise((resolve, reject) => {
   }, timeout);
 });
 
-test('sleep', async () => {
+it('sleep', async function () {
   const now = Date.now();
 
   await sleep(100);
-  expect(Date.now()).toBeGreaterThanOrEqual(now + 100);
+  expect(Date.now()).to.be.greaterThanOrEqual(now + 100);
 });
 
-test('trigger', async () => {
+it('trigger', async function () {
   const [value, setValue] = trigger<any>();
 
   const t = setTimeout(() => setValue('test'), 10);
 
   const result = await value();
-  expect(result).toBe('test');
+  expect(result).to.equal('test');
 
   clearTimeout(t);
 });
 
-test('promiseTimeout', async () => {
+it('promiseTimeout', async function () {
   {
     const promise = timeout(() => 'test', 100);
     const value = await promiseTimeout(promise, 200, new Error('timeout'));
-    expect(value).toBe('test');
+    expect(value).to.equal('test');
   }
 
   {
@@ -53,12 +53,12 @@ test('promiseTimeout', async () => {
   }
 });
 
-test('waitForCondition', async () => {
+it('waitForCondition', async function () {
   {
     const stop = Date.now() + 100;
     const value = await waitForCondition(() => Date.now() > stop, 200);
-    expect(value).toBe(true);
-    expect(Date.now()).toBeGreaterThanOrEqual(stop);
+    expect(value).to.be.true;
+    expect(Date.now()).to.be.greaterThanOrEqual(stop);
   }
 
   {
