@@ -5,7 +5,7 @@ const t: TemplateFunction<Input> = ({ input }) => {
   const modules = input.project.getReflectionsByKind(ReflectionKind.Module);
   return text`
 # DXOS
-project.reflections[module]:
+## Packages:
 ${modules.map(m => `- ${m.getFriendlyFullName()}`)}
 `;
 };

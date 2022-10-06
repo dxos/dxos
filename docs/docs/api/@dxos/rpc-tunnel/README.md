@@ -1,1 +1,1 @@
-# @dxos/rpc-tunnel
+# Package @dxos/rpc-tunnel

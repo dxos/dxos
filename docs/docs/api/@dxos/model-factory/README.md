@@ -1,1 +1,1 @@
-# @dxos/model-factory
+# Package @dxos/model-factory

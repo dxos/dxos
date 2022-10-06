@@ -1,1 +1,1 @@
-# @dxos/protocol-plugin-replicator
+# Package @dxos/protocol-plugin-replicator

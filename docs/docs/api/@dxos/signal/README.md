@@ -1,1 +1,1 @@
-# @dxos/signal
+# Package @dxos/signal

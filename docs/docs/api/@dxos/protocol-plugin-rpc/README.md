@@ -1,1 +1,1 @@
-# @dxos/protocol-plugin-rpc
+# Package @dxos/protocol-plugin-rpc

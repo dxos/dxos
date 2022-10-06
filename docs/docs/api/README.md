@@ -1,5 +1,5 @@
 # DXOS
-project.reflections[module]:
+## Packages:
 - @dxos/protocols
 - @dxos/echo-db
 - @dxos/messenger-model

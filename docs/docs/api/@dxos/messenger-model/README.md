@@ -1,1 +1,1 @@
-# @dxos/messenger-model
+# Package @dxos/messenger-model

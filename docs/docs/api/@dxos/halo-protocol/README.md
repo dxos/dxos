@@ -1,1 +1,1 @@
-# @dxos/halo-protocol
+# Package @dxos/halo-protocol

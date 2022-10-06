@@ -1,1 +1,1 @@
-# @dxos/text-model
+# Package @dxos/text-model

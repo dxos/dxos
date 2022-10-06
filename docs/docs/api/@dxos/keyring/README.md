@@ -1,1 +1,1 @@
-# @dxos/keyring
+# Package @dxos/keyring

@@ -1,1 +1,1 @@
-# @dxos/protocols
+# Package @dxos/protocols

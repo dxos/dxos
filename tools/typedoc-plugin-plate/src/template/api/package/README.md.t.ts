@@ -7,7 +7,7 @@ const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
     (module) =>
       new File({
         path: [outputDirectory, module.getFriendlyFullName(), "README.md"],
-        content: text`# ${module.getFriendlyFullName()}`,
+        content: text`# Package ${module.getFriendlyFullName()}`,
       })
   );
 };

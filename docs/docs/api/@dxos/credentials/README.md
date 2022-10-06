@@ -1,1 +1,1 @@
-# @dxos/credentials
+# Package @dxos/credentials

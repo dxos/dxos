@@ -1,0 +1,1 @@
+# Class @dxos/messaging.WebsocketSignalManager

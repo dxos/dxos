@@ -1,1 +1,1 @@
-# @dxos/rpc
+# Package @dxos/rpc

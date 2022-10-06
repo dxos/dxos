@@ -1,1 +1,1 @@
-# @dxos/network-manager
+# Package @dxos/network-manager

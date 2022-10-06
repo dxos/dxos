@@ -1,1 +1,1 @@
-# @dxos/messaging
+# Package @dxos/messaging

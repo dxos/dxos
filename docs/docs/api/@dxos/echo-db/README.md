@@ -1,1 +1,1 @@
-# @dxos/echo-db
+# Package @dxos/echo-db

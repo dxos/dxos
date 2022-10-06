@@ -1,1 +1,1 @@
-# @dxos/mesh-protocol
+# Package @dxos/mesh-protocol

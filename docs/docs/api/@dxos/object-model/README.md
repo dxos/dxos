@@ -1,1 +1,1 @@
-# @dxos/object-model
+# Package @dxos/object-model

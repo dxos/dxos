@@ -1,1 +1,1 @@
-# @dxos/protocol-network-generator
+# Package @dxos/protocol-network-generator

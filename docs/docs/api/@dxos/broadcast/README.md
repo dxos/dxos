@@ -1,1 +1,1 @@
-# @dxos/broadcast
+# Package @dxos/broadcast

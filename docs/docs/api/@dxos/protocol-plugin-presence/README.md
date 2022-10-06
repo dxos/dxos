@@ -1,1 +1,1 @@
-# @dxos/protocol-plugin-presence
+# Package @dxos/protocol-plugin-presence
