@@ -3,7 +3,7 @@
   "projects": {
     "async": "packages/common/async",
     "beast": "tools/beast",
-    "bare-template": "packages/apps/templates/bare",
+    "bare-template": "packages/apps/templates/bare-template",
     "bot-factory-client": "packages/bots/bot-factory-client",
     "botkit": "packages/bots/botkit",
     "broadcast": "packages/core/mesh/broadcast",
@@ -33,7 +33,7 @@
     "gem-spore": "packages/gem/gem-spore",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
     "halo-app": "packages/apps/halo-app",
-    "hello-template": "packages/apps/templates/hello",
+    "hello-template": "packages/apps/templates/hello-template",
     "kai": "packages/experimental/kai",
     "keys": "packages/common/keys",
     "keyring": "packages/core/halo/keyring",
