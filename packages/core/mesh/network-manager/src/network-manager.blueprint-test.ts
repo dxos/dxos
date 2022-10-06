@@ -75,12 +75,12 @@ const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemory: bool
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async () => {
-      await plugin2.send(peer1Id.asBuffer(), 'Foo');
+      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('Foo');
+      expect(received[1]).toBe('{"message": "Hello"}');
     });
   }).timeout(10_000).retries(10);
 
@@ -241,13 +241,13 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async () => {
-      await plugin2.send(peer1Id.asBuffer(), 'Foo');
+      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
 
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('Foo');
+      expect(received[1]).toBe('{"message": "Hello"}');
     });
 
     await networkManager1.destroy();
@@ -267,13 +267,13 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async () => {
-        await plugin2.send(peer1Id.asBuffer(), 'Foo');
+        await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
       });
 
       await waitForExpect(() => {
         expect(received.length).toBe(2);
         expect(received[0]).toBeInstanceOf(Protocol);
-        expect(received[1]).toBe('Foo');
+        expect(received[1]).toBe('{"message": "Hello"}');
       });
     }).timeout(10_000).retries(10);
   });
