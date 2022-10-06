@@ -56,7 +56,7 @@ const createPeer = async ({
   };
 };
 
-export const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemory: boolean, signalUrl?: string, transportFactory: TransportFactory }) => {
+const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemory: boolean, signalUrl?: string, transportFactory: TransportFactory }) => {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
@@ -82,8 +82,6 @@ export const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemor
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('Foo');
     });
-    await nm1.destroy();
-    await nm2.destroy();
   }).timeout(10_000).retries(10);
 
   it('join and leave swarm', async () => {

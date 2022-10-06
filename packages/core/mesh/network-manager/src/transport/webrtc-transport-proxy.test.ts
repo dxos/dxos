@@ -20,7 +20,7 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protoc
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe.only('WebRTCTransportProxy', () => {
+describe('WebRTCTransportProxy', () => {
   const setup = async ({
     initiator = true,
     ownId = PublicKey.random(),

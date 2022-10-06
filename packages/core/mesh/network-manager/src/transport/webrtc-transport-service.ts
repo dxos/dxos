@@ -61,7 +61,6 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('error', async (err) => {
-        log.catch(err);
         next({
           connection: {
             state: ConnectionState.CLOSED,
