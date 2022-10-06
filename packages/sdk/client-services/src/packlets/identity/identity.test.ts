@@ -5,9 +5,9 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
+import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
 import { codec, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
-import { createCredentialSignerWithKey, verifyCredential, CredentialGenerator } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -70,7 +70,7 @@ describe('halo/identity', () => {
     {
       const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
       const credentials = [
-        ...await generator.createSpaceGenesis(spaceKey, controlFeed.key),
+        ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
         await generator.createDeviceAuthorization(deviceKey),
         await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
       ];
@@ -162,7 +162,7 @@ describe('halo/identity', () => {
       {
         const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
         const credentials = [
-          ...await generator.createSpaceGenesis(spaceKey, controlFeed.key),
+          ...(await generator.createSpaceGenesis(spaceKey, controlFeed.key)),
           await generator.createDeviceAuthorization(deviceKey),
           await generator.createFeedAdmission(spaceKey, dataFeed.key, AdmittedFeed.Designation.DATA)
         ];
