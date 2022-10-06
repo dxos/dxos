@@ -5,6 +5,7 @@
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
+import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Plugin } from 'vite';
 
@@ -41,6 +42,24 @@ const themePlugin = (options: VitePluginTailwindOptions) => {
                       'Fira CodeVariable',
                       ...defaultConfig.theme.fontFamily.mono
                     ]
+                  },
+                  colors: {
+                    neutral: tailwindColors.zinc,
+                    success: tailwindColors.emerald,
+                    warning: tailwindColors.amber,
+                    error: tailwindColors.red,
+                    info: tailwindColors.cyan,
+                    primary: {
+                      100: '#3a1d60',
+                      200: '#373885',
+                      300: '#2555a5',
+                      400: '#0071bb',
+                      500: '#008dc9',
+                      600: '#00a9d8',
+                      700: '#00c5e6',
+                      800: '#55dfec',
+                      900: '#96f7f0'
+                    }
                   }
                 },
                 ...(env.mode === 'development' && { mode: 'jit' }),
