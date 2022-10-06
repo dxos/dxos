@@ -35,11 +35,6 @@ enum ConnectionState {
   CLOSED = 3;
 }
 
-message ConnectionRequest {
-  dxos.keys.PublicKey  session_id = 1;
-  bool initiator = 2;
-}
-
 message BridgeEvent {
   message ConnectionEvent {
     ConnectionState state = 1;
@@ -61,16 +56,21 @@ message BridgeEvent {
   }
 }
 
+message ConnectionRequest {
+  dxos.keys.PublicKey  proxy_id = 1;
+  bool initiator = 2;
+}
+
 message SignalRequest {
-  dxos.keys.PublicKey  session_id = 1;
+  dxos.keys.PublicKey  proxy_id = 1;
   dxos.mesh.swarm.Signal signal = 2;
 }
 
 message DataRequest {
-  dxos.keys.PublicKey  session_id = 1;
+  dxos.keys.PublicKey  proxy_id = 1;
   bytes payload = 2;
 }
 
 message CloseRequest{
-  dxos.keys.PublicKey  session_id = 1;
+  dxos.keys.PublicKey  proxy_id = 1;
 }

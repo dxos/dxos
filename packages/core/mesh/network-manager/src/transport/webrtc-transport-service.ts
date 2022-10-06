@@ -61,6 +61,7 @@ export class WebRTCTransportService implements BridgeService {
       });
 
       peer.on('error', async (err) => {
+        log.catch(err);
         next({
           connection: {
             state: ConnectionState.CLOSED,
@@ -79,25 +80,25 @@ export class WebRTCTransportService implements BridgeService {
         close();
       });
 
-      this.peers.set(request.sessionId, peer);
+      this.peers.set(request.proxyId, peer);
 
       ready();
     });
   }
 
-  async sendSignal ({ sessionId, signal }: SignalRequest): Promise<void> {
-    assert(this.peers.has(sessionId), 'Connection not ready to accept signals.');
+  async sendSignal ({ proxyId, signal }: SignalRequest): Promise<void> {
+    assert(this.peers.has(proxyId), 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
-    this.peers.get(sessionId)!.signal(JSON.parse(signal.json));
+    this.peers.get(proxyId)!.signal(JSON.parse(signal.json));
   }
 
-  async sendData ({ sessionId, payload }: DataRequest): Promise<void> {
-    assert(this.peers.has(sessionId));
-    this.peers.get(sessionId)!.write(payload);
+  async sendData ({ proxyId, payload }: DataRequest): Promise<void> {
+    assert(this.peers.has(proxyId));
+    this.peers.get(proxyId)!.write(payload);
   }
 
-  async close ({ sessionId }: CloseRequest) {
-    this.peers.get(sessionId)?.destroy();
+  async close ({ proxyId }: CloseRequest) {
+    this.peers.get(proxyId)?.destroy();
     this.peers.delete;
     log('Closed.');
   }
