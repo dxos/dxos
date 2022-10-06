@@ -1,3 +1,8 @@
+#
+# CircleCI configuration
+# https://circleci.com/docs/configuration-reference
+#
+
 version: 2.1
 
 orbs:
@@ -27,11 +32,12 @@ jobs:
   check:
     docker:
       - *docker_image
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
@@ -50,8 +56,8 @@ jobs:
                 environment:
                   NODE_OPTIONS: --max_old_space_size=8198
       - run:
-          name: Upload Code Coverage
-          command: ./.circleci/upload-coverage.sh
+          name: "Upload to codecov.com"
+          command: ./.circleci/scripts/upload-codecov.sh
           when: always
       - store_test_results:
           path: test-results
@@ -105,7 +111,7 @@ jobs:
           environment:
             NODE_OPTIONS: --max_old_space_size=8198
       - run:
-          name: Deploy HALO
+          name: "Deploy HALO"
           command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
