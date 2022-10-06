@@ -5,5 +5,5 @@
 import React from 'react';
 
 export const App = () => {
-  return <button className='btn btn-primary'>Potato</button>;
+  return <button className='btn btn-accent'>Potato</button>;
 };

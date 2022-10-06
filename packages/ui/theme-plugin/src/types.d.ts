@@ -3,3 +3,4 @@
 //
 
 declare module 'daisyui';
+declare module 'tailwindcss/stubs/defaultConfig.stub.js';

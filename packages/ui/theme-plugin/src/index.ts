@@ -6,6 +6,7 @@ import autoprefixer from 'autoprefixer';
 import daisyui from 'daisyui';
 import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
+import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Plugin } from 'vite';
 
 export interface VitePluginTailwindOptions {
@@ -31,6 +32,18 @@ const themePlugin = (options: VitePluginTailwindOptions) => {
           postcss: {
             plugins: [
               tailwindcss({
+                theme: {
+                  fontFamily: {
+                    sans: [
+                      'Roboto FlexVariable',
+                      ...defaultConfig.theme.fontFamily.sans
+                    ],
+                    mono: [
+                      'Fira CodeVariable',
+                      ...defaultConfig.theme.fontFamily.mono
+                    ]
+                  }
+                },
                 ...(env.mode === 'development' && { mode: 'jit' }),
                 content: [
                   resolve(__dirname, '../node_modules/daisyui/dist/**/*.js'),

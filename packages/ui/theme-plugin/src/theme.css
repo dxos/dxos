@@ -1,3 +1,17 @@
+@import '@fontsource/roboto-flex/variable-full.css';
+@import '@fontsource/fira-code/variable.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --rounded-btn: 0.33rem;
+  --rounded-box: 0.66rem;
+}
+
+.btn {
+  text-transform: inherit;
+  font-variation-settings: "wdth" 122;
+  letter-spacing: .06em;
+}
