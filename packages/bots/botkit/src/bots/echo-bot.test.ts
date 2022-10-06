@@ -10,8 +10,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { setupClient } from '../testutils';
 import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
 
-describe('Echo Bot', () => {
-  it('Starts a bot', async () => {
+describe('Echo Bot', function () {
+  it('Starts a bot', async function () {
     const { client, party, invitation } = await setupClient();
     const bot = new EchoBot(TEST_ECHO_TYPE);
 

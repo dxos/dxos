@@ -20,7 +20,7 @@ describe('until', function () {
   });
 
   it('error', async function () {
-    expectToThrow(async () => {
+    await expectToThrow(async () => {
       await until(async (resolve, reject) => {
         await sleep(100);
         reject(new Error());
@@ -29,7 +29,7 @@ describe('until', function () {
   });
 
   it('catch', async function () {
-    expectToThrow(async () => {
+    await expectToThrow(async () => {
       await until(async () => {
         await sleep(100);
         throw new Error();
@@ -38,7 +38,7 @@ describe('until', function () {
   });
 
   it('timeout', async function () {
-    expectToThrow(async () => {
+    await expectToThrow(async () => {
       await until(async (resolve) => {
         await sleep(500);
         resolve();

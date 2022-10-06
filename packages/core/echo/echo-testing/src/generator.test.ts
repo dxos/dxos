@@ -27,7 +27,7 @@ it.skip('generator', async function () {
   await echo.close();
 });
 
-it.skip('filter', async () => {
+it.skip('filter', async function () {
   const echo = await createTestInstance({ initialize: true });
   const party = await echo.createParty();
   const generator = new Generator(party.database, { seed: 100 });
