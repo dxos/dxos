@@ -37,8 +37,8 @@
     "@types/debug": "^4.1.7",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.6",
-    "@types/lodash.set": "^4.3.6"
+    "@types/lodash.get": "^4.4.7",
+    "@types/lodash.set": "^4.3.7"
   },
   "publishConfig": {
     "access": "public"

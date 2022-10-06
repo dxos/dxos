@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { NetworkManager } from '@dxos/network-manager';
@@ -13,8 +12,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from './service-context';
 
-describe('ServiceContext', () => {
-  const setup = async ({
+describe('ServiceContext', function () {
+  const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
@@ -31,9 +30,9 @@ describe('ServiceContext', () => {
     );
   };
 
-  describe('Identity management', () => {
-    test('creates identity', async () => {
-      const peer = await setup();
+  describe('Identity management', function () {
+    it('creates identity', async function () {
+      const peer = await setupPeer();
       await peer.open();
       afterTest(() => peer.close());
 
@@ -41,14 +40,14 @@ describe('ServiceContext', () => {
       expect(identity).toBeTruthy();
     });
 
-    test('device invitations', async () => {
+    it('device invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
-      const peer1 = await setup({ signalContext });
+      const peer1 = await setupPeer({ signalContext });
       await peer1.open();
       afterTest(() => peer1.close());
 
-      const peer2 = await setup({ signalContext });
+      const peer2 = await setupPeer({ signalContext });
       await peer2.open();
       afterTest(() => peer2.close());
 
@@ -62,9 +61,9 @@ describe('ServiceContext', () => {
     });
   });
 
-  describe('Data spaces', () => {
-    test('space genesis', async () => {
-      const serviceContext = await setup();
+  describe('Data spaces', function () {
+    it('space genesis', async function () {
+      const serviceContext = await setupPeer();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
       await serviceContext.createIdentity();
@@ -74,8 +73,8 @@ describe('ServiceContext', () => {
       expect(serviceContext.spaceManager!.spaces.has(space.key)).toBeTruthy();
     });
 
-    test('space genesis with database', async () => {
-      const serviceContext = await setup();
+    it('space genesis with database', async function () {
+      const serviceContext = await setupPeer();
       await serviceContext.open();
       afterTest(() => serviceContext.close());
       await serviceContext.createIdentity();
@@ -93,15 +92,15 @@ describe('ServiceContext', () => {
       }
     });
 
-    test('invitations', async () => {
+    it('invitations', async function () {
       const signalContext = new MemorySignalManagerContext();
 
-      const peer1 = await setup({ signalContext });
+      const peer1 = await setupPeer({ signalContext });
       await peer1.open();
       afterTest(() => peer1.close());
       await peer1.createIdentity();
 
-      const peer2 = await setup({ signalContext });
+      const peer2 = await setupPeer({ signalContext });
       await peer2.open();
       afterTest(() => peer2.close());
       await peer2.createIdentity();

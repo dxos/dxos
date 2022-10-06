@@ -2,13 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-import { join } from 'path';
+import { expect } from 'chai';
+import { join } from 'node:path';
 import * as pb from 'protobufjs';
 
 import { Schema, anySubstitutions } from '../src';
 
-describe('extending protobuf', () => {
-  it('extends proto with another file', async () => {
+describe('extending protobuf', function () {
+  it('extends proto with another file', async function () {
     const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
     const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another.proto'));
 
@@ -25,10 +26,10 @@ describe('extending protobuf', () => {
 
     const encoded = codec.encode(data);
     const decoded = codec.decode(encoded);
-    expect(decoded).toEqual(data);
+    expect(decoded).to.deep.equal(data);
   });
 
-  it('Extends proto with duplicate keys', async () => {
+  it('Extends proto with duplicate keys', async function () {
     const anyProto = await pb.load(join(__dirname, './proto/example/testing/any.proto'));
     const anotherProto = await pb.load(join(__dirname, './proto/example/testing/another-with-any.proto'));
 
@@ -45,6 +46,6 @@ describe('extending protobuf', () => {
 
     const encoded = codec.encode(data);
     const decoded = codec.decode(encoded);
-    expect(decoded).toEqual(data);
+    expect(decoded).to.deep.equal(data);
   });
 });

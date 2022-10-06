@@ -2,10 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { Stream } from './stream';
 
-describe('Stream', () => {
-  test('can consume a stream that immediately closes', async () => {
+describe('Stream', function () {
+  it('can consume a stream that immediately closes', async function () {
     const stream = new Stream(({ next, close }) => {
       next('foo');
       next('bar');
@@ -13,7 +15,7 @@ describe('Stream', () => {
       close();
     });
 
-    expect(await Stream.consume(stream)).toEqual([
+    expect(await Stream.consume(stream)).to.deep.equal([
       { ready: true },
       { data: 'foo' },
       { data: 'bar' },
@@ -22,9 +24,9 @@ describe('Stream', () => {
     ]);
   });
 
-  test('can consume a stream that produces items over time', async () => {
+  it('can consume a stream that produces items over time', async function () {
     const stream = new Stream(({ next, close }) => {
-      setImmediate(async () => {
+      void (async () => {
         await sleep(5);
         next('foo');
         await sleep(5);
@@ -33,10 +35,10 @@ describe('Stream', () => {
         next('baz');
         await sleep(5);
         close();
-      });
+      })();
     });
 
-    expect(await Stream.consume(stream)).toEqual([
+    expect(await Stream.consume(stream)).to.deep.equal([
       { ready: true },
       { data: 'foo' },
       { data: 'bar' },
@@ -45,17 +47,18 @@ describe('Stream', () => {
     ]);
   });
 
-  test('close error is buffered', async () => {
+  it('close error is buffered', async function () {
+    const error = new Error('test');
     const stream = new Stream(({ close }) => {
-      close(new Error('test'));
+      close(error);
     });
 
-    expect(await Stream.consume(stream)).toEqual([
-      { closed: true, error: new Error('test') }
+    expect(await Stream.consume(stream)).to.deep.equal([
+      { closed: true, error }
     ]);
   });
 
-  test('subscribe gets all updates', async () => {
+  it('subscribe gets all updates', async function () {
     let nextCb: (value: string) => void = () => {};
     const stream = new Stream<string>(({ next }) => {
       nextCb = next;
@@ -64,7 +67,7 @@ describe('Stream', () => {
     const received: string[] = [];
     stream.subscribe(msg => received.push(msg), () => {});
     nextCb('second');
-    expect(received).toEqual(['first', 'second']);
+    expect(received).to.deep.equal(['first', 'second']);
   });
 });
 

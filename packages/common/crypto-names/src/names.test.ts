@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { generateKey, generateName, parseName } from './names';
 
 const t = () => {
@@ -10,11 +12,11 @@ const t = () => {
   return { key, name };
 };
 
-test('example', () => {
+it('example', function () {
   const examples = Array.from({ length: 5 }).map(() => {
     const { key, name } = t();
     const testKey = parseName(name);
-    expect(key).toEqual(testKey);
+    expect(key.buffer).to.deep.equal(testKey.buffer);
     return {
       key: key.toString('hex'),
       name
@@ -24,10 +26,10 @@ test('example', () => {
   console.log(JSON.stringify(examples, undefined, 2));
 });
 
-test('name to be unique', () => {
+it('name to be unique', function () {
   Array.from({ length: 100 }).forEach(() => {
     const { key, name } = t();
     const testKey = parseName(name);
-    expect(key).toEqual(testKey);
+    expect(key.buffer).to.deep.equal(testKey.buffer);
   });
 });

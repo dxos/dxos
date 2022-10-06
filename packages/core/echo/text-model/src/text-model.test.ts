@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import faker from 'faker';
-import { it as test } from 'mocha';
 
 import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -12,8 +11,8 @@ import { ModelFactory, TestRig } from '@dxos/model-factory';
 
 import { TextModel } from './text-model';
 
-describe('TextModel', () => {
-  test('insert', async () => {
+describe('TextModel', function () {
+  it('insert', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -30,7 +29,7 @@ describe('TextModel', () => {
     expect(peer1.model.textContent).toBe('Hello DXOS World!');
   });
 
-  test('insert a new text node', async () => {
+  it('insert a new text node', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
 
@@ -49,7 +48,7 @@ describe('TextModel', () => {
     expect(strigified2).toBe(`"<paragraph>${text1}</paragraph><paragraph>${text2}</paragraph>"`);
   });
 
-  test('snapshot', async () => {
+  it('snapshot', async function () {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const model1 = modelFactory.createModel<TextModel>(
       TextModel.meta.type, 'test', {}, PublicKey.random(), new MockFeedWriter());
@@ -63,7 +62,7 @@ describe('TextModel', () => {
     expect(model2.model.textContent).toBe(text);
   });
 
-  test('conflict', async () => {
+  it('conflict', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TextModel), TextModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

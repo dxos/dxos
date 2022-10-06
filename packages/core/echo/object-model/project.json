@@ -26,10 +26,21 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/echo/object-model/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/echo/object-model/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/echo/object-model",
+        "resultsPath": "test-results/packages/core/echo/object-model",
+        "coveragePath": "coverage/packages/core/echo/object-model"
       }
     }
   },

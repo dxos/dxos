@@ -26,7 +26,7 @@ import { DEFAULT_DXNS_ENDPOINT } from './test-config';
 
 chai.use(chaiAsPromised);
 
-export const setup = async () => {
+export const setupRegistryClient = async () => {
   const apiPromise = await createApiPromise(DEFAULT_DXNS_ENDPOINT);
 
   // TODO(burdon): Change to array of accounts (are these special for testing?)

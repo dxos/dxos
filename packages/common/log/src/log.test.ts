@@ -8,8 +8,8 @@ import { log } from './log';
 // import { LogLevel } from './config';
 // log.config.filter = LogLevel.INFO;
 
-describe('log', () => {
-  it('line numbers', () => {
+describe('log', function () {
+  it('line numbers', function () {
     log.warn('LOG LINE 13');
 
     try {
@@ -19,7 +19,7 @@ describe('log', () => {
     }
   });
 
-  it('levels', () => {
+  it('levels', function () {
     log('Default level log message');
     log.debug('Debug level log message');
     log.info('Info level log message');
@@ -27,11 +27,11 @@ describe('log', () => {
     log.error('Error level log message');
   });
 
-  it('formatting', () => {
+  it('formatting', function () {
     log.info(`${2} + ${2} = ${2 + 2}`);
   });
 
-  it('context', () => {
+  it('context', function () {
     log.info('Message with context', {
       foo: 'bar',
       baz: 123

@@ -15,27 +15,27 @@ let client: Client;
 let party: Party;
 let builder: SchemaBuilder;
 
-beforeEach(async () => {
-  client = new Client();
-  await client.initialize();
-  await client.halo.createProfile({ username: 'test-user' });
-  party = await client.echo.createParty();
-  builder = new SchemaBuilder(party.database);
-});
+describe('Schemas', function () {
+  beforeEach(async function () {
+    client = new Client();
+    await client.initialize();
+    await client.halo.createProfile({ username: 'test-user' });
+    party = await client.echo.createParty();
+    builder = new SchemaBuilder(party.database);
+  });
 
-afterEach(async () => {
-  await party.destroy();
-  await client.destroy();
-});
+  afterEach(async function () {
+    await party.destroy();
+    await client.destroy();
+  });
 
-describe('Schemas', () => {
-  it('creation of Schema', async () => {
+  it('creation of Schema', async function () {
     const [schema] = await builder.createSchemas();
     expect(schema.name).toBe(builder.defaultSchemas[TestType.Org].schema);
     expect(schema.fields[0].key).toBe('title');
   });
 
-  it('add Schema field', async () => {
+  it('add Schema field', async function () {
     const [schema] = await builder.createSchemas();
 
     const newField: SchemaField = {
@@ -47,7 +47,7 @@ describe('Schemas', () => {
     expect(schema.getField('location')).toBeTruthy();
   });
 
-  it('add Schema linked field', async () => {
+  it('add Schema linked field', async function () {
     const [orgSchema, personSchema] = await builder.createSchemas();
 
     const fieldRef: SchemaField = {
@@ -77,7 +77,7 @@ describe('Schemas', () => {
     });
   });
 
-  it('Use schema to validate the fields of an item', async () => {
+  it('Use schema to validate the fields of an item', async function () {
     await builder.createSchemas();
     await builder.createData(undefined, {
       [builder.defaultSchemas[TestType.Org].schema]: 8,

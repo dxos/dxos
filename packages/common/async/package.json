@@ -6,7 +6,8 @@
   "author": "DXOS.org",
   "main": "dist/src/index.js",
   "browser": {
-    "node:assert": "assert"
+    "node:assert": "assert",
+    "node:events": "events"
   },
   "types": "dist/src/index.d.ts",
   "files": [
@@ -19,6 +20,9 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "assert": "^2.0.0"
+  },
+  "devDependencies": {
+    "events": "^3.3.0"
   },
   "publishConfig": {
     "access": "public"

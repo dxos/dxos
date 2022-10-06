@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "jest",
+      "mocha",
       "node"
     ]
   },
@@ -13,9 +13,6 @@
   "references": [
     {
       "path": "../keys"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
   ]
 }

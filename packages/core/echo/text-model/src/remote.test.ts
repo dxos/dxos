@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from '@dxos/echo-db';
 import { ModelFactory } from '@dxos/model-factory';
@@ -11,8 +10,8 @@ import { ObjectModel } from '@dxos/object-model';
 
 import { TextModel } from './text-model';
 
-describe('With remote database', () => {
-  test('create and write text', async () => {
+describe('With remote database', function () {
+  it('create and write text', async function () {
     const modelFactory = new ModelFactory().registerModel(TextModel);
     const backend = await createInMemoryDatabase(modelFactory);
     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());
@@ -25,7 +24,7 @@ describe('With remote database', () => {
     expect(text.model.textContent).toEqual('Hello world');
   });
 
-  test('create with parent', async () => {
+  it('create with parent', async function () {
     const modelFactory = new ModelFactory().registerModel(TextModel).registerModel(ObjectModel);
     const backend = await createInMemoryDatabase(modelFactory);
     const frontend = await createRemoteDatabaseFromDataServiceHost(modelFactory, backend.createDataServiceHost());

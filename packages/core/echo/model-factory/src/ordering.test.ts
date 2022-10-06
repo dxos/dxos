@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
@@ -11,12 +10,12 @@ import { Timeframe } from '@dxos/protocols';
 import { getInsertionIndex } from './ordering';
 import { ModelMessage } from './types';
 
-describe('Ordering', () => {
+describe('Ordering', function () {
   // feedA < feedB
   const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');
   const feedB = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000002');
 
-  test('mutations from a single feed get inserted at the end', () => {
+  it('mutations from a single feed get inserted at the end', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedA, 0, new Timeframe()),
@@ -26,7 +25,7 @@ describe('Ordering', () => {
     )).toEqual(2);
   });
 
-  test('mutations with higher feed key go after ones with lower feed key', () => {
+  it('mutations with higher feed key go after ones with lower feed key', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedA, 0, new Timeframe())
@@ -35,7 +34,7 @@ describe('Ordering', () => {
     )).toEqual(1);
   });
 
-  test('mutations with lower feed key go before ones with higher feed key', () => {
+  it('mutations with lower feed key go before ones with higher feed key', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedB, 0, new Timeframe())
@@ -44,7 +43,7 @@ describe('Ordering', () => {
     )).toEqual(0);
   });
 
-  test('dependant mutations with higher feed key get inserted at the end', () => {
+  it('dependant mutations with higher feed key get inserted at the end', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedA, 0, new Timeframe())
@@ -53,7 +52,7 @@ describe('Ordering', () => {
     )).toEqual(1);
   });
 
-  test('dependant mutations with lower feed key get inserted at the end', () => {
+  it('dependant mutations with lower feed key get inserted at the end', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedB, 0, new Timeframe())
@@ -62,7 +61,7 @@ describe('Ordering', () => {
     )).toEqual(1);
   });
 
-  test('same base', () => {
+  it('same base', function () {
     expect(getInsertionIndex(
       [
         createMutation(feedB, 0, new Timeframe()),

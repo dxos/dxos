@@ -88,6 +88,9 @@
         "default",
         "^default",
         {
+          "env": "CI"
+        },
+        {
           "env": "LOG_FILTER"
         },
         {

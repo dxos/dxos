@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { expect } from 'chai';
 import crypto from 'crypto';
 import debug from 'debug';
 import { Graph } from 'ngraph.graph';
@@ -18,8 +19,6 @@ const log = debug('test');
 debug.enable('test');
 
 const TIMEOUT = 30 * 1000;
-
-jest.setTimeout(TIMEOUT);
 
 const random = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -52,7 +51,9 @@ const links = (graph: Graph) => {
   return links;
 };
 
-test('presence', async () => {
+it('presence', async function () {
+  this.timeout(TIMEOUT);
+
   const topic = crypto.randomBytes(32);
   const network = await generator.balancedBinTree({
     topic,
@@ -68,7 +69,7 @@ test('presence', async () => {
   const peer1 = random(network.peers) as any;
 
   await waitForExpect(() => {
-    expect(network.connections.length).toBe(peer1.presence.graph.getLinksCount());
+    expect(network.connections.length).to.equal(peer1.presence.graph.getLinksCount());
   }, TIMEOUT, 2 * 1000);
 
   log('original network');
@@ -85,11 +86,11 @@ test('presence', async () => {
       .filter((peer: any) => peer !== peer1)
       .reduce((prev: any, peer: any) => prev && pathFinder.find(fromId, peer.id.toString('hex')).length > 0, true);
 
-    expect(result).toBe(true);
+    expect(result).to.be.true;
   }, TIMEOUT, 5 * 1000);
 
   peer1.presence.graph.forEachNode((node: any) => {
-    expect(node.data.metadata).toEqual({ shareStr: 'test1', shareBuf: Buffer.from('test2') });
+    expect(node.data.metadata).to.deep.equal({ shareStr: 'test1', shareBuf: Buffer.from('test2') });
   });
 
   log('network full connected');
@@ -97,6 +98,6 @@ test('presence', async () => {
   await network.destroy();
 
   await waitForExpect(() => {
-    expect(peer1.presence.graph.getNodesCount()).toBe(1);
+    expect(peer1.presence.graph.getNodesCount()).to.equal(1);
   }, TIMEOUT, 2 * 1000);
 });

@@ -27,10 +27,23 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/echo/echo-db/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/echo/echo-db/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/echo/echo-db",
+        "resultsPath": "test-results/packages/core/echo/echo-db",
+        "coveragePath": "coverage/packages/core/echo/echo-db",
+        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "forceExit": true
       }
     }
   },

@@ -26,10 +26,22 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/core/mesh/rpc/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/rpc/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/mesh/rpc",
+        "resultsPath": "test-results/packages/core/mesh/rpc",
+        "coveragePath": "coverage/packages/core/mesh/rpc"
       }
     }
   },

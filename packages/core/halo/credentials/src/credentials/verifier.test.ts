@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -12,9 +11,9 @@ import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials'
 import { createCredential } from './credential-factory';
 import { verifyCredential } from './verifier';
 
-describe('verifier', () => {
-  describe('no chain', () => {
-    test('pass', async () => {
+describe('verifier', function () {
+  describe('no chain', function () {
+    it('pass', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
@@ -34,7 +33,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    test('fail - invalid signature', async () => {
+    it('fail - invalid signature', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
@@ -57,7 +56,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - invalid issuer', async () => {
+    it('fail - invalid issuer', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
@@ -80,7 +79,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - invalid nonce', async () => {
+    it('fail - invalid nonce', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
@@ -104,7 +103,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - no nonce provided', async () => {
+    it('fail - no nonce provided', async function () {
       const keyring = new Keyring();
       const issuer = await keyring.createKey();
       const partyKey = PublicKey.random();
@@ -128,8 +127,8 @@ describe('verifier', () => {
     });
   });
 
-  describe('chain', () => {
-    test('pass - delegated authority with 1 device', async () => {
+  describe('chain', function () {
+    it('pass - delegated authority with 1 device', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -165,7 +164,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    test('fail - missing chain', async () => {
+    it('fail - missing chain', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -203,7 +202,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - invalid chain signature', async () => {
+    it('fail - invalid chain signature', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -241,7 +240,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - invalid chain assertion', async () => {
+    it('fail - invalid chain assertion', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device = await keyring.createKey();
@@ -287,7 +286,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('fail - chain does not lead to issuer', async () => {
+    it('fail - chain does not lead to issuer', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const identity2 = await keyring.createKey();
@@ -335,7 +334,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toMatchObject({ kind: 'fail' });
     });
 
-    test('pass - delegated authority with 2 devices', async () => {
+    it('pass - delegated authority with 2 devices', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();
@@ -385,7 +384,7 @@ describe('verifier', () => {
       expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
     });
 
-    test('fail - cyclic chain', async () => {
+    it('fail - cyclic chain', async function () {
       const keyring = new Keyring();
       const identity = await keyring.createKey();
       const device1 = await keyring.createKey();

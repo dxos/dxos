@@ -14,7 +14,7 @@ import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-
 
 // TODO(burdon): Remove foo, bar, etc.
 
-describe('Schema', () => {
+describe('Schema', function () {
   test('encode and decode', async () => {
     const codec = schema.getCodecForType('example.testing.types.TaskList');
 
@@ -134,7 +134,7 @@ describe('Schema', () => {
     expect(decoded).toEqual(initial);
   });
 
-  describe('Scalars', () => {
+  describe('Scalars', function () {
     test('required', () => {
       const codec = schema.getCodecForType('example.testing.types.Scalars');
 
@@ -255,7 +255,7 @@ describe('Schema', () => {
       expect(decoded).toEqual(initial);
     });
 
-    describe('optional fields are assigned undefined when missing on the wire', () => {
+    describe('optional fields are assigned undefined when missing on the wire', function () {
       const codec = schema.getCodecForType('example.testing.types.OptionalScalars');
 
       const expected: OptionalScalars = {};
