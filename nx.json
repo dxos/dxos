@@ -24,11 +24,27 @@
       }
     }
   },
+  // Named inputs explained here: https://nx.dev/more-concepts/customizing-inputs
   "namedInputs": {
-    "default": ["{projectRoot}/**/*"]
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    // Nx assumes the use of tsconfig.base.json.
+    //   https://nx.dev/more-concepts/customizing-inputs#global-settings.
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/.eslintrc*.js"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/**/*.md",
+      "!{projectRoot}/eslintConfig.json",
+      "!{workspaceRoot}/.eslintrc*.js"
+    ]
   },
   "targetDefaults": {
     "build": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
         "^bundle",
@@ -38,8 +54,8 @@
     },
     "bundle": {
       "inputs": [
-        "default",
-        "^default",
+        "production",
+        "^production",
         {
           "env": "CONFIG_DYNAMIC"
         }
@@ -52,6 +68,7 @@
       ]
     },
     "check": {
+      "inputs": ["default", "^production"],
       "dependsOn": [
         "lint",
         "test",
@@ -60,23 +77,33 @@
       ]
     },
     "e2e": {
+      "inputs": ["default", "^production"],
       "dependsOn": [
         "proto",
         "build",
         "bundle"
       ]
     },
+    "lint": {
+      "inputs": ["default"]
+    },
     "prebuild": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build"
       ]
     },
+    "prerelease": {
+      "inputs": ["default", "^production"]
+    },
     "proto": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build"
       ]
     },
     "serve": {
+      "inputs": ["production", "^production"],
       "dependsOn": [
         "^build",
         "^bundle",
@@ -86,7 +113,7 @@
     "test": {
       "inputs": [
         "default",
-        "^default",
+        "^production",
         {
           "env": "CI"
         },
