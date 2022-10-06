@@ -1,13 +1,12 @@
-#! /bin/bash
+#!/bin/bash
 
+# This file is referenced from the .circleci/config.yml
 # https://docs.codecov.com/docs/codecov-uploader
 
 curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import
 
 curl -Os https://uploader.codecov.io/latest/linux/codecov
-
 curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-
 curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
 
 gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
