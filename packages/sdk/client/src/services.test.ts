@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-// @dxos/mocha nodejs
+// @dxos/mocha platform=nodejs
 
 import assert from 'node:assert';
 

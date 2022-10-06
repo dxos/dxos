@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-// @dxos/mocha nodejs
+// @dxos/mocha platform=nodejs
 
 import expect from 'expect';
 import defaultHypercore from 'hypercore';

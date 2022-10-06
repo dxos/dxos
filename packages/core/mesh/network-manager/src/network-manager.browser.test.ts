@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha browser
+// @dxos/mocha platform=browser
 
 import { inMemoryTests, webRTCTests } from './network-manager.blueprint-test';
 

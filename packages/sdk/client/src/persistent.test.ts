@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha browser
+// @dxos/mocha platform=browser
 
 import expect from 'expect';
 import 'source-map-support/register';

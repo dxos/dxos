@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// @dxos/mocha browser
+// @dxos/mocha platform=browser
 
 // import expect from 'expect';
 

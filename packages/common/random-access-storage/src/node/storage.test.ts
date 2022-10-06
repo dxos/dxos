@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// @dxos/mocha nodejs
+// @dxos/mocha platform=nodejs
 
 import crypto from 'crypto';
 import del from 'del';
