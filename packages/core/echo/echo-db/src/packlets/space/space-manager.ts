@@ -3,9 +3,9 @@
 //
 
 import { Event } from '@dxos/async';
+import { CredentialSigner, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
-import { CredentialGenerator, CredentialSigner } from '@dxos/halo-protocol';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
@@ -90,7 +90,7 @@ export class SpaceManager {
         this._keyring, this._signingContext.identityKey, this._signingContext.deviceKey);
 
       const credentials = [
-        ...await generator.createSpaceGenesis(spaceKey, controlFeedKey),
+        ...(await generator.createSpaceGenesis(spaceKey, controlFeedKey)),
         await generator.createFeedAdmission(spaceKey, dataFeedKey, AdmittedFeed.Designation.DATA)
       ];
 

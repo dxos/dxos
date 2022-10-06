@@ -31,8 +31,8 @@ export const runTests = async (bundleFile: string, browser: Browser, options: Om
     {
       headless: options.headless,
       args: [
-        ...options.debug ? ['--auto-open-devtools-for-tabs'] : [],
-        ...options.browserArgs ?? []
+        ...(options.debug ? ['--auto-open-devtools-for-tabs'] : []),
+        ...(options.browserArgs ?? [])
       ]
     }
   );
