@@ -10,11 +10,13 @@ import { execTool, getBin, mochaComment, resolveFiles } from './util';
 
 export type NodeOptions = {
   testPatterns: string[]
+  coverage: boolean
+  coveragePath: string
   watch: boolean
   watchPatterns: string[]
   outputPath: string
   resultsPath: string
-  junitReport: boolean
+  xmlReport: boolean
   timeout: number
   checkLeaks: boolean
   forceExit: boolean
@@ -26,8 +28,10 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const ignoreArgs = await getIgnoreArgs(options.testPatterns);
   const setupArgs = getSetupArgs(context.root, options.domRequired);
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
+  const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
   const args = [
+    ...coverageArgs,
     ...options.testPatterns,
     ...ignoreArgs,
     ...reporterArgs,
@@ -45,7 +49,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     ...(options.forceExit ? ['--exit'] : [])
   ];
 
-  const mocha = getBin(context.root, 'mocha');
+  const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
   const exitCode = await execTool(mocha, args, {
     env: {
       ...process.env,
@@ -59,7 +63,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
 const setupReporter = async (context: ExecutorContext, options: NodeOptions) => {
   if (options.watch) {
     return ['--reporter', 'min'];
-  } else if (!options.junitReport) {
+  } else if (!options.xmlReport) {
     return ['--reporter', 'spec'];
   }
 
@@ -111,5 +115,17 @@ const getWatchArgs = (watch: boolean, patterns: string[]) => {
   return [
     '--watch',
     ...patterns.map(pattern => ['--watch-files', pattern]).flat()
+  ];
+};
+
+const getCoverageArgs = (coverage: boolean, outputPath: string, xmlReport: boolean) => {
+  if (!coverage) {
+    return [];
+  }
+
+  return [
+    '--reporter', (xmlReport ? 'clover' : 'lcov'),
+    '--report-dir', outputPath,
+    'mocha'
   ];
 };

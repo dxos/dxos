@@ -38,7 +38,8 @@
           "packages/core/halo/halo-protocol/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/halo/halo-protocol",
-        "resultsPath": "test-results/packages/core/halo/halo-protocol"
+        "resultsPath": "test-results/packages/core/halo/halo-protocol",
+        "coveragePath": "coverage/packages/core/halo/halo-protocol"
       }
     }
   },

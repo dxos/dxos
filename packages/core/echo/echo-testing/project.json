@@ -36,7 +36,8 @@
           "packages/core/echo/echo-testing/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/echo/echo-testing",
-        "resultsPath": "test-results/packages/core/echo/echo-testing"
+        "resultsPath": "test-results/packages/core/echo/echo-testing",
+        "coveragePath": "coverage/packages/core/echo/echo-testing"
       }
     }
   },

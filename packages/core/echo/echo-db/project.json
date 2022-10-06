@@ -40,6 +40,7 @@
         ],
         "outputPath": "tmp/mocha/packages/core/echo/echo-db",
         "resultsPath": "test-results/packages/core/echo/echo-db",
+        "coveragePath": "coverage/packages/core/echo/echo-db",
         "setup": "packages/core/mesh/signal/testing/setup.js",
         "forceExit": true
       }

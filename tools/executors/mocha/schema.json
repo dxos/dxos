@@ -25,6 +25,15 @@
       "type": "string",
       "description": "Setup script to run before tests"
     },
+    "coverage": {
+      "type": "boolean",
+      "description": "Run tests with a code coverage tool",
+      "default": false
+    },
+    "coveragePath": {
+      "type": "string",
+      "description": "Where to save coverage outputs"
+    },
     "watch": {
       "type": "boolean",
       "description": "Rerun tests on source file changes",
@@ -42,9 +51,9 @@
       "type": "string",
       "description": "Where to save test results"
     },
-    "junitReport": {
+    "xmlReport": {
       "type": "boolean",
-      "description": "Output xml results in junit format (generally for CI consumption)",
+      "description": "Output xml results for tests & coverage (generally for CI consumption)",
       "default": false
     },
     "timeout": {
@@ -87,5 +96,10 @@
       "description": "Arguments to pass to browser runner"
     }
   },
-  "required": ["testPatterns", "outputPath", "resultsPath"]
+  "required": [
+    "testPatterns",
+    "outputPath",
+    "resultsPath",
+    "coveragePath"
+  ]
 }

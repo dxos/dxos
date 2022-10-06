@@ -38,7 +38,8 @@
           "packages/common/feed-store/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/common/feed-store",
-        "resultsPath": "test-results/packages/common/feed-store"
+        "resultsPath": "test-results/packages/common/feed-store",
+        "coveragePath": "coverage/packages/common/feed-store"
       }
     }
   },

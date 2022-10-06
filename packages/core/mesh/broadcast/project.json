@@ -39,7 +39,8 @@
           "packages/core/mesh/broadcast/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/core/mesh/broadcast",
-        "resultsPath": "test-results/packages/core/mesh/broadcast"
+        "resultsPath": "test-results/packages/core/mesh/broadcast",
+        "coveragePath": "coverage/packages/core/mesh/broadcast"
       }
     }
   },

@@ -39,6 +39,7 @@
         ],
         "outputPath": "tmp/mocha/packages/sdk/react-client-testing",
         "resultsPath": "test-results/packages/sdk/react-client-testing",
+        "coveragePath": "coverage/packages/sdk/react-client-testing",
         "domRequired": true,
         "checkLeaks": false,
         "forceExit": true

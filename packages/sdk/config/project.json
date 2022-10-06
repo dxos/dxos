@@ -38,7 +38,8 @@
           "packages/sdk/config/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/sdk/config",
-        "resultsPath": "test-results/packages/sdk/config"
+        "resultsPath": "test-results/packages/sdk/config",
+        "coveragePath": "coverage/packages/sdk/config"
       }
     }
   },

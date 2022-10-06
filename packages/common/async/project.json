@@ -38,7 +38,8 @@
           "packages/common/async/src/**/*"
         ],
         "outputPath": "tmp/mocha/packages/common/async",
-        "resultsPath": "test-results/packages/common/async"
+        "resultsPath": "test-results/packages/common/async",
+        "coveragePath": "coverage/packages/common/async"
       }
     }
   },

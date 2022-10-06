@@ -39,6 +39,7 @@
         ],
         "outputPath": "tmp/mocha/packages/common/react-async",
         "resultsPath": "test-results/packages/common/react-async",
+        "coveragePath": "coverage/packages/common/react-async",
         "domRequired": true,
         "forceExit": true
       }
