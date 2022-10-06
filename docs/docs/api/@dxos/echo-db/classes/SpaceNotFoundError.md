@@ -1,1 +1,6 @@
-# Class @dxos/echo-db.SpaceNotFoundError
+# Class SpaceNotFoundError
+> Declared in package `@dxos/echo-db`
+
+## Fields
+
+## Methods

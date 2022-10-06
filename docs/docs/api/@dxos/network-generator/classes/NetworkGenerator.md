@@ -1,1 +1,6 @@
-# Class @dxos/network-generator.NetworkGenerator
+# Class NetworkGenerator
+> Declared in package `@dxos/network-generator`
+
+## Fields
+
+## Methods

@@ -1,1 +1,8 @@
-# Class @dxos/object-model.Matcher
+# Class Matcher
+> Declared in package `@dxos/object-model`
+Predicate matcher.
+NOTE: The approach here is to match items against the DNF predicate tree.
+
+## Fields
+
+## Methods

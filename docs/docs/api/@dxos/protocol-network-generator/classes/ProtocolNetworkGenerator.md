@@ -1,1 +1,6 @@
-# Class @dxos/protocol-network-generator.ProtocolNetworkGenerator
+# Class ProtocolNetworkGenerator
+> Declared in package `@dxos/protocol-network-generator`
+
+## Fields
+
+## Methods

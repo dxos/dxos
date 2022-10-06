@@ -1,1 +1,7 @@
-# Class @dxos/object-model.ObjectModel
+# Class ObjectModel
+> Declared in package `@dxos/object-model`
+Object mutation model.
+
+## Fields
+
+## Methods

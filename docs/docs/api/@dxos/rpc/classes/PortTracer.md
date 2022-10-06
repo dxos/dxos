@@ -1,1 +1,6 @@
-# Class @dxos/rpc.PortTracer
+# Class PortTracer
+> Declared in package `@dxos/rpc`
+
+## Fields
+
+## Methods

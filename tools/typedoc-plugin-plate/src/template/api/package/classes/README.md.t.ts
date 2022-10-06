@@ -12,7 +12,16 @@ const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
           'classes',
           `${aclass.getAlias()}.md`
         ],
-        content: text`# Class ${aclass.getFriendlyFullName()}`,
+        content: text`
+        # Class ${aclass.name}
+        > Declared in package \`${aclass.parent?.getFullName()}\`
+        ${aclass.comment?.summary?.map(s => s.text)}
+
+        ## Fields
+
+        ## Methods
+
+        `,
       })
   );
 };

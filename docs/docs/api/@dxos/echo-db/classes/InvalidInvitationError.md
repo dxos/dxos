@@ -1,1 +1,6 @@
-# Class @dxos/echo-db.InvalidInvitationError
+# Class InvalidInvitationError
+> Declared in package `@dxos/echo-db`
+
+## Fields
+
+## Methods

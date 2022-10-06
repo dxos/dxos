@@ -1,1 +1,7 @@
-# Class @dxos/object-model.MutationUtil
+# Class MutationUtil
+> Declared in package `@dxos/object-model`
+Represents mutations on objects.
+
+## Fields
+
+## Methods

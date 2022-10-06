@@ -1,1 +1,7 @@
-# Class @dxos/network-manager.Connection
+# Class Connection
+> Declared in package `@dxos/network-manager`
+Represents a connection to a remote peer.
+
+## Fields
+
+## Methods

@@ -1,1 +1,6 @@
-# Class @dxos/echo-db.IdentityNotInitializedError
+# Class IdentityNotInitializedError
+> Declared in package `@dxos/echo-db`
+
+## Fields
+
+## Methods

@@ -1,1 +1,7 @@
-# Class @dxos/network-manager.NetworkManager
+# Class NetworkManager
+> Declared in package `@dxos/network-manager`
+Manages connection to the swarm.
+
+## Fields
+
+## Methods

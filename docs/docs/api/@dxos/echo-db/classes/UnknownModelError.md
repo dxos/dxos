@@ -1,1 +1,6 @@
-# Class @dxos/echo-db.UnknownModelError
+# Class UnknownModelError
+> Declared in package `@dxos/echo-db`
+
+## Fields
+
+## Methods

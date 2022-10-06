@@ -1,1 +1,6 @@
-# Class @dxos/network-manager.SwarmMapper
+# Class SwarmMapper
+> Declared in package `@dxos/network-manager`
+
+## Fields
+
+## Methods

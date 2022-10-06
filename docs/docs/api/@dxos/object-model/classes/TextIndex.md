@@ -1,1 +1,7 @@
-# Class @dxos/object-model.TextIndex
+# Class TextIndex
+> Declared in package `@dxos/object-model`
+Caching text search.
+
+## Fields
+
+## Methods

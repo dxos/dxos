@@ -1,1 +1,6 @@
-# Class @dxos/text-model.TextModel
+# Class TextModel
+> Declared in package `@dxos/text-model`
+
+## Fields
+
+## Methods

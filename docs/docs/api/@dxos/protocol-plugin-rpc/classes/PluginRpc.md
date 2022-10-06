@@ -1,1 +1,6 @@
-# Class @dxos/protocol-plugin-rpc.PluginRpc
+# Class PluginRpc
+> Declared in package `@dxos/protocol-plugin-rpc`
+
+## Fields
+
+## Methods

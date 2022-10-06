@@ -1,1 +1,6 @@
-# Class @dxos/echo-db.SpaceProtocol
+# Class SpaceProtocol
+> Declared in package `@dxos/echo-db`
+
+## Fields
+
+## Methods

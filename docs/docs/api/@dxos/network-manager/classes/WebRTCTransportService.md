@@ -1,1 +1,6 @@
-# Class @dxos/network-manager.WebRTCTransportService
+# Class WebRTCTransportService
+> Declared in package `@dxos/network-manager`
+
+## Fields
+
+## Methods
