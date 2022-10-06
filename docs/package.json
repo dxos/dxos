@@ -6,12 +6,13 @@
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
     "cleanup:api": "rm docs/api/README.md",
     "docs:build": "vuepress build docs",
-    "generate:api": "typedoc --tsconfig ../tsconfig.json --plugin typedoc-plugin-markdown --out docs/api --gitRevision main --githubPages false --hideBreadcrumbs true --hideInPageTOC true --allReflectionsHaveOwnDocument true --hideMembersSymbol true --entryPointStrategy packages --entryPoints ../packages/core/**/* --entryPoints ../packages/sdk/*",
+    "generate:api": "typedoc",
     "prerelease": "pnpm run generate:api && pnpm run cleanup:api && pnpm run docs:build",
     "serve": "vuepress dev docs"
   },
   "devDependencies": {
     "@dxos/react-components": "workspace:*",
+    "@dxos/typedoc-plugin-plate": "workspace:*",
     "@types/eslint": "^8.4.6",
     "@types/markdown-it": "^12.2.3",
     "@types/markdown-it-container": "^2.0.5",

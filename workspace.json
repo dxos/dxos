@@ -82,6 +82,7 @@
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "ui-consumer": "packages/experimental/ui-consumer",
+    "typedoc-plugin-plate": "tools/typedoc-plugin-plate",
     "util": "packages/common/util",
     "vite-plugin": "tools/vite-plugin",
     "wallet-extension": "packages/experimental/wallet-extension",

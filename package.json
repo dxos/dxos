@@ -15,7 +15,8 @@
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "nx": "nx",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build": "nx run-many --target=build"
   },
   "dependencies": {
     "tslib": "^2.3.0"

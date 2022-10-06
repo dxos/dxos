@@ -1,0 +1,14 @@
+{
+  "name": "@dxos/typedoc-plugin-plate",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/src/index.js",
+  "dependencies": {
+    "@dxos/plate": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.58",
+    "typescript": "^4.7.2",
+    "typedoc": "^0.23.15"
+  }
+}
