@@ -37,7 +37,6 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     //   Then the SWC will transpile the typescript source to javascript.
     '-r', '@dxos/log-hook/register',
     '-r', '@swc-node/register',
-    '-r', require.resolve('./colors'),
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
@@ -92,6 +91,7 @@ const getIgnoreArgs = async (testPatterns: string[]) => {
 
 const getSetupArgs = (root: string, domRequired: boolean) => {
   const scripts = [
+    'colors',
     'mocha-env',
     'catch-unhandled-rejections',
     ...(domRequired ? ['react-setup'] : [])
