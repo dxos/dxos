@@ -27,7 +27,7 @@ describe('Network manager', () => {
     webRTCTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal` });
   }).timeout(10_000);
 
-  describe('WebRTC proxy transport', () => {
+  describe.skip('WebRTC proxy transport', () => {
     let broker: TestBroker;
     let service: any;
     const [rpcPortA, rpcPortB] = createLinkedPorts();

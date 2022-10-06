@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "dxos/halo/keys.proto";
+import "dxos/keys.proto";
 import "dxos/mesh/swarm.proto";
 import "google/protobuf/empty.proto";
 
@@ -36,7 +36,7 @@ enum ConnectionState {
 }
 
 message ConnectionRequest {
-  dxos.halo.keys.PubKey  session_id = 1;
+  dxos.keys.PublicKey  session_id = 1;
   bool initiator = 2;
 }
 
@@ -62,15 +62,15 @@ message BridgeEvent {
 }
 
 message SignalRequest {
-  dxos.halo.keys.PubKey  session_id = 1;
+  dxos.keys.PublicKey  session_id = 1;
   dxos.mesh.swarm.Signal signal = 2;
 }
 
 message DataRequest {
-  dxos.halo.keys.PubKey  session_id = 1;
+  dxos.keys.PublicKey  session_id = 1;
   bytes payload = 2;
 }
 
 message CloseRequest{
-  dxos.halo.keys.PubKey  session_id = 1;
+  dxos.keys.PublicKey  session_id = 1;
 }
