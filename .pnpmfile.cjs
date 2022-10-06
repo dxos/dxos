@@ -16,7 +16,7 @@ function readPackage(packageJson, context) {
 
     // https://github.com/nxext/nx-extensions/issues/755
     case '@nxext/vite': {
-      packageJson.peerDependencies['vite'] = '3.0.9'
+      packageJson.peerDependencies['vite'] = '^3.0.0'
       break;
     }
 

@@ -13,9 +13,6 @@ patchedDependencies:
   uuid@8.3.2:
     hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
-  vite@3.0.9:
-    hash: sn4pdpxxcdbczqmgzem6dbvc7e
-    path: patches/vite@3.0.9.patch
 
 importers:
 
@@ -92,7 +89,7 @@ importers:
       tslib: ^2.3.0
       typescript: ^4.7.2
       uuid: ^8.3.2
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
       wait-for-expect: ^3.0.2
       webpack: ^5.74.0
     dependencies:
@@ -121,14 +118,14 @@ importers:
       '@nrwl/storybook': 14.5.7_ngm3wdcdo7uaxtlrk2naaccafy
       '@nrwl/workspace': 14.5.7_24msc4yi7n6uds3ndd7rgnhcwm
       '@nx-plus/docusaurus': 14.1.0_zug6fde3m4dc2hat7xpv7hcuke
-      '@nxext/vite': 14.0.3_4yw7ucziv572yqpbjanig3ynou_twh37saat3kv5aa5buvztedblu
+      '@nxext/vite': 14.0.3_4yw7ucziv572yqpbjanig3ynou_mlvj5saw4mlulimonfovdblfpy
       '@playwright/test': 1.25.1
       '@rushstack/eslint-patch': 1.1.4
       '@storybook/addon-actions': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
       '@storybook/addon-essentials': 6.5.10_jmakcchk2cdzvptcu2pzqlpfu4
       '@storybook/addon-interactions': 6.5.10_eqofqcyt4sy26c4mzlp3wp32fa
       '@storybook/addon-links': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
-      '@storybook/builder-vite': 0.2.2_mphoq5xjdud5mv72wu4mxo6mre
+      '@storybook/builder-vite': 0.2.2_aizmoznuir3r4ysry5r7e7tbna
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 6.5.10_s3urzqyud3z5y2ux632jy7wy6y
       '@storybook/testing-library': 0.0.13_sfoxds7t5ydpegc3knd667wn6m
@@ -168,7 +165,7 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
       wait-for-expect: 3.0.2
       webpack: 5.74.0_esbuild@0.14.49
 
@@ -333,7 +330,7 @@ importers:
       react-dom: ^17.0.2
       react-router-dom: ^6.3.0
       typescript: ^4.7.2
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
       vite-plugin-pwa: ^0.12.4
     dependencies:
       '@dxos/client': link:../../sdk/client
@@ -362,10 +359,10 @@ importers:
       '@types/node': 16.11.62
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.0.1_vite@3.2.0-beta.0
       typescript: 4.7.4
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.6_vite@3.0.9
+      vite: 3.2.0-beta.0
+      vite-plugin-pwa: 0.12.6_vite@3.2.0-beta.0
 
   packages/apps/templates/bare:
     specifiers:
@@ -373,14 +370,14 @@ importers:
       '@dxos/config': workspace:*
       '@dxos/vite-plugin': workspace:*
       typescript: ^4.7.2
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
     dependencies:
       '@dxos/client': link:../../../sdk/client
       '@dxos/config': link:../../../sdk/config
     devDependencies:
       '@dxos/vite-plugin': link:../../../../tools/vite-plugin
       typescript: 4.7.4
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
 
   packages/apps/templates/hello:
     specifiers:
@@ -409,7 +406,7 @@ importers:
       react-dom: ^17.0.2
       require-from-string: ^2.0.2
       typescript: ^4.7.2
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
       vite-plugin-pwa: ^0.12.4
       webpack: ^5.74.0
     dependencies:
@@ -430,17 +427,17 @@ importers:
       '@storybook/addon-essentials': 6.5.10_noolnnmhwh27ijmjnril7wwuge
       '@storybook/addon-interactions': 6.5.10_ehdgrczf7r5rbncv6bihe3icne
       '@storybook/addon-links': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
-      '@storybook/builder-vite': 0.2.2_uksippbqqf5tnuygw5mrn7udp4
+      '@storybook/builder-vite': 0.2.2_sfsistzcjhlfrfiirsmsi6hbye
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/react': 6.5.10_bitigwzoqx6ku2fpooio2jve4a
       '@storybook/testing-library': 0.0.13_sfoxds7t5ydpegc3knd667wn6m
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.0.1_vite@3.2.0-beta.0
       require-from-string: 2.0.2
       typescript: 4.7.4
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
-      vite-plugin-pwa: 0.12.6_vite@3.0.9
+      vite: 3.2.0-beta.0
+      vite-plugin-pwa: 0.12.6_vite@3.2.0-beta.0
       webpack: 5.74.0
 
   packages/bots/bot-factory-client:
@@ -1808,7 +1805,7 @@ importers:
       debug: ^4.3.3
       react: ^17.0.2
       react-dom: ^17.0.2
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
@@ -1831,7 +1828,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
 
   packages/experimental/kai:
     specifiers:
@@ -2066,91 +2063,6 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
-      '@types/copy-paste': 1.1.30
-      '@types/js-yaml': 4.0.5
-      '@types/mocha': 8.2.3
-      '@types/node': 16.11.62
-      '@types/node-fetch': 2.5.12
-      '@types/qrcode-terminal': 0.12.0
-      '@types/react': 17.0.50
-      '@types/yargs': 16.0.4
-      esbuild: 0.14.49
-      mocha: 8.4.0
-      supervisor: 0.12.0
-      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
-      typescript: 4.7.4
-
-  packages/experimental/kodama/dist:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-testing': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/debug': workspace:*
-      '@dxos/keys': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-client': workspace:*
-      '@types/copy-paste': ^1.1.30
-      '@types/js-yaml': ^4.0.5
-      '@types/mocha': ^8.2.2
-      '@types/node': ^16.11.58
-      '@types/node-fetch': ^2.5.10
-      '@types/qrcode-terminal': ^0.12.0
-      '@types/react': ^17.0.24
-      '@types/yargs': ~16.0.1
-      chalk: ^4.1.0
-      clipboardy: ^3.0.0
-      compare-semver: ~1.1.0
-      date-format: ~4.0.11
-      esbuild: ~0.14.1
-      ink: ^3.2.0
-      ink-select-input: ~4.2.1
-      ink-spinner: ~4.0.3
-      ink-syntax-highlight: ~1.0.1
-      ink-table: ~3.0.0
-      ink-text-input: ~4.0.3
-      js-yaml: ^4.1.0
-      mocha: ^8.4.0
-      node-fetch: ^2.6.0
-      npm-api: ~1.0.1
-      qrcode-terminal: ~0.12.0
-      react: ^17.0.2
-      supervisor: ~0.12.0
-      ts-node: 10.9.1
-      typescript: ^4.7.2
-      yargs: ~16.2.0
-    dependencies:
-      '@dxos/async': link:../../../common/async
-      '@dxos/client': link:../../../sdk/client
-      '@dxos/client-testing': link:../../../sdk/client-testing
-      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
-      '@dxos/config': link:../../../sdk/config
-      '@dxos/debug': link:../../../common/debug
-      '@dxos/keys': link:../../../common/keys
-      '@dxos/protocols': link:../../../core/protocols
-      '@dxos/react-async': link:../../../common/react-async
-      '@dxos/react-client': link:../../../sdk/react-client
-      chalk: 4.1.2
-      clipboardy: 3.0.0
-      compare-semver: 1.1.0
-      date-format: 4.0.11
-      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
-      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
-      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
-      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
-      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
-      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
-      js-yaml: 4.1.0
-      node-fetch: 2.6.7
-      npm-api: 1.0.1
-      qrcode-terminal: 0.12.0
-      react: 17.0.2
-      yargs: 16.2.0
-    devDependencies:
-      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
@@ -3668,14 +3580,14 @@ importers:
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
       setimmediate: 1.0.5
-      vite: 3.0.9
+      vite: ^3.2.0-beta.0
     dependencies:
       '@dxos/config': link:../../packages/sdk/config
       '@dxos/esbuild-plugins': 2.29.0
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
       setimmediate: 1.0.5
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
 
 packages:
 
@@ -8277,7 +8189,6 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@esbuild/linux-loong64/0.15.10:
@@ -8286,7 +8197,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@eslint/eslintrc/1.3.0:
@@ -8668,7 +8578,7 @@ packages:
       '@types/yargs': 16.0.4
       chalk: 4.1.2
 
-  /@joshwooding/vite-plugin-react-docgen-typescript/0.0.5_4v7k37vedxleedrl4dfd6xcpjy:
+  /@joshwooding/vite-plugin-react-docgen-typescript/0.0.5_g53fd4hzcrtdq7tiyy55qgbwje:
     resolution: {integrity: sha512-HwAEj/vAP1+hzBfIv9DTCyg+1O0/LG48Up7j1RmJ+pFwjb/wRxzUBco4LqKFKe7SZ0M6IyASNh1oKP3yHnJElA==}
     peerDependencies:
       typescript: '>= 4.3.x'
@@ -8680,7 +8590,7 @@ packages:
       magic-string: 0.26.2
       react-docgen-typescript: 2.2.2_typescript@4.7.4
       typescript: 4.7.4
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
     dev: true
 
   /@jridgewell/gen-mapping/0.1.1:
@@ -10915,11 +10825,11 @@ packages:
       - typescript
     dev: true
 
-  /@nxext/vite/14.0.3_4yw7ucziv572yqpbjanig3ynou_twh37saat3kv5aa5buvztedblu:
+  /@nxext/vite/14.0.3_4yw7ucziv572yqpbjanig3ynou_mlvj5saw4mlulimonfovdblfpy:
     resolution: {integrity: sha512-gTexrtDTHmD1FjN4wwDMmkSFZvUBjTSaeQ0PuI71ugSc2pCHMc269EVbv/pkUeWqfkvevLIicYi521+H2XOm0A==}
     peerDependencies:
       '@nrwl/workspace': ^14.5.0
-      vite: 3.0.9
+      vite: ^3.0.0
     dependencies:
       '@nrwl/devkit': 14.5.0_nx@14.5.7
       '@nrwl/workspace': 14.5.7_24msc4yi7n6uds3ndd7rgnhcwm
@@ -10927,7 +10837,7 @@ packages:
       rxjs: 7.5.6
       rxjs-for-await: 1.0.0_rxjs@7.5.6
       tsconfig-paths: 3.14.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
     transitivePeerDependencies:
       - nx
     dev: true
@@ -12479,7 +12389,7 @@ packages:
       util-deprecate: 1.0.2
     dev: true
 
-  /@storybook/builder-vite/0.2.2_mphoq5xjdud5mv72wu4mxo6mre:
+  /@storybook/builder-vite/0.2.2_aizmoznuir3r4ysry5r7e7tbna:
     resolution: {integrity: sha512-kFY/Rbk+Bu5KmXOCP8CMxp6gfbNGGyNZwikWZe21NHcrVzwHg/aTs+MR37maRqlWcpJvTZmbkKMHak0+vDqpvw==}
     peerDependencies:
       '@storybook/mdx2-csf': ^0.0.3
@@ -12488,14 +12398,14 @@ packages:
       '@storybook/mdx2-csf':
         optional: true
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_4v7k37vedxleedrl4dfd6xcpjy
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_g53fd4hzcrtdq7tiyy55qgbwje
       '@rollup/pluginutils': 4.2.1
       '@storybook/core-common': 6.5.10_x3txwckfyatffp7ld5437zdlme
       '@storybook/mdx1-csf': 0.0.4_u2aypivye4tius5ftakppbroiy
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/node-logger': 6.5.10
       '@storybook/source-loader': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.0.1_vite@3.2.0-beta.0
       ast-types: 0.14.2
       es-module-lexer: 0.9.3
       glob: 7.2.0
@@ -12504,7 +12414,7 @@ packages:
       react-docgen: 6.0.0-alpha.3
       slash: 3.0.0
       sveltedoc-parser: 4.2.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
     transitivePeerDependencies:
       - '@babel/core'
       - eslint
@@ -12517,7 +12427,7 @@ packages:
       - webpack-command
     dev: true
 
-  /@storybook/builder-vite/0.2.2_uksippbqqf5tnuygw5mrn7udp4:
+  /@storybook/builder-vite/0.2.2_sfsistzcjhlfrfiirsmsi6hbye:
     resolution: {integrity: sha512-kFY/Rbk+Bu5KmXOCP8CMxp6gfbNGGyNZwikWZe21NHcrVzwHg/aTs+MR37maRqlWcpJvTZmbkKMHak0+vDqpvw==}
     peerDependencies:
       '@storybook/mdx2-csf': ^0.0.3
@@ -12526,14 +12436,14 @@ packages:
       '@storybook/mdx2-csf':
         optional: true
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_4v7k37vedxleedrl4dfd6xcpjy
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.0.5_g53fd4hzcrtdq7tiyy55qgbwje
       '@rollup/pluginutils': 4.2.1
       '@storybook/core-common': 6.5.10_3tgeifm2vmwrlpqlopppsnjtcu
       '@storybook/mdx1-csf': 0.0.4_u2aypivye4tius5ftakppbroiy
       '@storybook/mdx2-csf': 0.0.3
       '@storybook/node-logger': 6.5.10
       '@storybook/source-loader': 6.5.10_sfoxds7t5ydpegc3knd667wn6m
-      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      '@vitejs/plugin-react': 2.0.1_vite@3.2.0-beta.0
       ast-types: 0.14.2
       es-module-lexer: 0.9.3
       glob: 7.2.0
@@ -12542,7 +12452,7 @@ packages:
       react-docgen: 6.0.0-alpha.3
       slash: 3.0.0
       sveltedoc-parser: 4.2.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
     transitivePeerDependencies:
       - '@babel/core'
       - eslint
@@ -15979,7 +15889,7 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-react/2.0.1_vite@3.0.9:
+  /@vitejs/plugin-react/2.0.1_vite@3.2.0-beta.0:
     resolution: {integrity: sha512-uINzNHmjrbunlFtyVkST6lY1ewSfz/XwLufG0PIqvLGnpk2nOIOa/1CACTDNcKi1/RwaCzJLmsXwm1NsUVV/NA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -15992,7 +15902,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.18.6_@babel+core@7.18.13
       magic-string: 0.26.2
       react-refresh: 0.14.0
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -16004,7 +15914,7 @@ packages:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.0.9
       vue: 3.2.40
     dev: true
 
@@ -16107,7 +16017,7 @@ packages:
       connect-history-api-fallback: 2.0.0
       postcss: 8.4.16
       rollup: 2.79.1
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.0.9
       vue: 3.2.40
       vue-router: 4.1.5_vue@3.2.40
     transitivePeerDependencies:
@@ -21810,7 +21720,6 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-android-arm64/0.14.49:
@@ -21827,7 +21736,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-64/0.14.49:
@@ -21844,7 +21752,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-darwin-arm64/0.14.49:
@@ -21861,7 +21768,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-64/0.14.49:
@@ -21878,7 +21784,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-freebsd-arm64/0.14.49:
@@ -21895,7 +21800,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-32/0.14.49:
@@ -21912,7 +21816,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-64/0.14.49:
@@ -21929,7 +21832,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm/0.14.49:
@@ -21946,7 +21848,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-arm64/0.14.49:
@@ -21963,7 +21864,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-mips64le/0.14.49:
@@ -21980,7 +21880,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-ppc64le/0.14.49:
@@ -21997,7 +21896,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-riscv64/0.14.49:
@@ -22014,7 +21912,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-linux-s390x/0.14.49:
@@ -22031,7 +21928,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-netbsd-64/0.14.49:
@@ -22048,7 +21944,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-node-externals/1.4.1_esbuild@0.14.49:
@@ -22074,7 +21969,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-plugin-yaml/0.0.1:
@@ -22098,7 +21992,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-32/0.14.49:
@@ -22115,7 +22008,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-64/0.14.49:
@@ -22132,7 +22024,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-windows-arm64/0.14.49:
@@ -22149,7 +22040,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild/0.14.49:
@@ -22207,7 +22097,6 @@ packages:
       esbuild-windows-32: 0.15.10
       esbuild-windows-64: 0.15.10
       esbuild-windows-arm64: 0.15.10
-    dev: true
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -32667,6 +32556,15 @@ packages:
       nanoid: 3.3.4
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: true
+
+  /postcss/8.4.17:
+    resolution: {integrity: sha512-UNxNOLQydcOFi41yHNMcKRZ39NeXlr8AxGuZJsdub8vIb12fHzcq37DTU/QtbI6WLxNg2gF9Z+8qtRwTj1UI1Q==}
+    engines: {node: ^10 || ^12 || >=14}
+    dependencies:
+      nanoid: 3.3.4
+      picocolors: 1.0.0
+      source-map-js: 1.0.2
 
   /preact-render-to-string/5.2.4_preact@10.11.0:
     resolution: {integrity: sha512-iIPHb3BXUQ3Za6KNhkjN/waq11Oh+QWWtAgN3id3LrL+cszH3DYh8TxJPNQ6Aogsbu4JsqdJLBZltwPFpG6N6w==}
@@ -34654,7 +34552,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /rsvp/4.8.5:
     resolution: {integrity: sha512-nfMOlASu9OnRJo1mbEk2cz0D56a1MBNrJ7orjRZQG10XDyuvwksKbuXNp6qa+kbn839HwjwhBzhFmdsaEAfauA==}
@@ -38121,7 +38018,7 @@ packages:
       replace-ext: 1.0.1
     dev: false
 
-  /vite-plugin-pwa/0.12.6_vite@3.0.9:
+  /vite-plugin-pwa/0.12.6_vite@3.2.0-beta.0:
     resolution: {integrity: sha512-qRxx1zUlwKq2QD20nDZVL449wV+dflRVeDMLa2k4LZiHfWRfHWwmdhnDZOlMEgni0Zss1DkhyTmuzLYuO6aO3A==}
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0-0
@@ -38130,7 +38027,7 @@ packages:
       fast-glob: 3.2.11
       pretty-bytes: 6.0.0
       rollup: 2.77.3
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite: 3.2.0-beta.0
       workbox-build: 6.5.4
       workbox-window: 6.5.4
     transitivePeerDependencies:
@@ -38138,7 +38035,7 @@ packages:
       - supports-color
     dev: true
 
-  /vite/3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e:
+  /vite/3.0.9:
     resolution: {integrity: sha512-waYABTM+G6DBTCpYAxvevpG50UOlZuynR0ckTK5PawNVt7ebX6X7wNXHaGIO6wYYFXSM7/WcuFuO2QzhBB6aMw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -38163,7 +38060,36 @@ packages:
       rollup: 2.77.3
     optionalDependencies:
       fsevents: 2.3.2
-    patched: true
+    dev: true
+
+  /vite/3.2.0-beta.0:
+    resolution: {integrity: sha512-sIqxi9gLVl+ysDfioIpZjDN8PxF5ary2zRoHVWspqWteKuoCul4ExyXBK7+hkRHHJEJbbJABY2+vWAb/2sYmPg==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.15.10
+      postcss: 8.4.17
+      resolve: 1.22.1
+      rollup: 2.79.1
+    optionalDependencies:
+      fsevents: 2.3.2
 
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}

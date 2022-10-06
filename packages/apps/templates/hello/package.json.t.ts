@@ -55,7 +55,7 @@ const template: TemplateFunction<Input> = ({ input }) => /* javascript */ `{
     "@vitejs/plugin-react": "^2.0.1",
     "require-from-string": "^2.0.2",
     "typescript": "^4.7.2",
-    "vite": "3.0.9",
+    "vite": "^3.2.0-beta.0",
     "vite-plugin-pwa": "^0.12.4",
     "webpack": "^5.74.0"
   }${input.monorepo ? '' : `,

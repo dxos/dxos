@@ -88,7 +88,7 @@
     "ts-node": "10.9.1",
     "typescript": "^4.7.2",
     "uuid": "^8.3.2",
-    "vite": "3.0.9",
+    "vite": "^3.2.0-beta.0",
     "wait-for-expect": "^3.0.2",
     "webpack": "^5.74.0"
   },
@@ -97,8 +97,7 @@
       "@nrwl/js@14.5.7": "patches/@nrwl__js@14.5.7.patch",
       "@nxext/vite@14.0.3": "patches/@nxext__vite@14.0.3.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
-      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "vite@3.0.9": "patches/vite@3.0.9.patch"
+      "uuid@8.3.2": "patches/uuid@8.3.2.patch"
     }
   }
 }
