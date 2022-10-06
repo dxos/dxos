@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
-import { RpcPort } from '@dxos/rpc';
+import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -279,8 +279,9 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
   });
 };
 
-export const webRTCProxyTests = ({ signalUrl, port }: { signalUrl: string, port: RpcPort }) => {
-  const transportFactory = createWebRTCTransportProxyFactory({ port });
+export const webRTCProxyTests = ({ signalUrl, bridgeService }: { signalUrl: string, bridgeService: BridgeService }) => {
+  const transportFactory = createWebRTCTransportProxyFactory({ bridgeService });
+
   sharedTests({ inMemory: false, signalUrl, transportFactory });
 };
 

@@ -4,7 +4,7 @@
 
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
 import { webRTCTests, inMemoryTests, webRTCProxyTests } from './network-manager.blueprint-test';
@@ -29,7 +29,8 @@ describe('Network manager', () => {
 
   describe('WebRTC proxy transport', () => {
     let broker: TestBroker;
-    let service: any;
+    let service: ProtoRpcPeer<{}>;
+    let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
     const [rpcPortA, rpcPortB] = createLinkedPorts();
 
     before(async () => {
@@ -49,14 +50,27 @@ describe('Network manager', () => {
         }
       });
       await service.open();
+
+      rpcClient = createProtoRpcPeer({
+        requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
+        exposed: { },
+        handlers: { },
+        port: rpcPortB,
+        noHandshake: true,
+        encodingOptions: {
+          preserveAny: true
+        }
+      });
+      await rpcClient.open();
     });
 
     after(() => {
       broker?.stop();
       service?.close();
+      rpcClient?.close();
     });
 
-    webRTCProxyTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal`, port: rpcPortB });
+    webRTCProxyTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal`, bridgeService: rpcClient!.rpc.BridgeService });
   });
 
   describe('In-memory transport', () => {

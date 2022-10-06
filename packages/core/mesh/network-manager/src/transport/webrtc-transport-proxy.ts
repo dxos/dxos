@@ -7,10 +7,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
@@ -102,23 +100,9 @@ export class WebRTCTransportProxy implements Transport {
   }
 }
 
-export const createWebRTCTransportProxyFactory = ({ port }: { port: RpcPort }): TransportFactory => {
-  const rpc = createProtoRpcPeer({
-    requested: {
-      BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
-    },
-    exposed: {},
-    handlers: {},
-    noHandshake: true,
-    port,
-    encodingOptions: {
-      preserveAny: true
-    }
-  });
-  rpc.open().catch(error => log.catch(error));
-
+export const createWebRTCTransportProxyFactory = ({ bridgeService }: { bridgeService: BridgeService }): TransportFactory => {
   return (params: TransportOptions) => new WebRTCTransportProxy({
-    bridgeService: rpc.rpc.BridgeService,
+    bridgeService,
     ...params
   });
 };
