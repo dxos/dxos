@@ -12,20 +12,16 @@ import { ObjectModel } from '@dxos/object-model';
 describe('Client - nonpersistent', () => {
   it('open & close', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.destroy();
   }).retries(10);
 
   it('create profile', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user'
     });
 
     // const profile = client.halo.profile;
@@ -36,12 +32,10 @@ describe('Client - nonpersistent', () => {
 
   it('create party', async () => {
     const client = new Client();
-
     await client.initialize();
-
     await client.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user'
     });
 
     const party = await client.echo.createParty();
@@ -59,33 +53,33 @@ describe('Client - nonpersistent', () => {
       this.skip();
     }
 
-    const client = new Client(defaultTestingConfig);
-    await client.initialize();
-    await client.halo.createProfile({
+    const clientA = new Client(defaultTestingConfig);
+    await clientA.initialize();
+    await clientA.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test'
+      username: 'test-user-1'
     });
 
-    const party = await client.echo.createParty();
-    const item = await party.database.createItem({ model: ObjectModel, type: 'example:item/test' });
+    const party1 = await clientA.echo.createParty();
+    const item = await party1.database.createItem({ model: ObjectModel, type: 'example:item/test' });
     await item.model.set('foo', 'bar');
 
-    const otherClient = new Client(defaultTestingConfig);
-    await otherClient.initialize();
-    await otherClient.halo.createProfile({
+    const clientB = new Client(defaultTestingConfig);
+    await clientB.initialize();
+    await clientB.halo.createProfile({
       ...createKeyPair(),
-      username: 'DXOS test 2'
+      username: 'test-user-2'
     });
 
-    const invite = await party.createInvitation();
-    const otherParty = await otherClient.echo.acceptInvitation(invite.descriptor).getParty();
+    const invite = await party1.createInvitation();
+    const party2 = await clientB.echo.acceptInvitation(invite.descriptor).getParty();
 
-    await otherParty.database.waitForItem({ type: 'example:item/test' });
-    const otherItem = otherParty.database.select({ type: 'example:item/test' }).exec().entities[0];
+    await party2.database.waitForItem({ type: 'example:item/test' });
+    const otherItem = party2.database.select({ type: 'example:item/test' }).exec().entities[0];
     expect(otherItem.model.get('foo')).toEqual('bar');
 
-    await client.destroy();
-    await otherClient.destroy();
+    await clientA.destroy();
+    await clientB.destroy();
   }).timeout(10_000).retries(10);
 
   it.skip('offline invitations', async function () {
@@ -96,11 +90,11 @@ describe('Client - nonpersistent', () => {
 
     const clientA = new Client(defaultTestingConfig);
     await clientA.initialize();
-    await clientA.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 1' });
+    await clientA.halo.createProfile({ ...createKeyPair(), username: 'test-user-1' });
 
     const clientB = new Client(defaultTestingConfig);
     await clientB.initialize();
-    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'DXOS test 2' });
+    const profileB = await clientB.halo.createProfile({ ...createKeyPair(), username: 'test-user-2' });
 
     // Wait for invited person to arrive.
     // TODO(marik-d): Comparing by public key as a workaround for `https://github.com/dxos/dxos/issues/372`.

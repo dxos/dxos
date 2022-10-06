@@ -12,7 +12,7 @@ import { MemorySignalManager, Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
-import { OfferMessage, MessageRouter, SignalConnection } from './signal';
+import { SignalConnection } from './signal';
 import { Swarm, SwarmMapper } from './swarm';
 import { Topology } from './topology';
 import { createWebRTCTransportFactory, inMemoryTransportFactory } from './transport';
@@ -41,7 +41,6 @@ export class NetworkManager {
   private readonly _ice?: any[];
   private readonly _signalManager: SignalManager;
   private readonly _messenger: Messenger;
-  private readonly _messageRouter: MessageRouter;
   private readonly _signalConnection: SignalConnection;
   private readonly _connectionLog?: ConnectionLog;
 
@@ -61,36 +60,13 @@ export class NetworkManager {
       this._signalManager.swarmEvent.on(({ topic, swarmEvent: event }) =>
         this._swarms.get(topic)?.onSwarmEvent(event)
       );
-
-      this._signalManager.onMessage.on((message) =>
-        this._messageRouter.receiveMessage(message)
-      );
     }
+    this._messenger = new Messenger({ signalManager: this._signalManager });
 
-    {
-      this._messenger = new Messenger({ signalManager: this._signalManager });
-
-      const onOffer = async (message: OfferMessage) =>
-        (await this._swarms.get(message.topic!)?.onOffer(message)) ?? { accept: false };
-
-      this._messageRouter = new MessageRouter({
-        sendMessage: (message) => this._messenger.sendMessage(message),
-        onSignal: async (msg) => this._swarms.get(msg.topic!)?.onSignal(msg),
-        onOffer: (msg) => onOffer(msg)
-      });
-
-      this._messenger.listen({
-        payloadType: 'dxos.mesh.swarm.SwarmMessage',
-        onMessage: (message) => this._messageRouter.receiveMessage(message)
-      });
-    }
-
-    {
-      this._signalConnection = {
-        join: (opts) => this._signalManager.join(opts),
-        leave: (opts) => this._signalManager.leave(opts)
-      };
-    }
+    this._signalConnection = {
+      join: (opts) => this._signalManager.join(opts),
+      leave: (opts) => this._signalManager.leave(opts)
+    };
 
     if (log) {
       this._connectionLog = new ConnectionLog();
@@ -119,7 +95,7 @@ export class NetworkManager {
     return this._swarms.get(topic);
   }
 
-  joinProtocolSwarm (options: SwarmOptions) {
+  async joinProtocolSwarm (options: SwarmOptions) {
     // TODO(burdon): Use TS to constrain properties.
     assert(typeof options === 'object');
     const { topic, peerId, topology, protocol, presence } = options;
@@ -145,7 +121,7 @@ export class NetworkManager {
       peerId,
       topology,
       protocol,
-      this._messageRouter,
+      this._messenger,
       transportFactory,
       options.label
     );
