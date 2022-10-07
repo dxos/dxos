@@ -3,8 +3,9 @@
 
 Common signaling context that connects multiple MemorySignalManager instances.
 
-## Members
-- @dxos/messaging.MemorySignalManagerContext.constructor
-- @dxos/messaging.MemorySignalManagerContext.connections
-- @dxos/messaging.MemorySignalManagerContext.swarmEvent
-- @dxos/messaging.MemorySignalManagerContext.swarms
+## Constructors
+```ts
+new MemorySignalManagerContext(
+
+)
+```

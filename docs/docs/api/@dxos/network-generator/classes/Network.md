@@ -1,46 +1,9 @@
 # Class `Network`
 > Declared in package `@dxos/network-generator`
 
-## Members
-- @dxos/network-generator.Network.constructor
-- @dxos/network-generator.Network._connectionsOpening
-- @dxos/network-generator.Network._createConnection
-- @dxos/network-generator.Network._createPeer
-- @dxos/network-generator.Network._graph
-- @dxos/network-generator.Network.captureRejectionSymbol
-- @dxos/network-generator.Network.captureRejections
-- @dxos/network-generator.Network.defaultMaxListeners
-- @dxos/network-generator.Network.errorMonitor
-- @dxos/network-generator.Network.connections
-- @dxos/network-generator.Network.connectionsOpening
-- @dxos/network-generator.Network.graph
-- @dxos/network-generator.Network.peers
-- @dxos/network-generator.Network._addConnection
-- @dxos/network-generator.Network._destroyLink
-- @dxos/network-generator.Network._getPeerOrCreate
-- @dxos/network-generator.Network.addConnection
-- @dxos/network-generator.Network.addListener
-- @dxos/network-generator.Network.addPeer
-- @dxos/network-generator.Network.deleteConnection
-- @dxos/network-generator.Network.deletePeer
-- @dxos/network-generator.Network.destroy
-- @dxos/network-generator.Network.emit
-- @dxos/network-generator.Network.eventNames
-- @dxos/network-generator.Network.getMaxListeners
-- @dxos/network-generator.Network.insertPeer
-- @dxos/network-generator.Network.listenerCount
-- @dxos/network-generator.Network.listeners
-- @dxos/network-generator.Network.off
-- @dxos/network-generator.Network.on
-- @dxos/network-generator.Network.once
-- @dxos/network-generator.Network.prependListener
-- @dxos/network-generator.Network.prependOnceListener
-- @dxos/network-generator.Network.rawListeners
-- @dxos/network-generator.Network.removeAllListeners
-- @dxos/network-generator.Network.removeListener
-- @dxos/network-generator.Network.setMaxListeners
-- @dxos/network-generator.Network.getEventListeners
-- @dxos/network-generator.Network.listenerCount
-- @dxos/network-generator.Network.on
-- @dxos/network-generator.Network.once
-- @dxos/network-generator.Network.setMaxListeners
+## Constructors
+```ts
+new Network(
+options: NetworkOptions
+)
+```

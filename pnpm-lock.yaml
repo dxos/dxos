@@ -63,6 +63,7 @@ importers:
       '@swc-node/register': ~1.5.1
       '@types/chai': ^4.2.15
       '@types/glob': ~7.1.3
+      '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
       '@types/mocha': ^8.2.2
@@ -84,6 +85,7 @@ importers:
       husky: ^8.0.0
       jsdom: ^20.0.1
       jsdom-global: ^3.0.2
+      json-stringify-safe: ^5.0.1
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
       mocha: ^8.4.0
@@ -149,6 +151,7 @@ importers:
       '@swc-node/register': 1.5.1_typescript@4.7.4
       '@types/chai': 4.3.0
       '@types/glob': 7.1.4
+      '@types/json-stringify-safe': 5.0.0
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
       '@types/mocha': 8.2.3
@@ -170,6 +173,7 @@ importers:
       husky: 8.0.1
       jsdom: 20.0.1
       jsdom-global: 3.0.2_jsdom@20.0.1
+      json-stringify-safe: 5.0.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
       mocha: 8.4.0
@@ -3557,12 +3561,16 @@ importers:
   tools/typedoc-plugin-plate:
     specifiers:
       '@dxos/plate': workspace:*
+      '@types/json-stringify-safe': 5.0.0
       '@types/node': ^16.11.58
+      json-stringify-safe: ^5.0.1
       typedoc: ^0.23.15
       typescript: ^4.7.2
     devDependencies:
       '@dxos/plate': link:../plate
+      '@types/json-stringify-safe': 5.0.0
       '@types/node': 16.11.62
+      json-stringify-safe: 5.0.1
       typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4
       typescript: 4.7.4
 
@@ -14673,6 +14681,10 @@ packages:
 
   /@types/json-stable-stringify/1.0.33:
     resolution: {integrity: sha512-qEWiQff6q2tA5gcJGWwzplQcXdJtm+0oy6IHGHzlOf3eFAkGE/FIPXZK9ofWgNSHVp8AFFI33PJJshS0ei3Gvw==}
+    dev: true
+
+  /@types/json-stringify-safe/5.0.0:
+    resolution: {integrity: sha512-UUA1sH0RSRROdInuDOA1yoRzbi5xVFD1RHCoOvNRPTNwR8zBkJ/84PZ6NhKVDtKp0FTeIccJCdQz1X2aJPr4uw==}
     dev: true
 
   /@types/json5/0.0.29:

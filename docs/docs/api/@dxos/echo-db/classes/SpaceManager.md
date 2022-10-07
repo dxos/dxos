@@ -3,13 +3,14 @@
 
 Manages a collection of ECHO (Data) Spaces.
 
-## Members
-- @dxos/echo-db.SpaceManager.constructor
-- @dxos/echo-db.SpaceManager.spaces
-- @dxos/echo-db.SpaceManager.update
-- @dxos/echo-db.SpaceManager._constructSpace
-- @dxos/echo-db.SpaceManager._insertSpace
-- @dxos/echo-db.SpaceManager.acceptSpace
-- @dxos/echo-db.SpaceManager.close
-- @dxos/echo-db.SpaceManager.createSpace
-- @dxos/echo-db.SpaceManager.open
+## Constructors
+```ts
+new SpaceManager(
+_metadataStore: MetadataStore,
+_feedStore: FeedStore,
+_networkManager: NetworkManager,
+_keyring: Keyring,
+_dataService: DataService,
+_signingContext: SigningContext
+)
+```

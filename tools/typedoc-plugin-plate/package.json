@@ -7,6 +7,8 @@
     "@dxos/plate": "workspace:*",
     "@types/node": "^16.11.58",
     "typescript": "^4.7.2",
-    "typedoc": "^0.23.15"
+    "typedoc": "^0.23.15",
+    "json-stringify-safe": "^5.0.1",
+    "@types/json-stringify-safe": "5.0.0"
   }
 }

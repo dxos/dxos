@@ -3,9 +3,11 @@
 
 Utility class for generating credential messages, where the issuer is the current identity or device.
 
-## Members
-- @dxos/halo-protocol.CredentialGenerator.constructor
-- @dxos/halo-protocol.CredentialGenerator.createDeviceAuthorization
-- @dxos/halo-protocol.CredentialGenerator.createFeedAdmission
-- @dxos/halo-protocol.CredentialGenerator.createMemberInvitation
-- @dxos/halo-protocol.CredentialGenerator.createSpaceGenesis
+## Constructors
+```ts
+new CredentialGenerator(
+_keyring: Signer,
+_identityKey: PublicKey,
+_deviceKey: PublicKey
+)
+```

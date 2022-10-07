@@ -7,7 +7,11 @@ Entities are updated using snapshots and mutations sourced from the DataService.
 Entity and model mutations are forwarded to the DataService.
 This class is analogous to ItemDemuxer but for databases running in remote mode.
 
-## Members
-- @dxos/echo-db.DataMirror.constructor
-- @dxos/echo-db.DataMirror._subscribeToUpdates
-- @dxos/echo-db.DataMirror.open
+## Constructors
+```ts
+new DataMirror(
+_itemManager: ItemManager,
+_dataService: DataService,
+_partyKey: PublicKey
+)
+```

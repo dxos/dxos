@@ -3,6 +3,9 @@
 
 Represents a named property value.
 
-## Members
-- @dxos/object-model.KeyValueUtil.constructor
-- @dxos/object-model.KeyValueUtil.createMessage
+## Constructors
+```ts
+new KeyValueUtil(
+
+)
+```

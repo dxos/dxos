@@ -3,15 +3,16 @@
 
 Implements Transport for WebRTC. Uses simple-peer under the hood.
 
-## Members
-- @dxos/network-manager.WebRTCTransport.constructor
-- @dxos/network-manager.WebRTCTransport._peer
-- @dxos/network-manager.WebRTCTransport.closed
-- @dxos/network-manager.WebRTCTransport.connected
-- @dxos/network-manager.WebRTCTransport.errors
-- @dxos/network-manager.WebRTCTransport.peer
-- @dxos/network-manager.WebRTCTransport.remoteId
-- @dxos/network-manager.WebRTCTransport.sessionId
-- @dxos/network-manager.WebRTCTransport._disconnectStreams
-- @dxos/network-manager.WebRTCTransport.close
-- @dxos/network-manager.WebRTCTransport.signal
+## Constructors
+```ts
+new WebRTCTransport(
+_initiator: boolean,
+_stream: ReadWriteStream,
+_ownId: PublicKey,
+_remoteId: PublicKey,
+_sessionId: PublicKey,
+_topic: PublicKey,
+_sendSignal: Function,
+_webrtcConfig: any
+)
+```

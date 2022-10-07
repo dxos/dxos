@@ -3,12 +3,9 @@
 
 Thrown when request was terminated because the RPC endpoint has been closed.
 
-## Members
-- @dxos/rpc.RpcClosedError.constructor
-- @dxos/rpc.RpcClosedError.cause
-- @dxos/rpc.RpcClosedError.message
-- @dxos/rpc.RpcClosedError.name
-- @dxos/rpc.RpcClosedError.stack
-- @dxos/rpc.RpcClosedError.prepareStackTrace
-- @dxos/rpc.RpcClosedError.stackTraceLimit
-- @dxos/rpc.RpcClosedError.captureStackTrace
+## Constructors
+```ts
+new RpcClosedError(
+
+)
+```

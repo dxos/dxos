@@ -5,8 +5,11 @@ Provides methods for DataService for a single party.
 
 A DataServiceRouter must be placed before it to route requests to different DataServiceHost instances based on party id.
 
-## Members
-- @dxos/echo-db.DataServiceHost.constructor
-- @dxos/echo-db.DataServiceHost.subscribeEntitySet
-- @dxos/echo-db.DataServiceHost.subscribeEntityStream
-- @dxos/echo-db.DataServiceHost.write
+## Constructors
+```ts
+new DataServiceHost(
+_itemManager: ItemManager,
+_itemDemuxer: ItemDemuxer,
+_writeStream: FeedWriter<EchoEnvelope>
+)
+```

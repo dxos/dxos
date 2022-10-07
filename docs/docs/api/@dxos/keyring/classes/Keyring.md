@@ -3,12 +3,9 @@
 
 Manages keys.
 
-## Members
-- @dxos/keyring.Keyring.constructor
-- @dxos/keyring.Keyring._keyCache
-- @dxos/keyring.Keyring._getKey
-- @dxos/keyring.Keyring._setKey
-- @dxos/keyring.Keyring.createKey
-- @dxos/keyring.Keyring.deleteKey
-- @dxos/keyring.Keyring.list
-- @dxos/keyring.Keyring.sign
+## Constructors
+```ts
+new Keyring(
+_storage: Directory
+)
+```

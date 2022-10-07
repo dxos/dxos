@@ -1,20 +1,59 @@
-import { ReflectionKind, Reflection } from "typedoc";
+import os from "os";
+import { ReflectionKind, Reflection, TraverseProperty, ParameterReflection, DeclarationReflection, SignatureReflection } from "typedoc";
 import { Input, TemplateFunction, text, File } from "../..";
+import stringify from "json-stringify-safe";
+
+const children = (ref: Reflection, kind?: ReflectionKind) => {
+  const results: Reflection[] = [];
+  ref.traverse((reflection) => {
+    if (typeof kind == "undefined" || reflection.kind == kind)
+      results.push(reflection);
+  });
+  return results;
+};
+
+const tabs = (i: number = 0) => new Array(i).fill("  ").join("");
+
+const generic = (ref: Reflection, indent: number = 0): string => {
+  return text`
+  ${tabs(indent)}- ${ref.name} : ${ref.kindString}
+  ${children(ref).map((e) => generic(e, indent + 1))}
+  `;
+};
+
+const comment = (ref: Reflection) => {
+  return text`${ref.comment?.summary?.map(s => s.text).join(' ')}`;
+}
+
+const param = (ref: ParameterReflection) => {
+  return text`${ref.name}: ${ref.type}`;
+}
+
+const signature = (ref: SignatureReflection): string => {
+  return text`
+  \`\`\`ts
+  ${ref.name}(
+    ${ref.parameters?.map(param).join(',' + os.EOL)}
+  )
+  \`\`\`
+  ${comment(ref)}
+  `;
+}
+
+const method = (ref: DeclarationReflection): string => {
+  return text`
+  ${ref.getAllSignatures()?.map(signature)}
+  `;
+}
 
 const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const classes = input.project.getReflectionsByKind(ReflectionKind.Class);
-  const getReflectionsByKind = (ref: Reflection, kind: ReflectionKind) => {
-    const results: Reflection[] = [];
-    ref.traverse((reflection, property) => {
-      results.push(reflection);
-      if (reflection.kind == kind) {
-      }
-    });
-    return results;
-  };
-  return classes.map((aclass) => {
-    const members = getReflectionsByKind(aclass, ReflectionKind.ClassMember);
 
+  return classes.map((aclass) => {
+    const members = children(aclass);
+    const constructors = members.filter(
+      (m) => m.kind == ReflectionKind.Constructor
+    );
     return new File({
       path: [
         outputDirectory,
@@ -26,10 +65,10 @@ const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
         # Class \`${aclass.name}\`
         > Declared in package \`${aclass.parent?.getFullName()}\`
 
-        ${aclass.comment?.summary?.map((s) => s.text).join(' ')}
+        ${comment(aclass)}
 
-        ## Members
-        ${members.map((member) => '- ' + member.getFriendlyFullName())}
+        ## Constructors
+        ${constructors.map((c) => method(c as DeclarationReflection))}
         `,
     });
   });

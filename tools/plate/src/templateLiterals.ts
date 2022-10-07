@@ -19,7 +19,6 @@ const removeLeadingTabs = (literal: string) => {
   const firstLine = lines[1];
   const whitespace = /^\s+/.exec(firstLine);
   const trimStart = !!whitespace ? whitespace[0].length : 0;
-  console.log(firstLine, whitespace, { trimStart });
   return lines
     .map((l) => l.replace(new RegExp(`^\\s{0,${trimStart}}`), ""))
     .join(os.EOL);

@@ -1,44 +1,9 @@
 # Class `ProtocolNetworkGenerator`
 > Declared in package `@dxos/protocol-network-generator`
 
-## Members
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.constructor
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator._createPeer
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.balancedBinTree
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.circularLadder
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.cliqueCircle
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.complete
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.completeBipartite
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.error
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.grid
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.grid3
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.ladder
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.noLinks
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.path
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.wattsStrogatz
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.captureRejectionSymbol
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.captureRejections
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.defaultMaxListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.errorMonitor
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator._generate
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.addListener
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.createTopology
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.emit
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.eventNames
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.getMaxListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.listenerCount
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.listeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.off
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.on
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.once
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.prependListener
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.prependOnceListener
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.rawListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.removeAllListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.removeListener
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.setMaxListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.getEventListeners
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.listenerCount
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.on
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.once
-- @dxos/protocol-network-generator.ProtocolNetworkGenerator.setMaxListeners
+## Constructors
+```ts
+new ProtocolNetworkGenerator(
+createPeer: CreatePeerCallback
+)
+```

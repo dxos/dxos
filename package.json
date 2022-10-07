@@ -103,7 +103,9 @@
     "uuid": "^8.3.2",
     "vite": "3.0.9",
     "wait-for-expect": "^3.0.2",
-    "webpack": "^5.74.0"
+    "webpack": "^5.74.0",
+    "json-stringify-safe": "^5.0.1",
+    "@types/json-stringify-safe": "5.0.0"
   },
   "pnpm": {
     "patchedDependencies": {
