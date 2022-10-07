@@ -8,7 +8,7 @@ import { codec, MetadataStore } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -28,7 +28,8 @@ describe('identity-manager', function () {
     afterTest(() => feedStore.close());
 
     const networkManager = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext)
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: inMemoryTransportFactory
     });
 
     const identityManager = new IdentityManager(
