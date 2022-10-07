@@ -24,7 +24,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    themePlugin({content: ['@dxos/react-ui', './index.html', './src/**/*.{js,ts,jsx,tsx}']}),
+    themePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
