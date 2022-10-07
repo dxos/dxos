@@ -8,7 +8,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "serve": "vite"
+    "serve": "nx serve"
   },
   "files": [
     "dist",
