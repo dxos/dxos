@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/halo/src",
+  "sourceRoot": "packages/apps/halo-app/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/apps/halo/dist",
-        "tsConfig": "packages/apps/halo/tsconfig.json",
-        "main": "packages/apps/halo/src/index.ts"
+        "outputPath": "packages/apps/halo-app/dist",
+        "tsConfig": "packages/apps/halo-app/tsconfig.json",
+        "main": "packages/apps/halo-app/src/index.ts"
       }
     },
     "build-storybook": {
@@ -18,9 +18,9 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "packages/apps/halo/out/dxos/storybook/halo",
+        "outputPath": "packages/apps/halo-app/out/dxos/storybook/halo",
         "config": {
-          "configFolder": "packages/apps/halo/.storybook"
+          "configFolder": "packages/apps/halo-app/.storybook"
         }
       },
       "configurations": {
@@ -35,8 +35,8 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/apps/halo/out/halo",
-        "configFile": "packages/apps/halo/vite.config.ts"
+        "outputPath": "packages/apps/halo-app/out/halo",
+        "configFile": "packages/apps/halo-app/vite.config.ts"
       }
     },
     "lint": {
@@ -46,15 +46,15 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/apps/halo/**/*.{ts,js}"
+          "packages/apps/halo-app/**/*.{ts,js}"
         ]
       }
     },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/apps/halo/out/halo",
-        "configFile": "packages/apps/halo/vite.config.ts"
+        "outputPath": "packages/apps/halo-app/out/halo",
+        "configFile": "packages/apps/halo-app/vite.config.ts"
       }
     },
     "storybook": {
@@ -62,7 +62,7 @@
       "options": {
         "uiFramework": "@storybook/react",
         "config": {
-          "configFolder": "packages/apps/halo/.storybook"
+          "configFolder": "packages/apps/halo-app/.storybook"
         }
       },
       "configurations": {
