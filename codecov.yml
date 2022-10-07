@@ -1,0 +1,12 @@
+#
+# CodeCov Configuration
+# https://docs.codecov.com/docs/codecovyml-reference
+#
+
+flags:
+  nodejs:
+    paths:
+      - '.*'
+    # Assume coverage has not changed if a file is not touched.
+    # https://docs.codecov.com/docs/carryforward-flags
+    carryforward: true
