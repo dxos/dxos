@@ -32,7 +32,7 @@
     "gem-core": "packages/gem/gem-core",
     "gem-spore": "packages/gem/gem-spore",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
-    "halo-app": "packages/apps/halo",
+    "halo-app": "packages/apps/halo-app",
     "hello-template": "packages/apps/templates/hello",
     "kai": "packages/experimental/kai",
     "keys": "packages/common/keys",
