@@ -72,6 +72,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       if (storage.type === StorageType.NODE) {
         this.skip();
       }
+
       const fileName = randomText();
       const file = directory.createOrOpenFile(fileName);
 
@@ -118,22 +119,26 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file2.close();
     });
 
-    // TODO(yivlad): Not implemented.
+    // TODO(burdon): ???
     it.skip('destroy clears all data', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-
       const fileName = randomText();
-      const file = directory.createOrOpenFile(fileName);
 
-      const buffer = Buffer.from(randomText());
-      await writeAndCheck(file, buffer);
+      {
+        const file = directory.createOrOpenFile(fileName);
+        const buffer = Buffer.from(randomText());
+        await writeAndCheck(file, buffer);
+        await file.close();
+        await file.destroy();
+      }
 
-      await storage.destroy();
-      const { size } = await file.stat();
-      expect(size).toBe(0);
-
-      await file.close();
+      {
+        const file = directory.createOrOpenFile(fileName);
+        const { size } = await file.stat(); // TODO(burdon): Error: ENOENT: no such file or directory.
+        expect(size).toBe(0);
+        await file.close();
+      }
     });
 
     it('subdirectories', async () => {
