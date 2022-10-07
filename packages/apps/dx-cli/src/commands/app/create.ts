@@ -44,7 +44,7 @@ export default class Create extends BaseCommand {
 
     // TODO(wittjosiah): Cross-platform.
     const tmpDirectory = `/tmp/dxos-app-create-${Date.now()}`;
-    const templateDirectory = `${tmpDirectory}/apps/templates/${template}`;
+    const templateDirectory = `${tmpDirectory}/apps/templates/${template}-template`;
     const outputDirectory = `${cwd()}/${name}`;
 
     try {
