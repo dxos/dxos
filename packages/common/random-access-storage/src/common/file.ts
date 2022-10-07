@@ -12,23 +12,23 @@ import { FileStat, RandomAccessFileImpl } from './random-access-file';
  */
 export class File {
   constructor (
-    protected readonly _file: RandomAccessFileImpl
+    protected readonly _storage: RandomAccessFileImpl
   ) {}
 
-  get file () {
-    return this._file;
+  get storage () {
+    return this._storage;
   }
 
   get filename () {
-    return this._file.filename;
+    return this._storage.filename;
   }
 
   async write (offset: number, data: Buffer) {
-    return promisify(this._file.write.bind(this._file))(offset, data);
+    return promisify(this._storage.write.bind(this._storage))(offset, data);
   }
 
   async read (offset: number, size: number): Promise<Buffer> {
-    return promisify(this._file.read.bind(this._file))(offset, size);
+    return promisify(this._storage.read.bind(this._storage))(offset, size);
   }
 
   /**
@@ -44,30 +44,30 @@ export class File {
    */
   // TODO(burdon): Remove this comment after speaking with Mykola.
   async del (offset: number, size: number) {
-    return promisify(this._file.del.bind(this._file))(offset, size);
+    return promisify(this._storage.del.bind(this._storage))(offset, size);
   }
 
   async truncate (offset: number) {
-    return promisify(this._file.truncate.bind(this._file))(offset);
+    return promisify(this._storage.truncate.bind(this._storage))(offset);
   }
 
   async stat (): Promise<FileStat> {
-    return promisify(this._file.stat.bind(this._file))();
+    return promisify(this._storage.stat.bind(this._storage))();
   }
 
   async close (): Promise<Error> {
-    return promisify(this._file.close.bind(this._file))();
+    return promisify(this._storage.close.bind(this._storage))();
   }
 
   async destroy (): Promise<Error> {
-    return promisify(this._file.destroy.bind(this._file))();
+    return promisify(this._storage.destroy.bind(this._storage))();
   }
 
   /**
    * @internal
    */
   _isDestroyed () {
-    return this._file.destroyed;
+    return this._storage.destroyed;
   }
 
   /**
@@ -80,6 +80,6 @@ export class File {
       throw new Error('File is destroyed.');
     }
 
-    this._file.closed = false;
+    this._storage.closed = false;
   }
 }

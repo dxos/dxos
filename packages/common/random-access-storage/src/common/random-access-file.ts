@@ -22,8 +22,8 @@ export interface RandomAccessFile {
   destroy (cb: Callback<Error>): void
 }
 
+// TODO(burdon): Explain impl fields (are the common across all implementations)?
 export interface RandomAccessFileImpl extends RandomAccessFile {
-  // TODO(burdon): Where do these come from?
   closed: boolean
   destroyed: boolean
   filename: string

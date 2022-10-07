@@ -102,6 +102,7 @@ export class FeedDescriptor {
     await this._lock.executeSynchronized(async () => {
       await this._open();
     });
+
     return this.feed;
   }
 
@@ -132,7 +133,7 @@ export class FeedDescriptor {
   private _createStorage (dir = ''): (name: string) => RandomAccessFile {
     return (name) => {
       const file = this._directory.createOrOpenFile(`${dir}/${name}`);
-      return file.file;
+      return file.storage;
     };
   }
 
