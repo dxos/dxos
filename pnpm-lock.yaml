@@ -3410,19 +3410,6 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
-  tools/file:
-    specifiers:
-      '@types/mkdirp': ^1.0.2
-      '@types/node': ^16.11.58
-      mkdirp: ^1.0.4
-      typescript: ^4.7.2
-    dependencies:
-      mkdirp: 1.0.4
-    devDependencies:
-      '@types/mkdirp': 1.0.2
-      '@types/node': 16.11.62
-      typescript: 4.7.4
-
   tools/log-hook:
     specifiers:
       '@swc-node/sourcemap-support': ^0.2.0
@@ -3442,29 +3429,31 @@ importers:
 
   tools/plate:
     specifiers:
-      '@dxos/file': workspace:*
       '@types/lodash.flatten': ^4.4.6
       '@types/lodash.zip': ^4.2.6
+      '@types/mkdirp': ^1.0.2
       '@types/node': ^16.11.58
       '@types/prettier': ^2.7.1
       '@types/recursive-readdir': ^2.2.0
       esbuild: ~0.14.1
       lodash.flatten: ^4.4.0
       lodash.zip: ^4.2.0
+      mkdirp: ^1.0.4
       prettier: ^2.7.1
       recursive-readdir: ^2.2.2
       ts-node: 10.9.1
       typescript: ^4.7.2
     dependencies:
-      '@dxos/file': link:../file
       esbuild: 0.14.49
       lodash.flatten: 4.4.0
       lodash.zip: 4.2.0
+      mkdirp: 1.0.4
       prettier: 2.7.1
       recursive-readdir: 2.2.2
     devDependencies:
       '@types/lodash.flatten': 4.4.7
       '@types/lodash.zip': 4.2.7
+      '@types/mkdirp': 1.0.2
       '@types/node': 16.11.62
       '@types/prettier': 2.7.1
       '@types/recursive-readdir': 2.2.1

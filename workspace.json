@@ -28,7 +28,6 @@
     "eslint-plugin": "tools/eslint-plugin",
     "eslint-rules": "tools/eslint-rules",
     "feed-store": "packages/common/feed-store",
-    "file": "tools/file",
     "gem-core": "packages/gem/gem-core",
     "gem-spore": "packages/gem/gem-spore",
     "gravity-dashboard": "packages/gravity/gravity-dashboard",
