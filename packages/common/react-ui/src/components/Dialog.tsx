@@ -63,12 +63,16 @@ export const Dialog = (props: PropsWithChildren<DialogProps>) => {
               'focus:outline-none focus-visible:ring focus-visible:ring-primary-500 focus-visible:ring-opacity-75'
             )}
           >
-            <DialogPrimitive.Title className='text-sm font-medium text-neutral-900 dark:text-neutral-100'>
+            <DialogPrimitive.Title
+              className='text-sm font-medium text-neutral-900 dark:text-neutral-100'
+            >
               {props.title}
             </DialogPrimitive.Title>
 
             {props.description && (
-              <DialogPrimitive.Description className='mt-2 text-sm font-normal text-neutral-700 dark:text-neutral-400'>
+              <DialogPrimitive.Description
+                className='mt-2 text-sm font-normal text-neutral-700 dark:text-neutral-400'
+              >
                 {props.description}
               </DialogPrimitive.Description>
             )}
@@ -90,7 +94,9 @@ export const Dialog = (props: PropsWithChildren<DialogProps>) => {
                 'focus:outline-none focus-visible:ring focus-visible:ring-primary-500 focus-visible:ring-opacity-75'
               )}
             >
-              <X className='h-4 w-4 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400' />
+              <X
+                className='h-4 w-4 text-neutral-500 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-400'
+              />
             </DialogPrimitive.Close>
           </DialogPrimitive.Content>
         </Transition.Child>

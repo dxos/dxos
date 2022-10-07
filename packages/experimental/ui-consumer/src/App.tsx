@@ -5,12 +5,21 @@
 import cx from 'classnames';
 import React from 'react';
 
-import { Dialog, Button } from '@dxos/react-ui';
+import { Button, Dialog } from '@dxos/react-ui';
 
 export const App = () => {
   return (
     <main className='mt-8 px-8 inline-flex w-full flex-col space-y-4'>
-      <Dialog title='Edit profile' description='Make changes to your profile here. Click save when you’re done.' trigger={<Button>Open dialog</Button>} actions={[<Button key='save' className={cx('shadow-sm bg-primary-700 hover:bg-primary-800 dark:bg-primary-300 dark:hover:bg-primary-200')}>Save</Button>]}>
+      <Dialog
+        title='Edit profile'
+        description='Make changes to your profile here. Click save when you’re done.'
+        trigger={<Button>Open dialog</Button>}
+        actions={[
+          <Button
+            key='save'
+            className={cx('shadow-sm bg-primary-700 hover:bg-primary-800 dark:bg-primary-300 dark:hover:bg-primary-200')}
+          >Save</Button>
+        ]}>
         <form className='mt-2 space-y-2'>
           <fieldset>
             <label
