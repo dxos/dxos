@@ -15,22 +15,22 @@ import { FeedDescriptor } from './feed-descriptor';
 import type { Hypercore } from './hypercore';
 import type { ValueEncoding } from './types';
 
-export interface CreateDescriptorOptions {
+export type CreateDescriptorOptions = {
   key: PublicKey
   secretKey?: Buffer
   signer?: Signer
 }
 
-export interface CreateReadWriteFeedOptions {
+export type CreateReadWriteFeedOptions = {
   key: PublicKey
   secretKey: Buffer
 }
 
-export interface CreateReadOnlyFeedOptions {
+export type CreateReadOnlyFeedOptions = {
   key: PublicKey
 }
 
-export interface FeedStoreOptions {
+export type FeedStoreOptions = {
   /**
    * Encoding type for each feed.
    */

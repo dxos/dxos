@@ -3,15 +3,15 @@
 //
 // noinspection SpellCheckingInspection
 
+export type Callback<T> = (err: Error | null, data?: T) => void
+export type EventCallback<T> = (data: T) => void
+
 export type Block = {
   seq: number
   data: Buffer
 }
 
 export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;
-
-export type Callback<T> = (err: Error | null, data?: T) => void
-export type EventCallback<T> = (data: T) => void
 
 /**
  * https://hypercore-protocol.org

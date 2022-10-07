@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { HypercoreFeed } from './hypercore';
 
-export interface CreateBatchStreamOptions {
+export type CreateBatchStreamOptions = {
   start?: number
   end?: number
   live?: boolean
