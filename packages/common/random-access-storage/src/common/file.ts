@@ -8,26 +8,23 @@ import { FileStat, RandomAccessFile } from './random-access-file';
 
 /**
  * Random access file wrapper.
+ * https://github.com/random-access-storage/random-access-storage
  */
 export class File {
-  constructor (protected readonly _file: RandomAccessFile) {}
+  constructor (
+    protected readonly _file: RandomAccessFile
+  ) {}
 
   get filename () {
     return this._file.filename;
   }
 
-  /**
-   * Read Buffer from file starting from offset to offset+size.
-   */
-  read (offset: number, size: number): Promise<Buffer> {
-    return promisify(this._file.read.bind(this._file))(offset, size) as Promise<Buffer>;
+  async write (offset: number, data: Buffer) {
+    return promisify(this._file.write.bind(this._file))(offset, data);
   }
 
-  /**
-   * Write Buffer into file starting from offset.
-   */
-  write (offset: number, data: Buffer): Promise<void> {
-    return promisify(this._file.write.bind(this._file))(offset, data) as Promise<void>;
+  async read (offset: number, size: number): Promise<Buffer> {
+    return promisify(this._file.read.bind(this._file))(offset, size);
   }
 
   /**
@@ -35,31 +32,31 @@ export class File {
    * Throws 'Not deletable' in IDb realization.
    *
    * Example:
-   * // There is file with content Buffer([a, b, c]) at 0 offset.
-   *
    * // Truncate it at offset 1 with size 1.
    * await file.del(1, 1); // Do nothing, file will have content Buffer([a, c, d]).
    *
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  truncate (offset: number, size: number): Promise<void> {
-    return promisify(this._file.del.bind(this._file))(offset, size) as Promise<void>;
+  // TODO(burdon): Remove comment?
+  async del (offset: number, size: number) {
+    return promisify(this._file.del.bind(this._file))(offset, size);
   }
 
-  stat (): Promise<FileStat> {
-    return promisify(this._file.stat.bind(this._file))() as Promise<FileStat>;
+  async truncate (offset: number) {
+    return promisify(this._file.truncate.bind(this._file))(offset);
   }
 
-  close (): Promise<void> {
-    return promisify(this._file.close.bind(this._file))() as Promise<void>;
+  async stat (): Promise<FileStat> {
+    return promisify(this._file.stat.bind(this._file))();
   }
 
-  /**
-   * Delete the file.
-   */
-  delete (): Promise<void> {
-    return promisify(this._file.destroy.bind(this._file))() as Promise<void>;
+  async close (): Promise<void> {
+    return promisify(this._file.close.bind(this._file))();
+  }
+
+  async destroy () {
+    return promisify(this._file.destroy.bind(this._file))();
   }
 
   /**

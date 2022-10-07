@@ -188,7 +188,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
 
-      await file.delete();
+      await file.destroy();
 
       const reopened = directory.createOrOpenFile(fileName);
       const { size } = await reopened.stat();
@@ -224,7 +224,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.write(buffer1.length, buffer2);
       expect((await file.stat()).size).toBe(buffer1.length + buffer2.length);
 
-      await file.truncate(buffer1.length, buffer2.length);
+      await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
       expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
       await assert.rejects(async () => await file.read(buffer1.length, buffer2.length), Error, 'Could not satisfy length');

@@ -131,16 +131,15 @@ export class FeedDescriptor {
     return (name) => {
       const file = this._directory.createOrOpenFile(`${dir}/${name}`);
 
-      // TODO(burdon): Here we are wrapping our own File class.
-      // Separation between our internal File API and Hypercore's.
       return {
-        read: callbackify(file.read.bind(file)),
         write: callbackify(file.write.bind(file)),
-        del: callbackify(file.truncate.bind(file)),
+        read: callbackify(file.read.bind(file)),
+        del: callbackify(file.del.bind(file)),
+        truncate: callbackify(file.truncate.bind(file)),
         stat: callbackify(file.stat.bind(file)),
         close: callbackify(file.close.bind(file)),
-        destroy: callbackify(file.delete.bind(file))
-      } as RandomAccessFile;
+        destroy: callbackify(file.destroy.bind(file))
+      } as any as RandomAccessFile; // TODO(burdon): ???
     };
   }
 

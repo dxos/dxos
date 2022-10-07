@@ -75,7 +75,7 @@ export abstract class AbstractStorage implements Storage {
 
   protected async _deleteFilesInPath (path: string): Promise<void> {
     await Promise.all([...this._getFilesInPath(path)].map(([path, file]) => {
-      return file.delete()
+      return file.destroy()
         .then(() => this._files.delete(path))
         .catch((error: any) => log.error(error.message));
     }));
