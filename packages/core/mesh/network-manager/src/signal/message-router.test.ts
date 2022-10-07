@@ -18,7 +18,7 @@ import { afterTest } from '@dxos/testutils';
 import { MessageRouter } from './message-router';
 import { OfferMessage, SignalMessage } from './signal-messaging';
 
-describe('MessageRouter', () => {
+describe('MessageRouter', function () {
   let topic: PublicKey;
 
   let broker1: Awaited<ReturnType<typeof createTestBroker>>;

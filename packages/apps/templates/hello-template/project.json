@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/apps/templates/bare/src",
+  "sourceRoot": "packages/apps/templates/hello-template/src",
   "projectType": "application",
   "targets": {
     "lint": {
@@ -7,7 +7,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "packages/apps/templates/bare/**/*.{ts,js}"
+          "packages/apps/templates/hello-template/**/*.{ts,tsx,js,jsx}"
         ]
       }
     }
