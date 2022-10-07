@@ -284,7 +284,6 @@ export const webRTCProxyTests = ({ signalUrl, bridgeService }: { signalUrl: stri
   sharedTests({ inMemory: false, signalUrl, transportFactory });
 };
 
-// eslint-disable-next-line jest/no-export
 export function inMemoryTests () {
   const transportFactory = inMemoryTransportFactory;
   sharedTests({ inMemory: true, transportFactory });
