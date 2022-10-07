@@ -26,7 +26,7 @@ const comment = (ref: Reflection) => {
 }
 
 const param = (ref: ParameterReflection) => {
-  return text`${ref.name}: ${ref.type}`;
+  return `    ${ref.name}: ${ref.type}`;
 }
 
 const signature = (ref: SignatureReflection): string => {
