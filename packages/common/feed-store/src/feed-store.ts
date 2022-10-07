@@ -48,40 +48,25 @@ export interface FeedStoreOptions {
  * into a persist repository storage.
  */
 export class FeedStore {
-  private _directory: Directory;
-  private _valueEncoding: ValueEncoding | undefined;
-  private _hypercore: Hypercore;
   // TODO(dmaretskyi): Convert to ComplexMap.
-  private _descriptors: Map<string, FeedDescriptor>;
+  private readonly _descriptors: Map<string, FeedDescriptor> = new Map();
+
+  private readonly _directory: Directory;
+  private readonly _valueEncoding: ValueEncoding | undefined;
+  private readonly _hypercore: Hypercore;
 
   /**
-   * Is emitted when a new feed represented by FeedDescriptor is opened.
+   * Emitted when a new feed represented by FeedDescriptor is opened.
    */
   readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
-  /**
-   * @param directory RandomAccessStorage to use by default by the feeds.
-   * @param options Feedstore options.
-   */
-  constructor (directory: Directory, options: FeedStoreOptions = {}) {
-    assert(directory, 'The storage is required.');
-
+  constructor (directory: Directory, { valueEncoding, hypercore }: FeedStoreOptions = {}) {
+    assert(directory);
     this._directory = directory;
-
-    const {
-      valueEncoding,
-      hypercore = defaultHypercore
-    } = options;
     this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
-
-    this._hypercore = hypercore;
-
-    this._descriptors = new Map();
+    this._hypercore = hypercore ?? defaultHypercore;
   }
 
-  /**
-   * @type {RandomAccessStorage}
-   */
   get storage () {
     return this._directory;
   }
@@ -96,6 +81,7 @@ export class FeedStore {
    * Create a feed to Feedstore
    * @deprecated Use openReadWriteFeedWithSigner instead.
    */
+  // TODO(burdon): ???
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
     throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
     // const descriptor = this._descriptors.get(key.toHex());
@@ -126,16 +112,13 @@ export class FeedStore {
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
     log('Open read-only feed', { key });
-    const descriptor = this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
-    return descriptor;
+    return this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
   }
 
   /**
    * Factory to create a new FeedDescriptor.
    */
-  private async _createDescriptor (options: CreateDescriptorOptions) {
-    const { key, secretKey, signer } = options;
-
+  private async _createDescriptor ({ key, secretKey, signer }: CreateDescriptorOptions) {
     const descriptor = new FeedDescriptor({
       directory: this._directory,
       key,
@@ -163,7 +146,7 @@ const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   }
 
   return {
-    encode: (x: any) => Buffer.from(encoding.encode(x)),
+    encode: (data: any) => Buffer.from(encoding.encode(data)),
     decode: encoding.decode.bind(encoding)
   };
 };

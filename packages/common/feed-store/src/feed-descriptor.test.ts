@@ -25,7 +25,6 @@ describe('FeedDescriptor', function () {
     fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: await keyring.createKey(),
-      hypercore: defaultHypercore,
       signer: keyring
     });
   });
@@ -45,8 +44,7 @@ describe('FeedDescriptor', function () {
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
       key,
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed'),
-      hypercore: defaultHypercore
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed')
     });
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
@@ -59,8 +57,7 @@ describe('FeedDescriptor', function () {
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
-      valueEncoding: 'json',
-      hypercore: defaultHypercore
+      valueEncoding: 'json'
     });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
@@ -100,8 +97,7 @@ describe('FeedDescriptor', function () {
     const fd2 = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
-      secretKey,
-      hypercore: defaultHypercore
+      secretKey
     });
 
     await fd2.open();
@@ -117,8 +113,7 @@ describe('FeedDescriptor', function () {
       directory: createStorage({ type: StorageType.NODE, root }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
-      valueEncoding: 'utf-8',
-      hypercore: defaultHypercore
+      valueEncoding: 'utf-8'
     });
 
     await fd.open();

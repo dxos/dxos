@@ -15,10 +15,10 @@ import type { Directory, RandomAccessFile } from '@dxos/random-access-storage';
 import type { Hypercore, HypercoreFeed } from './hypercore';
 import type { ValueEncoding } from './types';
 
-interface FeedDescriptorOptions {
+type FeedDescriptorOptions = {
   directory: Directory
   key: PublicKey
-  hypercore: Hypercore
+  hypercore?: Hypercore
   secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
@@ -26,9 +26,7 @@ interface FeedDescriptorOptions {
 }
 
 /**
- * FeedDescriptor
- *
- * Abstract handler for an Hypercore instance.
+ * Abstract handler for an Hypercore feed.
  */
 export class FeedDescriptor {
   private readonly _directory: Directory;
