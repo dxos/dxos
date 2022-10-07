@@ -6,13 +6,12 @@ import flatten from 'lodash.flatten';
 import * as path from 'path';
 import readDir from 'recursive-readdir';
 
-import { File } from '@dxos/file';
-
 import {
   executeFileTemplate,
   TemplatingResult,
   isTemplateFile
 } from './executeFileTemplate';
+import { File } from './file';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string

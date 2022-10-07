@@ -1,0 +1,17 @@
+@import '@fontsource/roboto-flex/variable-full.css';
+@import '@fontsource/fira-code/variable.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  body {
+    @apply bg-neutral-100 text-neutral-900
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      @apply bg-neutral-900 text-neutral-50
+    }
+  }
+}
