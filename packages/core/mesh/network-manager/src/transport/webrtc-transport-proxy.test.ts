@@ -165,11 +165,11 @@ describe('WebRTCTransportProxy', function () {
     });
   }).timeout(2_000).retries(3);
 
-  describe('Multiplexing', () => {
+  describe('Multiplexing', function () {
     let service: any;
     let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
 
-    before(async () => {
+    before(async function () {
       const [port1, port2] = createLinkedPorts();
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
@@ -200,12 +200,12 @@ describe('WebRTCTransportProxy', function () {
       await rpcClient.open();
     });
 
-    after(async () => {
+    after(async function () {
       service?.close();
       rpcClient?.close();
     });
 
-    it('establish connection and send data through with protocol', async () => {
+    it('establish connection and send data through with protocol', async function () {
       const topic = PublicKey.random();
       const peer1Id = PublicKey.random();
       const peer2Id = PublicKey.random();

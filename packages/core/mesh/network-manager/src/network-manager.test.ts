@@ -58,13 +58,13 @@ describe('Network manager', function () {
       }
     });
 
-    before(async () => {
+    before(async function () {
       broker = await createTestBroker(PORT);
       await service.open();
       await rpcClient.open();
     });
 
-    after(() => {
+    after(function () {
       broker?.stop();
       service.close();
       rpcClient.close();

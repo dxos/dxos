@@ -253,7 +253,7 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
     await networkManager2.destroy();
   }).timeout(10_000).retries(10);
 
-  describe('StarTopology', function () {
+  describe('StarTopology', () => {
     it('two peers connect to each other', async () => {
       const { plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, topology: new StarTopology(peer1Id), transportFactory });
       const { plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, topology: new StarTopology(peer1Id), transportFactory });
