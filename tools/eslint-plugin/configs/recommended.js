@@ -7,6 +7,7 @@ module.exports = {
     'semistandard'
   ],
   plugins: [
+    'prettier',
     'unused-imports',
     '@stayradiated/prefer-arrow-functions',
     '@dxos/rules'
@@ -86,6 +87,7 @@ module.exports = {
       }
     ],
     'padded-blocks': 'off',
+    'prettier/prettier': 'error',
     'quote-props': 'off',
     'standard/no-callback-literal': 'off',
     'unused-imports/no-unused-imports': 'error',
