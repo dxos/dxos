@@ -9,7 +9,7 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
@@ -26,7 +26,8 @@ describe('space/replicator-plugin', function () {
 
     const peerId1 = PublicKey.random();
     const networkManager1 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext)
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: inMemoryTransportFactory
     });
     const replicator1 = new ReplicatorPlugin();
     const protocol1 = new SpaceProtocol(
@@ -42,7 +43,8 @@ describe('space/replicator-plugin', function () {
 
     const peerId2 = PublicKey.random();
     const networkManager2 = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext)
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: inMemoryTransportFactory
     });
     const replicator2 = new ReplicatorPlugin();
     const protocol2 = new SpaceProtocol(

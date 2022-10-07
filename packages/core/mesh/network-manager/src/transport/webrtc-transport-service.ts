@@ -7,11 +7,13 @@ import assert from 'assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ComplexMap } from '@dxos/util';
 
 export class WebRTCTransportService implements BridgeService {
-  protected peers = new Map<number, SimplePeer>();
+  protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());
 
   constructor (
     private readonly _webrtcConfig?: any
@@ -77,25 +79,25 @@ export class WebRTCTransportService implements BridgeService {
         close();
       });
 
-      this.peers.set(request.connectionId, peer);
+      this.peers.set(request.proxyId, peer);
 
       ready();
     });
   }
 
-  async sendSignal ({ connectionId, signal }: SignalRequest): Promise<void> {
-    assert(this.peers.has(connectionId), 'Connection not ready to accept signals.');
+  async sendSignal ({ proxyId, signal }: SignalRequest): Promise<void> {
+    assert(this.peers.has(proxyId), 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
-    this.peers.get(connectionId)!.signal(JSON.parse(signal.json));
+    this.peers.get(proxyId)!.signal(JSON.parse(signal.json));
   }
 
-  async sendData ({ connectionId, payload }: DataRequest): Promise<void> {
-    assert(this.peers.has(connectionId));
-    this.peers.get(connectionId)!.write(payload);
+  async sendData ({ proxyId, payload }: DataRequest): Promise<void> {
+    assert(this.peers.has(proxyId));
+    this.peers.get(proxyId)!.write(payload);
   }
 
-  async close ({ connectionId }: CloseRequest) {
-    this.peers.get(connectionId)?.destroy();
+  async close ({ proxyId }: CloseRequest) {
+    this.peers.get(proxyId)?.destroy();
     this.peers.delete;
     log('Closed.');
   }

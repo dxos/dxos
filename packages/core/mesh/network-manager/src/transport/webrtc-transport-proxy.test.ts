@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+// @dxos/mocha platform=nodejs
+
 import expect from 'expect';
 import { Duplex } from 'stream';
 import waitForExpect from 'wait-for-expect';
@@ -12,9 +14,8 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
-import { randomInt } from '@dxos/util';
 
 import { SignalMessage } from '../signal';
 import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
@@ -59,8 +60,21 @@ describe('WebRTCTransportProxy', function () {
     await webRTCService.open();
     afterTest(() => webRTCService.close());
 
+    // Starting RPC client
+    const rpcClient = createProtoRpcPeer({
+      requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
+      exposed: {},
+      handlers: {},
+      port: port2,
+      noHandshake: true,
+      encodingOptions: {
+        preserveAny: true
+      }
+    });
+    await rpcClient.open();
+    afterTest(() => rpcClient.close());
+
     const webRTCTransportProxy = new WebRTCTransportProxy({
-      webRTCConnectionId: randomInt(0, 1000),
       initiator,
       stream,
       ownId,
@@ -68,9 +82,8 @@ describe('WebRTCTransportProxy', function () {
       sessionId,
       topic,
       sendSignal,
-      port: port2
+      bridgeService: rpcClient.rpc.BridgeService
     });
-    await webRTCTransportProxy.init();
     afterTest(async () => await webRTCTransportProxy.close());
 
     return { webRTCService, webRTCTransportProxy };
@@ -144,13 +157,114 @@ describe('WebRTCTransportProxy', function () {
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
-      await plugin2.send(peer1Id.asBuffer(), 'Foo');
+      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
 
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('Foo');
+      expect(received[1]).toBe('{"message": "Hello"}');
     });
   }).timeout(2_000).retries(3);
+
+  describe('Multiplexing', function () {
+    let service: any;
+    let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
+
+    before(async function () {
+      const [port1, port2] = createLinkedPorts();
+
+      const webRTCTransportService: BridgeService = new WebRTCTransportService();
+      service = createProtoRpcPeer({
+        requested: {},
+        exposed: {
+          BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
+        },
+        handlers: { BridgeService: webRTCTransportService },
+        port: port1,
+        noHandshake: true,
+        encodingOptions: {
+          preserveAny: true
+        }
+      });
+      await service.open();
+
+      rpcClient = createProtoRpcPeer({
+        requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
+        exposed: {},
+        handlers: {},
+        port: port2,
+        noHandshake: true,
+        encodingOptions: {
+          preserveAny: true
+        }
+      });
+      await rpcClient.open();
+    });
+
+    after(async function () {
+      service?.close();
+      rpcClient?.close();
+    });
+
+    it('establish connection and send data through with protocol', async function () {
+      const topic = PublicKey.random();
+      const peer1Id = PublicKey.random();
+      const peer2Id = PublicKey.random();
+      const sessionId = PublicKey.random();
+
+      const plugin1 = new TestProtocolPlugin(peer1Id.asBuffer());
+      const protocolProvider1 = testProtocolProvider(topic.asBuffer(), peer1Id.asBuffer(), plugin1);
+      const proxy1 = new WebRTCTransportProxy({
+        initiator: true,
+        stream: protocolProvider1({ channel: discoveryKey(topic), initiator: true }).stream,
+        ownId: peer1Id,
+        remoteId: peer2Id,
+        sessionId,
+        topic,
+        sendSignal: async msg => {
+          await sleep(10);
+          await proxy2.signal(msg.data.signal);
+        },
+        bridgeService: rpcClient.rpc.BridgeService
+      }
+      );
+      afterTest(() => proxy1.errors.assertNoUnhandledErrors());
+
+      const plugin2 = new TestProtocolPlugin(peer2Id.asBuffer());
+      const protocolProvider2 = testProtocolProvider(topic.asBuffer(), peer2Id.asBuffer(), plugin2);
+      const proxy2 = new WebRTCTransportProxy({
+        initiator: false,
+        stream: protocolProvider2({ channel: discoveryKey(topic), initiator: false }).stream,
+        ownId: peer2Id,
+        remoteId: peer1Id,
+        sessionId,
+        topic,
+        sendSignal: async msg => {
+          await sleep(10);
+          await proxy1.signal(msg.data.signal);
+        },
+        bridgeService: rpcClient.rpc.BridgeService
+      }
+      );
+      afterTest(() => proxy2.errors.assertNoUnhandledErrors());
+
+      const received: any[] = [];
+      const mockReceive = (p: Protocol, s: string) => {
+        received.push(p, s);
+        return undefined;
+      };
+      plugin1.on('receive', mockReceive);
+
+      plugin2.on('connect', async (protocol) => {
+        await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
+      });
+
+      await waitForExpect(() => {
+        expect(received.length).toBe(2);
+        expect(received[0]).toBeInstanceOf(Protocol);
+        expect(received[1]).toBe('{"message": "Hello"}');
+      });
+    }).timeout(5_000).retries(3);
+  });
 });

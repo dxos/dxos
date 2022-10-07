@@ -5,7 +5,7 @@
 import { Context, createContext, useContext } from 'react';
 
 import { BotFactoryClient } from '@dxos/bot-factory-client';
-import { NetworkManager } from '@dxos/client';
+import { NetworkManager, createWebRTCTransportFactory } from '@dxos/client';
 import { Config } from '@dxos/config';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 
@@ -27,7 +27,7 @@ export const createBotFactoryClient = async (config: Config): Promise<BotFactory
   const signal = config.get('runtime.services.signal.server');
   const networkManager = new NetworkManager({
     signalManager: signal ? new WebsocketSignalManager([signal]) : new MemorySignalManager(signalContext),
-    ice: config.get('runtime.services.ice'),
+    transportFactory: createWebRTCTransportFactory({ iceServers: config.get('runtime.services.ice') }),
     log: true
   });
 

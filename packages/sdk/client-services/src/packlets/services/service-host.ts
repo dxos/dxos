@@ -5,7 +5,7 @@
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { createStorageObjects } from '../storage';
@@ -36,10 +36,11 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     const networkManager = new NetworkManager(this._config.get('runtime.services.signal.server') ? {
       signalManager: new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!]),
-      ice: this._config.get('runtime.services.ice'),
+      transportFactory: createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') }),
       log: true
     } : {
-      signalManager: new MemorySignalManager(SIGNAL_CONTEXT)
+      signalManager: new MemorySignalManager(SIGNAL_CONTEXT),
+      transportFactory: inMemoryTransportFactory
     });
 
     this._context = new ServiceContext(

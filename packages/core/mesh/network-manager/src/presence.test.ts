@@ -13,13 +13,14 @@ import { afterTest } from '@dxos/testutils';
 import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { FullyConnectedTopology } from './topology';
+import { inMemoryTransportFactory } from './transport';
 
 const signalContext = new MemorySignalManagerContext();
 
 const createPeer = async (topic: PublicKey) => {
   const peerId = PublicKey.random();
 
-  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext) });
+  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
   afterTest(() => networkManager.destroy());
 
   const presencePlugin = new PresencePlugin(peerId.asBuffer());
