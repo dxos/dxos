@@ -21,7 +21,7 @@
     "devtools-extension": "packages/devtools/devtools-extension",
     "devtools-mesh": "packages/devtools/devtools-mesh",
     "docs": "docs",
-    "dx-cli": "packages/apps/dx-cli",
+    "dx-cli": "packages/devtools/dx-cli",
     "echo-db": "packages/core/echo/echo-db",
     "echo-testing": "packages/core/echo/echo-testing",
     "esbuild": "tools/executors/esbuild",
