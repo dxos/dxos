@@ -135,7 +135,7 @@ export class FeedDescriptor {
         write: callbackify(file.write.bind(file)),
         read: callbackify(file.read.bind(file)),
         del: callbackify(file.truncate.bind(file)), // TODO(burdon): Mapped to truncate?
-        truncate: callbackify(file.truncate.bind(file)),
+        truncate: callbackify(file.truncate.bind(file)), // TODO(burdon): Not used?
         stat: callbackify(file.stat.bind(file)),
         close: callbackify(file.close.bind(file)),
         destroy: callbackify(file.destroy.bind(file))
