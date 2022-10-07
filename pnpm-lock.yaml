@@ -320,7 +320,7 @@ importers:
   packages/apps/dx-cli/testing/app:
     specifiers: {}
 
-  packages/apps/halo:
+  packages/apps/halo-app:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/client': workspace:*
@@ -1716,7 +1716,7 @@ importers:
       react-dom: 17.0.2_react@17.0.2
       react-router-dom: 6.3.0_sfoxds7t5ydpegc3knd667wn6m
 
-  packages/e2e/rpc-tunnel:
+  packages/e2e/rpc-tunnel-e2e:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
@@ -1996,6 +1996,91 @@ importers:
       yargs: 16.2.0
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@types/copy-paste': 1.1.30
+      '@types/js-yaml': 4.0.5
+      '@types/mocha': 8.2.3
+      '@types/node': 16.11.62
+      '@types/node-fetch': 2.5.12
+      '@types/qrcode-terminal': 0.12.0
+      '@types/react': 17.0.50
+      '@types/yargs': 16.0.4
+      esbuild: 0.14.49
+      mocha: 8.4.0
+      supervisor: 0.12.0
+      ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
+      typescript: 4.7.4
+
+  packages/experimental/kodama/dist:
+    specifiers:
+      '@dxos/async': workspace:*
+      '@dxos/client': workspace:*
+      '@dxos/client-testing': workspace:*
+      '@dxos/codec-protobuf': workspace:*
+      '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/protocols': workspace:*
+      '@dxos/protocols-toolchain': workspace:*
+      '@dxos/react-async': workspace:*
+      '@dxos/react-client': workspace:*
+      '@types/copy-paste': ^1.1.30
+      '@types/js-yaml': ^4.0.5
+      '@types/mocha': ^8.2.2
+      '@types/node': ^16.11.58
+      '@types/node-fetch': ^2.5.10
+      '@types/qrcode-terminal': ^0.12.0
+      '@types/react': ^17.0.24
+      '@types/yargs': ~16.0.1
+      chalk: ^4.1.0
+      clipboardy: ^3.0.0
+      compare-semver: ~1.1.0
+      date-format: ~4.0.11
+      esbuild: ~0.14.1
+      ink: ^3.2.0
+      ink-select-input: ~4.2.1
+      ink-spinner: ~4.0.3
+      ink-syntax-highlight: ~1.0.1
+      ink-table: ~3.0.0
+      ink-text-input: ~4.0.3
+      js-yaml: ^4.1.0
+      mocha: ^8.4.0
+      node-fetch: ^2.6.0
+      npm-api: ~1.0.1
+      qrcode-terminal: ~0.12.0
+      react: ^17.0.2
+      supervisor: ~0.12.0
+      ts-node: 10.9.1
+      typescript: ^4.7.2
+      yargs: ~16.2.0
+    dependencies:
+      '@dxos/async': link:../../../common/async
+      '@dxos/client': link:../../../sdk/client
+      '@dxos/client-testing': link:../../../sdk/client-testing
+      '@dxos/codec-protobuf': link:../../../common/codec-protobuf
+      '@dxos/config': link:../../../sdk/config
+      '@dxos/debug': link:../../../common/debug
+      '@dxos/keys': link:../../../common/keys
+      '@dxos/protocols': link:../../../core/protocols
+      '@dxos/react-async': link:../../../common/react-async
+      '@dxos/react-client': link:../../../sdk/react-client
+      chalk: 4.1.2
+      clipboardy: 3.0.0
+      compare-semver: 1.1.0
+      date-format: 4.0.11
+      ink: 3.2.0_pxzommwrsowkd4kgag6q3sluym
+      ink-select-input: 4.2.1_ink@3.2.0+react@17.0.2
+      ink-spinner: 4.0.3_ink@3.2.0+react@17.0.2
+      ink-syntax-highlight: 1.0.1_ink@3.2.0+react@17.0.2
+      ink-table: 3.0.0_ink@3.2.0+react@17.0.2
+      ink-text-input: 4.0.3_ink@3.2.0+react@17.0.2
+      js-yaml: 4.1.0
+      node-fetch: 2.6.7
+      npm-api: 1.0.1
+      qrcode-terminal: 0.12.0
+      react: 17.0.2
+      yargs: 16.2.0
+    devDependencies:
+      '@dxos/protocols-toolchain': link:../../../../tools/deprecated/protocols-toolchain
       '@types/copy-paste': 1.1.30
       '@types/js-yaml': 4.0.5
       '@types/mocha': 8.2.3
@@ -5483,9 +5568,9 @@ packages:
       '@babel/core': 7.18.13
       '@babel/helper-annotate-as-pure': 7.18.6
       '@babel/helper-module-imports': 7.18.6
-      '@babel/helper-plugin-utils': 7.18.9
+      '@babel/helper-plugin-utils': 7.19.0
       '@babel/plugin-syntax-jsx': 7.18.6_@babel+core@7.18.13
-      '@babel/types': 7.18.13
+      '@babel/types': 7.19.3
     dev: true
 
   /@babel/plugin-transform-react-pure-annotations/7.16.0_@babel+core@7.18.13:
@@ -9124,13 +9209,13 @@ packages:
       moment:
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       '@mui/x-date-pickers': 5.0.0-alpha.1_oop6dcki46d7lexi6nxggagcai
       '@types/react': 17.0.50
       clsx: 1.2.1
@@ -9171,13 +9256,13 @@ packages:
       moment:
         optional: true
     dependencies:
-      '@babel/runtime': 7.18.9
+      '@babel/runtime': 7.19.0
       '@emotion/react': 11.9.3_o4tzmattbhtwklwarjrqq4a6ty
       '@emotion/styled': 11.9.3_kw5zkxyh4qzmyxliksbmsmaxoy
       '@mui/base': 5.0.0-alpha.88_hiunvzosbwliizyirxfy6hjyim
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       '@mui/x-date-pickers': 5.0.0-alpha.1_lo3xzamluryvy2xkcnd6bbfbsy
       '@types/react': 17.0.50
       clsx: 1.2.1
@@ -9605,7 +9690,7 @@ packages:
       '@date-io/moment': 2.13.1_moment@2.29.1
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       clsx: 1.2.1
       moment: 2.29.1
       prop-types: 15.8.1
@@ -9643,7 +9728,7 @@ packages:
       '@date-io/moment': 2.13.1
       '@mui/material': 5.8.7_frantx6tj4fjdcwvjt54fmciae
       '@mui/system': 5.8.7_wllw5quaeeyvaf6li3qs5obqwu
-      '@mui/utils': 5.8.6_react@17.0.2
+      '@mui/utils': 5.10.6_react@17.0.2
       clsx: 1.2.1
       prop-types: 15.8.1
       react: 17.0.2
@@ -11422,7 +11507,7 @@ packages:
   /@protobufjs/utf8/1.1.0:
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  /@rollup/plugin-babel/5.3.1_nvdofgmkndekaa75mrvcpsebcy:
+  /@rollup/plugin-babel/5.3.1_4aoyzp5jmnjre465pp7ghvzkve:
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
@@ -11435,8 +11520,8 @@ packages:
     dependencies:
       '@babel/core': 7.18.13
       '@babel/helper-module-imports': 7.18.6
-      '@rollup/pluginutils': 3.1.0_rollup@2.77.3
-      rollup: 2.77.3
+      '@rollup/pluginutils': 3.1.0_rollup@2.79.1
+      rollup: 2.79.1
     dev: true
 
   /@rollup/plugin-inject/4.0.4_rollup@2.77.3:
@@ -11450,29 +11535,29 @@ packages:
       rollup: 2.77.3
     dev: false
 
-  /@rollup/plugin-node-resolve/11.2.1_rollup@2.77.3:
+  /@rollup/plugin-node-resolve/11.2.1_rollup@2.79.1:
     resolution: {integrity: sha512-yc2n43jcqVyGE2sqV5/YCmocy9ArjVAP/BeXyTtADTBBX6V0e5UMqwO8CdQ0kzjb6zu5P1qMzsScCMRvE9OlVg==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.77.3
+      '@rollup/pluginutils': 3.1.0_rollup@2.79.1
       '@types/resolve': 1.17.1
       builtin-modules: 3.3.0
       deepmerge: 4.2.2
       is-module: 1.0.0
       resolve: 1.22.1
-      rollup: 2.77.3
+      rollup: 2.79.1
     dev: true
 
-  /@rollup/plugin-replace/2.4.2_rollup@2.77.3:
+  /@rollup/plugin-replace/2.4.2_rollup@2.79.1:
     resolution: {integrity: sha512-IGcu+cydlUMZ5En85jxHH4qj2hta/11BHq95iHEyb2sbgiN0eCdzvUcHw5gt9pBL5lTi4JDYJ1acCoMGpTvEZg==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.77.3
+      '@rollup/pluginutils': 3.1.0_rollup@2.79.1
       magic-string: 0.25.7
-      rollup: 2.77.3
+      rollup: 2.79.1
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.77.3:
@@ -11485,6 +11570,19 @@ packages:
       estree-walker: 1.0.1
       picomatch: 2.3.1
       rollup: 2.77.3
+    dev: false
+
+  /@rollup/pluginutils/3.1.0_rollup@2.79.1:
+    resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
+    engines: {node: '>= 8.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0
+    dependencies:
+      '@types/estree': 0.0.39
+      estree-walker: 1.0.1
+      picomatch: 2.3.1
+      rollup: 2.79.1
+    dev: true
 
   /@rollup/pluginutils/4.2.1:
     resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
@@ -25103,7 +25201,7 @@ packages:
   /history/5.3.0:
     resolution: {integrity: sha512-ZqaKwjjrAYUYfLG+htGaIIZ4nioX2L70ZUMIFysS3xvBsSG4x/n1V6TXV3N8ZYNuFGlDirFg32T7B6WOUPDYcQ==}
     dependencies:
-      '@babel/runtime': 7.17.2
+      '@babel/runtime': 7.19.0
 
   /hmac-blake2b/2.0.0:
     resolution: {integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==}
@@ -34613,14 +34711,14 @@ packages:
       rollup: 2.77.3
     dev: false
 
-  /rollup-plugin-terser/7.0.2_rollup@2.77.3:
+  /rollup-plugin-terser/7.0.2_rollup@2.79.1:
     resolution: {integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==}
     peerDependencies:
       rollup: ^2.0.0
     dependencies:
       '@babel/code-frame': 7.18.6
       jest-worker: 26.6.2
-      rollup: 2.77.3
+      rollup: 2.79.1
       serialize-javascript: 4.0.0
       terser: 5.15.0
     dev: true
@@ -38124,7 +38222,7 @@ packages:
       debug: 4.3.4
       fast-glob: 3.2.11
       pretty-bytes: 6.0.0
-      rollup: 2.77.3
+      rollup: 2.79.1
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       workbox-build: 6.5.4
       workbox-window: 6.5.4
@@ -38961,11 +39059,11 @@ packages:
     dependencies:
       '@apideck/better-ajv-errors': 0.3.6_ajv@8.11.0
       '@babel/core': 7.18.13
-      '@babel/preset-env': 7.19.1_@babel+core@7.18.13
+      '@babel/preset-env': 7.19.3_@babel+core@7.18.13
       '@babel/runtime': 7.19.0
-      '@rollup/plugin-babel': 5.3.1_nvdofgmkndekaa75mrvcpsebcy
-      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.77.3
-      '@rollup/plugin-replace': 2.4.2_rollup@2.77.3
+      '@rollup/plugin-babel': 5.3.1_4aoyzp5jmnjre465pp7ghvzkve
+      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.79.1
+      '@rollup/plugin-replace': 2.4.2_rollup@2.79.1
       '@surma/rollup-plugin-off-main-thread': 2.2.3
       ajv: 8.11.0
       common-tags: 1.8.2
@@ -38974,8 +39072,8 @@ packages:
       glob: 7.2.0
       lodash: 4.17.21
       pretty-bytes: 5.6.0
-      rollup: 2.77.3
-      rollup-plugin-terser: 7.0.2_rollup@2.77.3
+      rollup: 2.79.1
+      rollup-plugin-terser: 7.0.2_rollup@2.79.1
       source-map: 0.8.0-beta.0
       stringify-object: 3.3.0
       strip-comments: 2.0.1
