@@ -2,44 +2,82 @@
 // Copyright 2022 DXOS.org
 //
 
-// NOTE: The import order here is important.
-// The `require` hooks that are registered in those modules will be run in the same order as they are imported.
-// We want the logger preprocessor to be run on typescript source first.
-// Then the SWC will transpile the typescript source to javascript.
-import '@dxos/log-hook/register';
-import '@swc-node/register';
-
 import type { ExecutorContext } from '@nrwl/devkit';
-import glob from 'glob';
-import Mocha from 'mocha';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
-import './util/react-setup';
-import './util/catch-unhandled-rejections';
+import { BrowserTypes } from './browser';
+import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
+import { NodeOptions, runNode } from './run-node';
+import { runSetup } from './util';
 
-export interface MochaExecutorOptions {
-  testPatterns: string[]
-  jsdom: boolean
-  timeout: number
-}
+export const TestEnvironments = [
+  'nodejs',
+  ...BrowserTypes
+] as const;
+
+export type TestEnvironment = typeof TestEnvironments[number];
+
+export type MochaExecutorOptions = NodeOptions & BrowserOptions & {
+  environments?: (TestEnvironment | 'all')[]
+  devEnvironments: TestEnvironment[]
+  ciEnvironments: TestEnvironment[]
+  setup?: string
+};
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
   console.info('Executing "mocha"...');
   console.info(`Options: ${JSON.stringify(options, null, 2)}`);
 
-  const mocha = new Mocha({ timeout: options.timeout });
+  const resolvedOptions = {
+    ...options,
+    environments: getEnvironments(options),
+    setup: options.setup ? resolve(context.root, options.setup) : options.setup,
+    testPatterns: options.testPatterns.map(pattern => resolve(context.root, pattern)),
+    watchPatterns: options.watchPatterns?.map(pattern => resolve(context.root, pattern)),
+    outputPath: resolve(context.root, options.outputPath),
+    resultsPath: resolve(context.root, options.resultsPath),
+    coveragePath: resolve(context.root, options.coveragePath),
+    headless: options.stayOpen ? false : options.headless
+  };
 
-  if (options.jsdom) {
-    await import('jsdom-global/register');
+  const includesBrowserEnv = resolvedOptions.environments
+    .filter(environment => ([...BrowserTypes.values()] as string[]).includes(environment))
+    .length > 0;
+  const [skipBrowserTests] = await Promise.all([
+    includesBrowserEnv && runBrowserBuild(resolvedOptions),
+    resolvedOptions.setup && runSetup(resolvedOptions.setup)
+  ]);
+
+  // TODO(wittjosiah): Run in parallel and aggregate test results from all environments to a single view.
+  // TODO(wittjosiah): Run all even if there are failures.
+  let success = true;
+  for (const env of resolvedOptions.environments) {
+    switch (env) {
+      case 'chromium':
+      case 'firefox':
+      case 'webkit': {
+        success &&= skipBrowserTests || await runBrowser(context.projectName!, env, resolvedOptions);
+        break;
+      }
+
+      case 'nodejs': {
+        success &&= await runNode(context, resolvedOptions);
+        break;
+      }
+    }
   }
 
-  options.testPatterns.forEach(pattern => {
-    glob.sync(pattern).forEach(path => {
-      mocha.addFile(resolve(context.root, path));
-    });
-  });
+  return { success };
+};
 
-  const failures = await new Promise(resolve => mocha.run(failures => resolve(failures)));
+const getEnvironments = (options: MochaExecutorOptions) => {
+  if (options.environments) {
+    return options.environments.includes('all')
+      ? TestEnvironments
+      : options.environments as TestEnvironment[];
+  } else if (process.env.CI) {
+    return options.ciEnvironments;
+  }
 
-  return { success: !failures };
+  return options.devEnvironments;
 };

@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
@@ -18,8 +17,8 @@ import { createFeedWriter } from './feed-writer';
 // TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
-describe('Feed tests:', () => {
-  test('codec', () => {
+describe('Feed tests:', function () {
+  it('codec', function () {
     const message1: FeedMessage = {
       timeframe: new Timeframe(),
       payload: {
@@ -32,7 +31,7 @@ describe('Feed tests:', () => {
     expect(message1).toEqual(message2);
   });
 
-  test.skip('hypercore', async () => {
+  it.skip('hypercore', async function () {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
@@ -53,7 +52,7 @@ describe('Feed tests:', () => {
     expect(block).toEqual(data);
   });
 
-  test.skip('feed writer', async () => {
+  it.skip('feed writer', async function () {
     const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();

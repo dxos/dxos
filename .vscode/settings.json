@@ -13,8 +13,10 @@
     "testutils"
   ],
   "files.associations": {
+    "nx.json": "jsonc",
     "workspace.json": "jsonc",
     "project.json": "jsonc",
+    "schema.json": "jsonc",
     "eslintConfig.json": "jsonc",
     ".eslintrc.json": "jsonc",
     "rush.json": "jsonc",

@@ -47,10 +47,21 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/registry-client/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/sdk/registry-client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/registry-client",
+        "resultsPath": "test-results/packages/sdk/registry-client",
+        "coveragePath": "coverage/packages/sdk/registry-client"
       }
     }
   },

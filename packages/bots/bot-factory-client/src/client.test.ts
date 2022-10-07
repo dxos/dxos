@@ -9,8 +9,8 @@ import { NetworkManager } from '@dxos/network-manager';
 
 import { BotFactoryClient } from './client';
 
-describe('In-Memory', () => {
-  it('Can be initialized', async () => {
+describe('In-Memory', function () {
+  it('Can be initialized', async function () {
     const networkManager = new NetworkManager({
       signalManager: new MemorySignalManager(new MemorySignalManagerContext())
     });

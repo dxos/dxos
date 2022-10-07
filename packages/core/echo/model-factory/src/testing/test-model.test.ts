@@ -3,14 +3,13 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { ModelFactory } from '../model-factory';
 import { TestModel } from './test-model';
 import { TestRig } from './test-rig';
 
-describe('test model', () => {
-  test('basic mutations', async () => {
+describe('test model', function () {
+  it('basic mutations', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
     const peer = rig.createPeer();
 
@@ -19,7 +18,7 @@ describe('test model', () => {
     expect(peer.model.keys).toHaveLength(1);
   });
 
-  test('multiple peers', async () => {
+  it('multiple peers', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();
@@ -32,7 +31,7 @@ describe('test model', () => {
     expect(peer2.model.get('title')).toBe('Braneframe');
   });
 
-  test('concurrency - states converge', async () => {
+  it('concurrency - states converge', async function () {
     const rig = new TestRig(new ModelFactory().registerModel(TestModel), TestModel);
     const peer1 = rig.createPeer();
     const peer2 = rig.createPeer();

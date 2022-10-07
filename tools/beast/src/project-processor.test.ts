@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import pick from 'lodash/pick';
-import { it as test } from 'mocha';
 import path from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
@@ -22,8 +21,8 @@ import { WorkspaceProcessor } from './workspace-processor';
 
 const baseDir = path.join(__dirname, '../../..');
 
-describe('Code analysis', () => {
-  test('Sanity', () => {
+describe('Code analysis', function () {
+  it('Sanity', function () {
     const processor = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
 
@@ -32,7 +31,7 @@ describe('Code analysis', () => {
     expect(root?.getName()).toBeTruthy();
   });
 
-  test('Create graph', () => {
+  it('Create graph', function () {
     const processor = new WorkspaceProcessor(baseDir).init();
     const builder = new ProjectProcessor(baseDir, processor, '@dxos/client');
 

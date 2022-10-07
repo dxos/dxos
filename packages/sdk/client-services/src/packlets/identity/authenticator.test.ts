@@ -4,16 +4,19 @@
 
 import assert from 'assert';
 import expect from 'expect';
-import { it as test } from 'mocha';
 
-import { createCredentialSignerWithKey } from '@dxos/halo-protocol';
+import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { ComplexSet } from '@dxos/util';
 
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 
-describe('identity/authenticator', () => {
-  test('verifies credentials', async () => {
+describe('identity/authenticator', function () {
+  it('verifies credentials', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     const keyring = new Keyring();
     const deviceKey = await keyring.createKey();
     const signer = createCredentialSignerWithKey(keyring, deviceKey);

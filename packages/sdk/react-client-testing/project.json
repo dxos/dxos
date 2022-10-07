@@ -26,11 +26,24 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/sdk/react-client-testing/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
+        "watchPatterns": [
+          "packages/sdk/react-client-testing/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/react-client-testing",
+        "resultsPath": "test-results/packages/sdk/react-client-testing",
+        "coveragePath": "coverage/packages/sdk/react-client-testing",
+        "domRequired": true,
+        "checkLeaks": false,
+        "forceExit": true
       }
     }
   },

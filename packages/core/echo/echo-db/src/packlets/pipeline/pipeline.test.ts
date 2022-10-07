@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { it as test } from 'mocha';
-
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
@@ -15,8 +13,8 @@ import { range } from '@dxos/util';
 import { codec } from '../common';
 import { Pipeline } from './pipeline';
 
-describe('pipeline/Pipeline', () => {
-  test('asynchronous reader & writer without ordering', async () => {
+describe('pipeline/Pipeline', function () {
+  it('asynchronous reader & writer without ordering', async function () {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 

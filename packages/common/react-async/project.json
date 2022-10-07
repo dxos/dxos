@@ -26,11 +26,23 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/common/react-async/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
+        "watchPatterns": [
+          "packages/common/react-async/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/common/react-async",
+        "resultsPath": "test-results/packages/common/react-async",
+        "coveragePath": "coverage/packages/common/react-async",
+        "domRequired": true,
+        "forceExit": true
       }
     }
   },

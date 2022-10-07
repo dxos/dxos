@@ -1,3 +1,8 @@
+#
+# CircleCI configuration
+# https://circleci.com/docs/configuration-reference
+#
+
 version: 2.1
 
 orbs:
@@ -27,6 +32,8 @@ jobs:
   check:
     docker:
       - *docker_image
+    # https://circleci.com/docs/configuration-reference/#docker-execution-environment
+    resource_class: xlarge
     steps:
       - checkout
       - *cache_restore
@@ -35,20 +42,26 @@ jobs:
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test
+      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --coverage --xmlReport
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint
       - when:
           condition:
             equal: [ main, <<pipeline.git.branch>> ]
           steps:
             - run: pnpm nx run-many --target=build
-            - run: pnpm nx run-many --target=test
+            - run: pnpm nx run-many --target=test --coverage --xmlReport
             - run: pnpm nx run-many --target=lint
             - run:
                 command: pnpm nx run-many --target=prerelease
                 no_output_timeout: 30m
                 environment:
                   NODE_OPTIONS: --max_old_space_size=8198
+      - run:
+          name: "Upload to codecov.com"
+          command: ./.circleci/scripts/upload-codecov.sh
+          when: always
+      - store_test_results:
+          path: test-results
 
   #
   # End-to-end integration tests.
@@ -99,7 +112,7 @@ jobs:
           environment:
             NODE_OPTIONS: --max_old_space_size=8198
       - run:
-          name: Deploy HALO
+          name: "Deploy HALO"
           command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
           environment:
             NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011

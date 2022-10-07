@@ -26,10 +26,21 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
         "testPatterns": [
           "packages/core/echo/messenger-model/src/**/*.test.{ts,js}"
-        ]
+        ],
+        "watchPatterns": [
+          "packages/core/echo/messenger-model/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/echo/messenger-model",
+        "resultsPath": "test-results/packages/core/echo/messenger-model",
+        "coveragePath": "coverage/packages/core/echo/messenger-model"
       }
     }
   },

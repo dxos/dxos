@@ -92,7 +92,7 @@ describe('Grid demo', function () {
     }
   }
 
-  it('Opens grid', async () => {
+  it('Opens grid', async function () {
     const grid = createGrid('/Secondary', [rows, columns]);
 
     let page = 0;

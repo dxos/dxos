@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-/* eslint-disable jest/no-export, jest/no-disabled-tests, jest/expect-expect, jest/valid-title */
-
 import { EventEmitter } from 'events';
 
 import { promiseTimeout } from './async';

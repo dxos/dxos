@@ -26,11 +26,24 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
           "packages/sdk/react-client/src/**/*.test.{ts,tsx,js,jsx}"
         ],
-        "jsdom": true
+        "watchPatterns": [
+          "packages/sdk/react-client/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/sdk/react-client",
+        "resultsPath": "test-results/packages/sdk/react-client",
+        "coveragePath": "coverage/packages/sdk/react-client",
+        "domRequired": true,
+        "forceExit": true
       }
     },
     "e2e": {
