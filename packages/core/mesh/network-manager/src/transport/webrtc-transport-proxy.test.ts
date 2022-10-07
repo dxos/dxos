@@ -263,6 +263,6 @@ describe('WebRTCTransportProxy', function () {
         expect(received[0]).toBeInstanceOf(Protocol);
         expect(received[1]).toBe('{"message": "Hello"}');
       });
-    }).timeout(2_000);
+    }).timeout(5_000).retries(3);
   });
 });
