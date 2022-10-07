@@ -36,17 +36,17 @@ const Test = () => {
 
 let rootContainer: HTMLElement;
 
-beforeEach(() => {
-  rootContainer = document.createElement('div');
-  document.body.appendChild(rootContainer);
-});
+describe('useStateMutator', function () {
+  beforeEach(function () {
+    rootContainer = document.createElement('div');
+    document.body.appendChild(rootContainer);
+  });
 
-afterEach(() => {
-  document.body.removeChild(rootContainer);
-});
+  afterEach(function () {
+    document.body.removeChild(rootContainer);
+  });
 
-describe('useStateMutator', () => {
-  it('udpates the value.', async () => {
+  it('udpates the value.', async function () {
     act(() => {
       render(<Test />, rootContainer);
     });

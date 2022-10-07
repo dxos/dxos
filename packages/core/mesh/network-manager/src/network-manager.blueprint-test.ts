@@ -203,7 +203,6 @@ const sharedTests = ({ inMemory, signalUrl, transportFactory }: { inMemory: bool
   });
 };
 
-// eslint-disable-next-line jest/no-export
 export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
   let topic: PublicKey;
   let peer1Id: PublicKey;

@@ -19,8 +19,8 @@ import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
 
-describe('space/replicator-plugin', () => {
-  it('replicates a feed', async () => {
+describe('space/replicator-plugin', function () {
+  it('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
 

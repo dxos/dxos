@@ -9,10 +9,10 @@ import { DXN } from './dxn';
 import { Filtering } from './filtering';
 import { RegistryRecord } from './registry-client';
 
-describe('Filtering', () => {
+describe('Filtering', function () {
   // TODO(marik-d): Fix those tests.
-  describe('Resources filtering', () => {
-    it('Filters by type, when equal, then filtered in', () => {
+  describe('Resources filtering', function () {
+    it('Filters by type, when equal, then filtered in', function () {
       // code const data = [{ messageFqn: 'app' } as unknown as Resource, { mesageFqn: 'bot' } as unknown as Resource];
       // code const actual = data.filter(item => Filtering.matchResource(item, { type: 'app' }));
 
@@ -20,7 +20,7 @@ describe('Filtering', () => {
       // code expect(actual[0].messageFqn).to.be.equal('app');
     });
 
-    it('Filters by text, when contains text, then filtered in', () => {
+    it('Filters by text, when contains text, then filtered in', function () {
       const data = [
         DXN.fromDomainName('apps', 'super-app'),
         DXN.fromDomainName('bricks', 'redbrick')
@@ -31,7 +31,7 @@ describe('Filtering', () => {
       expect(actual[0].toString()).to.be.equal('bricks:redbrick');
     });
 
-    it('Filters by text, when contains text (case-insensitive), then filtered in', () => {
+    it('Filters by text, when contains text (case-insensitive), then filtered in', function () {
       const data = [
         DXN.fromDomainName('apps', 'super-app'),
         DXN.fromDomainName('bricks', 'redbrick')
@@ -43,7 +43,7 @@ describe('Filtering', () => {
     });
   });
 
-  describe('Records filtering', () => {
+  describe('Records filtering', function () {
     const appTypeCID = createCID();
     const botTypeCID = createCID();
     // TODO(wittjosiah): Include types in filtering once they are no longer differentiated from data records.
@@ -90,13 +90,13 @@ describe('Filtering', () => {
       }
     ];
 
-    it('Filters by type', () => {
+    it('Filters by type', function () {
       expect(records.filter(item => Filtering.matchRecord(item, { type: appTypeCID }))).to.have.length(2);
       expect(records.filter(item => Filtering.matchRecord(item, { type: botTypeCID }))).to.have.length(1);
       expect(records.filter(item => Filtering.matchRecord(item, { type: createCID() }))).to.have.length(0);
     });
 
-    it('Filters by text', () => {
+    it('Filters by text', function () {
       // expect(records.filter(item => Filtering.matchRecord(item, { text: 'app' }))).to.have.length(3); // 2 Applications and App type.
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'application' }))).to.have.length(2);
       expect(records.filter(item => Filtering.matchRecord(item, { text: 'botter' }))).to.have.length(1);

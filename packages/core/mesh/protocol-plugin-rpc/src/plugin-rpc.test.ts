@@ -40,8 +40,8 @@ const createPeer = async (
   return { plugin, networkManager };
 };
 
-describe('Protocol plugin rpc', () => {
-  it('Works with rpc port', async () => {
+describe('Protocol plugin rpc', function () {
+  it('Works with rpc port', async function () {
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
     let serverPort: RpcPort | undefined;
@@ -78,7 +78,7 @@ describe('Protocol plugin rpc', () => {
     await server.close();
   });
 
-  it('Works with protobuf service', async () => {
+  it('Works with protobuf service', async function () {
     const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const clientId = PublicKey.random();
@@ -124,7 +124,7 @@ describe('Protocol plugin rpc', () => {
     expect(response.data).toEqual('responseData');
   });
 
-  it('One server two clients', async () => {
+  it('One server two clients', async function () {
     const service = schema.getService('example.testing.rpc.TestService');
     const topic = PublicKey.random();
     const client1Id = PublicKey.random();

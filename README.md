@@ -1,8 +1,19 @@
-[![DXOS](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
-[![MIT License](https://img.shields.io/npm/l/@dxos/client?style=flat)](https://github.com/dxos/dxos/blob/main/LICENSE)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat)](https://conventionalcommits.org)
+![DXOS](./docs/docs/assets/images/github-repo-banner.png)
 
-![js-dxos](./docs/assets/images/github-repo-banner.png)
+<!-- https://shields.io -->
+[![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE)
+[![CI](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
+![Netlify Status](https://img.shields.io/netlify/847d26d2-ec3b-4f2e-ac3b-caee7fe6e7bc)
+[![codecov](https://img.shields.io/codecov/c/github/dxos/dxos?token=CLO9PHX2PQ)](https://codecov.io/gh/dxos/dxos)
+![Node](https://img.shields.io/node/v/@dxos/client)
+[![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
+[![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
+
+<!--
+When public:
+![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)
+![Contributors](https://img.shields.io/github/contributors/dxos/dxos)
+-->
 
 ## DXOS Monorepo
 
@@ -35,15 +46,16 @@ pnpm run demo:grid
 ## Installation and usage
 
 
-## Deployment
-
-Packages are deployed via [Release Please](https://github.com/dxos/dxos/blob/main/docs/internal/getting-started.md#release-process).
-
 
 ## Troubleshooting
 
 For debugging, use the [DXOS DevTools extension](./packages/sdk/devtools-extension/README.md).
 Also check the [FAQ section](./docs/internal/getting-started.md#FAQ).
+
+
+## Coverage
+
+![Coverage](https://codecov.io/gh/dxos/dxos/branch/main/graphs/tree.svg?token=CLO9PHX2PQ)
 
 
 ## Contributing

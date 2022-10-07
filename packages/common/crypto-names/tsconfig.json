@@ -8,10 +8,5 @@
     "data/**/*.json",
     "scripts",
     "src"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.spec.json"
-    }
   ]
 }

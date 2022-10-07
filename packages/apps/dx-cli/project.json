@@ -13,10 +13,23 @@
     },
     "test": {
       "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
+        "ciEnvironments": ["nodejs"],
         "testPatterns": [
-          "packages/apps/dx-cli/src/**/*.test.{ts,tsx,js,jsx}"
-        ]
+          "packages/apps/dx-cli/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/apps/dx-cli/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/apps/dx-cli",
+        "resultsPath": "test-results/packages/apps/dx-cli",
+        "coveragePath": "coverage/packages/apps/dx-cli",
+        "checkLeaks": false
       },
       "dependsOn": [
         "build"

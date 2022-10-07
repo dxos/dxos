@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
 // https://javascript.info/proxy
@@ -136,7 +135,7 @@ class Database {
 }
 
 describe('API', () => {
-  test('Pseudo-code', () => {
+  it('Pseudo-code', () => {
     const db = new Database();
     db.addType(ContactType, value => new Proxy<Contact>(value, new ContactHandler()));
 

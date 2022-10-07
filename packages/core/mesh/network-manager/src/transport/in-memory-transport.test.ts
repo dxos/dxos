@@ -53,8 +53,8 @@ const createPair = () => {
   return { connection1, connection2, plugin1, plugin2, peer1Id, peer2Id, topic };
 };
 
-describe('InMemoryTransport', () => {
-  it('establish connection and send data through with protocol', async () => {
+describe('InMemoryTransport', function () {
+  it('establish connection and send data through with protocol', async function () {
     const { plugin1, plugin2, peer1Id } = createPair();
 
     const received: any[] = [];
@@ -75,7 +75,7 @@ describe('InMemoryTransport', () => {
     });
   });
 
-  it('10 pairs of peers connecting at the same time', async () => {
+  it('10 pairs of peers connecting at the same time', async function () {
     await Promise.all(range(10).map(async () => {
       const { plugin1, plugin2, peer1Id } = createPair();
 

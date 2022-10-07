@@ -36,8 +36,8 @@ const createPeer = async (topic: PublicKey) => {
   return { peerId, presence: presencePlugin, networkManager };
 };
 
-describe('Presence', () => {
-  it('sees connected peers', async () => {
+describe('Presence', function () {
+  it('sees connected peers', async function () {
     const topic = PublicKey.random();
     const peer1 = await createPeer(topic);
     const peer2 = await createPeer(topic);
@@ -51,7 +51,7 @@ describe('Presence', () => {
     });
   });
 
-  it('removes disconnected peers', async () => {
+  it('removes disconnected peers', async function () {
     const topic = PublicKey.random();
     const peer1 = await createPeer(topic);
     const peer2 = await createPeer(topic);

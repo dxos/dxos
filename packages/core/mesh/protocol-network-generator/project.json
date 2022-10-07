@@ -25,14 +25,27 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@dxos/mocha:mocha",
       "outputs": [
-        "packages/core/mesh/protocol-network-generator/coverage"
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
       ],
       "options": {
-        "jestConfig": "packages/core/mesh/protocol-network-generator/jest.config.ts",
-        "passWithNoTests": true
+        "ciEnvironments": ["nodejs"],
+        "testPatterns": [
+          "packages/core/mesh/protocol-network-generator/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/core/mesh/protocol-network-generator/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/core/mesh/protocol-network-generator",
+        "resultsPath": "test-results/packages/core/mesh/protocol-network-generator",
+        "coveragePath": "coverage/packages/core/mesh/protocol-network-generator"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "mocha"
+  ]
 }

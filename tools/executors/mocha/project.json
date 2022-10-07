@@ -22,7 +22,6 @@
     }
   },
   "implicitDependencies": [
-    "async",
     "log-hook"
   ]
 }

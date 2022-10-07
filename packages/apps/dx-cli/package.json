@@ -25,7 +25,6 @@
     "readme": "oclif readme",
     "run:cmd": "npm run build && ./bin/run config --config ./config/config.yml --json",
     "run:config": "npm run build && ./bin/run config --config ./config/config.yml --json",
-    "test": "toolchain test",
     "posttest": "npm run lint"
   },
   "dependencies": {

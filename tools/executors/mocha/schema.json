@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "testPatterns": {
+      "type": "array",
+      "description": "Globs of tests"
+    },
+    "environments": {
+      "type": "array",
+      "description": "Override which environments to run tests in"
+    },
+    "devEnvironments": {
+      "type": "array",
+      "description": "Environments to run tests in during development",
+      "default": ["nodejs"]
+    },
+    "ciEnvironments": {
+      "type": "array",
+      "description": "Environments to run tests in CI",
+      "default": ["nodejs", "chromium", "firefox", "webkit"]
+    },
+    "setup": {
+      "type": "string",
+      "description": "Setup script to run before tests"
+    },
+    "coverage": {
+      "type": "boolean",
+      "description": "Run tests with a code coverage tool",
+      "default": false
+    },
+    "coveragePath": {
+      "type": "string",
+      "description": "Where to save coverage outputs"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Rerun tests on source file changes",
+      "default": false
+    },
+    "watchFiles": {
+      "type": "array",
+      "description": "Glob of files to watch"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "Where to save test outputs"
+    },
+    "resultsPath": {
+      "type": "string",
+      "description": "Where to save test results"
+    },
+    "xmlReport": {
+      "type": "boolean",
+      "description": "Output xml results for tests & coverage (generally for CI consumption)",
+      "default": false
+    },
+    "timeout": {
+      "type": "number",
+      "description": "Mocha timeout in ms",
+      "default": 15000
+    },
+    "checkLeaks": {
+      "type": "boolean",
+      "description": "Check for global variable leaks",
+      "default": true
+    },
+    "forceExit": {
+      "type": "boolean",
+      "description": "Force Moch to quit after tests complete",
+      "default": false
+    },
+    "domRequired": {
+      "type": "boolean",
+      "description": "Register mock dom environment in Node test process",
+      "default": false
+    },
+    "stayOpen": {
+      "type": "boolean",
+      "description": "Keep browser window open after tests have completed",
+      "default": false
+    },
+    "headless": {
+      "type": "boolean",
+      "description": "Run browser environments in headless mode",
+      "default": true
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Enable debug logging",
+      "default": false
+    },
+    "browserArgs": {
+      "type": "array",
+      "description": "Arguments to pass to browser runner"
+    }
+  },
+  "required": [
+    "testPatterns",
+    "outputPath",
+    "resultsPath",
+    "coveragePath"
+  ]
+}

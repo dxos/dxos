@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { codec, MetadataStore } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
@@ -15,8 +14,8 @@ import { afterTest } from '@dxos/testutils';
 
 import { IdentityManager } from './identity-manager';
 
-describe('fubar/identity-manager', () => {
-  const setup = async ({
+describe('identity-manager', function () {
+  const setupPeer = async ({
     signalContext = new MemorySignalManagerContext(),
     storage = createStorage({ type: StorageType.RAM })
   }: {
@@ -46,8 +45,8 @@ describe('fubar/identity-manager', () => {
     };
   };
 
-  test('creates identity', async () => {
-    const { identityManager } = await setup();
+  it('creates identity', async function () {
+    const { identityManager } = await setupPeer();
     await identityManager.open();
     afterTest(() => identityManager.close());
 
@@ -55,16 +54,16 @@ describe('fubar/identity-manager', () => {
     expect(identity).toBeTruthy();
   });
 
-  test('reload from storage', async () => {
+  it('reload from storage', async function () {
     const storage = createStorage({ type: StorageType.RAM });
 
-    const peer1 = await setup({ storage });
+    const peer1 = await setupPeer({ storage });
     await peer1.identityManager.open();
     const identity1 = await peer1.identityManager.createIdentity();
     await peer1.identityManager.close();
     await peer1.feedStore.close();
 
-    const peer2 = await setup({ storage });
+    const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
     expect(peer2.identityManager.identity).toBeDefined();
     expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
@@ -73,13 +72,13 @@ describe('fubar/identity-manager', () => {
     // TODO(dmaretskyi): Check that identity is "alive" (space is working and can write mutations).
   });
 
-  test('admit another device', async () => {
+  it('admit another device', async function () {
     const signalContext = new MemorySignalManagerContext();
 
-    const peer1 = await setup({ signalContext });
+    const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
 
-    const peer2 = await setup({ signalContext });
+    const peer2 = await setupPeer({ signalContext });
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     const identity2 = await peer2.identityManager.acceptIdentity({

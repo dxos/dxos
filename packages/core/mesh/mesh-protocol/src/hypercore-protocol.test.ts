@@ -5,13 +5,12 @@
 import crypto from 'crypto';
 import expect from 'expect';
 import ProtocolStream from 'hypercore-protocol';
-import { it as test } from 'mocha';
 import pump from 'pump';
 
 import { createPromiseFromCallback } from '@dxos/async';
 
-describe('hypercore-protocol', () => {
-  test('Basic connection of two hypercore protocols', async () => {
+describe('hypercore-protocol', function () {
+  it('Basic connection of two hypercore protocols', async function () {
     let aliceHandshake = false;
     let bobHandshake = false;
     let aliceOptions = false;

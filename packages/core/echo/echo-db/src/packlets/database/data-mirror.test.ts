@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 
 import { promiseTimeout } from '@dxos/async';
 import { MockFeedWriter } from '@dxos/feed-store';
@@ -20,8 +19,8 @@ import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';
 import { ItemManager } from './item-manager';
 
-describe('DataMirror', () => {
-  test('basic', async () => {
+describe('DataMirror', function () {
+  it('basic', async function () {
     // Setup
     const modelFactory = new ModelFactory().registerModel(ObjectModel);
     const feed = new MockFeedWriter<EchoEnvelope>();

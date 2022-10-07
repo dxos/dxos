@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import { it as test } from 'mocha';
 import waitForExpect from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
@@ -16,8 +15,8 @@ import { SpaceProtocol } from './space-protocol';
 
 const signalContext = new MemorySignalManagerContext();
 
-describe('space/space-protocol', () => {
-  test('two peers discover each other', async () => {
+describe('space/space-protocol', function () {
+  it('two peers discover each other', async function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();
@@ -61,7 +60,7 @@ describe('space/space-protocol', () => {
     });
   });
 
-  test('failing authentication', async () => {
+  it('failing authentication', async function () {
     const topic = PublicKey.random();
 
     const peerId1 = PublicKey.random();

@@ -1,4 +1,3 @@
-/* eslint-disable jest/expect-expect */
 //
 // Copyright 2020 DXOS.org
 //
@@ -16,7 +15,7 @@ describe('Playwright tests for Wallet Extension', function () {
   let context: BrowserContext;
   let page: Page;
 
-  before(async () => {
+  before(async function () {
     const userDataDir = `/tmp/browser-mocha/${v4()}`;
     context = await chromium.launchPersistentContext(userDataDir, {
       headless: false, // Extensions do not work in headless mode.
@@ -28,12 +27,12 @@ describe('Playwright tests for Wallet Extension', function () {
     page = await context.newPage();
   });
 
-  it('Installs properly', async () => {
+  it('Installs properly', async function () {
     await page.goto(`chrome-extension://${await getExtensionId()}/popup/fullscreen.html`);
     await page.waitForSelector("//*[contains(text(),'Welcome to DXOS')]");
   });
 
-  after(async () => {
+  after(async function () {
     await page.close();
     await context.close();
   });

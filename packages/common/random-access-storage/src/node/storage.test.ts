@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// @dxos/mocha platform=nodejs
+
 import crypto from 'crypto';
 import del from 'del';
 import expect from 'expect';
@@ -23,17 +25,21 @@ const write = async (file: File, data = 'test') => {
   await expect(file.read(offset, buffer.length)).resolves.toEqual(buffer);
 };
 
-before(() => del(ROOT_DIRECTORY));
-after(() => del(ROOT_DIRECTORY));
+describe('testing node storage types', function () {
+  before(function () {
+    return del(ROOT_DIRECTORY);
+  });
+  after(function () {
+    return del(ROOT_DIRECTORY);
+  });
 
-describe('testing node storage types', () => {
-  it('create storage with node file by default', async () => {
+  it('create storage with node file by default', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     expect(storage.type).toBe(StorageType.NODE);
   });
 
-  it('create file', async () => {
+  it('create file', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -44,7 +50,7 @@ describe('testing node storage types', () => {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
   });
 
-  it('delete directory', async () => {
+  it('delete directory', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -57,7 +63,7 @@ describe('testing node storage types', () => {
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('destroy storage', async () => {
+  it('destroy storage', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -70,11 +76,11 @@ describe('testing node storage types', () => {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('should throw an assert error if invalid type for platform', () => {
+  it('should throw an assert error if invalid type for platform', function () {
     expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
   });
 
-  it('file exists and destroyes in subDirectory', async () => {
+  it('file exists and destroyes in subDirectory', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');

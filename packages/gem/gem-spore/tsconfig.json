@@ -8,6 +8,9 @@
     "outDir": "dist",
     "strict": false
   },
+  "exclude": [
+    "**/*.test.ts"
+  ],
   "include": [
     "src",
     "stories"

@@ -2,7 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { it as test } from 'mocha';
+// @dxos/mocha platform=nodejs
+
 import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
@@ -13,7 +14,7 @@ import { afterTest } from '@dxos/testutils';
 
 import { Client } from './packlets/proxies';
 
-const setup = async () => {
+const setupClient = async () => {
   const client = new Client();
   await client.initialize();
   afterTest(() => client.destroy());
@@ -24,12 +25,12 @@ const setup = async () => {
   };
 };
 
-describe.skip('Client Services', () => {
-  describe('device invitations', () => {
-    test('creates and joins a HALO invitation', async () => {
-      const inviter = await setup();
+describe.skip('Client Services', function () {
+  describe('device invitations', function () {
+    it('creates and joins a HALO invitation', async function () {
+      const inviter = await setupClient();
       afterTest(() => inviter.client.destroy());
-      const invitee = await setup();
+      const invitee = await setupClient();
       afterTest(() => invitee.client.destroy());
 
       await inviter.services.ProfileService.createProfile({ username: 'test-user' });
