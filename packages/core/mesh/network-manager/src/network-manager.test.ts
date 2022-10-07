@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// @dxos/mocha platform=nodejs
+
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
