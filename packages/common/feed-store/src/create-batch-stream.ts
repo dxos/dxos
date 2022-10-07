@@ -106,15 +106,13 @@ export const createBatchStream = (feed: HypercoreFeed, opts: CreateBatchStreamOp
   };
 
   const buildMessage = (data: object) => {
-    const message = {
+    return {
       key: PublicKey.from(feed.key),
       seq: seq++,
       data,
       sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
-
-    return message;
   };
 
   const cleanup = () => {

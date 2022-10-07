@@ -26,7 +26,8 @@ import {
   PeerInfo,
   Topology,
   SwarmInfo,
-  ConnectionLog
+  ConnectionLog,
+  createWebRTCTransportFactory
 } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { FullScreen } from '@dxos/react-components';
@@ -43,6 +44,7 @@ const createPeer = async (controlTopic: PublicKey, peerId: PublicKey, topologyFa
   await signalManager.subscribeMessages(peerId);
   const networkManager = new NetworkManager({
     signalManager,
+    transportFactory: createWebRTCTransportFactory(),
     log: true
   });
 

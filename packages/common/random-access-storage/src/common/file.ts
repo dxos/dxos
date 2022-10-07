@@ -4,7 +4,7 @@
 
 import promisify from 'pify';
 
-import { FileStat, RandomAccessFile } from './random-access-file';
+import { FileStat, RandomAccessFileImpl } from './random-access-file';
 
 /**
  * Random access file wrapper.
@@ -12,8 +12,12 @@ import { FileStat, RandomAccessFile } from './random-access-file';
  */
 export class File {
   constructor (
-    protected readonly _file: RandomAccessFile
+    protected readonly _file: RandomAccessFileImpl
   ) {}
+
+  get file () {
+    return this._file;
+  }
 
   get filename () {
     return this._file.filename;
@@ -38,7 +42,7 @@ export class File {
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  // TODO(burdon): Remove comment?
+  // TODO(burdon): Reconcile with RAS.
   async del (offset: number, size: number) {
     return promisify(this._file.del.bind(this._file))(offset, size);
   }
@@ -51,11 +55,11 @@ export class File {
     return promisify(this._file.stat.bind(this._file))();
   }
 
-  async close (): Promise<void> {
+  async close (): Promise<Error> {
     return promisify(this._file.close.bind(this._file))();
   }
 
-  async destroy () {
+  async destroy (): Promise<Error> {
     return promisify(this._file.destroy.bind(this._file))();
   }
 

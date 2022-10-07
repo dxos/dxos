@@ -65,13 +65,13 @@ describe('InMemoryTransport', function () {
     plugin1.on('receive', mockReceive);
 
     plugin2.on('connect', async (protocol) => {
-      await plugin2.send(peer1Id.asBuffer(), 'Foo');
+      await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
 
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
-      expect(received[1]).toBe('Foo');
+      expect(received[1]).toBe('{"message": "Hello"}');
     });
   });
 
@@ -87,13 +87,13 @@ describe('InMemoryTransport', function () {
       plugin1.on('receive', mockReceive);
 
       plugin2.on('connect', async (protocol) => {
-        await plugin2.send(peer1Id.asBuffer(), 'Foo');
+        await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
       });
 
       await waitForExpect(() => {
         expect(received.length).toBe(2);
         expect(received[0]).toBeInstanceOf(Protocol);
-        expect(received[1]).toBe('Foo');
+        expect(received[1]).toBe('{"message": "Hello"}');
       });
     }));
   });

@@ -17,7 +17,6 @@ const error = debug('dxos:stream:error');
 
 /**
  * Returns a stream that appends messages directly to a hypercore feed.
- * @param feed
  * @returns {NodeJS.WritableStream}
  */
 // TODO(burdon): Move to @dxos/codec.

@@ -3,7 +3,9 @@
 //
 // noinspection SpellCheckingInspection
 
-export type Callback<T> = (err: Error | null, data?: T) => void
+import { RandomAccessFileConstructor } from '@dxos/random-access-storage';
+
+export type Callback<T> = (err: Error | null, result?: T) => void
 export type EventCallback<T> = (data: T) => void
 
 export type Block = {
@@ -11,13 +13,17 @@ export type Block = {
   data: Buffer
 }
 
-export type Hypercore = (storage: any, key?: any, options?: any) => HypercoreFeed;
-
 /**
+ * We use hypercore version 9.12
  * https://hypercore-protocol.org
  * https://www.npmjs.com/package/hypercore/v/9.12.0
+ */
+// TODO(burdon): According to the docs, hypercore uses the random-access-file storage API.
+//  However the `del` method behaves differently than expected.
+export type Hypercore = (storageFactory: RandomAccessFileConstructor | string, publicKey?: any, options?: any) => HypercoreFeed;
+
+/**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0
- * NOTE: This closedly follows (but is not the same as) the RandomAccessFile typpe.
  */
 export interface HypercoreFeed {
   closed: boolean
@@ -37,7 +43,7 @@ export interface HypercoreFeed {
    */
   append (data: any, cb?: Callback<number>): void
 
-  close (cb?: NodeJS.ErrnoException): void
+  close (cb?: Error): void
 
   createReadStream (options?: any): NodeJS.ReadableStream
 
@@ -45,7 +51,7 @@ export interface HypercoreFeed {
   downloaded (start: number, end: number): boolean
 
   // TODO(burdon): Flush isn't used?
-  flush (cb?: NodeJS.ErrnoException): void
+  flush (cb?: Error): void
 
   /**
    * Gets a block of data.
