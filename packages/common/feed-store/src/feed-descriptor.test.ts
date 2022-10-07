@@ -15,7 +15,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import FeedDescriptor from './feed-descriptor';
+import { FeedDescriptor } from './feed-descriptor';
 
 describe('FeedDescriptor', function () {
   let fd: FeedDescriptor;

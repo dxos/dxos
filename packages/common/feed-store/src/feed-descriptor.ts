@@ -36,24 +36,23 @@ export class FeedDescriptor {
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
   private readonly _hypercore: Hypercore;
-  private readonly _lock: Lock;
   private readonly _disableSigning: boolean;
   private readonly _signer?: Signer;
 
+  private readonly _lock = new Lock();
   private _feed: HypercoreFeed | null;
 
-  constructor (options: FeedDescriptorOptions) {
-    const {
-      directory,
-      key,
-      secretKey,
-      valueEncoding,
-      hypercore = defaultHypercore,
-      disableSigning = false,
-      signer
-    } = options;
-    assert(!signer || !secretKey, 'Cannot use signer and secret_key at the same time.');
-    assert(!signer || !disableSigning, 'Signing cannot be disabled when signer is provided');
+  constructor ({
+    directory,
+    key,
+    secretKey,
+    valueEncoding,
+    hypercore = defaultHypercore,
+    disableSigning = false,
+    signer
+  }: FeedDescriptorOptions) {
+    assert(!signer || !secretKey, 'Cannot use signer and secretKey at the same time.');
+    assert(!signer || !disableSigning, 'Signing cannot be disabled when signer is provided.');
 
     this._directory = directory;
     this._valueEncoding = valueEncoding;
@@ -62,9 +61,6 @@ export class FeedDescriptor {
     this._secretKey = secretKey;
     this._disableSigning = !!disableSigning;
     this._signer = signer;
-
-    this._lock = new Lock();
-
     this._feed = null;
   }
 
@@ -188,5 +184,3 @@ export class FeedDescriptor {
     return pify(this._feed.append.bind(this._feed))(message);
   }
 }
-
-export default FeedDescriptor;
