@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { NetworkManager } from '@dxos/network-manager';
+import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
@@ -21,7 +21,8 @@ describe('ServiceContext', function () {
     storage?: Storage
   } = {}) => {
     const networkManager = new NetworkManager({
-      signalManager: new MemorySignalManager(signalContext)
+      signalManager: new MemorySignalManager(signalContext),
+      transportFactory: inMemoryTransportFactory
     });
 
     return new ServiceContext(
