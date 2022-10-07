@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import {resolve} from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { themePlugin } from '@dxos/react-ui/dist/src/plugin';
+import { themePlugin } from '@dxos/react-ui/plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
