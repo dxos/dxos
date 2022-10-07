@@ -6,5 +6,5 @@
   "gitRevision": "main",
   "githubPages": false,
   "entryPointStrategy": "packages",
-  "entryPoints": ["../packages/core/**/*", "../packags/sdk/*"]
+  "entryPoints": ["../packages/core/**/*", "../packages/sdk/*"]
 }

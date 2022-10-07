@@ -1,0 +1,444 @@
+# Package @dxos/react-toolkit
+
+        - @dxos/react-toolkit : Module
+- RegistrationStage : Enumeration
+- CHECK_SEED_PHRASE : Enumeration Member
+- ENTER_USERNAME : Enumeration Member
+- RESTORE : Enumeration Member
+- SHOW_SEED_PHRASE : Enumeration Member
+- START : Enumeration Member
+- ErrorBoundary : Class
+- constructor : Constructor
+- new ErrorBoundary : Constructor signature
+- props : Parameter
+- new ErrorBoundary : Constructor signature
+- props : Parameter
+- context : Parameter
+- context : Property
+- props : Property
+- refs : Property
+- __type : Type literal
+- __index : Index signature
+- key :
+- state : Property
+- __type : Type literal
+- errors : Property
+- fatal : Property
+- contextType : Property
+- defaultProps : Property
+- __type : Type literal
+- indicator : Property
+- __type : Type literal
+- __type : Call signature
+- __namedParameters : Parameter
+- onError : Property
+- onReload : Property
+- onReset : Property
+- view : Property
+- __type : Type literal
+- __type : Call signature
+- __namedParameters : Parameter
+- UNSAFE_componentWillMount : Method
+- UNSAFE_componentWillMount : Call signature
+- UNSAFE_componentWillReceiveProps : Method
+- UNSAFE_componentWillReceiveProps : Call signature
+- nextProps : Parameter
+- nextContext : Parameter
+- UNSAFE_componentWillUpdate : Method
+- UNSAFE_componentWillUpdate : Call signature
+- nextProps : Parameter
+- nextState : Parameter
+- nextContext : Parameter
+- componentDidCatch : Method
+- componentDidCatch : Call signature
+- err : Parameter
+- componentDidMount : Method
+- componentDidMount : Call signature
+- componentDidUpdate : Method
+- componentDidUpdate : Call signature
+- prevProps : Parameter
+- prevState : Parameter
+- snapshot : Parameter
+- componentWillMount : Method
+- componentWillMount : Call signature
+- componentWillReceiveProps : Method
+- componentWillReceiveProps : Call signature
+- nextProps : Parameter
+- nextContext : Parameter
+- componentWillUnmount : Method
+- componentWillUnmount : Call signature
+- componentWillUpdate : Method
+- componentWillUpdate : Call signature
+- nextProps : Parameter
+- nextState : Parameter
+- nextContext : Parameter
+- forceUpdate : Method
+- forceUpdate : Call signature
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- getSnapshotBeforeUpdate : Method
+- getSnapshotBeforeUpdate : Call signature
+- prevProps : Parameter
+- prevState : Parameter
+- render : Method
+- render : Call signature
+- setState : Method
+- setState : Call signature
+- K : Type parameter
+- state : Parameter
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- shouldComponentUpdate : Method
+- shouldComponentUpdate : Call signature
+- nextProps : Parameter
+- nextState : Parameter
+- nextContext : Parameter
+- IpfsHelper : Class
+- constructor : Constructor
+- new IpfsHelper : Constructor signature
+- ipfsGateway : Parameter
+- _ipfsGateway : Property
+- _fetch : Method
+- _fetch : Call signature
+- request : Parameter
+- cid : Parameter
+- download : Method
+- download : Call signature
+- cid : Parameter
+- upload : Method
+- upload : Call signature
+- body : Parameter
+- contentType : Parameter
+- url : Method
+- url : Call signature
+- cid : Parameter
+- RegistrySearchModel : Class
+- constructor : Constructor
+- new RegistrySearchModel : Constructor signature
+- _registry : Parameter
+- _filters : Parameter
+- _results : Property
+- _text : Property
+- _types : Property
+- _update : Property
+- results : Accessor
+- results : Get signature
+- types : Accessor
+- types : Get signature
+- doUpdate : Method
+- doUpdate : Call signature
+- initialize : Method
+- initialize : Call signature
+- setFilters : Method
+- setFilters : Call signature
+- filters : Parameter
+- setText : Method
+- setText : Call signature
+- text : Parameter
+- subscribe : Method
+- subscribe : Call signature
+- __type : Type literal
+- __type : Call signature
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- results : Parameter
+- ErrorContextState : Interface
+- addError : Property
+- __type : Type literal
+- __type : Call signature
+- error : Parameter
+- errors : Property
+- resetErrors : Property
+- __type : Type literal
+- __type : Call signature
+- ErrorIndicatorProps : Interface
+- errors : Property
+- onReset : Property
+- __type : Type literal
+- __type : Call signature
+- ErrorViewProps : Interface
+- context : Property
+- error : Property
+- issueLink : Property
+- onReload : Property
+- __type : Type literal
+- __type : Call signature
+- onReset : Property
+- __type : Type literal
+- __type : Call signature
+- title : Property
+- JoinDialogProps : Interface
+- closeOnSuccess : Property
+- invitationCode : Property
+- modal : Property
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- onJoin : Property
+- __type : Type literal
+- __type : Call signature
+- joinOptions : Parameter
+- open : Property
+- title : Property
+- JoinHaloDialogProps : Interface
+- closeOnSuccess : Property
+- invitationCode : Property
+- modal : Property
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- onJoin : Property
+- __type : Type literal
+- __type : Call signature
+- open : Property
+- JoinPartyDialogProps : Interface
+- closeOnSuccess : Property
+- invitationCode : Property
+- modal : Property
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- onJoin : Property
+- __type : Type literal
+- __type : Call signature
+- party : Parameter
+- open : Property
+- MemberRowProps : Interface
+- member : Property
+- onRemove : Property
+- __type : Type literal
+- __type : Call signature
+- PartySharingDialogProps : Interface
+- createUrl : Property
+- __type : Type literal
+- __type : Call signature
+- invitationCode : Parameter
+- invitations : Property
+- modal : Property
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- onCreateOfflineInvitation : Property
+- __type : Type literal
+- __type : Call signature
+- open : Property
+- partyKey : Property
+- PendingInvitationProps : Interface
+- createUrl : Property
+- __type : Type literal
+- __type : Call signature
+- invitationCode : Parameter
+- invitationCode : Property
+- onCancel : Property
+- __type : Type literal
+- __type : Call signature
+- pin : Property
+- ProfileDialogProps : Interface
+- onCancel : Property
+- __type : Type literal
+- __type : Call signature
+- onCreate : Property
+- __type : Type literal
+- __type : Call signature
+- __namedParameters : Parameter
+- __type : Type literal
+- username : Property
+- onJoinHalo : Property
+- __type : Type literal
+- __type : Call signature
+- open : Property
+- RegistrationDialogProps : Interface
+- debug : Property
+- initialStage : Property
+- modal : Property
+- onComplete : Property
+- __type : Type literal
+- __type : Call signature
+- seedPhrase : Parameter
+- username : Parameter
+- onJoinHalo : Property
+- __type : Type literal
+- __type : Call signature
+- onRestore : Property
+- __type : Type literal
+- __type : Call signature
+- seedPhrase : Parameter
+- open : Property
+- skipSeedCheck : Property
+- RegistrySearchPanelProps : Interface
+- clearOnSelect : Property
+- model : Property
+- onSelect : Property
+- __type : Type literal
+- __type : Call signature
+- resource : Parameter
+- version : Parameter
+- types : Property
+- versions : Property
+- RegistryTypeFilterProps : Interface
+- onSelectedChange : Property
+- __type : Type literal
+- __type : Call signature
+- selected : Parameter
+- selected : Property
+- types : Property
+- SharingDialogProps : Interface
+- createUrl : Property
+- __type : Type literal
+- __type : Call signature
+- invitationCode : Parameter
+- invitations : Property
+- members : Property
+- modal : Property
+- onCancelInvitation : Property
+- __type : Type literal
+- __type : Call signature
+- invitation : Parameter
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- onCreateBotInvitation : Property
+- __type : Type literal
+- __type : Call signature
+- resource : Parameter
+- onCreateInvitation : Property
+- __type : Type literal
+- __type : Call signature
+- onCreateOfflineInvitation : Property
+- __type : Type literal
+- __type : Call signature
+- open : Property
+- title : Property
+- HaloSharingDialogProps : Type alias
+- SearchFilter : Type alias
+- __type : Type literal
+- __type : Call signature
+- resource : Parameter
+- ErrorContext : Variable
+- isMobile : Variable
+- ErrorIndicator : Function
+- ErrorIndicator : Call signature
+- __namedParameters : Parameter
+- ErrorView : Function
+- ErrorView : Call signature
+- __namedParameters : Parameter
+- ExportDialog : Function
+- ExportDialog : Call signature
+- __namedParameters : Parameter
+- __type : Type literal
+- encrypter : Property
+- __type : Type literal
+- __type : Call signature
+- passphrase : Parameter
+- filename : Property
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- open : Property
+- GlobalErrorWrapper : Function
+- GlobalErrorWrapper : Call signature
+- __namedParameters : Parameter
+- __type : Type literal
+- children : Property
+- indicator : Property
+- HaloSharingDialog : Function
+- HaloSharingDialog : Call signature
+- props : Parameter
+- ImportDialog : Function
+- ImportDialog : Call signature
+- __namedParameters : Parameter
+- __type : Type literal
+- decrypter : Property
+- __type : Type literal
+- __type : Call signature
+- text : Parameter
+- passphrase : Parameter
+- onClose : Property
+- __type : Type literal
+- __type : Call signature
+- text : Parameter
+- open : Property
+- JoinDialog : Function
+- JoinDialog : Call signature
+- __namedParameters : Parameter
+- JoinHaloDialog : Function
+- JoinHaloDialog : Call signature
+- __namedParameters : Parameter
+- JoinPartyDialog : Function
+- JoinPartyDialog : Call signature
+- __namedParameters : Parameter
+- MemberRow : Function
+- MemberRow : Call signature
+- __namedParameters : Parameter
+- PartySharingDialog : Function
+- PartySharingDialog : Call signature
+- __namedParameters : Parameter
+- PendingInvitation : Function
+- PendingInvitation : Call signature
+- __namedParameters : Parameter
+- ProfileDialog : Function
+- ProfileDialog : Call signature
+- __namedParameters : Parameter
+- RegistrationDialog : Function
+- RegistrationDialog : Call signature
+- __namedParameters : Parameter
+- RegistrySearchPanel : Function
+- RegistrySearchPanel : Call signature
+- __namedParameters : Parameter
+- RegistryTypeFilter : Function
+- RegistryTypeFilter : Call signature
+- __namedParameters : Parameter
+- SharingDialog : Function
+- SharingDialog : Call signature
+- __namedParameters : Parameter
+- SpawnBotPanel : Function
+- SpawnBotPanel : Call signature
+- __namedParameters : Parameter
+- createDownloadLink : Function
+- createDownloadLink : Call signature
+- filename : Parameter
+- text : Parameter
+- createResourceFilter : Function
+- createResourceFilter : Call signature
+- __type : Type literal
+- __type : Call signature
+- resource : Parameter
+- domainExp : Parameter
+- resourceExp : Parameter
+- createTheme : Function
+- createTheme : Call signature
+- base : Parameter
+- getTypeName : Function
+- getTypeName : Call signature
+- __namedParameters : Parameter
+- handleKey : Function
+- handleKey : Call signature
+- __type : Type literal
+- __type : Call signature
+- event : Parameter
+- __type : Type literal
+- key : Property
+- key : Parameter
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- ordinal : Function
+- ordinal : Call signature
+- n : Parameter
+- pickUnique : Function
+- pickUnique : Call signature
+- T : Type parameter
+- array : Parameter
+- n : Parameter
+- useErrors : Function
+- useErrors : Call signature
+- usePartySerializer : Function
+- usePartySerializer : Call signature
+- useRegistrySearchModel : Function
+- useRegistrySearchModel : Call signature
+- registry : Parameter
+- filters : Parameter
+- deps : Parameter

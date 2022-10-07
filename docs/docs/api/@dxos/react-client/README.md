@@ -1,0 +1,95 @@
+# Package @dxos/react-client
+
+        - @dxos/react-client : Module
+- BotFactoryClientProviderProps : Interface
+- children : Property
+- ClientProviderProps : Interface
+- children : Property
+- client : Property
+- clientRef : Property
+- config : Property
+- onInitialize : Property
+- __type : Type literal
+- __type : Call signature
+- client : Parameter
+- options : Property
+- UseRegistryBotsProps : Interface
+- sortByKeywords : Property
+- ClientProvider : Type alias
+- BotFactoryClientContext : Variable
+- ClientContext : Variable
+- BotFactoryClientProvider : Function
+- BotFactoryClientProvider : Call signature
+- __namedParameters : Parameter
+- ClientProvider : Function
+- ClientProvider : Call signature
+- __namedParameters : Parameter
+- createBotFactoryClient : Function
+- createBotFactoryClient : Call signature
+- config : Parameter
+- useBotFactoryClient : Function
+- useBotFactoryClient : Call signature
+- required : Parameter
+- useClient : Function
+- useClient : Call signature
+- useConfig : Function
+- useConfig : Call signature
+- useContacts : Function
+- useContacts : Call signature
+- useDevtools : Function
+- useDevtools : Call signature
+- useHaloInvitations : Function
+- useHaloInvitations : Call signature
+- client : Parameter
+- useMembers : Function
+- useMembers : Call signature
+- party : Parameter
+- useParties : Function
+- useParties : Call signature
+- useParty : Function
+- useParty : Call signature
+- partyKey : Parameter
+- usePartyInvitations : Function
+- usePartyInvitations : Call signature
+- partyKey : Parameter
+- useProfile : Function
+- useProfile : Call signature
+- disableHaloLogin : Parameter
+- useReducer : Function
+- useReducer : Call signature
+- T : Type parameter
+- R : Type parameter
+- selection : Parameter
+- value : Parameter
+- deps : Parameter
+- useRegistryBotFactories : Function
+- useRegistryBotFactories : Call signature
+- useRegistryBots : Function
+- useRegistryBots : Call signature
+- props : Parameter
+- useResultSet : Function
+- useResultSet : Call signature
+- T : Type parameter
+- resultSet : Parameter
+- useSearchSelection : Function
+- useSearchSelection : Call signature
+- party : Parameter
+- search : Parameter
+- useSecretProvider : Function
+- useSecretProvider : Call signature
+- T : Type parameter
+- useSelection : Function
+- useSelection : Call signature
+- T : Type parameter
+- selection : Parameter
+- deps : Parameter
+- useStream : Function
+- useStream : Call signature
+- T : Type parameter
+- streamFactory : Parameter
+- __type : Type literal
+- __type : Call signature
+- defaultValue : Parameter
+- deps : Parameter
+- useWNSRegistry : Function
+- useWNSRegistry : Call signature

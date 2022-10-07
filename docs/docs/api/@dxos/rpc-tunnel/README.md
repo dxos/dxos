@@ -1,1 +1,68 @@
 # Package @dxos/rpc-tunnel
+
+        - @dxos/rpc-tunnel : Module
+- MessageChannel : Class
+- constructor : Constructor
+- new MessageChannel : Constructor signature
+- _setup : Parameter
+- __type : Type literal
+- __type : Call signature
+- channel : Parameter
+- port : Parameter
+- _handlers : Property
+- _nextId : Property
+- messagePorts : Property
+- addHandler : Method
+- addHandler : Call signature
+- id : Parameter
+- source : Parameter
+- handler : Parameter
+- __type : Type literal
+- __type : Call signature
+- data : Parameter
+- addPort : Method
+- addPort : Call signature
+- port : Parameter
+- onConnect : Method
+- onConnect : Call signature
+- event : Parameter
+- onMessage : Method
+- onMessage : Call signature
+- event : Parameter
+- removeHandler : Method
+- removeHandler : Call signature
+- id : Parameter
+- IFramePortOptions : Type alias
+- __type : Type literal
+- destination : Property
+- iframe : Property
+- origin : Property
+- source : Property
+- IFrameWorkerRelayOptions : Type alias
+- __type : Type literal
+- channel : Property
+- origin : Property
+- port : Property
+- MessageData : Type alias
+- __type : Type literal
+- payload : Property
+- source : Property
+- WorkerPortOptions : Type alias
+- __type : Type literal
+- channel : Property
+- destination : Property
+- port : Property
+- source : Property
+- createIFrame : Function
+- createIFrame : Call signature
+- source : Parameter
+- id : Parameter
+- createIFramePort : Function
+- createIFramePort : Call signature
+- __namedParameters : Parameter
+- createIFrameWorkerRelay : Function
+- createIFrameWorkerRelay : Call signature
+- __namedParameters : Parameter
+- createWorkerPort : Function
+- createWorkerPort : Call signature
+- __namedParameters : Parameter

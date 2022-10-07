@@ -1,0 +1,40 @@
+# Package @dxos/react-registry-client
+
+        - @dxos/react-registry-client : Module
+- BotData : Interface
+- created : Property
+- description : Property
+- dxn : Property
+- tag : Property
+- version : Property
+- Result : Interface
+- bots : Property
+- error : Property
+- RegistryContext : Type alias
+- __type : Type literal
+- accounts : Property
+- registry : Property
+- RegistryContext : Variable
+- RegistryInitializer : Function
+- RegistryInitializer : Call signature
+- __namedParameters : Parameter
+- RegistryProvider : Function
+- RegistryProvider : Call signature
+- __namedParameters : Parameter
+- useAccountClient : Function
+- useAccountClient : Call signature
+- useAuthorities : Function
+- useAuthorities : Call signature
+- useBots : Function
+- useBots : Call signature
+- useRecordTypes : Function
+- useRecordTypes : Call signature
+- filter : Parameter
+- useRecords : Function
+- useRecords : Call signature
+- filter : Parameter
+- useRegistry : Function
+- useRegistry : Call signature
+- useResources : Function
+- useResources : Call signature
+- filter : Parameter

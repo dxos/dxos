@@ -1,7 +1,8 @@
 import { ReflectionKind } from "typedoc";
+import { parseModuleSource } from "typedoc/dist/lib/converter/comments/declarationReference";
 import { Input, TemplateFunction, text } from ".";
 
-const t: TemplateFunction<Input> = ({ input }) => {
+const template: TemplateFunction<Input> = ({ input }) => {
   const modules = input.project.getReflectionsByKind(ReflectionKind.Module);
   return text`
 # DXOS
@@ -10,4 +11,4 @@ ${modules.map(m => `- ${m.getFriendlyFullName()}`)}
 `;
 };
 
-export default t;
+export default template;

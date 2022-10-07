@@ -1,0 +1,153 @@
+# Package @dxos/client-testing
+
+        - @dxos/client-testing : Module
+- TestType : Enumeration
+- Org : Enumeration Member
+- Person : Enumeration Member
+- Project : Enumeration Member
+- Task : Enumeration Member
+- OrgBuilder : Class
+- constructor : Constructor
+- new OrgBuilder : Constructor signature
+- _builder : Parameter
+- _org : Parameter
+- org : Accessor
+- org : Get signature
+- createPeople : Method
+- createPeople : Call signature
+- n : Parameter
+- createProjects : Method
+- createProjects : Call signature
+- n : Parameter
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- buidler : Parameter
+- PartyBuilder : Class
+- constructor : Constructor
+- new PartyBuilder : Constructor signature
+- _party : Parameter
+- party : Accessor
+- party : Get signature
+- createLink : Method
+- createLink : Call signature
+- source : Parameter
+- target : Parameter
+- createOrg : Method
+- createOrg : Call signature
+- createOrgs : Method
+- createOrgs : Call signature
+- n : Parameter
+- callback : Parameter
+- __type : Type literal
+- __type : Call signature
+- buidler : Parameter
+- createParty : Method
+- createParty : Call signature
+- createPerson : Method
+- createPerson : Call signature
+- org : Parameter
+- createProject : Method
+- createProject : Call signature
+- org : Parameter
+- createRandomItem : Method
+- createRandomItem : Call signature
+- parent : Parameter
+- createTask : Method
+- createTask : Call signature
+- project : Parameter
+- ProjectBuilder : Class
+- constructor : Constructor
+- new ProjectBuilder : Constructor signature
+- _builder : Parameter
+- _org : Parameter
+- _project : Parameter
+- project : Accessor
+- project : Get signature
+- createTasks : Method
+- createTasks : Call signature
+- n : Parameter
+- people : Parameter
+- SchemaBuilder : Class
+- constructor : Constructor
+- new SchemaBuilder : Constructor signature
+- _database : Parameter
+- defaultSchemas : Accessor
+- defaultSchemas : Get signature
+- __type : Type literal
+- __index : Index signature
+- schema :
+- createData : Method
+- createData : Call signature
+- customSchemas : Parameter
+- options : Parameter
+- __type : Type literal
+- __index : Index signature
+- key :
+- createItems : Method
+- createItems : Call signature
+- __namedParameters : Parameter
+- numItems : Parameter
+- createSchemas : Method
+- createSchemas : Call signature
+- customSchemas : Parameter
+- TreeRoot : Class
+- constructor : Constructor
+- new TreeRoot : Constructor signature
+- id : Parameter
+- children : Parameter
+- children : Property
+- id : Property
+- NumberRange : Type alias
+- Options : Type alias
+- __type : Type literal
+- numOrgs : Property
+- numPeople : Property
+- numProjects : Property
+- numTasks : Property
+- SchemaDefWithGenerator : Type alias
+- SchemaFieldWithGenerator : Type alias
+- TreeNode : Type alias
+- DefaultSchemaDefs : Variable
+- __type : Type literal
+- __index : Index signature
+- schema :
+- defaultTestOptions : Variable
+- array : Function
+- array : Call signature
+- length : Parameter
+- buildTestParty : Function
+- buildTestParty : Call signature
+- builder : Parameter
+- options : Parameter
+- capitalize : Function
+- capitalize : Call signature
+- text : Parameter
+- enumFromString : Function
+- enumFromString : Call signature
+- T : Type parameter
+- type : Parameter
+- __type : Type literal
+- __index : Index signature
+- s :
+- value : Parameter
+- getNumber : Function
+- getNumber : Call signature
+- n : Parameter
+- log : Function
+- log : Call signature
+- formatter : Parameter
+- args : Parameter
+- times : Function
+- times : Call signature
+- T : Type parameter
+- length : Parameter
+- constructor : Parameter
+- __type : Type literal
+- __type : Call signature
+- i : Parameter
+- treeLogger : Function
+- treeLogger : Call signature
+- node : Parameter
+- ancestors : Parameter
+- rows : Parameter

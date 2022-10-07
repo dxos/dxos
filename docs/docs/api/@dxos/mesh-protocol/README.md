@@ -1,1 +1,280 @@
 # Package @dxos/mesh-protocol
+
+        - @dxos/mesh-protocol : Module
+- ERR_EXTENSION_RESPONSE_FAILED : Class
+- constructor : Constructor
+- new ERR_EXTENSION_RESPONSE_FAILED : Constructor signature
+- extension : Parameter
+- responseCode : Parameter
+- responseMessage : Parameter
+- cause : Property
+- extension : Property
+- isNanoerror : Property
+- message : Property
+- name : Property
+- responseCode : Property
+- responseMessage : Property
+- stack : Property
+- prepareStackTrace : Property
+- __type : Type literal
+- __type : Call signature
+- err : Parameter
+- stackTraces : Parameter
+- stackTraceLimit : Property
+- captureStackTrace : Method
+- captureStackTrace : Call signature
+- targetObject : Parameter
+- constructorOpt : Parameter
+- equals : Method
+- equals : Call signature
+- error : Parameter
+- from : Method
+- from : Call signature
+- error : Parameter
+- Extension : Class
+- constructor : Constructor
+- new Extension : Constructor signature
+- name : Parameter
+- options : Parameter
+- [kCodec] : Property
+- _closeHandler : Property
+- _feedHandler : Property
+- _handshakeHandler : Property
+- _initHandler : Property
+- _messageHandler : Property
+- _name : Property
+- _protocol : Property
+- _protocolExtension : Property
+- _subscribeCb : Property
+- close : Property
+- emit : Property
+- nmOptions : Property
+- on : Property
+- open : Property
+- request : Property
+- userSchema : Property
+- name : Accessor
+- name : Get signature
+- _buildMessage : Method
+- _buildMessage : Call signature
+- message : Parameter
+- _close : Method
+- _close : Call signature
+- _onMessage : Method
+- _onMessage : Call signature
+- msg : Parameter
+- _open : Method
+- _open : Call signature
+- _send : Method
+- _send : Call signature
+- chunk : Parameter
+- _subscribe : Method
+- _subscribe : Call signature
+- next : Parameter
+- __type : Type literal
+- __type : Call signature
+- msg : Parameter
+- onFeed : Method
+- onFeed : Call signature
+- discoveryKey : Parameter
+- onHandshake : Method
+- onHandshake : Call signature
+- onInit : Method
+- onInit : Call signature
+- openWithProtocol : Method
+- openWithProtocol : Call signature
+- protocol : Parameter
+- send : Method
+- send : Call signature
+- message : Parameter
+- options : Parameter
+- __type : Type literal
+- oneway : Property
+- setCloseHandler : Method
+- setCloseHandler : Call signature
+- closeHandler : Parameter
+- setFeedHandler : Method
+- setFeedHandler : Call signature
+- feedHandler : Parameter
+- setHandshakeHandler : Method
+- setHandshakeHandler : Call signature
+- handshakeHandler : Parameter
+- setInitHandler : Method
+- setInitHandler : Call signature
+- initHandler : Parameter
+- setMessageHandler : Method
+- setMessageHandler : Call signature
+- messageHandler : Parameter
+- Protocol : Class
+- constructor : Constructor
+- new Protocol : Constructor signature
+- options : Parameter
+- _channel : Property
+- _connected : Property
+- _context : Property
+- _discoveryKey : Property
+- _discoveryToPublicKey : Property
+- _extensionInit : Property
+- _extensionMap : Property
+- _handshakes : Property
+- _init : Property
+- _initTimeout : Property
+- _initiator : Property
+- _isOpen : Property
+- _stream : Property
+- _streamOptions : Property
+- error : Property
+- extensionsHandshake : Property
+- extensionsInitialized : Property
+- handshake : Property
+- channel : Accessor
+- channel : Get signature
+- connected : Accessor
+- connected : Get signature
+- extensionNames : Accessor
+- extensionNames : Get signature
+- extensions : Accessor
+- extensions : Get signature
+- id : Accessor
+- id : Get signature
+- initiator : Accessor
+- initiator : Get signature
+- stream : Accessor
+- stream : Get signature
+- streamOptions : Accessor
+- streamOptions : Get signature
+- _extensionHandler : Method
+- _extensionHandler : Call signature
+- name : Parameter
+- message : Parameter
+- _handleError : Method
+- _handleError : Call signature
+- error : Parameter
+- _handshakeExtensions : Method
+- _handshakeExtensions : Call signature
+- _initExtensions : Method
+- _initExtensions : Call signature
+- userSession : Parameter
+- _openConnection : Method
+- _openConnection : Call signature
+- _openExtensions : Method
+- _openExtensions : Call signature
+- close : Method
+- close : Call signature
+- getContext : Method
+- getContext : Call signature
+- getExtension : Method
+- getExtension : Call signature
+- name : Parameter
+- getSession : Method
+- getSession : Call signature
+- init : Method
+- init : Call signature
+- open : Method
+- open : Call signature
+- setContext : Method
+- setContext : Call signature
+- context : Parameter
+- setExtension : Method
+- setExtension : Call signature
+- extension : Parameter
+- setExtensions : Method
+- setExtensions : Call signature
+- extensions : Parameter
+- setHandshakeHandler : Method
+- setHandshakeHandler : Call signature
+- handler : Parameter
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- toString : Method
+- toString : Call signature
+- waitForHandshake : Method
+- waitForHandshake : Call signature
+- ExtensionOptions : Interface
+- __index : Index signature
+- key :
+- schema : Property
+- ProtocolOptions : Interface
+- codec : Property
+- discoveryKey : Property
+- discoveryToPublicKey : Property
+- __type : Type literal
+- __type : Call signature
+- discoveryKey : Parameter
+- initTimeout : Property
+- initiator : Property
+- streamOptions : Property
+- userSession : Property
+- ProtocolStreamOptions : Interface
+- encrypted : Property
+- expectedFeeds : Property
+- id : Property
+- keyPair : Property
+- __type : Type literal
+- publicKey : Property
+- secretKey : Property
+- live : Property
+- noise : Property
+- onauthenticate : Property
+- __type : Type literal
+- __type : Call signature
+- remotePublicKey : Parameter
+- done : Parameter
+- onchannelclose : Property
+- __type : Type literal
+- __type : Call signature
+- discoveryKey : Parameter
+- publicKey : Parameter
+- ondiscoverykey : Property
+- __type : Type literal
+- __type : Call signature
+- discoveryKey : Parameter
+- onhandshake : Property
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- timeout : Property
+- CloseHandler : Type alias
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- FeedHandler : Type alias
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- discoveryKey : Parameter
+- HandshakeHandler : Type alias
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- InitHandler : Type alias
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- MessageHandler : Type alias
+- __type : Type literal
+- __type : Call signature
+- protocol : Parameter
+- message : Parameter
+- ERR_EXTENSION_CLOSE_FAILED : Variable
+- ERR_EXTENSION_FEED_FAILED : Variable
+- ERR_EXTENSION_HANDSHAKE_FAILED : Variable
+- ERR_EXTENSION_INIT_FAILED : Variable
+- ERR_EXTENSION_RESPONSE_TIMEOUT : Variable
+- ERR_PROTOCOL_CONNECTION_INVALID : Variable
+- ERR_PROTOCOL_EXTENSION_MISSING : Variable
+- ERR_PROTOCOL_HANDSHAKE_FAILED : Variable
+- ERR_PROTOCOL_INIT_INVALID : Variable
+- ERR_PROTOCOL_STREAM_CLOSED : Variable
+- createTestProtocolPair : Function
+- createTestProtocolPair : Call signature
+- extensions1 : Parameter
+- extensions2 : Parameter
+- getProtocolFromStream : Function
+- getProtocolFromStream : Call signature
+- stream : Parameter
+- pipeProtocols : Function
+- pipeProtocols : Call signature
+- a : Parameter
+- b : Parameter

@@ -1,5 +1,5 @@
 # Class `MemorySignalManagerContext`
-> Declared in package `@dxos/messaging`
+> Declared in [`packages/core/mesh/messaging/src/memory-signal-manager.ts`](https://github.com/dxos/protocols/blob/main/packages/core/mesh/messaging/src/memory-signal-manager.ts#L20)
 
 Common signaling context that connects multiple MemorySignalManager instances.
 
@@ -9,3 +9,11 @@ new MemorySignalManagerContext(
 
 )
 ```
+
+---
+- MemorySignalManagerContext : Class
+- constructor : Constructor
+- new MemorySignalManagerContext : Constructor signature
+- connections : Property
+- swarmEvent : Property
+- swarms : Property

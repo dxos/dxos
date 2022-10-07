@@ -1,1 +1,86 @@
 # Package @dxos/broadcast
+
+        - @dxos/broadcast : Module
+- Broadcast : Class
+- P : Type parameter
+- constructor : Constructor
+- new Broadcast : Constructor signature
+- P : Type parameter
+- middleware : Parameter
+- options : Parameter
+- _codec : Property
+- _id : Property
+- _isOpen : Property
+- _lookup : Property
+- _peers : Property
+- _seenSeqs : Property
+- _send : Property
+- _subscribe : Property
+- _unsubscribe : Property
+- packet : Property
+- send : Property
+- sendError : Property
+- subscribeError : Property
+- _onPacket : Method
+- _onPacket : Call signature
+- packetEncoded : Parameter
+- _publish : Method
+- _publish : Call signature
+- packet : Parameter
+- options : Parameter
+- __type : Type literal
+- close : Method
+- close : Call signature
+- open : Method
+- open : Call signature
+- pruneCache : Method
+- pruneCache : Call signature
+- publish : Method
+- publish : Call signature
+- data : Parameter
+- options : Parameter
+- updateCache : Method
+- updateCache : Call signature
+- opts : Parameter
+- updatePeers : Method
+- updatePeers : Call signature
+- peers : Parameter
+- CacheOptions : Interface
+- maxAge : Property
+- maxSize : Property
+- Middleware : Interface
+- P : Type parameter
+- lookup : Property
+- send : Property
+- subscribe : Property
+- Options : Interface
+- id : Property
+- maxAge : Property
+- maxSize : Property
+- Peer : Interface
+- id : Property
+- PublishOptions : Interface
+- seq : Property
+- LookupFn : Type alias
+- P : Type parameter
+- __type : Type literal
+- __type : Call signature
+- SendFn : Type alias
+- P : Type parameter
+- __type : Type literal
+- __type : Call signature
+- message : Parameter
+- peer : Parameter
+- options : Parameter
+- SubscribeFn : Type alias
+- P : Type parameter
+- __type : Type literal
+- __type : Call signature
+- onPacket : Parameter
+- __type : Type literal
+- __type : Call signature
+- packetEncoded : Parameter
+- updatePeers : Parameter
+- __type : Type literal
+- __type : Call signature
+- peers : Parameter

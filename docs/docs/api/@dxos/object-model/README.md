@@ -1,1 +1,239 @@
 # Package @dxos/object-model
+
+        - @dxos/object-model : Module
+- KeyValueUtil : Class
+- constructor : Constructor
+- new KeyValueUtil : Constructor signature
+- createMessage : Method
+- createMessage : Call signature
+- key : Parameter
+- value : Parameter
+- Matcher : Class
+- constructor : Constructor
+- new Matcher : Constructor signature
+- _options : Parameter
+- _matchItem : Method
+- _matchItem : Call signature
+- item : Parameter
+- predicate : Parameter
+- getFilter : Method
+- getFilter : Call signature
+- __type : Type literal
+- __type : Call signature
+- item : Parameter
+- query : Parameter
+- matchItems : Method
+- matchItems : Call signature
+- query : Parameter
+- items : Parameter
+- MutationBuilder : Class
+- constructor : Constructor
+- new MutationBuilder : Constructor signature
+- _model : Parameter
+- _mutations : Property
+- commit : Method
+- commit : Call signature
+- set : Method
+- set : Call signature
+- key : Parameter
+- value : Parameter
+- MutationUtil : Class
+- constructor : Constructor
+- new MutationUtil : Constructor signature
+- applyMutation : Method
+- applyMutation : Call signature
+- object : Parameter
+- mutation : Parameter
+- applyMutationSet : Method
+- applyMutationSet : Call signature
+- object : Parameter
+- message : Parameter
+- createFieldMutation : Method
+- createFieldMutation : Call signature
+- key : Parameter
+- value : Parameter
+- createMultiFieldMutation : Method
+- createMultiFieldMutation : Call signature
+- object : Parameter
+- ObjectModel : Class
+- constructor : Constructor
+- new ObjectModel : Constructor signature
+- _meta : Parameter
+- _itemId : Parameter
+- _getState : Parameter
+- __type : Type literal
+- __type : Call signature
+- _mutationWriter : Parameter
+- _getState : Property
+- __type : Type literal
+- __type : Call signature
+- update : Property
+- meta : Property
+- itemId : Accessor
+- itemId : Get signature
+- modelMeta : Accessor
+- modelMeta : Get signature
+- readOnly : Accessor
+- readOnly : Get signature
+- addToSet : Method
+- addToSet : Call signature
+- key : Parameter
+- value : Parameter
+- builder : Method
+- builder : Call signature
+- get : Method
+- get : Call signature
+- key : Parameter
+- defaultValue : Parameter
+- getProperty : Method
+- getProperty : Call signature
+- key : Parameter
+- defaultValue : Parameter
+- pushToArray : Method
+- pushToArray : Call signature
+- key : Parameter
+- value : Parameter
+- removeFromSet : Method
+- removeFromSet : Call signature
+- key : Parameter
+- value : Parameter
+- set : Method
+- set : Call signature
+- key : Parameter
+- value : Parameter
+- setProperties : Method
+- setProperties : Call signature
+- properties : Parameter
+- setProperty : Method
+- setProperty : Call signature
+- key : Parameter
+- value : Parameter
+- subscribe : Method
+- subscribe : Call signature
+- __type : Type literal
+- __type : Call signature
+- listener : Parameter
+- __type : Type literal
+- __type : Call signature
+- result : Parameter
+- toJSON : Method
+- toJSON : Call signature
+- __type : Type literal
+- id : Property
+- type : Property
+- toObject : Method
+- toObject : Call signature
+- toString : Method
+- toString : Call signature
+- write : Method
+- write : Call signature
+- mutation : Parameter
+- OrderedList : Class
+- constructor : Constructor
+- new OrderedList : Constructor signature
+- _model : Parameter
+- _property : Parameter
+- _unsubscribe : Property
+- __type : Type literal
+- __type : Call signature
+- _values : Property
+- update : Property
+- id : Accessor
+- id : Get signature
+- values : Accessor
+- values : Get signature
+- destroy : Method
+- destroy : Call signature
+- init : Method
+- init : Call signature
+- values : Parameter
+- insert : Method
+- insert : Call signature
+- left : Parameter
+- right : Parameter
+- refresh : Method
+- refresh : Call signature
+- remove : Method
+- remove : Call signature
+- values : Parameter
+- TextIndex : Class
+- constructor : Constructor
+- new TextIndex : Constructor signature
+- __namedParameters : Parameter
+- _cache : Property
+- _items : Property
+- _minisearch : Property
+- search : Method
+- search : Call signature
+- text : Parameter
+- update : Method
+- update : Call signature
+- items : Parameter
+- ValueUtil : Class
+- constructor : Constructor
+- new ValueUtil : Constructor signature
+- applyKeyValue : Method
+- applyKeyValue : Call signature
+- object : Parameter
+- keyValue : Parameter
+- applyValue : Method
+- applyValue : Call signature
+- object : Parameter
+- key : Parameter
+- value : Parameter
+- bool : Method
+- bool : Call signature
+- value : Parameter
+- bytes : Method
+- bytes : Call signature
+- value : Parameter
+- createMessage : Method
+- createMessage : Call signature
+- value : Parameter
+- datetime : Method
+- datetime : Call signature
+- value : Parameter
+- float : Method
+- float : Call signature
+- value : Parameter
+- getObjectValue : Method
+- getObjectValue : Call signature
+- __type : Type literal
+- value : Parameter
+- getScalarValue : Method
+- getScalarValue : Call signature
+- value : Parameter
+- integer : Method
+- integer : Call signature
+- value : Parameter
+- object : Method
+- object : Call signature
+- value : Parameter
+- string : Method
+- string : Call signature
+- value : Parameter
+- valueOf : Method
+- valueOf : Call signature
+- value : Parameter
+- ObjectProperties : Interface
+- get : Method
+- get : Call signature
+- key : Parameter
+- defaultValue : Parameter
+- set : Method
+- set : Call signature
+- key : Parameter
+- value : Parameter
+- Getter : Type alias
+- __type : Type literal
+- __type : Call signature
+- item : Parameter
+- path : Parameter
+- ObjectModelState : Type alias
+- removeKey : Function
+- removeKey : Call signature
+- object : Parameter
+- key : Parameter
+- validateKey : Function
+- validateKey : Call signature
+- key : Parameter

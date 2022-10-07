@@ -21,3 +21,15 @@
 - @dxos/rpc
 - @dxos/rpc-tunnel
 - @dxos/signal
+- @dxos/client
+- @dxos/client-services
+- @dxos/client-testing
+- @dxos/config
+- @dxos/react-client
+- @dxos/react-client-testing
+- @dxos/react-components
+- @dxos/react-echo-graph
+- @dxos/react-ipfs
+- @dxos/react-registry-client
+- @dxos/react-toolkit
+- @dxos/registry-client
