@@ -71,7 +71,7 @@ describe('Network manager', function () {
     webRTCProxyTests({ signalUrl: `ws://localhost:${PORT}/.well-known/dx/signal`, bridgeService: rpcClient.rpc.BridgeService });
   });
 
-  describe('In-memory transport', () => {
+  describe('In-memory transport', function () {
     inMemoryTests();
   }).timeout(30_000);
 });
