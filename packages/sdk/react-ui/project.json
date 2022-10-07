@@ -15,6 +15,17 @@
           "packages/sdk/react-ui/src/theme.css"
         ]
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/react-ui/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      }
     }
   }
 }
