@@ -5,7 +5,6 @@
 // @dxos/mocha platform=nodejs
 
 import expect from 'expect';
-import defaultHypercore from 'hypercore';
 import assert from 'node:assert';
 import pify from 'pify';
 import tempy from 'tempy';
