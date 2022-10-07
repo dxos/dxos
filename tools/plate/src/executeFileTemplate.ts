@@ -6,7 +6,7 @@ import path from 'path';
 // import { promises as fs } from "fs";
 import * as tsnode from 'ts-node';
 
-import { File, MaybePromise, promise } from '@dxos/file';
+import { File, MaybePromise, promise } from './file';
 
 export const TEMPLATE_REGEX = /(.*)\.t\.ts$/;
 
