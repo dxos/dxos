@@ -2,9 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import tailwindcssForms from '@tailwindcss/forms';
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import tailwindcss from 'tailwindcss';
+import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
 import { Plugin } from 'vite';
@@ -43,27 +45,37 @@ const themePlugin = (options: VitePluginTailwindOptions) => {
                       ...defaultConfig.theme.fontFamily.mono
                     ]
                   },
-                  colors: {
-                    neutral: tailwindColors.zinc,
-                    success: tailwindColors.emerald,
-                    warning: tailwindColors.amber,
-                    error: tailwindColors.red,
-                    info: tailwindColors.cyan,
-                    primary: {
-                      100: '#3a1d60',
-                      200: '#373885',
-                      300: '#2555a5',
-                      400: '#0071bb',
-                      500: '#008dc9',
-                      600: '#00a9d8',
-                      700: '#00c5e6',
-                      800: '#55dfec',
-                      900: '#96f7f0'
+                  extend: {
+                    colors: {
+                      neutral: tailwindColors.zinc,
+                      success: tailwindColors.emerald,
+                      warning: tailwindColors.amber,
+                      error: tailwindColors.red,
+                      info: tailwindColors.cyan,
+                      primary: {
+                        100: '#3a1d60',
+                        200: '#373885',
+                        300: '#2555a5',
+                        400: '#0071bb',
+                        500: '#008dc9',
+                        600: '#00a9d8',
+                        700: '#00c5e6',
+                        800: '#55dfec',
+                        900: '#96f7f0'
+                      },
+                      transparent: 'transparent',
+                      current: 'currentColor',
+                      white: '#ffffff',
+                      black: '#000000'
                     }
                   }
                 },
+                plugins: [tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
-                content: config.content
+                content: [
+                  'node_modules/@dxos/react-ui/dist/**/*.js',
+                  ...config.content
+                ]
               }),
               autoprefixer
             ]

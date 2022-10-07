@@ -11,7 +11,7 @@ import themePlugin from '@dxos/react-ui/dist/src/plugin';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   optimizeDeps: {
-    include: []
+    include: ['@dxos/react-ui']
   },
   build: {
     outDir: 'out/experimental/app/ui-consumer',
@@ -24,7 +24,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    themePlugin({content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']}),
+    themePlugin({content: ['@dxos/react-ui', './index.html', './src/**/*.{js,ts,jsx,tsx}']}),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
