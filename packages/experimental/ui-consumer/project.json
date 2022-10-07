@@ -8,6 +8,17 @@
         "outputPath": "packages/experimental/ui-consumer/out/ui-consumer",
         "configFile": "packages/experimental/ui-consumer/vite.config.ts"
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/ui-consumer/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      }
     }
   }
 }

@@ -3,6 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
+import {resolve} from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/dist/src/plugin';
@@ -11,6 +12,7 @@ import { themePlugin } from '@dxos/react-ui/dist/src/plugin';
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   optimizeDeps: {
+    force: true,
     include: ['@dxos/react-ui']
   },
   build: {
@@ -25,7 +27,10 @@ export default defineConfig({
   plugins: [
     react(),
     themePlugin({
-      content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']
+      content: [
+        resolve(__dirname, './index.html'),
+        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')
+      ]
     }),
     VitePWA({
       registerType: 'autoUpdate',

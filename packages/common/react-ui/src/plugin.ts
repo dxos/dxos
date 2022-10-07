@@ -9,7 +9,7 @@ import tailwindcss from 'tailwindcss';
 import tailwindcssRadix from 'tailwindcss-radix';
 import tailwindColors from 'tailwindcss/colors';
 import defaultConfig from 'tailwindcss/stubs/defaultConfig.stub.js';
-import { Plugin, ConfigEnv, UserConfig } from 'vite';
+import { Plugin } from 'vite';
 
 export interface VitePluginTailwindOptions {
   jit?: boolean
@@ -18,7 +18,7 @@ export interface VitePluginTailwindOptions {
   content: string[]
 }
 
-export const themePlugin: Plugin = (options: VitePluginTailwindOptions) => {
+export const themePlugin = (options: VitePluginTailwindOptions) => {
   const config: VitePluginTailwindOptions = {
     jit: true,
     cssPath: resolve(__dirname, './theme.css'),
@@ -28,7 +28,7 @@ export const themePlugin: Plugin = (options: VitePluginTailwindOptions) => {
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-    config: (_: UserConfig, env: ConfigEnv) => {
+    config: ({ root }, env) => {
       return {
         css: {
           postcss: {
@@ -73,7 +73,7 @@ export const themePlugin: Plugin = (options: VitePluginTailwindOptions) => {
                 plugins: [tailwindcssForms, tailwindcssRadix()],
                 ...(env.mode === 'development' && { mode: 'jit' }),
                 content: [
-                  'node_modules/@dxos/react-ui/dist/**/*.js',
+                  resolve(root || './', 'node_modules/@dxos/react-ui/dist/**/*.js'),
                   ...config.content
                 ]
               }),
@@ -83,10 +83,10 @@ export const themePlugin: Plugin = (options: VitePluginTailwindOptions) => {
         }
       };
     },
-    resolveId: (id: string) => {
+    resolveId: (id) => {
       if (id === config.virtualFileId) {
         return config.cssPath;
       }
     }
-  };
+  } as Plugin;
 };

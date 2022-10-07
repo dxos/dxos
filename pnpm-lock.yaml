@@ -770,6 +770,37 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
 
+  packages/common/react-ui:
+    specifiers:
+      '@fontsource/fira-code': ^4.5.12
+      '@fontsource/roboto-flex': ^4.5.2
+      '@headlessui/react': ^1.7.3
+      '@radix-ui/react-dialog': ^1.0.0
+      '@tailwindcss/forms': ^0.5.3
+      autoprefixer: ^10.4.12
+      classnames: ^2.3.2
+      phosphor-react: ^1.4.1
+      postcss: ^8.4.17
+      react: ^17.0.2
+      react-dom: ^17.0.2
+      tailwindcss: ^3.1.8
+      tailwindcss-radix: ^2.6.0
+    dependencies:
+      '@fontsource/fira-code': 4.5.12
+      '@fontsource/roboto-flex': 4.5.2
+      '@headlessui/react': 1.7.3_sfoxds7t5ydpegc3knd667wn6m
+      '@radix-ui/react-dialog': 1.0.0_sfoxds7t5ydpegc3knd667wn6m
+      '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
+      autoprefixer: 10.4.12_postcss@8.4.17
+      classnames: 2.3.2
+      phosphor-react: 1.4.1_react@17.0.2
+      postcss: 8.4.17
+      tailwindcss: 3.1.8
+      tailwindcss-radix: 2.6.0
+    devDependencies:
+      react: 17.0.2
+      react-dom: 17.0.2_react@17.0.2
+
   packages/common/testutils:
     specifiers:
       '@types/node': ^16.11.58
@@ -2235,7 +2266,7 @@ importers:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
     devDependencies:
-      '@dxos/react-ui': link:../../sdk/react-ui
+      '@dxos/react-ui': link:../../common/react-ui
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9
@@ -3145,37 +3176,6 @@ importers:
       '@types/url-join': 4.0.1
       '@types/uuid': 8.3.3
       babel-plugin-add-module-exports: 1.0.4
-      react: 17.0.2
-      react-dom: 17.0.2_react@17.0.2
-
-  packages/sdk/react-ui:
-    specifiers:
-      '@fontsource/fira-code': ^4.5.12
-      '@fontsource/roboto-flex': ^4.5.2
-      '@headlessui/react': ^1.7.3
-      '@radix-ui/react-dialog': ^1.0.0
-      '@tailwindcss/forms': ^0.5.3
-      autoprefixer: ^10.4.12
-      classnames: ^2.3.2
-      phosphor-react: ^1.4.1
-      postcss: ^8.4.17
-      react: ^17.0.2
-      react-dom: ^17.0.2
-      tailwindcss: ^3.1.8
-      tailwindcss-radix: ^2.6.0
-    dependencies:
-      '@fontsource/fira-code': 4.5.12
-      '@fontsource/roboto-flex': 4.5.2
-      '@headlessui/react': 1.7.3_sfoxds7t5ydpegc3knd667wn6m
-      '@radix-ui/react-dialog': 1.0.0_sfoxds7t5ydpegc3knd667wn6m
-      '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
-      autoprefixer: 10.4.12_postcss@8.4.17
-      classnames: 2.3.2
-      phosphor-react: 1.4.1_react@17.0.2
-      postcss: 8.4.17
-      tailwindcss: 3.1.8
-      tailwindcss-radix: 2.6.0
-    devDependencies:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
 

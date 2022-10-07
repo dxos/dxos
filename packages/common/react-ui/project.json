@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/sdk/react-ui/src",
+  "sourceRoot": "packages/common/react-ui/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,11 +8,11 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/sdk/react-ui/dist",
-        "tsConfig": "packages/sdk/react-ui/tsconfig.json",
-        "main": "packages/sdk/react-ui/src/index.ts",
+        "outputPath": "packages/common/react-ui/dist",
+        "tsConfig": "packages/common/react-ui/tsconfig.json",
+        "main": "packages/common/react-ui/src/index.ts",
         "assets": [
-          "packages/sdk/react-ui/src/theme.css"
+          "packages/common/react-ui/src/theme.css"
         ]
       }
     },
@@ -23,7 +23,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/react-ui/src/**/*.{js,jsx,ts,tsx}"
+          "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
         ]
       }
     }

@@ -70,7 +70,7 @@
     "react-ipfs": "packages/sdk/react-ipfs",
     "react-registry-client": "packages/sdk/react-registry-client",
     "react-toolkit": "packages/sdk/react-toolkit",
-    "react-ui": "packages/sdk/react-ui",
+    "react-ui": "packages/common/react-ui",
     "registry-client": "packages/sdk/registry-client",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/core/mesh/rpc",
