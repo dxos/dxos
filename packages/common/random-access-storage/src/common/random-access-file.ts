@@ -29,4 +29,4 @@ export interface RandomAccessFileImpl extends RandomAccessFile {
   filename: string
 }
 
-export type RandomAccessFileConstructor = (filename: string, opts?: {}) => RandomAccessFileImpl
+export type RandomAccessFileConstructor = (filename: string, opts?: {}) => RandomAccessFile

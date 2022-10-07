@@ -42,7 +42,7 @@ export class File {
    * // Truncate it at offset 1 with size 2.
    * await file.del(1, 2); // Truncate, file will have content Buffer([a]) because 1 + 2 >= 3.
    */
-  // TODO(burdon): Reconcile with RAS.
+  // TODO(burdon): Remove this comment after speaking with Mykola.
   async del (offset: number, size: number) {
     return promisify(this._file.del.bind(this._file))(offset, size);
   }

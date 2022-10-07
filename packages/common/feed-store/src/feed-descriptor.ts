@@ -10,7 +10,7 @@ import pify from 'pify';
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { Directory, RandomAccessFileConstructor, RandomAccessFileImpl } from '@dxos/random-access-storage';
+import { Directory, RandomAccessFile, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import type { Hypercore, HypercoreFeed } from './hypercore';
 import type { ValueEncoding } from './types';
@@ -129,21 +129,10 @@ export class FeedDescriptor {
   /**
    * Defines the real path where the Hypercore is going to work with the RandomAccessStorage specified.
    */
-  private _createStorage (dir = ''): (name: string) => RandomAccessFileImpl {
+  private _createStorage (dir = ''): (name: string) => RandomAccessFile {
     return (name) => {
       const file = this._directory.createOrOpenFile(`${dir}/${name}`);
       return file.file;
-
-      // TODO(burdon): This just undoes promisify.
-      // return {
-      //   write: callbackify(file.write.bind(file)),
-      //   read: callbackify(file.read.bind(file)),
-      //   del: callbackify(file.del.bind(file)),
-      // truncate: callbackify(file.truncate.bind(file)),
-      // stat: callbackify(file.stat.bind(file)),
-      // close: callbackify(file.close.bind(file)),
-      // destroy: callbackify(file.destroy.bind(file))
-      // }
     };
   }
 

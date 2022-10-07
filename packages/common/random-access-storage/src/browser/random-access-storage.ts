@@ -4,21 +4,21 @@
 
 import { join } from 'node:path';
 
-import { AbstractStorage, File, RandomAccessFileConstructor } from '../common';
+import { AbstractStorage, File, RandomAccessFileImpl } from '../common';
 
 /**
  * Base class for random access files based on IDB.
  * https://www.npmjs.com/package/abstract-random-access
  */
 export abstract class RandomAccessStorage extends AbstractStorage {
-  private readonly _fileStorage: RandomAccessFileConstructor;
+  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessFileImpl;
 
   constructor (path: string) {
     super(path);
     this._fileStorage = this._createFileStorage(path);
   }
 
-  protected abstract _createFileStorage (path: string): RandomAccessFileConstructor;
+  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessFileImpl;
 
   protected _createFile (filename: string, path: string): File {
     const fullPath = join(path, filename);
