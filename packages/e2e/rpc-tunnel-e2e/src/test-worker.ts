@@ -3,12 +3,27 @@
 //
 
 import { schema } from '@dxos/protocols';
-import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
+import { createProtoRpcPeer } from '@dxos/rpc';
+import { PortMuxer } from '@dxos/rpc-tunnel';
 
+import { Channels } from './channels';
 import { TestClient } from './test-client';
 
-const setup = async (port: RpcPort, client: TestClient) => {
+const clientOne = new TestClient();
+const clientTwo = new TestClient({ value: 10050 });
+
+onconnect = async event => {
+  const muxer = new PortMuxer(event.ports[0]);
+
+  await Promise.all([
+    setup(muxer, Channels.ONE, clientOne),
+    setup(muxer, Channels.TWO, clientTwo)
+  ]);
+};
+
+const setup = async (muxer: PortMuxer, channel: string, client: TestClient) => {
+  const port = muxer.createPort({ channel });
+
   const server = createProtoRpcPeer({
     requested: {},
     exposed: {
@@ -20,18 +35,3 @@ const setup = async (port: RpcPort, client: TestClient) => {
 
   await server.open();
 };
-
-const channel = new MessageChannel(async (channel, port) => {
-  await Promise.all([
-    setup(
-      createWorkerPort({ channel, port, source: 'child', destination: 'parent' }),
-      new TestClient()
-    ),
-    setup(
-      createWorkerPort({ channel, port, source: 'router', destination: 'proxy' }),
-      new TestClient({ value: 10050 })
-    )
-  ]);
-});
-
-onconnect = event => channel.onConnect(event);

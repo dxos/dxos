@@ -11,6 +11,7 @@ import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
+import { Channels } from './channels';
 import { TestClient } from './test-client';
 
 const IN_IFRAME = window.parent !== window;
@@ -23,7 +24,10 @@ const App = () => {
 
   useAsyncEffect(async () => {
     if (IN_IFRAME) {
-      const port = createIFramePort({ origin: 'http://localhost:5173' });
+      const port = createIFramePort({
+        origin: 'http://localhost:5173',
+        channel: Channels.ONE
+      });
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {
@@ -39,7 +43,11 @@ const App = () => {
 
       client.subscribe(value => setValue(String(value)));
     } else {
-      const port = await createIFramePort({ iframe: iframeRef.current!, origin: 'http://localhost:5173' });
+      const port = await createIFramePort({
+        iframe: iframeRef.current!,
+        origin: 'http://127.0.0.1:5173',
+        channel: Channels.ONE
+      });
       const client = createProtoRpcPeer({
         requested: {
           TestStreamService: schema.getService('example.testing.rpc.TestStreamService')
@@ -81,9 +89,9 @@ const App = () => {
         <iframe
           ref={iframeRef}
           id='test-iframe'
-          // If main app is loaded from localhost, localhost is cross-origin.
+          // If main app is loaded from localhost, 127.0.0.1 is cross-origin.
           //   https://stackoverflow.com/a/5268240/2804332
-          src='http://localhost:5173/iframe.html'
+          src='http://127.0.0.1:5173/iframe.html'
           style={{
             flexGrow: 1
           }}

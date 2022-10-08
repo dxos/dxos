@@ -2,17 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
+import { log } from '@dxos/log';
 import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
 
-const log = debug('dxos:rpc-tunnel:iframe-port');
-
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
-    log('IFrame content window missing', { origin });
+    log.debug('IFrame content window missing', { origin });
     return;
   }
 
@@ -27,31 +24,25 @@ const sendToParentWindow = (origin: string, message: MessageData) => {
 export type IFramePortOptions = {
   origin: string
   iframe?: HTMLIFrameElement
-  source?: string
-  destination?: string
+  channel: string
 }
 
 /**
  * Create a RPC port with an iframe over window messaging.
  * @param options.origin Origin of destination window.
  * @param options.iframe Instance of the iframe if sending to child.
- * @param options.source Identifier for sent messages.
- * @param options.destination Listen for recieved messages with this source.
+ * @param options.channel Identifier for sent/recieved messages.
  * @returns RPC port for messaging.
  */
 export const createIFramePort = ({
   origin,
   iframe,
-  source: maybeSource,
-  destination: maybeDestination
+  channel
 }: IFramePortOptions): RpcPort => {
-  const source = maybeSource ?? (iframe ? 'parent' : 'child');
-  const destination = maybeDestination ?? (iframe ? 'child' : 'parent');
-
   return {
     send: async data => {
       const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-      const message = { source, payload };
+      const message = { channel, payload };
       if (iframe) {
         sendToIFrame(iframe, origin, message);
       } else {
@@ -61,11 +52,11 @@ export const createIFramePort = ({
     subscribe: callback => {
       const handler = (event: MessageEvent<MessageData>) => {
         const message = event.data;
-        if (message.source !== destination) {
+        if (message.channel !== channel) {
           return;
         }
 
-        log(`Received message from ${destination}:`, message);
+        log.debug('Received message', message);
         callback(new Uint8Array(message.payload));
       };
 
