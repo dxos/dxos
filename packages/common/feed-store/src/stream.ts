@@ -5,7 +5,7 @@
 import debug from 'debug';
 import { Readable, Transform, Writable } from 'readable-stream';
 
-import type { HypercoreFeed } from './hypercore';
+import type { HypercoreFeed } from '@dxos/hypercore';
 
 const error = debug('dxos:stream:error');
 

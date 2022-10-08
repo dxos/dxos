@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import { ProtocolExtension } from 'hypercore-protocol';
+import type { ProtocolExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 import assert from 'node:assert';
 

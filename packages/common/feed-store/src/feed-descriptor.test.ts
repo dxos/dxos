@@ -5,10 +5,10 @@
 // @dxos/mocha platform=nodejs
 
 import expect from 'expect';
-import { HypercoreFeed } from 'packages/common/feed-store/src/hypercore';
 import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
+import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';

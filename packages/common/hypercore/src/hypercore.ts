@@ -3,12 +3,13 @@
 //
 // noinspection SpellCheckingInspection
 
+import * as events from 'events';
+
 import { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 // TODO(burdon): Reconcile with mesh-protoco shimd.d.ts
 
 export type Callback<T> = (err: Error | null, result?: T) => void
-export type EventCallback<T> = (data: T) => void
 
 export type Block = {
   seq: number
@@ -30,8 +31,12 @@ export type ReplicateOptions = {
 
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0
+ *
+ * Events
+ * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
-export interface HypercoreFeed {
+// TODO(burdon): Replace with TS defs.
+export interface HypercoreFeed extends events.EventEmitter {
   closed: boolean
   discoveryKey: Buffer
   head: any
@@ -39,7 +44,6 @@ export interface HypercoreFeed {
   length: number
   opened: boolean
   readable: boolean
-  ready: any
   secretKey: Buffer
 
   /**
@@ -49,7 +53,9 @@ export interface HypercoreFeed {
    */
   append (data: any, cb?: Callback<number>): void
 
-  close (cb?: Error): void
+  open (cb?: Callback<void>): void
+  close (cb?: Callback<void>): void
+  ready (cb?: Callback<void>): void
 
   createReadStream (options?: any): NodeJS.ReadableStream
 
@@ -74,17 +80,9 @@ export interface HypercoreFeed {
   getBatch (start: number, end: number, ...args: any[]): any
 
   /**
-   * Events.
-   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
-   */
-  on (event: string, cb: EventCallback<any>): any
-
-  removeListener (event: string, cb: EventCallback<any>): any
-
-  /**
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
    */
-  replicate (initiator: boolean, options: ReplicateOptions): NodeJS.ReadWriteStream
+  replicate (initiator: boolean, options?: ReplicateOptions): NodeJS.ReadWriteStream
 
   undownload (range: any): void
 }

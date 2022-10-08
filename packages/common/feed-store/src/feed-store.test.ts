@@ -15,13 +15,13 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { createKeyPair, verifySignature } from '@dxos/crypto';
+import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore';
 
 interface KeyPair {
   key: PublicKey

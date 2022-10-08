@@ -556,6 +556,7 @@ importers:
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -578,7 +579,9 @@ importers:
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
+      '@dxos/crypto': link:../crypto
       '@dxos/debug': link:../debug
+      '@dxos/hypercore': link:../hypercore
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
       '@dxos/random-access-storage': link:../random-access-storage
@@ -593,7 +596,6 @@ importers:
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/crypto': link:../crypto
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/protocols': link:../../core/protocols
       '@types/debug': 4.1.7
@@ -603,6 +605,25 @@ importers:
       '@types/readable-stream': 2.3.9
       faker: 5.5.3
       tempy: 1.0.1
+
+  packages/common/hypercore:
+    specifiers:
+      '@dxos/crypto': workspace:*
+      '@dxos/keys': workspace:*
+      '@dxos/random-access-storage': workspace:*
+      '@types/randombytes': ^2.0.0
+      assert: ^2.0.0
+      hypercore: ^9.12.0
+      pify: ~5.0.0
+    dependencies:
+      '@dxos/crypto': link:../crypto
+      '@dxos/keys': link:../keys
+      '@dxos/random-access-storage': link:../random-access-storage
+      assert: 2.0.0
+      hypercore: 9.12.0
+      pify: 5.0.0
+    devDependencies:
+      '@types/randombytes': 2.0.0
 
   packages/common/keys:
     specifiers:

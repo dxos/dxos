@@ -10,10 +10,10 @@ import pify from 'pify';
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
+import type { Hypercore, HypercoreFeed } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Directory, RandomAccessFile, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
-import type { Hypercore, HypercoreFeed } from './hypercore';
 import type { ValueEncoding } from './types';
 
 type FeedDescriptorOptions = {
@@ -48,8 +48,8 @@ export class FeedDescriptor {
     directory,
     key,
     secretKey,
-    valueEncoding,
-    hypercore = defaultHypercore, // TODO(burdon): Rename constructor.
+    valueEncoding, // TODO(burdon): Default or required?
+    hypercore = defaultHypercore, // TODO(burdon): Remove.
     disableSigning = false,
     signer
   }: FeedDescriptorOptions) {
@@ -194,7 +194,7 @@ export class FeedDescriptor {
     this._feed = feed;
 
     // Wait until ready.
-    await pify(feed.ready.bind(feed))();
+    await pify(feed.open.bind(feed))();
 
     return feed;
   }

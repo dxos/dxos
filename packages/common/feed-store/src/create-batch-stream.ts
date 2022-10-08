@@ -125,7 +125,7 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
   };
 
   const open = (size: any, cb: (err: Error) => void) => {
-    feed.ready((err: Error) => {
+    feed.ready(err => {
       if (err) {
         return cb(err);
       }

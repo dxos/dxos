@@ -21,7 +21,9 @@
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/hypercore": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
@@ -37,7 +39,6 @@
   "devDependencies": {
     "@dxos/benchmark-suite": "^1.0.0-beta.1",
     "@dxos/browser-runner": "^1.0.0-beta.13",
-    "@dxos/crypto": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",

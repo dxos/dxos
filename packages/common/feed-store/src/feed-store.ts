@@ -7,12 +7,12 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/crypto';
+import type { Hypercore } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
-import type { Hypercore } from './hypercore';
 import type { ValueEncoding } from './types';
 
 export type CreateDescriptorOptions = {
@@ -60,7 +60,7 @@ export class FeedStore {
   constructor (directory: Directory, { hypercore, valueEncoding }: FeedStoreOptions = {}) {
     assert(directory);
     this._directory = directory;
-    this._hypercore = hypercore ?? defaultHypercore;
+    this._hypercore = hypercore ?? defaultHypercore; // TODO(burdon): Remove.
     this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
   }
 

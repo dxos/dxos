@@ -10,6 +10,7 @@ import pify from 'pify';
 
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
+import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { schema, createTestItemMutation, FeedMessageBlock, Timeframe } from '@dxos/protocols';
@@ -18,7 +19,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { HypercoreFeed } from './hypercore';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 

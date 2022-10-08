@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
-import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamOptions as ProtocolStreamOptionsDef } from 'hypercore-protocol';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
@@ -23,15 +23,17 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
-export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
+export interface ProtocolStreamOptions extends ProtocolStreamOptionsDef {
   /**
    * You can use this to detect if you connect to yourself.
    */
   id?: Buffer
+
   /**
    * Signal to the other peer that you want to keep this stream open forever.
    */
   live?: boolean
+
   /**
    * Match the discovery_key with a public_key to do the handshake.
    */
@@ -40,6 +42,7 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
 
 export interface ProtocolOptions {
   discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
+
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
@@ -55,6 +58,7 @@ export interface ProtocolOptions {
   codec?: Codec<any>
 
   initiator: boolean
+
   userSession?: Record<string, any>
 }
 
@@ -71,7 +75,7 @@ export class Protocol {
   readonly handshake = new Event<this>();
 
   private readonly _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
-  private readonly _streamOptions: ProtocolStreamCtorOpts | undefined;
+  private readonly _streamOptions: ProtocolStreamOptions | undefined;
   private readonly _initTimeout: number;
   private readonly _initiator!: boolean;
   private readonly _discoveryKey?: Buffer;

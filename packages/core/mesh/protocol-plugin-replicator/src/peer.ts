@@ -93,7 +93,8 @@ export class Peer {
       stream.expectedFeeds = stream.feeds.length + 1;
     }
 
-    feedDescriptor.feed.replicate(replicateOptions);
+    // TODO(burdon): These options don't match the API.
+    feedDescriptor.feed.replicate(replicateOptions as any);
     this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
 
     log('stream replicated', feedDescriptor.key.toHex());

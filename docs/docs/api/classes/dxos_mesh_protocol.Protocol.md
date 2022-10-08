@@ -162,7 +162,7 @@ ___
 
 ### \_streamOptions
 
- `Private` `Readonly` **\_streamOptions**: `undefined` \| `ProtocolStreamCtorOpts`
+ `Private` `Readonly` **\_streamOptions**: `undefined` \| `ProtocolStreamOptions`
 
 #### Defined in
 
@@ -310,11 +310,11 @@ ___
 
 ### streamOptions
 
-`get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamCtorOpts`
+`get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamOptions`
 
 #### Returns
 
-{ `id`: `any`  } & `ProtocolStreamCtorOpts`
+{ `id`: `any`  } & `ProtocolStreamOptions`
 
 #### Defined in
 

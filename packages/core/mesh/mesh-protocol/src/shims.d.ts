@@ -29,7 +29,7 @@ declare module 'hypercore-protocol' {
     extension: (id: number, message: Buffer) => any;
   }
 
-  export interface ProtocolStreamCtorOpts {
+  export interface ProtocolStreamOptions {
     live?: boolean
     // Set to false to disable encryption if you are already piping through a encrypted stream.
     encrypted?: true
@@ -80,12 +80,11 @@ declare module 'hypercore-protocol' {
     state: any;
     destroyed: boolean;
 
-    constructor(initiator?: boolean, opts?: ProtocolStreamCtorOpts);
+    constructor(initiator?: boolean, opts?: ProtocolStreamOptions);
 
     open (key: any, handlers: ChannelHandlers): Channel;
     destroy (error?: any);
     finalize();
-
     registerExtension(name: string, handlers?: ExtensionHandlers): Extension;
   }
 
