@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { defaultConfig, LogConfig, LogContext, LogLevel, LogMetadata, LogProcessor, LogProcessorType } from './config';
-import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors';
+import { defaultConfig, LogConfig, LogContext, LogLevel, LogMetadata, LogProcessor, LogProcessorType } from './config.js';
+import { CONSOLE_PROCESSOR, DEBUG_PROCESSOR } from './processors/index.js';
 
 export type Logger = (message: string, ctx?: LogContext, meta?: LogMetadata) => void
 

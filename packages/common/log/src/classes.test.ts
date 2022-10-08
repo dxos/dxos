@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { log } from './log';
-import { debugInfo, ownershipClass } from './ownership';
+import { log } from './log.js';
+import { debugInfo, ownershipClass } from './ownership.js';
 
 describe('classes', function () {
   it('field instance', function () {

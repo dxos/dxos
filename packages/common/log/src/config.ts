@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { OwnershipScope } from './ownership';
+import type { OwnershipScope } from './ownership.js';
 
 export interface LogMetadata {
   file: string

@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { inspect } from 'node:util';
 
-import { LogLevel, LogProcessor, shouldLog } from '../config';
+import { LogLevel, LogProcessor, shouldLog } from '../config.js';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.DEBUG]: 'gray',

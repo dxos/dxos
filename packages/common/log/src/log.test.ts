@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { log } from './log';
+import { log } from './log.js';
 
 // TODO(burdon): Override with LOG_FILTER
 // import { LogLevel } from './config';
@@ -13,7 +13,7 @@ describe('log', function () {
     log.warn('LOG LINE 13');
 
     try {
-      throw new Error('ERROR ON LINE 16');
+      throw new Error('ERROR ON LINE 16, LOG LINE 18');
     } catch (err: any) {
       log.catch(err);
     }
