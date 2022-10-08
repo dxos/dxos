@@ -73,8 +73,6 @@ class TraceInjector extends Visitor {
   }
 
   override visitProgram (node: Program) {
-    console.log("RUN plugin", { filename: this.filename, code: this.code });
-
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;

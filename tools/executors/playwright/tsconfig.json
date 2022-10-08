@@ -1,7 +1,10 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+
+    // Compile executors to CommonJS, so that NX can load them correctly.
+    "module": "CommonJS"
   },
   "include": [
     "src"

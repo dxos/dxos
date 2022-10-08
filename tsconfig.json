@@ -11,7 +11,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "CommonJS",
+    "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
@@ -20,6 +20,10 @@
     "strict": true,
     "stripInternal": true,
     "target": "ES2018"
+  },
+  "ts-node": {
+    "swc": true,
+    "esm": true
   },
   "include": [
     "**/*.ts",

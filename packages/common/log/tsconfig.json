@@ -4,17 +4,11 @@
     "lib": [
       "DOM"
     ],
-    "module": "ESNext", 
-    "moduleResolution": "node",
-    "target": "ESNext",
     "outDir": "dist"
-  },
-  "ts-node": {
-    "swc": true
   },
   "include": [
     "src",
     "test"
-],
+  ],
   "references": []
 }
