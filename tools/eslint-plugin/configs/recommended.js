@@ -27,6 +27,7 @@ module.exports = {
     'brace-style': ['error', '1tbs'],
     'func-call-spacing': 'off',
     'import/export': 'off',
+    'import/extensions': ['error', 'ignorePackages'],
     'import/newline-after-import': ['error', {
       count: 1
       // TODO(wittjosiah): This option exists but seems unreleased.
