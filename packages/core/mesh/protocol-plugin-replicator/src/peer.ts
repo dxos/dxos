@@ -16,7 +16,10 @@ export class Peer {
 
   readonly closed = new Event();
 
-  constructor (private _protocol: Protocol, private _extension: Extension) {}
+  constructor (
+    private _protocol: Protocol,
+    private _extension: Extension
+  ) {}
 
   get feeds () {
     return this._feeds;
@@ -66,12 +69,12 @@ export class Peer {
 
   /**
    * Replicate a feed.
-   * @param {FeedDescriptor} feed
-   * @returns {boolean} - true if `feed.replicate` was called.
+   * @param {FeedDescriptor} feedDescriptor
+   * @returns {boolean} - true if `feed.replicate` was called and succeeds.
    * @private
    */
-  _replicate (feed: FeedDescriptor): boolean {
-    if (!feed || !feed.feed.replicate) { // TODO(burdon): What does this test?
+  _replicate (feedDescriptor: FeedDescriptor): boolean {
+    if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
       return false;
     }
 
@@ -81,7 +84,7 @@ export class Peer {
       return false;
     }
 
-    if (this._feeds.has(feed.key.toHex())) {
+    if (this._feeds.has(feedDescriptor.key.toHex())) {
       return true;
     }
 
@@ -90,11 +93,10 @@ export class Peer {
       stream.expectedFeeds = stream.feeds.length + 1;
     }
 
-    feed.feed.replicate(replicateOptions);
+    feedDescriptor.feed.replicate(replicateOptions);
+    this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
 
-    this._feeds.set(feed.key.toHex(), feed);
-
-    log('stream replicated', feed.key.toHex());
+    log('stream replicated', feedDescriptor.key.toHex());
     return true;
   }
 }

@@ -28,6 +28,7 @@ type FeedDescriptorOptions = {
 /**
  * Abstract handler for an Hypercore feed.
  */
+// TODO(burdon): Rename FeedWrapper (and hide hypercore).
 export class FeedDescriptor {
   private readonly _directory: Directory;
   private readonly _key: PublicKey;

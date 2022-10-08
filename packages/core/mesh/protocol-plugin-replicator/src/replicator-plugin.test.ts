@@ -99,7 +99,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     append: (msg: any) => feed.append(msg),
     getMessages: () => {
       const messages: any[] = [];
-      const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor.feed)));
+      const stream = multi.obj(Array.from((feedStore as any)._descriptors.values()).map((descriptor: any) => createBatchStream(descriptor)));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });

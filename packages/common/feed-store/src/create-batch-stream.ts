@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/keys';
 
-import { HypercoreFeed } from './hypercore';
+import { FeedDescriptor } from './feed-descriptor';
 
 export type CreateBatchStreamOptions = {
   start?: number
@@ -19,8 +19,9 @@ export type CreateBatchStreamOptions = {
   tail?: boolean
 }
 
-export const createBatchStream = (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) => {
+export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchStreamOptions = {}) => {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
+  const { feed } = descriptor;
 
   let start = opts.start || 0;
   let end = typeof opts.end === 'number' ? opts.end : -1;

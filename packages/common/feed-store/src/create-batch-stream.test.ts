@@ -11,17 +11,19 @@ import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { createBatchStream } from './create-batch-stream';
+import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore';
 
-const createFeed = async () => {
+const createFeed = async (): Promise<FeedDescriptor> => {
   const keyring = new Keyring();
   const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
-  const { feed } = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
-  return feed;
+  return await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 };
 
-const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
+const append = (descriptor: FeedDescriptor, message: any) => {
+  const feed = descriptor.feed;
+  pify(feed.append.bind(feed))(message);
+};
 
 describe('Batch stream', function () {
   it('Single message', async function () {

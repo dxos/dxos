@@ -137,10 +137,9 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
 
     log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}`);
 
-    assert(descriptor.feed, 'Feed is not initialized');
+    assert(descriptor.feed, 'Feed not initialized.');
     const stream = new Readable({ objectMode: true })
-      // TODO(wittjosiah): Type this.
-      .wrap(createBatchStream(descriptor.feed, { live: true, start: startIdx }) as any);
+      .wrap(createBatchStream(descriptor, { live: true, start: startIdx }) as any);
 
     this._openFeeds.set(descriptor.key.toHex(), {
       descriptor,
