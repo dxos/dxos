@@ -1,0 +1,12 @@
+diff --git a/dist/transpilers/swc.js b/dist/transpilers/swc.js
+index eeddd4fbb2f18a7e8b20bb628d5f5c806ae20594..5994f236d6b035a0cede0f95fbe13bba24b62d11 100644
+--- a/dist/transpilers/swc.js
++++ b/dist/transpilers/swc.js
+@@ -41,6 +41,7 @@ function create(createOptions) {
+         const { code, map } = swcInstance.transformSync(input, {
+             ...swcOptions,
+             filename: fileName,
++            plugin: typeof global.SWC_PLUGIN === 'function' ? global.SWC_PLUGIN({ fileName, input }) : undefined,
+         });
+         return { outputText: code, sourceMapText: map };
+     };
