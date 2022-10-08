@@ -8,12 +8,20 @@ import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 import { loadSync } from 'sorcery';
 
-import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess, registerGlobalPlugin } from './preprocessor';
+
+//
+// Here be dragons.
+//
+
 
 // TODO(dmaretskyi): Move to separate package in tools.
-
-// Here be dragons.
 export const register = () => {
+  // Register plugin to be read by the patched ts-node/esm loader.
+  // Sets SWC_PLUGIN global.
+  registerGlobalPlugin();
+
+  // Register commonjs require hook.
   addHook((code, filename) => {
     try {
       const output = preprocess(code, filename);

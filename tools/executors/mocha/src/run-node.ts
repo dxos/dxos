@@ -44,8 +44,13 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
     //   We want the logger preprocessor to be run on typescript source first.
     //   Then the SWC will transpile the typescript source to javascript.
-    // '-r', '@dxos/log-hook/register',
-    // '-r', 'ts-node/register/transpile-only',
+
+    // This will register a hook that will be consumed by ts-node/esm loader.
+    // The hook injects logger line numbers into the source code.
+    '-r', '@dxos/log-hook/register.cjs',
+
+    // TODO(dmaretskyi): Remove this once we don't have any CJS tests.
+    '-r', '@swc-node/register',
 
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CallExpression, Expression, Import, Program, Span, Super, transformSync, TsType } from '@swc/core';
+import { CallExpression, Expression, Import, Plugin, Program, Span, Super, transformSync, TsType } from '@swc/core';
 import Visitor from '@swc/core/Visitor';
 
 export const preprocess = (code: string, filename: string) => {
@@ -20,6 +20,21 @@ export const preprocess = (code: string, filename: string) => {
     }
   });
 };
+
+type GlobalPluginOpts = {
+  fileName: string,
+  input: string
+}
+
+declare global {
+  const SWC_PLUGIN: ((opts: GlobalPluginOpts) => Plugin) | undefined;
+}
+
+export function registerGlobalPlugin() {
+  // This will be called by the patched ts-node/esm loader.
+  (global as any).SWC_PLUGIN = ({ fileName, input }: GlobalPluginOpts): Plugin =>
+    (m) => new TraceInjector(fileName, input).visitProgram(m);
+}
 
 const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 
@@ -58,6 +73,8 @@ class TraceInjector extends Visitor {
   }
 
   override visitProgram (node: Program) {
+    console.log("RUN plugin", { filename: this.filename, code: this.code });
+
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;
@@ -100,9 +117,8 @@ class TraceInjector extends Visitor {
                   span: ZERO_SPAN
                 },
                 value: {
-                  type: 'Identifier',
-                  value: '__filename',
-                  optional: false,
+                  type: 'StringLiteral',
+                  value: this.filename,
                   span: ZERO_SPAN
                 }
               },
