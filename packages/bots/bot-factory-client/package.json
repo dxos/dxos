@@ -27,7 +27,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
-    "@koush/wrtc": "^0.5.3",
+    "@koush/wrtc": "0.5.3",
     "@types/debug": "^4.1.7",
     "jsonify": "^0.0.0"
   },
