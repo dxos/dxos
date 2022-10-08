@@ -16,7 +16,7 @@ import { createFeedWriter } from './feed-writer';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
-describe('Feed tests:', function () {
+describe('Feed tests.', function () {
   it('codec', function () {
     const message1: FeedMessage = {
       timeframe: new Timeframe(),

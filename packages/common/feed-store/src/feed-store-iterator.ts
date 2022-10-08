@@ -29,6 +29,13 @@ export type MessageSelector<T> = (candidates: FeedBlock<T>[]) => number | undefi
 
 export type FeedSelector = (descriptor: FeedDescriptor) => boolean
 
+type FeedState<T> = {
+  descriptor: FeedDescriptor
+  iterator: AsyncIterator<FeedBlock<T>[]>
+  sendQueue: FeedBlock<T>[] // TODO(burdon): Why "send"?
+  frozen: boolean
+}
+
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
  * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
@@ -36,18 +43,16 @@ export type FeedSelector = (descriptor: FeedDescriptor) => boolean
  */
 // TODO(marik-d): Add stop method.
 export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
-  /** Curent set of active feeds. */
+  // Currently active feeds.
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
 
-  /** Feed key as hex => feed state */
-  private readonly _openFeeds = new Map<string, {
-    descriptor: FeedDescriptor
-    iterator: AsyncIterator<FeedBlock<T>[]>
-    sendQueue: FeedBlock<T>[] // TODO(burdon): Why "send"?
-    frozen: boolean
-  }>();
+  // Indexed by hex key.
+  private readonly _openFeeds = new Map<string, FeedState<T>>();
 
+  // Triggers polling the active feeds (e.g., when a new feed is added).
   private readonly _trigger = new Trigger();
+
+  // TODO(burdon): Document.
   private readonly _generatorInstance = this._generator();
 
   /**
@@ -108,41 +113,43 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
 
     return new Timeframe(
       Array.from(this._openFeeds.values())
-        .filter(feed => feed.descriptor.feed.length > 0)
-        .map(feed => [feed.descriptor.key, feed.descriptor.feed.length - 1])
+        .filter(state => state.descriptor.length > 0)
+        .map(state => [
+          state.descriptor.key,
+          state.descriptor.length - 1
+        ])
     );
   }
 
   // TODO(burdon): Comment.
   private _reevaluateFeeds () {
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    for (const [keyHex, feed] of this._openFeeds) {
-      if (!this._feedSelector(feed.descriptor)) {
-        feed.frozen = true;
+    for (const [, state] of this._openFeeds) {
+      if (!this._feedSelector(state.descriptor)) {
+        state.frozen = true;
       }
     }
 
     // Get candidate snapshot since we will be mutating the collection.
-    for (const descriptor of Array.from(this._candidateFeeds.values())) {
-      if (this._feedSelector(descriptor)) {
-        void this._startReadingFromFeed(descriptor);
-        this._candidateFeeds.delete(descriptor);
+    for (const feedDescriptor of Array.from(this._candidateFeeds.values())) {
+      if (this._feedSelector(feedDescriptor)) {
+        void this._startReadingFromFeed(feedDescriptor);
+        this._candidateFeeds.delete(feedDescriptor);
       }
     }
   }
 
-  private async _startReadingFromFeed (descriptor: FeedDescriptor) {
-    const frameSeq = this._skipTimeframe.get(PublicKey.from(descriptor.key));
+  private async _startReadingFromFeed (feedDescriptor: FeedDescriptor) {
+    const frameSeq = this._skipTimeframe.get(PublicKey.from(feedDescriptor.key));
     const startIdx = frameSeq !== undefined ? frameSeq + 1 : 0;
 
-    log(`Starting reading from feed ${descriptor.key.toString()} from sequence ${startIdx}`);
+    log(`Starting reading from feed ${feedDescriptor.key.toString()} from sequence ${startIdx}`);
 
-    assert(descriptor.feed, 'Feed not initialized.');
+    assert(feedDescriptor.initialized, 'Feed not initialized.');
     const stream = new Readable({ objectMode: true })
-      .wrap(createBatchStream(descriptor, { live: true, start: startIdx }) as any);
+      .wrap(createBatchStream(feedDescriptor, { live: true, start: startIdx }) as any);
 
-    this._openFeeds.set(descriptor.key.toHex(), {
-      descriptor,
+    this._openFeeds.set(feedDescriptor.key.toHex(), {
+      descriptor: feedDescriptor,
       iterator: stream[Symbol.asyncIterator](),
       sendQueue: [],
       frozen: false
@@ -155,8 +162,8 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
   private _getMessageCandidates () {
     const openFeeds = Array.from(this._openFeeds.values());
     return openFeeds
-      .filter(feed => !feed.frozen && feed.sendQueue.length > 0)
-      .map(feed => feed.sendQueue[0]);
+      .filter(state => !state.frozen && state.sendQueue.length > 0)
+      .map(state => state.sendQueue[0]);
   }
 
   /**
@@ -177,14 +184,13 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
 
     const pickedCandidate = candidates[selected];
     // TODO(wittjosiah): Is actually a Buffer for some reason. See todo in FeedBlock.
-    const feed = this._openFeeds.get(pickedCandidate.key.toHex());
-    assert(feed);
+    const state = this._openFeeds.get(pickedCandidate.key.toHex());
+    assert(state);
 
-    return feed.sendQueue.shift();
+    return state.sendQueue.shift();
   }
 
   /**
-   *
    * @private
    */
   // TODO(burdon): Comment.

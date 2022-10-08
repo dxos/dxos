@@ -88,7 +88,7 @@ describe('feed store iterator', function () {
       iterator.addFeedDescriptor(descriptor);
     }));
 
-    log(JSON.stringify({
+    log('?????????????', JSON.stringify({
       config,
       feeds: Array.from(feeds.keys()).map(feedKey => feedKey.toHex())
     }, undefined, 2));

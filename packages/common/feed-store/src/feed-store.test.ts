@@ -29,25 +29,29 @@ interface KeyPair {
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
+const keyring = new Keyring();
+
 const createFeedStore = (storage: Storage, options = {}) => {
   return new FeedStore(storage.createDirectory('feed'), options);
 };
 
 const createDefault = async () => {
   const directory = tempy.directory();
-
   return {
     directory,
     feedStore: createFeedStore(createStorage({ type: StorageType.NODE, root: directory }), { valueEncoding: 'utf-8' })
   };
 };
-const keyring = new Keyring();
 
-const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>):
-  Promise<Record<string, FeedDescriptor>> =>
-  Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
-    [feed, await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)]
-  )));
+const createFeeds = async (
+  feedStore: FeedStore,
+  keys: Record<string, KeyPair>
+): Promise<Record<string, FeedDescriptor>> => {
+  return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) => [
+    feed,
+    await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)
+  ])));
+};
 
 const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
@@ -75,7 +79,7 @@ describe.skip('FeedStore', function () {
 
   it('Create feed', async function () {
     const { feedStore } = await createDefault();
-    const { booksFeed: descriptor } = await defaultFeeds(feedStore, keys);
+    const { booksFeed: descriptor } = await createFeeds(feedStore, keys);
     const { feed: booksFeed } = descriptor;
 
     expect(booksFeed).toBeInstanceOf(hypercore);
@@ -119,7 +123,7 @@ describe.skip('FeedStore', function () {
 
   it('Descriptors', async function () {
     const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
+    await createFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
       .toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key)
@@ -128,7 +132,7 @@ describe.skip('FeedStore', function () {
 
   it('Feeds', async function () {
     const { feedStore } = await createDefault();
-    const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore, keys);
+    const { booksFeed, usersFeed, groupsFeed } = await createFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
       .toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
@@ -136,7 +140,7 @@ describe.skip('FeedStore', function () {
 
   it('Close feedStore and their feeds', async function () {
     const { feedStore } = await createDefault();
-    await defaultFeeds(feedStore, keys);
+    await createFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(3);
     await feedStore.close();
@@ -286,6 +290,7 @@ describe.skip('FeedStore', function () {
           key: key.toString(),
           result: await verifySignature(key, data, signature)
         });
+
         callbackify(verifySignature)(key, data, signature, cb);
       }
     };

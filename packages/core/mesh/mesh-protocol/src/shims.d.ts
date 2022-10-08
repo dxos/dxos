@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+declare module 'buffer-json-encoding';
+
 declare module 'nanoerror' {
   export declare class Nanoerror extends Error {
     constructor(...args: any[]);
@@ -16,7 +18,8 @@ declare module 'nanoerror' {
   export = nanoerror;
 }
 
-declare module 'buffer-json-encoding';
+declare module 'nanomessage';
+declare module 'signal-promise';
 
 declare module 'hypercore-protocol' {
   import events = require('events');
@@ -88,7 +91,3 @@ declare module 'hypercore-protocol' {
 
   export = ProtocolStream;
 }
-
-declare module 'nanomessage';
-
-declare module 'signal-promise';

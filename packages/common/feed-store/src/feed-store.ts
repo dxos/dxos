@@ -31,13 +31,10 @@ export type CreateReadOnlyFeedOptions = {
 }
 
 export type FeedStoreOptions = {
-  /**
-   * Encoding type for each feed.
-   */
+  // Encoding type for each feed.
   valueEncoding?: ValueEncoding
-  /**
-   * Hypercore class to use.
-   */
+
+  // Hypercore class to use.
   hypercore?: Hypercore
 }
 
@@ -48,23 +45,23 @@ export type FeedStoreOptions = {
  * into a persist repository storage.
  */
 export class FeedStore {
-  // TODO(dmaretskyi): Convert to ComplexMap.
+  // TODO(dmaretskyi): Convert to ComplexMap (i.e., use PublicKey as index).
   private readonly _descriptors: Map<string, FeedDescriptor> = new Map();
 
   private readonly _directory: Directory;
-  private readonly _valueEncoding: ValueEncoding | undefined;
   private readonly _hypercore: Hypercore;
+  private readonly _valueEncoding: ValueEncoding | undefined;
 
   /**
    * Emitted when a new feed represented by FeedDescriptor is opened.
    */
   readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
-  constructor (directory: Directory, { valueEncoding, hypercore }: FeedStoreOptions = {}) {
+  constructor (directory: Directory, { hypercore, valueEncoding }: FeedStoreOptions = {}) {
     assert(directory);
     this._directory = directory;
-    this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
     this._hypercore = hypercore ?? defaultHypercore;
+    this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
   }
 
   get storage () {
@@ -81,7 +78,7 @@ export class FeedStore {
    * Create a feed to Feedstore
    * @deprecated Use openReadWriteFeedWithSigner instead.
    */
-  // TODO(burdon): ???
+  // TODO(burdon): Remove.
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
     throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
     // const descriptor = this._descriptors.get(key.toHex());
@@ -94,7 +91,7 @@ export class FeedStore {
   /**
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
-  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer) {
+  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer): Promise<FeedDescriptor> {
     log('open read/write feed', { key });
     if (this._descriptors.has(key.toHex())) {
       const descriptor = this._descriptors.get(key.toHex())!;
@@ -118,8 +115,8 @@ export class FeedStore {
   /**
    * Factory to create a new FeedDescriptor.
    */
-  private async _createDescriptor ({ key, secretKey, signer }: CreateDescriptorOptions) {
-    const descriptor = new FeedDescriptor({
+  private async _createDescriptor ({ key, secretKey, signer }: CreateDescriptorOptions): Promise<FeedDescriptor> {
+    const feedDescriptor = new FeedDescriptor({
       directory: this._directory,
       key,
       secretKey,
@@ -128,18 +125,15 @@ export class FeedStore {
       hypercore: this._hypercore
     });
 
-    this._descriptors.set(
-      descriptor.key.toString(),
-      descriptor
-    );
+    this._descriptors.set(feedDescriptor.key.toString(), feedDescriptor);
 
-    await descriptor.open();
-    this.feedOpenedEvent.emit(descriptor);
-
-    return descriptor;
+    await feedDescriptor.open();
+    this.feedOpenedEvent.emit(feedDescriptor);
+    return feedDescriptor;
   }
 }
 
+// TODO(burdon): Document.
 const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;
