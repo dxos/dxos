@@ -7,7 +7,7 @@ import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { createProtoRpcPeer } from '@dxos/rpc';
@@ -39,48 +39,50 @@ export class HaloInvitations {
       topic: swarmKey,
       peerId: swarmKey,
       topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
-        log('Inviter connected');
-        const peer = createProtoRpcPeer({
-          requested: {
-            InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
-          },
-          exposed: {
-            InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
-          },
-          handlers: {
-            InviterInvitationService: {
-              admitDevice: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
-                log('Admit device', { deviceKey });
-                await identity.controlPipeline.writer.write({
-                  '@type': 'dxos.echo.feed.CredentialsMessage',
-                  credential: await identity.getIdentityCredentialSigner().createCredential({
-                    subject: deviceKey,
-                    assertion: {
-                      '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                      identityKey: identity.identityKey,
-                      deviceKey
-                    }
-                  })
-                });
-                // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
+      protocol: createProtocolFactory(swarmKey, swarmKey, [
+        new RpcPlugin(async (port) => {
+          log('Inviter connected');
+          const peer = createProtoRpcPeer({
+            requested: {
+              InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
+            },
+            exposed: {
+              InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
+            },
+            handlers: {
+              InviterInvitationService: {
+                admitDevice: async ({ deviceKey, controlFeedKey, dataFeedKey }) => {
+                  log('Admit device', { deviceKey });
+                  await identity.controlPipeline.writer.write({
+                    '@type': 'dxos.echo.feed.CredentialsMessage',
+                    credential: await identity.getIdentityCredentialSigner().createCredential({
+                      subject: deviceKey,
+                      assertion: {
+                        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+                        identityKey: identity.identityKey,
+                        deviceKey
+                      }
+                    })
+                  });
+                  // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
+                }
               }
-            }
-          },
-          port
-        });
+            },
+            port
+          });
 
-        await peer.open();
-        log('Inviter RPC open');
+          await peer.open();
+          log('Inviter RPC open');
 
-        await peer.rpc.InviteeInvitationService.acceptIdenity({
-          identityKey: identity.identityKey,
-          haloSpaceKey: identity.haloSpaceKey,
-          genesisFeedKey: identity.haloGenesisFeedKey
-        });
+          await peer.rpc.InviteeInvitationService.acceptIdenity({
+            identityKey: identity.identityKey,
+            haloSpaceKey: identity.haloSpaceKey,
+            genesisFeedKey: identity.haloGenesisFeedKey
+          });
 
-        onFinish?.();
-      })])
+          onFinish?.();
+        })
+      ])
     });
 
     return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
@@ -97,52 +99,54 @@ export class HaloInvitations {
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
-        log('Invitee connected');
-        const peer = createProtoRpcPeer({
-          requested: {
-            InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
-          },
-          exposed: {
-            InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
-          },
-          handlers: {
-            InviteeInvitationService: {
-              acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
-                try {
-                  log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
-                  const identity = await this._identityManager.acceptIdentity({
-                    identityKey,
-                    haloSpaceKey,
-                    haloGenesisFeedKey: genesisFeedKey
-                  });
+      protocol: createProtocolFactory(swarmKey, swarmKey, [
+        new RpcPlugin(async (port) => {
+          log('Invitee connected');
+          const peer = createProtoRpcPeer({
+            requested: {
+              InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
+            },
+            exposed: {
+              InviteeInvitationService: schema.getService('dxos.halo.invitations.InviteeInvitationService')
+            },
+            handlers: {
+              InviteeInvitationService: {
+                acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
+                  try {
+                    log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
+                    const identity = await this._identityManager.acceptIdentity({
+                      identityKey,
+                      haloSpaceKey,
+                      haloGenesisFeedKey: genesisFeedKey
+                    });
 
-                  log('Try to admit device');
-                  await peer.rpc.InviterInvitationService.admitDevice({
-                    deviceKey: identity.deviceKey,
-                    controlFeedKey: PublicKey.random(),
-                    dataFeedKey: PublicKey.random()
-                  });
+                    log('Try to admit device');
+                    await peer.rpc.InviterInvitationService.admitDevice({
+                      deviceKey: identity.deviceKey,
+                      controlFeedKey: PublicKey.random(),
+                      dataFeedKey: PublicKey.random()
+                    });
 
-                  log('Waiting for identity to be ready');
-                  await identity.ready();
+                    log('Waiting for identity to be ready');
+                    await identity.ready();
 
-                  await this._onInitialize();
+                    await this._onInitialize();
 
-                  done.wake();
-                  log('Invitee done');
-                } catch (err: any) {
-                  log.catch(err);
+                    done.wake();
+                    log('Invitee done');
+                  } catch (err: any) {
+                    log.catch(err);
+                  }
                 }
               }
-            }
-          },
-          port
-        });
+            },
+            port
+          });
 
-        await peer.open();
-        log('Invitee RPC open');
-      })])
+          await peer.open();
+          log('Invitee RPC open');
+        })
+      ])
     });
 
     await done.wait();

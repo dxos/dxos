@@ -18,7 +18,7 @@ import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
-import { Replicator, ReplicatorMiddleware } from './replicator';
+import { ReplicatorPlugin, ReplicatorMiddleware } from './replicator-plugin';
 
 const noop = () => {};
 
@@ -42,12 +42,14 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
         unsubscribe();
       };
     },
+
     load: async () => {
       const feeds = onLoad(feedStore);
       return feeds.map(
         feed => encodeFeed(feed)
       );
     },
+
     replicate: async (feeds: FeedData[]) => {
       const hypercoreFeeds = await Promise.all(feeds.map(async (feedData) => {
         if (feedData.key) {
@@ -72,7 +74,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
   );
   let closed = false;
 
-  const replicator = new Replicator(middleware({
+  const replicator = new ReplicatorPlugin(middleware({
     feedStore,
     onLoad: () => [feed],
     onUnsubscribe: () => {

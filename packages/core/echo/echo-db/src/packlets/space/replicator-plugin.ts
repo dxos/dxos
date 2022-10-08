@@ -5,12 +5,12 @@
 import { Event } from '@dxos/async';
 import { FeedDescriptor } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { ReplicatorPlugin as AbstractReplicatorPlugin } from '@dxos/protocol-plugin-replicator';
 
 /**
  * Protocol plugin for feed replication.
  */
-export class ReplicatorPlugin extends Replicator {
+export class ReplicatorPlugin extends AbstractReplicatorPlugin {
   private readonly _feedAdded = new Event<FeedDescriptor>();
   private readonly _feeds = new Set<FeedDescriptor>();
 

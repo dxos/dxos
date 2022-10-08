@@ -7,7 +7,7 @@ import debug from 'debug';
 import { ServiceDescriptor } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcServer, RpcPeer, RpcPort } from '@dxos/rpc';
@@ -24,7 +24,7 @@ export class BotController {
   constructor (private _botFactory: BotFactoryService, private _networkManager: NetworkManager) {}
 
   async start (topic: PublicKey): Promise<void> {
-    const plugin = new PluginRpc(this._onPeerConnect.bind(this));
+    const plugin = new RpcPlugin(this._onPeerConnect.bind(this));
     await this._networkManager.joinProtocolSwarm({
       topic,
       peerId: topic,
