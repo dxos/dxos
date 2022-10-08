@@ -24,10 +24,7 @@ const App = () => {
 
   useAsyncEffect(async () => {
     if (IN_IFRAME) {
-      const port = createIFramePort({
-        origin: 'http://localhost:5173',
-        channel: Channels.ONE
-      });
+      const port = createIFramePort({ channel: Channels.ONE });
       const client = new TestClient();
       const server = createProtoRpcPeer({
         requested: {

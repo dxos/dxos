@@ -25,36 +25,29 @@ export class PortMuxer {
     }
   }
 
-  private createWorkerPort (channel: string, options: WorkerPortOptions) {
-    const port = createWorkerPort({
-      ...options,
-      subscribe: callback => {
-        this._activeChannels.set(channel, callback);
-        return () => this._activeChannels.delete(channel);
-      }
-    });
-    this._rpcPorts.set(channel, port);
-
-    return port;
-  }
-
-  private createIFramePort (channel: string, options: IFramePortOptions) {
-    const port = createIFramePort(options);
-    this._rpcPorts.set(channel, port);
-
-    return port;
-  }
-
-  createPort (options: Omit<WorkerPortOptions, 'port'> | IFramePortOptions) {
-    if ('origin' in options) {
-      return this.createIFramePort(options.channel, options);
-    }
-
+  createWorkerPort (options: Omit<WorkerPortOptions, 'port' | 'subscribe'>) {
     if (!this._messagePort) {
       throw new Error('Message port is required to create worker ports');
     }
 
-    return this.createWorkerPort(options.channel, { ...options, port: this._messagePort });
+    const port = createWorkerPort({
+      ...options,
+      port: this._messagePort,
+      subscribe: callback => {
+        this._activeChannels.set(options.channel, callback);
+        return () => this._activeChannels.delete(options.channel);
+      }
+    });
+    this._rpcPorts.set(options.channel, port);
+
+    return port;
+  }
+
+  createIFramePort (options: IFramePortOptions) {
+    const port = createIFramePort(options);
+    this._rpcPorts.set(options.channel, port);
+
+    return port;
   }
 
   private onWorkerMessage (event: MessageEvent<MessageData>) {

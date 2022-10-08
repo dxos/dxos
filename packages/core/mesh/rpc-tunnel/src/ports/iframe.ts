@@ -22,25 +22,33 @@ const sendToParentWindow = (origin: string, message: MessageData) => {
 };
 
 export type IFramePortOptions = {
-  origin: string
-  iframe?: HTMLIFrameElement
   channel: string
+  iframe?: HTMLIFrameElement
+  origin?: string
+  onOrigin?: (origin: string) => void
 }
 
 /**
  * Create a RPC port with an iframe over window messaging.
- * @param options.origin Origin of destination window.
- * @param options.iframe Instance of the iframe if sending to child.
  * @param options.channel Identifier for sent/recieved messages.
+ * @param options.iframe Instance of the iframe if sending to child.
+ * @param options.origin Origin of the destination window.
+ * @param options.onOrigin Callback triggered when origin of destination window is verified.
  * @returns RPC port for messaging.
  */
 export const createIFramePort = ({
-  origin,
+  channel,
   iframe,
-  channel
+  origin,
+  onOrigin
 }: IFramePortOptions): RpcPort => {
   return {
     send: async data => {
+      if (!origin) {
+        log.warn('No origin set yet', { channel });
+        return;
+      }
+
       const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
       const message = { channel, payload };
       if (iframe) {
@@ -50,10 +58,27 @@ export const createIFramePort = ({
       }
     },
     subscribe: callback => {
-      const handler = (event: MessageEvent<MessageData>) => {
-        const message = event.data;
-        if (message.channel !== channel) {
+      const handler = (event: MessageEvent<unknown>) => {
+        if (!iframe && event.source !== window.parent) {
+          // Not from parent window.
           return;
+        } else if (iframe && event.source !== iframe.contentWindow) {
+          // Not from child window.
+          return;
+        }
+
+        const isMessageData = event.data &&
+          typeof event.data === 'object' &&
+          'channel' in event.data &&
+          'payload' in event.data;
+        const message = isMessageData ? event.data as MessageData : undefined;
+        if (message?.channel !== channel) {
+          return;
+        }
+
+        if (!origin) {
+          origin = event.origin;
+          onOrigin?.(origin);
         }
 
         log.debug('Received message', message);
