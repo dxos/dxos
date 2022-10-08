@@ -1,7 +1,11 @@
+import { statSync } from 'fs';
 import { Transform } from 'jscodeshift'
+import { dirname, join } from 'path';
 
 /*
-Moves symbols between packages.
+
+Adds ESM-style extensions to imports
+
 */
 
 const transform: Transform = (fileInfo, api, options) => {
@@ -9,8 +13,12 @@ const transform: Transform = (fileInfo, api, options) => {
     return null
   }
 
+  // Only process sources.
+  if(!fileInfo.path.includes('src')) {
+    return null
+  }
+
   const j = api.jscodeshift;
-  const replaceList = [options.replace].flat()
   const root = j(fileInfo.source)
 
   const getFirstNode = () => root.find(j.Program).get('body', 0).node;
@@ -22,24 +30,21 @@ const transform: Transform = (fileInfo, api, options) => {
   root
     .find(j.ImportSpecifier)
     .forEach(path => {
-      const identifier = path.node.imported.name
       const source = path.parent.value.source.value
 
-      const replaceTarget = getReplaceTarget(replaceList, source, identifier)
-      if (!replaceTarget) {
+      // Not relative
+      if(!source.startsWith('.')) {
         return
       }
 
-      path.parent.insertAfter(j.importDeclaration(
-        [j.importSpecifier(j.identifier(identifier))],
-        j.literal(replaceTarget)
-      ))
+      if(['.js', '.ts', '.tsx'].some(ext => source.endsWith(ext))) {
+        return
+      }
 
-      // Remove old import
-      if (path.parent.value.specifiers.length === 1) {
-        j(path.parent).remove()
+      if(isDirectory(join(dirname(fileInfo.path), source))) {
+        path.parent.value.source.value = `${source}/index.js`
       } else {
-        j(path).remove()
+        path.parent.value.source.value = `${source}.js`
       }
     })
 
@@ -52,15 +57,11 @@ const transform: Transform = (fileInfo, api, options) => {
   return root.toSource({ quote: 'single' })
 }
 
-const getReplaceTarget = (replaceList: string[], source: string, identifier: string): string | undefined => {
-  for (const replace of replaceList) {
-
-    const [from, to] = replace.split(':')
-    const [pkg, id] = from.split('#')
-
-    if (source === pkg && (identifier === id || id === '*')) {
-      return to
-    }
+const isDirectory = (path: string) => {
+  try {
+    return statSync(path).isDirectory()
+  } catch (e) {
+    return false
   }
 }
 
