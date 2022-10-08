@@ -1,0 +1,47 @@
+{
+  "sourceRoot": "packages/sdk/shared-client/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/shared-client/dist",
+        "tsConfig": "packages/sdk/shared-client/tsconfig.json",
+        "main": "packages/sdk/shared-client/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/shared-client/**/*.{ts,js}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/sdk/shared-client/out",
+        "configFile": "packages/sdk/shared-client/vite.config.ts"
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/shared-client/playwright/tests/*.spec.ts"
+        ],
+        "config": "packages/sdk/shared-client/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "playwright"
+  ]
+}

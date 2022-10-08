@@ -49,7 +49,7 @@
     "@dxos/object-model": "workspace:*",
     "@dxos/protocols-toolchain": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@koush/wrtc": "^0.5.3",
+    "@koush/wrtc": "0.5.3",
     "@types/debug": "^4.1.7",
     "@types/readable-stream": "^2.3.9",
     "source-map-support": "^0.5.12"
