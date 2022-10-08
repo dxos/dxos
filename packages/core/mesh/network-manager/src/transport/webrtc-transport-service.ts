@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
 import assert from 'assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
@@ -11,6 +10,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
+
+let wrtc: any = null;
+
+if (typeof window !== 'undefined') {
+  wrtc = require('@koush/wrtc');
+}
 
 export class WebRTCTransportService implements BridgeService {
   protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());

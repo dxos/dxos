@@ -109,8 +109,7 @@
       "@nxext/vite@14.0.3": "patches/@nxext__vite@14.0.3.patch",
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "vite@3.0.9": "patches/vite@3.0.9.patch",
-      "@koush/wrtc@0.5.3": "patches/@koush__wrtc@0.5.3.patch"
+      "vite@3.0.9": "patches/vite@3.0.9.patch"
     }
   }
 }
