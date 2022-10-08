@@ -82,7 +82,7 @@ importers:
       jsdom-global: ^3.0.2
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       mocha-junit-reporter: ^2.1.0
       mocha-multi-reporters: ^1.5.1
       netlify-cli: ^11.5.1
@@ -167,9 +167,9 @@ importers:
       jsdom-global: 3.0.2_jsdom@20.0.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
-      mocha: 8.4.0
-      mocha-junit-reporter: 2.1.0_mocha@8.4.0
-      mocha-multi-reporters: 1.5.1_mocha@8.4.0
+      mocha: 10.0.0
+      mocha-junit-reporter: 2.1.0_mocha@10.0.0
+      mocha-multi-reporters: 1.5.1_mocha@10.0.0
       netlify-cli: 11.5.1
       nx: 14.5.7_@swc-node+register@1.5.1
       nyc: 15.1.0
@@ -1111,7 +1111,7 @@ importers:
       assert: ^2.0.0
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       typescript: ^4.7.2
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
@@ -1132,7 +1132,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       earljs: 0.1.12_typescript@4.7.4
-      mocha: 8.4.0
+      mocha: 10.0.0
       typescript: 4.7.4
       wait-for-expect: 3.0.2
 
@@ -1888,7 +1888,7 @@ importers:
       immutability-helper: ^3.0.2
       it-all: 1.0.6
       mobile-detect: ~1.4.5
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       robotjs: ~0.6.0
@@ -1949,7 +1949,7 @@ importers:
       electron: 18.0.4
       esbuild-plugin-yaml: 0.0.1
       faker: 5.5.3
-      mocha: 8.4.0
+      mocha: 10.0.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       robotjs: 0.6.0
@@ -1989,7 +1989,7 @@ importers:
       ink-table: ~3.0.0
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       node-fetch: ^2.6.0
       npm-api: ~1.0.1
       qrcode-terminal: ~0.12.0
@@ -2036,7 +2036,7 @@ importers:
       '@types/react': 17.0.50
       '@types/yargs': 16.0.4
       esbuild: 0.14.49
-      mocha: 8.4.0
+      mocha: 10.0.0
       supervisor: 0.12.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
@@ -2075,7 +2075,7 @@ importers:
       '@types/react-dom': ^17.0.9
       debug: ^4.3.3
       lexical: ~0.3.11
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       ts-node: 10.9.1
@@ -2119,7 +2119,7 @@ importers:
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
       debug: 4.3.4
-      mocha: 8.4.0
+      mocha: 10.0.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
@@ -2139,7 +2139,7 @@ importers:
       assert: ^2.0.0
       faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
@@ -2161,7 +2161,7 @@ importers:
       '@types/node': 16.11.62
       '@types/url-join': 4.0.1
       faker: 5.5.3
-      mocha: 8.4.0
+      mocha: 10.0.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -3180,7 +3180,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       minimatch: ^5.1.0
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       ts-morph: ^16.0.0
       typescript: ^4.7.2
       yargs: ~16.2.0
@@ -3205,7 +3205,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       '@types/yargs': 16.0.4
-      mocha: 8.4.0
+      mocha: 10.0.0
       typescript: 4.7.4
 
   tools/codemods:
@@ -3258,7 +3258,7 @@ importers:
       jest: 27.5.1
       jsdom: ^20.0.1
       jsdom-global: ^3.0.2
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       pkg-dir: ~5.0.0
       terser: ^5.12.0
       ts-jest: 27.1.4
@@ -3279,7 +3279,7 @@ importers:
       jest: 27.5.1_ts-node@10.9.1
       jsdom: 20.0.1
       jsdom-global: 3.0.2_jsdom@20.0.1
-      mocha: 8.4.0
+      mocha: 10.0.0
       pkg-dir: 5.0.0
       terser: 5.15.0
       ts-jest: 27.1.4_5jrtamctapj4etgwmvh6x5y554
@@ -3354,7 +3354,7 @@ importers:
       argparse: ^2.0.1
       chalk: ^4.1.0
       glob: ~7.1.6
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
@@ -3375,7 +3375,7 @@ importers:
       '@types/glob': 7.1.4
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
-      mocha: 8.4.0
+      mocha: 10.0.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -3452,7 +3452,7 @@ importers:
       glob: ~7.1.6
       js-yaml: ^4.1.0
       mdast-util-to-markdown: ~1.3.0
-      mocha: ^8.4.0
+      mocha: ^10.0.0
       protocol-buffers-schema: ~3.6.0
       rehype-stringify: ~9.0.3
       remark: ~14.0.2
@@ -3497,7 +3497,7 @@ importers:
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
-      mocha: 8.4.0
+      mocha: 10.0.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -19010,20 +19010,6 @@ packages:
     dev: true
     optional: true
 
-  /chokidar/3.5.1:
-    resolution: {integrity: sha512-9+s+Od+W0VJJzawDma/gvBNQqkTiqYTWLuZoyAsivsI4AaWTCzHG06/TMjsf1cYe9Cb97UCEhjz7HvnPk2p/tw==}
-    engines: {node: '>= 8.10.0'}
-    dependencies:
-      anymatch: 3.1.2
-      braces: 3.0.2
-      glob-parent: 5.1.2
-      is-binary-path: 2.1.0
-      is-glob: 4.0.3
-      normalize-path: 3.0.0
-      readdirp: 3.5.0
-    optionalDependencies:
-      fsevents: 2.3.2
-
   /chokidar/3.5.3:
     resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==}
     engines: {node: '>= 8.10.0'}
@@ -20707,18 +20693,6 @@ packages:
         optional: true
     dependencies:
       ms: 2.1.3
-
-  /debug/4.3.1_supports-color@8.1.1:
-    resolution: {integrity: sha512-doEwdvm4PCeK4K3RQN2ZC2BYUBaxwLARCqZmMjtF8a51J2Rb0xpVloFRnCODwqjpwnAoao4pelN8l3RJdv3gRQ==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-      supports-color: 8.1.1
 
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -24721,16 +24695,6 @@ packages:
       path-is-absolute: 1.0.1
     dev: true
 
-  /glob/7.1.6:
-    resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
-    dependencies:
-      fs.realpath: 1.0.0
-      inflight: 1.0.6
-      inherits: 2.0.4
-      minimatch: 3.1.2
-      once: 1.4.0
-      path-is-absolute: 1.0.1
-
   /glob/7.1.7:
     resolution: {integrity: sha512-OvD9ENzPLbegENnYP5UUfJIirTg4+XwMWGaQfQTY0JenxNvvIKP3U3/tAQSPIu/lHxXYSZmpXlUHeqAIdKzBLQ==}
     dependencies:
@@ -25051,10 +25015,6 @@ packages:
     resolution: {integrity: sha512-/PiFUa7WIsl48dUeCvhIHnwNmAAzlI/eHoJl0vu3nsFA366JleY7Ff8EVTplZu5kO0MIdZjKTTnzItL61ahbnw==}
     engines: {node: '>=8.0.0'}
     dev: false
-
-  /growl/1.10.5:
-    resolution: {integrity: sha512-qBr4OuELkhPenW6goKVXiv47US3clb3/IbuWF9KNKEijAy9oeHxU9IgzjvJhHkUzhaj7rOUD7+YGWqUjLp5oSA==}
-    engines: {node: '>=4.x'}
 
   /growly/1.3.0:
     resolution: {integrity: sha512-+xGQY0YyAWCnqy7Cd++hc2JqMYzlm0dG30Jd0beaA64sROr8C4nt8Yc9V5Ro3avlSUDTN0ulqP/VBKi1/lLygw==}
@@ -27888,12 +27848,6 @@ packages:
       argparse: 1.0.10
       esprima: 4.0.1
 
-  /js-yaml/4.0.0:
-    resolution: {integrity: sha512-pqon0s+4ScYUvX30wxQi3PogGFAlUyH0awepWvwkj4jD4v+ova3RiYw8bmA6x2rDrEaj8i/oWKoRxpVNW+Re8Q==}
-    hasBin: true
-    dependencies:
-      argparse: 2.0.1
-
   /js-yaml/4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
@@ -28825,12 +28779,6 @@ packages:
     dependencies:
       chalk: 1.1.3
     dev: true
-
-  /log-symbols/4.0.0:
-    resolution: {integrity: sha512-FN8JBzLx6CzeMrB0tg6pqlGU1wCrXW+ZXGH481kfsBqer0hToTIiHdjH4Mq8xJUbvATujKCvaREGWpGUionraA==}
-    engines: {node: '>=10'}
-    dependencies:
-      chalk: 4.1.2
 
   /log-symbols/4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -30072,6 +30020,12 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
 
+  /minimatch/5.0.1:
+    resolution: {integrity: sha512-nLDxIFRyhDblz3qMuq+SoRZED4+miJ/G+tdDrjkkkRnjAsBexeGpgjLEQ0blJy7rHhR2b93rhQY4SvyWu9v03g==}
+    engines: {node: '>=10'}
+    dependencies:
+      brace-expansion: 2.0.1
+
   /minimatch/5.1.0:
     resolution: {integrity: sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==}
     engines: {node: '>=10'}
@@ -30216,7 +30170,7 @@ packages:
     resolution: {integrity: sha512-yc0LhH6tItlvfLBugVUEtgawwFU2sIe+cSdmRJJCTMZ5GEJyLxNyC/NIOAOGk67Fa8GNpOttO3Xz/1bHpXFD/g==}
     dev: false
 
-  /mocha-junit-reporter/2.1.0_mocha@8.4.0:
+  /mocha-junit-reporter/2.1.0_mocha@10.0.0:
     resolution: {integrity: sha512-Zhz1J+XqJUaAOuSFtHgi2+b+W3rP1SZtaU3HHNNp1iEKMSeoC1/EQUVkGknkLNOBxJhXJ4xLgOr8TbYAZOkUIw==}
     peerDependencies:
       mocha: '>=2.2.5'
@@ -30224,14 +30178,14 @@ packages:
       debug: 2.6.9
       md5: 2.3.0
       mkdirp: 0.5.5
-      mocha: 8.4.0
+      mocha: 10.0.0
       strip-ansi: 6.0.1
       xml: 1.0.1
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /mocha-multi-reporters/1.5.1_mocha@8.4.0:
+  /mocha-multi-reporters/1.5.1_mocha@10.0.0:
     resolution: {integrity: sha512-Yb4QJOaGLIcmB0VY7Wif5AjvLMUFAdV57D2TWEva1Y0kU/3LjKpeRVmlMIfuO1SVbauve459kgtIizADqxMWPg==}
     engines: {node: '>=6.0.0'}
     peerDependencies:
@@ -30239,38 +30193,35 @@ packages:
     dependencies:
       debug: 4.3.4
       lodash: 4.17.21
-      mocha: 8.4.0
+      mocha: 10.0.0
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /mocha/8.4.0:
-    resolution: {integrity: sha512-hJaO0mwDXmZS4ghXsvPVriOhsxQ7ofcpQdm8dE+jISUOKopitvnXFQmpRR7jd2K6VBG6E26gU3IAbXXGIbu4sQ==}
-    engines: {node: '>= 10.12.0'}
+  /mocha/10.0.0:
+    resolution: {integrity: sha512-0Wl+elVUD43Y0BqPZBzZt8Tnkw9CMUdNYnUsTfOM1vuhJVZL+kiesFYsqwBkEEuEixaiPe5ZQdqDgX2jddhmoA==}
+    engines: {node: '>= 14.0.0'}
     hasBin: true
     dependencies:
       '@ungap/promise-all-settled': 1.1.2
       ansi-colors: 4.1.1
       browser-stdout: 1.3.1
-      chokidar: 3.5.1
-      debug: 4.3.1_supports-color@8.1.1
+      chokidar: 3.5.3
+      debug: 4.3.4_supports-color@8.1.1
       diff: 5.0.0
       escape-string-regexp: 4.0.0
       find-up: 5.0.0
-      glob: 7.1.6
-      growl: 1.10.5
+      glob: 7.2.0
       he: 1.2.0
-      js-yaml: 4.0.0
-      log-symbols: 4.0.0
-      minimatch: 3.0.4
+      js-yaml: 4.1.0
+      log-symbols: 4.1.0
+      minimatch: 5.0.1
       ms: 2.1.3
-      nanoid: 3.1.20
-      serialize-javascript: 5.0.1
+      nanoid: 3.3.3
+      serialize-javascript: 6.0.0
       strip-json-comments: 3.1.1
       supports-color: 8.1.1
-      which: 2.0.2
-      wide-align: 1.1.3
-      workerpool: 6.1.0
+      workerpool: 6.2.1
       yargs: 16.2.0
       yargs-parser: 20.2.4
       yargs-unparser: 2.0.0
@@ -30471,16 +30422,16 @@ packages:
     resolution: {integrity: sha512-K/ON5wyflyPyZskdeT3m7Y2gJVkm3QLdKykMCquAbK8A2erstyMpZUc3NG8Nz5jKdfatiYndONrlmLF8+pGl+A==}
     dev: false
 
-  /nanoid/3.1.20:
-    resolution: {integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
   /nanoid/3.1.30:
     resolution: {integrity: sha512-zJpuPDwOv8D2zq2WRoMe1HsfZthVewpel9CAvTfc/2mBD1uUT/agc5f7GHGWXlYkFvi1mVxe4IjvP2HNrop7nQ==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
     dev: true
+
+  /nanoid/3.3.3:
+    resolution: {integrity: sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
 
   /nanoid/3.3.4:
     resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
@@ -34337,12 +34288,6 @@ packages:
       - supports-color
     dev: true
 
-  /readdirp/3.5.0:
-    resolution: {integrity: sha512-cMhu7c/8rdhkHXWsY+osBhfSy0JikwpHK/5+imo+LpeasTF8ouErHrlYkwT0++njiyuDvc7OFY5T3ukvZ8qmFQ==}
-    engines: {node: '>=8.10.0'}
-    dependencies:
-      picomatch: 2.3.1
-
   /readdirp/3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
@@ -35413,12 +35358,12 @@ packages:
     resolution: {integrity: sha512-SaaNal9imEO737H2c05Og0/8LUXG7EnsZyMa8MzkmuHoELfT6txuj0cMqRj6zfPKnmQ1yasR4PCJc8x+M4JSPA==}
     dependencies:
       randombytes: 2.1.0
+    dev: true
 
   /serialize-javascript/6.0.0:
     resolution: {integrity: sha512-Qr3TosvguFt8ePWqsvRfrKyQXIiW+nGbYpy8XK24NQHE83caxWt+mIymTT19DGFbNWNLfEwsrkSmN64lVWB9ag==}
     dependencies:
       randombytes: 2.1.0
-    dev: true
 
   /serve-favicon/2.5.0:
     resolution: {integrity: sha512-FMW2RvqNr03x+C0WxTyu6sOv21oOjkq5j8tjquWccwa6ScNyGFOGJVpuS1NmTVGBAHS07xnSKotgf2ehQmf9iA==}
@@ -39327,11 +39272,6 @@ packages:
     dependencies:
       isexe: 2.0.0
 
-  /wide-align/1.1.3:
-    resolution: {integrity: sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==}
-    dependencies:
-      string-width: 2.1.1
-
   /wide-align/1.1.5:
     resolution: {integrity: sha512-eDMORYaPNZ4sQIuuYPDHdQvf4gyCF9rEEV/yPxGfwPkRodwEgiMUUXTx/dex+Me0wxx53S+NgUHaP7y3MGlDmg==}
     dependencies:
@@ -39556,8 +39496,8 @@ packages:
       microevent.ts: 0.1.1
     dev: true
 
-  /workerpool/6.1.0:
-    resolution: {integrity: sha512-toV7q9rWNYha963Pl/qyeZ6wG+3nnsyvolaNUS8+R5Wtw6qJPTxIlOP1ZSvcGhEJw+l3HMMmtiNo9Gl61G4GVg==}
+  /workerpool/6.2.1:
+    resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
 
   /wrap-ansi/2.1.0:
     resolution: {integrity: sha512-vAaEaDM946gbNpH5pLVNR+vX2ht6n0Bt3GXwVB1AuAqZosOvHNF3P7wDnh8KLkSqgUh0uh77le7Owgoz+Z9XBw==}
