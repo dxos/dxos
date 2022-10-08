@@ -26,25 +26,43 @@ const transform: Transform = (fileInfo, api, options) => {
   // Save the comments attached to the first node
   const firstNode = getFirstNode();
   const { comments } = firstNode;
+  
+  const convert = (specifier: any) => {
+    const source = specifier.value
+
+    // Not relative
+    if(!source.startsWith('.')) {
+      return
+    }
+
+    if(['.js', '.ts', '.tsx', '.json'].some(ext => source.endsWith(ext))) {
+      return
+    }
+
+    if(isDirectory(join(dirname(fileInfo.path), source))) {
+      specifier.value = `${source}/index.js`
+    } else {
+      specifier.value = `${source}.js`
+    }
+  }
 
   root
-    .find(j.ImportSpecifier)
+    .find(j.ImportDeclaration)
     .forEach(path => {
-      const source = path.parent.value.source.value
+      convert(path.node.source)
+    })
 
-      // Not relative
-      if(!source.startsWith('.')) {
-        return
-      }
+  root
+    .find(j.ExportAllDeclaration)
+    .forEach(path => {
+      convert(path.node.source)
+    })
 
-      if(['.js', '.ts', '.tsx'].some(ext => source.endsWith(ext))) {
-        return
-      }
-
-      if(isDirectory(join(dirname(fileInfo.path), source))) {
-        path.parent.value.source.value = `${source}/index.js`
-      } else {
-        path.parent.value.source.value = `${source}.js`
+  root
+    .find(j.ExportNamedDeclaration)
+    .forEach(path => {
+      if(path.node.source) {
+        convert(path.node.source)
       }
     })
 
