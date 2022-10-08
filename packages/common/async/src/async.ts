@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { trigger } from './trigger';
+import { trigger } from './trigger.js';
 
 /**
  * Times out after delay.

@@ -21,6 +21,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@swc/core": "~1.2.248",
     "@babel/core": "^7.18.13",
     "@docusaurus/module-type-aliases": "2.1.0",
     "@docusaurus/theme-classic": "2.1.0",

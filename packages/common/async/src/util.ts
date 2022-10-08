@@ -4,7 +4,7 @@
 
 import { EventEmitter } from 'events';
 
-import { promiseTimeout } from './async';
+import { promiseTimeout } from './async.js';
 
 /**
  * Adds the listener and returns a function to remove it.

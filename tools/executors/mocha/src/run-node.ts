@@ -3,6 +3,7 @@
 //
 
 import { ExecutorContext } from '@nrwl/devkit';
+import { assert } from 'node:console';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -30,23 +31,38 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const watchArgs = getWatchArgs(options.watch, options.watchPatterns);
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
+  // Absolute path to the project root.
+  const projectRoot = join(context.root, context.workspace.projects[context.projectName!].root)
+  assert(projectRoot);
+
   const args = [
     ...coverageArgs,
-    ...options.testPatterns,
     ...ignoreArgs,
     ...reporterArgs,
+
     // NOTE: The import order here is important.
     //   The `require` hooks that are registered in those modules will be run in the same order as they are imported.
     //   We want the logger preprocessor to be run on typescript source first.
     //   Then the SWC will transpile the typescript source to javascript.
-    '-r', '@dxos/log-hook/register',
-    '-r', '@swc-node/register',
+    // '-r', '@dxos/log-hook/register',
+    // '-r', 'ts-node/register/transpile-only',
+
     ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
     ...setupArgs,
     ...watchArgs,
     '-t', String(options.timeout),
     ...(options.checkLeaks ? ['--checkLeaks'] : []),
-    ...(options.forceExit ? ['--exit'] : [])
+    ...(options.forceExit ? ['--exit'] : []),
+
+    '--extension', 'ts',
+    '--extension', 'tsx',
+    '--extension', 'js',
+    '--extension', 'jsx',
+
+    // Loader for typescript files.
+    `--loader=${require.resolve('ts-node/esm')}`,
+
+    ...options.testPatterns,
   ];
 
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');
@@ -54,7 +70,10 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     env: {
       ...process.env,
       'FORCE_COLOR': '2'
-    }
+    },
+
+    // NOTE: Running mocha in the project directory is required for ts-node to load it's config correctly.
+    cwd: projectRoot
   });
 
   return !exitCode;

@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { sleep, promiseTimeout, waitForCondition } from './async';
-import { trigger } from './trigger';
+import { sleep, promiseTimeout, waitForCondition } from './async.js';
+import { trigger } from './trigger.js';
 
 const timeout = (f: Function, timeout = 0) => new Promise((resolve, reject) => {
   const handle = setTimeout(async () => {

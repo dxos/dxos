@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 import EventEmitter from 'node:events';
 
-import { promiseTimeout } from './async';
-import { latch } from './latch';
-import { onEvent, waitForEvent } from './util';
+import { promiseTimeout } from './async.js';
+import { latch } from './latch.js';
+import { onEvent, waitForEvent } from './util.js';
 
 it('onEvent', async function () {
   const emitter = new EventEmitter();

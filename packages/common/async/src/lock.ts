@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { trigger } from './trigger';
+import { trigger } from './trigger.js';
 
 /**
  * A locking meachnism to ensure that a given section of the code is executed by only a single "thread" at a time.

@@ -4,7 +4,7 @@
 
 import { EventEmitter } from 'events';
 
-import { trigger } from './trigger';
+import { trigger } from './trigger.js';
 
 /**
  * Waits for the specified number of events from the given emitter.

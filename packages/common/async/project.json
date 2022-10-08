@@ -33,7 +33,7 @@
       ],
       "options": {
         "testPatterns": [
-          "packages/common/async/src/**/*.test.{ts,js}"
+          "packages/common/async/src/**/*.test.ts"
         ],
         "watchPatterns": [
           "packages/common/async/src/**/*"

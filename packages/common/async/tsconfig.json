@@ -2,11 +2,18 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
+    "module": "ESNext", 
+    "moduleResolution": "node",
+    "target": "ESNext",
     "types": [
       "@dxos/mocha",
       "mocha",
       "node"
     ]
+  },
+  "ts-node": {
+    "esm": true,
+    "swc": true
   },
   "include": [
     "src"

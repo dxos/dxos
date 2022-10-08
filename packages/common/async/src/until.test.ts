@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { sleep } from './async';
-import { until } from './until';
+import { sleep } from './async.js';
+import { until } from './until.js';
 
 describe('until', function () {
   it('success', async function () {

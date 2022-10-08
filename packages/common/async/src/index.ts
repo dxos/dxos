@@ -2,14 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './async';
-export * from './callback';
-export * from './event';
-export * from './latch';
-export * from './lock';
-export * from './sink';
-export * from './stream-to-array';
-export * from './trigger';
-export * from './types';
-export * from './until';
-export * from './util';
+export * from './async.js';
+export * from './callback.js';
+export * from './event.js';
+export * from './latch.js';
+export * from './lock.js';
+export * from './sink.js';
+export * from './stream-to-array.js';
+export * from './trigger.js';
+export * from './types.js';
+export * from './until.js';
+export * from './util.js';
