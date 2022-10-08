@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
 import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
@@ -14,6 +13,12 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
+
+let wrtc: any = null;
+
+if (typeof window !== 'undefined') {
+  wrtc = require('@koush/wrtc');
+}
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.

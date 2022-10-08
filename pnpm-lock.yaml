@@ -16,9 +16,6 @@ patchedDependencies:
   vite@3.0.9:
     hash: sn4pdpxxcdbczqmgzem6dbvc7e
     path: patches/vite@3.0.9.patch
-  '@koush/wrtc@0.5.3':
-    hash: 3ez2xlldyf3qkjfea5jzbm35da
-    path: patches/@koush__wrtc@0.5.3.patch
 
 importers:
 
@@ -401,7 +398,7 @@ importers:
       '@dxos/client': link:../../sdk/client
       '@dxos/messaging': link:../../core/mesh/messaging
       '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@koush/wrtc': 0.5.3_3ez2xlldyf3qkjfea5jzbm35da
+      '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       jsonify: 0.0.0
 
@@ -1200,7 +1197,7 @@ importers:
       '@dxos/protocols': link:../../protocols
       '@dxos/rpc': link:../rpc
       '@dxos/util': link:../../../common/util
-      '@koush/wrtc': 0.5.3_3ez2xlldyf3qkjfea5jzbm35da
+      '@koush/wrtc': 0.5.3
       assert: 2.0.0
       isomorphic-ws: 4.0.1_ws@7.5.6
       nanomessage-rpc: 3.2.0
@@ -2526,7 +2523,7 @@ importers:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
       '@dxos/text-model': link:../../core/echo/text-model
-      '@koush/wrtc': 0.5.3_3ez2xlldyf3qkjfea5jzbm35da
+      '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/readable-stream': 2.3.9
       source-map-support: 0.5.21
@@ -7177,7 +7174,7 @@ packages:
     resolution: {integrity: sha512-zMM9Ds+SawiUkakS7y94Ymqx+S0ORzpG3frZirN3l+UlXUmSUR7hF4wxCVqW+ei94JzV5kt0uXBcoOEAuiydrw==}
     dev: false
 
-  /@koush/wrtc/0.5.3_3ez2xlldyf3qkjfea5jzbm35da:
+  /@koush/wrtc/0.5.3:
     resolution: {integrity: sha512-hQqoSZS3/1pUJo3v91oXqFPRQZnqVxiGbEvYE4QsCGUv1hoqGyvr9Kj47RUP9xdYkHMra9HSWFqPj61U8PdSRQ==}
     engines: {node: ^8.11.2 || >=10.0.0}
     requiresBuild: true
@@ -7191,7 +7188,6 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    patched: true
 
   /@lexical/clipboard/0.3.11_lexical@0.3.11:
     resolution: {integrity: sha512-ly+9R2Rccz80eV9Gu0hOi701fXIyU50t+S7OR0Ensos09oAmQPae6poFkvS3k36tH+leLgk0hRZ47pB/+ejENA==}
