@@ -1,6 +1,7 @@
 {
   "name": "@dxos/ui-consumer",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Consumer of low-level design system for DXOS.",
   "license": "MIT",

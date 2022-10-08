@@ -1,7 +1,7 @@
 {
   "name": "@dxos/log-hook",
   "version": "2.33.4",
-  "description": "Logger",
+  "description": "Logger compilation hook.",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",

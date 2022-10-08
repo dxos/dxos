@@ -1,6 +1,7 @@
 {
   "name": "@dxos/showcase",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "description": "Components that display other components and references to APIs.",
   "author": "DXOS.org",

@@ -1,6 +1,7 @@
 {
   "name": "@dxos/log",
   "version": "2.33.4",
+  "type": "module",
   "description": "Logger",
   "license": "MIT",
   "author": "DXOS.org",

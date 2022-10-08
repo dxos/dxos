@@ -1,6 +1,7 @@
 {
   "name": "@dxos/js",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "description": "DXOS NodeJS Protocols and SDK.",
   "license": "MIT",

@@ -1,6 +1,7 @@
 {
   "name": "@dxos/docs",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "TODO(wittjosiah)": "Resolve the asset path issue here.",
