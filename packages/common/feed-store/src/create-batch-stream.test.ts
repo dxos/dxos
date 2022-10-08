@@ -16,7 +16,9 @@ import { FeedStore } from './feed-store';
 
 const createFeed = async (): Promise<FeedDescriptor> => {
   const keyring = new Keyring();
-  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
+  const feedStore = new FeedStore(
+    createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
+
   return await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 };
 
@@ -26,35 +28,38 @@ const append = (descriptor: FeedDescriptor, message: any) => {
 };
 
 describe('Batch stream', function () {
-  it('Single message', async function () {
-    const feed = await createFeed();
-    const stream = createBatchStream(feed, { live: true });
+  it('Write single message', async function () {
+    const feedDescriptor = await createFeed();
+    const stream = createBatchStream(feedDescriptor, { live: true });
     const messages: any[] = [];
     stream.on('data', (data) => {
       data.forEach((message: any) => {
         messages.push(message.data);
       });
     });
+
     const msg = PublicKey.random().toString();
-    await append(feed, msg);
+    await append(feedDescriptor, msg);
     await waitForExpect(() => {
       expect(messages).toContain(msg);
     });
   });
 
-  it('Five messages', async function () {
-    const feed = await createFeed();
-    const stream = createBatchStream(feed, { live: true });
+  it('Write multiple messages', async function () {
+    const feedDescriptor = await createFeed();
+    const stream = createBatchStream(feedDescriptor, { live: true });
     const messages: any[] = [];
     stream.on('data', (data) => {
       data.forEach((message: any) => {
         messages.push(message.data);
       });
     });
+
     const sent = Array.from(Array(5)).map(() => PublicKey.random().toString());
     for (const msg of sent) {
-      await append(feed, msg);
+      await append(feedDescriptor, msg);
     }
+
     await waitForExpect(() => {
       for (const msg of sent) {
         expect(messages).toContain(msg);

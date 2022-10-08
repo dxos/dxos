@@ -83,10 +83,12 @@ export class FeedDescriptor {
     return this._feed;
   }
 
+  // TODO(burdon): Rename isOpen.
   get opened () {
     return !!(this._feed && this._feed.opened && !this._feed.closed);
   }
 
+  // TODO(burdon): Rename isWritable.
   get writable () {
     return !!this._signer;
   }
@@ -102,14 +104,14 @@ export class FeedDescriptor {
    */
   async open (): Promise<HypercoreFeed> {
     if (this.opened) {
-      return this.feed;
+      return this._feed!;
     }
 
     await this._lock.executeSynchronized(async () => {
       await this._open();
     });
 
-    return this.feed;
+    return this._feed!;
   }
 
   /**
