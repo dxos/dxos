@@ -688,6 +688,7 @@ importers:
     specifiers:
       '@fontsource/fira-code': ^4.5.12
       '@fontsource/roboto-flex': ^4.5.2
+      '@fontsource/space-grotesk': ^4.5.10
       '@headlessui/react': ^1.7.3
       '@radix-ui/react-dialog': ^1.0.0
       '@tailwindcss/forms': ^0.5.3
@@ -702,6 +703,7 @@ importers:
     dependencies:
       '@fontsource/fira-code': 4.5.12
       '@fontsource/roboto-flex': 4.5.2
+      '@fontsource/space-grotesk': 4.5.10
       '@headlessui/react': 1.7.3_sfoxds7t5ydpegc3knd667wn6m
       '@radix-ui/react-dialog': 1.0.0_sfoxds7t5ydpegc3knd667wn6m
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
@@ -2165,7 +2167,7 @@ importers:
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
-  packages/experimental/ui-consumer:
+  packages/experimental/text-editor:
     specifiers:
       '@dxos/react-ui': workspace:*
       '@types/react': ^17.0.24
@@ -8178,6 +8180,10 @@ packages:
 
   /@fontsource/roboto-flex/4.5.2:
     resolution: {integrity: sha512-GYG8WbC9K8HdIYwIzgPb7dc4CrMMb0QUOP6IYPeuVvd33PyZRvVvu1CvRzXhqbI+trV37Ti3WBCfJJl9RvsVTQ==}
+    dev: false
+
+  /@fontsource/space-grotesk/4.5.10:
+    resolution: {integrity: sha512-Ua+3NeVpUbVrF4F0I5posgZ0/SvpX0ijmwU4MI43cormzOP6r6Z09+BWwhS85+wMJsM+ravc+65fa/rqAZQ3wg==}
     dev: false
 
   /@gar/promisify/1.1.3:
@@ -32990,6 +32996,7 @@ packages:
       nanoid: 3.3.4
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: true
 
   /postcss/8.4.17:
     resolution: {integrity: sha512-UNxNOLQydcOFi41yHNMcKRZ39NeXlr8AxGuZJsdub8vIb12fHzcq37DTU/QtbI6WLxNg2gF9Z+8qtRwTj1UI1Q==}
@@ -32998,7 +33005,6 @@ packages:
       nanoid: 3.3.4
       picocolors: 1.0.0
       source-map-js: 1.0.2
-    dev: false
 
   /preact-render-to-string/5.2.4_preact@10.11.0:
     resolution: {integrity: sha512-iIPHb3BXUQ3Za6KNhkjN/waq11Oh+QWWtAgN3id3LrL+cszH3DYh8TxJPNQ6Aogsbu4JsqdJLBZltwPFpG6N6w==}
@@ -38609,7 +38615,7 @@ packages:
         optional: true
     dependencies:
       esbuild: 0.14.49
-      postcss: 8.4.16
+      postcss: 8.4.17
       resolve: 1.22.1
       rollup: 2.77.3
     optionalDependencies:

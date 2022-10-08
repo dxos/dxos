@@ -1,5 +1,6 @@
 @import '@fontsource/roboto-flex/variable-full.css';
 @import '@fontsource/fira-code/variable.css';
+@import '@fontsource/space-grotesk/variable-full.css';
 
 @tailwind base;
 @tailwind components;

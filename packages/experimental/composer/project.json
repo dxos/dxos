@@ -1,12 +1,12 @@
 {
-  "sourceRoot": "packages/experimental/ui-consumer/src",
+  "sourceRoot": "packages/experimental/composer/src",
   "projectType": "application",
   "targets": {
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/experimental/ui-consumer/out/ui-consumer",
-        "configFile": "packages/experimental/ui-consumer/vite.config.ts"
+        "outputPath": "packages/experimental/composer/out/composer",
+        "configFile": "packages/experimental/composer/vite.config.ts"
       }
     },
     "lint": {
@@ -16,7 +16,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/experimental/ui-consumer/src/**/*.{js,jsx,ts,tsx}"
+          "packages/experimental/composer/src/**/*.{js,jsx,ts,tsx}"
         ]
       }
     }
