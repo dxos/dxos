@@ -26,22 +26,18 @@ const App = ({ worker }: { worker?: SharedWorker }) => {
 
   useAsyncEffect(async () => {
     if (worker) {
+      const parentPort = createIFramePort({ channel: Channels.ONE });
       const workerPort = createWorkerPort({
         port: worker.port,
         channel: Channels.ONE
       });
 
-      const parentPort = createIFramePort({
-        origin: 'http://localhost:5173',
-        channel: Channels.ONE
+      parentPort.subscribe(async msg => {
+        await workerPort.send(msg);
       });
 
       workerPort.subscribe(async msg => {
         await parentPort.send(msg);
-      });
-
-      parentPort.subscribe(async msg => {
-        await workerPort.send(msg);
       });
     } else {
       const port = await createIFramePort({

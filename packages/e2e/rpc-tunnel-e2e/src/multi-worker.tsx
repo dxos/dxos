@@ -65,8 +65,8 @@ if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
     const muxer = new PortMuxer(worker.port);
-    const portOne = muxer.createPort({ channel: Channels.ONE });
-    const portTwo = muxer.createPort({ channel: Channels.TWO });
+    const portOne = muxer.createWorkerPort({ channel: Channels.ONE });
+    const portTwo = muxer.createWorkerPort({ channel: Channels.TWO });
 
     render(
       <StrictMode>
