@@ -5,7 +5,7 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import type { HypercoreFeed } from '@dxos/feed-store';
+import { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKeyLike } from '@dxos/keys';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { schemaJson } from '@dxos/protocols';
@@ -14,8 +14,6 @@ import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicato
 import { Peer } from './peer';
 
 const log = debug('dxos:protocol-plugin-replicator');
-
-// code const log = debug('dxos.replicator');
 
 export type ReplicatorContextInfo = {
   /**
@@ -31,7 +29,7 @@ export type ReplicatorContextInfo = {
 
 type LoadFunction = (info: ReplicatorContextInfo) => Promise<FeedData[]>;
 type SubscribeFunction = (share: (feeds: FeedData[]) => Promise<void> | undefined, info: ReplicatorContextInfo) => () => void;
-type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<HypercoreFeed[]>;
+type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedDescriptor[]>;
 
 const defaultSubscribe: SubscribeFunction = () => () => {};
 const defaultReplicate: ReplicateFunction = async () => [];
@@ -157,8 +155,8 @@ export class ReplicatorPlugin {
 
     try {
       const info = { context, session };
-      const feeds = (await this._replicate(data, info)) || [];
-      peer?.replicate(feeds);
+      const feeds = await this._replicate(data, info);
+      peer?.replicate(feeds ?? []);
     } catch (err: any) {
       console.warn('Replicate feeds error', err);
     }

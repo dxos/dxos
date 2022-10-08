@@ -45,7 +45,7 @@ export class FeedDescriptor {
     key,
     secretKey,
     valueEncoding,
-    hypercore = defaultHypercore,
+    hypercore = defaultHypercore, // TODO(burdon): Rename constructor.
     disableSigning = false,
     signer
   }: FeedDescriptorOptions) {
@@ -62,9 +62,23 @@ export class FeedDescriptor {
     this._feed = null;
   }
 
+  get key () {
+    return this._key;
+  }
+
+  // TODO(burdon): Remove.
+  get secretKey () {
+    return this._secretKey;
+  }
+
+  get discoveryKey () {
+    return this._feed?.discoveryKey;
+  }
+
+  // TODO(burdon): Remove (debug only).
   // TODO(dmaretskyi): Rename to `hypercore` to avoid code spelling `feed.feed`.
   get feed (): HypercoreFeed {
-    assert(this._feed, 'Feed is not initialized');
+    assert(this._feed, 'Feed not initialized.');
     return this._feed;
   }
 
@@ -72,25 +86,16 @@ export class FeedDescriptor {
     return !!(this._feed && this._feed.opened && !this._feed.closed);
   }
 
-  get key () {
-    return this._key;
-  }
-
-  get secretKey () {
-    return this._secretKey;
+  get writable () {
+    return !!this._signer;
   }
 
   get valueEncoding () {
     return this._valueEncoding;
   }
 
-  get writable () {
-    return !!this._signer;
-  }
-
   /**
    * Open an Hypercore feed based on the related feed options.
-   *
    * This is an atomic operation, FeedDescriptor makes
    * sure that the feed is not going to open again.
    */

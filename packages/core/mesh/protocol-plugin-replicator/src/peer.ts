@@ -5,14 +5,15 @@
 import debug from 'debug';
 
 import { Event } from '@dxos/async';
-import type { HypercoreFeed } from '@dxos/feed-store';
+import { FeedDescriptor } from '@dxos/feed-store';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
 const log = debug('dxos.replicator.peer');
 
 export class Peer {
-  private readonly _feeds = new Map<string, HypercoreFeed>();
+  private readonly _feeds = new Map<string, FeedDescriptor>();
+
   readonly closed = new Event();
 
   constructor (private _protocol: Protocol, private _extension: Extension) {}
@@ -47,7 +48,7 @@ export class Peer {
   /**
    * Replicate multiple feeds.
    */
-  replicate (feeds: HypercoreFeed[] = []) {
+  replicate (feeds: FeedDescriptor[] = []) {
     feeds.forEach(feed => this._replicate(feed));
   }
 
@@ -56,7 +57,6 @@ export class Peer {
    */
   close () {
     const { stream } = this._protocol;
-
     if (!stream.destroyed) {
       stream.destroy();
     }
@@ -66,38 +66,35 @@ export class Peer {
 
   /**
    * Replicate a feed.
-   * @param {Hypercore} feed
+   * @param {FeedDescriptor} feed
    * @returns {boolean} - true if `feed.replicate` was called.
    * @private
    */
-  _replicate (feed: HypercoreFeed): boolean {
-    if (!feed || !feed.replicate) {
+  _replicate (feed: FeedDescriptor): boolean {
+    if (!feed || !feed.feed.replicate) { // TODO(burdon): What does this test?
       return false;
     }
 
     const { stream } = this._protocol;
-
     if (stream.destroyed) {
-      log('stream already destroyed, cannot replicate.');
+      log('Stream already destroyed, cannot replicate.');
       return false;
     }
 
-    if (this._feeds.has(feed.key.toString('hex'))) {
+    if (this._feeds.has(feed.key.toHex())) {
       return true;
     }
 
     const replicateOptions = Object.assign({}, this._protocol.streamOptions, { stream, initiator: this._protocol.initiator });
-
     if (!replicateOptions.live && replicateOptions.expectedFeeds === undefined) {
       stream.expectedFeeds = stream.feeds.length + 1;
     }
 
-    feed.replicate(replicateOptions);
+    feed.feed.replicate(replicateOptions);
 
-    this._feeds.set(feed.key.toString('hex'), feed);
+    this._feeds.set(feed.key.toHex(), feed);
 
-    log('stream replicated', feed.key.toString('hex'));
-
+    log('stream replicated', feed.key.toHex());
     return true;
   }
 }

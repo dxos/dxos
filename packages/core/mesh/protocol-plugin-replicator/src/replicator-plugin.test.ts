@@ -31,7 +31,7 @@ interface MiddlewareOptions {
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
   const encodeFeed = (feed: FeedDescriptor): FeedData => ({
     key: feed.key.asBuffer(), // TODO(dmaretskyi): Has to be buffer because of broken encoding.
-    discoveryKey: feed.feed.discoveryKey
+    discoveryKey: feed.discoveryKey
   });
 
   return {
@@ -51,16 +51,15 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
     },
 
     replicate: async (feeds: FeedData[]) => {
-      const hypercoreFeeds = await Promise.all(feeds.map(async (feedData) => {
+      const feedDescriptors = await Promise.all(feeds.map(async (feedData) => {
         if (feedData.key) {
-          const feed = await feedStore.openReadOnlyFeed(PublicKey.from(feedData.key));
-          return feed.feed;
+          return await feedStore.openReadOnlyFeed(PublicKey.from(feedData.key));
         }
 
         return null;
       }));
 
-      return hypercoreFeeds.filter(boolGuard);
+      return feedDescriptors.filter(boolGuard);
     }
   };
 };
