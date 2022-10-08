@@ -82,7 +82,7 @@ importers:
       jsdom-global: ^3.0.2
       lodash.get: ^4.4.2
       lodash.set: ^4.3.2
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       mocha-junit-reporter: ^2.1.0
       mocha-multi-reporters: ^1.5.1
       netlify-cli: ^11.5.1
@@ -167,9 +167,9 @@ importers:
       jsdom-global: 3.0.2_jsdom@20.0.1
       lodash.get: 4.4.2
       lodash.set: 4.3.2
-      mocha: 10.0.0
-      mocha-junit-reporter: 2.1.0_mocha@10.0.0
-      mocha-multi-reporters: 1.5.1_mocha@10.0.0
+      mocha: 9.2.2
+      mocha-junit-reporter: 2.1.0_mocha@9.2.2
+      mocha-multi-reporters: 1.5.1_mocha@9.2.2
       netlify-cli: 11.5.1
       nx: 14.5.7_@swc-node+register@1.5.1
       nyc: 15.1.0
@@ -1111,7 +1111,7 @@ importers:
       assert: ^2.0.0
       earljs: ~0.1.10
       isomorphic-ws: ^4.0.1
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       typescript: ^4.7.2
       wait-for-expect: ^3.0.2
       ws: ^7.4.4
@@ -1132,7 +1132,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       earljs: 0.1.12_typescript@4.7.4
-      mocha: 10.0.0
+      mocha: 9.2.2
       typescript: 4.7.4
       wait-for-expect: 3.0.2
 
@@ -1888,7 +1888,7 @@ importers:
       immutability-helper: ^3.0.2
       it-all: 1.0.6
       mobile-detect: ~1.4.5
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       robotjs: ~0.6.0
@@ -1949,7 +1949,7 @@ importers:
       electron: 18.0.4
       esbuild-plugin-yaml: 0.0.1
       faker: 5.5.3
-      mocha: 10.0.0
+      mocha: 9.2.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       robotjs: 0.6.0
@@ -1989,7 +1989,7 @@ importers:
       ink-table: ~3.0.0
       ink-text-input: ~4.0.3
       js-yaml: ^4.1.0
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       node-fetch: ^2.6.0
       npm-api: ~1.0.1
       qrcode-terminal: ~0.12.0
@@ -2036,7 +2036,7 @@ importers:
       '@types/react': 17.0.50
       '@types/yargs': 16.0.4
       esbuild: 0.14.49
-      mocha: 10.0.0
+      mocha: 9.2.2
       supervisor: 0.12.0
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
@@ -2075,7 +2075,7 @@ importers:
       '@types/react-dom': ^17.0.9
       debug: ^4.3.3
       lexical: ~0.3.11
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       react: ^17.0.2
       react-dom: ^17.0.2
       ts-node: 10.9.1
@@ -2119,7 +2119,7 @@ importers:
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
       debug: 4.3.4
-      mocha: 10.0.0
+      mocha: 9.2.2
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
@@ -2139,7 +2139,7 @@ importers:
       assert: ^2.0.0
       faker: ^5.5.3
       isomorphic-fetch: ^3.0.0
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       preact: ^10.11.0
       preact-render-to-string: ^5.2.4
       ts-node: 10.9.1
@@ -2161,7 +2161,7 @@ importers:
       '@types/node': 16.11.62
       '@types/url-join': 4.0.1
       faker: 5.5.3
-      mocha: 10.0.0
+      mocha: 9.2.2
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -3180,7 +3180,7 @@ importers:
       lodash.defaultsdeep: ^4.6.1
       lodash.pick: ^4.4.0
       minimatch: ^5.1.0
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       ts-morph: ^16.0.0
       typescript: ^4.7.2
       yargs: ~16.2.0
@@ -3205,7 +3205,7 @@ importers:
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
       '@types/yargs': 16.0.4
-      mocha: 10.0.0
+      mocha: 9.2.2
       typescript: 4.7.4
 
   tools/codemods:
@@ -3258,7 +3258,7 @@ importers:
       jest: 27.5.1
       jsdom: ^20.0.1
       jsdom-global: ^3.0.2
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       pkg-dir: ~5.0.0
       terser: ^5.12.0
       ts-jest: 27.1.4
@@ -3279,7 +3279,7 @@ importers:
       jest: 27.5.1_ts-node@10.9.1
       jsdom: 20.0.1
       jsdom-global: 3.0.2_jsdom@20.0.1
-      mocha: 10.0.0
+      mocha: 9.2.2
       pkg-dir: 5.0.0
       terser: 5.15.0
       ts-jest: 27.1.4_5jrtamctapj4etgwmvh6x5y554
@@ -3354,7 +3354,7 @@ importers:
       argparse: ^2.0.1
       chalk: ^4.1.0
       glob: ~7.1.6
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       protobufjs: ^6.9.0
       read-pkg: ^5.2.0
       ts-morph: ^16.0.0
@@ -3375,7 +3375,7 @@ importers:
       '@types/glob': 7.1.4
       '@types/mocha': 8.2.3
       '@types/node': 16.11.62
-      mocha: 10.0.0
+      mocha: 9.2.2
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -3452,7 +3452,7 @@ importers:
       glob: ~7.1.6
       js-yaml: ^4.1.0
       mdast-util-to-markdown: ~1.3.0
-      mocha: ^10.0.0
+      mocha: ^9.0.0
       protocol-buffers-schema: ~3.6.0
       rehype-stringify: ~9.0.3
       remark: ~14.0.2
@@ -3497,7 +3497,7 @@ importers:
       '@types/protocol-buffers-schema': 3.4.1
       '@types/yargs': 16.0.4
       diff: 5.1.0
-      mocha: 10.0.0
+      mocha: 9.2.2
       ts-node: 10.9.1_ztk36lpti5hakrxlrrp2fdvwfi
       typescript: 4.7.4
 
@@ -20694,6 +20694,18 @@ packages:
     dependencies:
       ms: 2.1.3
 
+  /debug/4.3.3_supports-color@8.1.1:
+    resolution: {integrity: sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
+      supports-color: 8.1.1
+
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -25015,6 +25027,10 @@ packages:
     resolution: {integrity: sha512-/PiFUa7WIsl48dUeCvhIHnwNmAAzlI/eHoJl0vu3nsFA366JleY7Ff8EVTplZu5kO0MIdZjKTTnzItL61ahbnw==}
     engines: {node: '>=8.0.0'}
     dev: false
+
+  /growl/1.10.5:
+    resolution: {integrity: sha512-qBr4OuELkhPenW6goKVXiv47US3clb3/IbuWF9KNKEijAy9oeHxU9IgzjvJhHkUzhaj7rOUD7+YGWqUjLp5oSA==}
+    engines: {node: '>=4.x'}
 
   /growly/1.3.0:
     resolution: {integrity: sha512-+xGQY0YyAWCnqy7Cd++hc2JqMYzlm0dG30Jd0beaA64sROr8C4nt8Yc9V5Ro3avlSUDTN0ulqP/VBKi1/lLygw==}
@@ -30020,11 +30036,11 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
 
-  /minimatch/5.0.1:
-    resolution: {integrity: sha512-nLDxIFRyhDblz3qMuq+SoRZED4+miJ/G+tdDrjkkkRnjAsBexeGpgjLEQ0blJy7rHhR2b93rhQY4SvyWu9v03g==}
+  /minimatch/4.2.1:
+    resolution: {integrity: sha512-9Uq1ChtSZO+Mxa/CL1eGizn2vRn3MlLgzhT0Iz8zaY8NdvxvB0d5QdPFmCKf7JKA9Lerx5vRrnwO03jsSfGG9g==}
     engines: {node: '>=10'}
     dependencies:
-      brace-expansion: 2.0.1
+      brace-expansion: 1.1.11
 
   /minimatch/5.1.0:
     resolution: {integrity: sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==}
@@ -30170,7 +30186,7 @@ packages:
     resolution: {integrity: sha512-yc0LhH6tItlvfLBugVUEtgawwFU2sIe+cSdmRJJCTMZ5GEJyLxNyC/NIOAOGk67Fa8GNpOttO3Xz/1bHpXFD/g==}
     dev: false
 
-  /mocha-junit-reporter/2.1.0_mocha@10.0.0:
+  /mocha-junit-reporter/2.1.0_mocha@9.2.2:
     resolution: {integrity: sha512-Zhz1J+XqJUaAOuSFtHgi2+b+W3rP1SZtaU3HHNNp1iEKMSeoC1/EQUVkGknkLNOBxJhXJ4xLgOr8TbYAZOkUIw==}
     peerDependencies:
       mocha: '>=2.2.5'
@@ -30178,14 +30194,14 @@ packages:
       debug: 2.6.9
       md5: 2.3.0
       mkdirp: 0.5.5
-      mocha: 10.0.0
+      mocha: 9.2.2
       strip-ansi: 6.0.1
       xml: 1.0.1
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /mocha-multi-reporters/1.5.1_mocha@10.0.0:
+  /mocha-multi-reporters/1.5.1_mocha@9.2.2:
     resolution: {integrity: sha512-Yb4QJOaGLIcmB0VY7Wif5AjvLMUFAdV57D2TWEva1Y0kU/3LjKpeRVmlMIfuO1SVbauve459kgtIizADqxMWPg==}
     engines: {node: '>=6.0.0'}
     peerDependencies:
@@ -30193,35 +30209,37 @@ packages:
     dependencies:
       debug: 4.3.4
       lodash: 4.17.21
-      mocha: 10.0.0
+      mocha: 9.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /mocha/10.0.0:
-    resolution: {integrity: sha512-0Wl+elVUD43Y0BqPZBzZt8Tnkw9CMUdNYnUsTfOM1vuhJVZL+kiesFYsqwBkEEuEixaiPe5ZQdqDgX2jddhmoA==}
-    engines: {node: '>= 14.0.0'}
+  /mocha/9.2.2:
+    resolution: {integrity: sha512-L6XC3EdwT6YrIk0yXpavvLkn8h+EU+Y5UcCHKECyMbdUIxyMuZj4bX4U9e1nvnvUUvQVsV2VHQr5zLdcUkhW/g==}
+    engines: {node: '>= 12.0.0'}
     hasBin: true
     dependencies:
       '@ungap/promise-all-settled': 1.1.2
       ansi-colors: 4.1.1
       browser-stdout: 1.3.1
       chokidar: 3.5.3
-      debug: 4.3.4_supports-color@8.1.1
+      debug: 4.3.3_supports-color@8.1.1
       diff: 5.0.0
       escape-string-regexp: 4.0.0
       find-up: 5.0.0
       glob: 7.2.0
+      growl: 1.10.5
       he: 1.2.0
       js-yaml: 4.1.0
       log-symbols: 4.1.0
-      minimatch: 5.0.1
+      minimatch: 4.2.1
       ms: 2.1.3
-      nanoid: 3.3.3
+      nanoid: 3.3.1
       serialize-javascript: 6.0.0
       strip-json-comments: 3.1.1
       supports-color: 8.1.1
-      workerpool: 6.2.1
+      which: 2.0.2
+      workerpool: 6.2.0
       yargs: 16.2.0
       yargs-parser: 20.2.4
       yargs-unparser: 2.0.0
@@ -30428,8 +30446,8 @@ packages:
     hasBin: true
     dev: true
 
-  /nanoid/3.3.3:
-    resolution: {integrity: sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==}
+  /nanoid/3.3.1:
+    resolution: {integrity: sha512-n6Vs/3KGyxPQd6uO0eH4Bv0ojGSUvuLlIHtC3Y0kEO23YRge8H9x1GCzLn28YX0H66pMkxuaeESFq4tKISKwdw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -39496,8 +39514,8 @@ packages:
       microevent.ts: 0.1.1
     dev: true
 
-  /workerpool/6.2.1:
-    resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
+  /workerpool/6.2.0:
+    resolution: {integrity: sha512-Rsk5qQHJ9eowMH28Jwhe8HEbmdYDX4lwoMWshiCXugjtHqMD9ZbiqSDLxcsfdqsETPzVUtX5s1Z5kStiIM6l4A==}
 
   /wrap-ansi/2.1.0:
     resolution: {integrity: sha512-vAaEaDM946gbNpH5pLVNR+vX2ht6n0Bt3GXwVB1AuAqZosOvHNF3P7wDnh8KLkSqgUh0uh77le7Owgoz+Z9XBw==}
