@@ -16,7 +16,7 @@ export default defineConfig({
     include: ['@dxos/react-ui']
   },
   build: {
-    outDir: 'out/experimental/app/ui-consumer',
+    outDir: 'out/experimental/app/text-editor',
     commonjsOptions: {
       include: [
         /packages/,

@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/ui-consumer",
+  "name": "@dxos/composer",
   "version": "1.0.0",
   "private": true,
-  "description": "Consumer of low-level design system for DXOS.",
+  "description": "Document editing experience within a DXOS shell.",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
