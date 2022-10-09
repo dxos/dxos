@@ -3,13 +3,14 @@
 //
 
 import type { NanoresourceProperties } from 'nanoresource';
+import pify from 'pify';
 
-import type { FeedProperties, FeedReplicationOptions } from './types';
+import type { FeedProperties, FeedReplicationOptions, HypercoreFeedObject } from './types';
 
 /**
  * Wrapped HypercoreFeedObject.
  */
-export interface HypercoreFeed extends FeedProperties, NanoresourceProperties {
+export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
   // Nanoresource
   open (): Promise<void>
   close (): Promise<void>
@@ -30,3 +31,19 @@ export interface HypercoreFeed extends FeedProperties, NanoresourceProperties {
   downloaded (start: number, end: number): boolean
   undownload (id: number): void
 }
+
+/**
+ * Wrap async methods.
+ */
+export const wrapFeed = (feed: HypercoreFeedObject): HypercoreFeed => {
+  return Object.assign(feed, {
+    open: pify(feed.open).bind(feed),
+    close: pify(feed.close).bind(feed),
+    append: pify(feed.append).bind(feed),
+    flush: pify(feed.flush).bind(feed),
+    head: pify(feed.head).bind(feed),
+    get: pify(feed.get).bind(feed),
+    getBatch: pify(feed.getBatch).bind(feed),
+    download: pify(feed.download).bind(feed)
+  }) as any as HypercoreFeed;
+};
