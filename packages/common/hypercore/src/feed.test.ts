@@ -8,20 +8,18 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import hypercore from 'hypercore';
 import pify from 'pify';
+import ram from 'random-access-memory';
 
 import { sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-
-import { createRaf } from './util';
 
 chai.use(chaiAsPromised);
 
 describe('Feed', function () {
   it('construct, open and close', async function () {
     const key = sha256(PublicKey.random().toHex());
-    const storage = createRaf();
 
-    const raw = hypercore(storage, key);
+    const raw = hypercore(ram, key);
     const feed = pify(raw);
 
     expect(feed.opened).to.be.false;
