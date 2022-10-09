@@ -51,7 +51,7 @@ const sidebarItem: {
                       .filter(isMarkdown)
                       .map((file) => ({
                         text: fileName(file),
-                        link: link.sectionItem(pkg, fileName(file)),
+                        link: link.sectionItem(pkg, section, fileName(file)),
                       })),
                   } as AnySidebarItem)
                 : null
