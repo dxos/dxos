@@ -3,16 +3,16 @@
 //
 
 import promisify from 'pify';
-
-import { FileStat, RandomAccessFileImpl } from './random-access-file';
+import type { FileStat, RandomAccessFile } from 'random-access-file';
 
 /**
  * Random access file wrapper.
  * https://github.com/random-access-storage/random-access-storage
  */
+// TODO(burdon): Replace with pify'd object.
 export class File {
   constructor (
-    protected readonly _storage: RandomAccessFileImpl
+    protected readonly _storage: RandomAccessFile
   ) {}
 
   get storage () {

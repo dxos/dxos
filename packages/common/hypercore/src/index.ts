@@ -2,4 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './hypercore';
+export * from './defaults';
+export * from './hypercore-factory';
