@@ -12,7 +12,7 @@ export class Directory {
   constructor (
     public readonly path: string,
     private readonly _getFilesInPath: () => File[],
-    private readonly _createFile: (filename: string, path: string, opts?: any) => File,
+    private readonly _createFile: (path: string, filename: string, opts?: any) => File,
     private readonly _deleteFilesInPath: () => Promise<void>
   ) {}
 
@@ -21,7 +21,7 @@ export class Directory {
   }
 
   createOrOpenFile (filename: string, opts?: any): File {
-    return this._createFile(filename, this.path, opts);
+    return this._createFile(this.path, filename, opts);
   }
 
   createDirectory (path: string): Directory {

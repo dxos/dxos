@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './feed';
+export * from './hypercore-feed';

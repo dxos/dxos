@@ -279,6 +279,7 @@ describe.skip('FeedStore', function () {
             cb(err);
             return;
           }
+
           console.log('sign', Buffer.from(res).toString('hex'));
           cb(null, Buffer.from(res));
         });
@@ -297,7 +298,7 @@ describe.skip('FeedStore', function () {
 
     const secretKey = Buffer.from('secret');
 
-    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { secretKey, crypto });
+    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto, secretKey });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto });
 
     const stream1 = hypercore1.replicate(true);

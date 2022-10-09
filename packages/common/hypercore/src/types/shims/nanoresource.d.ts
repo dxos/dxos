@@ -9,12 +9,14 @@
 declare module 'nanoresource' {
   import { Callback } from './callback';
 
-  export interface Nanoresource {
+  export interface NanoresourceProperties {
     opened: boolean // Once opened this stays true.
     closed: boolean
     opening: boolean
     closing: boolean
+  }
 
+  export interface Nanoresource extends NanoresourceProperties {
     open (cb?: Callback<void>): void
     close (cb?: Callback<void>): void
   }

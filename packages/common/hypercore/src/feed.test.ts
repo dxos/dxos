@@ -35,7 +35,6 @@ describe('Feed', function () {
     expect(feed.closed).to.be.false;
 
     await feed.close();
-    console.log(feed.opened, feed.closed);
     expect(feed.opened).to.be.true; // Expected.
     expect(feed.closed).to.be.true;
 

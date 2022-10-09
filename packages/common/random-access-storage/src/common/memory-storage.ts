@@ -15,7 +15,7 @@ import { StorageType } from './storage';
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  protected _createFile (filename: string, path: string): File {
+  protected _createFile (path: string, filename: string): File {
     const fullPath = join(path, filename);
     const existingFile = this._getFileIfExists(fullPath);
     if (existingFile) {

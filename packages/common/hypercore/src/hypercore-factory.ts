@@ -8,7 +8,6 @@ import pify from 'pify';
 import ram from 'random-access-memory';
 
 import { sha256 } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
 import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { defaultFeedOptions } from './defaults';
@@ -20,7 +19,8 @@ import type { FeedOptions } from './types';
  */
 export class HypercoreFactory {
   constructor (
-    private readonly _storage: RandomAccessFileConstructor = ram
+    private readonly _storage: RandomAccessFileConstructor = ram,
+    private readonly _prefix?: string
   ) {
     assert(this._storage);
   }
@@ -28,9 +28,21 @@ export class HypercoreFactory {
   /**
    * Creates a pify wrapped hypercore object.
    */
-  create (publicKey?: PublicKey, options?: FeedOptions): HypercoreFeed {
-    const key = publicKey ? Buffer.from(sha256(publicKey.toHex())) : undefined;
-    const feed = hypercore(this._storage, key, options ?? defaultFeedOptions);
-    return pify(feed);
+  create (publicKey?: Buffer, options?: FeedOptions): HypercoreFeed {
+    // TODO(burdon): Pluggable???
+    const key = publicKey ? Buffer.from(sha256(publicKey.toString('hex'))) : undefined;
+    const feed = hypercore(this._storage, publicKey, options ?? defaultFeedOptions);
+
+    // Wrap async methods.
+    return Object.assign(feed, {
+      open: pify(feed.open).bind(feed),
+      close: pify(feed.close).bind(feed),
+      append: pify(feed.append).bind(feed),
+      flush: pify(feed.flush).bind(feed),
+      head: pify(feed.head).bind(feed),
+      get: pify(feed.get).bind(feed),
+      getBatch: pify(feed.getBatch).bind(feed),
+      download: pify(feed.download).bind(feed)
+    });
   }
 }

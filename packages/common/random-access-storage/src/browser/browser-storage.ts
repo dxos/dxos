@@ -21,7 +21,7 @@ export abstract class BrowserStorage extends AbstractStorage {
 
   protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessFile;
 
-  protected _createFile (filename: string, path: string): File {
+  protected _createFile (path: string, filename: string): File {
     const fullPath = join(path, filename);
     const existingFile = this._getFileIfExists(fullPath);
     if (existingFile) {

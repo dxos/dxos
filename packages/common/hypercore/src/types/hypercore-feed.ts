@@ -22,9 +22,18 @@ import { Callback, RandomAccessFileConstructor } from '@dxos/random-access-stora
 /**
  * Feed data block.
  */
-export type Block = {
+export type FeedBlock = {
   seq: number
   data: Buffer
+}
+
+/**
+ * Download range.
+ */
+export type Range = {
+  start: number
+  end: number
+  linear: boolean
 }
 
 /**
@@ -43,7 +52,7 @@ export type FeedOptions = {
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
  */
-export type ReplicateOptions = {
+export type FeedReplicationOptions = {
   live: boolean
 }
 
@@ -78,16 +87,20 @@ export interface FeedProperties {
 }
 
 /**
+ * Raw hypercore feed.
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  */
 // TODO(burdon): Update full list of methods.
-export interface Feed extends Nanoresource, FeedProperties, events.EventEmitter {
+export interface HypercoreFeedObject extends Nanoresource, FeedProperties, events.EventEmitter {
 
   // Alias for open.
   ready (cb?: Callback<void>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedappenddata-callback
   append (data: string | Buffer | (string | Buffer)[], cb: Callback<number>): void
+
+  // Undocumented.
+  flush (cb?: Callback<void>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
   createReadStream (options?: any): NodeJS.ReadableStream
@@ -96,21 +109,19 @@ export interface Feed extends Nanoresource, FeedProperties, events.EventEmitter 
   createWriteStream (options?: any): NodeJS.WritableStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
-  replicate (initiator: boolean, options?: ReplicateOptions): NodeJS.ReadWriteStream
+  replicate (initiator: boolean, options?: FeedReplicationOptions): NodeJS.ReadWriteStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
-  head (cb: Callback<Block>): void
-  head (options?: any, cb?: Callback<Block>): void
+  head (options?: any, cb?: Callback<FeedBlock>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
-  get (index: number, cb: Callback<Block>): void
-  get (index: number, options: any, cb: Callback<Block>): void
+  get (index: number, options: any, cb: Callback<FeedBlock>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedgetbatchstart-end-options-callback
-  getBatch (start: number, end: number, options: any, cb: Callback<Block[]>): void
+  getBatch (start: number, end: number, options: any, cb: Callback<FeedBlock[]>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-  download (range?: any, cb?: Callback<number>): any
+  download (range?: Range, cb?: Callback<number>): any
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
   downloaded (start: number, end: number): boolean
@@ -121,4 +132,8 @@ export interface Feed extends Nanoresource, FeedProperties, events.EventEmitter 
 
 // Default constructor.
 // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-export type FeedConstructor = (storage: RandomAccessFileConstructor, key?: Buffer | string, options?: FeedOptions) => Feed
+export type HypercoreFeedConstructor = (
+  storage: RandomAccessFileConstructor,
+  key?: Buffer | string,
+  options?: FeedOptions
+) => HypercoreFeedObject

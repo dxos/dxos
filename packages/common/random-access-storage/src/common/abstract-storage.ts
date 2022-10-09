@@ -43,7 +43,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected abstract _createFile (filename: string, path: string, opts?: any): File;
+  protected abstract _createFile (path: string, filename: string, opts?: any): File;
 
   protected abstract _destroy (): Promise<void>;
 

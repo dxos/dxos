@@ -14,7 +14,7 @@ import { createFile, AbstractStorage, File, StorageType } from '../common';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected _createFile (filename: string, path: string, opts: any = {}): File {
+  protected _createFile (path: string, filename: string, opts: any = {}): File {
     const file = createFile(raf(filename, { directory: path, ...opts }));
     this._addFile(join(path, filename), file);
     return file;
