@@ -54,7 +54,7 @@ export abstract class AbstractStorage implements Storage {
   protected _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
-      if (file && !file._isDestroyed()) {
+      if (file && !file.destroyed) {
         return file;
       }
     }

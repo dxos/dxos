@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import ram from 'random-access-memory';
 
 import { AbstractStorage } from './abstract-storage';
-import { File } from './file';
+import { createFile, File } from './file';
 import { StorageType } from './storage';
 
 /**
@@ -19,11 +19,11 @@ export class MemoryStorage extends AbstractStorage {
     const fullPath = join(path, filename);
     const existingFile = this._getFileIfExists(fullPath);
     if (existingFile) {
-      existingFile._reopen();
+      existingFile.reopen();
       return existingFile!;
     }
 
-    const file = new File(ram());
+    const file = createFile(ram());
     this._addFile(fullPath, file);
     return file;
   }

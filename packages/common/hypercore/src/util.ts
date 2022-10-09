@@ -9,5 +9,5 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 // TODO(burdon): Factor out to RAF.
 export const createRaf = (type: StorageType = StorageType.RAM, root = './'): RandomAccessFileConstructor => {
   const dir = createStorage({ type }).createDirectory(root);
-  return (filename: string) => dir.createOrOpenFile(filename).storage;
+  return (filename: string) => dir.createOrOpenFile(filename);
 };
