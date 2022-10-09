@@ -51,7 +51,7 @@ describe('Factory', function () {
     expect(total).to.eq(numBlocks);
   });
 
-  it.only('replicate messages', async function () {
+  it('replicate messages', async function () {
     // TODO(burdon): Files must be unique since 6 cores per feed -- need one factory per feed! { key, secret_key, tree, data, bitfield, signatures).
     const factory = new HypercoreFactory();
 
