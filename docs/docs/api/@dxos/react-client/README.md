@@ -1,95 +1,61 @@
-# Package @dxos/react-client
+# @dxos/react-client
 
-        - @dxos/react-client : Module
-- BotFactoryClientProviderProps : Interface
-- children : Property
-- ClientProviderProps : Interface
-- children : Property
-- client : Property
-- clientRef : Property
-- config : Property
-- onInitialize : Property
-- __type : Type literal
-- __type : Call signature
-- client : Parameter
-- options : Property
-- UseRegistryBotsProps : Interface
-- sortByKeywords : Property
-- ClientProvider : Type alias
-- BotFactoryClientContext : Variable
-- ClientContext : Variable
-- BotFactoryClientProvider : Function
-- BotFactoryClientProvider : Call signature
-- __namedParameters : Parameter
-- ClientProvider : Function
-- ClientProvider : Call signature
-- __namedParameters : Parameter
-- createBotFactoryClient : Function
-- createBotFactoryClient : Call signature
-- config : Parameter
-- useBotFactoryClient : Function
-- useBotFactoryClient : Call signature
-- required : Parameter
-- useClient : Function
-- useClient : Call signature
-- useConfig : Function
-- useConfig : Call signature
-- useContacts : Function
-- useContacts : Call signature
-- useDevtools : Function
-- useDevtools : Call signature
-- useHaloInvitations : Function
-- useHaloInvitations : Call signature
-- client : Parameter
-- useMembers : Function
-- useMembers : Call signature
-- party : Parameter
-- useParties : Function
-- useParties : Call signature
-- useParty : Function
-- useParty : Call signature
-- partyKey : Parameter
-- usePartyInvitations : Function
-- usePartyInvitations : Call signature
-- partyKey : Parameter
-- useProfile : Function
-- useProfile : Call signature
-- disableHaloLogin : Parameter
-- useReducer : Function
-- useReducer : Call signature
-- T : Type parameter
-- R : Type parameter
-- selection : Parameter
-- value : Parameter
-- deps : Parameter
-- useRegistryBotFactories : Function
-- useRegistryBotFactories : Call signature
-- useRegistryBots : Function
-- useRegistryBots : Call signature
-- props : Parameter
-- useResultSet : Function
-- useResultSet : Call signature
-- T : Type parameter
-- resultSet : Parameter
-- useSearchSelection : Function
-- useSearchSelection : Call signature
-- party : Parameter
-- search : Parameter
-- useSecretProvider : Function
-- useSecretProvider : Call signature
-- T : Type parameter
-- useSelection : Function
-- useSelection : Call signature
-- T : Type parameter
-- selection : Parameter
-- deps : Parameter
-- useStream : Function
-- useStream : Call signature
-- T : Type parameter
-- streamFactory : Parameter
-- __type : Type literal
-- __type : Call signature
-- defaultValue : Parameter
-- deps : Parameter
-- useWNSRegistry : Function
-- useWNSRegistry : Call signature
+A react implementation of the DXOS Client APIs.
+
+## Install
+
+```bash
+git clone git@github.com:dxos/protocols.git
+cd protocols
+rush update
+rush build
+
+cd packages/sdk/demos
+rushx book
+```
+
+## Usage
+
+The snippet below illustrates a self-contained DXOS application that uses providers to create the client and instantiate a user profile.
+
+```javascript
+import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+const App = () => {
+  const client = useClient();
+
+  return (
+    <pre>{JSON.stringify(client.info())}</pre>
+  );
+};
+
+const Root = () => (
+  <ClientProvider>
+    <ProfileInitializer>
+      <App />
+    </ProfileInitializer>
+  </ClientProvider>
+);
+
+ReactDOM.render(<Root/>, document.getElementById('root'));
+```
+
+## Storybooks
+
+The [HALO Invitation Story](./stories/halo-invitations.stories.tsx) demonstrates multiple clients (devices) joining the same HALO.
+
+https://user-images.githubusercontent.com/3523355/137532718-a21f1f27-9854-4c0b-831a-e9ff92feac49.mov
+
+The [Party Invitation Story](./stories/party-invitations.stories.tsx) demonstrates multiple clients creating and sharing parties.
+
+https://user-images.githubusercontent.com/3523355/137532717-e77395dc-96f9-4e4b-8f67-e6bd026a3abe.mov
+
+## Contributing
+
+PRs accepted.
+
+## License
+
+MIT © DXOS

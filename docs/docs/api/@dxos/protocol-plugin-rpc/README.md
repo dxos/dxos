@@ -1,30 +1,3 @@
-# Package @dxos/protocol-plugin-rpc
+# @dxos/protocol-plugin-rpc
 
-        - @dxos/protocol-plugin-rpc : Module
-- PluginRpc : Class
-- constructor : Constructor
-- new PluginRpc : Constructor signature
-- _onConnect : Parameter
-- _peers : Property
-- extensionName : Property
-- _onMessage : Method
-- _onMessage : Call signature
-- peer : Parameter
-- data : Parameter
-- _onPeerConnect : Method
-- _onPeerConnect : Call signature
-- peer : Parameter
-- _onPeerDisconnect : Method
-- _onPeerDisconnect : Call signature
-- peer : Parameter
-- close : Method
-- close : Call signature
-- createExtension : Method
-- createExtension : Call signature
-- createPort : Function
-- createPort : Call signature
-- peer : Parameter
-- receive : Parameter
-- getPeerId : Function
-- getPeerId : Call signature
-- peer : Parameter
+Protocol plugin RPC implementation.

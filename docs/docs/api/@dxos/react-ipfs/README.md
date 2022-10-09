@@ -1,28 +1,3 @@
-# Package @dxos/react-ipfs
+# @dxos/react-ipfs
 
-        - @dxos/react-ipfs : Module
-- IPFSFile : Type alias
-- __type : Type literal
-- cid : Property
-- filename : Property
-- size : Property
-- getIpfsUrl : Function
-- getIpfsUrl : Call signature
-- gateway : Parameter
-- cid : Parameter
-- filename : Parameter
-- uploadFilesToIpfs : Function
-- uploadFilesToIpfs : Call signature
-- ipfsClient : Parameter
-- files : Parameter
-- onError : Parameter
-- __type : Type literal
-- __type : Call signature
-- error : Parameter
-- useIpfsClient : Function
-- useIpfsClient : Call signature
-- url : Parameter
-- useIpfsFiles : Function
-- useIpfsFiles : Call signature
-- party : Parameter
-- type : Parameter
+Utils and hooks for managing IPFS files.

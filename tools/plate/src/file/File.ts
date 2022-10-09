@@ -71,10 +71,8 @@ export class File<D = string> {
     return `${path.join(ellipsis(this.dir), `${this.name}${this.ext}`)}${
       typeof this.content === "string"
         ? " [" + kib(this.content?.length ?? 0) + "]"
-        : typeof this.content != "undefined"
-        ? ellipsis((this.content as any)?.toString())
-        : ""
-    }`;
+        : "" 
+    }${this.isCopy() ? ` copy from ${this.copyFrom}` : ''}`;
   }
 
   clone() {

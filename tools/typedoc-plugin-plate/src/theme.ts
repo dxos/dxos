@@ -29,13 +29,14 @@ import { Input } from "./template/api";
 
 export class Theme extends ThemeBase {
   private renderer: Renderer;
+  private outputDirectory: string;
   constructor(renderer: Renderer) {
     super(renderer);
     this.renderer = renderer;
-    // this.listenTo(this.owner, {
-    //   [RendererEvent.BEGIN]: this.onBeginRenderer,
-    //   [PageEvent.BEGIN]: this.onBeginPage,
-    // });
+    this.outputDirectory = "";
+    this.listenTo(this.owner, {
+      [RendererEvent.BEGIN]: this.onBeginRenderer
+    });
   }
 
   render(page: PageEvent<Reflection>): string {
@@ -45,14 +46,14 @@ export class Theme extends ThemeBase {
     );
   }
 
-  // onBeginPage() {}
-
-  // onBeginRenderer() {}
+  onBeginRenderer(event: RendererEvent) {
+    this.outputDirectory = event.outputDirectory;
+  }
 
   async getUrls(project: ProjectReflection) {
     const files = await executeDirectoryTemplate<Input>({
       templateDirectory: path.resolve(__dirname, "template/api"),
-      outputDirectory: "",
+      outputDirectory: this.outputDirectory,
       input: {
         project,
       },
