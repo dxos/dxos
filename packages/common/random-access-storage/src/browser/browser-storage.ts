@@ -3,9 +3,9 @@
 //
 
 import { join } from 'node:path';
-import type { RandomAccessFile } from 'random-access-file';
 
 import { createFile, AbstractStorage, File } from '../common';
+import type { RandomAccessFile } from '../types';
 
 /**
  * Base class for random access files based on IDB.

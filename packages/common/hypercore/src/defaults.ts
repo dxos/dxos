@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FeedOptions, ReplicateOptions } from 'hypercore';
+import type { FeedOptions, ReplicateOptions } from './types';
 
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options

@@ -3,7 +3,8 @@
 //
 
 import pify from 'pify';
-import type { FileStat, RandomAccessFile } from 'random-access-file';
+
+import type { FileStat, RandomAccessFile } from '../types';
 
 /**
  * Construct async File wrapper.

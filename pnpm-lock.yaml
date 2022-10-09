@@ -623,6 +623,8 @@ importers:
       hypercore: ^9.12.0
       pify: ~5.0.0
       random-access-file: ^2.2.1
+      random-access-memory: ^3.1.2
+      random-access-storage: ^3.0.0
     dependencies:
       '@dxos/crypto': link:../crypto
       '@dxos/keys': link:../keys
@@ -631,6 +633,8 @@ importers:
       hypercore: 9.12.0
       pify: 5.0.0
       random-access-file: 2.2.1
+      random-access-memory: 3.1.4
+      random-access-storage: 3.0.0
     devDependencies:
       '@types/chai': 4.3.0
       '@types/chai-as-promised': 7.1.4
@@ -687,7 +691,8 @@ importers:
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
-      random-access-memory: ~3.1.2
+      random-access-memory: ^3.1.2
+      random-access-storage: ^3.0.0
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
     dependencies:
@@ -699,6 +704,7 @@ importers:
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
       random-access-memory: 3.1.4
+      random-access-storage: 3.0.0
       random-access-web: 2.0.3
     devDependencies:
       '@types/pify': 3.0.2
@@ -33725,6 +33731,13 @@ packages:
     resolution: {integrity: sha512-nW7UQGxcihvSLuK9PahoKL0jlmw2S6yGV8DsC85xHuUBLJrUoetRbQ5LzuXTt+FWp/iXgjp12x7zh55NNghaBg==}
     dependencies:
       inherits: 2.0.4
+      queue-tick: 1.0.0
+    dev: false
+
+  /random-access-storage/3.0.0:
+    resolution: {integrity: sha512-f9KeHUMhrqj0hE2d4HbUXk/Cd5vElaVzdA0PuqPTlnxsG3dDvwQaMg8POT5tWK6UxJ80zAONZpHgLPMnnff1RA==}
+    dependencies:
+      events: 3.3.0
       queue-tick: 1.0.0
     dev: false
 

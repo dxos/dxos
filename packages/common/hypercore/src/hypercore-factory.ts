@@ -3,16 +3,17 @@
 //
 
 import assert from 'assert';
-import hypercore, { FeedOptions } from 'hypercore';
+import hypercore from 'hypercore';
 import pify from 'pify';
-import type { Constructor as RandomAccessFileConstructor } from 'random-access-file';
 import ram from 'random-access-memory';
 
 import { sha256 } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { defaultFeedOptions } from './defaults';
 import { HypercoreFeed } from './hypercore-feed';
+import type { FeedOptions } from './types';
 
 /**
  * Hypercore wrapper factory.

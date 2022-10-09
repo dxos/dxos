@@ -32,7 +32,7 @@ void (async () => {
 
     for (let i = 0; i < maxMessages; i++) {
       await new Promise<void>((resolve, reject) => {
-        feed.append(`${name}/${i}`, (err) => {
+        feed.append(`${name}/${i}`, (err: Error) => {
           if (err) {
             return reject(err);
           }

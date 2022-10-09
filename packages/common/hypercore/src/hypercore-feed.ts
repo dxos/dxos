@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { FeedProperties } from 'hypercore';
 import * as Nanoresource from 'nanoresource';
+
+import type { FeedProperties } from './types';
 
 /**
  * Pify wrapped Hypercore object.
