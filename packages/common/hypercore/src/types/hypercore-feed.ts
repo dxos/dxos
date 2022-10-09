@@ -14,7 +14,6 @@
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
 
-import events from 'events';
 import type { Nanoresource } from 'nanoresource';
 
 import { Callback, RandomAccessFileConstructor } from '@dxos/random-access-storage';
@@ -91,7 +90,7 @@ export interface FeedProperties {
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  */
 // TODO(burdon): Update full list of methods.
-export interface HypercoreFeedObject extends Nanoresource, FeedProperties, events.EventEmitter {
+export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
 
   // Alias for open.
   ready (cb?: Callback<void>): void
