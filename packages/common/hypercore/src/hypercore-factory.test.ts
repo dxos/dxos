@@ -82,26 +82,29 @@ describe('Factory', function () {
     const stream2 = feed2.replicate(false);
     stream1.pipe(stream2).pipe(stream1);
 
-    let upload = 0;
+    let uploaded = 0;
     feed1.on('upload', () => {
-      console.log('up');
-      upload++;
+      uploaded++;
+      // TODO(burdon): Formatter.
+      console.log('up  ', String(uploaded).padStart(4), feed1.length);
     });
 
-    let download = 0;
+    let downloaded = 0;
     feed2.on('download', (seq: number, data: Buffer) => {
-      console.log('down');
       const { id } = JSON.parse(data.toString()) as TestDataItem;
       expect(id).to.eq(seq);
-      download++;
-      expect(upload).to.be.greaterThanOrEqual(download);
+      downloaded++;
+      console.log('down', String(downloaded).padStart(4), feed2.length);
+      expect(downloaded).to.be.lessThanOrEqual(uploaded);
     });
+
+    // TODO(burdon): Everything is written synchronously, so this is only called once.
     feed2.on('sync', () => {
       console.log('sync');
       expect(feed2.length).to.eq(numBlocks);
     });
 
-    // TODO(burdon): This doesn't work (try to create race condition).
+    // TODO(burdon): This doesn't work.
     // setRandomInterval((i) => {
     //   const datum = createDataItem(i);
     //   void feed1.append(JSON.stringify(datum));
@@ -109,10 +112,10 @@ describe('Factory', function () {
     // }, 0, 10);
 
     const data: TestDataItem[] = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
-    for await (const datum of data) {
+    for (const datum of data) {
       void feed1.append(JSON.stringify(datum));
 
-      // TODO(burdon): Test sync can happen before end.
+      // TODO(burdon): Flush sporadically to test random syncing.
       if (faker.datatype.boolean()) {
         void feed1.flush();
       }
@@ -120,12 +123,8 @@ describe('Factory', function () {
 
     await feed1.flush();
 
-    // setTimeout(() => {
-    //   void feed2.download();
-    // }, 100);
-
     await waitForExpect(async () => {
-      expect(download).to.eq(numBlocks);
+      expect(downloaded).to.eq(numBlocks);
       expect(feed2.length).to.eq(feed1.length);
     });
 
