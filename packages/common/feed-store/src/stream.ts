@@ -5,8 +5,6 @@
 import debug from 'debug';
 import { Readable, Transform, Writable } from 'readable-stream';
 
-import type { HypercoreFeed } from '@dxos/hypercore';
-
 const error = debug('dxos:stream:error');
 
 /**
@@ -19,13 +17,13 @@ const error = debug('dxos:stream:error');
  * Returns a stream that appends messages directly to a hypercore feed.
  * @returns {NodeJS.WritableStream}
  */
-// TODO(burdon): Move to @dxos/codec.
-export const createWritableFeedStream = (feed: HypercoreFeed) => new Writable({
-  objectMode: true,
-  write: (message, _, callback) => {
-    feed.append(message, callback);
-  }
-});
+// TODO(burdon): Remove.
+// export const createWritableFeedStream = (feed: HypercoreFeed) => new Writable({
+//   objectMode: true,
+//   write: (message, _, callback) => {
+//     feed.append(message, callback);
+//   }
+// });
 
 /**
  * Creates a readStream stream that can be used as a buffer into which messages can be pushed.
