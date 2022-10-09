@@ -8,7 +8,8 @@ const apiPath = path.resolve(__dirname, "../../docs/api");
 
 export const link = {
   package: (name: string) => `/api/${name}`,
-  class: (pkg: string, name: string) => `/api/${pkg}/classes/${name}`,
+  sectionItem: (pkg: string, section: string, name: string) =>
+    `/api/${pkg}/${section}/${name}`,
 };
 
 type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;
@@ -41,7 +42,7 @@ const sidebarItem: {
           await Promise.all(
             API_SECTIONS.map(async (section) =>
               (await dirExists(path.resolve(apiPath, pkg, section)))
-                ? {
+                ? ({
                     text: capitalCase(section),
                     collapsible: true,
                     children: (
@@ -50,9 +51,9 @@ const sidebarItem: {
                       .filter(isMarkdown)
                       .map((file) => ({
                         text: fileName(file),
-                        link: link.class(pkg, fileName(file)),
+                        link: link.sectionItem(pkg, fileName(file)),
                       })),
-                  } as AnySidebarItem
+                  } as AnySidebarItem)
                 : null
             )
           )
