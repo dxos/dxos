@@ -36,12 +36,20 @@ export type Range = {
 }
 
 /**
+ * https://github.com/mafintosh/abstract-encoding
+ */
+export type ValueEncoding = {
+  encode: (data: any) => Uint8Array
+  decode: (data: Uint8Array) => any
+}
+
+/**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
  */
 export type FeedOptions = {
   createIfMissing?: boolean
   secretKey?: Buffer
-  valueEncoding?: 'json' | 'utf-8' | 'binary' // defaults to binary
+  valueEncoding?: 'json' | 'utf-8' | 'binary' | ValueEncoding
   crypto?: {
     sign: (data: any, secretKey: Buffer, cb: Callback<any>) => void
     verify: (signature: any, data: any, key: Buffer, cb: Callback<boolean>) => void

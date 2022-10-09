@@ -97,12 +97,12 @@ describe.skip('FeedStore', function () {
   it.skip('Create duplicate feed', async function () {
     const { feedStore } = await createDefault();
 
-    const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
-    assert(fds.secretKey);
+    const { feed } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
+    assert(feed.secretKey);
 
     const [usersFeed, feed2] = await Promise.all([
-      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey),
-      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey)
+      feedStore.openReadWriteFeed(PublicKey.from(feed.key), feed.secretKey),
+      feedStore.openReadWriteFeed(PublicKey.from(feed.key), feed.secretKey)
     ]);
     expect(usersFeed.feed).toBe(feed2.feed);
 
