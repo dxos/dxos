@@ -7,6 +7,7 @@ import { PublicKey } from '@dxos/keys';
 /**
  * Protobuf encoding.
  */
+// TODO(burdon): Check custom encoding.
 export type ValueEncoding = string | {
   encode: (data: any) => Uint8Array
   decode: (data: Uint8Array) => any

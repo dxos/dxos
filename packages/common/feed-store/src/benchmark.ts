@@ -30,15 +30,9 @@ void (async () => {
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await fs.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
+    // TODO(burdon): Can we use a plain for loop for await?
     for (let i = 0; i < maxMessages; i++) {
-      await new Promise<void>((resolve, reject) => {
-        feed.append(`${name}/${i}`, (err: Error) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve();
-        });
-      });
+      await feed.append(`${name}/${i}`);
     }
 
     return feed;

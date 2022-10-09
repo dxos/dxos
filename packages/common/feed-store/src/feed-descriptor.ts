@@ -10,39 +10,17 @@ import pify from 'pify';
 import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
-import type { Hypercore, HypercoreFeed } from '@dxos/hypercore';
+import type { HypercoreFeedConstructor, HypercoreFeed } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Directory, RandomAccessFile, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import type { ValueEncoding } from './types';
 
-// TODO(burdon): New wrapper.
-// TODO(burdon): Use factor to create mocks (why is that required?)
-// TODO(burdon): Why is the semaphore required on open.
-export class Wrapper {
-  private readonly _feed: HypercoreFeed;
-
-  constructor (
-    private readonly _hypercore: Hypercore
-  ) {
-    this._feed = pify(this._hypercore);
-  }
-
-  // TODO(burdon): Internal only.
-  get hypercore (): Hypercore {
-    return this._feed;
-  }
-
-  get feed (): HypercoreFeed {
-    return this._feed;
-  }
-}
-
 // TODO(burdon): Use hypercore.FeedOptions directly.
 type FeedDescriptorOptions = {
   directory: Directory
   key: PublicKey
-  hypercore?: Hypercore
+  hypercore?: HypercoreFeedConstructor
   secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
@@ -58,7 +36,7 @@ export class FeedDescriptor {
   private readonly _key: PublicKey;
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
-  private readonly _hypercore: Hypercore;
+  private readonly _hypercore: HypercoreFeedConstructor;
   private readonly _disableSigning: boolean;
   private readonly _signer?: Signer;
 

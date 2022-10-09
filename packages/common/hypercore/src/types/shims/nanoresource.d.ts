@@ -27,10 +27,10 @@ declare module 'nanoresource' {
   import { Callback } from './callback';
 
   export interface NanoresourceProperties {
-    opened: boolean // Once opened this stays true.
-    closed: boolean
-    opening: boolean
-    closing: boolean
+    readonly opened: boolean // Once opened this stays true.
+    readonly closed: boolean // Cannot be re-opened after closed.
+    readonly opening: boolean
+    readonly closing: boolean
   }
 
   export interface Nanoresource extends NanoresourceProperties, EventEmitter {
