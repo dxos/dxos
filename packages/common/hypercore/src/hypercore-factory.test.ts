@@ -12,35 +12,7 @@ import { createKeyPair } from '@dxos/crypto';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { HypercoreFeed } from './hypercore-feed';
-
-// TODO(burdon): Replace with proto.
-type TestDataItem = { id: number, text: string }
-
-const createDataItem = (n: number): TestDataItem => ({
-  id: n,
-  text: faker.lorem.sentence()
-});
-
-// TODO(burdon): Move to async.
-const setRandomInterval = (cb: (i: number) => boolean, min = 0, max = 100) => {
-  let i = 0;
-  let running = true;
-  const f = () => {
-    setTimeout(() => {
-      if (running) {
-        if (cb(i++)) {
-          f();
-        }
-      }
-    }, faker.datatype.number({ min, max }));
-  };
-
-  f();
-
-  return () => {
-    running = false;
-  };
-};
+import { createDataItem, TestDataItem } from './testing';
 
 describe('Factory', function () {
   it('construct, open and close', async function () {
