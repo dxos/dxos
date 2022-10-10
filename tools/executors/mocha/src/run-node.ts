@@ -7,7 +7,7 @@ import { assert } from 'node:console';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { execTool, getBin, mochaComment, resolveFiles } from './util';
+import { execTool, getBin, mochaComment, resolveFiles } from './util/index.js';
 
 export type NodeOptions = {
   testPatterns: string[]
@@ -52,7 +52,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     // TODO(dmaretskyi): Remove this once we don't have any CJS tests.
     '-r', '@swc-node/register',
 
-    ...(options.domRequired ? ['-r', 'jsdom-global/register'] : []),
+    ...(options.domRequired ? ['-r', require.resolve('jsdom-global/register')] : []),
     ...setupArgs,
     ...watchArgs,
     '-t', String(options.timeout),
