@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './Demo';
-export * from './HighlightedCode';
-export * from './ShowcaseComponent';
-export * from './TypescriptApiBox';
+export * from './Demo.js';
+export * from './HighlightedCode.js';
+export * from './ShowcaseComponent.js';
+export * from './TypescriptApiBox.js';

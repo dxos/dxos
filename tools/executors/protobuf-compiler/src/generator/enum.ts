@@ -3,11 +3,11 @@
 //
 
 import { dirname, relative } from 'path';
-import * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
+import {default as protobufjs } from 'protobufjs';
+import ts from 'typescript';
 
-import { GeneratorContext } from './context';
-import { attachDocComment } from './doc-comment';
+import { GeneratorContext } from './context.js';
+import { attachDocComment } from './doc-comment.js';
 
 const f = ts.factory;
 

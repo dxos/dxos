@@ -5,12 +5,12 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { MyKey } from './my-key';
-import { schema } from './proto';
+import { MyKey } from './my-key.js';
+import { schema } from './proto/index.js';
 import {
   ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp
-} from './proto/gen/example/testing/types';
-import { Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
+} from './proto/gen/example/testing/types.js';
+import { Test } from './proto/gen/example/testing/util.js'; // NOTE: From protobuf-test.
 
 // TODO(burdon): Remove foo, bar, etc.
 

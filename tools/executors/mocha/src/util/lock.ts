@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { trigger } from './trigger';
+import { trigger } from './trigger.js';
 
 // Copied from @dxos/async.
 export class Lock {

@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import { ChildProcess, spawn, SpawnSyncOptionsWithBufferEncoding } from 'child_process';
 
-import { TOOLCHAIN_PACKAGE_DIR } from '../common';
+import { TOOLCHAIN_PACKAGE_DIR } from '../common.js';
 
 const printChildStatus = (child: ChildProcess, name: string, start: number) => {
   if (child.exitCode === null) {

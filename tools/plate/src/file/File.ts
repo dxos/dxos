@@ -6,7 +6,7 @@ import { promises as fs } from 'fs';
 import mkdirp from 'mkdirp';
 import * as path from 'path';
 
-import { relative, fileExists, ellipsis, kib } from './utils';
+import { relative, fileExists, ellipsis, kib } from './utils.js';
 
 export type Path = string | string[];
 

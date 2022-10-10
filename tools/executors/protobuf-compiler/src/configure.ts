@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
+import descriptorJson from 'protobufjs/google/protobuf/descriptor.json' assert { type: 'json' };
 
 /**
  * Manually adds descriptor proto to the list of common protobuf definitions.
  */
 export const preconfigureProtobufjs = () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  pb.common('descriptor', require('protobufjs/google/protobuf/descriptor.json').nested.google.nested.protobuf.nested);
+  pb.common('descriptor', descriptorJson.nested.google.nested.protobuf.nested);
 };

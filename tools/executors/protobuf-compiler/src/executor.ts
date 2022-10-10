@@ -3,12 +3,12 @@
 //
 
 import type { ExecutorContext } from '@nrwl/devkit';
-import { sync as glob } from 'glob';
+import globPkg from 'glob';
 import { rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolve } from 'path';
 
-import { build } from './build';
+import { build } from './build.js';
 
 export interface GenerateExecutorOptions {
   basePath: string
@@ -33,7 +33,7 @@ export default async (options: GenerateExecutorOptions, context: ExecutorContext
   }
 
   const substitutions = existsSync(substitutionsPath) ? substitutionsPath : undefined;
-  const proto = glob(src, { cwd: context.cwd });
+  const proto = globPkg.sync(src, { cwd: context.cwd });
 
   await build({
     proto,

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './browser';
-export * from './build';
-export * from './output';
-export * from './run-tests';
+export * from './browser.js';
+export * from './build.js';
+export * from './output.js';
+export * from './run-tests.js';

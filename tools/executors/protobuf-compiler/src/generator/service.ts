@@ -4,14 +4,14 @@
 
 import assert from 'node:assert';
 import { dirname, relative } from 'path';
-import * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
+import {default as protobufjs } from 'protobufjs';
+import ts from 'typescript';
 
-import { normalizeFullyQualifiedName } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
-import { GeneratorContext } from './context';
-import { attachDocComment } from './doc-comment';
-import { types, getTypeReference } from './types';
+import { normalizeFullyQualifiedName } from '../namespaces.js';
+import { SubstitutionsMap } from '../parser/index.js';
+import { GeneratorContext } from './context.js';
+import { attachDocComment } from './doc-comment.js';
+import { types, getTypeReference } from './types.js';
 
 const f = ts.factory;
 

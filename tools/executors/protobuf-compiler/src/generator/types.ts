@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
+import {default as protobufjs } from 'protobufjs';
+import ts from 'typescript';
 
 import {
   convertNameToIdentifier,
@@ -12,8 +12,8 @@ import {
   getRelativeName,
   getSafeNamespaceIdentifier,
   namesEqual
-} from '../namespaces';
-import { SubstitutionsMap } from '../parser';
+} from '../namespaces.js';
+import { SubstitutionsMap } from '../parser/index.js';
 
 const f = ts.factory;
 

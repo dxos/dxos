@@ -8,11 +8,11 @@ import { ArgumentParser } from 'argparse';
 import { resolve } from 'path';
 import readPkg from 'read-pkg';
 
-import { preconfigureProtobufjs } from './configure';
-import { logger } from './logger';
-import { ModuleSpecifier } from './module-specifier';
-import { registerResolver } from './parser';
-import { parseAndGenerateSchema } from './type-generator';
+import { preconfigureProtobufjs } from './configure.js';
+import { logger } from './logger.js';
+import { ModuleSpecifier } from './module-specifier.js';
+import { registerResolver } from './parser/index.js';
+import { parseAndGenerateSchema } from './type-generator.js';
 
 const main = async () => {
   const { version } = await readPkg();

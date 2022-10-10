@@ -8,7 +8,7 @@ import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
 import { loadSync } from 'sorcery';
 
-import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess, registerGlobalPlugin } from './preprocessor';
+import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess, registerGlobalPlugin } from './preprocessor.js';
 
 //
 // Here be dragons.

@@ -11,8 +11,8 @@ import { Box, Tooltip, ToggleButtonGroup, ToggleButton, Collapse, IconButton } f
 import { styled, alpha, useTheme } from '@mui/material/styles';
 import { MUIStyledCommonProps } from '@mui/system';
 
-import { HighlightedCode } from './HighlightedCode';
-import { JavaScriptIcon, TypeScriptIcon } from './icons';
+import { HighlightedCode } from './HighlightedCode.js';
+import { JavaScriptIcon, TypeScriptIcon } from './icons/index.js';
 
 const Root = styled('div')(({ theme }) => ({
   marginBottom: 40,

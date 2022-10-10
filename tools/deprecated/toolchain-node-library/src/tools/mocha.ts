@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Config } from '../config';
-import { execTool } from './common';
+import { Config } from '../config.js';
+import { execTool } from './common.js';
 
 export interface ExecMochaOpts {
   config: Config

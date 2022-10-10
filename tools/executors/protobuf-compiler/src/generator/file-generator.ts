@@ -3,16 +3,16 @@
 //
 
 import { dirname, join } from 'path';
-import pb from 'protobufjs';
-import * as ts from 'typescript';
+import { default as pb } from 'protobufjs';;
+import ts from 'typescript';
 
-import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
-import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
-import { SubstitutionsMap } from '../parser';
-import { GeneratorContext } from './context';
-import { createDeclarations, createTypeDictionary } from './declaration-generator';
-import { createSerializerDefinition } from './serializer-definition-generator';
-import { createServicesDictionary } from './service';
+import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier.js';
+import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces.js';
+import { SubstitutionsMap } from '../parser/index.js';
+import { GeneratorContext } from './context.js';
+import { createDeclarations, createTypeDictionary } from './declaration-generator.js';
+import { createSerializerDefinition } from './serializer-definition-generator.js';
+import { createServicesDictionary } from './service.js';
 
 const f = ts.factory;
 

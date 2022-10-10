@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 
-import { Flowchart } from './mermaid';
+import { Flowchart } from './mermaid.js';
 
 describe('Mermaid builder', function () {
   it('Flowchart', function () {

@@ -10,9 +10,9 @@ import { dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { Page } from 'playwright';
 
-import { Lock, trigger } from '../util';
-import { BrowserType } from './browser';
-import { TestResult } from './reporter';
+import { Lock, trigger } from '../util/index.js';
+import { BrowserType } from './browser.js';
+import { TestResult } from './reporter.js';
 
 export type RunTestsOptions = {
   debug: boolean

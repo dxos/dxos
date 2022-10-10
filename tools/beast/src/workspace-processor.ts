@@ -6,8 +6,8 @@ import fs from 'fs';
 import minimatch from 'minimatch';
 import path from 'path';
 
-import { PackageJson, Project, ProjectMap, WorkspaceJson } from './types';
-import { array } from './util';
+import { PackageJson, Project, ProjectMap, WorkspaceJson } from './types.js';
+import { array } from './util.js';
 
 type WorkspaceProcessorOptions = {
   verbose?: boolean

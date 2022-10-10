@@ -8,7 +8,7 @@ import * as React from 'react';
 import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@mui/styles';
 
-import { Demo } from './Demo';
+import { Demo } from './Demo.js';
 
 interface ShowcaseComponentProps {
   component: any

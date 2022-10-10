@@ -13,8 +13,8 @@ import { hideBin } from 'yargs/helpers';
 //     return new TSError(diagnosticText, diagnosticCodes, diagnostics);
 import { log } from '@dxos/log';
 
-import { PackageDependencyBuilder } from './package-dependency-builder';
-import { WorkspaceProcessor } from './workspace-processor';
+import { PackageDependencyBuilder } from './package-dependency-builder.js';
+import { WorkspaceProcessor } from './workspace-processor.js';
 
 const main = () => {
   log.info('Started');

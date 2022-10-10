@@ -3,6 +3,7 @@
 //
 
 import assert from 'node:assert';
+import { createRequire } from 'node:module';
 import { isAbsolute, resolve, relative } from 'path';
 
 /**
@@ -35,19 +36,19 @@ export class ModuleSpecifier {
       const relativePath = normalizeRelativePath(relative(importContext, resolve(this.contextPath, this.name)));
       for (const ext of ['.js', '.ts']) {
         if (relativePath.endsWith(ext)) {
-          return removeExtension(relativePath, ext);
+          return `${removeExtension(relativePath, ext)}.js`; // Add .js extension for ESM support.
         }
       }
-      return relativePath;
+      return `${relativePath}.js`; // Add .js extension for ESM support.
     }
   }
 
   resolve () {
-    return require.resolve(this.name, { paths: [this.contextPath] });
+    return createRequire(import.meta.url).resolve(this.name, { paths: [this.contextPath] });
   }
 }
 
-export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', __dirname);
+export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', new URL(import.meta.url).pathname);
 
 const normalizeRelativePath = (path: string) => {
   if (!path.startsWith('.')) {

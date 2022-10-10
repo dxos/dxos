@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './tools';
+export * from './tools/index.js';
 
-export * from './common';
-export * from './config';
-export * from './main';
-export * from './project';
+export * from './common.js';
+export * from './config.js';
+export * from './main.js';
+export * from './project.js';

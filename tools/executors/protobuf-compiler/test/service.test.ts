@@ -7,9 +7,9 @@ import { it as test } from 'mocha';
 
 import { Stream } from '@dxos/codec-protobuf';
 
-import { MyKey } from './my-key';
-import { schema } from './proto';
-import { TaskType } from './proto/gen/example/testing/types';
+import { MyKey } from './my-key.js';
+import { schema } from './proto/index.js';
+import { TaskType } from './proto/gen/example/testing/types.js';
 
 test('services', async () => {
   const service = schema.getService('example.testing.service.TestService');

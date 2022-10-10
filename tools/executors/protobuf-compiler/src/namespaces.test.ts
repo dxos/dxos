@@ -5,18 +5,18 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 import { resolve, join } from 'path';
-import * as pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
-import { preconfigureProtobufjs } from './configure';
-import { splitSchemaIntoNamespaces } from './namespaces';
-import { registerResolver } from './parser';
+import { preconfigureProtobufjs } from './configure.js';
+import { splitSchemaIntoNamespaces } from './namespaces.js';
+import { registerResolver } from './parser/index.js';
 
 test('split namespaces', async () => {
   const baseDir = resolve(process.cwd(), './test/proto');
   registerResolver(baseDir);
   preconfigureProtobufjs();
 
-  const root = await pb.load(join(__dirname, '../test/proto/example/testing/types.proto'));
+  const root = await pb.load(new URL('../test/proto/example/testing/types.proto', import.meta.url).pathname);
   const namespaces = splitSchemaIntoNamespaces(root);
 
   expect(Array.from(namespaces.keys()).sort()).toEqual([

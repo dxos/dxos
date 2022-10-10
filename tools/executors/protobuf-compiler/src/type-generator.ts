@@ -4,14 +4,14 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import pb from 'protobufjs';
-import * as ts from 'typescript';
+import { default as pb } from 'protobufjs';;
+import ts from 'typescript';
 
-import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator';
-import { logger } from './logger';
-import { ModuleSpecifier } from './module-specifier';
-import { splitSchemaIntoNamespaces } from './namespaces';
-import { parseSubstitutionsFile, SubstitutionsMap } from './parser';
+import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator/index.js';
+import { logger } from './logger.js';
+import { ModuleSpecifier } from './module-specifier.js';
+import { splitSchemaIntoNamespaces } from './namespaces.js';
+import { parseSubstitutionsFile, SubstitutionsMap } from './parser/index.js';
 
 export const parseAndGenerateSchema = async (
   substitutionsModule: ModuleSpecifier | undefined,

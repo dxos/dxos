@@ -10,8 +10,8 @@ import {
   executeFileTemplate,
   TemplatingResult,
   isTemplateFile
-} from './executeFileTemplate';
-import { File } from './file';
+} from './executeFileTemplate.js';
+import { File } from './file/index.js';
 
 export type ExecuteDirectoryTemplateOptions<TInput> = {
   templateDirectory: string

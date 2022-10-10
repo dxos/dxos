@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { File } from './File';
+import { File } from './File.js';
 
 export class JSONFile<T> extends File<T> {
   protected override async serialize (): Promise<string> {

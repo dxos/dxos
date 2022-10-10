@@ -4,7 +4,9 @@
     "lib": [
       "DOM"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+
+    "module": "CommonJS"
   },
   "include": [
     "src",

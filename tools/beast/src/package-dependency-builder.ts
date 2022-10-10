@@ -6,9 +6,9 @@ import ColorHash from 'color-hash';
 import fs from 'fs';
 import path from 'path';
 
-import { Flowchart, SubgraphBuilder } from './mermaid';
-import { Project, ProjectMap } from './types';
-import { array } from './util';
+import { Flowchart, SubgraphBuilder } from './mermaid.js';
+import { Project, ProjectMap } from './types.js';
+import { array } from './util.js';
 
 const colorHash = new ColorHash({
   lightness: 0.95,

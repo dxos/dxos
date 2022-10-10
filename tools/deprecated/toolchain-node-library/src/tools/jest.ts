@@ -4,9 +4,9 @@
 
 import { join } from 'path';
 
-import { TOOLCHAIN_PACKAGE_DIR } from '../common';
-import { Project } from '../project';
-import { execTool } from './common';
+import { TOOLCHAIN_PACKAGE_DIR } from '../common.js';
+import { Project } from '../project.js';
+import { execTool } from './common.js';
 
 export interface ExecJestOpts {
   project: Project

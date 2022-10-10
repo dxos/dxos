@@ -3,13 +3,13 @@
 //
 
 import expect from 'expect';
-import pick from 'lodash/pick';
+import pick from 'lodash.pick';
 import path from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
-import { Flowchart } from './mermaid';
-import { ProjectProcessor } from './project-processor';
-import { WorkspaceProcessor } from './workspace-processor';
+import { Flowchart } from './mermaid.js';
+import { ProjectProcessor } from './project-processor.js';
+import { WorkspaceProcessor } from './workspace-processor.js';
 
 // TODO(burdon): Navigate imports (package), then look for private final, new, etc.
 // TODO(burdon): Find package.
@@ -19,7 +19,7 @@ import { WorkspaceProcessor } from './workspace-processor';
 //  Also track `new` construction of decorated objects.
 //  https://www.typescriptlang.org/docs/handbook/decorators.html
 
-const baseDir = path.join(__dirname, '../../..');
+const baseDir = new URL('../../..', import.meta.url).pathname;
 
 describe('Code analysis', function () {
   it('Sanity', function () {

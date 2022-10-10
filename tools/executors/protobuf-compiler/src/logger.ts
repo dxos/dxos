@@ -4,8 +4,8 @@
 
 import chalk from 'chalk';
 
-import { ModuleSpecifier } from './module-specifier';
-import { SubstitutionsMap } from './parser';
+import { ModuleSpecifier } from './module-specifier.js';
+import { SubstitutionsMap } from './parser/index.js';
 
 export class Logger {
   logCompilationOptions (

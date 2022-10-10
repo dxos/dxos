@@ -5,10 +5,10 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import { resolve } from 'node:path';
 
-import { BrowserTypes } from './browser';
-import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser';
-import { NodeOptions, runNode } from './run-node';
-import { runSetup } from './util';
+import { BrowserTypes } from './browser/index.js';
+import { BrowserOptions, runBrowser, runBrowserBuild } from './run-browser.js';
+import { NodeOptions, runNode } from './run-node.js';
+import { runSetup } from './util/index.js';
 
 export const TestEnvironments = [
   'nodejs',
@@ -56,7 +56,7 @@ export default async (options: MochaExecutorOptions, context: ExecutorContext): 
       case 'chromium':
       case 'firefox':
       case 'webkit': {
-        success &&= skipBrowserTests || await runBrowser(context.projectName!, env, resolvedOptions);
+        success &&= skipBrowserTests || (await runBrowser(context.projectName!, env, resolvedOptions));
         break;
       }
 

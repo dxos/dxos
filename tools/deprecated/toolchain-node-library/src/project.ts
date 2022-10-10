@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { sync as pkgDir } from 'pkg-dir';
 
-import { Config } from './config';
+import { Config } from './config.js';
 
 export interface ToolchainConfig {
   bundlePackages?: string[]

@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
+import {default as protobufjs } from 'protobufjs';
+import ts from 'typescript';
 
-import { normalizeFullyQualifiedName } from '../namespaces';
-import { GeneratorContext } from './context';
-import { createEnumDeclaration } from './enum';
-import { createMessageDeclaration } from './message';
-import { createServiceDeclaration } from './service';
-import { getTypeReference } from './types';
+import { normalizeFullyQualifiedName } from '../namespaces.js';
+import { GeneratorContext } from './context.js';
+import { createEnumDeclaration } from './enum.js';
+import { createMessageDeclaration } from './message.js';
+import { createServiceDeclaration } from './service.js';
+import { getTypeReference } from './types.js';
 
 const f = ts.factory;
 

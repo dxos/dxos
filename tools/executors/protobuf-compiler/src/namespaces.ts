@@ -3,8 +3,8 @@
 //
 
 import assert from 'node:assert';
-import * as pb from 'protobufjs';
-import * as ts from 'typescript';
+import { default as pb } from 'protobufjs';;
+import ts from 'typescript';
 
 const f = ts.factory;
 

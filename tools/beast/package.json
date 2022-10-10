@@ -38,6 +38,7 @@
     "@types/lodash": "^4.14.182",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/minimatch": "^5.1.2",
+    "@types/lodash.pick": "^4.4.7",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.58",
     "@types/yargs": "~16.0.1",

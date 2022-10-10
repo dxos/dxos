@@ -3,9 +3,9 @@
 //
 
 import { Project, Symbol, TypeChecker } from 'ts-morph';
-import * as ts from 'typescript';
+import ts from 'typescript';
 
-import { ModuleSpecifier } from '../module-specifier';
+import { ModuleSpecifier } from '../module-specifier.js';
 
 export interface ImportDescriptor {
   clause: ts.ImportClause

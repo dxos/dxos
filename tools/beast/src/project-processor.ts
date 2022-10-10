@@ -5,7 +5,7 @@
 import path from 'path';
 import { ClassDeclaration, Project } from 'ts-morph';
 
-import { ProjectMap } from './types';
+import { ProjectMap } from './types.js';
 
 /**
  * Process Nx project and package.

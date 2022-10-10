@@ -3,8 +3,9 @@
 //
 
 import { existsSync } from 'fs';
+import { createRequire } from 'module';
 import { basename, dirname, join } from 'path';
-import pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
 export type ProtoResolver = (origin: string, target: string) => string | null;
 
@@ -22,6 +23,8 @@ export function createProtoResolver (
     if (classicResolved && existsSync(classicResolved)) {
       return classicResolved;
     }
+
+    const require = createRequire(import.meta.url)
 
     try {
       // Test if referenced package.

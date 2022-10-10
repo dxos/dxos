@@ -3,11 +3,11 @@
 //
 
 import assert from 'node:assert';
-import * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
+import {default as protobufjs } from 'protobufjs';
+import ts from 'typescript';
 
-import { SubstitutionsMap } from '../parser';
-import { types } from './types';
+import { SubstitutionsMap } from '../parser/index.js';
+import { types } from './types.js';
 
 const f = ts.factory;
 

@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Project } from '../project';
-import { execCommand } from './common';
+import { Project } from '../project.js';
+import { execCommand } from './common.js';
 
 export const execScript = async (project: Project, script: string, args: string[]) => {
   if (!project.packageJsonContents.scripts?.[script]) {

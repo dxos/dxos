@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './JavaScriptIcon';
-export * from './TypeScriptIcon';
+export * from './JavaScriptIcon.js';
+export * from './TypeScriptIcon.js';

@@ -4,8 +4,8 @@
 
 import { anySubstitutions, timestampSubstitutions } from '@dxos/codec-protobuf';
 
-import { MyInterfaceSubstitution } from '../my-interface';
-import { MyKey } from '../my-key';
+import { MyInterfaceSubstitution } from '../my-interface.js';
+import { MyKey } from '../my-key.js';
 
 export default {
   ...anySubstitutions,

@@ -3,11 +3,11 @@
 //
 
 import expect from 'expect';
-import path from 'path';
+import { URL } from 'url';
 
-import { WorkspaceProcessor } from './workspace-processor';
+import { WorkspaceProcessor } from './workspace-processor.js';
 
-const baseDir = path.join(__dirname, '../../..');
+const baseDir = new URL('../../..', import.meta.url).pathname;
 
 describe('Code analysis', function () {
   it('Sanity', function () {

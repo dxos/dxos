@@ -6,15 +6,15 @@ import chalk from 'chalk';
 import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 import * as fs from 'fs';
-import { sync as glob } from 'glob';
+import globPkg from 'glob';
 import { join } from 'path';
 import { Arguments, Argv } from 'yargs';
 
 import { FixMemdownPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
-import { Config, defaults } from './config';
-import { Project } from './project';
-import { execCommand, execJest, execTool, execLint, execMocha, execScript } from './tools';
+import { Config, defaults } from './config.js';
+import { Project } from './project.js';
+import { execCommand, execJest, execTool, execLint, execMocha, execScript } from './tools/index.js';
 
 const PACKAGE_TIMEOUT = 10 * 60 * 1000;
 
@@ -63,7 +63,7 @@ const buildProto = async (config: Config, project: Project) => {
   }
 
   // Compile protocol buffer definitions.
-  const protoFiles = glob(src, { cwd: project.packageRoot });
+  const protoFiles = globPkg.sync(src, { cwd: project.packageRoot });
   if (protoFiles.length > 0) {
     process.stdout.write(chalk`\n{green.bold Protobuf}\n`);
 
