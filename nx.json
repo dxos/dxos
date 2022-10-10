@@ -31,7 +31,7 @@
     //   https://nx.dev/more-concepts/customizing-inputs#global-settings.
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.json",
-      "{workspaceRoot}/.eslintrc*.js"
+      "{workspaceRoot}/.eslintrc*.cjs"
     ],
     "production": [
       "default",
@@ -39,7 +39,7 @@
       "!{projectRoot}/**/*.test.ts",
       "!{projectRoot}/**/*.md",
       "!{projectRoot}/eslintConfig.json",
-      "!{workspaceRoot}/.eslintrc*.js"
+      "!{workspaceRoot}/.eslintrc*.cjs"
     ]
   },
   "targetDefaults": {
