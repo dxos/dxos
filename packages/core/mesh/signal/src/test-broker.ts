@@ -4,7 +4,7 @@
 
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import debug from 'debug';
-import fetch from 'node-fetch';
+import { default as fetch } from 'node-fetch';
 import path, { dirname } from 'path';
 import pkgUp from 'pkg-up';
 import * as process from 'process';
@@ -20,7 +20,7 @@ interface TestBrokerOptions {
 }
 
 export class TestBroker {
-  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: __dirname })!), 'bin');
+  private readonly _binPath = path.join(dirname(pkgUp.sync({ cwd: new URL('.', import.meta.url).pathname })!), 'bin');
   private _startRetries = 0;
   private readonly _retriesLimit = 3;
   private readonly _port: number;
