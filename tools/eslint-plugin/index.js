@@ -4,10 +4,10 @@
 
 module.exports = {
   configs: {
-    packlets: require('./configs/packlets'),
-    recommended: require('./configs/recommended'),
-    react: require('./configs/react'),
-    test: require('./configs/test'),
-    typescript: require('./configs/typescript')
+    packlets: require('@dxos/eslint-plugin/configs/packlets'),
+    recommended: require('@dxos/eslint-plugin/configs/recommended'),
+    react: require('@dxos/eslint-plugin/configs/react'),
+    test: require('@dxos/eslint-plugin/configs/test'),
+    typescript: require('@dxos/eslint-plugin/configs/typescript')
   }
 };
