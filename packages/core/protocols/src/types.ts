@@ -5,9 +5,9 @@
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 
-import { TYPES } from './proto';
-import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
-import { Timeframe } from './timeframe';
+import { TYPES } from './proto/index.js';
+import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed.js';
+import { Timeframe } from './timeframe.js';
 
 export type TypedMessage = TypedProtoMessage<TYPES>
 

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './proto';
-export * from './timeframe';
-export * from './testing';
-export * from './types';
+export * from './proto/index.js';
+export * from './timeframe.js';
+export * from './testing.js';
+export * from './types.js';

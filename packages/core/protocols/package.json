@@ -6,10 +6,171 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "type": "module",
   "browser": {
     "node:assert": "assert",
     "node:util": "util"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./proto/dxos/bot": {
+      "default": "./dist/src/proto/gen/dxos/bot.js",
+      "types": "./dist/src/proto/gen/dxos/bot.d.ts"
+    },
+    "./proto/dxos/client": {
+      "default": "./dist/src/proto/gen/dxos/client.js",
+      "types": "./dist/src/proto/gen/dxos/client.d.ts"
+    },
+    "./proto/dxos/config": {
+      "default": "./dist/src/proto/gen/dxos/config.js",
+      "types": "./dist/src/proto/gen/dxos/config.d.ts"
+    },
+    "./proto/dxos/devtools": {
+      "default": "./dist/src/proto/gen/dxos/devtools.js",
+      "types": "./dist/src/proto/gen/dxos/devtools.d.ts"
+    },
+    "./proto/dxos/echo/feed": {
+      "default": "./dist/src/proto/gen/dxos/echo/feed.js",
+      "types": "./dist/src/proto/gen/dxos/echo/feed.d.ts"
+    },
+    "./proto/dxos/echo/invitation_protocol": {
+      "default": "./dist/src/proto/gen/dxos/echo/invitation_protocol.js",
+      "types": "./dist/src/proto/gen/dxos/echo/invitation_protocol.d.ts"
+    },
+    "./proto/dxos/echo/invitation": {
+      "default": "./dist/src/proto/gen/dxos/echo/invitation.js",
+      "types": "./dist/src/proto/gen/dxos/echo/invitation.d.ts"
+    },
+    "./proto/dxos/echo/metadata": {
+      "default": "./dist/src/proto/gen/dxos/echo/metadata.js",
+      "types": "./dist/src/proto/gen/dxos/echo/metadata.d.ts"
+    },
+    "./proto/dxos/echo/model/messenger": {
+      "default": "./dist/src/proto/gen/dxos/echo/model/messenger.js",
+      "types": "./dist/src/proto/gen/dxos/echo/model/messenger.d.ts"
+    },
+    "./proto/dxos/echo/model/object": {
+      "default": "./dist/src/proto/gen/dxos/echo/model/object.js",
+      "types": "./dist/src/proto/gen/dxos/echo/model/object.d.ts"
+    },
+    "./proto/dxos/echo/model/text": {
+      "default": "./dist/src/proto/gen/dxos/echo/model/text.js",
+      "types": "./dist/src/proto/gen/dxos/echo/model/text.d.ts"
+    },
+    "./proto/dxos/echo/service": {
+      "default": "./dist/src/proto/gen/dxos/echo/service.js",
+      "types": "./dist/src/proto/gen/dxos/echo/service.d.ts"
+    },
+    "./proto/dxos/echo/snapshot": {
+      "default": "./dist/src/proto/gen/dxos/echo/snapshot.js",
+      "types": "./dist/src/proto/gen/dxos/echo/snapshot.d.ts"
+    },
+    "./proto/dxos/echo/timeframe": {
+      "default": "./dist/src/proto/gen/dxos/echo/timeframe.js",
+      "types": "./dist/src/proto/gen/dxos/echo/timeframe.d.ts"
+    },
+    "./proto/dxos/google": {
+      "default": "./dist/src/proto/gen/dxos/google.js",
+      "types": "./dist/src/proto/gen/dxos/google.d.ts"
+    },
+    "./proto/dxos/halo/credentials": {
+      "default": "./dist/src/proto/gen/dxos/halo/credentials.js",
+      "types": "./dist/src/proto/gen/dxos/halo/credentials.d.ts"
+    },
+    "./proto/dxos/halo/credentials/auth": {
+      "default": "./dist/src/proto/gen/dxos/halo/credentials/auth.js",
+      "types": "./dist/src/proto/gen/dxos/halo/credentials/auth.d.ts"
+    },
+    "./proto/dxos/halo/credentials/greet": {
+      "default": "./dist/src/proto/gen/dxos/halo/credentials/greet.js",
+      "types": "./dist/src/proto/gen/dxos/halo/credentials/greet.d.ts"
+    },
+    "./proto/dxos/halo/credentials/identity": {
+      "default": "./dist/src/proto/gen/dxos/halo/credentials/identity.js",
+      "types": "./dist/src/proto/gen/dxos/halo/credentials/identity.d.ts"
+    },
+    "./proto/dxos/halo/credentials/party": {
+      "default": "./dist/src/proto/gen/dxos/halo/credentials/party.js",
+      "types": "./dist/src/proto/gen/dxos/halo/credentials/party.d.ts"
+    },
+    "./proto/dxos/halo/invitations": {
+      "default": "./dist/src/proto/gen/dxos/halo/invitations.js",
+      "types": "./dist/src/proto/gen/dxos/halo/invitations.d.ts"
+    },
+    "./proto/dxos/halo/keyring": {
+      "default": "./dist/src/proto/gen/dxos/halo/keyring.js",
+      "types": "./dist/src/proto/gen/dxos/halo/keyring.d.ts"
+    },
+    "./proto/dxos/halo/keys": {
+      "default": "./dist/src/proto/gen/dxos/halo/keys.js",
+      "types": "./dist/src/proto/gen/dxos/halo/keys.d.ts"
+    },
+    "./proto/dxos/halo/signed": {
+      "default": "./dist/src/proto/gen/dxos/halo/signed.js",
+      "types": "./dist/src/proto/gen/dxos/halo/signed.d.ts"
+    },
+    "./proto/dxos/keys": {
+      "default": "./dist/src/proto/gen/dxos/keys.js",
+      "types": "./dist/src/proto/gen/dxos/keys.d.ts"
+    },
+    "./proto/dxos/mesh/bridge": {
+      "default": "./dist/src/proto/gen/dxos/mesh/bridge.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/bridge.d.ts"
+    },
+    "./proto/dxos/mesh/broadcast": {
+      "default": "./dist/src/proto/gen/dxos/mesh/broadcast.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/broadcast.d.ts"
+    },
+    "./proto/dxos/mesh/messaging": {
+      "default": "./dist/src/proto/gen/dxos/mesh/messaging.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/messaging.d.ts"
+    },
+    "./proto/dxos/mesh/presence": {
+      "default": "./dist/src/proto/gen/dxos/mesh/presence.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/presence.d.ts"
+    },
+    "./proto/dxos/mesh/protocol": {
+      "default": "./dist/src/proto/gen/dxos/mesh/protocol.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/protocol.d.ts"
+    },
+    "./proto/dxos/mesh/replicator": {
+      "default": "./dist/src/proto/gen/dxos/mesh/replicator.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/replicator.d.ts"
+    },
+    "./proto/dxos/mesh/signal": {
+      "default": "./dist/src/proto/gen/dxos/mesh/signal.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/signal.d.ts"
+    },
+    "./proto/dxos/mesh/swarm": {
+      "default": "./dist/src/proto/gen/dxos/mesh/swarm.js",
+      "types": "./dist/src/proto/gen/dxos/mesh/swarm.d.ts"
+    },
+    "./proto/dxos/registry": {
+      "default": "./dist/src/proto/gen/dxos/registry.js",
+      "types": "./dist/src/proto/gen/dxos/registry.d.ts"
+    },
+    "./proto/dxos/rpc": {
+      "default": "./dist/src/proto/gen/dxos/rpc.js",
+      "types": "./dist/src/proto/gen/dxos/rpc.d.ts"
+    },
+    "./proto/dxos/service/publisher": {
+      "default": "./dist/src/proto/gen/dxos/service/publisher.js",
+      "types": "./dist/src/proto/gen/dxos/service/publisher.d.ts"
+    },
+    "./proto/dxos/type": {
+      "default": "./dist/src/proto/gen/dxos/type.js",
+      "types": "./dist/src/proto/gen/dxos/type.d.ts"
+    },
+    "./proto/example/testing/data": {
+      "default": "./dist/src/proto/gen/example/testing/data.js",
+      "types": "./dist/src/proto/gen/example/testing/data.d.ts"
+    },
+    "./proto/example/testing/rpc": {
+      "default": "./dist/src/proto/gen/example/testing/rpc.js",
+      "types": "./dist/src/proto/gen/example/testing/rpc.d.ts"
+    }
   },
   "types": "dist/src/index.d.ts",
   "files": [
