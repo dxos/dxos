@@ -14,7 +14,7 @@ const transform: Transform = (fileInfo, api, options) => {
   }
 
   // Only process sources.
-  if(!fileInfo.path.includes('src')) {
+  if(!['src', 'test', 'stories'].some(path => fileInfo.path.includes(path))) {
     return null
   }
 
@@ -35,7 +35,7 @@ const transform: Transform = (fileInfo, api, options) => {
       return
     }
 
-    if(['.js', '.ts', '.tsx', '.json'].some(ext => source.endsWith(ext))) {
+    if(['.js', '.ts', '.jsx', '.tsx', '.json'].some(ext => source.endsWith(ext))) {
       return
     }
 
