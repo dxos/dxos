@@ -11,10 +11,23 @@ import { getFullPath } from './utils';
 export class Directory {
   constructor (
     public readonly path: string,
+    // TODO(burdon): Create interface for these methods.
     private readonly _getFilesInPath: () => File[],
     private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
     private readonly _deleteFilesInPath: () => Promise<void>
   ) {}
+
+  /**
+   * Create a new sub-directory.
+   */
+  createDirectory (path: string): Directory {
+    return new Directory(
+      getFullPath(this.path, path),
+      this._getFilesInPath,
+      this._getOrCreateFile,
+      this._deleteFilesInPath
+    );
+  }
 
   /**
    * Get all files in the current directory.
@@ -28,18 +41,6 @@ export class Directory {
    */
   getOrCreateFile (filename: string, opts?: any): File {
     return this._getOrCreateFile(this.path, filename, opts);
-  }
-
-  /**
-   * Create a new sub-directory.
-   */
-  createDirectory (path: string): Directory {
-    return new Directory(
-      getFullPath(this.path, path),
-      this._getFilesInPath,
-      this._getOrCreateFile,
-      this._deleteFilesInPath
-    );
   }
 
   /**

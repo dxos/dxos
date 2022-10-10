@@ -53,10 +53,12 @@ export abstract class AbstractStorage implements Storage {
 
     // TODO(burdon): Reopen?
     let file = this._getFileIfExists(fullPath);
-    if (!file) {
+    if (file) {
+      file.reopen();
+    } else {
       const raw = this._createFile(path, filename, opts);
       file = wrapFile(raw);
-      this._files.set(filename, file);
+      this._files.set(fullPath, file);
     }
 
     return file;
@@ -66,7 +68,7 @@ export abstract class AbstractStorage implements Storage {
 
   protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessFile;
 
-  protected _getFileIfExists (filename: string): File | undefined {
+  private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
       if (file && !file.destroyed) {
@@ -78,18 +80,20 @@ export abstract class AbstractStorage implements Storage {
   private _getFilesInPath (path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      Array.from(this._files.entries()).filter(([path]) => path.includes(fullPath))
+      Array.from(this._files.entries()).filter(([path]) => {
+        return path.includes(fullPath);
+      })
     );
   }
 
   private async _closeFilesInPath (path: string): Promise<void> {
-    await Promise.all([...this._getFilesInPath(path).values()].map(
+    await Promise.all(Array.from(this._getFilesInPath(path).values()).map(
       file => file.close().catch((err: any) => log.catch(err))
     ));
   }
 
   protected async _deleteFilesInPath (path: string): Promise<void> {
-    await Promise.all([...this._getFilesInPath(path)].map(([path, file]) => {
+    await Promise.all(Array.from(this._getFilesInPath(path)).map(([path, file]) => {
       return file.destroy()
         .then(() => this._files.delete(path))
         .catch((error: any) => log.error(error.message));

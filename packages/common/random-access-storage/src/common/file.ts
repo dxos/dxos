@@ -25,13 +25,13 @@ export interface File {
   /**
    * @deprecated
    */
-  // TODO(burdon): Remove.
+  // TODO(burdon): Remove?
   get destroyed (): boolean
 
   /**
    * @deprecated
    */
-  // TODO(burdon): Remove.
+  // TODO(burdon): Remove?
   reopen (): void
 }
 
@@ -43,7 +43,7 @@ export const wrapFile = (file: RandomAccessFile): File => {
   return Object.assign(wrapper, {
     native: file,
 
-    // TODO(burdon): This will only work for ram and idb.
+    // TODO(burdon): This will only work for ram and idb?
     reopen: () => {
       if (wrapper.destroyed) {
         throw new Error('File is destroyed.');

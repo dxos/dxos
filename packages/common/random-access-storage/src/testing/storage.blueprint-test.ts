@@ -48,8 +48,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
       const count = 10;
       const files = Array.from(Array(count))
-        .map(() => randomText())
-        .map(fileName => directory.getOrCreateFile(fileName));
+        .map(() => directory.getOrCreateFile(randomText()));
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
@@ -75,51 +74,30 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
       const fileName = randomText();
       const file = directory.getOrCreateFile(fileName);
-
       const { size } = await file.stat();
       expect(size).toBe(0);
     });
 
-    it('reopen', async () => {
-      // Open.
+    it.only('reopen and check if data is the same', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
-      const file = directory.getOrCreateFile(fileName);
+      const data1 = Buffer.from(randomText());
 
-      // Write & close.
-      await writeAndCheck(file, Buffer.from(randomText()));
-      await file.close();
+      {
+        const file = directory.getOrCreateFile(fileName);
+        await writeAndCheck(file, data1);
+        await file.close();
+      }
 
-      // Open again.
-      const file2 = directory.getOrCreateFile('EchoMetadata');
-      // Write & close.
-      await writeAndCheck(file2, Buffer.from(randomText()));
-      await file2.close();
+      {
+        const file = directory.getOrCreateFile(fileName);
+        const data2 = await file.read(0, data1.length);
+        expect(data2).toEqual(data1);
+        await file.close();
+      }
     });
 
-    it('reopen and check if data is the same', async () => {
-      // Open.
-      const storage = createStorage();
-      const fileName = randomText();
-      const data = Buffer.from(randomText());
-      const directory = storage.createDirectory();
-      const file = directory.getOrCreateFile(fileName);
-
-      // Write & close.
-      await writeAndCheck(file, data);
-      await file.close();
-
-      // Open again.
-      const file2 = directory.getOrCreateFile(fileName);
-
-      // Read and check inside.
-      const dataFromFile = await file2.read(0, data.length);
-      expect(dataFromFile).toEqual(data);
-      await file2.close();
-    });
-
-    // TODO(burdon): ???
     it.skip('destroy clears all data', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
@@ -141,7 +119,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       }
     });
 
-    it('subdirectories', async () => {
+    it('sub-directories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
       const dir1 = storage.createDirectory('dir1');
@@ -164,7 +142,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
-    it('write in directory/subDirectory/file', async () => {
+    it('write in directory/sub-directory/file', async () => {
       const storage = createStorage();
       const dir = storage.createDirectory('directory');
       const subDir = dir.createDirectory('subDirectory');
@@ -192,7 +170,6 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
-
       await file.destroy();
 
       const reopened = directory.getOrCreateFile(fileName);
@@ -215,8 +192,9 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
     it('truncate file', async function () {
       const storage = createStorage();
+
+      // File.truncate() throws 'Not deletable' error for IDb.
       if (storage.type === StorageType.IDB) {
-        // File.truncate() throws 'Not deletable' error for IDb.
         this.skip();
       }
 
