@@ -13,7 +13,7 @@ import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protoco
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { InvitationDescriptor } from './invitation-descriptor';
+import { InvitationDescriptor } from './invitation-descriptor.js';
 
 // TODO(burdon): Possible to factor out echo-db deps.
 

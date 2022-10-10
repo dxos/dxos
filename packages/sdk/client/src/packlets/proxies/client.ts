@@ -22,12 +22,12 @@ import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
-import { createDevtoolsRpcServer } from './devtools';
-import { EchoProxy } from './echo-proxy';
-import { HaloProxy } from './halo-proxy';
-import { ClientServiceProxy } from './service-proxy';
-import { OpenProgress } from './stubs';
-import { DXOS_VERSION } from './version';
+import { createDevtoolsRpcServer } from './devtools.js';
+import { EchoProxy } from './echo-proxy.js';
+import { HaloProxy } from './halo-proxy.js';
+import { ClientServiceProxy } from './service-proxy.js';
+import { OpenProgress } from './stubs.js';
+import { DXOS_VERSION } from './version.js';
 
 const log = debug('dxos:client-proxy');
 

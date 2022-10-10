@@ -5,7 +5,7 @@
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { MaybeFunction, MaybePromise } from '@dxos/util';
 
-import { Config } from './config';
+import { Config } from './config.js';
 
 export type ConfigProvider = MaybeFunction<MaybePromise<Config | ConfigProto>>
 

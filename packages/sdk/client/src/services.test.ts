@@ -12,7 +12,7 @@ import { InvitationRequest, RedeemedInvitation } from '@dxos/protocols/proto/dxo
 import { RpcClosedError } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { Client } from './packlets/proxies';
+import { Client } from './packlets/proxies/index.js';
 
 const setupClient = async () => {
   const client = new Client();

@@ -5,22 +5,22 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { DevtoolsHost, Event as ClientAPIEvent } from '@dxos/protocols/proto/dxos/devtools';
 
-import { getConfig } from './config';
-import { enableDebugLogging, disableDebugLogging } from './debug-logging';
-import { DevtoolsServiceDependencies } from './devtools-context';
-import { DevtoolsHostEvents } from './devtools-host-events';
-import { subscribeToFeeds, subscribeToFeedBlocks } from './feeds';
-import { subscribeToItems } from './items';
-import { subscribeToCredentialMessages, subscribeToKeyringKeys } from './keys';
+import { getConfig } from './config.js';
+import { enableDebugLogging, disableDebugLogging } from './debug-logging.js';
+import { DevtoolsServiceDependencies } from './devtools-context.js';
+import { DevtoolsHostEvents } from './devtools-host-events.js';
+import { subscribeToFeeds, subscribeToFeedBlocks } from './feeds.js';
+import { subscribeToItems } from './items.js';
+import { subscribeToCredentialMessages, subscribeToKeyringKeys } from './keys.js';
 import {
   getNetworkPeers,
   subscribeToNetworkTopics,
   subscribeToNetworkStatus,
   subscribeToSignalTrace,
   subscribeToSwarmInfo
-} from './network';
-import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties';
-import { resetStorage } from './storage';
+} from './network.js';
+import { getPartySnapshot, savePartySnapshot, subscribeToParties } from './parties.js';
+import { resetStorage } from './storage.js';
 
 export const createDevtoolsHost = (
   context: DevtoolsServiceDependencies,

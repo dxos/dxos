@@ -29,8 +29,8 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
-import { ServiceContext } from '../service-context';
+import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations/index.js';
+import { ServiceContext } from '../service-context.js';
 
 /**
  * Party service implementation.

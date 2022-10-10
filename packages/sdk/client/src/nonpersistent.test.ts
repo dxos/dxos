@@ -10,7 +10,7 @@ import 'source-map-support/register';
 import { createKeyPair } from '@dxos/crypto';
 import { ObjectModel } from '@dxos/object-model';
 
-import { Client, defaultTestingConfig } from './packlets/proxies';
+import { Client, defaultTestingConfig } from './packlets/proxies/index.js';
 
 describe('Client - nonpersistent', function () {
   it('open & close', async function () {

@@ -12,9 +12,9 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { Halo, Invitation, InvitationRequest } from '../api';
-import { InvitationProxy } from './invitation-proxy';
-import { Contact, CreateProfileOptions, PartyMember } from './stubs';
+import { Halo, Invitation, InvitationRequest } from '../api/index.js';
+import { InvitationProxy } from './invitation-proxy.js';
+import { Contact, CreateProfileOptions, PartyMember } from './stubs.js';
 
 export interface HaloInfo {
   key?: PublicKey

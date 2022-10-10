@@ -11,10 +11,10 @@ import { ObjectModel, ObjectProperties } from '@dxos/object-model';
 import { Party as PartyProto, PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { CreationInvitationOptions, InvitationRequest, Party } from '../api';
-import { InvitationProxy } from './invitation-proxy';
-import { ClientServiceProxy } from './service-proxy';
-import { PARTY_ITEM_TYPE } from './stubs';
+import { CreationInvitationOptions, InvitationRequest, Party } from '../api/index.js';
+import { InvitationProxy } from './invitation-proxy.js';
+import { ClientServiceProxy } from './service-proxy.js';
+import { PARTY_ITEM_TYPE } from './stubs.js';
 
 export type ActivationOptions = any
 

@@ -6,7 +6,7 @@
 
 import expect from 'expect';
 import assert from 'node:assert';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { clientServiceBundle, InvitationDescriptor } from '@dxos/client-services';
@@ -19,7 +19,7 @@ import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { Client } from './packlets/proxies';
+import { Client } from './packlets/proxies/index.js';
 
 describe('Client', function () {
   //

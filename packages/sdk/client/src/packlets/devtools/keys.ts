@@ -10,7 +10,7 @@ import {
 } from '@dxos/protocols/proto/dxos/devtools';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { DevtoolsServiceDependencies } from './devtools-context';
+import { DevtoolsServiceDependencies } from './devtools-context.js';
 
 export const subscribeToKeyringKeys = ({ keyring }: DevtoolsServiceDependencies) => new Stream<SubscribeToKeyringKeysResponse>(({ next }) => {
   next({ keys: keyring.keys });

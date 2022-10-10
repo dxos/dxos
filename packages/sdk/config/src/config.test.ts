@@ -6,9 +6,9 @@ import expect from 'expect';
 
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 
-import { Config, mapFromKeyValues, mapToKeyValues } from './config';
-import defaults from './testing/defaults.json';
-import envmap from './testing/envs-map.json';
+import { Config, mapFromKeyValues, mapToKeyValues } from './config.js';
+import defaults from './testing/defaults.json' assert { type: 'json' };
+import envmap from './testing/envs-map.json' assert { type: 'json' };
 
 it('Empty config', function () {
   const config = new Config({});

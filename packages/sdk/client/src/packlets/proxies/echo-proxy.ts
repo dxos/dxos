@@ -14,11 +14,11 @@ import { ObjectModel } from '@dxos/object-model';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { Echo, Party, PartyInvitation } from '../api';
-import { HaloProxy } from './halo-proxy';
-import { InvitationProxy } from './invitation-proxy';
-import { PartyProxy } from './party-proxy';
-import { ClientServiceProxy } from './service-proxy';
+import { Echo, Party, PartyInvitation } from '../api/index.js';
+import { HaloProxy } from './halo-proxy.js';
+import { InvitationProxy } from './invitation-proxy.js';
+import { PartyProxy } from './party-proxy.js';
+import { ClientServiceProxy } from './service-proxy.js';
 
 /**
  * Client proxy to local/remote ECHO service.

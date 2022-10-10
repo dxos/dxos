@@ -16,8 +16,8 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
-import { Identity } from './identity';
+import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator.js';
+import { Identity } from './identity.js';
 
 describe('halo/identity', function () {
   it('create', async function () {

@@ -18,7 +18,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { HaloSigner } from '../signer';
+import { HaloSigner } from '../signer.js';
 
 /**
  * HALO service implementation.

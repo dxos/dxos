@@ -15,7 +15,7 @@ import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { Identity } from '../identity';
+import { Identity } from '../identity/index.js';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord

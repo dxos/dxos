@@ -12,7 +12,7 @@ import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager'
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { IdentityManager } from './identity-manager';
+import { IdentityManager } from './identity-manager.js';
 
 describe('identity-manager', function () {
   const setupPeer = async ({

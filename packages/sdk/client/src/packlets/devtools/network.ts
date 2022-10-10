@@ -14,7 +14,7 @@ import {
   SubscribeToSwarmInfoResponse
 } from '@dxos/protocols/proto/dxos/devtools';
 
-import { DevtoolsServiceDependencies } from './devtools-context';
+import { DevtoolsServiceDependencies } from './devtools-context.js';
 
 export const subscribeToNetworkStatus = (hook: DevtoolsServiceDependencies) => new Stream<SubscribeToSignalStatusResponse>(({ next, close }) => {
   const update = () => {

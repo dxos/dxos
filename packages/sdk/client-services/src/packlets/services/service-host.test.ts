@@ -8,7 +8,7 @@ import { InvitationState } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { afterTest } from '@dxos/testutils';
 
-import { ClientServiceHost } from './service-host';
+import { ClientServiceHost } from './service-host.js';
 
 const defaultTestingConfig: ConfigProto = {
   version: 1,

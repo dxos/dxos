@@ -7,6 +7,6 @@ export * as defs from '@dxos/protocols/proto/dxos/config';
 
 export { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-export * from './config';
-export * from './loaders';
-export * from './types';
+export * from './config.js';
+export * from './loaders/index.js';
+export * from './types.js';

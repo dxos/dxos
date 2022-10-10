@@ -17,7 +17,7 @@ import {
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { RpcClosedError } from '@dxos/rpc';
 
-import { InvitationRequest } from '../api';
+import { InvitationRequest } from '../api/index.js';
 
 export interface CreateInvitationRequestOpts {
   stream: Stream<InvitationRequestProto>

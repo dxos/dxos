@@ -22,8 +22,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 
-import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations';
-import { ServiceContext } from '../service-context';
+import { InvitationDescriptor, InviteeInvitation, InviteeInvitations } from '../../invitations/index.js';
+import { ServiceContext } from '../service-context.js';
 
 /**
  * Profile service implementation.

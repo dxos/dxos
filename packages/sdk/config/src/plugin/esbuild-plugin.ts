@@ -5,8 +5,8 @@
 import type { Plugin } from 'esbuild';
 import assert from 'node:assert';
 
-import { definitions } from './definitions';
-import { ConfigPluginOpts } from './types';
+import { definitions } from './definitions.js';
+import { ConfigPluginOpts } from './types.js';
 
 // TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
 export const ConfigPlugin = ({

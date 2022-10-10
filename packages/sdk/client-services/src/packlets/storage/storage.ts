@@ -4,14 +4,14 @@
 
 import jsondown from 'jsondown';
 import leveljs from 'level-js';
-import memdown from 'memdown';
+import { default as memdown } from 'memdown';
 
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { isNode } from '@dxos/util';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
-import { InvalidConfigurationError } from '../../errors';
+import { InvalidConfigurationError } from '../../errors.js';
 
 export type KeyStorageType = 'ram' | 'leveljs' | 'jsondown';
 

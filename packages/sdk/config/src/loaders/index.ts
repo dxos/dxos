@@ -8,8 +8,8 @@ import path from 'node:path';
 
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-import { mapFromKeyValues } from '../config';
-import { FILE_DEFAULTS, FILE_ENVS } from '../types';
+import { mapFromKeyValues } from '../config.js';
+import { FILE_DEFAULTS, FILE_ENVS } from '../types.js';
 
 const DEFAULT_BASE_PATH = path.resolve(process.cwd(), 'config');
 

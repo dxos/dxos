@@ -56,6 +56,6 @@ export {
   createWebRTCTransportFactory
 } from '@dxos/network-manager';
 
-export * from './packlets/api';
-export * from './packlets/proxies';
+export * from './packlets/api/index.js';
+export * from './packlets/proxies/index.js';
 // export * from './packlets/devtools';

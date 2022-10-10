@@ -62,7 +62,7 @@
         "outputPath": "tmp/mocha/packages/sdk/client",
         "resultsPath": "test-results/packages/sdk/client",
         "coveragePath": "coverage/packages/sdk/client",
-        "setup": "packages/core/mesh/signal/testing/setup.js",
+        "setup": "packages/core/mesh/signal/testing/setup.cjs",
         "checkLeaks": false,
         "forceExit": true
       }

@@ -7,7 +7,7 @@ import expect from 'expect';
 import { validateKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
-import { Client, InvitationOffer, Item, Role } from './api';
+import { Client, InvitationOffer, Item, Role } from './api.js';
 
 const createClient = () => ({} as Client);
 

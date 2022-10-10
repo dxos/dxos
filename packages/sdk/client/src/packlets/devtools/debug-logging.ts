@@ -4,7 +4,7 @@
 
 import { EnableDebugLoggingRequest } from '@dxos/protocols/proto/dxos/devtools';
 
-import { DevtoolsServiceDependencies } from './devtools-context';
+import { DevtoolsServiceDependencies } from './devtools-context.js';
 
 /* Note that we can not simply import the debug module here and call its enable, disable
  * functions -- if we did that we'd be calling a different instance of the createDebug

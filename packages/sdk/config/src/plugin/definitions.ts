@@ -7,7 +7,7 @@ import { readFileSync } from 'fs';
 import yaml from 'js-yaml';
 import { resolve } from 'node:path';
 
-import { ConfigPluginOpts } from './types';
+import { ConfigPluginOpts } from './types.js';
 
 const log = debug('dxos:config:plugin');
 

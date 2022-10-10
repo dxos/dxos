@@ -4,8 +4,8 @@
 
 // TODO(burdon): Add data service here.
 
-export * from './halo';
-export * from './party';
-export * from './profile';
-export * from './system';
-export * from './tracing';
+export * from './halo.js';
+export * from './party.js';
+export * from './profile.js';
+export * from './system.js';
+export * from './tracing.js';

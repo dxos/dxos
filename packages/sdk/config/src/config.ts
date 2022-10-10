@@ -9,8 +9,8 @@ import set from 'lodash.set';
 
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-import { sanitizeConfig } from './sanitizer';
-import { ConfigKey, DeepIndex, ParseKey } from './types';
+import { sanitizeConfig } from './sanitizer.js';
+import { ConfigKey, DeepIndex, ParseKey } from './types.js';
 
 type MappingSpec = Record<string, { path: string, type?: string }>;
 

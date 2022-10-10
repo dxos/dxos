@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './service-context';
-export * from './service-factory';
-export * from './service-host';
-export * from './services';
-export * from './signer';
+export * from './service-context.js';
+export * from './service-factory.js';
+export * from './service-host.js';
+export * from './services.js';
+export * from './signer.js';

@@ -12,8 +12,8 @@ import { schema } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { Identity, IdentityManager } from '../identity';
-import { InvitationDescriptor } from '../invitations';
+import { Identity, IdentityManager } from '../identity/index.js';
+import { InvitationDescriptor } from '../invitations/index.js';
 
 // TODO(burdon): Move to halo.
 

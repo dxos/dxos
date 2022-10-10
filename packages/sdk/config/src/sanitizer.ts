@@ -6,7 +6,7 @@ import { sanitize, SanitizeContext } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 
-import { InvalidConfigError } from './errors';
+import { InvalidConfigError } from './errors.js';
 
 const configRootType = schema.getCodecForType('dxos.config.Config');
 

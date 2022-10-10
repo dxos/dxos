@@ -8,11 +8,11 @@ import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
-import { createStorageObjects } from '../storage';
-import { ServiceContext } from './service-context';
-import { createServices } from './service-factory';
-import { ClientServiceProvider, ClientServices } from './services';
-import { HaloSigner } from './signer';
+import { createStorageObjects } from '../storage/index.js';
+import { ServiceContext } from './service-context.js';
+import { createServices } from './service-factory.js';
+import { ClientServiceProvider, ClientServices } from './services.js';
+import { HaloSigner } from './signer.js';
 // import { DevtoolsHostEvents } from '../devtools';
 
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();

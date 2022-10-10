@@ -5,7 +5,7 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { SubscribeToItemsResponse } from '@dxos/protocols/proto/dxos/devtools';
 
-import { DevtoolsServiceDependencies } from './devtools-context';
+import { DevtoolsServiceDependencies } from './devtools-context.js';
 
 const getData = (echo: DevtoolsServiceDependencies['echo']): SubscribeToItemsResponse => {
   const result: any = {

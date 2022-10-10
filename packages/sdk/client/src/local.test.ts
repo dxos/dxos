@@ -9,7 +9,7 @@ import expect from 'expect';
 import { waitForCondition } from '@dxos/async';
 import { ConfigProto } from '@dxos/config';
 
-import { Client } from './packlets/proxies';
+import { Client } from './packlets/proxies/index.js';
 
 describe('Client', function () {
   describe('Local-only tests', function () {});

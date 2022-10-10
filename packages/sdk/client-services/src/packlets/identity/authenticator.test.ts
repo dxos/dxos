@@ -9,7 +9,7 @@ import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { ComplexSet } from '@dxos/util';
 
-import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
+import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator.js';
 
 describe('identity/authenticator', function () {
   it('verifies credentials', async function () {

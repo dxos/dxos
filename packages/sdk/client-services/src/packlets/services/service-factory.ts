@@ -4,10 +4,10 @@
 
 import { Config } from '@dxos/config';
 
-import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl';
-import { ServiceContext } from './service-context';
-import { ClientServices } from './services';
-import { HaloSigner } from './signer';
+import { HaloService, PartyService, ProfileService, SystemService, TracingService } from './impl/index.js';
+import { ServiceContext } from './service-context.js';
+import { ClientServices } from './services.js';
+import { HaloSigner } from './signer.js';
 
 /**
  * Service factory.

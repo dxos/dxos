@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { ServiceContext } from './service-context';
+import { ServiceContext } from './service-context.js';
 
 describe('ServiceContext', function () {
   const setupPeer = async ({

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './echo';
-export * from './halo';
-export * from './invitation';
-export * from './invitation-request';
+export * from './echo.js';
+export * from './halo.js';
+export * from './invitation.js';
+export * from './invitation-request.js';

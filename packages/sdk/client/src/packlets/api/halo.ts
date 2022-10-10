@@ -9,9 +9,9 @@ import { Profile, SignRequest, SignResponse } from '@dxos/protocols/proto/dxos/c
 import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
-import { Contact, CreateProfileOptions } from '../proxies';
-import { Invitation } from './invitation';
-import { InvitationRequest } from './invitation-request';
+import { Contact, CreateProfileOptions } from '../proxies/index.js';
+import { Invitation } from './invitation.js';
+import { InvitationRequest } from './invitation-request.js';
 
 /**
  * HALO API.

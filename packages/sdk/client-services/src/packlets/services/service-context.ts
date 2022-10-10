@@ -20,8 +20,8 @@ import { PublicKey } from '@dxos/keys';
 import { NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
 
-import { IdentityManager } from '../identity';
-import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
+import { IdentityManager } from '../identity/index.js';
+import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations/index.js';
 
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
