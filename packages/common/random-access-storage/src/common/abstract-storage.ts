@@ -14,7 +14,8 @@ import { getFullPath } from './utils';
 
 /**
  * Base class for all storage implementations.
- * https://www.npmjs.com/package/abstract-random-access
+ * https://github.com/random-access-storage
+ * https://github.com/random-access-storage/random-access-storage
  */
 export abstract class AbstractStorage implements Storage {
   protected readonly _files = new Map<string, File>();
@@ -51,20 +52,22 @@ export abstract class AbstractStorage implements Storage {
   protected getOrCreateFile (path: string, filename: string, opts?: any): File {
     const fullPath = join(path, filename);
 
-    // TODO(burdon): Reopen?
+    // Some variants (e.g., Node) do not allow files to be reopened.
     let file = this._getFileIfExists(fullPath);
-    if (file) {
-      file.reopen();
+    if (file && file?.clone) {
+      file = wrapFile(file.clone(), file.type);
     } else {
       const raw = this._createFile(path, filename, opts);
-      file = wrapFile(raw);
+      file = wrapFile(raw, this.type);
       this._files.set(fullPath, file);
     }
 
     return file;
   }
 
-  protected abstract _destroy (): Promise<void>;
+  protected _destroy (): Promise<void> | undefined {
+    return undefined;
+  }
 
   protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessFile;
 
@@ -96,7 +99,7 @@ export abstract class AbstractStorage implements Storage {
     await Promise.all(Array.from(this._getFilesInPath(path)).map(([path, file]) => {
       return file.destroy()
         .then(() => this._files.delete(path))
-        .catch((error: any) => log.error(error.message));
+        .catch((err: any) => log.error(err.message));
     }));
   }
 }

@@ -14,23 +14,19 @@ export const createDataItem = (n: number): TestDataItem => ({
   text: faker.lorem.sentence()
 });
 
-// TODO(burdon): Move to async.
-export const setRandomInterval = (cb: (i: number) => boolean, min = 0, max = 100) => {
+type BatchCallback = (next: (num: number) => void, index: number, remaining: number) => void
+
+export const batch = (cb: BatchCallback, total: number) => {
   let i = 0;
-  let running = true;
   const f = () => {
-    setTimeout(() => {
-      if (running) {
-        if (cb(i++)) {
-          f();
-        }
+    const remaining = total - i;
+    cb((num = 1) => {
+      i += num;
+      if (i < total) {
+        f();
       }
-    }, faker.datatype.number({ min, max }));
+    }, i, remaining);
   };
 
   f();
-
-  return () => {
-    running = false;
-  };
 };

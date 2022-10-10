@@ -3,7 +3,7 @@
 //
 
 /**
- * https://www.npmjs.com/package/hypercore/v/9.12.0 (NPM)
+ * https://www.npmjs.com/package/hypercore/v/9.12.0
  */
 declare module 'hypercore' {
   import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';

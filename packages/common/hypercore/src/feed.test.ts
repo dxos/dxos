@@ -6,7 +6,7 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import hypercore from 'hypercore';
+import Hypercore from 'hypercore';
 import pify from 'pify';
 import ram from 'random-access-memory';
 
@@ -19,7 +19,7 @@ describe('Feed', function () {
   it('construct, open and close', async function () {
     const key = sha256(PublicKey.random().toHex());
 
-    const raw = hypercore(ram, key);
+    const raw = new Hypercore(ram, key);
     const feed = pify(raw);
 
     expect(feed.opened).to.be.false;

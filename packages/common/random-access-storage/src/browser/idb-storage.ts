@@ -9,6 +9,7 @@ import { BrowserStorage } from './browser-storage';
 
 /**
  * Storage interface implementation for index DB.
+ * https://github.com/random-access-storage/random-access-idb
  */
 export class IDbStorage extends BrowserStorage {
   public override type: StorageType = StorageType.IDB;

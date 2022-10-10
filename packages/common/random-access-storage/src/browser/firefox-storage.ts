@@ -8,7 +8,8 @@ import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
 
 /**
- * Storage interface implementation for Firefox browser
+ * Storage interface implementation for Firefox browser.
+ * https://github.com/random-access-storage/random-access-web
  */
 export class FirefoxStorage extends BrowserStorage {
   public override type: StorageType = StorageType.FIREFOX;

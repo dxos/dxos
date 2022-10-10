@@ -10,6 +10,7 @@ import { StorageType } from './storage';
 
 /**
  * Storage interface implementation for RAM.
+ * https://github.com/random-access-storage/random-access-memory
  */
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
@@ -17,6 +18,4 @@ export class MemoryStorage extends AbstractStorage {
   protected override _createFile (path: string, filename: string): RandomAccessFile {
     return ram();
   }
-
-  protected override async _destroy () {}
 }

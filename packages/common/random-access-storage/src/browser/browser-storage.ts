@@ -9,7 +9,6 @@ import type { RandomAccessFile } from '../types';
 
 /**
  * Base class for random access files based on IDB.
- * https://www.npmjs.com/package/abstract-random-access
  */
 export abstract class BrowserStorage extends AbstractStorage {
   private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessFile;

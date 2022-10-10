@@ -164,7 +164,7 @@ export class FeedDescriptor {
     // TODO(dmaretskyi): Replace sha256 from hypercore-crypto with a web-crypto equivalent.
     const key = sha256(this._key.toHex());
 
-    const feed = this._hypercore(storage, key, {
+    const hypercore = this._hypercore(storage, key, {
       // TODO(dmaretskyi): Can we just pass undefined. We might need this for hypercore to consider this feed as writable.
       secretKey: this._signer ? Buffer.from('secret') : undefined,
       valueEncoding: this._valueEncoding,
@@ -188,14 +188,15 @@ export class FeedDescriptor {
     });
 
     // TODO(burdon): MUST be set before calling ready (due to lock above?)
-    this._feed = wrapFeed(feed);
+    const feed = wrapFeed(hypercore);
 
     // TODO(burdon): This isn't required unless sparse is set with options?
     // Request the feed to eagerly download everything.
-    void this._feed.download();
+    void feed.download();
 
     // Wait until ready.
-    await this._feed.open();
+    await feed.open();
+    return feed;
   }
 
   /**

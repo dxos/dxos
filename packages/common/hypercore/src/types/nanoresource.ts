@@ -7,10 +7,10 @@ import EventEmitter from 'events';
 import { Callback } from '@dxos/random-access-storage';
 
 export interface NanoresourceProperties {
-  readonly opened: boolean // Once opened this stays true.
-  readonly closed: boolean // Cannot be re-opened after closed.
   readonly opening: boolean
+  readonly opened: boolean // Once opened this stays true.
   readonly closing: boolean
+  readonly closed: boolean // Cannot be re-opened after closed.
 }
 
 /**

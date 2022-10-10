@@ -5,15 +5,21 @@
 import events from 'events';
 
 /**
- * Interface of file objects returned by `random-access-*` implementations.
+ * Properties for `random-access-*` implementations.
  *
  * https://www.npmjs.com/package/random-access-storage
  * https://github.com/random-access-storage/random-access-storage
  */
-export interface RandomAccessStorage extends events.EventEmitter {
-  opened: boolean
-  closed: boolean
+export interface RandomAccessStorageProperties extends events.EventEmitter {
+  readonly opened: boolean
+  readonly suspended: boolean
+  readonly closed: boolean
+  readonly unlinked: boolean
+  readonly writing: boolean
 
-  // TODO(burdon): Which platforms support this? Not documented.
-  destroyed?: boolean
+  readonly readable: boolean
+  readonly writable: boolean
+  readonly deletable: boolean
+  readonly truncatable: boolean
+  readonly statable: boolean
 }

@@ -4,11 +4,12 @@
 
 /**
  * Hypercore Typescript Definitions version 9.12.0
+ * NOTE: Must not clash with 'hypercore' package name.
  *
- * https://hypercore-protocol.org (Web)
- * https://www.npmjs.com/package/hypercore/v/9.12.0 (NPM)
- * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0 (Repo)
- * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53 (Code)
+ * https://hypercore-protocol.org
+ * https://www.npmjs.com/package/hypercore/v/9.12.0
+ * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0
+ * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  *
  * Events
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
@@ -16,6 +17,7 @@
 
 import { Callback, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
+import { ProtocolStream } from './hypercore-protocol';
 import type { Nanoresource } from './nanoresource';
 
 /**
@@ -67,7 +69,22 @@ export type FeedOptions = {
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
  */
 export type FeedReplicationOptions = {
-  live: boolean
+  live?: boolean
+  ack?: boolean
+  download?: boolean
+  upload?: boolean
+  encrypted?: boolean
+  noise?: boolean
+  keyPair?: { publicKey: Buffer, secretKey: Buffer }
+  onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void
+  onfeedauthenticate?: (feed: HypercoreFeedObject, remotePublicKey: Buffer, cb: () => void) => void
+}
+
+type Totals = {
+  uploadedBytes: number
+  uploadedBlocks: number
+  downloadedBytes: number
+  downloadedBlocks: number
 }
 
 /**
@@ -84,7 +101,7 @@ export interface FeedProperties {
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
   readonly key: Buffer
 
-  // TODO(burdon): Not documented or safe?
+  // TODO(burdon): Need to fake otherwise readonly. Inject crypto instead.
   readonly secretKey: Buffer
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#discoveryKey
@@ -100,13 +117,17 @@ export interface FeedProperties {
   readonly peers: Buffer[]
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
-  readonly stats: any
+  readonly stats: {
+    peers: Totals
+    totals: Totals
+  }
 }
 
 /**
  * Raw hypercore feed.
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  */
+// TODO(burdon): Rename Core.
 // TODO(burdon): Update full list of methods.
 export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
 
@@ -126,7 +147,7 @@ export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
   createWriteStream (options?: any): NodeJS.WritableStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
-  replicate (initiator: boolean, options?: FeedReplicationOptions): NodeJS.ReadWriteStream
+  replicate (initiator: boolean, options?: FeedReplicationOptions): ProtocolStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
   head (options?: any, cb?: Callback<FeedBlock>): void
