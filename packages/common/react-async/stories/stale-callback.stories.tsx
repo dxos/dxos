@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useStateWithRef } from '../src';
+import { useStateWithRef } from '../src/index.js';
 
 export default {
   title: 'react-async/stale-callback'

@@ -10,11 +10,11 @@ import expect from 'expect';
 import { promises as fs, constants } from 'fs';
 import path from 'path';
 
-import { File, StorageType } from '../common';
-import { storageTests } from '../testing';
-import { createStorage } from './storage';
+import { File, StorageType } from '../common/index.js';
+import { storageTests } from '../testing/index.js';
+import { createStorage } from './storage.js';
 
-const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
+const ROOT_DIRECTORY = path.resolve(path.join(import.meta.url, '../out', 'testing'));
 
 const temp = () => path.join(ROOT_DIRECTORY, crypto.randomBytes(32).toString('hex'));
 

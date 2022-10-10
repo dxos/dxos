@@ -2,11 +2,11 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './create-batch-stream';
-export * from './feed-store';
-export * from './feed-store-iterator';
-export * from './feed-descriptor';
-export * from './feed-writer';
-export * from './hypercore-types';
-export * from './stream';
-export * from './types';
+export * from './create-batch-stream.js';
+export * from './feed-store.js';
+export * from './feed-store-iterator.js';
+export * from './feed-descriptor.js';
+export * from './feed-writer.js';
+export * from './hypercore-types.js';
+export * from './stream.js';
+export * from './types.js';

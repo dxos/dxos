@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Any, EncodingOptions, WithTypeUrl } from '../common';
-import type { Schema } from '../schema';
+import { Any, EncodingOptions, WithTypeUrl } from '../common.js';
+import type { Schema } from '../schema.js';
 
 export const anySubstitutions = {
   'google.protobuf.Any': {

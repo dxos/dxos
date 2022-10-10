@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { decrypt, encrypt } from './encrypt';
+import { decrypt, encrypt } from './encrypt.js';
 
 // Using JSON test data due to its popularity. Any text should work.
 const testJsonData = `{"keys":[{"added":"2020-02-04T22:22:37-07:00","created":"2020-02-04T22:22:37-07:00","hint":false,

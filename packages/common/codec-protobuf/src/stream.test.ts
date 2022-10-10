@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Stream } from './stream';
+import { Stream } from './stream.js';
 
 describe('Stream', function () {
   it('can consume a stream that immediately closes', async function () {

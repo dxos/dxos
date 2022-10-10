@@ -5,7 +5,7 @@
 import expect from 'expect';
 import assert from 'node:assert';
 
-import { File, Storage, StorageType } from '../common';
+import { File, Storage, StorageType } from '../common/index.js';
 
 export function storageTests (testGroupName: string, createStorage: () => Storage) {
   const randomText = () => Math.random().toString(36).substring(2);

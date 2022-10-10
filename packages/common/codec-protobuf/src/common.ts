@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import type { Schema } from './schema';
+import type { Schema } from './schema.js';
 
 export interface EncodingOptions {
   /**

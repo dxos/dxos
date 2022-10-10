@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { createKeyPair, createId } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
-import { humanize } from './human-hash';
+import { humanize } from './human-hash.js';
 
 it('Hashing', function () {
   const { publicKey, secretKey } = createKeyPair();

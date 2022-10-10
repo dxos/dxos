@@ -11,7 +11,7 @@ import { randomBytes } from 'node:crypto';
 import { callbackify } from 'node:util';
 import pify from 'pify';
 import tempy from 'tempy';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { createKeyPair, verifySignature } from '@dxos/crypto';
@@ -19,9 +19,9 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { FeedDescriptor } from './feed-descriptor';
-import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore-types';
+import { FeedDescriptor } from './feed-descriptor.js';
+import { FeedStore } from './feed-store.js';
+import { HypercoreFeed } from './hypercore-types.js';
 
 interface KeyPair {
   key: PublicKey

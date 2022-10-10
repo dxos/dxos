@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useMounted } from '../src';
+import { useMounted } from '../src/index.js';
 
 export default {
   title: 'react-async'

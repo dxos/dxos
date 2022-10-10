@@ -4,8 +4,8 @@
 
 import randomAccessIdb from 'random-access-idb';
 
-import { StorageType } from '../common';
-import { RandomAccessStorage } from './random-access-storage';
+import { StorageType } from '../common/index.js';
+import { RandomAccessStorage } from './random-access-storage.js';
 
 /**
  * Storage interface implementation for index DB.

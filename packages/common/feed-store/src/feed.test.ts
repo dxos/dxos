@@ -11,8 +11,8 @@ import { schema, Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { FeedStore } from './feed-store';
-import { createFeedWriter } from './feed-writer';
+import { FeedStore } from './feed-store.js';
+import { createFeedWriter } from './feed-writer.js';
 
 // TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');

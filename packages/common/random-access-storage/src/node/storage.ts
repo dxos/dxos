@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
-import { NodeStorage } from './node-storage';
+import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common/index.js';
+import { NodeStorage } from './node-storage.js';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {

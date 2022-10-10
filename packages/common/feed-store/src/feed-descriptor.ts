@@ -12,8 +12,8 @@ import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import type { Directory } from '@dxos/random-access-storage';
 
-import type { HypercoreFeed, Hypercore } from './hypercore-types';
-import type { ValueEncoding } from './types';
+import type { HypercoreFeed, Hypercore } from './hypercore-types.js';
+import type { ValueEncoding } from './types.js';
 
 interface FeedDescriptorOptions {
   directory: Directory

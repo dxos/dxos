@@ -11,9 +11,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
 
-import FeedDescriptor from './feed-descriptor';
-import type { Hypercore } from './hypercore-types';
-import type { ValueEncoding } from './types';
+import FeedDescriptor from './feed-descriptor.js';
+import type { Hypercore } from './hypercore-types.js';
+import type { ValueEncoding } from './types.js';
 
 export interface CreateDescriptorOptions {
   key: PublicKey

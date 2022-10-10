@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Enum, Type } from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
 export interface SanitizeContext {
   errors: string[]
@@ -15,7 +15,7 @@ export interface SanitizeContext {
  * @param path
  * @param context
  */
-export const sanitize = (type: Type, value: any, path: string, context: SanitizeContext) => {
+export const sanitize = (type: pb.Type, value: any, path: string, context: SanitizeContext) => {
   for (const key of Object.keys(value)) {
     if (!type.fields[key]) {
       context.errors.push(`Unexpected key: ${path}.${key}`);
@@ -31,15 +31,15 @@ export const sanitize = (type: Type, value: any, path: string, context: Sanitize
     if (!field.resolvedType) {
       continue;
     }
-    if (field.resolvedType instanceof Type) {
+    if (field.resolvedType instanceof pb.Type) {
       sanitize(field.resolvedType, value[key], `${path}.${key}`, context);
-    } else if (field.resolvedType instanceof Enum) {
+    } else if (field.resolvedType instanceof pb.Enum) {
       value[key] = sanitizeEnum(field.resolvedType, value[key], `${path}.${key}`, context);
     }
   }
 };
 
-const sanitizeEnum = (type: Enum, value: any, path: string, context: SanitizeContext): any => {
+const sanitizeEnum = (type: pb.Enum, value: any, path: string, context: SanitizeContext): any => {
   if (type.valuesById[value]) {
     return value;
   }

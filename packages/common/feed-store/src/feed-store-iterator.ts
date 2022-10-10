@@ -10,9 +10,9 @@ import { Event, Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
-import { createBatchStream } from './create-batch-stream';
-import { FeedDescriptor } from './feed-descriptor';
-import { FeedBlock } from './types';
+import { createBatchStream } from './create-batch-stream.js';
+import { FeedDescriptor } from './feed-descriptor.js';
+import { FeedBlock } from './types.js';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 

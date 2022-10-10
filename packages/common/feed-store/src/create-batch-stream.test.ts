@@ -4,15 +4,15 @@
 
 import expect from 'expect';
 import pify from 'pify';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { createBatchStream } from './create-batch-stream';
-import { FeedStore } from './feed-store';
-import { HypercoreFeed } from './hypercore-types';
+import { createBatchStream } from './create-batch-stream.js';
+import { FeedStore } from './feed-store.js';
+import { HypercoreFeed } from './hypercore-types.js';
 
 const createFeed = async () => {
   const keyring = new Keyring();

@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/keys';
 import { MaybePromise } from '@dxos/util';
 
-import { FeedDescriptor } from './feed-descriptor';
+import { FeedDescriptor } from './feed-descriptor.js';
 
 export interface WriteReceipt {
   feedKey: PublicKey

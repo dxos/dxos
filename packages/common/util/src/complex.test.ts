@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { PublicKey } from '@dxos/keys';
 
-import { makeSet, makeMap } from './complex';
+import { makeSet, makeMap } from './complex.js';
 
 const PulicKeySet = makeSet<PublicKey>(key => key.toHex());
 

@@ -4,7 +4,7 @@
 
 import promisify from 'pify';
 
-import { FileStat, RandomAccessFile } from './random-access-file';
+import { FileStat, RandomAccessFile } from './random-access-file.js';
 
 /**
  * Random access file wrapper.

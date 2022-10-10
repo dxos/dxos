@@ -4,9 +4,9 @@
 
 import { expect } from 'chai';
 import { join } from 'node:path';
-import * as pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
-import { Schema, anySubstitutions } from '../src';
+import { Schema, anySubstitutions } from '../src/index.js';
 
 describe('extending protobuf', function () {
   it('extends proto with another file', async function () {

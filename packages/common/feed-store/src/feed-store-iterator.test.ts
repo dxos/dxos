@@ -16,9 +16,9 @@ import { schema, createTestItemMutation, FeedMessageBlock, Timeframe } from '@dx
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { FeedStore } from './feed-store';
-import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { HypercoreFeed } from './hypercore-types';
+import { FeedStore } from './feed-store.js';
+import { FeedSelector, FeedStoreIterator } from './feed-store-iterator.js';
+import { HypercoreFeed } from './hypercore-types.js';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 

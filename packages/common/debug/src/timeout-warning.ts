@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { StackTrace } from './stack-trace';
+import { StackTrace } from './stack-trace.js';
 
 /**
  * Prints a warning to console if the action takes longer then specified timeout. No errors are thrown.

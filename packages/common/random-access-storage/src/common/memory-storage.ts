@@ -5,9 +5,9 @@
 import { join } from 'node:path';
 import ram from 'random-access-memory';
 
-import { AbstractStorage } from './abstract-storage';
-import { File } from './file';
-import { StorageType } from './storage';
+import { AbstractStorage } from './abstract-storage.js';
+import { File } from './file.js';
+import { StorageType } from './storage.js';
 
 /**
  * Storage interface implementation for RAM.

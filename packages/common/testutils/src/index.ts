@@ -4,5 +4,5 @@
 
 // TODO(burdon): Rename @dxos/test-utils
 
-export * from './after-test';
-export * from './timeout';
+export * from './after-test.js';
+export * from './timeout.js';

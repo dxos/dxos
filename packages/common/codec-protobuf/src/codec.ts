@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-import protobufjs, { IConversionOptions } from 'protobufjs';
+import {default as protobufjs } from 'protobufjs';
 
-import { EncodingOptions } from './common';
-import { Codec } from './interface';
-import { BidirectionalMapingDescriptors } from './mapping';
-import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper';
-import type { Schema } from './schema';
+import { EncodingOptions } from './common.js';
+import { Codec } from './interface.js';
+import { BidirectionalMapingDescriptors } from './mapping.js';
+import { createMessageMapper, Mapper } from './precompiled-mapping/create-message-mapper.js';
+import type { Schema } from './schema.js';
 
-export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
+export const OBJECT_CONVERSION_OPTIONS: protobufjs.IConversionOptions = {
   // Represent long integers as strings.
   longs: String,
 

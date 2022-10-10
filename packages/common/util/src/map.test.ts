@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { LazyMap } from '../src/map';
+import { LazyMap } from '../src/map.js';
 
 describe('map', function () {
   it('set', function () {

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Directory } from './directory';
+import { Directory } from './directory.js';
 
 export enum StorageType {
   RAM = 'ram',

@@ -6,7 +6,7 @@ import del from 'del';
 import { join } from 'node:path';
 import raf from 'random-access-file';
 
-import { AbstractStorage, File, StorageType } from '../common';
+import { AbstractStorage, File, StorageType } from '../common/index.js';
 
 /**
  * Storage interface implementation for Node.

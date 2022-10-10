@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 
-import { ripemd160, sha1, sha256, sha512 } from './hash';
+import { ripemd160, sha1, sha256, sha512 } from './hash.js';
 
 it('SHA1', function () {
   const hashed = sha1('Test message');

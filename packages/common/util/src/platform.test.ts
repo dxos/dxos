@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { isNode } from './platform';
+import { isNode } from './platform.js';
 
 it('knows when running in node', function () {
   if (mochaExecutor.environment === 'nodejs') {

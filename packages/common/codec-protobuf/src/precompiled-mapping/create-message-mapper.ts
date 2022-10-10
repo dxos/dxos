@@ -3,10 +3,10 @@
 //
 
 import assert from 'node:assert';
-import * as pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
-import { MapingDescriptors } from '../mapping';
-import { codegen, ref } from './codegen';
+import { MapingDescriptors } from '../mapping.js';
+import { codegen, ref } from './codegen.js';
 
 export type Mapper = (obj: any, extraArgs: any[]) => any;
 

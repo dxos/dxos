@@ -3,13 +3,13 @@
 //
 
 import expect from 'expect';
-import 'raf/polyfill';
+import 'raf/polyfill.js';
 import React, { useState } from 'react';
 import { render } from 'react-dom';
 import { act } from 'react-dom/test-utils';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
-import { useAsyncEffect } from './useAsyncEffect';
+import { useAsyncEffect } from './useAsyncEffect.js';
 
 const doAsync = async <T, >(value: T) => await new Promise<T>((resolve) => {
   resolve(value);

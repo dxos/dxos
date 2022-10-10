@@ -3,11 +3,11 @@
 //
 
 import assert from 'node:assert';
-import pb from 'protobufjs';
+import { default as pb } from 'protobufjs';;
 
-import { Any, EncodingOptions } from './common';
-import type { Schema } from './schema';
-import { Stream } from './stream';
+import { Any, EncodingOptions } from './common.js';
+import type { Schema } from './schema.js';
+import { Stream } from './stream.js';
 
 export interface ServiceBackend {
   call (method: string, request: Any): Promise<Any>

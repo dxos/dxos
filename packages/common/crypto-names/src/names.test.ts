@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { generateKey, generateName, parseName } from './names';
+import { generateKey, generateName, parseName } from './names.js';
 
 const t = () => {
   const key = generateKey();

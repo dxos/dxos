@@ -7,9 +7,9 @@
 import expect from 'expect';
 import 'source-map-support/register';
 
-import { StorageType } from '../common';
-import { storageTests } from '../testing';
-import { createStorage } from './storage';
+import { StorageType } from '../common/index.js';
+import { storageTests } from '../testing/index.js';
+import { createStorage } from './storage.js';
 
 const ROOT_DIRECTORY = 'testing';
 

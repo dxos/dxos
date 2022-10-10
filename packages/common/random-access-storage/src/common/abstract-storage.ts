@@ -4,10 +4,10 @@
 
 import { log } from '@dxos/log';
 
-import { Directory } from './directory';
-import { File } from './file';
-import { Storage, StorageType } from './storage';
-import { getFullPath } from './utils';
+import { Directory } from './directory.js';
+import { File } from './file.js';
+import { Storage, StorageType } from './storage.js';
+import { getFullPath } from './utils.js';
 
 /**
  * Base class for all storage implementations.

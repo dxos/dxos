@@ -7,7 +7,7 @@ import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
 
-import { FeedStore } from './feed-store';
+import { FeedStore } from './feed-store.js';
 
 const range = (n: number) => [...Array(n).keys()];
 

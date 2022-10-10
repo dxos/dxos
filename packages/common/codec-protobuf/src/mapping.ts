@@ -3,9 +3,9 @@
 //
 
 import assert from 'node:assert';
-import protobufjs from 'protobufjs';
+import {default as protobufjs } from 'protobufjs';
 
-import { Substitutions } from './common';
+import { Substitutions } from './common.js';
 
 export type MapingDescriptors = Partial<Record<string, (value: any, ...extraArgs: any) => any>>
 

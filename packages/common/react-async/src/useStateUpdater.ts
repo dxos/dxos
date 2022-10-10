@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import update from 'immutability-helper';
+import { default as update } from 'immutability-helper';
 import { Dispatch, SetStateAction, useState } from 'react';
 
 /**

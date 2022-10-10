@@ -7,9 +7,9 @@ import 'raf/polyfill';
 import React, { useEffect } from 'react';
 import { render } from 'react-dom';
 import { act } from 'react-dom/test-utils';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
-import { useStateUpdater } from './useStateUpdater';
+import { useStateUpdater } from './useStateUpdater.js';
 
 // Expensive object to copy.
 const complex = {

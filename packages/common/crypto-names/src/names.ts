@@ -9,7 +9,7 @@ import crypto from 'hypercore-crypto';
 // https://github.com/skjorrface/animals.txt/blob/master/animals.txt (500 animals)
 // https://gist.github.com/Xeoncross/5381806b18de1f395187 (900 positive adjectives)
 
-import words from '../data/words.json';
+import words from '../data/words.json' assert { type: 'json' };
 
 // TODO(burdon): Make exensible without breaking existing words (e.g., add byte and word).
 // TODO(burdon): Store hash of words and check consistent in code.

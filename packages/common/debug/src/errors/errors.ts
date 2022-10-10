@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DXOSError } from './dxos-error';
+import { DXOSError } from './dxos-error.js';
 
 export class InvalidParameterError extends DXOSError {
   constructor (message?: string) {

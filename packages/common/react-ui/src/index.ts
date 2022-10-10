@@ -3,4 +3,4 @@
 //
 
 export * from 'phosphor-react';
-export * from './components';
+export * from './components/index.js';

@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from '../common';
-export * from './storage';
+export * from '../common/index.js';
+export * from './storage.js';
