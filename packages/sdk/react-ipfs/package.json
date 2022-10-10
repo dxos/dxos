@@ -15,7 +15,8 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "ipfs-http-client": "~56.0.1"
+    "ipfs-http-client": "^58.0.1",
+    "undici": "^5.11.0"
   },
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
