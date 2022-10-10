@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { FeedOptions, FeedReplicationOptions } from './hypercore';
+import type { HypercoreOptions, ReplicationOptions } from './hypercore';
 
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
  */
-export const defaultFeedOptions: FeedOptions = {
+export const defaultFeedOptions: HypercoreOptions = {
   createIfMissing: true,
   valueEncoding: 'binary'
 };
@@ -15,7 +15,7 @@ export const defaultFeedOptions: FeedOptions = {
 /**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
  */
-export const defaultReplicateOptions: FeedReplicationOptions = {
+export const defaultReplicateOptions: ReplicationOptions = {
   live: false,
   ack: false,
   download: true,

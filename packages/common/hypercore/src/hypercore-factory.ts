@@ -9,7 +9,7 @@ import hypercore from 'hypercore';
 import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { wrapFeed, HypercoreFeed } from './hypercore-feed';
-import type { Hypercore, FeedOptions } from './types';
+import type { Hypercore, HypercoreOptions } from './types';
 
 /**
  * Hypercore wrapper factory.
@@ -24,7 +24,7 @@ export class HypercoreFactory {
   /**
    * Creates a pify wrapped hypercore object.
    */
-  create (publicKey?: Buffer, options?: FeedOptions): HypercoreFeed {
+  create (publicKey?: Buffer, options?: HypercoreOptions): HypercoreFeed {
     // TODO(burdon): Make this pluggable.
     // const key = publicKey ? Buffer.from(sha256(publicKey.toString('hex'))) : undefined;
     const feed: Hypercore = hypercore(this._storage, publicKey, options);

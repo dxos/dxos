@@ -11,15 +11,15 @@ import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { wrapFeed } from '@dxos/hypercore';
-import type { FeedReplicationOptions, HypercoreFeedConstructor, HypercoreFeed, ValueEncoding } from '@dxos/hypercore';
+import type { ReplicationOptions, HypercoreConstructor, HypercoreFeed, ValueEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Directory, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
-// TODO(burdon): Use hypercore.FeedOptions directly.
+// TODO(burdon): Use hypercore.HypercoreOptions directly.
 type FeedDescriptorOptions = {
   directory: Directory
   key: PublicKey
-  hypercore?: HypercoreFeedConstructor
+  hypercore?: HypercoreConstructor
   secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
@@ -35,7 +35,7 @@ export class FeedDescriptor {
   private readonly _key: PublicKey;
   private readonly _secretKey?: Buffer;
   private readonly _valueEncoding?: ValueEncoding;
-  private readonly _hypercore: HypercoreFeedConstructor;
+  private readonly _hypercore: HypercoreConstructor;
   private readonly _disableSigning: boolean;
   private readonly _signer?: Signer;
 
@@ -149,7 +149,7 @@ export class FeedDescriptor {
   /**
    * Return replication stream.
    */
-  replicate (initiator: boolean, options?: FeedReplicationOptions) {
+  replicate (initiator: boolean, options?: ReplicationOptions) {
     assert(this._feed);
     return this._feed?.replicate(initiator, options);
   }

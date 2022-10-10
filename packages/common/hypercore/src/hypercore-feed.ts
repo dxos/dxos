@@ -6,8 +6,8 @@ import pify from 'pify';
 import { Readable, Writable } from 'streamx';
 
 import type {
-  FeedProperties,
-  FeedReplicationOptions,
+  HypercoreProperties,
+  ReplicationOptions,
   Hypercore,
   NanoresourceProperties,
   ProtocolStream
@@ -16,7 +16,7 @@ import type {
 /**
  * Wrapped Hypercore.
  */
-export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
+export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperties {
   readonly native: Hypercore
 
   // Nanoresource
@@ -34,7 +34,7 @@ export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
   flush (): Promise<void>
   createReadStream (options?: any): Readable
   createWriteStream (options?: any): Writable
-  replicate (initiator: boolean, options?: FeedReplicationOptions): ProtocolStream
+  replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
   head (options?: any): Promise<any>
   get (index: number, options?: any): Promise<Buffer>
   /** @deprecated remove in v10 */

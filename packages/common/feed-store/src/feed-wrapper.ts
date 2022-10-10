@@ -3,7 +3,7 @@
 //
 
 import { wrapFeed } from '@dxos/hypercore';
-import type { HypercoreFeedObject, HypercoreFeed } from '@dxos/hypercore';
+import type { Hypercore, HypercoreFeed } from '@dxos/hypercore';
 
 // TODO(burdon): New wrapper.
 // TODO(burdon): Use factor to create mocks (why is that required?)
@@ -12,13 +12,13 @@ export class Wrapper {
   private readonly _feed: HypercoreFeed;
 
   constructor (
-    private readonly _hypercore: HypercoreFeedObject
+    private readonly _hypercore: Hypercore
   ) {
     this._feed = wrapFeed(this._hypercore);
   }
 
   // TODO(burdon): Internal only.
-  get hypercore (): HypercoreFeedObject {
+  get hypercore (): Hypercore {
     return this._hypercore;
   }
 

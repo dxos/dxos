@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/crypto';
-import type { HypercoreFeedConstructor, ValueEncoding } from '@dxos/hypercore';
+import type { HypercoreConstructor, ValueEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
@@ -34,7 +34,7 @@ export type FeedStoreOptions = {
   valueEncoding?: ValueEncoding
 
   // Hypercore class to use.
-  hypercore?: HypercoreFeedConstructor
+  hypercore?: HypercoreConstructor
 }
 
 /**
@@ -48,7 +48,7 @@ export class FeedStore {
   private readonly _descriptors: Map<string, FeedDescriptor> = new Map();
 
   private readonly _directory: Directory;
-  private readonly _hypercore: HypercoreFeedConstructor;
+  private readonly _hypercore: HypercoreConstructor;
   private readonly _valueEncoding: ValueEncoding | undefined;
 
   /**

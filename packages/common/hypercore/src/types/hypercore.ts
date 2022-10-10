@@ -57,19 +57,9 @@ export interface Crypto {
 }
 
 /**
- * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
- */
-export type FeedOptions = {
-  createIfMissing?: boolean
-  secretKey?: Buffer
-  valueEncoding?: ValueEncoding
-  crypto?: Crypto
-}
-
-/**
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
  */
-export type FeedReplicationOptions = {
+export type ReplicationOptions = {
   live?: boolean
   ack?: boolean
   download?: boolean
@@ -81,17 +71,33 @@ export type FeedReplicationOptions = {
   onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void
 }
 
-type Totals = {
-  uploadedBytes: number
-  uploadedBlocks: number
-  downloadedBytes: number
-  downloadedBlocks: number
+/**
+ * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
+ */
+export type Stats = {
+  peers: Stats[]
+  totals: {
+    uploadedBytes: number
+    uploadedBlocks: number
+    downloadedBytes: number
+    downloadedBlocks: number
+  }
+}
+
+/**
+ * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
+ */
+export type HypercoreOptions = {
+  createIfMissing?: boolean
+  secretKey?: Buffer
+  valueEncoding?: ValueEncoding
+  crypto?: Crypto
 }
 
 /**
  * Shared property definitions for raw and wrapped objects.
  */
-export interface FeedProperties {
+export interface HypercoreProperties {
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedwritable
   readonly writable: boolean
@@ -118,10 +124,7 @@ export interface FeedProperties {
   readonly peers: Buffer[]
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedstats
-  readonly stats: {
-    peers: Totals
-    totals: Totals
-  }
+  readonly stats: Stats
 }
 
 /**
@@ -130,7 +133,7 @@ export interface FeedProperties {
  */
 // TODO(burdon): Rename Core.
 // TODO(burdon): Update full list of methods.
-export interface Hypercore extends Nanoresource, FeedProperties {
+export interface Hypercore extends Nanoresource, HypercoreProperties {
 
   // Alias for open.
   ready (cb?: Callback<void>): void
@@ -148,7 +151,7 @@ export interface Hypercore extends Nanoresource, FeedProperties {
   createWriteStream (options?: any): NodeJS.WritableStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
-  replicate (initiator: boolean, options?: FeedReplicationOptions): ProtocolStream
+  replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
   /** @deprecated remove in v10 */
@@ -176,5 +179,5 @@ export interface Hypercore extends Nanoresource, FeedProperties {
 export type HypercoreConstructor = (
   storage: RandomAccessFileConstructor,
   key?: Buffer | string,
-  options?: FeedOptions
+  options?: HypercoreOptions
 ) => Hypercore
