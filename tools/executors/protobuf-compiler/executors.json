@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "executors": {
     "generate": {
-      "implementation": "./dist/src/executor",
+      "implementation": "./executor.cjs",
       "schema": "./schema.json",
       "description": "ts generate"
     }

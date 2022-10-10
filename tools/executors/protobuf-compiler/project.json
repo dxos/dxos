@@ -33,13 +33,23 @@
       }
     },
     "test": {
-      "executor": "nx:run-script",
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
       "options": {
-        "script": "test"
-      },
-      "dependsOn": [
-        "prebuild"
-      ]
+        "testPatterns": [
+          "tools/executors/protobuf-compiler/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "tools/executors/protobuf-compiler/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/tools/executors/protobuf-compiler",
+        "resultsPath": "test-results/tools/executors/protobuf-compiler",
+        "coveragePath": "coverage/tools/executors/protobuf-compiler"
+      }
     }
   }
 }
