@@ -6,7 +6,7 @@ import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { SidebarGroupCollapsible } from 'vuepress';
 
-import { API_SECTIONS, DOCS_PATH, PINNED_PACKAGES } from '../constants';
+import { API_SECTIONS, DOCS_PATH, PINNED_PACKAGES } from '../constants.js';
 
 const groupByModule = (list: string[]) => list.reduce<{ [key: string]: string[] }>((grouped, item) => {
   const [module, entity] = item.split('.');

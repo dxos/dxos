@@ -7,7 +7,7 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SidebarGroupCollapsible, SidebarItem } from 'vuepress';
 
-import { DOCS_PATH } from '../constants';
+import { DOCS_PATH } from '../constants.js';
 
 const parseFrontMatter = (path: string): [number, SidebarItem | string] => {
   const content = readFileSync(path, 'utf-8');
