@@ -6,7 +6,7 @@
 
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import Hypercore from 'hypercore';
+import hypercore from 'hypercore';
 import ram from 'random-access-memory';
 
 // import { sha256 } from '@dxos/crypto';
@@ -20,7 +20,7 @@ chai.use(chaiAsPromised);
 describe('Hypercore', function () {
   it('construct, open and close', async function () {
     // const key = sha256(PublicKey.random().toHex());
-    const raw = new Hypercore(ram);
+    const raw = hypercore(ram);
     const feed = wrapFeed(raw);
 
     expect(feed.opened).to.be.false;
@@ -47,7 +47,7 @@ describe('Hypercore', function () {
   });
 
   it('writes and reads blocks', async function () {
-    const raw = new Hypercore(ram);
+    const raw = hypercore(ram);
     const feed = wrapFeed(raw);
     await feed.append('test');
 

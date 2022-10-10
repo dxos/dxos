@@ -8,16 +8,16 @@ import { Readable, Writable } from 'streamx';
 import type {
   FeedProperties,
   FeedReplicationOptions,
-  HypercoreFeedObject,
+  Hypercore,
   NanoresourceProperties,
   ProtocolStream
 } from './types';
 
 /**
- * Wrapped HypercoreFeedObject.
+ * Wrapped Hypercore.
  */
 export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
-  readonly native: HypercoreFeedObject
+  readonly native: Hypercore
 
   // Nanoresource
   /** @deprecated remove in v10 */
@@ -47,7 +47,7 @@ export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
 /**
  * Wrap async methods.
  */
-export const wrapFeed = (feed: HypercoreFeedObject): HypercoreFeed => {
+export const wrapFeed = (feed: Hypercore): HypercoreFeed => {
   // TODO(burdon): Could create issues if overwrite methods.
   // TODO(burdon): Reconcile with pifyFields.
   return Object.assign(feed, {

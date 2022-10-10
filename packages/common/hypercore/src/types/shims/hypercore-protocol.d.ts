@@ -13,7 +13,7 @@ declare module 'hypercore' {
   export const Protocol: ProtocolStreamConstructor = (
     initiator: boolean,
     options?: ProtocolStreamOptions
-  ) => HypercoreFeedObject;
+  ) => Hypercore;
 
   export = Protocol;
 }

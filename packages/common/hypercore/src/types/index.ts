@@ -3,6 +3,6 @@
 //
 
 export * from './defaults';
-export * from './hypercore-feed';
+export * from './hypercore';
 export * from './hypercore-protocol';
 export * from './nanoresource';

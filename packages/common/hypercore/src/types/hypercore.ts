@@ -78,7 +78,7 @@ export type FeedReplicationOptions = {
   noise?: boolean
   keyPair?: { publicKey: Buffer, secretKey: Buffer }
   onauthenticate?: (remotePublicKey: Buffer, cb: () => void) => void
-  onfeedauthenticate?: (feed: HypercoreFeedObject, remotePublicKey: Buffer, cb: () => void) => void
+  onfeedauthenticate?: (feed: Hypercore, remotePublicKey: Buffer, cb: () => void) => void
 }
 
 type Totals = {
@@ -130,7 +130,7 @@ export interface FeedProperties {
  */
 // TODO(burdon): Rename Core.
 // TODO(burdon): Update full list of methods.
-export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
+export interface Hypercore extends Nanoresource, FeedProperties {
 
   // Alias for open.
   ready (cb?: Callback<void>): void
@@ -177,4 +177,4 @@ export type HypercoreConstructor = (
   storage: RandomAccessFileConstructor,
   key?: Buffer | string,
   options?: FeedOptions
-) => HypercoreFeedObject
+) => Hypercore

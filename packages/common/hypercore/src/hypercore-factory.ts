@@ -3,14 +3,13 @@
 //
 
 import assert from 'assert';
-import Hypercore from 'hypercore';
+import hypercore from 'hypercore';
 
 import { sha256 } from '@dxos/crypto';
 import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { wrapFeed, HypercoreFeed } from './hypercore-feed';
-import { HypercoreFeedObject } from './types';
-import type { FeedOptions } from './types';
+import type { Hypercore, FeedOptions } from './types';
 
 /**
  * Hypercore wrapper factory.
@@ -28,7 +27,7 @@ export class HypercoreFactory {
   create (publicKey?: Buffer, options?: FeedOptions): HypercoreFeed {
     // TODO(burdon): Make this pluggable.
     const key = publicKey ? Buffer.from(sha256(publicKey.toString('hex'))) : undefined;
-    const feed: HypercoreFeedObject = new Hypercore(this._storage, publicKey, options);
+    const feed: Hypercore = hypercore(this._storage, publicKey, options);
     return wrapFeed(feed);
   }
 }
