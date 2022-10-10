@@ -131,8 +131,6 @@ export interface HypercoreProperties {
  * Raw hypercore feed.
  * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
  */
-// TODO(burdon): Rename Core.
-// TODO(burdon): Update full list of methods.
 export interface Hypercore extends Nanoresource, HypercoreProperties {
 
   // Alias for open.
