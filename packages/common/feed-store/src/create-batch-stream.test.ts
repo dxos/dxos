@@ -22,9 +22,9 @@ const createFeed = async (): Promise<FeedDescriptor> => {
   return await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 };
 
-const append = (descriptor: FeedDescriptor, message: any) => {
+const append = async (descriptor: FeedDescriptor, message: any) => {
   const feed = descriptor.feed;
-  pify(feed.append.bind(feed))(message);
+  await pify(feed.append.bind(feed))(message);
 };
 
 describe('Batch stream', function () {
