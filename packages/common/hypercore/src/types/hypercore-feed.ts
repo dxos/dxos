@@ -173,7 +173,7 @@ export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
 
 // Default constructor.
 // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-export type HypercoreFeedConstructor = (
+export type HypercoreConstructor = (
   storage: RandomAccessFileConstructor,
   key?: Buffer | string,
   options?: FeedOptions

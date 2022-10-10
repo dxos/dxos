@@ -16,7 +16,8 @@ import { wrapFeed } from './hypercore-feed';
 
 chai.use(chaiAsPromised);
 
-describe('Feed', function () {
+// TODO(burdon): Add other tests.
+describe('Hypercore', function () {
   it('construct, open and close', async function () {
     // const key = sha256(PublicKey.random().toHex());
     const raw = new Hypercore(ram);
