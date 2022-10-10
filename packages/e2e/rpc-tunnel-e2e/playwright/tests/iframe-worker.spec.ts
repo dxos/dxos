@@ -3,7 +3,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect, Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { default as waitForExpect } from 'wait-for-expect';
 
 const config = {

@@ -28,7 +28,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-, "packages/devtools/dx-cli/src/commands/config/index.test.cts"  ],
+, "packages/devtools/dx-cli/src/commands/config/index.test.cts", "packages/sdk/config/src/plugin/esbuild-plugin.cts"  ],
   "exclude": [
     "node_modules",
     "dist",

@@ -5,8 +5,8 @@
 import RollupNodeGlobalsPlugin from 'rollup-plugin-polyfill-node';
 import { Plugin } from 'vite';
 
-import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin';
-import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin';
+import { ConfigPlugin as EsbuildConfigPlugin } from '@dxos/config/esbuild-plugin.cjs';
+import { ConfigPlugin as RollupConfigPlugin } from '@dxos/config/rollup-plugin.cjs';
 import { NodeGlobalsPolyfillPlugin as EsbuildNodeGlobalsPlugin } from '@dxos/esbuild-plugins';
 
 export const dxosPlugin = (configPath?: string): Plugin => ({

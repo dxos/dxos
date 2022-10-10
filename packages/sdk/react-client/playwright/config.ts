@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { PlaywrightTestConfig } from '@playwright/test';
+import { type PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   use: {

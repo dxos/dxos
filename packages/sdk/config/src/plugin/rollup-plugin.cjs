@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { definitions } from './definitions';
+import { definitions } from './definitions.cjs';
 
 export function ConfigPlugin ({ configPath, dynamic = false, publicUrl = '' } = {}) {
   dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
