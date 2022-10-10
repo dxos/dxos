@@ -21,7 +21,10 @@ export type CreateBatchStreamOptions = {
   tail?: boolean
 }
 
-export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchStreamOptions = {}) => {
+export const createBatchStream = (
+  descriptor: FeedDescriptor,
+  opts: CreateBatchStreamOptions = {}
+): NodeJS.ReadableStream => {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
   const { feed } = descriptor;
 
@@ -37,8 +40,9 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
   let first = true;
   let firstSyncEnd = end;
 
-  let range = feed.download({ start, end, linear: true });
+  let range = feed.native.download({ start, end, linear: true });
 
+  // TODO(burdon): Make async.
   const read = (size: any, cb?: any) => {
     if (!feed.opened) {
       return open(size, cb);
@@ -58,9 +62,11 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
           return cb(null, null);
         }
       }
+
       if (opts.tail) {
         start = feed.length;
       }
+
       firstSyncEnd = end === Infinity ? feed.length : end;
       first = false;
     }
@@ -71,7 +77,7 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err: any, data: any) => {
+      feed.native.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -88,23 +94,25 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err, data) => {
+      feed.native.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
+
         cb(null, [buildMessage(data as any)]);
       });
       return;
     }
 
     seq = setStart(batchEnd);
-    feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
-      if (err || messages.length === 0) {
+    // TODO(burdon): Deprecated.
+    feed.native.getBatch(seq, batchEnd, opts, (err: Error | null, blocks?: Buffer[]) => {
+      if (err || blocks?.length === 0) { // TODO(burdon): Block length 0 is not an error.
         cb(err);
         return;
       }
 
-      cb(null, messages.map(buildMessage));
+      cb(null, blocks!.map(buildMessage));
     });
   };
 
@@ -127,10 +135,11 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
   };
 
   const open = (size: any, cb: (err: Error) => void) => {
-    feed.ready(err => {
+    feed.native.ready(err => {
       if (err) {
         return cb(err);
       }
+
       read(size, cb);
     });
   };
@@ -142,8 +151,11 @@ export const createBatchStream = (descriptor: FeedDescriptor, opts: CreateBatchS
     if (range.iterator) {
       range.iterator.start = start;
     }
+
     return prevStart;
   };
 
-  return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
+  return streamFrom.obj(read)
+    .on('end', cleanup)
+    .on('close', cleanup);
 };

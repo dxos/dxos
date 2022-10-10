@@ -208,9 +208,9 @@ describe.skip('FeedStore', function () {
     const feed1 = await feedStore1.openReadWriteFeedWithSigner(key, keyring);
     const feed2 = await feedStore2.openReadOnlyFeed(key);
 
-    const stream1 = feed1.feed.replicate(true);
-    const stream2 = feed2.feed.replicate(false);
-
+    // TODO(burdon): Export stream.d.ts to interfaces
+    const stream1 = feed1.replicate(true) as any as NodeJS.ReadStream;
+    const stream2 = feed2.replicate(false) as any as NodeJS.WriteStream;
     stream1.pipe(stream2).pipe(stream1);
 
     await feed1.append('test');
@@ -226,7 +226,6 @@ describe.skip('FeedStore', function () {
 
     const stream1 = hypercore1.replicate(true);
     const stream2 = hypercore2.replicate(false);
-
     stream1.pipe(stream2).pipe(stream1);
 
     hypercore1.append('test');
@@ -255,7 +254,6 @@ describe.skip('FeedStore', function () {
 
     const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey, crypto: MOCK_CRYPTO });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { crypto: MOCK_CRYPTO });
-
     const stream1 = hypercore1.replicate(true);
     const stream2 = hypercore2.replicate(false);
 

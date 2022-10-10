@@ -84,8 +84,10 @@ describe('FeedDescriptor', function () {
     // Closing multiple times should actually close once.
     await Promise.all([feedDescriptor.close(), feedDescriptor.close()]);
     expect(feedDescriptor.opened).toBe(false);
-    feedDescriptor.feed.append('test', (err: any) => {
-      expect(err.message).toContain('This feed is not writable');
+    feedDescriptor.feed.native.append('test', (err: Error | null) => {
+      if (err) {
+        expect(err.message).toContain('This feed is not writable.');
+      }
     });
 
     // If we try to close a feed that is opening should wait for the open result.

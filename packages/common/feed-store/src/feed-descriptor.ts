@@ -11,7 +11,7 @@ import { Lock } from '@dxos/async';
 import { sha256, verifySignature, Signer } from '@dxos/crypto';
 import { failUndefined } from '@dxos/debug';
 import { wrapFeed } from '@dxos/hypercore';
-import type { HypercoreFeedConstructor, HypercoreFeed, ValueEncoding } from '@dxos/hypercore';
+import type { FeedReplicationOptions, HypercoreFeedConstructor, HypercoreFeed, ValueEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Directory, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
@@ -148,11 +148,11 @@ export class FeedDescriptor {
   }
 
   /**
-   *
+   * Return replication stream.
    */
-  replicate (options: any) {
+  replicate (initiator: boolean, options?: FeedReplicationOptions) {
     assert(this._feed);
-    return pify(this._feed?.replicate.bind(this._feed))(options);
+    return this._feed?.replicate(initiator, options);
   }
 
   private async _open () {
@@ -204,7 +204,7 @@ export class FeedDescriptor {
    */
   private _createStorage (path = ''): RandomAccessFileConstructor {
     return (filename) => {
-      return this._directory.createOrOpenFile(`${path}/${filename}`);
+      return this._directory.getOrCreateFile(`${path}/${filename}`);
     };
   }
 }

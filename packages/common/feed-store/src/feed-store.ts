@@ -74,6 +74,20 @@ export class FeedStore {
   }
 
   /**
+   * Create a feed to Feedstore
+   * @deprecated Use openReadWriteFeedWithSigner instead.
+   */
+  async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
+    // throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
+    const descriptor = this._descriptors.get(key.toHex());
+    if (descriptor && descriptor.secretKey) {
+      return descriptor;
+    }
+
+    return this._createDescriptor({ key, secretKey });
+  }
+
+  /**
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
   async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer): Promise<FeedDescriptor> {

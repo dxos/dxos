@@ -17,6 +17,8 @@ import type {
  * Wrapped HypercoreFeedObject.
  */
 export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
+  readonly native: HypercoreFeedObject
+
   // Nanoresource
   /** @deprecated remove in v10 */
   open (): Promise<void>
@@ -34,9 +36,9 @@ export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
   createWriteStream (options?: any): Writable
   replicate (initiator: boolean, options?: FeedReplicationOptions): ProtocolStream
   head (options?: any): Promise<any>
-  get (index: number, options?: any): Promise<any>
+  get (index: number, options?: any): Promise<Buffer>
   /** @deprecated remove in v10 */
-  getBatch (start: number, end: number, options?: any): Promise<any[]>
+  getBatch (start: number, end: number, options?: any): Promise<Buffer[]>
   download (range?: any): Promise<number>
   downloaded (start: number, end: number): boolean
   undownload (id: number): void
@@ -46,7 +48,11 @@ export interface HypercoreFeed extends NanoresourceProperties, FeedProperties {
  * Wrap async methods.
  */
 export const wrapFeed = (feed: HypercoreFeedObject): HypercoreFeed => {
+  // TODO(burdon): Could create issues if overwrite methods.
+  // TODO(burdon): Reconcile with pifyFields.
   return Object.assign(feed, {
+    native: feed,
+
     open: pify(feed.open).bind(feed),
     close: pify(feed.close).bind(feed),
     append: pify(feed.append).bind(feed),

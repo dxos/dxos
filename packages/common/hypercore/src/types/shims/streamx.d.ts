@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// TODO(burdon): Convert to actual definitions.
+
 /**
  * https://www.npmjs.com/package/streamx
  * https://github.com/streamxorg/streamx

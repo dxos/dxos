@@ -2,7 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-import type { wrapFeed, HypercoreFeedObject, HypercoreFeed } from '@dxos/hypercore';
+import { wrapFeed } from '@dxos/hypercore';
+import type { HypercoreFeedObject, HypercoreFeed } from '@dxos/hypercore';
 
 // TODO(burdon): New wrapper.
 // TODO(burdon): Use factor to create mocks (why is that required?)

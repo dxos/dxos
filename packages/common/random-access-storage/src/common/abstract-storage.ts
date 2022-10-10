@@ -52,6 +52,7 @@ export abstract class AbstractStorage implements Storage {
   protected getOrCreateFile (path: string, filename: string, opts?: any): File {
     const fullPath = join(path, filename);
 
+    // TODO(burdon): Check if closed. Clone only if ram.
     // Some variants (e.g., Node) do not allow files to be reopened.
     let file = this._getFileIfExists(fullPath);
     if (file && file?.clone) {

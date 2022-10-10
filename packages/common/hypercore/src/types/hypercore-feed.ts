@@ -23,6 +23,7 @@ import type { Nanoresource } from './nanoresource';
 /**
  * Feed data block.
  */
+// TODO(burdon): Remove -- not defined by hypercore.
 export type FeedBlock = {
   seq: number
   data: Buffer
@@ -150,13 +151,15 @@ export interface HypercoreFeedObject extends Nanoresource, FeedProperties {
   replicate (initiator: boolean, options?: FeedReplicationOptions): ProtocolStream
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
+  /** @deprecated remove in v10 */
   head (options?: any, cb?: Callback<FeedBlock>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
-  get (index: number, options: any, cb: Callback<FeedBlock>): void
+  get (index: number, options: any, cb: Callback<Buffer>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedgetbatchstart-end-options-callback
-  getBatch (start: number, end: number, options: any, cb: Callback<FeedBlock[]>): void
+  /** @deprecated remove in v10 */
+  getBatch (start: number, end: number, options: any, cb: Callback<Buffer[]>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
   download (range?: Range, cb?: Callback<number>): any
