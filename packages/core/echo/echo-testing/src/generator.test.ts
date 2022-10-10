@@ -4,7 +4,8 @@
 
 import expect from 'expect';
 
-// import { createTestInstance } from '@dxos/echo-db';
+// @ts-ignore
+import { createTestInstance } from '@dxos/echo-db';
 import { Matcher } from '@dxos/object-model';
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
