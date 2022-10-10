@@ -9,6 +9,8 @@ import { PublicKey } from '@dxos/keys';
 
 import { FeedDescriptor } from './feed-descriptor';
 
+// TODO(burdon): Reconcile with feed-store iterator.
+//  https://github.com/dxos/dxos/pull/1611#discussion_r989889196
 export type CreateBatchStreamOptions = {
   start?: number
   end?: number

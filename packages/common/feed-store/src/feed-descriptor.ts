@@ -47,7 +47,7 @@ export class FeedDescriptor {
   constructor ({
     directory,
     key,
-    secretKey,
+    secretKey, // TODO(burdon): Remove: https://github.com/dxos/dxos/pull/1611#discussion_r989888001
     valueEncoding, // TODO(burdon): Default or required?
     hypercore = defaultHypercore, // TODO(burdon): Remove.
     disableSigning = false,
