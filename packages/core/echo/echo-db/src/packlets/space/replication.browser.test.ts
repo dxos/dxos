@@ -28,8 +28,9 @@ describe('replication', function () {
     const srcFeed = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
     const dstFeed = await feedStore2.openReadOnlyFeed(srcFeed.key);
 
-    const stream1 = srcFeed.feed.replicate(true);
-    const stream2 = dstFeed.feed.replicate(false);
+    // TODO(burdon): Export stream.d.ts to interfaces
+    const stream1 = srcFeed.feed.replicate(true) as any as NodeJS.ReadStream;
+    const stream2 = dstFeed.feed.replicate(false) as any as NodeJS.WriteStream;
     stream1.pipe(stream2).pipe(stream1);
 
     await srcFeed.append({

@@ -65,7 +65,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 };
 
 const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
-  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf8' });
+  const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: 'utf-8' });
   const keyring = new Keyring();
   const feed = await feedStore.openReadWriteFeedWithSigner(
     await keyring.createKey(),

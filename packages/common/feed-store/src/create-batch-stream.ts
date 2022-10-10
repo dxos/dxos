@@ -118,7 +118,7 @@ export const createBatchStream = (
 
   const buildMessage = (data: object) => {
     return {
-      key: PublicKey.from(feed.key),
+      key: PublicKey.from(feed.key), // TODO(burdon): Document.
       seq: seq++,
       data,
       sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
