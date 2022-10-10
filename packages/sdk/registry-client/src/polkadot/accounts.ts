@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 
-import { Account, AccountKey, AccountsClientBackend } from '../api';
-import { PolkadotClient } from './polkadot-client';
+import { Account, AccountKey, AccountsClientBackend } from '../api/index.js';
+import { PolkadotClient } from './polkadot-client.js';
 
 /**
  * Polkadot DXNS accounts client backend.

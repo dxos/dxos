@@ -9,7 +9,7 @@ import { schemaJson } from '@dxos/protocols';
 
 import {
   AccountKey, CID, DXN, RecordMetadata, RegistryClient, RegistryType, TypeRecordMetadata
-} from '../api';
+} from '../api/index.js';
 
 /**
  * Generates a random CID.

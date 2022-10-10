@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { AccountKey } from './account-key';
+import { AccountKey } from './account-key.js';
 
 /**
  * Accounts with a list of devices.

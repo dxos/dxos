@@ -5,7 +5,7 @@
 import { ApiPromise } from '@polkadot/api/promise';
 import { AddressOrPair } from '@polkadot/api/types';
 
-import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler';
+import { ApiTransactionHandler, SignTxFunction } from './api-transaction-handler.js';
 
 /**
  * Base functionality for derived clients.

@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { CID } from './cid';
-import { DXN } from './dxn';
-import { RegistryRecord } from './registry-client';
+import { CID } from './cid.js';
+import { DXN } from './dxn.js';
+import { RegistryRecord } from './registry-client.js';
 
 /**
  * Filters to apply to lists of data from DXNS.

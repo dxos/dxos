@@ -9,7 +9,7 @@ import jsonrpc from '@polkadot/types/interfaces/jsonrpc';
 import { RegistryTypes } from '@polkadot/types/types';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 
-import * as definitions from './interfaces/definitions';
+import * as definitions from './interfaces/definitions.js';
 
 export const registryTypes: RegistryTypes = Object
   .values(definitions)

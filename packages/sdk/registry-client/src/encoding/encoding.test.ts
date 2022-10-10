@@ -6,11 +6,11 @@ import { expect } from 'chai';
 
 import { raise } from '@dxos/debug';
 
-import { createCID, createMockTypes } from '../testing';
+import { createCID, createMockTypes } from '../testing/index.js';
 import {
   decodeExtensionPayload,
   encodeExtensionPayload
-} from './encoding';
+} from './encoding.js';
 
 describe('Record encoding', function () {
   const mockTypes = createMockTypes();

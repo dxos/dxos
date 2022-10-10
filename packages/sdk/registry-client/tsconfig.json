@@ -8,6 +8,7 @@
     ],
     "noImplicitAny": false,
     "outDir": "dist",
+    "moduleResolution": "node",
     "paths": {
       "@polkadot/api/augment": [
         "./packages/sdk/registry-client/src/polkadot/interfaces/augment-api.ts"

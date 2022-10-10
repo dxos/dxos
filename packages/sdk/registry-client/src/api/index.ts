@@ -2,14 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './account-key';
-export * from './accounts';
-export * from './accounts-client';
-export * from './auctions';
-export * from './auctions-client';
-export * from './cid';
-export * from './domain-key';
-export * from './dxn';
-export * from './filtering';
-export * from './registry';
-export * from './registry-client';
+export * from './account-key.js';
+export * from './accounts.js';
+export * from './accounts-client.js';
+export * from './auctions.js';
+export * from './auctions-client.js';
+export * from './cid.js';
+export * from './domain-key.js';
+export * from './dxn.js';
+export * from './filtering.js';
+export * from './registry.js';
+export * from './registry-client.js';

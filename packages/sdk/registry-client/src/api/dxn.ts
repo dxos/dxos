@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DomainKey } from './domain-key';
+import { DomainKey } from './domain-key.js';
 
 export type DXNString = string;
 

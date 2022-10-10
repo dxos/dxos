@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
+import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
-import { AccountKey } from './account-key';
-import { CID } from './cid';
-import { DomainKey } from './domain-key';
-import { DXN } from './dxn';
+import { AccountKey } from './account-key.js';
+import { CID } from './cid.js';
+import { DomainKey } from './domain-key.js';
+import { DXN } from './dxn.js';
 
 /**
  * Authorities provide namespaces for records.

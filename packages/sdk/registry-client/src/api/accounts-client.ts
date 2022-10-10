@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { AccountKey } from './account-key';
-import { AccountsClientBackend, Account } from './accounts';
+import { AccountKey } from './account-key.js';
+import { AccountsClientBackend, Account } from './accounts.js';
 
 /**
  * Main API for DXNS account and devices management.

@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { DomainKey } from './domain-key';
-import { DXN } from './dxn';
+import { DomainKey } from './domain-key.js';
+import { DXN } from './dxn.js';
 
 const VALID_AUTHORITY = 'example';
 const VALID_PATH = 'valid/path';

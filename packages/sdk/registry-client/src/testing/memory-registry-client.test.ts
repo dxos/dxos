@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { AccountKey, CID, DXN, RegistryClient } from '../api';
-import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator';
-import { MemoryRegistryClientBackend } from './memory-registry-client';
+import { AccountKey, CID, DXN, RegistryClient } from '../api/index.js';
+import { createDXN, registerMockRecord, registerMockResource, registerMockTypes } from './fake-data-generator.js';
+import { MemoryRegistryClientBackend } from './memory-registry-client.js';
 
 describe('Registry API mock', function () {
   let mock: MemoryRegistryClientBackend;

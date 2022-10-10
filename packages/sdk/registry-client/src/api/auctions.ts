@@ -5,9 +5,9 @@
 import { AddressOrPair } from '@polkadot/api/types';
 import BigNumber from 'bn.js';
 
-import { SignTxFunction } from '../polkadot';
-import { AccountKey } from './account-key';
-import { DomainKey } from './domain-key';
+import { SignTxFunction } from '../polkadot/index.js';
+import { AccountKey } from './account-key.js';
+import { DomainKey } from './domain-key.js';
 
 /**
  * Auction allows assigning names to identities.

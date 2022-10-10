@@ -7,7 +7,7 @@ import { webcrypto as crypto } from 'crypto';
 import assert from 'node:assert';
 
 import { schema } from '@dxos/protocols';
-import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
+import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 import { ComplexMap } from '@dxos/util';
 
 import {
@@ -18,7 +18,7 @@ import {
   DXN,
   RecordWithCid,
   RegistryClientBackend
-} from '../api';
+} from '../api/index.js';
 
 /**
  * In-memory implementation of the registry client with statically specified records.

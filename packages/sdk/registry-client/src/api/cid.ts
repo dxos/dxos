@@ -6,7 +6,7 @@ import { fromB58String, toB58String } from 'multihashes';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 
-import { Multihash } from '../polkadot/interfaces';
+import { Multihash } from '../polkadot/interfaces/index.js';
 
 /**
  * Conten-addressable ID.

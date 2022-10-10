@@ -7,7 +7,7 @@ import protobuf from 'protobufjs';
 
 import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
+import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import {
@@ -15,13 +15,13 @@ import {
   decodeExtensionPayload,
   encodeExtensionPayload,
   sanitizeExtensionData
-} from '../encoding';
-import { AccountKey } from './account-key';
-import { CID } from './cid';
-import { DomainKey } from './domain-key';
-import { DXN } from './dxn';
-import { Filtering, Filter } from './filtering';
-import { Authority, RegistryClientBackend } from './registry';
+} from '../encoding/index.js';
+import { AccountKey } from './account-key.js';
+import { CID } from './cid.js';
+import { DomainKey } from './domain-key.js';
+import { DXN } from './dxn.js';
+import { Filtering, Filter } from './filtering.js';
+import { Authority, RegistryClientBackend } from './registry.js';
 
 export type ResourceSet = {
   name: DXN

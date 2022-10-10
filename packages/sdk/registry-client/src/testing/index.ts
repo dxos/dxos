@@ -2,5 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './fake-data-generator';
-export * from './memory-registry-client';
+export * from './fake-data-generator.js';
+export * from './memory-registry-client.js';

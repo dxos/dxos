@@ -9,8 +9,8 @@ import chaiAsPromised from 'chai-as-promised';
 
 import {
   AccountsClient
-} from '../../src';
-import { setupRegistryClient } from './utils';
+} from '../../src/index.js';
+import { setupRegistryClient } from './utils.js';
 
 chai.use(chaiAsPromised);
 

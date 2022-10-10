@@ -7,9 +7,9 @@ import type { IConversionOptions, Type } from 'protobufjs';
 
 import { FieldMapper, mapMessage } from '@dxos/codec-protobuf';
 import { TYPES } from '@dxos/protocols';
-import { Record } from '@dxos/protocols/proto/dxos/registry';
+import { Record } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
-import { CID, RegistryType } from '../api';
+import { CID, RegistryType } from '../api/index.js';
 
 const getProtoTypeFromTypeRecord = (record: RegistryType): Type =>
   record.type.protobufDefs.lookupType(record.type.messageName);

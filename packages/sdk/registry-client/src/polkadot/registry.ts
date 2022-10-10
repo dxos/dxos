@@ -8,7 +8,7 @@ import { compactAddLength } from '@polkadot/util';
 import assert from 'node:assert';
 
 import { schema } from '@dxos/protocols';
-import { Record as RawRecord } from '@dxos/protocols/proto/dxos/registry';
+import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 import { isNotNullOrUndefined } from '@dxos/util';
 
 import {
@@ -19,9 +19,9 @@ import {
   DXN,
   RecordWithCid,
   RegistryClientBackend
-} from '../api';
-import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces';
-import { PolkadotClient } from './polkadot-client';
+} from '../api/index.js';
+import { Multihash, Resource as BaseResource, Record as PolkadotRecord } from './interfaces/index.js';
+import { PolkadotClient } from './polkadot-client.js';
 
 /**
  * Polkadot DXNS registry client backend.

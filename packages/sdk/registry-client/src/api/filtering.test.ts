@@ -4,10 +4,10 @@
 
 import { expect } from 'chai';
 
-import { createCID } from '../testing';
-import { DXN } from './dxn';
-import { Filtering } from './filtering';
-import { RegistryRecord } from './registry-client';
+import { createCID } from '../testing/index.js';
+import { DXN } from './dxn.js';
+import { Filtering } from './filtering.js';
+import { RegistryRecord } from './registry-client.js';
 
 describe('Filtering', function () {
   // TODO(marik-d): Fix those tests.

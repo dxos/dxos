@@ -21,8 +21,8 @@ import {
   AccountsClient,
   PolkadotAccounts,
   PolkadotAuctions
-} from '../../src';
-import { DEFAULT_DXNS_ENDPOINT } from './test-config';
+} from '../../src/index.js';
+import { DEFAULT_DXNS_ENDPOINT } from './test-config.js';
 
 chai.use(chaiAsPromised);
 

@@ -4,9 +4,9 @@
 
 // Note: Do not export ./interfaces, they conflict with the types in the SDK.
 
-export * from './accounts';
-export * from './api-creation';
-export * from './api-transaction-handler';
-export * from './auctions';
-export * from './polkadot-client';
-export * from './registry';
+export * from './accounts.js';
+export * from './api-creation.js';
+export * from './api-transaction-handler.js';
+export * from './auctions.js';
+export * from './polkadot-client.js';
+export * from './registry.js';

@@ -8,10 +8,10 @@ import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
 import { schemaJson } from '@dxos/protocols';
-import { App } from '@dxos/protocols/proto/dxos/type';
+import { App } from '@dxos/protocols/dist/src/proto/gen/dxos/type.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
-import { createCID, AccountKey, CID, DomainKey, DXN, PolkadotRegistry, RegistryClient } from '../../src';
-import { setupRegistryClient } from './utils';
+import { createCID, AccountKey, CID, DomainKey, DXN, PolkadotRegistry, RegistryClient } from '../../src/index.js';
+import { setupRegistryClient } from './utils.js';
 
 chai.use(chaiAsPromised);
 

@@ -4,10 +4,10 @@
 
 import { AddressOrPair } from '@polkadot/api/types';
 
-import { SignTxFunction } from '../polkadot';
-import { AccountKey } from './account-key';
-import { Auction, AuctionsClientBackend } from './auctions';
-import { DomainKey } from './domain-key';
+import { SignTxFunction } from '../polkadot/index.js';
+import { AccountKey } from './account-key.js';
+import { Auction, AuctionsClientBackend } from './auctions.js';
+import { DomainKey } from './domain-key.js';
 
 /**
  * Main API for DXNS auctions management.
