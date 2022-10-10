@@ -122,7 +122,6 @@ export class FeedDescriptor {
       return await this._open();
     });
 
-    // TODO(burdon): Remove.
     return this._feed ?? failUndefined();
   }
 
@@ -189,14 +188,14 @@ export class FeedDescriptor {
 
     // TODO(burdon): MUST be set before calling ready (due to lock above?)
     const feed = wrapFeed(hypercore);
+    this._feed = feed;
 
     // TODO(burdon): This isn't required unless sparse is set with options?
     // Request the feed to eagerly download everything.
-    void feed.download();
+    // void feed.download();
 
     // Wait until ready.
     await feed.open();
-    return feed;
   }
 
   /**
