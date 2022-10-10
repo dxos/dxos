@@ -15,9 +15,9 @@ import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { Item } from './item';
-import { ItemDemuxer } from './item-demuxer';
-import { ItemManager } from './item-manager';
+import { Item } from './item.js';
+import { ItemDemuxer } from './item-demuxer.js';
+import { ItemManager } from './item-manager.js';
 
 const log = debug('dxos:echo:item-demuxer:test');
 

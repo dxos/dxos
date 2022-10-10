@@ -5,14 +5,14 @@
 // @dxos/mocha platform=browser
 
 import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage } from '@dxos/random-access-storage';
 
-import { codec } from '../common';
+import { codec } from '../common/index.js';
 
 describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {

@@ -8,8 +8,8 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential } from './credential-factory';
-import { verifyCredential } from './verifier';
+import { createCredential } from './credential-factory.js';
+import { verifyCredential } from './verifier.js';
 
 describe('verifier', function () {
   describe('no chain', function () {

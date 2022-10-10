@@ -7,9 +7,9 @@ import assert from 'node:assert';
 import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 
-import { Entity } from './entity';
-import { Item } from './item';
-import { ItemManager } from './item-manager';
+import { Entity } from './entity.js';
+import { Item } from './item.js';
+import { ItemManager } from './item-manager.js';
 
 export interface LinkData {
   sourceId: ItemID

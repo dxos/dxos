@@ -14,8 +14,8 @@ import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
-import { createMessageSelector } from './message-selector';
-import { TimeframeClock } from './timeframe-clock';
+import { createMessageSelector } from './message-selector.js';
+import { TimeframeClock } from './timeframe-clock.js';
 
 const STALL_TIMEOUT = 1000;
 

@@ -12,12 +12,12 @@ import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { DataMirror } from './data-mirror';
-import { DataService } from './data-service';
-import { DataServiceHost } from './data-service-host';
-import { Item } from './item';
-import { ItemDemuxer } from './item-demuxer';
-import { ItemManager } from './item-manager';
+import { DataMirror } from './data-mirror.js';
+import { DataService } from './data-service.js';
+import { DataServiceHost } from './data-service-host.js';
+import { Item } from './item.js';
+import { ItemDemuxer } from './item-demuxer.js';
+import { ItemManager } from './item-manager.js';
 
 describe('DataMirror', function () {
   it('basic', async function () {

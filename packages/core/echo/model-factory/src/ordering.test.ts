@@ -7,8 +7,8 @@ import expect from 'expect';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
-import { getInsertionIndex } from './ordering';
-import { ModelMessage } from './types';
+import { getInsertionIndex } from './ordering.js';
+import { ModelMessage } from './types.js';
 
 describe('Ordering', function () {
   // feedA < feedB

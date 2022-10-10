@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './model';
-export * from './types';
+export * from './model.js';
+export * from './types.js';

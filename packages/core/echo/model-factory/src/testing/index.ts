@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './messages';
-export * from './test-model';
-export * from './test-list-model';
-export * from './test-rig';
+export * from './messages.js';
+export * from './test-model.js';
+export * from './test-list-model.js';
+export * from './test-rig.js';

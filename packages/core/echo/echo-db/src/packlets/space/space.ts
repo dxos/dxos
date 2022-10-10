@@ -17,11 +17,11 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { Database, FeedDatabaseBackend } from '../database';
-import { Pipeline, PipelineAccessor } from '../pipeline';
-import { ControlPipeline } from './control-pipeline';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+import { Database, FeedDatabaseBackend } from '../database/index.js';
+import { Pipeline, PipelineAccessor } from '../pipeline/index.js';
+import { ControlPipeline } from './control-pipeline.js';
+import { ReplicatorPlugin } from './replicator-plugin.js';
+import { SpaceProtocol, SwarmIdentity } from './space-protocol.js';
 
 export type SpaceParams = {
   spaceKey: PublicKey

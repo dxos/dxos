@@ -9,10 +9,10 @@ import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope, ItemMutation } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { Entity } from './entity';
-import { ItemManager } from './item-manager';
-import type { Link } from './link';
-import { createItemSelection, Selection } from './selection';
+import { Entity } from './entity.js';
+import { ItemManager } from './item-manager.js';
+import type { Link } from './link.js';
+import { createItemSelection, Selection } from './selection/index.js';
 
 const log = debug('dxos:echo-db:item');
 

@@ -7,9 +7,9 @@ import { log } from '@dxos/log';
 import { Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { FeedInfo, FeedStateMachine } from './feed-state-machine';
-import { MemberStateMachine, MemberInfo } from './member-state-machine';
+import { getCredentialAssertion, verifyCredential } from '../credentials/index.js';
+import { FeedInfo, FeedStateMachine } from './feed-state-machine.js';
+import { MemberStateMachine, MemberInfo } from './member-state-machine.js';
 
 export interface PartyState {
   readonly genesisCredential: Credential | undefined

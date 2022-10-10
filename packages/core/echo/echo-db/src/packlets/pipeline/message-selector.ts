@@ -8,7 +8,7 @@ import assert from 'node:assert';
 import { MessageSelector } from '@dxos/feed-store';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { TimeframeClock } from './timeframe-clock';
+import { TimeframeClock } from './timeframe-clock.js';
 
 const log = debug('dxos:echo-db:message-selector');
 

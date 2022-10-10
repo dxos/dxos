@@ -10,10 +10,10 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { Model } from '../model';
-import { ModelFactory } from '../model-factory';
-import { StateManager } from '../state-manager';
-import { ModelConstructor, ModelMessage } from '../types';
+import { Model } from '../model.js';
+import { ModelFactory } from '../model-factory.js';
+import { StateManager } from '../state-manager.js';
+import { ModelConstructor, ModelMessage } from '../types.js';
 
 const log = debug('dxos:echo:model-test-rig');
 

@@ -8,7 +8,7 @@ import { rmSync } from 'fs';
 import { Item } from '@dxos/echo-db';
 import { ObjectModel } from '@dxos/object-model';
 
-import { createPersistentInstance } from './persistant-instance';
+import { createPersistentInstance } from './persistant-instance.js';
 
 // TODO(burdon): Save data in repo to check if protocol has changed? Check protocol version.
 const createData = async (storagePath: string) => {

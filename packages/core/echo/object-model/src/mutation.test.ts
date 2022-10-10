@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { ObjectMutation } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { MutationUtil, ValueUtil } from './mutation';
+import { MutationUtil, ValueUtil } from './mutation.js';
 
 describe('Mutations', function () {
   it('ValueUtil', function () {

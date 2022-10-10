@@ -5,7 +5,7 @@
 import jsondown from 'jsondown';
 import { join } from 'path';
 
-import { ECHO } from '@dxos/echo-db';
+// import { ECHO } from '@dxos/echo-db';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 export const createPersistentInstance = (storagePath: string) => new ECHO({

@@ -3,15 +3,15 @@
 //
 
 import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { afterTest } from '@dxos/testutils';
 
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
-import { SpaceProtocol } from './space-protocol';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin.js';
+import { SpaceProtocol } from './space-protocol.js';
 
 const signalContext = new MemorySignalManagerContext();
 

@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Event } from '@dxos/async';
 import { ItemID } from '@dxos/protocols';
 
-import { ObjectModel } from './object-model';
+import { ObjectModel } from './object-model.js';
 
 /**
  * Utility class that wraps an `ObjectModel` and implements a linked list via key-values on a given property.

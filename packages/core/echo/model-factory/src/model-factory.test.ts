@@ -6,8 +6,8 @@ import expect from 'expect';
 
 import { PublicKey } from '@dxos/keys';
 
-import { ModelFactory } from './model-factory';
-import { TestModel } from './testing';
+import { ModelFactory } from './model-factory.js';
+import { TestModel } from './testing/index.js';
 
 describe('model factory', function () {
   it('model constructor', async function () {

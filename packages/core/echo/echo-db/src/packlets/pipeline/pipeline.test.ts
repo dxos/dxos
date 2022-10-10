@@ -10,8 +10,8 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
-import { codec } from '../common';
-import { Pipeline } from './pipeline';
+import { codec } from '../common/index.js';
+import { Pipeline } from './pipeline.js';
 
 describe('pipeline/Pipeline', function () {
   it('asynchronous reader & writer without ordering', async function () {

@@ -8,8 +8,8 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { afterTest } from '@dxos/testutils';
 
-import { createInMemoryDatabase, Database } from '../database';
-import { Schema, TYPE_SCHEMA } from './schema';
+import { createInMemoryDatabase, Database } from '../database/index.js';
+import { Schema, TYPE_SCHEMA } from './schema.js';
 
 const SCHEMA = 'example:type/schema/organization';
 const createTestSchema = async (database: Database) => {

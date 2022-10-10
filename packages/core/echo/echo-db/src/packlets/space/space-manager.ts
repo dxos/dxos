@@ -14,10 +14,10 @@ import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { DataService } from '../database';
-import { MetadataStore } from '../metadata';
-import { AuthProvider, AuthVerifier } from './auth-plugin';
-import { Space } from './space';
+import { DataService } from '../database/index.js';
+import { MetadataStore } from '../metadata/index.js';
+import { AuthProvider, AuthVerifier } from './auth-plugin.js';
+import { Space } from './space.js';
 
 // TODO(burdon): Factor out to CredentialGenerator?
 export interface SigningContext {

@@ -2,15 +2,15 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './data-mirror';
-export * from './data-service-host';
-export * from './data-service';
-export * from './database-backend';
-export * from './item-demuxer';
-export * from './item-manager';
-export * from './testing';
-export * from './item';
-export * from './link';
-export * from './entity';
-export * from './selection';
-export * from './database';
+export * from './data-mirror.js';
+export * from './data-service-host.js';
+export * from './data-service.js';
+export * from './database-backend.js';
+export * from './item-demuxer.js';
+export * from './item-manager.js';
+export * from './testing.js';
+export * from './item.js';
+export * from './link.js';
+export * from './entity.js';
+export * from './selection/index.js';
+export * from './database.js';

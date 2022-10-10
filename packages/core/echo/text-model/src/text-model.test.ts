@@ -9,7 +9,7 @@ import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-import { TextModel } from './text-model';
+import { TextModel } from './text-model.js';
 
 describe('TextModel', function () {
   it('insert', async function () {

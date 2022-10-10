@@ -14,8 +14,8 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../common';
-import { ControlPipeline } from './control-pipeline';
+import { codec } from '../common/index.js';
+import { ControlPipeline } from './control-pipeline.js';
 
 describe('space/control-pipeline', function () {
   it('admits feeds', async function () {

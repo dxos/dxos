@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 
-import { ResultSet } from './result-set';
+import { ResultSet } from './result-set.js';
 
 export const resultSetToStream = <T, U>(resultSet: ResultSet<T>, map: (arg: T[]) => U): Stream<U> => new Stream(({ next }) => {
   next(map(resultSet.value));

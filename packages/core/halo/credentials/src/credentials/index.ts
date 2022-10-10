@@ -2,8 +2,8 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './assertions';
-export * from './credential-factory';
-export * from './credential-generator';
-export * from './signing';
-export * from './verifier';
+export * from './assertions.js';
+export * from './credential-factory.js';
+export * from './credential-generator.js';
+export * from './signing.js';
+export * from './verifier.js';

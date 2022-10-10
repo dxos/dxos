@@ -10,9 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { ItemID } from '@dxos/protocols';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Model } from './model';
-import { StateManager } from './state-manager';
-import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types';
+import { Model } from './model.js';
+import { StateManager } from './state-manager.js';
+import { ModelType, ModelMeta, ModelConstructor, validateModelClass } from './types.js';
 
 /**
  * Creates Model instances from a registered collection of Model types.

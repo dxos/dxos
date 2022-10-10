@@ -4,10 +4,10 @@
 
 import { ItemID } from '@dxos/protocols';
 
-import { Entity } from '../entity';
-import { Item } from '../item';
-import { Link } from '../link';
-import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util';
+import { Entity } from '../entity.js';
+import { Item } from '../item.js';
+import { Link } from '../link.js';
+import { coerceToId, OneOrMultiple, testOneOrMultiple } from './util.js';
 
 //
 // Types

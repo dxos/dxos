@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { Matcher } from './matcher';
+import { Matcher } from './matcher.js';
 
 // TODO(burdon): Adapt for ObjectModel.
 // TODO(burdon): Nested properties?

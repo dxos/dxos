@@ -19,8 +19,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
-import { SpaceNotFoundError } from '../errors';
-import { DataServiceHost } from './data-service-host';
+import { SpaceNotFoundError } from '../errors/index.js';
+import { DataServiceHost } from './data-service-host.js';
 
 const log = debug('dxos:echo-db:data-service-router');
 

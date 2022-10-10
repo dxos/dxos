@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { ItemManager } from './item-manager';
+import { ItemManager } from './item-manager.js';
 
 describe('ItemManager', function () {
   describe('basic', function () {

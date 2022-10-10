@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import MiniSearch from 'minisearch';
+import { default as MiniSearch } from 'minisearch';
 
-import { Getter } from './matcher';
+import { Getter } from './matcher.js';
 
 interface IndexerOptions {
   fields: string[]

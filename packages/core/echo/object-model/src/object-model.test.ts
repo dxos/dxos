@@ -7,8 +7,8 @@ import expect from 'expect';
 // TODO(burdon): Rename TestRig and/or move to separate package.
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-import { ObjectModel } from './object-model';
-import { validateKey } from './util';
+import { ObjectModel } from './object-model.js';
+import { validateKey } from './util.js';
 
 describe('ObjectModel', function () {
   it('checks valid keys', function () {

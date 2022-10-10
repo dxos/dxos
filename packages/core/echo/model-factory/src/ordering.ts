@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
-import { ModelMessage } from './types';
+import { ModelMessage } from './types.js';
 
 /**
  * Ensures strong ordering of a mutation queue.

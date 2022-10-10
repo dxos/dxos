@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './party-state-machine';
-export * from './feed-state-machine';
-export * from './member-state-machine';
-export * from './device-state-machine';
+export * from './party-state-machine.js';
+export * from './feed-state-machine.js';
+export * from './member-state-machine.js';
+export * from './device-state-machine.js';

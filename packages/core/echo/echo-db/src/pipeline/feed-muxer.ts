@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { IEchoStream, Timeframe } from '@dxos/protocols';
 import { jsonReplacer } from '@dxos/util';
 
-import { CredentialProcessor, PartyStateProvider } from './party-processor';
+import { CredentialProcessor, PartyStateProvider } from './party-processor.js';
 
 const log = debug('dxos:echo-db:pipeline');
 

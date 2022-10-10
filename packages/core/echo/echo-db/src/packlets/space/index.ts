@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './space';
-export * from './space-protocol';
-export * from './replicator-plugin';
+export * from './space.js';
+export * from './space-protocol.js';
+export * from './replicator-plugin.js';
 
 // TODO(burdon): Why not * (if not then move other definitions).
 export {
@@ -12,6 +12,6 @@ export {
   AuthVerifier,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER
-} from './auth-plugin';
+} from './auth-plugin.js';
 
-export * from './space-manager';
+export * from './space-manager.js';

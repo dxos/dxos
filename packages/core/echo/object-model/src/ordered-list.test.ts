@@ -6,8 +6,8 @@ import expect from 'expect';
 
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-import { ObjectModel } from './object-model';
-import { OrderedList } from './ordered-list';
+import { ObjectModel } from './object-model.js';
+import { OrderedList } from './ordered-list.js';
 
 describe('OrderedList', function () {
   it('refresh', async function () {

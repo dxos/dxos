@@ -10,9 +10,9 @@ import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager'
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { codec } from '../common';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
-import { Space } from './space';
+import { codec } from '../common/index.js';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin.js';
+import { Space } from './space.js';
 
 // TODO(burdon): Factor out and share across tests?
 

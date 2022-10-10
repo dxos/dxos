@@ -12,7 +12,7 @@ import {
   KeyValue, ObjectMutation, ObjectMutationSet, KeyValueObject, Value
 } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { removeKey } from './util';
+import { removeKey } from './util.js';
 
 /**
  * @typedef {Object} Value

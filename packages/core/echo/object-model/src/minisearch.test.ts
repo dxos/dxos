@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import MiniSearch from 'minisearch';
+import { default as MiniSearch } from 'minisearch';
 
 describe('Search', function () {
   it('minisearch', async function () {

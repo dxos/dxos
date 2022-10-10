@@ -6,8 +6,8 @@ import { checkType } from '@dxos/debug';
 import { schema } from '@dxos/protocols';
 import type { TestItemMutation, TestItemSnapshot } from '@dxos/protocols/proto/example/testing/data';
 
-import { Model } from '../model';
-import { ModelMeta, MutationProcessMeta, StateMachine } from '../types';
+import { Model } from '../model.js';
+import { ModelMeta, MutationProcessMeta, StateMachine } from '../types.js';
 
 class TestModelStateMachine implements StateMachine<Map<any, any>, TestItemMutation, TestItemSnapshot> {
   private readonly _state = new Map();

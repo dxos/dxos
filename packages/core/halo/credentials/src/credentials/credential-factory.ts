@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { TypedMessage } from '@dxos/protocols';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getSignaturePayload } from './signing';
-import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
+import { getSignaturePayload } from './signing.js';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier.js';
 
 export type CreateCredentialSignerParams = {
   subject: PublicKey

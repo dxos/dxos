@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Extension, ERR_EXTENSION_RESPONSE_FAILED, Protocol } from '@dxos/mesh-protocol';
 
-import { SwarmIdentity } from './space-protocol';
+import { SwarmIdentity } from './space-protocol.js';
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 

@@ -8,7 +8,7 @@ import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { Keyring } from './keyring';
+import { Keyring } from './keyring.js';
 
 describe('Keyring', function () {
   it('sign & verify', async function () {

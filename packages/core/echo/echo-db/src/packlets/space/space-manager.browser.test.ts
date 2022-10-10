@@ -12,11 +12,11 @@ import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-mana
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../common';
-import { DataService } from '../database';
-import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
-import { SpaceManager } from './space-manager';
+import { codec } from '../common/index.js';
+import { DataService } from '../database/index.js';
+import { MetadataStore } from '../metadata/index.js';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin.js';
+import { SpaceManager } from './space-manager.js';
 
 describe('space-manager', function () {
   const createPeer = async () => {

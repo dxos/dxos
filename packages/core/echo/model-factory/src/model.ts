@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import type { ItemID } from '@dxos/protocols';
 
-import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types';
+import { ModelMeta, MutationWriteReceipt, MutationWriter } from './types.js';
 
 /**
  * Abstract base class for Models.

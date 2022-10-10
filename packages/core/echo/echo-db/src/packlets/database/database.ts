@@ -11,13 +11,13 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemType, ItemID } from '@dxos/protocols';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataServiceHost } from './data-service-host';
-import { DatabaseBackend } from './database-backend';
-import { Entity } from './entity';
-import { Item } from './item';
-import { ItemManager } from './item-manager';
-import { Link } from './link';
-import { RootFilter, Selection, createSelection } from './selection';
+import { DataServiceHost } from './data-service-host.js';
+import { DatabaseBackend } from './database-backend.js';
+import { Entity } from './entity.js';
+import { Item } from './item.js';
+import { ItemManager } from './item-manager.js';
+import { Link } from './link.js';
+import { RootFilter, Selection, createSelection } from './selection/index.js';
 
 export interface CreateItemOption<M extends Model> {
   model?: ModelConstructor<M>

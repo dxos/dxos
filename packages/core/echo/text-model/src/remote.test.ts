@@ -8,7 +8,7 @@ import { createInMemoryDatabase, createRemoteDatabaseFromDataServiceHost } from 
 import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 
-import { TextModel } from './text-model';
+import { TextModel } from './text-model.js';
 
 describe('With remote database', function () {
   it('create and write text', async function () {

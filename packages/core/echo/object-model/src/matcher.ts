@@ -3,9 +3,10 @@
 //
 
 import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
+import assert from 'assert';
 
-import { ValueUtil } from './mutation';
-import { TextIndex } from './text-index';
+import { ValueUtil } from './mutation.js';
+import { TextIndex } from './text-index.js';
 
 export type Getter = (item: any, path: string) => any;
 
@@ -91,6 +92,7 @@ export class Matcher {
         // Match text against cached text index.
         if (this._options.textIndex) {
           const matches = this._options.textIndex.search(text);
+          assert(matches);
           return matches.findIndex(match => match.id === item.id) !== -1;
         }
 

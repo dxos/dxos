@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { ModelFactory, TestRig } from '@dxos/model-factory';
 
-import { MessengerModel } from './model';
+import { MessengerModel } from './model.js';
 
 describe('MessengerModel', function () {
   it('send message', async function () {

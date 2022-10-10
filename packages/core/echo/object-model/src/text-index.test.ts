@@ -6,8 +6,8 @@ import expect from 'expect';
 
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { Matcher } from './matcher';
-import { TextIndex } from './text-index';
+import { Matcher } from './matcher.js';
+import { TextIndex } from './text-index.js';
 
 // https://en.wikipedia.org/wiki/Shakespeare%27s_plays#Canonical_plays
 const items = [

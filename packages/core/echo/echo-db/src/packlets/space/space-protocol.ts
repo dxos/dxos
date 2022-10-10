@@ -9,7 +9,7 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { MMSTTopology, NetworkManager, Plugin } from '@dxos/network-manager';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 
-import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin';
+import { AuthPlugin, AuthVerifier, AuthProvider } from './auth-plugin.js';
 
 // TODO(burdon): Move/remove?
 

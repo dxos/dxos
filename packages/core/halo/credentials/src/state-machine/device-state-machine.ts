@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
+import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials/index.js';
 
 /**
  * Processes device invitation credentials.

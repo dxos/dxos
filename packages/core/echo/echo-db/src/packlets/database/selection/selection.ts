@@ -4,9 +4,9 @@
 
 import { Event } from '@dxos/async';
 
-import { Entity } from '../entity';
-import { Item } from '../item';
-import { Link } from '../link';
+import { Entity } from '../entity.js';
+import { Item } from '../item.js';
+import { Link } from '../link.js';
 import {
   createQueryOptionsFilter,
   filterToPredicate,
@@ -17,8 +17,8 @@ import {
   Predicate,
   QueryOptions,
   RootFilter
-} from './queries';
-import { SelectionContext, SelectionResult, SelectionRoot } from './result';
+} from './queries.js';
+import { SelectionContext, SelectionResult, SelectionRoot } from './result.js';
 
 /**
  * Factory for selector that provides a root set of items.

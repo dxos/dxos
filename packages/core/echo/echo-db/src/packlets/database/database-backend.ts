@@ -12,10 +12,10 @@ import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { DataMirror } from './data-mirror';
-import { DataServiceHost } from './data-service-host';
-import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
-import { ItemManager } from './item-manager';
+import { DataMirror } from './data-mirror.js';
+import { DataServiceHost } from './data-service-host.js';
+import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer.js';
+import { ItemManager } from './item-manager.js';
 
 const log = debug('dxos:echo-db:database-backend');
 

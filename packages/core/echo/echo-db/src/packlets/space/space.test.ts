@@ -10,7 +10,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest } from '@dxos/testutils';
 
-import { TestAgentFactory } from './testing';
+import { TestAgentFactory } from './testing.js';
 
 describe('space/space', function () {
   it('database', async function () {

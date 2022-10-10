@@ -5,7 +5,7 @@
 // @dxos/mocha platform=browser
 
 import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -16,10 +16,10 @@ import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
-import { codec } from '../common';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
-import { ReplicatorPlugin } from './replicator-plugin';
-import { SpaceProtocol } from './space-protocol';
+import { codec } from '../common/index.js';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin.js';
+import { ReplicatorPlugin } from './replicator-plugin.js';
+import { SpaceProtocol } from './space-protocol.js';
 
 const signalContext = new MemorySignalManagerContext();
 

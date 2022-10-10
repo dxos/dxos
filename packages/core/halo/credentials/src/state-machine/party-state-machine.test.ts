@@ -7,8 +7,8 @@ import expect from 'expect';
 import { Keyring } from '@dxos/keyring';
 import { AdmittedFeed, Chain, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential, verifyCredential } from '../credentials';
-import { PartyStateMachine } from './party-state-machine';
+import { createCredential, verifyCredential } from '../credentials/index.js';
+import { PartyStateMachine } from './party-state-machine.js';
 
 describe('PartyStateMachine', function () {
   it('basic party creation', async function () {

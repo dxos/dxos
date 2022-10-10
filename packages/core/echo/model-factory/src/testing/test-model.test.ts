@@ -4,9 +4,9 @@
 
 import expect from 'expect';
 
-import { ModelFactory } from '../model-factory';
-import { TestModel } from './test-model';
-import { TestRig } from './test-rig';
+import { ModelFactory } from '../model-factory.js';
+import { TestModel } from './test-model.js';
+import { TestRig } from './test-rig.js';
 
 describe('test model', function () {
   it('basic mutations', async function () {

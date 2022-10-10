@@ -10,8 +10,8 @@ import { ModelMeta, Model, StateMachine, MutationProcessMeta } from '@dxos/model
 import { schema } from '@dxos/protocols';
 import { ObjectMutation, ObjectMutationSet, ObjectSnapshot } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { MutationUtil, ValueUtil } from './mutation';
-import { validateKey } from './util';
+import { MutationUtil, ValueUtil } from './mutation.js';
+import { validateKey } from './util.js';
 
 export type ObjectModelState = Record<string, any>
 

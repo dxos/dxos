@@ -6,8 +6,8 @@ import { verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Chain, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { isValidAuthorizedDeviceCredential } from './assertions';
-import { getSignaturePayload } from './signing';
+import { isValidAuthorizedDeviceCredential } from './assertions.js';
+import { getSignaturePayload } from './signing.js';
 
 export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 

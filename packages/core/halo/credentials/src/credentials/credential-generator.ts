@@ -6,7 +6,7 @@ import { Signer } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { AdmittedFeed, Credential, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential } from './credential-factory';
+import { createCredential } from './credential-factory.js';
 
 // TODO(burdon): Normalize party_key, space_key (args, proto).
 

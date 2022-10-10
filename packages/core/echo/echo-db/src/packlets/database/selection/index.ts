@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './queries';
-export * from './result';
-export * from './selection';
-export * from './util';
+export * from './queries.js';
+export * from './result.js';
+export * from './selection.js';
+export * from './util.js';

@@ -11,8 +11,8 @@ import { PublicKey } from '@dxos/keys';
 import type { MutationMeta, MutationMetaWithTimeframe, ItemID } from '@dxos/protocols';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { Model } from './model';
-import { getInsertionIndex } from './ordering';
+import { Model } from './model.js';
+import { getInsertionIndex } from './ordering.js';
 import {
   ModelConstructor,
   ModelMessage,
@@ -23,7 +23,7 @@ import {
   MutationProcessMeta,
   StateOf,
   StateMachine
-} from './types';
+} from './types.js';
 
 const log = debug('dxos:model-factory:state-manager');
 

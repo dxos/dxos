@@ -9,9 +9,9 @@ import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { MutationMetaWithTimeframe, Timeframe } from '@dxos/protocols';
 
-import { Model } from './model';
-import { StateManager } from './state-manager';
-import { TestListModel } from './testing';
+import { Model } from './model.js';
+import { StateManager } from './state-manager.js';
+import { TestListModel } from './testing/index.js';
 
 // feedA < feedB
 const feedA = PublicKey.fromHex('0x0000000000000000000000000000000000000000000000000000000000000001');

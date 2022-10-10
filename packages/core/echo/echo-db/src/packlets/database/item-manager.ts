@@ -15,10 +15,10 @@ import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
-import { UnknownModelError } from '../errors';
-import { Entity } from './entity';
-import { Item } from './item';
-import { Link } from './link';
+import { UnknownModelError } from '../errors/index.js';
+import { Entity } from './entity.js';
+import { Item } from './item.js';
+import { Link } from './link.js';
 
 const log = debug('dxos:echo-db:item-manager');
 

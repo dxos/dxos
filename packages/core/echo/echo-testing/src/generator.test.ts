@@ -4,11 +4,11 @@
 
 import expect from 'expect';
 
-import { createTestInstance } from '@dxos/echo-db';
+// import { createTestInstance } from '@dxos/echo-db';
 import { Matcher } from '@dxos/object-model';
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
-import { Generator, OBJECT_PERSON } from './generator';
+import { Generator, OBJECT_PERSON } from './generator.js';
 
 it.skip('generator', async function () {
   const echo = await createTestInstance({ initialize: true });

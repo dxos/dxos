@@ -10,7 +10,7 @@ import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { Pipeline, PipelineAccessor } from '../pipeline';
+import { Pipeline, PipelineAccessor } from '../pipeline/index.js';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey

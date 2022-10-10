@@ -9,7 +9,7 @@ import type { WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import type { ItemID, MutationMetaWithTimeframe } from '@dxos/protocols';
 
-import { Model } from './model';
+import { Model } from './model.js';
 
 // TODO(burdon): Replace with DXN (push to core protocol def).
 export type ModelType = string

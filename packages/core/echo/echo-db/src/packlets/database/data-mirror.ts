@@ -10,8 +10,8 @@ import { PublicKey } from '@dxos/keys';
 import { Model } from '@dxos/model-factory';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { Entity } from './entity';
-import { ItemManager } from './item-manager';
+import { Entity } from './entity.js';
+import { ItemManager } from './item-manager.js';
 
 const log = debug('dxos:echo-db:data-mirror');
 

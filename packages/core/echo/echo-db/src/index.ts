@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './packlets/common';
-export * from './packlets/database';
-export * from './packlets/errors';
-export * from './packlets/metadata';
-export * from './packlets/space';
-export * from './packlets/api';
+export * from './packlets/common/index.js';
+export * from './packlets/database/index.js';
+export * from './packlets/errors/index.js';
+export * from './packlets/metadata/index.js';
+export * from './packlets/space/index.js';
+export * from './packlets/api/index.js';

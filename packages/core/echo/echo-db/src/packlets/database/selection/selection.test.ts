@@ -10,11 +10,11 @@ import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { ItemID, ItemType } from '@dxos/protocols';
 
-import { Entity } from '../entity';
-import { Item } from '../item';
-import { Link } from '../link';
-import { RootFilter } from './queries';
-import { createSelection } from './selection';
+import { Entity } from '../entity.js';
+import { Item } from '../item.js';
+import { Link } from '../link.js';
+import { RootFilter } from './queries.js';
+import { createSelection } from './selection.js';
 
 // Use to prevent ultra-long diffs.
 const ids = (entities: Entity[]) => entities.map(entity => entity.id);

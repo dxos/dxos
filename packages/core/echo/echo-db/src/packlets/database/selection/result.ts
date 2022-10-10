@@ -6,9 +6,9 @@ import assert from 'node:assert';
 
 import { Event } from '@dxos/async';
 
-import { Database } from '../database';
-import { Entity } from '../entity';
-import { dedupe } from './util';
+import { Database } from '../database.js';
+import { Entity } from '../entity.js';
+import { dedupe } from './util.js';
 
 /**
  * Represents where the selection has started.
