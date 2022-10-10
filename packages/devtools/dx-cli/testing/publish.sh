@@ -4,7 +4,7 @@ pushd ./testing/app > /dev/null
 
 export DX_CONFIG=../../config/config.yml
 
-dx=../../bin/run
+dx=../../bin/run.js
 
 # Publish mock app.
 $dx app publish --verbose

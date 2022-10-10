@@ -2,7 +2,7 @@
 
 export DX_CONFIG=./testing/config/user-1.yml
 
-dx=./bin/run
+dx=./bin/run.js
 
 # Reset
 if [ "$1" = '--reset' ];

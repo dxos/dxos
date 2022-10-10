@@ -5,7 +5,7 @@
 import { Command, Flags } from '@oclif/core';
 import assert from 'assert';
 import debug from 'debug';
-import * as fs from 'fs-extra';
+import fs from 'node:fs'
 import yaml from 'js-yaml';
 import * as path from 'path';
 
@@ -13,7 +13,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 
-import { PublisherRpcPeer } from './util';
+import { PublisherRpcPeer } from './util/index.js';
 
 const log = debug('dxos:cli:main');
 const error = log.extend('error');

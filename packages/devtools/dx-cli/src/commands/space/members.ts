@@ -6,8 +6,8 @@ import { CliUx } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
-import { mapMembers, printMembers, selectSpace } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { mapMembers, printMembers, selectSpace } from '../../util/index.js';
 
 export default class Members extends BaseCommand {
   static override enableJsonFlag = true;

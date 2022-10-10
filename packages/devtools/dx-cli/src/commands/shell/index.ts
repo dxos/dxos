@@ -4,7 +4,7 @@
 
 import { CliUx, run } from '@oclif/core';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base-command.js';
 
 export default class Shell extends BaseCommand {
   static override description = 'Interactive shell.';

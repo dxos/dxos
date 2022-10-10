@@ -5,8 +5,8 @@
 import { Flags } from '@oclif/core';
 import assert from 'assert';
 
-import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, build, loadConfig, publish } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { PublisherRpcPeer, build, loadConfig, publish } from '../../util/index.js';
 
 export default class Publish extends BaseCommand {
   static override description = 'Publish apps.';

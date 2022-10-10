@@ -9,8 +9,8 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
-import { BaseCommand } from '../../base-command';
-import { printMembers, selectSpace } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { printMembers, selectSpace } from '../../util/index.js';
 
 // TODO(burdon): Reconcile invite/share.
 export default class Invite extends BaseCommand {

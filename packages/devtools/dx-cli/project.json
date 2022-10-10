@@ -21,7 +21,7 @@
       "options": {
         "ciEnvironments": ["nodejs"],
         "testPatterns": [
-          "packages/devtools/dx-cli/src/**/*.test.{ts,js}"
+          "packages/devtools/dx-cli/src/**/*.test.{ts,js,cts}"
         ],
         "watchPatterns": [
           "packages/devtools/dx-cli/src/**/*"

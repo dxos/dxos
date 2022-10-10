@@ -4,7 +4,7 @@
 
 import { Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base-command.js';
 
 export default class Recover extends BaseCommand {
   static override enableJsonFlag = true;

@@ -4,7 +4,7 @@
 
 import { spawnSync } from 'child_process';
 
-import type { PackageModule, Logger } from './common';
+import type { PackageModule, Logger } from './common.js';
 
 export interface BuildParams {
   log: Logger

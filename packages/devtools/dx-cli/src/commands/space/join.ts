@@ -7,8 +7,8 @@ import chalk from 'chalk';
 
 import { Client, InvitationDescriptor } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
-import { mapMembers, printMembers } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { mapMembers, printMembers } from '../../util/index.js';
 
 export default class Join extends BaseCommand {
   static override enableJsonFlag = true;

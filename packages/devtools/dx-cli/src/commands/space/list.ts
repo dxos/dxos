@@ -6,8 +6,8 @@ import { CliUx } from '@oclif/core';
 
 import { Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
-import { mapSpaces, printSpaces } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { mapSpaces, printSpaces } from '../../util/index.js';
 
 export default class List extends BaseCommand {
   static override enableJsonFlag = true;

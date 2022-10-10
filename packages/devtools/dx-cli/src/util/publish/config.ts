@@ -11,7 +11,7 @@ import path from 'path';
 import { Config } from '@dxos/config';
 import type { ConfigProto } from '@dxos/config';
 
-import { PackageModule } from './common';
+import { PackageModule } from './common.js';
 
 const DEFAULT_BUILD_COMMAND = 'npm run build';
 const EXTENSION_CONFIG_FILENAME = 'dx.yml';

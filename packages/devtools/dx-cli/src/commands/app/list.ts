@@ -4,8 +4,8 @@
 
 import assert from 'assert';
 
-import { BaseCommand } from '../../base-command';
-import { PublisherRpcPeer, printModules } from '../../util';
+import { BaseCommand } from '../../base-command.js';
+import { PublisherRpcPeer, printModules } from '../../util/index.js';
 
 export default class List extends BaseCommand {
   static override enableJsonFlag = true;

@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base-command.js';
 
 export default class Reset extends BaseCommand {
   static override description = 'Reset all data.';
