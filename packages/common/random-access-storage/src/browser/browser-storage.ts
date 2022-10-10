@@ -4,7 +4,7 @@
 
 import { join } from 'node:path';
 
-import { createFile, AbstractStorage, File } from '../common';
+import { AbstractStorage } from '../common';
 import type { RandomAccessFile } from '../types';
 
 /**
@@ -19,20 +19,12 @@ export abstract class BrowserStorage extends AbstractStorage {
     this._fileStorage = this._createFileStorage(path);
   }
 
-  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessFile;
-
-  protected _createFile (path: string, filename: string): File {
+  protected _createFile (path: string, filename: string): RandomAccessFile {
     const fullPath = join(path, filename);
-    const existingFile = this._getFileIfExists(fullPath);
-    if (existingFile) {
-      existingFile.reopen();
-      return existingFile;
-    }
-
-    const file = createFile(this._fileStorage(fullPath));
-    this._addFile(fullPath, file);
-    return file;
+    return this._fileStorage(fullPath);
   }
+
+  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessFile;
 
   protected override async _destroy () {
     // eslint-disable-next-line no-undef
@@ -45,7 +37,7 @@ export abstract class BrowserStorage extends AbstractStorage {
         reject(new Error('Upgrade needed.'));
       };
       request.onblocked = () => {
-        reject(new Error('Blocked'));
+        reject(new Error('Blocked.'));
       };
       request.onerror = (err: any) => {
         reject(err);

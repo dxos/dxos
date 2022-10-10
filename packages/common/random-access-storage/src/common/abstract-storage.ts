@@ -2,10 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import { join } from 'node:path';
+
 import { log } from '@dxos/log';
 
+import { RandomAccessFile } from '../types';
 import { Directory } from './directory';
-import { File } from './file';
+import { File, wrapFile } from './file';
 import { Storage, StorageType } from './storage';
 import { getFullPath } from './utils';
 
@@ -14,22 +17,24 @@ import { getFullPath } from './utils';
  * https://www.npmjs.com/package/abstract-random-access
  */
 export abstract class AbstractStorage implements Storage {
-  public abstract type: StorageType
-
   protected readonly _files = new Map<string, File>();
 
-  constructor (protected readonly path: string) {}
+  public readonly abstract type: StorageType
+
+  constructor (
+    protected readonly path: string
+  ) {}
 
   public get size () {
     return this._files.size;
   }
 
-  public createDirectory (path = ''): Directory {
+  public createDirectory (sub = ''): Directory {
     return new Directory(
-      getFullPath(this.path, path),
-      () => [...this._getFilesInPath(path).values()],
-      this._createFile.bind(this),
-      () => this._deleteFilesInPath(path)
+      getFullPath(this.path, sub),
+      () => Array.from(this._getFilesInPath(sub).values()),
+      (...args) => this.getOrCreateFile(...args),
+      () => this._deleteFilesInPath(sub)
     );
   }
 
@@ -43,13 +48,23 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected abstract _createFile (path: string, filename: string, opts?: any): File;
+  protected getOrCreateFile (path: string, filename: string, opts?: any): File {
+    const fullPath = join(path, filename);
+
+    // TODO(burdon): Reopen?
+    let file = this._getFileIfExists(fullPath);
+    if (!file) {
+      const raw = this._createFile(path, filename, opts);
+      file = wrapFile(raw);
+      this._files.set(filename, file);
+    }
+
+    return file;
+  }
 
   protected abstract _destroy (): Promise<void>;
 
-  protected _addFile (filename: string, file: File) {
-    this._files.set(filename, file);
-  }
+  protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessFile;
 
   protected _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
@@ -63,7 +78,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFilesInPath (path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
-      [...this._files].filter(([path]) => path.includes(fullPath))
+      Array.from(this._files.entries()).filter(([path]) => path.includes(fullPath))
     );
   }
 

@@ -25,4 +25,4 @@ export interface RandomAccessFile extends RandomAccessStorage {
   destroy (cb: Callback<Error>): void
 }
 
-export type RandomAccessFileConstructor = (filename: string, options: any) => RandomAccessFile
+export type RandomAccessFileConstructor = (filename: string, options?: any) => RandomAccessFile

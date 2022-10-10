@@ -7,28 +7,12 @@ import pify from 'pify';
 import type { FileStat, RandomAccessFile } from '../types';
 
 /**
- * Construct async File wrapper.
- */
-export const createFile = (file: RandomAccessFile): File => {
-  const wrapper = pify(file);
-  return Object.assign(wrapper, {
-    // TODO(burdon): This will only work for ram and idb.
-    reopen: () => {
-      if (wrapper.destroyed) {
-        throw new Error('File is destroyed.');
-      }
-
-      wrapper.closed = false;
-    }
-  });
-};
-
-/**
  * Random access file wrapper.
  * https://github.com/random-access-storage/random-access-storage
  */
 export interface File {
-  filename: string
+  readonly filename: string
+  readonly native: RandomAccessFile
 
   write (offset: number, data: Buffer): Promise<void>
   read (offset: number, size: number): Promise<Buffer>
@@ -50,3 +34,22 @@ export interface File {
   // TODO(burdon): Remove.
   reopen (): void
 }
+
+/**
+ * Construct async File wrapper.
+ */
+export const wrapFile = (file: RandomAccessFile): File => {
+  const wrapper = pify(file);
+  return Object.assign(wrapper, {
+    native: file,
+
+    // TODO(burdon): This will only work for ram and idb.
+    reopen: () => {
+      if (wrapper.destroyed) {
+        throw new Error('File is destroyed.');
+      }
+
+      wrapper.closed = false;
+    }
+  });
+};

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import randomAccessIdb from 'random-access-idb';
+import idb from 'random-access-idb';
 
 import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
@@ -13,7 +13,7 @@ import { BrowserStorage } from './browser-storage';
 export class IDbStorage extends BrowserStorage {
   public override type: StorageType = StorageType.IDB;
 
-  protected _createFileStorage (path: string) {
-    return randomAccessIdb(path);
+  protected override _createFileStorage (path: string) {
+    return idb(path);
   }
 }

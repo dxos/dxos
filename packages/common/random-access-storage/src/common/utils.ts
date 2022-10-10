@@ -4,5 +4,7 @@
 
 import { join } from 'node:path';
 
+// TODO(burdon): ???
 export const stringDiff = (first: string, second: string) => first.split(second).join('');
-export const getFullPath = (rootPath: string, path: string) => join(rootPath, stringDiff(path, rootPath));
+
+export const getFullPath = (root: string, path: string) => join(root, stringDiff(path, root));

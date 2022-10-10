@@ -22,7 +22,7 @@ void (async () => {
     }
   };
 
-  const fs = new FeedStore(createStorage().createDirectory('.benchmark'), { valueEncoding: 'utf8' });
+  const fs = new FeedStore(createStorage().createDirectory('.benchmark'), { valueEncoding: 'utf-8' });
   const suite = new Suite(fs, { maxFeeds, maxMessages });
 
   suite.beforeAll(() => Promise.all(range(maxFeeds).map(async i => {

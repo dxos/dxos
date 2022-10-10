@@ -14,9 +14,9 @@
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
 
-import type { Nanoresource } from 'nanoresource';
-
 import { Callback, RandomAccessFileConstructor } from '@dxos/random-access-storage';
+
+import type { Nanoresource } from './nanoresource';
 
 /**
  * Feed data block.
@@ -38,9 +38,19 @@ export type Range = {
 /**
  * https://github.com/mafintosh/abstract-encoding
  */
-export type ValueEncoding = {
+export type AbstractValueEncoding = {
   encode: (data: any) => Uint8Array
   decode: (data: Uint8Array) => any
+}
+
+export type ValueEncoding = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding
+
+/**
+ * Crypto
+ */
+export interface Crypto {
+  sign: (data: any, secretKey: Buffer, cb: Callback<any>) => void
+  verify: (signature: any, data: any, key: Buffer, cb: Callback<boolean>) => void
 }
 
 /**
@@ -49,11 +59,8 @@ export type ValueEncoding = {
 export type FeedOptions = {
   createIfMissing?: boolean
   secretKey?: Buffer
-  valueEncoding?: 'json' | 'utf-8' | 'binary' | ValueEncoding
-  crypto?: {
-    sign: (data: any, secretKey: Buffer, cb: Callback<any>) => void
-    verify: (signature: any, data: any, key: Buffer, cb: Callback<boolean>) => void
-  }
+  valueEncoding?: ValueEncoding
+  crypto?: Crypto
 }
 
 /**
@@ -76,6 +83,9 @@ export interface FeedProperties {
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
   readonly key: Buffer
+
+  // TODO(burdon): Not documented or safe?
+  readonly secretKey: Buffer
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#discoveryKey
   readonly discoveryKey: Buffer

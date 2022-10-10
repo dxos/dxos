@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import randomAccessMutable from 'random-access-web/mutable-file-wrapper';
+import raw from 'random-access-web/mutable-file-wrapper';
 
 import { StorageType } from '../common';
 import { BrowserStorage } from './browser-storage';
@@ -14,6 +14,6 @@ export class FirefoxStorage extends BrowserStorage {
   public override type: StorageType = StorageType.FIREFOX;
 
   protected override _createFileStorage (path: string) {
-    return randomAccessMutable({ name: path });
+    return raw({ name: path });
   }
 }
