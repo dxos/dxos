@@ -3,7 +3,8 @@
 //
 
 import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
-import { default as TextInput } from 'ink-text-input';
+import textInputPkg from 'ink-text-input';
+const { default: TextInput } = textInputPkg;
 import React, { FC, useEffect, useState } from 'react';
 
 import { useAppState } from '../../hooks/index.js';
