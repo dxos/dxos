@@ -4,7 +4,7 @@
 
 import React, { ReactNode } from 'react';
 
-import { useSvgContext } from '../hooks';
+import { useSvgContext } from '../hooks/index.js';
 
 export interface SVGProps {
   children?: ReactNode

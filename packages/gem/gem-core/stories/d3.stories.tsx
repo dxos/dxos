@@ -19,7 +19,7 @@ import {
   useGrid,
   useZoom,
   useSvgContext
-} from '../src';
+} from '../src/index.js';
 
 export default {
   title: 'gem-x/D3'

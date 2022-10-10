@@ -6,7 +6,8 @@
       "ESNext"
     ],
     "outDir": "dist",
-    "strict": false
+    "strict": false,
+    "module": "CommonJS"
   },
   "exclude": [
     "**/*.test.ts"

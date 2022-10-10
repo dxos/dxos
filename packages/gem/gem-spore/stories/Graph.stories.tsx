@@ -17,7 +17,7 @@ import {
   Markers,
   TestGraphModel,
   TestNode
-} from '../src';
+} from '../src/index.js';
 
 export default {
   title: 'gem-spore/Graph'

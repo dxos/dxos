@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useGrid } from '../hooks';
-import { defaultGridStyles } from '../styles';
+import { useGrid } from '../hooks/index.js';
+import { defaultGridStyles } from '../styles.js';
 
 export interface GridProps {
   axis?: boolean

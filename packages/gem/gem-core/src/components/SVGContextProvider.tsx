@@ -6,8 +6,8 @@ import * as d3 from 'd3';
 import React, { ReactNode, useEffect, useMemo } from 'react';
 import useResizeObserver from 'use-resize-observer';
 
-import { SVGContext } from '../context';
-import { SVGContextDef } from '../hooks';
+import { SVGContext } from '../context/index.js';
+import { SVGContextDef } from '../hooks/index.js';
 
 export interface SVGCOntextProviderProps {
   context?: SVGContext

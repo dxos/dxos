@@ -13,7 +13,7 @@ import {
   useSvgContext,
   useZoom,
   createSvgContext
-} from '../src';
+} from '../src/index.js';
 
 // Pros
 // - Natural layout and control of DOM (incl. SVG element).

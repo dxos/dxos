@@ -5,8 +5,8 @@
 import * as d3 from 'd3';
 import React, { useEffect, useRef } from 'react';
 
-import { createMarkers } from '../graph';
-import { defaultMarkerStyles } from './styles';
+import { createMarkers } from '../graph/index.js';
+import { defaultMarkerStyles } from './styles.js';
 
 export interface MarkersProps {
   className?: string

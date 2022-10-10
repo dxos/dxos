@@ -14,8 +14,8 @@ import {
   GraphLayoutNode,
   GraphRenderer,
   LabelOptions
-} from '../graph';
-import { defaultGraphStyles } from './styles';
+} from '../graph/index.js';
+import { defaultGraphStyles } from './styles.js';
 
 export interface GraphProps {
   className?: string

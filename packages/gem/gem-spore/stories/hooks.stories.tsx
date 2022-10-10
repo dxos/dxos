@@ -32,7 +32,7 @@ import {
   defaultGraphStyles,
   defaultMarkerStyles,
   linkerRenderer
-} from '../src';
+} from '../src/index.js';
 import { styles } from './helpers';
 
 debug.enable('');
