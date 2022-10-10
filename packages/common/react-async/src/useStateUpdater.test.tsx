@@ -3,10 +3,10 @@
 //
 
 import expect from 'expect';
-import 'raf/polyfill';
+import 'raf/polyfill.js';
 import React, { useEffect } from 'react';
 import { render } from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react-dom/test-utils.js';
 import { default as waitForExpect } from 'wait-for-expect';
 
 import { useStateUpdater } from './useStateUpdater.js';

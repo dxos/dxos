@@ -6,7 +6,7 @@ import expect from 'expect';
 import 'raf/polyfill.js';
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { act } from 'react-dom/test-utils.js';
 import { default as waitForExpect } from 'wait-for-expect';
 
 import { useAsyncEffect } from './useAsyncEffect.js';
