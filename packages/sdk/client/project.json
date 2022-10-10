@@ -24,6 +24,9 @@
         ],
         "outdir": "packages/sdk/client/dist/browser",
         "bundlePackages": [
+          "util/",
+          "readable-stream",
+          "debug",
           "@dxos/client-services",
           "@dxos/credentials",
           "@dxos/crypto",

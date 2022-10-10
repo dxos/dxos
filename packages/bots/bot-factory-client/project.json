@@ -24,6 +24,7 @@
         ],
         "outfile": "packages/bots/bot-factory-client/dist/browser.js",
         "bundlePackages": [
+          "debug",
           "@dxos/network-manager"
         ]
       }

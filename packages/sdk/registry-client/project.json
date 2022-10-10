@@ -24,6 +24,9 @@
         ],
         "outfile": "packages/sdk/registry-client/dist/browser.js",
         "bundlePackages": [
+          "bn.js",
+          "util",
+          "debug",
           "@polkadot/api",
           "@polkadot/keyring",
           "@polkadot/metadata",

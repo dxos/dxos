@@ -27,6 +27,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     outdir: options.outdir,
     outfile: options.outfile,
     format: 'esm',
+    platform: 'browser',
     write: true,
     bundle: true,
     // https://esbuild.github.io/api/#log-override
