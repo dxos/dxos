@@ -36,7 +36,7 @@ export const defaults: Config = {
       outdir: 'out/book'
     }
   },
-protobuf: {
+  protobuf: {
     base: './src/proto/',
     src: '**/*.proto',
     output: 'gen',

@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 
 import { MapingDescriptors } from '../mapping.js';
 import { codegen, ref } from './codegen.js';

@@ -14,8 +14,8 @@ import { DatabaseSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { DataServiceHost } from './data-service-host.js';
 import { DatabaseBackend } from './database-backend.js';
 import { Entity } from './entity.js';
-import { Item } from './item.js';
 import { ItemManager } from './item-manager.js';
+import { Item } from './item.js';
 import { Link } from './link.js';
 import { RootFilter, Selection, createSelection } from './selection/index.js';
 

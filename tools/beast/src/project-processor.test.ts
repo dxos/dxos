@@ -4,7 +4,6 @@
 
 import expect from 'expect';
 import pick from 'lodash.pick';
-import path from 'path';
 import { ClassDeclaration } from 'ts-morph';
 
 import { Flowchart } from './mermaid.js';

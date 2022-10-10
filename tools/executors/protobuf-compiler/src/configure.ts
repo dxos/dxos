@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 import descriptorJson from 'protobufjs/google/protobuf/descriptor.json' assert { type: 'json' };
 
 /**

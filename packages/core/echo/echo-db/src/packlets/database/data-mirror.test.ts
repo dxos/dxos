@@ -13,11 +13,11 @@ import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { DataMirror } from './data-mirror.js';
-import { DataService } from './data-service.js';
 import { DataServiceHost } from './data-service-host.js';
-import { Item } from './item.js';
+import { DataService } from './data-service.js';
 import { ItemDemuxer } from './item-demuxer.js';
 import { ItemManager } from './item-manager.js';
+import { Item } from './item.js';
 
 describe('DataMirror', function () {
   it('basic', async function () {

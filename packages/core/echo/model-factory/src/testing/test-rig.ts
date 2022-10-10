@@ -10,8 +10,8 @@ import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { Model } from '../model.js';
 import { ModelFactory } from '../model-factory.js';
+import { Model } from '../model.js';
 import { StateManager } from '../state-manager.js';
 import { ModelConstructor, ModelMessage } from '../types.js';
 

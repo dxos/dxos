@@ -7,6 +7,7 @@ import protobuf from 'protobufjs';
 
 import { decodeProtobuf, encodeProtobuf } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
+// eslint-disable-next-line no-restricted-imports
 import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 

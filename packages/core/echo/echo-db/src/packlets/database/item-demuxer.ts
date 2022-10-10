@@ -12,8 +12,8 @@ import { IEchoStream, ItemID } from '@dxos/protocols';
 import { DatabaseSnapshot, ItemSnapshot, LinkSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { Entity } from './entity.js';
-import { Item } from './item.js';
 import { ItemManager, ModelConstructionOptions } from './item-manager.js';
+import { Item } from './item.js';
 import { Link } from './link.js';
 
 const log = debug('dxos:echo-db:item-demuxer');

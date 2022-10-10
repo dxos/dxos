@@ -7,7 +7,7 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 module.exports = {
   root: true,
   extends: [
-    './.eslintrc.js',
+    './.eslintrc.cjs',
     'plugin:@dxos/packlets'
   ]
 };

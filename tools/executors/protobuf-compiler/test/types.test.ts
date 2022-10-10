@@ -6,11 +6,11 @@ import expect from 'expect';
 import { it as test } from 'mocha';
 
 import { MyKey } from './my-key.js';
-import { schema } from './proto/index.js';
 import {
   ComplexFields, OptionalScalars, Outer, Scalars, TaskList, TaskType, WithTimestamp
 } from './proto/gen/example/testing/types.js';
 import { Test } from './proto/gen/example/testing/util.js'; // NOTE: From protobuf-test.
+import { schema } from './proto/index.js';
 
 // TODO(burdon): Remove foo, bar, etc.
 

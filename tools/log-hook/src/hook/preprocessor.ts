@@ -22,7 +22,7 @@ export const preprocess = (code: string, filename: string) => {
 };
 
 type GlobalPluginOpts = {
-  fileName: string,
+  fileName: string
   input: string
 }
 
@@ -30,11 +30,11 @@ declare global {
   const SWC_PLUGIN: ((opts: GlobalPluginOpts) => Plugin) | undefined;
 }
 
-export function registerGlobalPlugin() {
+export const registerGlobalPlugin = () => {
   // This will be called by the patched ts-node/esm loader.
   (global as any).SWC_PLUGIN = ({ fileName, input }: GlobalPluginOpts): Plugin =>
     (m) => new TraceInjector(fileName, input).visitProgram(m);
-}
+};
 
 const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 

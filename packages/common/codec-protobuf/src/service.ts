@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 
 import { Any, EncodingOptions } from './common.js';
 import type { Schema } from './schema.js';

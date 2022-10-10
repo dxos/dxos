@@ -19,9 +19,9 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { EntityNotFoundError } from '../errors/index.js';
-import { Item } from './item.js';
 import { ItemDemuxer } from './item-demuxer.js';
 import { ItemManager } from './item-manager.js';
+import { Item } from './item.js';
 import { Link } from './link.js';
 
 const log = debug('dxos:echo-db:data-service-host');

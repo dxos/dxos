@@ -3,7 +3,7 @@
 //
 
 import { dirname, relative } from 'path';
-import {default as protobufjs } from 'protobufjs';
+import { default as protobufjs } from 'protobufjs';
 import ts from 'typescript';
 
 import { GeneratorContext } from './context.js';

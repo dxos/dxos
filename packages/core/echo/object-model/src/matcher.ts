@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
 import assert from 'assert';
+
+import { Predicate, Query } from '@dxos/protocols/proto/dxos/echo/model/object';
 
 import { ValueUtil } from './mutation.js';
 import { TextIndex } from './text-index.js';

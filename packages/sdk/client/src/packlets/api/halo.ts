@@ -10,8 +10,8 @@ import { DeviceInfo } from '@dxos/protocols/proto/dxos/halo/credentials/identity
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 
 import { Contact, CreateProfileOptions } from '../proxies/index.js';
-import { Invitation } from './invitation.js';
 import { InvitationRequest } from './invitation-request.js';
+import { Invitation } from './invitation.js';
 
 /**
  * HALO API.

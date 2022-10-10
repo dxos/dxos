@@ -32,7 +32,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
   const coverageArgs = getCoverageArgs(options.coverage, options.coveragePath, options.xmlReport);
 
   // Absolute path to the project root.
-  const projectRoot = join(context.root, context.workspace.projects[context.projectName!].root)
+  const projectRoot = join(context.root, context.workspace.projects[context.projectName!].root);
   assert(projectRoot);
 
   const args = [
@@ -68,7 +68,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     // TODO(dmaretskyi): Consider https://github.com/lukeed/tsm.
     `--loader=${require.resolve('ts-node/esm')}`,
 
-    ...options.testPatterns,
+    ...options.testPatterns
   ];
 
   const mocha = getBin(context.root, options.coverage ? 'nyc' : 'mocha');

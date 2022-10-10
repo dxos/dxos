@@ -8,6 +8,7 @@ import chaiAsPromised from 'chai-as-promised';
 import protobuf from 'protobufjs';
 
 import { schemaJson } from '@dxos/protocols';
+// eslint-disable-next-line no-restricted-imports
 import { App } from '@dxos/protocols/dist/src/proto/gen/dxos/type.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
 import { createCID, AccountKey, CID, DomainKey, DXN, PolkadotRegistry, RegistryClient } from '../../src/index.js';

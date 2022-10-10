@@ -4,7 +4,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 import ts from 'typescript';
 
 import { createIndexSourceFile, createNamespaceSourceFile, getFileNameForNamespace } from './generator/index.js';

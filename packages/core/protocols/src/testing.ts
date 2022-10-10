@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { schema } from './proto/index.js';
 import { FeedMessage } from './proto/gen/dxos/echo/feed.js';
+import { schema } from './proto/index.js';
 import { Timeframe } from './timeframe.js';
 import { ItemID } from './types.js';
 

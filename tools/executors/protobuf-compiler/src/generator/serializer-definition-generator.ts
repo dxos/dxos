@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import {default as protobufjs } from 'protobufjs';
+import { default as protobufjs } from 'protobufjs';
 import ts from 'typescript';
 
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier.js';

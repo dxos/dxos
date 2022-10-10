@@ -11,8 +11,8 @@ import { PartyDetails } from '@dxos/protocols/proto/dxos/client';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
 import { ActivationOptions, PartyMember } from '../proxies/index.js';
-import { Invitation } from './invitation.js';
 import { InvitationRequest } from './invitation-request.js';
+import { Invitation } from './invitation.js';
 
 export interface CreationInvitationOptions {
   inviteeKey?: PublicKey

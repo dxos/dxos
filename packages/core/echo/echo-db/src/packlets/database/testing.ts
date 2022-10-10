@@ -8,10 +8,10 @@ import { ModelFactory } from '@dxos/model-factory';
 import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 
-import { DataService } from './data-service.js';
 import { DataServiceHost } from './data-service-host.js';
-import { Database } from './database.js';
+import { DataService } from './data-service.js';
 import { FeedDatabaseBackend, RemoteDatabaseBackend } from './database-backend.js';
+import { Database } from './database.js';
 
 export const createInMemoryDatabase = async (modelFactory: ModelFactory) => {
   const feed = new MockFeedWriter<EchoEnvelope>();

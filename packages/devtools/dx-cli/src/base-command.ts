@@ -5,8 +5,8 @@
 import { Command, Flags } from '@oclif/core';
 import assert from 'assert';
 import debug from 'debug';
-import fs from 'node:fs'
 import yaml from 'js-yaml';
+import fs from 'node:fs';
 import * as path from 'path';
 
 import { sleep } from '@dxos/async';

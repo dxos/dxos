@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 import { join } from 'node:path';
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 
 import { Schema, anySubstitutions } from '../src/index.js';
 

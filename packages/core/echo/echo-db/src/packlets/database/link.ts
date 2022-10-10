@@ -8,8 +8,8 @@ import { Model, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 
 import { Entity } from './entity.js';
-import { Item } from './item.js';
 import { ItemManager } from './item-manager.js';
+import { Item } from './item.js';
 
 export interface LinkData {
   sourceId: ItemID

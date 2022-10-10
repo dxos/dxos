@@ -17,6 +17,7 @@ module.exports = {
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/func-call-spacing': ['error'],
+    '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/member-delimiter-style': [
       'error',
       {

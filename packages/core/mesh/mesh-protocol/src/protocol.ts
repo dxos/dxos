@@ -15,8 +15,8 @@ import {
   ERR_PROTOCOL_HANDSHAKE_FAILED,
   ERR_PROTOCOL_EXTENSION_MISSING
 } from './errors.js';
-import { Extension } from './extension.js';
 import { ExtensionInit } from './extension-init.js';
+import { Extension } from './extension.js';
 import { keyToHuman } from './utils.js';
 
 const log = debug('dxos:protocol');

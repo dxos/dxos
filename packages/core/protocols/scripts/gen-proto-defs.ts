@@ -29,7 +29,7 @@ const main = (
   // https://nodejs.org/api/path.html
   fs.rmSync(outdir, { recursive: true, force: true });
 
-  if(!PACKAGE_EXPORTS) {
+  if (!PACKAGE_EXPORTS) {
     fs.mkdirSync(outdir);
 
     // Create README.
@@ -46,13 +46,13 @@ const main = (
     const exports = {
       '.': {
         default: './dist/src/index.js',
-        types: './dist/src/index.d.ts',
+        types: './dist/src/index.d.ts'
       }
-    }
+    };
     for (const file of files) {
       const idx = file.indexOf(prefix);
       if (idx !== 0) {
-        continue
+        continue;
       }
       const sub = file.substr(prefix.length + 1);
       const dir = path.join(outdir, path.dirname(sub));
@@ -62,7 +62,7 @@ const main = (
       exports['./' + path.join(dir, filename)] = {
         default: './' + path.join('dist/src/proto/gen', `${exportFile}.js`),
         types: './' + path.join('dist/src/proto/gen', `${exportFile}.d.ts`)
-      }
+      };
     }
 
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));

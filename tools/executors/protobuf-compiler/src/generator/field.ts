@@ -3,7 +3,7 @@
 //
 
 import assert from 'node:assert';
-import {default as protobufjs } from 'protobufjs';
+import { default as protobufjs } from 'protobufjs';
 import ts from 'typescript';
 
 import { SubstitutionsMap } from '../parser/index.js';

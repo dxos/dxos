@@ -7,6 +7,7 @@ import type { IConversionOptions, Type } from 'protobufjs';
 
 import { FieldMapper, mapMessage } from '@dxos/codec-protobuf';
 import { TYPES } from '@dxos/protocols';
+// eslint-disable-next-line no-restricted-imports
 import { Record } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
 import { CID, RegistryType } from '../api/index.js';

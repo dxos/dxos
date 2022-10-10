@@ -23,11 +23,13 @@ module.exports = {
         singleReturnOnly: false
       }
     ],
+    '@typescript-eslint/ban-ts-comment': 'off',
     'curly': ['error', 'all'],
     'brace-style': ['error', '1tbs'],
     'func-call-spacing': 'off',
     'import/export': 'off',
     'import/extensions': 'off',
+    'import/no-named-default': 'off',
     'import/newline-after-import': ['error', {
       count: 1
       // TODO(wittjosiah): This option exists but seems unreleased.

@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+// eslint-disable-next-line no-restricted-imports
 import { Record as RawRecord } from '@dxos/protocols/dist/src/proto/gen/dxos/registry.js'; // Hack until we can set "moduleResolution": "nodenext" in tsconfig.json.
 
 import { AccountKey } from './account-key.js';

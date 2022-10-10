@@ -4,8 +4,9 @@
 
 import { useInput, useFocus, useFocusManager } from 'ink';
 import wrappedTextInputPkg from 'ink-text-input';
-const { default: WrappedTextInput } = wrappedTextInputPkg;
 import React, { FC, useEffect, useMemo } from 'react';
+
+const { default: WrappedTextInput } = wrappedTextInputPkg;
 
 // https://github.com/vadimdemedes/ink-text-input
 export const TextInput: FC<{

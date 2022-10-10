@@ -7,8 +7,8 @@ import crypto from 'node:crypto';
 import { PassThrough } from 'node:stream';
 import { default as waitForExpect } from 'wait-for-expect';
 
-import { Network } from './network.js';
 import { NetworkGenerator } from './network-generator.js';
+import { Network } from './network.js';
 
 const genericTest = async (network: Network) => {
   expect(network.peers[0]).to.have.property('name');

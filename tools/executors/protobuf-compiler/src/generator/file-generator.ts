@@ -3,7 +3,7 @@
 //
 
 import { dirname, join } from 'path';
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 import ts from 'typescript';
 
 import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier.js';

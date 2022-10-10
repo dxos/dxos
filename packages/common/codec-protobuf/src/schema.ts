@@ -3,7 +3,7 @@
 //
 
 import merge from 'lodash.merge';
-import {default as protobufjs } from 'protobufjs';
+import { default as protobufjs } from 'protobufjs';
 
 import { ProtoCodec } from './codec.js';
 import { Substitutions } from './common.js';

@@ -52,7 +52,7 @@ export interface BuildOptions {
 
 const buildProto = async (config: Config, project: Project) => {
   const protoBase = project.toolchainConfig.protoBase ?? config.protobuf.base;
-const output = join(project.packageRoot, protoBase, config.protobuf.output);
+  const output = join(project.packageRoot, protoBase, config.protobuf.output);
   const src = join(project.packageRoot, protoBase, config.protobuf.src);
   const substitutions = join(project.packageRoot, protoBase, config.protobuf.substitutions);
 

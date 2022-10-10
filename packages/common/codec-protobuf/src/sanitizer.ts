@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { default as pb } from 'protobufjs';;
+import { default as pb } from 'protobufjs';
 
 export interface SanitizeContext {
   errors: string[]

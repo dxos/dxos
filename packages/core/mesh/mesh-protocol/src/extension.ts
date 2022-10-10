@@ -5,7 +5,6 @@
 import debug from 'debug';
 import { ProtocolExtension } from 'hypercore-protocol';
 import nanomessage from 'nanomessage';
-const { Nanomessage, errors: nanomessageErrors } = nanomessage;
 import assert from 'node:assert';
 
 import { patchBufferCodec, Codec, WithTypeUrl } from '@dxos/codec-protobuf';
@@ -22,6 +21,8 @@ import {
 } from './errors.js';
 import { Protocol } from './protocol.js';
 import { keyToHuman } from './utils.js';
+
+const { Nanomessage, errors: nanomessageErrors } = nanomessage;
 
 const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
 

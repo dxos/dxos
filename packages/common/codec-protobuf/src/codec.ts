@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import {default as protobufjs } from 'protobufjs';
+import { default as protobufjs } from 'protobufjs';
 
 import { EncodingOptions } from './common.js';
 import { Codec } from './interface.js';

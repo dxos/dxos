@@ -4,8 +4,8 @@
 
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { resolve, join } from 'path';
-import { default as pb } from 'protobufjs';;
+import { resolve } from 'path';
+import { default as pb } from 'protobufjs';
 
 import { preconfigureProtobufjs } from './configure.js';
 import { splitSchemaIntoNamespaces } from './namespaces.js';

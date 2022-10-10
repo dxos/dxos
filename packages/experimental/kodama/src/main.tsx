@@ -13,10 +13,11 @@ import { ConfigProto } from '@dxos/config';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import pkgJson from '../package.json' assert { type: 'json' };
-const { name, version } = pkgJson;
 import { start } from './start.js';
 import { clear, versionCheck } from './util.js';
 import { showVersion } from './version.js';
+
+const { name, version } = pkgJson;
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
@@ -35,7 +36,7 @@ type Argv = {
  * Command line parser.
  */
 const main = async () => {
-  yargs()
+  await yargs()
     .scriptName('kodama')
     .option('config', {
       description: 'Config file',
