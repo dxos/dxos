@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+// @ts-nocheck
+
 import expect from 'expect';
 
-// @ts-ignore
-import { createTestInstance } from '@dxos/echo-db';
 import { Matcher } from '@dxos/object-model';
 import { Predicate } from '@dxos/protocols/proto/dxos/echo/model/object';
 
