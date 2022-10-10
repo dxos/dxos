@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap } from '@dxos/util';
 
-import { CommandTrace, SignalClient, SignalStatus } from './signal-client';
-import { SignalManager } from './signal-manager';
+import { CommandTrace, SignalClient, SignalStatus } from './signal-client.js';
+import { SignalManager } from './signal-manager.js';
 
 // TODO: Make class re-entrant.
 export class WebsocketSignalManager implements SignalManager {

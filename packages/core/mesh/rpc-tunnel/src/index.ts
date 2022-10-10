@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './message';
-export * from './ports';
-export * from './relays';
+export * from './message.js';
+export * from './ports/index.js';
+export * from './relays/index.js';

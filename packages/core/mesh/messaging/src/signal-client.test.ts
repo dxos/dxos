@@ -3,7 +3,7 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { Any, TaggedType } from '@dxos/codec-protobuf';
@@ -12,7 +12,7 @@ import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalClient } from './signal-client';
+import { SignalClient } from './signal-client.js';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',

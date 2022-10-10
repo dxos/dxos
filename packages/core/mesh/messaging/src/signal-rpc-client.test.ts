@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Message as SignalMessage, SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { SignalRPCClient } from './signal-rpc-client';
+import { SignalRPCClient } from './signal-rpc-client.js';
 
 describe('SignalRPCClient', function () {
   let broker: TestBroker;

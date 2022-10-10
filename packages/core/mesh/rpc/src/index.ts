@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './rpc';
-export * from './errors';
-export * from './service';
-export * from './testutil';
-export * from './trace';
+export * from './rpc.js';
+export * from './errors.js';
+export * from './service.js';
+export * from './testutil.js';
+export * from './trace.js';

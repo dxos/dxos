@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { CommandTrace, SignalStatus } from './signal-client';
-import { SignalManager } from './signal-manager';
+import { CommandTrace, SignalStatus } from './signal-client.js';
+import { SignalManager } from './signal-manager.js';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.

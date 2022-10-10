@@ -9,10 +9,10 @@ import pump from 'pump';
 
 import { sleep } from '@dxos/async';
 
-import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors';
-import { Extension } from './extension';
-import { Protocol } from './protocol';
-import { pipeProtocols } from './testing';
+import { ERR_EXTENSION_RESPONSE_FAILED, ERR_EXTENSION_RESPONSE_TIMEOUT } from './errors.js';
+import { Extension } from './extension.js';
+import { Protocol } from './protocol.js';
+import { pipeProtocols } from './testing/index.js';
 
 const log = debug('dxos:protocol:test');
 

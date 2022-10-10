@@ -8,8 +8,8 @@ import { log } from '@dxos/log';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
-import { ConnectionState } from './connection';
-import { Swarm } from './swarm';
+import { ConnectionState } from './connection.js';
+import { Swarm } from './swarm.js';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.

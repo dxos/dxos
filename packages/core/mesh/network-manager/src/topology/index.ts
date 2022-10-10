@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './fully-connected-topology';
-export * from './mmst-topology';
-export * from './star-topology';
-export * from './topology';
+export * from './fully-connected-topology.js';
+export * from './mmst-topology.js';
+export * from './star-topology.js';
+export * from './topology.js';

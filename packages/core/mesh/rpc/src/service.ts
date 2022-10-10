@@ -4,7 +4,7 @@
 
 import { EncodingOptions, ServiceDescriptor, ServiceHandler } from '@dxos/codec-protobuf';
 
-import { RpcPeer, RpcPeerOptions } from './rpc';
+import { RpcPeer, RpcPeerOptions } from './rpc.js';
 
 export type ServiceBundle<S> = { [K in keyof S]: ServiceDescriptor<S[K]> }
 

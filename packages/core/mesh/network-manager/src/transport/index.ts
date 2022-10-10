@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './in-memory-transport';
-export * from './transport';
-export * from './webrtc-transport';
-export * from './webrtc-transport-service';
-export * from './webrtc-transport-proxy';
+export * from './in-memory-transport.js';
+export * from './transport.js';
+export * from './webrtc-transport.js';
+export * from './webrtc-transport-service.js';
+export * from './webrtc-transport-proxy.js';

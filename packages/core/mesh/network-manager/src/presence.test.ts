@@ -3,17 +3,17 @@
 //
 
 import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { afterTest } from '@dxos/testutils';
 
-import { NetworkManager } from './network-manager';
-import { createProtocolFactory } from './protocol-factory';
-import { FullyConnectedTopology } from './topology';
-import { inMemoryTransportFactory } from './transport';
+import { NetworkManager } from './network-manager.js';
+import { createProtocolFactory } from './protocol-factory.js';
+import { FullyConnectedTopology } from './topology/index.js';
+import { inMemoryTransportFactory } from './transport/index.js';
 
 const signalContext = new MemorySignalManagerContext();
 

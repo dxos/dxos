@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
-import { Transport, TransportFactory, TransportOptions } from './transport';
+import { SignalMessage } from '../signal/index.js';
+import { Transport, TransportFactory, TransportOptions } from './transport.js';
 
 export interface WebRTCTransportProxyParams {
   initiator: boolean

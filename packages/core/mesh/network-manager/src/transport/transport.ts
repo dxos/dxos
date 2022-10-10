@@ -7,7 +7,7 @@ import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
+import { SignalMessage } from '../signal/index.js';
 
 /**
  * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.

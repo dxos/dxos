@@ -14,10 +14,10 @@ import {
   ERR_PROTOCOL_CONNECTION_INVALID,
   ERR_PROTOCOL_HANDSHAKE_FAILED,
   ERR_PROTOCOL_EXTENSION_MISSING
-} from './errors';
-import { Extension } from './extension';
-import { ExtensionInit } from './extension-init';
-import { keyToHuman } from './utils';
+} from './errors.js';
+import { Extension } from './extension.js';
+import { ExtensionInit } from './extension-init.js';
+import { keyToHuman } from './utils.js';
 
 const log = debug('dxos:protocol');
 

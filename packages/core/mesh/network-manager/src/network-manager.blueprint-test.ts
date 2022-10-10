@@ -5,7 +5,7 @@
 import expect from 'expect';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { Event, latch, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -17,11 +17,11 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { NetworkManager } from './network-manager';
-import { createProtocolFactory } from './protocol-factory';
-import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
-import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { createWebRTCTransportFactory, createWebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory } from './transport';
+import { NetworkManager } from './network-manager.js';
+import { createProtocolFactory } from './protocol-factory.js';
+import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol.js';
+import { FullyConnectedTopology, StarTopology, Topology } from './topology/index.js';
+import { createWebRTCTransportFactory, createWebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory } from './transport/index.js';
 
 const signalContext = new MemorySignalManagerContext();
 

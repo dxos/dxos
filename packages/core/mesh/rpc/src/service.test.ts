@@ -9,9 +9,9 @@ import { Stream } from '@dxos/codec-protobuf';
 import { schema } from '@dxos/protocols';
 import { TestStreamService, TestRpcResponse } from '@dxos/protocols/proto/example/testing/rpc';
 
-import { SerializedRpcError } from './errors';
-import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts } from './testutil';
+import { SerializedRpcError } from './errors.js';
+import { createProtoRpcPeer, ProtoRpcPeer, createServiceBundle } from './service.js';
+import { createLinkedPorts } from './testutil.js';
 
 describe('Protobuf service', function () {
   it('Works with protobuf service', async function () {

@@ -3,7 +3,7 @@
 //
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { Any, TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
@@ -11,9 +11,9 @@ import { TYPES } from '@dxos/protocols';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { Messenger } from './messenger';
-import { Message } from './signal-methods';
-import { WebsocketSignalManager } from './websocket-signal-manager';
+import { Messenger } from './messenger.js';
+import { Message } from './signal-methods.js';
+import { WebsocketSignalManager } from './websocket-signal-manager.js';
 
 const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',

@@ -14,13 +14,13 @@ import { SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { ProtocolProvider } from '../network-manager';
-import { MessageRouter } from '../signal';
-import { OfferMessage, SignalMessage } from '../signal/signal-messaging';
-import { SwarmController, Topology } from '../topology';
-import { TransportFactory } from '../transport';
-import { Topic } from '../types';
-import { Connection, ConnectionState } from './connection';
+import { ProtocolProvider } from '../network-manager.js';
+import { MessageRouter } from '../signal/index.js';
+import { OfferMessage, SignalMessage } from '../signal/signal-messaging.js';
+import { SwarmController, Topology } from '../topology/index.js';
+import { TransportFactory } from '../transport/index.js';
+import { Topic } from '../types.js';
+import { Connection, ConnectionState } from './connection.js';
 
 const INITIATION_DELAY = 100;
 

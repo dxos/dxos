@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SwarmController, Topology } from './topology';
+import { SwarmController, Topology } from './topology.js';
 
 export class StarTopology implements Topology {
   private _controller?: SwarmController;

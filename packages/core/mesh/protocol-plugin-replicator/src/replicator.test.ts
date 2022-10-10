@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
 import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
@@ -18,7 +18,7 @@ import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { boolGuard } from '@dxos/util';
 
-import { Replicator, ReplicatorMiddleware } from './replicator';
+import { Replicator, ReplicatorMiddleware } from './replicator.js';
 
 const noop = () => {};
 

@@ -7,13 +7,13 @@ import crypto from 'crypto';
 import debug from 'debug';
 import { Graph } from 'ngraph.graph';
 import path from 'ngraph.path';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 
-import { PresencePlugin } from './presence-plugin';
+import { PresencePlugin } from './presence-plugin.js';
 
 const log = debug('test');
 debug.enable('test');

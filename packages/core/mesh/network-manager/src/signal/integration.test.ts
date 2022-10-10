@@ -5,14 +5,14 @@
 // @dxos/mocha platform=nodejs
 
 import { expect } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { PublicKey } from '@dxos/keys';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { MessageRouter } from './message-router';
-import { SignalMessage } from './signal-messaging';
+import { MessageRouter } from './message-router.js';
+import { SignalMessage } from './signal-messaging.js';
 
 describe('Signal Integration Test', function () {
   let broker: TestBroker;

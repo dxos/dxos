@@ -9,8 +9,8 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { createTestBroker, TestBroker } from '@dxos/signal';
 
-import { webRTCTests, inMemoryTests, webRTCProxyTests } from './network-manager.blueprint-test';
-import { WebRTCTransportService } from './transport';
+import { webRTCTests, inMemoryTests, webRTCProxyTests } from './network-manager.blueprint-test.js';
+import { WebRTCTransportService } from './transport/index.js';
 
 const PORT = 12087;
 

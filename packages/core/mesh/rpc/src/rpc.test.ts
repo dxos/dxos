@@ -8,9 +8,9 @@ import { sleep } from '@dxos/async';
 import { Any, Stream, TaggedType } from '@dxos/codec-protobuf';
 import { TYPES } from '@dxos/protocols';
 
-import { SerializedRpcError } from './errors';
-import { RpcPeer } from './rpc';
-import { createLinkedPorts } from './testutil';
+import { SerializedRpcError } from './errors.js';
+import { RpcPeer } from './rpc.js';
+import { createLinkedPorts } from './testutil.js';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',

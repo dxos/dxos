@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './protocol';
-export * from './extension';
-export * from './errors';
-export * from './testing';
+export * from './protocol.js';
+export * from './extension.js';
+export * from './errors.js';
+export * from './testing/index.js';

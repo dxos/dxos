@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 import assert from 'node:assert';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -15,7 +15,7 @@ import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { PluginRpc } from './plugin-rpc';
+import { PluginRpc } from './plugin-rpc.js';
 
 const signalContext = new MemorySignalManagerContext();
 

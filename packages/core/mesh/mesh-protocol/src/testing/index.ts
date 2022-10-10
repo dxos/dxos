@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './util';
+export * from './util.js';

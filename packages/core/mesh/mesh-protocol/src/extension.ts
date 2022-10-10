@@ -4,7 +4,8 @@
 
 import debug from 'debug';
 import { ProtocolExtension } from 'hypercore-protocol';
-import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
+import nanomessage from 'nanomessage';
+const { Nanomessage, errors: nanomessageErrors } = nanomessage;
 import assert from 'node:assert';
 
 import { patchBufferCodec, Codec, WithTypeUrl } from '@dxos/codec-protobuf';
@@ -18,9 +19,9 @@ import {
   ERR_EXTENSION_CLOSE_FAILED,
   ERR_EXTENSION_RESPONSE_FAILED,
   ERR_EXTENSION_RESPONSE_TIMEOUT
-} from './errors';
-import { Protocol } from './protocol';
-import { keyToHuman } from './utils';
+} from './errors.js';
+import { Protocol } from './protocol.js';
+import { keyToHuman } from './utils.js';
 
 const { NMSG_ERR_TIMEOUT } = nanomessageErrors;
 
@@ -48,7 +49,7 @@ export type FeedHandler = (protocol: Protocol, discoveryKey: Buffer) => Promise<
  * Events: "send", "receive", "error"
  */
 // TODO(burdon): Rename ProtocolPlugin to disambiguate ProtocolExtension.
-export class Extension extends Nanomessage {
+export class Extension extends (Nanomessage as any) {
   public _name: any;
   public [kCodec]: Codec<any>;
   public on: any;

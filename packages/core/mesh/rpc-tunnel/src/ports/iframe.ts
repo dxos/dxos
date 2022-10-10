@@ -6,7 +6,7 @@ import debug from 'debug';
 
 import { RpcPort } from '@dxos/rpc';
 
-import { MessageData } from '../message';
+import { MessageData } from '../message.js';
 
 const log = debug('dxos:rpc-tunnel:iframe-port');
 

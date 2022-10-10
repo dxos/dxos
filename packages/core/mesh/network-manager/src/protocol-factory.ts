@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Extension, Protocol } from '@dxos/mesh-protocol';
 
-import { ProtocolProvider } from './network-manager';
+import { ProtocolProvider } from './network-manager.js';
 
 interface ProtocolFactoryOptions {
   plugins: any[]

@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './presence-plugin';
+export * from './presence-plugin.js';

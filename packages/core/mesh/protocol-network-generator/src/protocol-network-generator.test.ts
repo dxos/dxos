@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 import { Protocol } from '@dxos/mesh-protocol';
 
-import { ProtocolNetworkGenerator } from './protocol-network-generator';
+import { ProtocolNetworkGenerator } from './protocol-network-generator.js';
 
 it('basic generator', async function () {
   const generator = new ProtocolNetworkGenerator(async (topic, id) => ({

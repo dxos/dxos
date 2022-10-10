@@ -4,7 +4,7 @@
 
 import expect from 'expect';
 import { Duplex } from 'stream';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { WebRTCTransport } from './webrtc-transport';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol.js';
+import { WebRTCTransport } from './webrtc-transport.js';
 
 describe('WebRTCTransport', function () {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.

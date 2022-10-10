@@ -11,11 +11,11 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { Messenger, SignalManager } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionLog } from './connection-log';
-import { SignalConnection } from './signal';
-import { Swarm, SwarmMapper } from './swarm';
-import { Topology } from './topology';
-import { TransportFactory } from './transport';
+import { ConnectionLog } from './connection-log.js';
+import { SignalConnection } from './signal/index.js';
+import { Swarm, SwarmMapper } from './swarm/index.js';
+import { Topology } from './topology/index.js';
+import { TransportFactory } from './transport/index.js';
 
 export type ProtocolProvider = (opts: {
   channel: Buffer

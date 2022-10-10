@@ -3,7 +3,7 @@
 //
 
 import expect from 'expect';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
@@ -11,8 +11,8 @@ import { Protocol } from '@dxos/mesh-protocol';
 import { afterTest } from '@dxos/testutils';
 import { range } from '@dxos/util';
 
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { InMemoryTransport } from './in-memory-transport';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol.js';
+import { InMemoryTransport } from './in-memory-transport.js';
 
 // TODO(burdon): Flaky test.
 //     Cannot log after tests are done. Did you forget to wait for something async in your test?

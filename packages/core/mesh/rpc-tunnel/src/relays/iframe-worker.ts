@@ -4,9 +4,9 @@
 
 import debug from 'debug';
 
-import { MessageData } from '../message';
-import { MessageChannel } from '../ports';
-import { MessageRelay } from './message-relay';
+import { MessageData } from '../message.js';
+import { MessageChannel } from '../ports/index.js';
+import { MessageRelay } from './message-relay.js';
 
 const log = debug('dxos:rpc-tunnel:iframe-worker-relay');
 

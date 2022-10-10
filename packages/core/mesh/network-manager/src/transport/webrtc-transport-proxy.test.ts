@@ -6,7 +6,7 @@
 
 import expect from 'expect';
 import { Duplex } from 'stream';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { discoveryKey } from '@dxos/crypto';
@@ -17,10 +17,10 @@ import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { SignalMessage } from '../signal';
-import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol';
-import { WebRTCTransportProxy } from './webrtc-transport-proxy';
-import { WebRTCTransportService } from './webrtc-transport-service';
+import { SignalMessage } from '../signal/index.js';
+import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protocol.js';
+import { WebRTCTransportProxy } from './webrtc-transport-proxy.js';
+import { WebRTCTransportService } from './webrtc-transport-service.js';
 
 describe('WebRTCTransportProxy', function () {
   const setupProxy = async ({

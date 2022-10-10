@@ -7,7 +7,7 @@ import { EventEmitter } from 'node:events';
 
 import { NetworkGenerator } from '@dxos/network-generator';
 
-import { Broadcast, Middleware } from './broadcast';
+import { Broadcast, Middleware } from './broadcast.js';
 
 const packetId = (packet: any) => packet.seq.toString('hex') + packet.origin.toString('hex');
 

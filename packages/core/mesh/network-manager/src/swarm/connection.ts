@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage, SignalMessaging } from '../signal';
-import { Transport, TransportFactory } from '../transport';
+import { SignalMessage, SignalMessaging } from '../signal/index.js';
+import { Transport, TransportFactory } from '../transport/index.js';
 
 /**
  * State machine for each connection.

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { RpcPort } from './rpc';
+import { RpcPort } from './rpc.js';
 
 export const createLinkedPorts = (): [RpcPort, RpcPort] => {
   let aliceReceive: RpcPort['send'] | undefined;

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/keys';
 
-import { SwarmController, Topology } from './topology';
+import { SwarmController, Topology } from './topology.js';
 
 export class FullyConnectedTopology implements Topology {
   private _controller?: SwarmController;

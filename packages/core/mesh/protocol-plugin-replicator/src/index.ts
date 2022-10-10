@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './replicator';
+export * from './replicator.js';

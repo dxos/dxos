@@ -6,7 +6,7 @@ import graphGenerators from 'ngraph.generators';
 
 import { Event } from '@dxos/async';
 
-import { IdGenerator, Network, NetworkOptions } from './network';
+import { IdGenerator, Network, NetworkOptions } from './network.js';
 
 export const TOPOLOGIES = [
   'ladder',

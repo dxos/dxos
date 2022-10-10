@@ -8,7 +8,7 @@ import distance from 'xor-distance';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SwarmController, Topology } from './topology';
+import { SwarmController, Topology } from './topology.js';
 
 export interface MMSTTopologyOptions {
   /**

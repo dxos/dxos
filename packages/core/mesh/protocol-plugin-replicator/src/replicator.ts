@@ -11,7 +11,7 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { schemaJson } from '@dxos/protocols';
 import type { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 
-import { Peer } from './peer';
+import { Peer } from './peer.js';
 
 const log = debug('dxos:protocol-plugin-replicator');
 

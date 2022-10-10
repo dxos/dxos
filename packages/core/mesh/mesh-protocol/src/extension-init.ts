@@ -8,8 +8,8 @@ import Signal from 'signal-promise';
 import { Trigger } from '@dxos/async';
 import { Buffer as ProtoBuffer } from '@dxos/protocols/proto/dxos/mesh/protocol';
 
-import { ERR_PROTOCOL_INIT_INVALID } from './errors';
-import { Extension } from './extension';
+import { ERR_PROTOCOL_INIT_INVALID } from './errors.js';
+import { Extension } from './extension.js';
 
 type Command = 'continue' | 'break' | 'session'
 

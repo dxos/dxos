@@ -5,7 +5,7 @@
 // @dxos/mocha platform=nodejs
 
 import { expect, mockFn } from 'earljs';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { sleep, promiseTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -18,9 +18,9 @@ import {
 } from '@dxos/messaging';
 import { afterTest } from '@dxos/testutils';
 
-import { FullyConnectedTopology } from '../topology';
-import { createWebRTCTransportFactory, WebRTCTransport } from '../transport';
-import { Swarm } from './swarm';
+import { FullyConnectedTopology } from '../topology/index.js';
+import { createWebRTCTransportFactory, WebRTCTransport } from '../transport/index.js';
+import { Swarm } from './swarm.js';
 
 describe('Swarm', function () {
   const context = new MemorySignalManagerContext();

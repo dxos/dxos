@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { Transport, TransportFactory } from './transport';
+import { Transport, TransportFactory } from './transport.js';
 
 type ConnectionKey = [topic: PublicKey, nodeId: PublicKey, remoteId: PublicKey]
 

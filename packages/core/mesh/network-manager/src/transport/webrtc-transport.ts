@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { SignalMessage } from '../signal';
-import { Transport, TransportFactory } from './transport';
+import { SignalMessage } from '../signal/index.js';
+import { Transport, TransportFactory } from './transport.js';
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.

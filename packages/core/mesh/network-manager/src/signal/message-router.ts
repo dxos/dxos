@@ -15,7 +15,7 @@ import {
   OfferMessage,
   SignalMessage,
   SignalMessaging
-} from './signal-messaging';
+} from './signal-messaging.js';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void

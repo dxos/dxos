@@ -16,8 +16,8 @@ import {
   SubscriptionGroup
 } from '@dxos/util';
 
-import { SignalManager } from './signal-manager';
-import { Message } from './signal-methods';
+import { SignalManager } from './signal-manager.js';
+import { Message } from './signal-methods.js';
 
 export type OnMessage = (params: {
   author: PublicKey

@@ -7,8 +7,8 @@ import pump from 'pump';
 import { createPromiseFromCallback } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { Extension } from '../extension';
-import { Protocol } from '../protocol';
+import { Extension } from '../extension.js';
+import { Protocol } from '../protocol.js';
 
 /**
  * Connect two protocols in-memory.

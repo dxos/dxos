@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './signal-connection';
-export * from './signal-messaging';
-export * from './message-router';
+export * from './signal-connection.js';
+export * from './signal-messaging.js';
+export * from './message-router.js';

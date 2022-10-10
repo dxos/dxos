@@ -4,7 +4,7 @@
 
 // @dxos/mocha platform=browser
 
-import { inMemoryTests, webRTCTests } from './network-manager.blueprint-test';
+import { inMemoryTests, webRTCTests } from './network-manager.blueprint-test.js';
 
 describe('Network manager', function () {
   describe('WebRTC transport', function () {

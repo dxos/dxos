@@ -6,7 +6,7 @@
 
 import { expect } from 'earljs';
 import { it, describe } from 'mocha';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 import { Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -15,8 +15,8 @@ import { Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createTestBroker } from '@dxos/signal';
 import { afterTest } from '@dxos/testutils';
 
-import { MessageRouter } from './message-router';
-import { OfferMessage, SignalMessage } from './signal-messaging';
+import { MessageRouter } from './message-router.js';
+import { OfferMessage, SignalMessage } from './signal-messaging.js';
 
 describe('MessageRouter', function () {
   let topic: PublicKey;
