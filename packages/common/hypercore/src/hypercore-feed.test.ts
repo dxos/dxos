@@ -163,7 +163,7 @@ describe('Factory', function () {
       await feed1.close();
       console.log(feed1.opening, feed1.opened, feed1.closing, feed1.closed);
 
-      // TODO(burdon): Not closed, but random-access-storage throws error.
+      // TODO(burdon): Not closed, but hypercore throws: "Feed is closed" (one of the random-access-storage is closed).
       // await feed2.close();
       console.log(feed2.opening, feed2.opened, feed2.closing, feed2.closed);
     }
