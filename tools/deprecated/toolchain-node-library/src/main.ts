@@ -181,7 +181,7 @@ export const execBuildBook = async (config: Config, options: BuildOptions = {}) 
  * Runs the storybook for the current package.
  */
 export const execBook = async (userArgs?: string[]) => {
-  await execTool('esbuild-server', ['book', ...(userArgs ?? [])]);
+  await execTool('esbuild-server', ['book', '--config', 'esbuild-server.config.cjs', ...(userArgs ?? [])]);
 };
 
 /**

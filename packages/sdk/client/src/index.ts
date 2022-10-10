@@ -30,19 +30,19 @@ export {
 } from '@dxos/keys';
 
 export {
-  ItemID
+  type ItemID
 } from '@dxos/protocols';
 
 // TODO(burdon): Remove exported protos?
 export {
-  KeyRecord,
+  type KeyRecord,
   KeyType
 } from '@dxos/protocols/proto/dxos/halo/keys';
 
 export {
-  Profile,
-  SignRequest,
-  SignResponse
+  type Profile,
+  type SignRequest,
+  type SignResponse
 } from '@dxos/protocols/proto/dxos/client';
 
 export {

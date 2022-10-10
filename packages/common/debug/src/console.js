@@ -12,7 +12,8 @@ export const filterConsole = (filters = {}) => {
 
   Object.keys(filters).forEach(key => {
     const f = console[key];
-    console[key] = (...args) => {
+    // NOTE: This must stay a function with a function keyword.
+    console[key] = function (...args) {
       const match = filters[key].find(str => args[0].indexOf(str) !== -1);
 
       if (!match) {

@@ -6,7 +6,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
-  "type": "module",
   "browser": {
     "node:assert": "assert",
     "node:events": "events"

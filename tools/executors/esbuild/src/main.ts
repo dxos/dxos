@@ -26,7 +26,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     entryPoints: options.entryPoints,
     outdir: options.outdir,
     outfile: options.outfile,
-    format: 'cjs',
+    format: 'esm',
     write: true,
     bundle: true,
     // https://esbuild.github.io/api/#log-override
