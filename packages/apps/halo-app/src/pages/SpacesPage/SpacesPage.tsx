@@ -11,7 +11,7 @@ import { Box, SpeedDial, SpeedDialAction, SpeedDialIcon, Typography } from '@mui
 import { useClient, useParties } from '@dxos/react-client';
 import { JoinPartyDialog } from '@dxos/react-toolkit';
 
-import { SpaceList } from '../../components';
+import { SpaceList } from '../../components/index.js';
 
 export const SpacesPage = () => {
   const client = useClient();

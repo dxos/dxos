@@ -5,7 +5,7 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-import { App } from './components';
+import { App } from './components/index.js';
 
 if ('serviceWorker' in navigator) {
   // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register

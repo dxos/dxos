@@ -9,7 +9,7 @@ import { ClientProvider, useSelection } from '@dxos/react-client';
 import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-client-testing';
 import { FullScreen } from '@dxos/react-components';
 
-import { EchoList } from '../src';
+import { EchoList } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/EchoList'

@@ -3,13 +3,13 @@
 //
 
 import { screen, render, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { default as userEvent } from '@testing-library/user-event';
 import expect from 'expect';
 import React from 'react';
 
 import { Party, Client } from '@dxos/client';
 
-import { useSelection } from './useSelection';
+import { useSelection } from './useSelection.js';
 
 const count = 10;
 const TYPE_EXAMPLE = 'example:type/org';

@@ -4,8 +4,8 @@
 
 import browser, { Runtime } from 'webextension-polyfill';
 
-import { wrapPort } from '../utils/wrapPort';
-import { BackgroundServer } from './background-server';
+import { wrapPort } from '../utils/wrapPort.js';
+import { BackgroundServer } from './background-server.js';
 
 void (async () => {
   const server = new BackgroundServer();

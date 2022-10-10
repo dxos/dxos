@@ -11,7 +11,7 @@ import { useMounted } from '@dxos/react-async';
 import { FileUploadDialog } from '@dxos/react-components';
 
 // TODO(burdon): Move to react-components?
-import { ImportIpfsDialog } from './ImportIpfsDialog';
+import { ImportIpfsDialog } from './ImportIpfsDialog.js';
 
 enum ShowDialog {
   IMPORT_FILE,

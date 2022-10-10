@@ -2,21 +2,21 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './BoxContainer';
-export * from './Clipboard';
-export * from './CustomTextField';
-export * from './Dialog';
-export * from './FullScreen'; // TODO(burdon): Move components from Braneframe.
-export * from './Files';
-export * from './HashIcon';
-export * from './Icons';
-export * from './JsonTree';
-export * from './MemberList';
-export * from './Passcode';
-export * from './QRCode';
-export * from './SearchAutocomplete';
-export * from './Searchbar';
-export * from './Skeleton';
-export * from './SlidingDrawer';
-export * from './Toolbar';
-export * from './VirtualTable';
+export * from './BoxContainer.js';
+export * from './Clipboard/index.js';
+export * from './CustomTextField.js';
+export * from './Dialog.js';
+export * from './FullScreen.js'; // TODO(burdon): Move components from Braneframe.
+export * from './Files/index.js';
+export * from './HashIcon.js';
+export * from './Icons/index.js';
+export * from './JsonTree/index.js';
+export * from './MemberList/index.js';
+export * from './Passcode.js';
+export * from './QRCode.js';
+export * from './SearchAutocomplete/index.js';
+export * from './Searchbar.js';
+export * from './Skeleton/index.js';
+export * from './SlidingDrawer.js';
+export * from './Toolbar.js';
+export * from './VirtualTable.js';

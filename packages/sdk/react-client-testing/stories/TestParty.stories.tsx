@@ -10,7 +10,7 @@ import { TreeItem, TreeView } from '@mui/lab';
 import { Item, ObjectModel } from '@dxos/client';
 import { ClientProvider, useSelection } from '@dxos/react-client';
 
-import { ProfileInitializer, useTestParty } from '../src';
+import { ProfileInitializer, useTestParty } from '../src/index.js';
 
 export default {
   title: 'react-client-testing/TestParty'

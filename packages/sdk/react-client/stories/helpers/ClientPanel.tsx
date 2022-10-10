@@ -8,8 +8,8 @@ import { Box } from '@mui/material';
 
 import { Client, Party } from '@dxos/client';
 
-import { useProfile } from '../../src';
-import { JsonPanel } from './JsonPanel';
+import { useProfile } from '../../src/index.js';
+import { JsonPanel } from './JsonPanel.js';
 
 export const ClientPanel = ({
   client,

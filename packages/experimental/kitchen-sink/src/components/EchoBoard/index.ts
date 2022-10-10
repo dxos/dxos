@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './EchoBoard';
-export * from './EchoCard';
-export * from './EchoSubList';
+export * from './EchoBoard.js';
+export * from './EchoCard.js';
+export * from './EchoSubList.js';

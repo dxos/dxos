@@ -19,7 +19,7 @@ import {
 import { FeedBlock } from '@dxos/feed-store';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { Table, TableCell } from '../Table';
+import { Table, TableCell } from '../Table/index.js';
 
 const colorHash = new ColorHash({ saturation: 0.5 });
 

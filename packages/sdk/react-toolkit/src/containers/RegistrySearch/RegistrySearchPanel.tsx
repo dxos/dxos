@@ -9,7 +9,7 @@ import { Autocomplete, Box, TextField } from '@mui/material';
 import { SearchAutocomplete, SearchResult } from '@dxos/react-components';
 import { RegistryType, ResourceSet } from '@dxos/registry-client';
 
-import { RegistrySearchModel } from './RegistrySearchModel';
+import { RegistrySearchModel } from './RegistrySearchModel.js';
 
 export interface RegistrySearchPanelProps {
   model: RegistrySearchModel

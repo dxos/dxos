@@ -2,5 +2,5 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './MemberAvatar';
-export * from './MemberList';
+export * from './MemberAvatar.js';
+export * from './MemberList.js';

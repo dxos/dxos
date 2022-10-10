@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './AppBar';
+export * from './AppBar.js';

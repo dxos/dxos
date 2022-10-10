@@ -9,7 +9,7 @@ import urljoin from 'url-join';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
-import { defaultConfig, Command } from '../common';
+import { defaultConfig, Command } from '../common/index.js';
 
 // TODO(burdon): Integrate with @dxos/log
 

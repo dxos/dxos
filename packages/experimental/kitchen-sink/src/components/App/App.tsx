@@ -10,11 +10,11 @@ import { ExportAction, execSelection, itemAdapter, usePartyBuilder } from '@dxos
 import { FullScreen } from '@dxos/react-components';
 import { useGraphModel } from '@dxos/react-echo-graph';
 
-import { useQuery } from '../../data'; // TODO(burdon): Pass into App.
-import { AppBar } from '../AppBar';
-import { CreateItemButton } from '../CreateItem';
-import { ThemeProvider } from '../Theme';
-import { ViewContainer, ViewType } from '../View';
+import { useQuery } from '../../data.js'; // TODO(burdon): Pass into App.
+import { AppBar } from '../AppBar/index.js';
+import { CreateItemButton } from '../CreateItem/index.js';
+import { ThemeProvider } from '../Theme/index.js';
+import { ViewContainer, ViewType } from '../View/index.js';
 
 interface AppProps {
   party: Party

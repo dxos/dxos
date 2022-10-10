@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { typeMeta } from '@dxos/react-client-testing';
 
-import { IconRadio, IconRadioGroup } from '../IconRadio';
+import { IconRadio, IconRadioGroup } from '../IconRadio/index.js';
 
 // TODO(burdon): Use ToggleButtonGroup
 

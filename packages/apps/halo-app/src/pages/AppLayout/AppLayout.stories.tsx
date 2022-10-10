@@ -8,7 +8,7 @@ import { HashRouter } from 'react-router-dom';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 
-import { AppLayout } from './AppLayout';
+import { AppLayout } from './AppLayout.js';
 
 export default {
   title: 'react-appkit/AppLayout'

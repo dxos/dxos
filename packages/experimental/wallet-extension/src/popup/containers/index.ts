@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './Fullscreen';
-export * from './Main';
-export * from './Popup';
-export * from './Root';
+export * from './Fullscreen.js';
+export * from './Main.js';
+export * from './Popup.js';
+export * from './Root.js';

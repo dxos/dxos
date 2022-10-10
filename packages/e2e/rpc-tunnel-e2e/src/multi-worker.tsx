@@ -13,7 +13,7 @@ import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
 
 // eslint-disable-next-line
 // @ts-ignore
-import SharedWorker from './test-worker?sharedworker';
+import SharedWorker from './test-worker?sharedworker.js';
 
 const App = ({ id, port }: { id: string, port: RpcPort }) => {
   const [closed, setClosed] = useState(true);

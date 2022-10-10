@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './registry';
-export * from './registryBotFactories';
-export * from './registryBots';
+export * from './registry.js';
+export * from './registryBotFactories.js';
+export * from './registryBots.js';

@@ -11,9 +11,9 @@ import {
 } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 
-import { DraggableContainer } from '../DraggableContainer';
-import { DroppableContainer } from '../DroppableContainer';
-import { Row } from './Row';
+import { DraggableContainer } from '../DraggableContainer.js';
+import { DroppableContainer } from '../DroppableContainer.js';
+import { Row } from './Row.js';
 
 type RowProps = {
   id: string

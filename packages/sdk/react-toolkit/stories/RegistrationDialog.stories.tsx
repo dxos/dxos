@@ -8,7 +8,7 @@ import { Box, Button } from '@mui/material';
 
 import { sleep } from '@dxos/async';
 
-import { RegistrationDialog } from '../src';
+import { RegistrationDialog } from '../src/index.js';
 
 export default {
   title: 'react-toolkit/RegistrationDialog',

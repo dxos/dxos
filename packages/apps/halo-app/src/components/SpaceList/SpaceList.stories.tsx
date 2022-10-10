@@ -10,7 +10,7 @@ import { ClientProvider, useClient, useParties } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { Toolbar } from '@dxos/react-components';
 
-import { SpaceList } from './SpaceList';
+import { SpaceList } from './SpaceList.js';
 
 export default {
   title: 'react-appkit/PartyList'

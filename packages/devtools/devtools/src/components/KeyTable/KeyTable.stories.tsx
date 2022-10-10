@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { KeyRecord, KeyType } from '@dxos/protocols/proto/dxos/halo/keys';
 import { FullScreen } from '@dxos/react-components';
 
-import { KeyTable } from './KeyTable';
+import { KeyTable } from './KeyTable.js';
 
 export default {
   title: 'KeyTable'

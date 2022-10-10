@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { useDevtools, useParties, useStream } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { KeySelect, Panel } from '../../components';
+import { KeySelect, Panel } from '../../components/index.js';
 
 export const CredentialMessagesPanel = () => {
   const [selectedPartyKey, setSelectedPartyKey] = useState<PublicKey>();

@@ -12,7 +12,7 @@ import { useClient, ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { TextModel } from '@dxos/text-model';
 
-import { Editor } from '../src';
+import { Editor } from '../src/index.js';
 
 const log = debug('dxos:lexical:test');
 debug.enable('dxos:lexical:*');

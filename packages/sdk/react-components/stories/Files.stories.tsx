@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, TextField } from '@mui/material';
 
-import { FileUploadDialog, useFileDownload } from '../src';
+import { FileUploadDialog, useFileDownload } from '../src/index.js';
 
 export default {
   title: 'react-components/Files'

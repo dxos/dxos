@@ -14,8 +14,8 @@ import { CopyText, FullScreen, Passcode } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { RegistryClient } from '@dxos/registry-client';
 
-import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src';
-import { Column, createMockRegistryWithBot } from './helpers';
+import { ErrorBoundary, JoinPartyDialog, PartySharingDialog } from '../src/index.js';
+import { Column, createMockRegistryWithBot } from './helpers/index.js';
 
 export default {
   title: 'react-toolkit/PartySharing'

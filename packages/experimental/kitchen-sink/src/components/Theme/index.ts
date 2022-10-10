@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './styles';
-export * from './Theme';
+export * from './styles.js';
+export * from './Theme.js';

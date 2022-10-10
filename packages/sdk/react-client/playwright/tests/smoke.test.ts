@@ -3,7 +3,7 @@
 //
 
 import { test, expect } from '@playwright/test';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 test.describe('Smoke test', () => {
   // TODO(wittjosiah): Renable once singleton client has stable hosted location.

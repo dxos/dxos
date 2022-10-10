@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './useHaloInvitations';
-export * from './usePartyInvitations';
-export * from './useSecretProvider';
+export * from './useHaloInvitations.js';
+export * from './usePartyInvitations.js';
+export * from './useSecretProvider.js';

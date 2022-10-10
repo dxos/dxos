@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/network-manager';
 import { CopyText } from '@dxos/react-components';
 
-import { BooleanIcon } from './BooleanIcon';
+import { BooleanIcon } from './BooleanIcon.js';
 
 export interface SwarmListProps {
   swarms: SwarmInfo[]

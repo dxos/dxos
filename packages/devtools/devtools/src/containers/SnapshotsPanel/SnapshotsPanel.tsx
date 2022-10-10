@@ -11,7 +11,7 @@ import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { useDevtools, useParties } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { KeySelect, Panel } from '../../components';
+import { KeySelect, Panel } from '../../components/index.js';
 
 export const SnapshotsPanel = () => {
   const devtoolsHost = useDevtools();

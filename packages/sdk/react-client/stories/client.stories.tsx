@@ -4,8 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { ClientProvider, useClient } from '../src';
-import { ClientPanel } from './helpers';
+import { ClientProvider, useClient } from '../src/index.js';
+import { ClientPanel } from './helpers/index.js';
 
 export default {
   title: 'react-client/ClientProvider'

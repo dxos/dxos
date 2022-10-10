@@ -13,7 +13,7 @@ import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 
-import { ErrorBoundary, PartySharingDialog } from '../src';
+import { ErrorBoundary, PartySharingDialog } from '../src/index.js';
 
 export default {
   title: 'react-toolkit/BotSharing'

@@ -8,7 +8,7 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { useRegistry } from '@dxos/react-registry-client';
 import { ResourceSet } from '@dxos/registry-client';
 
-import { useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch';
+import { useRegistrySearchModel, RegistrySearchPanel } from '../RegistrySearch/index.js';
 
 interface SpawnBotDialogProps {
   onSelect: (resource: ResourceSet) => void

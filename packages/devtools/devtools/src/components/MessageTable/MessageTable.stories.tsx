@@ -9,7 +9,7 @@ import { FeedBlock } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { FullScreen } from '@dxos/react-components';
 
-import { MessageTable } from './MessageTable';
+import { MessageTable } from './MessageTable.js';
 
 export default {
   title: 'MessageTable'

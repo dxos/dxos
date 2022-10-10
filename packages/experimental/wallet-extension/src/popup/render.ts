@@ -5,7 +5,7 @@
 import EventEmitter from 'events';
 import ReactDOM from 'react-dom';
 
-import { inDev } from './utils';
+import { inDev } from './utils/index.js';
 
 export const render = (app: JSX.Element) => {
   const eventEmitter = new EventEmitter();

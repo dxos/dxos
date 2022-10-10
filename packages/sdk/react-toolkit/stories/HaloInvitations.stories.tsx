@@ -12,8 +12,8 @@ import { ClientProvider, useParties, useProfile } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { CopyText, FullScreen } from '@dxos/react-components';
 
-import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src';
-import { Column } from './helpers';
+import { ErrorBoundary, HaloSharingDialog, JoinHaloDialog } from '../src/index.js';
+import { Column } from './helpers/index.js';
 
 export default {
   title: 'react-toolkit/HaloInvitations'

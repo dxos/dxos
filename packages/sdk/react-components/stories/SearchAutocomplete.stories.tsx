@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { SearchAutocomplete, SearchResult, TextSearchModel } from '../src';
+import { SearchAutocomplete, SearchResult, TextSearchModel } from '../src/index.js';
 
 export default {
   title: 'react-components/SearchAutocomplete'

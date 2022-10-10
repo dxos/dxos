@@ -5,7 +5,7 @@
 import debug from 'debug';
 import expect from 'expect';
 import { it as test } from 'mocha';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 import { applyUpdate, Doc } from 'yjs';
 
 import { Client, defaultConfig } from '@dxos/client';

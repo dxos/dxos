@@ -10,8 +10,8 @@ import { Box, Fab } from '@mui/material';
 import { TestType } from '@dxos/client-testing';
 import { itemAdapter } from '@dxos/react-client-testing';
 
-import { TypeSelector } from '../TypeSelector';
-import { CreateItemDialog } from './CreateItemDialog';
+import { TypeSelector } from '../TypeSelector/index.js';
+import { CreateItemDialog } from './CreateItemDialog.js';
 
 interface CreateItemButtonProps {
   onCreate: (type?: string, title?: string) => void

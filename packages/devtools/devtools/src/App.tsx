@@ -13,10 +13,10 @@ import { FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
 
-import { Loader } from './components';
-import { PanelsContainer } from './containers';
-import { sections } from './sections';
-import { theme } from './theme';
+import { Loader } from './components/index.js';
+import { PanelsContainer } from './containers/index.js';
+import { sections } from './sections.js';
+import { theme } from './theme.js';
 
 const Main = ({ client }: { client: Client }) => (
   <ClientProvider client={client}>

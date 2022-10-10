@@ -38,7 +38,7 @@ import {
   SnapshotsPanel,
   StoragePanel,
   SwarmPanel
-} from './containers';
+} from './containers/index.js';
 
 export const sections: Section[] = [
   {

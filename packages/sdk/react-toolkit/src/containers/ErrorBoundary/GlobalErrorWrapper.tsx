@@ -5,8 +5,8 @@
 import debug from 'debug';
 import React, { FunctionComponent, ReactNode, useContext, useEffect } from 'react';
 
-import { ErrorIndicatorProps } from '../../components';
-import { ErrorContext } from '../../hooks';
+import { ErrorIndicatorProps } from '../../components/index.js';
+import { ErrorContext } from '../../hooks/index.js';
 
 const error = debug('dxos:react-toolkit:error');
 

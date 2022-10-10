@@ -6,8 +6,8 @@ import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
 
-import { Spy } from '../client';
-import { Command } from '../common';
+import { Spy } from '../client/index.js';
+import { Command } from '../common/index.js';
 
 const keys = [
   'c5c0b3b2c174ad3306d7a2c2f8b0df1698eba0ef6b86070cfae730f68c8fefc2',

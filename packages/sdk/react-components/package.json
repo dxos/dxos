@@ -48,7 +48,7 @@
     "@types/faker": "^5.5.9",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.isplainobject": "^4.0.6",
-    "@types/react": "^17.0.24",
+    "@types/react": "^17.0.39",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/string-hash": "^1.1.1",
     "@types/url-join": "~4.0.1",

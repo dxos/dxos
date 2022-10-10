@@ -6,7 +6,7 @@ import React, { ReactNode } from 'react';
 
 import { styled } from '@mui/material';
 
-import { ThemeProvider } from './ThemeProvider';
+import { ThemeProvider } from './ThemeProvider.js';
 
 const FullScreen = styled('div')({
   display: 'flex',

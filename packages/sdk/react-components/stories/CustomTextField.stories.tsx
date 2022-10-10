@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Box, Button, Divider, Typography } from '@mui/material';
 
-import { CustomTextField } from '../src';
-import { Container } from './helpers';
+import { CustomTextField } from '../src/index.js';
+import { Container } from './helpers.js';
 
 export default {
   title: 'react-components/CustomTextField',

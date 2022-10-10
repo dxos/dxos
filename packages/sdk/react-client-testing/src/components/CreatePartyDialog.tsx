@@ -9,7 +9,7 @@ import { Box, Button, LinearProgress, TextField, Typography } from '@mui/materia
 import { useMounted } from '@dxos/react-async';
 import { Dialog } from '@dxos/react-components';
 
-import { ImportMenu } from './ImportMenu';
+import { ImportMenu } from './ImportMenu.js';
 
 export interface CreatePartyDialogProps {
   open: boolean

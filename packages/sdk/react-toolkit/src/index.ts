@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './components';
-export * from './containers';
-export * from './helpers';
-export * from './hooks';
+export * from './components/index.js';
+export * from './containers/index.js';
+export * from './helpers/index.js';
+export * from './hooks/index.js';

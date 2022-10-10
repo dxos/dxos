@@ -12,7 +12,7 @@ import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { createBundledRpcServer, RpcPort, RpcPeer, PortTracer } from '@dxos/rpc';
 import { SubscriptionGroup } from '@dxos/util';
 
-import { config } from './config';
+import { config } from './config.js';
 
 export class BackgroundServer {
   // TODO(burdon): Configure signer adapter.

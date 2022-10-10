@@ -6,7 +6,7 @@ import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
 import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
 
-import { TestClient } from './test-client';
+import { TestClient } from './test-client.js';
 
 const setup = async (port: RpcPort, client: TestClient) => {
   const server = createProtoRpcPeer({

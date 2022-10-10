@@ -18,13 +18,13 @@ import {
   useContacts,
   useParties,
   useProfile
-} from '../src';
+} from '../src/index.js';
 import {
   ClientPanel,
   ContactsSelector,
   Container,
   PartyJoinPanel
-} from './helpers';
+} from './helpers/index.js';
 
 export default {
   title: 'react-client/Party Invitations'

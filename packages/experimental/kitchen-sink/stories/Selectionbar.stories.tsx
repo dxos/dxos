@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 
-import { Searchbar } from '../src';
+import { Searchbar } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/Searchbar'

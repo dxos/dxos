@@ -11,8 +11,8 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { EchoCard } from './EchoCard';
-import { EchoSubList } from './EchoSubList';
+import { EchoCard } from './EchoCard.js';
+import { EchoSubList } from './EchoSubList.js';
 
 export interface EchoBoardProps {
   items?: Item<ObjectModel>[]

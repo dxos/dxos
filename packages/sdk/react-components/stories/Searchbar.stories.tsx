@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Box, Divider } from '@mui/material';
 
-import { Searchbar } from '../src';
-import { Container } from './helpers';
+import { Searchbar } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-components/SearchBar',

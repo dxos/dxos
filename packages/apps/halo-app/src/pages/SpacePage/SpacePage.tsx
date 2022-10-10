@@ -17,7 +17,7 @@ import { CustomTextField, HashIcon } from '@dxos/react-components';
 import { PartySharingDialog } from '@dxos/react-toolkit';
 import { humanize } from '@dxos/util';
 
-import { useSafeSpaceKey } from '../../hooks';
+import { useSafeSpaceKey } from '../../hooks/index.js';
 
 // TODO(wittjosiah): Copied from Kodama, make customizable.
 const LABEL_PROPERTY = 'name';

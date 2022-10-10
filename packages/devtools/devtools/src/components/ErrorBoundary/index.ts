@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './ErrorBoundary';
+export * from './ErrorBoundary.js';

@@ -11,8 +11,8 @@ import { Timeframe } from '@dxos/protocols';
 import { SubscribeToPartiesResponse } from '@dxos/protocols/proto/dxos/devtools';
 import { CopyText, HashIcon } from '@dxos/react-components';
 
-import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
-import { Table, TableCell } from '../Table';
+import { BooleanIcon } from '../BooleanIcon/BooleanIcon.js';
+import { Table, TableCell } from '../Table/index.js';
 
 const TimeFrame = ({ value }: { value: Timeframe }) => (
   <div>

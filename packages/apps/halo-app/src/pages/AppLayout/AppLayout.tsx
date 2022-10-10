@@ -10,7 +10,7 @@ import { FormControlLabel, Switch, Tab, Tabs } from '@mui/material';
 import { useProfile } from '@dxos/react-client';
 import { FullScreen } from '@dxos/react-components';
 
-import { AppToolbar } from './AppToolbar';
+import { AppToolbar } from './AppToolbar.js';
 
 const tabs = [
   {

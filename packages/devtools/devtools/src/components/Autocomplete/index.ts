@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Autocomplete';
+export * from './Autocomplete.js';

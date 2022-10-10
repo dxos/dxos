@@ -12,7 +12,7 @@ import { ObjectModel } from '@dxos/object-model';
 import { ItemID } from '@dxos/protocols';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { CreateItemDialog } from '../CreateItem';
+import { CreateItemDialog } from '../CreateItem/index.js';
 
 export interface EchoChildListProps {
   item: Item<ObjectModel>

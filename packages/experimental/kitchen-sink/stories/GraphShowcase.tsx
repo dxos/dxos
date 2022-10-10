@@ -9,7 +9,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { itemAdapter, ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
-import { graphStyles } from '../src';
+import { graphStyles } from '../src/index.js';
 
 faker.seed(100);
 

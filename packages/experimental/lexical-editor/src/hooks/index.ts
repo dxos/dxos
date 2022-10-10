@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './useProviderFactory';
+export * from './useProviderFactory.js';

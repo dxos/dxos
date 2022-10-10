@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 
-import { KeySelect } from './KeySelect';
+import { KeySelect } from './KeySelect.js';
 
 export default {
   title: 'KeySelect'

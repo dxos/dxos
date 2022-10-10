@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './ErrorIndicator';
-export * from './ErrorView';
-export * from './ExportDialog';
-export * from './ImportDialog';
-export * from './ProfileDialog';
-export * from './RegistrationDialog';
-export * from './Theme';
+export * from './ErrorIndicator.js';
+export * from './ErrorView.js';
+export * from './ExportDialog.js';
+export * from './ImportDialog.js';
+export * from './ProfileDialog.js';
+export * from './RegistrationDialog.js';
+export * from './Theme.js';

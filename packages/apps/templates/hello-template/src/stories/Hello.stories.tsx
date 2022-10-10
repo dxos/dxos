@@ -7,7 +7,7 @@ import React from 'react';
 import { ClientProvider, useClient, useProfile } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 
-import { ONLINE_CONFIG } from './config';
+import { ONLINE_CONFIG } from './config.js';
 
 export default {
   title: 'HelloWorld/Hello'

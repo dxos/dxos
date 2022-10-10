@@ -8,7 +8,7 @@ import { Box, IconButton, Typography, TypographyProps } from '@mui/material';
 
 import { truncateKey } from '@dxos/debug';
 
-import { CopyToClipboard } from './CopyToClipboard';
+import { CopyToClipboard } from './CopyToClipboard.js';
 
 export interface CopyTextProps extends TypographyProps {
   value?: string

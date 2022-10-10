@@ -10,7 +10,7 @@ import { Box, Fab } from '@mui/material';
 import { PublicKey } from '@dxos/keys';
 import { HaloSharingDialog } from '@dxos/react-toolkit';
 
-import { DeviceList } from '../../components';
+import { DeviceList } from '../../components/index.js';
 
 export const DevicesPage = () => {
   const [devices] = useState([{ publicKey: PublicKey.random(), displayName: 'This Device' }]);

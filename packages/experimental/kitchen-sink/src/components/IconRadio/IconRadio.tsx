@@ -6,7 +6,7 @@ import React, { ReactNode, useContext } from 'react';
 
 import { IconButton, IconButtonProps } from '@mui/material';
 
-import { IconRadioGroupContext } from './IconRadioGroup';
+import { IconRadioGroupContext } from './IconRadioGroup.js';
 
 interface IconRadioProps extends IconButtonProps {
   children: ReactNode

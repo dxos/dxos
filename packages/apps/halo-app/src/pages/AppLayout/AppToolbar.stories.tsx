@@ -8,7 +8,7 @@ import { HashRouter } from 'react-router-dom';
 import { Construction as ExampleIcon, BugReport as TestIcon } from '@mui/icons-material';
 import { Box, Button, Drawer } from '@mui/material';
 
-import { AppToolbar } from './AppToolbar';
+import { AppToolbar } from './AppToolbar.js';
 
 export default {
   title: 'react-appkit/AppLayout/AppToolbar'

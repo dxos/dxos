@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ConfigProto } from '@dxos/config';
 import { MemoryRegistryClientBackend, RegistryClient, RegistryType } from '@dxos/registry-client';
 
-import { RegistryProvider, useRegistry } from '../src';
+import { RegistryProvider, useRegistry } from '../src/index.js';
 
 export default {
   title: 'react-registry-client/RegistryProvider'

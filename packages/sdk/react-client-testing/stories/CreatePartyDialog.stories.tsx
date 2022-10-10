@@ -6,7 +6,7 @@ import React from 'react';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { CreatePartyDialog } from '../src';
+import { CreatePartyDialog } from '../src/index.js';
 
 export default {
   title: 'react-client-testing/CreatePartyDialog'

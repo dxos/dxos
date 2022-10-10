@@ -13,7 +13,7 @@ import { defaultGraphStyles, Graph, GraphLayoutNode, GraphForceProjector, Marker
 import { useDynamicRef } from '@dxos/react-async';
 import { ItemAdapter } from '@dxos/react-client-testing';
 
-import { EchoGraphModel } from './model';
+import { EchoGraphModel } from './model.js';
 
 export interface EchoGraphProps {
   model?: EchoGraphModel

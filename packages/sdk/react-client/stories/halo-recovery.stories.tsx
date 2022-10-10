@@ -15,10 +15,10 @@ import {
   useClient,
   useParties,
   useProfile
-} from '../src';
+} from '../src/index.js';
 import {
   ClientPanel, Container
-} from './helpers';
+} from './helpers/index.js';
 
 export default {
   title: 'react-client/HALO Recovery'

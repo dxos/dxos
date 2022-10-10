@@ -10,7 +10,7 @@ import { useRegistry } from '@dxos/react-registry-client';
 import { RegistrySearchPanel, useRegistrySearchModel } from '@dxos/react-toolkit';
 import { CID, RegistryRecord, ResourceSet } from '@dxos/registry-client';
 
-import { Panel } from '../../components';
+import { Panel } from '../../components/index.js';
 
 // TODO(wittjosiah): Add table results similar to console.
 export const RegistryPanel = () => {

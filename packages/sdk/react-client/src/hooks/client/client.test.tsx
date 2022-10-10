@@ -9,8 +9,8 @@ import React from 'react';
 import { Client } from '@dxos/client';
 import { ConfigProto } from '@dxos/config';
 
-import { ClientProvider } from '../../containers';
-import { useClient } from './useClient';
+import { ClientProvider } from '../../containers/index.js';
+import { useClient } from './useClient.js';
 
 describe('Client hook', function () {
   const render = () => useClient();

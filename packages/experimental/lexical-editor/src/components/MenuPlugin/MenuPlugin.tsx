@@ -7,7 +7,7 @@ import { $getSelection } from 'lexical';
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { INSERT_FRAME_COMMAND } from '../FramePlugin';
+import { INSERT_FRAME_COMMAND } from '../FramePlugin/index.js';
 
 // TODO(burdon): Config from map.
 const isInsertFrame = (event: KeyboardEvent) => {

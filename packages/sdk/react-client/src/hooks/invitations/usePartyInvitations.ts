@@ -5,8 +5,8 @@
 import { PartyProxy } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 
-import { useParty } from '../echo-queries';
-import { useInvitations } from './useInvitations';
+import { useParty } from '../echo-queries/index.js';
+import { useInvitations } from './useInvitations.js';
 
 export const usePartyInvitations = (partyKey?: PublicKey) => {
   const party = useParty(partyKey);

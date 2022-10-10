@@ -11,7 +11,7 @@ import type { SecretProvider } from '@dxos/credentials';
 import { useSecretProvider } from '@dxos/react-client';
 import { Dialog, HashIcon, Passcode } from '@dxos/react-components';
 
-import { handleKey } from '../../helpers';
+import { handleKey } from '../../helpers/index.js';
 
 const invitationCodeFromUrl = (text: string) => text.substring(text.lastIndexOf('/') + 1);
 

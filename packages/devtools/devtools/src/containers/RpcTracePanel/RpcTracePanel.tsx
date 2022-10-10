@@ -8,7 +8,7 @@ import { RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { useClient } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 
-import { Panel } from '../../components';
+import { Panel } from '../../components/index.js';
 
 export const RpcTracePanel = () => {
   const client = useClient();

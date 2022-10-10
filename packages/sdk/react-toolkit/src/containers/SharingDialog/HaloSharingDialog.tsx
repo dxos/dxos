@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient, useHaloInvitations } from '@dxos/react-client';
 
-import { SharingDialog, SharingDialogProps } from './SharingDialog';
+import { SharingDialog, SharingDialogProps } from './SharingDialog.js';
 
 export type HaloSharingDialogProps = Omit<SharingDialogProps, 'onCreateInvitation' | 'onCancelInvitation' | 'title' | 'members'>
 

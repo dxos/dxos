@@ -6,8 +6,8 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 
-import { JsonTreeView } from '../src';
-import { Container } from './helpers';
+import { JsonTreeView } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-components/JsonTreeView',

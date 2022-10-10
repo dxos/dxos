@@ -38,7 +38,7 @@
     "@mui/material": "^5.8.1",
     "@mui/system": "^5.8.1",
     "@types/faker": "^5.5.9",
-    "@types/react": "^17.0.24",
+    "@types/react": "^17.0.39",
     "clsx": "^1.1.1",
     "faker": "^5.5.3",
     "react": "^17.0.2",

@@ -2,5 +2,5 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './search';
-export * from './useSelection';
+export * from './search.js';
+export * from './useSelection.js';

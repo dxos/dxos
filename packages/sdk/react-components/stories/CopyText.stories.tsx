@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useTheme, Box, Divider, TextField } from '@mui/material';
 
-import { CopyText } from '../src';
-import { Container } from './helpers';
+import { CopyText } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-components/CopyText',

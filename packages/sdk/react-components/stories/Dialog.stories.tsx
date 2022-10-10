@@ -13,7 +13,7 @@ import {
   Typography
 } from '@mui/material';
 
-import { Dialog, DialogProps } from '../src';
+import { Dialog, DialogProps } from '../src/index.js';
 
 export default {
   title: 'react-components/Dialog'

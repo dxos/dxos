@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { useDevtools, useParties, useStream } from '@dxos/react-client';
 
-import { KeySelect, MessageTable, Panel } from '../../components';
+import { KeySelect, MessageTable, Panel } from '../../components/index.js';
 
 export const FeedsPanel = () => {
   const devtoolsHost = useDevtools();

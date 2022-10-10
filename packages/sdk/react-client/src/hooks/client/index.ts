@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './context';
-export * from './useClient';
-export * from './useConfig';
-export * from './useDevtools';
-export * from './useProfile';
+export * from './context.js';
+export * from './useClient.js';
+export * from './useConfig.js';
+export * from './useDevtools.js';
+export * from './useProfile.js';

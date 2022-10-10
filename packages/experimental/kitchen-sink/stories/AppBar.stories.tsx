@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { AppBar, ViewType, ThemeProvider } from '../src';
+import { AppBar, ViewType, ThemeProvider } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/AppBar'

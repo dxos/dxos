@@ -10,8 +10,8 @@ import { TableBody, TableHead, TableRow } from '@mui/material';
 import { KeyRecord } from '@dxos/protocols/proto/dxos/halo/keys';
 import { CopyText } from '@dxos/react-components';
 
-import { BooleanIcon } from '../BooleanIcon/BooleanIcon';
-import { Table, TableCell } from '../Table';
+import { BooleanIcon } from '../BooleanIcon/BooleanIcon.js';
+import { Table, TableCell } from '../Table/index.js';
 
 const sorter = (a: KeyRecord, b: KeyRecord) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.own ? -1 : 1);
 

@@ -6,8 +6,8 @@ import assert from 'node:assert';
 
 import { DXN, RegistryRecord, ResourceSet } from '@dxos/registry-client';
 
-import { useRegistry } from '../registry';
-import { useAsync } from './useAsync';
+import { useRegistry } from '../registry/index.js';
+import { useAsync } from './useAsync.js';
 
 const BOT_TYPE_DXN = DXN.parse('dxos:type/bot');
 

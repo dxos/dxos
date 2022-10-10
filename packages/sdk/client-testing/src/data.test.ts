@@ -10,9 +10,9 @@ import yaml from 'js-yaml';
 
 import { truncate, truncateKey } from '@dxos/debug';
 
-import { buildTestParty, PartyBuilder, TestType } from './builders';
-import { treeLogger, TreeRoot } from './logging';
-import { Builder, handler } from './testing';
+import { buildTestParty, PartyBuilder, TestType } from './builders/index.js';
+import { treeLogger, TreeRoot } from './logging/index.js';
+import { Builder, handler } from './testing/index.js';
 
 const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');

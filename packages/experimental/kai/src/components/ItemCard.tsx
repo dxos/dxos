@@ -13,7 +13,7 @@ import {
   Typography
 } from '@mui/material';
 
-import { Item } from '../hooks';
+import { Item } from '../hooks/index.js';
 
 const styles = css`
   &.MuiCard-root {

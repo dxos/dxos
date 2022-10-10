@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './tree';
+export * from './tree.js';

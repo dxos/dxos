@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './KeyTable';
+export * from './KeyTable.js';

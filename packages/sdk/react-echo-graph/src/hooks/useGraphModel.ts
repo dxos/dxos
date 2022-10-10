@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { Item, Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { EchoGraphModel } from '../components';
+import { EchoGraphModel } from '../components/index.js';
 
 // TODO(kaplanski): Separate selection api filters from post query filters?
 /**

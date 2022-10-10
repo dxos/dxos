@@ -3,7 +3,7 @@
 //
 
 import { expect, Page, test } from '@playwright/test';
-import waitForExpect from 'wait-for-expect';
+import { default as waitForExpect } from 'wait-for-expect';
 
 const config = {
   baseUrl: 'http://localhost:5173'

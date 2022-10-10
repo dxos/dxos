@@ -8,7 +8,7 @@ import {
 } from '@dxos/registry-client';
 import { getAsyncValue } from '@dxos/util';
 
-import { RegistryContext } from '../hooks';
+import { RegistryContext } from '../hooks/index.js';
 
 export const createRegistryContext = async (
   configProvider: ConfigProvider,

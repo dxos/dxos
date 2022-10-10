@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './IconRadio';
-export * from './IconRadioGroup';
+export * from './IconRadio.js';
+export * from './IconRadioGroup.js';

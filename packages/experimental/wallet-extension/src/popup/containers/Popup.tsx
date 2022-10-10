@@ -6,7 +6,7 @@ import React from 'react';
 
 import { createTheme as createMuiTheme, ThemeProvider, CssBaseline } from '@mui/material';
 
-import { Root } from './Root';
+import { Root } from './Root.js';
 
 const baseTheme = createMuiTheme({
   components: {

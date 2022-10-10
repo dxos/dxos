@@ -8,7 +8,7 @@ import ReactDOM from 'react-dom';
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 
-import { App } from './components';
+import { App } from './components/index.js';
 
 const Main = () => {
   const party = useTestParty();

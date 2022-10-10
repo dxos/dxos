@@ -13,7 +13,7 @@ import { useClient, ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer } from '@dxos/react-client-testing';
 import { TextModel } from '@dxos/text-model';
 
-import { Editor, useProviderFactory } from '../src';
+import { Editor, useProviderFactory } from '../src/index.js';
 import { Container } from './helpers';
 
 const log = debug('dxos:lexical:test');

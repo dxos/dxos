@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './SearchAutocomplete';
-export * from './SearchModel';
+export * from './SearchAutocomplete.js';
+export * from './SearchModel.js';

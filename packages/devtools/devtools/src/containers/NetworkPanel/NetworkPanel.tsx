@@ -13,7 +13,7 @@ import { SubscribeToNetworkTopicsResponse } from '@dxos/protocols/proto/dxos/dev
 import { useAsyncEffect } from '@dxos/react-async';
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { Autocomplete } from '../../components';
+import { Autocomplete } from '../../components/index.js';
 
 interface Topic {
   topic: string

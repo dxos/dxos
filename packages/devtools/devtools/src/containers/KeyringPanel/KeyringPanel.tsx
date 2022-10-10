@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { KeyTable } from '../../components';
+import { KeyTable } from '../../components/index.js';
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();

@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './partyBuilder';
-export * from './schemaBuilder';
+export * from './partyBuilder.js';
+export * from './schemaBuilder.js';

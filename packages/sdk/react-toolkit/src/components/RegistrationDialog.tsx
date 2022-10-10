@@ -24,7 +24,7 @@ import {
 import { generateSeedPhrase } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 
-import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers';
+import { pickUnique, isMobile, ordinal, createDownloadLink } from '../helpers/index.js';
 
 export enum RegistrationStage {
   START,

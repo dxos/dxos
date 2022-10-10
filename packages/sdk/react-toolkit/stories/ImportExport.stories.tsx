@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { ImportDialog, ExportDialog } from '../src';
-import { Container } from './helpers';
+import { ImportDialog, ExportDialog } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-toolkit/ImportExport'

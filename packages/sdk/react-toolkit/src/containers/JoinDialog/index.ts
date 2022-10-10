@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './JoinDialog';
-export * from './JoinPartyDialog';
-export * from './JoinHaloDialog';
+export * from './JoinDialog.js';
+export * from './JoinPartyDialog.js';
+export * from './JoinHaloDialog.js';

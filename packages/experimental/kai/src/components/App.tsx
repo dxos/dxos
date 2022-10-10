@@ -10,10 +10,10 @@ import {
   Share as ShareIcon
 } from '@mui/icons-material';
 
-import { useTestItems } from '../hooks';
-import { Actions } from './Actions';
-import { ItemCard } from './ItemCard';
-import { Searchbar } from './Searchbar';
+import { useTestItems } from '../hooks/index.js';
+import { Actions } from './Actions.js';
+import { ItemCard } from './ItemCard.js';
+import { Searchbar } from './Searchbar.js';
 
 // TODO(burdon): Storybook for App.
 

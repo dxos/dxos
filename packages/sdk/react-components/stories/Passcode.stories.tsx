@@ -9,8 +9,8 @@ import {
 } from '@mui/icons-material';
 import { Box, IconButton, TextField, Typography } from '@mui/material';
 
-import { Passcode } from '../src';
-import { Container } from './helpers';
+import { Passcode } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-components/Passcode',

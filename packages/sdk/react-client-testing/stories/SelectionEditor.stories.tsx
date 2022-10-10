@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { ClientProvider } from '@dxos/react-client';
 
-import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestParty } from '../src';
+import { defaultSelectionText, execSelection, ProfileInitializer, SelectionEditor, useTestParty } from '../src/index.js';
 
 export default {
   title: 'react-client-testing/SelectionEditor'

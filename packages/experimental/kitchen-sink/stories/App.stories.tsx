@@ -16,7 +16,7 @@ import { useFileDownload } from '@dxos/react-components';
 import { uploadFilesToIpfs, useIpfsClient } from '@dxos/react-ipfs';
 import { usePartySerializer } from '@dxos/react-toolkit';
 
-import { App } from '../src';
+import { App } from '../src/index.js';
 // TODO(burdon): Lint issue.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

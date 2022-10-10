@@ -13,7 +13,7 @@ import { ErrorBoundary } from '@dxos/react-toolkit';
 import {
   AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
   RequireProfile, SpacePage, SpacesPage
-} from './pages';
+} from './pages/index.js';
 
 const configProvider = async () => new Config(await Dynamics(), Defaults());
 

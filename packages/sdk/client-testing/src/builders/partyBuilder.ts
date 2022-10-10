@@ -6,7 +6,7 @@ import faker from 'faker';
 
 import { Item, ObjectModel, Party } from '@dxos/client';
 
-import { NumberRange, capitalize, getNumber } from '../util';
+import { NumberRange, capitalize, getNumber } from '../util/index.js';
 
 export enum TestType {
   Org = 'example:type/org',

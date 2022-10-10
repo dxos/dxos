@@ -18,7 +18,7 @@ import { useParties, useParty, useSelection } from '@dxos/react-client';
 import { JsonTreeView } from '@dxos/react-components';
 import { TextModel } from '@dxos/text-model';
 
-import { KeySelect, Panel } from '../../components';
+import { KeySelect, Panel } from '../../components/index.js';
 
 const ItemNode = ({ item, onSelect }: ItemNodeProps) => {
   const children = useSelection(item.select().children()) ?? [];

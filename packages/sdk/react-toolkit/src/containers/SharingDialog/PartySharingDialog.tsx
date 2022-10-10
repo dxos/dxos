@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { useBotFactoryClient, useMembers, useParty, usePartyInvitations } from '@dxos/react-client';
 import { ResourceSet } from '@dxos/registry-client';
 
-import { SharingDialog, SharingDialogProps } from './SharingDialog';
+import { SharingDialog, SharingDialogProps } from './SharingDialog.js';
 
 export interface PartySharingDialogProps extends Omit<SharingDialogProps,
   'title' | 'members' | 'onCreateInvitation' | 'onCancelInvitation' | 'onCreateBotInvitation'> {

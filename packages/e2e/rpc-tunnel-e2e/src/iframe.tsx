@@ -11,7 +11,7 @@ import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { TestClient } from './test-client';
+import { TestClient } from './test-client.js';
 
 const IN_IFRAME = window.parent !== window;
 

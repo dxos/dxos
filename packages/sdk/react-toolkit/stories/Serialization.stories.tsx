@@ -11,7 +11,7 @@ import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
 import { FileUploadDialog, FullScreen, useFileDownload } from '@dxos/react-components';
 
-import { usePartySerializer } from '../src';
+import { usePartySerializer } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/Serialization'

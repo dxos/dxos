@@ -10,7 +10,7 @@ import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { isNode } from '@dxos/util';
 
-import { useClient } from './useClient';
+import { useClient } from './useClient.js';
 
 const DEFAULT_HALO_ORIGIN = 'http://localhost:3967';
 const IFRAME_ID = '__DXOS_AUTH__';

@@ -7,9 +7,9 @@ import React from 'react';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 
-import { AppBar } from '../components';
-import { WithSnackbarContext, useExtensionPort } from '../hooks';
-import { Main } from './Main';
+import { AppBar } from '../components/index.js';
+import { WithSnackbarContext, useExtensionPort } from '../hooks/index.js';
+import { Main } from './Main.js';
 
 export const Root = () => {
   const rpcPort = useExtensionPort();

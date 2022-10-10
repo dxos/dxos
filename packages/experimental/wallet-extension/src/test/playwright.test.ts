@@ -5,7 +5,7 @@
 import { BrowserContext, chromium, Page } from 'playwright';
 import { v4 } from 'uuid';
 
-import { getExtensionId } from '../utils/extensionId';
+import { getExtensionId } from '../utils/extensionId.js';
 
 const EXTENSION_PATH = `${process.cwd()}/dist`;
 

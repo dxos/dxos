@@ -9,7 +9,7 @@ import {
   Database, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA
 } from '@dxos/client';
 
-import { TestType } from './partyBuilder';
+import { TestType } from './partyBuilder.js';
 
 export const log = debug('dxos:client-testing');
 debug.enable('dxos:client-testing');

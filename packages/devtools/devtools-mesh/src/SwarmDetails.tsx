@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { SwarmInfo } from '@dxos/network-manager';
 
-import { ConnectionInfoView } from './ConnectionInfoView';
-import { SwarmInfoView } from './SwarmInfo';
-import { SwarmTable } from './SwarmTable';
+import { ConnectionInfoView } from './ConnectionInfoView.js';
+import { SwarmInfoView } from './SwarmInfo.js';
+import { SwarmTable } from './SwarmTable.js';
 
 interface SwarmDetailsProps {
   swarms: SwarmInfo[]

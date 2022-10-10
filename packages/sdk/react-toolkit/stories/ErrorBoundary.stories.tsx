@@ -11,7 +11,7 @@ import { Client } from '@dxos/client';
 import { DXOSError } from '@dxos/debug';
 import { ClientProvider } from '@dxos/react-client';
 
-import { ErrorBoundary, ErrorView, useErrors } from '../src';
+import { ErrorBoundary, ErrorView, useErrors } from '../src/index.js';
 
 export default {
   title: 'react-toolkit/ErrorBoundary'

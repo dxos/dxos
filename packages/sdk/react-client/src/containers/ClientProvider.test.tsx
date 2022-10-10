@@ -8,8 +8,8 @@ import React from 'react';
 
 import { Client } from '@dxos/client';
 
-import { useClient } from '../hooks';
-import { ClientProvider } from './ClientProvider';
+import { useClient } from '../hooks/index.js';
+import { ClientProvider } from './ClientProvider.js';
 
 const TestComponent = () => {
   const client = useClient();

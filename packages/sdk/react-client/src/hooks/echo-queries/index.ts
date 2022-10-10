@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './useContacts';
-export * from './useMembers';
-export * from './useParties';
+export * from './useContacts.js';
+export * from './useMembers.js';
+export * from './useParties.js';

@@ -11,7 +11,7 @@
       "DOM",
       "ESNext"
     ],
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
@@ -28,7 +28,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "packages/devtools/dx-cli/src/commands/config/index.test.cts"  ],
   "exclude": [
     "node_modules",
     "dist",

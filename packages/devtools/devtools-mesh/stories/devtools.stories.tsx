@@ -32,7 +32,7 @@ import {
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
 import { FullScreen } from '@dxos/react-components';
 
-import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src';
+import { PeerGraph, SignalStatusComp, SignalTrace, SwarmDetails } from '../src/index.js';
 
 export default {
   title: 'Devtools/Topology'

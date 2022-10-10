@@ -13,8 +13,8 @@ import { FullScreen, QRCode } from '@dxos/react-components';
 import { JoinHaloDialog } from '@dxos/react-toolkit';
 import { humanize } from '@dxos/util';
 
-import { ExistingIdentityDialog } from './ExistingIdentityDialog';
-import { NewIdentityDialog } from './NewIdentityDialog';
+import { ExistingIdentityDialog } from './ExistingIdentityDialog.js';
+import { NewIdentityDialog } from './NewIdentityDialog.js';
 
 export interface RegistrationPageProps {
   onRegister?: (client: Client) => Promise<Party>

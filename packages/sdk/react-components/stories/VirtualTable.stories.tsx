@@ -11,7 +11,7 @@ import {
 } from '@mui/icons-material';
 import { Box, Checkbox, IconButton } from '@mui/material';
 
-import { GetRowHeightProps, DataCellProps, VirtualTable, FullScreen } from '../src';
+import { GetRowHeightProps, DataCellProps, VirtualTable, FullScreen } from '../src/index.js';
 
 faker.seed(123);
 

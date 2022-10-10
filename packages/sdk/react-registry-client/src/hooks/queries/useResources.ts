@@ -4,8 +4,8 @@
 
 import { Filter, ResourceSet } from '@dxos/registry-client';
 
-import { useRegistry } from '../registry';
-import { useAsync } from './useAsync';
+import { useRegistry } from '../registry/index.js';
+import { useAsync } from './useAsync.js';
 
 interface Result {
   resources: ResourceSet[]

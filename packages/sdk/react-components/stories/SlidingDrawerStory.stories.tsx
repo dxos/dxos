@@ -15,7 +15,7 @@ import {
   SlidingContent,
   SlidingDrawer,
   Toolbar
-} from '../src';
+} from '../src/index.js';
 
 export default {
   title: 'react-components/SlidingDrawer'

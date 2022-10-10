@@ -10,7 +10,7 @@ import { ProfileInitializer, itemAdapter, useTestParty } from '@dxos/react-clien
 import { FullScreen } from '@dxos/react-components';
 import { EchoGraph, useGraphModel } from '@dxos/react-echo-graph';
 
-import { EchoGrid, Layout, graphStyles, tableStyles } from '../src';
+import { EchoGrid, Layout, graphStyles, tableStyles } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/Layout'

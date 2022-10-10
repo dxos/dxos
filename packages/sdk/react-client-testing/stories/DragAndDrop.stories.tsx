@@ -11,11 +11,11 @@ import { Item, Party, ObjectModel, OrderedList } from '@dxos/client';
 import { useAsyncEffect } from '@dxos/react-async';
 import { ClientProvider, useClient, useSelection } from '@dxos/react-client';
 
-import { ProfileInitializer } from '../src';
+import { ProfileInitializer } from '../src/index.js';
 import {
   ColumnContainer, DragAndDropDebugPanel, DroppableList, DroppableTable, ListItem,
   ListItemDef, ResetButton, StorybookContainer, moveItemInArray, updateSourceAndTargetState
-} from './helpers';
+} from './helpers/index.js';
 
 export default {
   title: 'react-client-testing/DragAndDrop'
@@ -315,7 +315,7 @@ const MultipleListStory = () => {
 
     await Promise.all(orderedLists.map(async (orderedList) => {
       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-      initialOrder && await orderedList?.init(initialOrder.values);
+      initialOrder && (await orderedList?.init(initialOrder.values));
     }));
 
   };
@@ -780,7 +780,7 @@ const MultipleContainersStory = () => {
 
     await Promise.all(orderedLists.map(async (orderedList) => {
       const initialOrder = initialOrders.find(order => order.id === orderedList.id);
-      initialOrder && await orderedList?.init(initialOrder.values);
+      initialOrder && (await orderedList?.init(initialOrder.values));
     }));
 
     await columnOrderedList!.init(initialColumnOrder);

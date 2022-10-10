@@ -9,7 +9,7 @@ import expect from 'expect';
 import { Item, ObjectModel, Party, Schema, SchemaField, TYPE_SCHEMA, Client } from '@dxos/client';
 import { truncate, truncateKey } from '@dxos/debug';
 
-import { log, SchemaBuilder, TestType } from './builders';
+import { log, SchemaBuilder, TestType } from './builders/index.js';
 
 let client: Client;
 let party: Party;

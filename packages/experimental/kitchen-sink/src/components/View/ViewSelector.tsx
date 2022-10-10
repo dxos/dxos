@@ -10,7 +10,7 @@ import {
   FormatListBulleted as ListIcon
 } from '@mui/icons-material';
 
-import { IconRadio, IconRadioGroup } from '../IconRadio';
+import { IconRadio, IconRadioGroup } from '../IconRadio/index.js';
 
 export enum ViewType {
   List = 'list',

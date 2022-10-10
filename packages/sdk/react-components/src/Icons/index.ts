@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './DXOS';
+export * from './DXOS.js';

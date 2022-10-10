@@ -10,8 +10,8 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { RegistryType, ResourceSet } from '@dxos/registry-client';
 
-import { RegistrySearchPanel, useRegistrySearchModel } from '../src';
-import { createMockRegistry } from './helpers';
+import { RegistrySearchPanel, useRegistrySearchModel } from '../src/index.js';
+import { createMockRegistry } from './helpers/index.js';
 
 export default {
   title: 'react-toolkit/RegistrySearchPanel'

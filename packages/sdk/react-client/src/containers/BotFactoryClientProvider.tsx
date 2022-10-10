@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { useAsyncEffect } from '@dxos/react-async';
 
-import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks';
+import { BotFactoryClientContext, createBotFactoryClient, useConfig } from '../hooks/index.js';
 
 export interface BotFactoryClientProviderProps {
   children?: ReactNode

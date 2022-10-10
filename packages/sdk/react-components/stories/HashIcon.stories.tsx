@@ -8,7 +8,7 @@ import { Box, IconButton } from '@mui/material';
 
 import { PublicKey } from '@dxos/keys';
 
-import { CopyText, HashIcon } from '../src';
+import { CopyText, HashIcon } from '../src/index.js';
 
 export default {
   title: 'react-components/HashIcon',

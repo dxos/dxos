@@ -8,7 +8,7 @@ import { Box, Button, TextField } from '@mui/material';
 
 import { Dialog } from '@dxos/react-components';
 
-import { handleKey } from '../helpers';
+import { handleKey } from '../helpers/index.js';
 
 export interface ProfileDialogProps {
   open: boolean

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Autocomplete, TextField } from '@mui/material';
 
-import { SearchModel, SearchResult } from './SearchModel';
+import { SearchModel, SearchResult } from './SearchModel.js';
 
 export interface SearchAutocompleteProps<T> {
   model: SearchModel<T>

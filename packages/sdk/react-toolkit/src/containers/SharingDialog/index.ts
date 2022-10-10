@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './MemberRow';
-export * from './HaloSharingDialog';
-export * from './PartySharingDialog';
-export * from './PendingInvitation';
-export * from './SharingDialog';
-export * from './SpawnBotPanel';
+export * from './MemberRow.js';
+export * from './HaloSharingDialog.js';
+export * from './PartySharingDialog.js';
+export * from './PendingInvitation.js';
+export * from './SharingDialog.js';
+export * from './SpawnBotPanel.js';

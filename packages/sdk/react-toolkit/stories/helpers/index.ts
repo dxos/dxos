@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './Column';
-export * from './Container';
-export * from './mock-registry';
+export * from './Column.js';
+export * from './Container.js';
+export * from './mock-registry.js';

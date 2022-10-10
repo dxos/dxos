@@ -10,7 +10,7 @@ import { render } from 'react-dom';
 // debug.enable('dxos:*')
 // log.config.filter='debug'
 
-import { App } from './App';
+import { App } from './App.js';
 
 // TODO(wittjosiah): StrictMode causing issues with the react sdk, re-enable once fixed.
 render(

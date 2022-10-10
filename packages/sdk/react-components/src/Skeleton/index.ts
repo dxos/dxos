@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Skeleton';
+export * from './Skeleton.js';

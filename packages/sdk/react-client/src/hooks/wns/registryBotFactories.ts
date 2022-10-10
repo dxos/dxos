@@ -5,8 +5,8 @@
 import debug from 'debug';
 import { useState, useEffect } from 'react';
 
-import { useWNSRegistry } from './registry';
-import { QueryRecord, WRN_TYPE_BOT_FACTORY } from './types';
+import { useWNSRegistry } from './registry.js';
+import { QueryRecord, WRN_TYPE_BOT_FACTORY } from './types.js';
 
 const log = debug('dxos:react-client');
 

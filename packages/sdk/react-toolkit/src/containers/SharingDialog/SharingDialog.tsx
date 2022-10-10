@@ -16,9 +16,9 @@ import { InvitationRequest, PartyMember } from '@dxos/client';
 import { Dialog } from '@dxos/react-components';
 import { ResourceSet } from '@dxos/registry-client';
 
-import { MemberRow } from './MemberRow';
-import { PendingInvitation } from './PendingInvitation';
-import { SpawnBotPanel } from './SpawnBotPanel';
+import { MemberRow } from './MemberRow.js';
+import { PendingInvitation } from './PendingInvitation.js';
+import { SpawnBotPanel } from './SpawnBotPanel.js';
 
 const defaultCreateUrl = (invitationCode: string) => {
   // TODO(burdon): By-pass keyhole with fake code.

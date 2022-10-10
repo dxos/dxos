@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { useSnackbar } from './useSnackbar';
+import { useSnackbar } from './useSnackbar.js';
 
 // TODO(burdon): Rewrite and replace useSnackbar.
 

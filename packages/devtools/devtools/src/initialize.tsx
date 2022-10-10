@@ -8,7 +8,7 @@ import ReactDOM from 'react-dom';
 import { Event } from '@dxos/async';
 import { Client } from '@dxos/client';
 
-import { App } from './App';
+import { App } from './App.js';
 
 export const initializeDevtools = (clientReady: Event<Client>) => {
   ReactDOM.render(

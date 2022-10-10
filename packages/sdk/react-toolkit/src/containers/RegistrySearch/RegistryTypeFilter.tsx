@@ -9,7 +9,7 @@ import { styled, Chip } from '@mui/material';
 import { useControlledState } from '@dxos/react-async';
 import { CID, RegistryType } from '@dxos/registry-client';
 
-import { getTypeName } from './RegistrySearchModel';
+import { getTypeName } from './RegistrySearchModel.js';
 
 // https://mui.com/components/chips/#chip-array
 const List = styled('ul')(({ theme }) => ({

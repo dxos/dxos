@@ -8,7 +8,7 @@ import browser from 'webextension-polyfill';
 import { Fullscreen as FullscreenIcon } from '@mui/icons-material';
 import { AppBar as MuiAppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 
-import { inFullScreenMode } from '../utils';
+import { inFullScreenMode } from '../utils/index.js';
 
 export const AppBar = () => {
   const onExpandToFullscreen = async () => {

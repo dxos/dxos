@@ -65,6 +65,7 @@ export const runNode = async (context: ExecutorContext, options: NodeOptions) =>
     '--extension', 'jsx',
 
     // Loader for typescript files.
+    // TODO(dmaretskyi): Consider https://github.com/lukeed/tsm.
     `--loader=${require.resolve('ts-node/esm')}`,
 
     ...options.testPatterns,

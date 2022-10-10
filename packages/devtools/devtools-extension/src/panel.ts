@@ -5,7 +5,7 @@
 import debug from 'debug';
 import browser from 'webextension-polyfill';
 
-import { waitForDXOS } from './utils';
+import { waitForDXOS } from './utils/index.js';
 
 const log = debug('dxos:extension:panel');
 

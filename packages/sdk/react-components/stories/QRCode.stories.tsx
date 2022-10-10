@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { QRCode } from '../src';
-import { Container } from './helpers';
+import { QRCode } from '../src/index.js';
+import { Container } from './helpers/index.js';
 
 export default {
   title: 'react-components/QRCode',

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 
-import { JoinDialog, JoinDialogProps } from './JoinDialog';
+import { JoinDialog, JoinDialogProps } from './JoinDialog.js';
 
 export interface JoinHaloDialogProps extends Omit<JoinDialogProps, 'onJoin' | 'title'> {
   onJoin?: () => Promise<void> | void

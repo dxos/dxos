@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { ErrorBoundary } from '../../src';
+import { ErrorBoundary } from '../../src/index.js';
 
 export const Container = ({ children }: { children: ReactNode }) => (
   <FullScreen style={{ backgroundColor: '#EEE' }}>

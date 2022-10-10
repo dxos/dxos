@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-client-testing';
 import { BoxContainer, FullScreen } from '@dxos/react-components';
 
-import { EchoGraph, useGraphModel } from '../src';
+import { EchoGraph, useGraphModel } from '../src/index.js';
 
 export default {
   title: 'KitchenSink/EchoGraph'

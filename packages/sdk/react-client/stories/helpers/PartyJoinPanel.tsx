@@ -6,7 +6,7 @@ import React, { ChangeEvent, useEffect, useState } from 'react';
 
 import { Box, Button, TextField, Toolbar } from '@mui/material';
 
-import { JsonPanel } from './JsonPanel';
+import { JsonPanel } from './JsonPanel.js';
 
 export const PartyJoinPanel = (
   {

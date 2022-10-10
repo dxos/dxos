@@ -9,7 +9,7 @@ import { Box } from '@mui/material';
 
 import { FullScreen } from '@dxos/react-components';
 
-import { Autocomplete } from './Autocomplete';
+import { Autocomplete } from './Autocomplete.js';
 
 export default {
   title: 'Autocomplete'

@@ -4,7 +4,7 @@
 
 import { Party } from '@dxos/client';
 
-import { useSelection } from './useSelection';
+import { useSelection } from './useSelection.js';
 
 /**
  * A Selector used for finding items based on a search pattern.

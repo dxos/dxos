@@ -4,9 +4,9 @@
 
 import React, { Component, FunctionComponent, PropsWithChildren } from 'react';
 
-import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../../components';
-import { ErrorContext } from '../../hooks';
-import { GlobalErrorWrapper } from './GlobalErrorWrapper';
+import { ErrorIndicator, ErrorIndicatorProps, ErrorView, ErrorViewProps } from '../../components/index.js';
+import { ErrorContext } from '../../hooks/index.js';
+import { GlobalErrorWrapper } from './GlobalErrorWrapper.js';
 
 // TODO(burdon): Configure error indicator.
 // TODO(burdon): Configure loading indicator (that can be reset downstream).

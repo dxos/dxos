@@ -11,10 +11,10 @@ import { ItemAdapter } from '@dxos/react-client-testing';
 import { BoxContainer } from '@dxos/react-components';
 import { EchoGraph, EchoGraphModel } from '@dxos/react-echo-graph';
 
-import { EchoBoard } from '../EchoBoard';
-import { EchoList } from '../EchoList';
-import { graphStyles } from '../Theme';
-import { ViewType } from './ViewSelector';
+import { EchoBoard } from '../EchoBoard/index.js';
+import { EchoList } from '../EchoList/index.js';
+import { graphStyles } from '../Theme/index.js';
+import { ViewType } from './ViewSelector.js';
 
 interface ViewContainerProps {
   value: string
