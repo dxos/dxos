@@ -8,7 +8,9 @@
     "outDir": "dist",
     "types": [
       "node"
-    ]
+    ],
+    "moduleResolution": "node",
+    "module": "esnext"
   },
   "include": [
     "src/*.ts",

@@ -19,7 +19,7 @@ const data: { [key: string ]: string[] } = words;
 const bits = 8; // Bits per section.
 const length = Math.pow(2, bits);
 
-const parts: string[] = ['a', 'b', 'c'];
+const parts = ['a', 'b', 'c'] as const;
 const parser = new Parser().bit8('a').bit8('b').bit8('c');
 const types = ['adjectives', 'adjectives', 'animals'];
 
