@@ -7,7 +7,7 @@ import { schema } from '@dxos/protocols';
 import { BotService } from '@dxos/protocols/proto/dxos/bot';
 import { createLinkedPorts, createRpcServer, RpcPort } from '@dxos/rpc';
 
-import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container';
+import { BotExitStatus, BotContainer, SpawnOptions } from './bot-container.js';
 
 export class InProcessBotContainer implements BotContainer {
   private readonly _bots = new Map<string, BotService>();

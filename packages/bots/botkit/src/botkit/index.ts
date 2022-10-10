@@ -2,4 +2,4 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './build-bot';
+export * from './build-bot.js';

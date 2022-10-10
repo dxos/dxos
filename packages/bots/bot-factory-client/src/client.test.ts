@@ -7,7 +7,7 @@ import expect from 'expect';
 import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 
-import { BotFactoryClient } from './client';
+import { BotFactoryClient } from './client.js';
 
 describe('In-Memory', function () {
   it('Can be initialized', async function () {

@@ -12,8 +12,8 @@ import {
   StartRequest
 } from '@dxos/protocols/proto/dxos/bot';
 
-import { createIpcPort } from '../bot-container';
-import { startBot } from './start-bot';
+import { createIpcPort } from '../bot-container/index.js';
+import { startBot } from './start-bot.js';
 
 export class EmptyBot implements BotService {
   async initialize (request: InitializeRequest) {

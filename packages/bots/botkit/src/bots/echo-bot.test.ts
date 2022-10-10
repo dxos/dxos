@@ -7,8 +7,8 @@ import expect from 'expect';
 import { PublicKey } from '@dxos/keys';
 import { ObjectModel } from '@dxos/object-model';
 
-import { setupClient } from '../testutils';
-import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
+import { setupClient } from '../testutils/index.js';
+import { EchoBot, TEST_ECHO_TYPE } from './echo-bot.js';
 
 describe('Echo Bot', function () {
   it('Starts a bot', async function () {

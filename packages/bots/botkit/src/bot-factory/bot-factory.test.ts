@@ -8,8 +8,8 @@ import { sleep } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
-import { NodeContainer } from '../bot-container';
-import { BotFactory } from './bot-factory';
+import { NodeContainer } from '../bot-container/index.js';
+import { BotFactory } from './bot-factory.js';
 
 describe('BotFactory', function () {
   describe('with NodeContainer', function () {

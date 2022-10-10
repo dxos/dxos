@@ -14,7 +14,7 @@ import { schema } from '@dxos/protocols';
 import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
 
-import { BotHandle } from './handle';
+import { BotHandle } from './handle.js';
 
 const log = debug('dxos:bot-factory-client');
 

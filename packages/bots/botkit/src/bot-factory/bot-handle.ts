@@ -17,7 +17,7 @@ import { Bot, BotPackageSpecifier, BotReport, BotService, GetLogsResponse } from
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { createRpcClient, ProtoRpcPeer } from '@dxos/rpc';
 
-import { BotContainer, BotExitStatus } from '../bot-container';
+import { BotContainer, BotExitStatus } from '../bot-container/index.js';
 
 const MAX_ATTEMPTS = 1;
 const ATTEMPT_DELAY = 3_000;

@@ -4,9 +4,9 @@
 
 import debug from 'debug';
 
-import { createIpcPort } from '../bot-container';
-import { Bot } from './client-bot';
-import { startBot } from './start-bot';
+import { createIpcPort } from '../bot-container/index.js';
+import { Bot } from './client-bot.js';
+import { startBot } from './start-bot.js';
 
 const log = debug('dxos:bot:client-bot');
 

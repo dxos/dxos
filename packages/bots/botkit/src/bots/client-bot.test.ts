@@ -4,8 +4,8 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { setupBroker, setupClient } from '../testutils';
-import { Bot } from './client-bot';
+import { setupBroker, setupClient } from '../testutils/index.js';
+import { Bot } from './client-bot.js';
 
 describe('Client Bot', function () {
   it('Starts a bot', async function () {

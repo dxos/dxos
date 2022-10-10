@@ -6,5 +6,5 @@ import { Bot } from '@dxos/protocols/proto/dxos/bot';
 
 export { Bot };
 
-export * from './client';
-export * from './handle';
+export * from './client.js';
+export * from './handle.js';

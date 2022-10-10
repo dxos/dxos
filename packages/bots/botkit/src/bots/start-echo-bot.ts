@@ -4,9 +4,9 @@
 
 import debug from 'debug';
 
-import { createIpcPort } from '../bot-container';
-import { EchoBot, TEST_ECHO_TYPE } from './echo-bot';
-import { startBot } from './start-bot';
+import { createIpcPort } from '../bot-container/index.js';
+import { EchoBot, TEST_ECHO_TYPE } from './echo-bot.js';
+import { startBot } from './start-bot.js';
 
 const log = debug('dxos:bot:echo-bot');
 

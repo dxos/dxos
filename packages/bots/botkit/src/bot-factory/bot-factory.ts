@@ -11,12 +11,12 @@ import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { Bot, BotFactoryService, GetLogsRequest, SendCommandRequest, SpawnBotRequest } from '@dxos/protocols/proto/dxos/bot';
 
-import { BotContainer } from '../bot-container';
-import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config';
-import { BotHandle } from './bot-handle';
-import type { ContentResolver } from './dxns-content-resolver';
-import type { BotSnapshotStorage } from './fs-bot-snapshot-storage';
-import type { ContentLoader } from './ipfs-content-loader';
+import { BotContainer } from '../bot-container/index.js';
+import { BOT_OUT_DIR, BOT_FACTORY_DEFAULT_PERSISTENT } from '../config.js';
+import { BotHandle } from './bot-handle.js';
+import type { ContentResolver } from './dxns-content-resolver.js';
+import type { BotSnapshotStorage } from './fs-bot-snapshot-storage.js';
+import type { ContentLoader } from './ipfs-content-loader.js';
 
 const log = debug('dxos:botkit:bot-factory');
 

@@ -2,6 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './broker-setup';
-export * from './client-setup';
-export * from './mock-registry';
+export * from './broker-setup.js';
+export * from './client-setup.js';
+export * from './mock-registry.js';

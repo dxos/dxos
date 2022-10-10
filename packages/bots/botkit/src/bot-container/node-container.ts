@@ -11,7 +11,7 @@ import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { RpcPort } from '@dxos/rpc';
 
-import { BotContainer, BotExitStatus, SpawnOptions } from './bot-container';
+import { BotContainer, BotExitStatus, SpawnOptions } from './bot-container.js';
 
 const log = debug('dxos:botkit:node-container');
 

@@ -5,8 +5,8 @@
 import { Stream } from '@dxos/codec-protobuf';
 import { BotReport, BotService, InitializeRequest, SendCommandRequest, StartRequest } from '@dxos/protocols/proto/dxos/bot';
 
-import { createIpcPort } from '../bot-container';
-import { startBot } from './start-bot';
+import { createIpcPort } from '../bot-container/index.js';
+import { startBot } from './start-bot.js';
 
 /**
  * Bot that crashes the whole process on command.

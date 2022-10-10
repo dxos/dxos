@@ -10,9 +10,9 @@ import { WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createApiPromise, PolkadotRegistry, RegistryClient } from '@dxos/registry-client';
 
-import { NodeContainer } from './bot-container';
-import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory';
-import { BOT_SNAPSHOT_DIR, getConfig } from './config';
+import { NodeContainer } from './bot-container/index.js';
+import { BotFactory, BotController, DXNSContentResolver, ContentResolver, ContentLoader, IPFSContentLoader, FSBotSnapshotStorage } from './bot-factory/index.js';
+import { BOT_SNAPSHOT_DIR, getConfig } from './config.js';
 
 const log = debug('dxos:botkit:bot-factory:main');
 

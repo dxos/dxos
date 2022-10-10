@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-export * from './bot-factory';
-export * from './bot-handle';
-export * from './bot-controller';
-export * from './fs-bot-snapshot-storage';
-export * from './ipfs-content-loader';
-export * from './dxns-content-resolver';
+export * from './bot-factory.js';
+export * from './bot-handle.js';
+export * from './bot-controller.js';
+export * from './fs-bot-snapshot-storage.js';
+export * from './ipfs-content-loader.js';
+export * from './dxns-content-resolver.js';
