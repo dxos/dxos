@@ -3565,6 +3565,7 @@ importers:
       '@dxos/plate': workspace:*
       '@types/node': ^16.11.58
       '@vuepress/client': ^2.0.0-beta.51
+      change-case: ^4.1.2
       typedoc: ^0.23.15
       typescript: ^4.7.2
       vue: ^3.2.40
@@ -3573,6 +3574,7 @@ importers:
       '@dxos/plate': link:../plate
       '@types/node': 16.11.62
       '@vuepress/client': 2.0.0-beta.51
+      change-case: 4.1.2
       typedoc: 0.23.15_k4qfemgm4ttpeeuk35ye3qqa2i_typescript@4.7.4
       typescript: 4.7.4
       vue: 3.2.40

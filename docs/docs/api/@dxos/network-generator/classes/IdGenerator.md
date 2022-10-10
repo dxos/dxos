@@ -5,16 +5,10 @@ Class helper to generate random buffer ids based on a number.
 
 ## Constructors
 ```ts
-new IdGenerator(
+const newIdGenerator = new IdGenerator();
 
-)
 ```
 
----
-- IdGenerator : Class
-- constructor : Constructor
-- new IdGenerator : Constructor signature
-- _ids : Property
-- get : Method
-- get : Call signature
-- id : Parameter
+## Properties
+
+## Functions

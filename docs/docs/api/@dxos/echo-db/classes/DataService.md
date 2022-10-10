@@ -5,26 +5,10 @@ Routes DataService requests to different DataServiceHost instances based on part
 
 ## Constructors
 ```ts
-new DataService(
+const newDataService = new DataService();
 
-)
 ```
 
----
-- DataService : Class
-- constructor : Constructor
-- new DataService : Constructor signature
-- _trackedParties : Property
-- subscribeEntitySet : Method
-- subscribeEntitySet : Call signature
-- request : Parameter
-- subscribeEntityStream : Method
-- subscribeEntityStream : Call signature
-- request : Parameter
-- trackParty : Method
-- trackParty : Call signature
-- key : Parameter
-- host : Parameter
-- write : Method
-- write : Call signature
-- request : Parameter
+## Properties
+
+## Functions

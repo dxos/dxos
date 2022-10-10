@@ -7,30 +7,12 @@ Uses DataMirror to populate entities in ItemManager.
 
 ## Constructors
 ```ts
-new RemoteDatabaseBackend(
+const newRemoteDatabaseBackend = new RemoteDatabaseBackend(
 _service: DataService,
 _partyKey: PublicKey
 )
 ```
 
----
-- RemoteDatabaseBackend : Class
-- constructor : Constructor
-- new RemoteDatabaseBackend : Constructor signature
-- _service : Parameter
-- _partyKey : Parameter
-- _itemManager : Property
-- isReadOnly : Accessor
-- isReadOnly : Get signature
-- close : Method
-- close : Call signature
-- createDataServiceHost : Method
-- createDataServiceHost : Call signature
-- createSnapshot : Method
-- createSnapshot : Call signature
-- getWriteStream : Method
-- getWriteStream : Call signature
-- open : Method
-- open : Call signature
-- itemManager : Parameter
-- modelFactory : Parameter
+## Properties
+
+## Functions

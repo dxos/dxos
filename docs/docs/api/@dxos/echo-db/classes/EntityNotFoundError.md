@@ -3,29 +3,11 @@
 
 ## Constructors
 ```ts
-new EntityNotFoundError(
+const newEntityNotFoundError = new EntityNotFoundError(
 entityId: string
 )
 ```
 
----
-- EntityNotFoundError : Class
-- constructor : Constructor
-- new EntityNotFoundError : Constructor signature
-- entityId : Parameter
-- cause : Property
-- code : Property
-- dxosErrorMessage : Property
-- message : Property
-- name : Property
-- stack : Property
-- prepareStackTrace : Property
-- __type : Type literal
-- __type : Call signature
-- err : Parameter
-- stackTraces : Parameter
-- stackTraceLimit : Property
-- captureStackTrace : Method
-- captureStackTrace : Call signature
-- targetObject : Parameter
-- constructorOpt : Parameter
+## Properties
+
+## Functions

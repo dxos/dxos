@@ -3,32 +3,11 @@
 
 ## Constructors
 ```ts
-new SchemaBuilder(
+const newSchemaBuilder = new SchemaBuilder(
 _database: Database
 )
 ```
 
----
-- SchemaBuilder : Class
-- constructor : Constructor
-- new SchemaBuilder : Constructor signature
-- _database : Parameter
-- defaultSchemas : Accessor
-- defaultSchemas : Get signature
-- __type : Type literal
-- __index : Index signature
-- schema :
-- createData : Method
-- createData : Call signature
-- customSchemas : Parameter
-- options : Parameter
-- __type : Type literal
-- __index : Index signature
-- key :
-- createItems : Method
-- createItems : Call signature
-- __namedParameters : Parameter
-- numItems : Parameter
-- createSchemas : Method
-- createSchemas : Call signature
-- customSchemas : Parameter
+## Properties
+
+## Functions

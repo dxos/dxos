@@ -7,7 +7,6 @@
 - @dxos/object-model
 - @dxos/text-model
 - @dxos/credentials
-- @dxos/halo-protocol
 - @dxos/keyring
 - @dxos/broadcast
 - @dxos/mesh-protocol

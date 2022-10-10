@@ -5,41 +5,12 @@ Filterable resource search model.
 
 ## Constructors
 ```ts
-new RegistrySearchModel(
+const newRegistrySearchModel = new RegistrySearchModel(
 _registry: RegistryClient,
 _filters: SearchFilter[]
 )
 ```
 
----
-- RegistrySearchModel : Class
-- constructor : Constructor
-- new RegistrySearchModel : Constructor signature
-- _registry : Parameter
-- _filters : Parameter
-- _results : Property
-- _text : Property
-- _types : Property
-- _update : Property
-- results : Accessor
-- results : Get signature
-- types : Accessor
-- types : Get signature
-- doUpdate : Method
-- doUpdate : Call signature
-- initialize : Method
-- initialize : Call signature
-- setFilters : Method
-- setFilters : Call signature
-- filters : Parameter
-- setText : Method
-- setText : Call signature
-- text : Parameter
-- subscribe : Method
-- subscribe : Call signature
-- __type : Type literal
-- __type : Call signature
-- callback : Parameter
-- __type : Type literal
-- __type : Call signature
-- results : Parameter
+## Properties
+
+## Functions

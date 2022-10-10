@@ -3,26 +3,11 @@
 
 ## Constructors
 ```ts
-new StarTopology(
+const newStarTopology = new StarTopology(
 _centralPeer: PublicKey
 )
 ```
 
----
-- StarTopology : Class
-- constructor : Constructor
-- new StarTopology : Constructor signature
-- _centralPeer : Parameter
-- _controller : Property
-- destroy : Method
-- destroy : Call signature
-- init : Method
-- init : Call signature
-- controller : Parameter
-- onOffer : Method
-- onOffer : Call signature
-- peer : Parameter
-- toString : Method
-- toString : Call signature
-- update : Method
-- update : Call signature
+## Properties
+
+## Functions

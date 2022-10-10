@@ -3,32 +3,11 @@
 
 ## Constructors
 ```ts
-new MetadataStore(
+const newMetadataStore = new MetadataStore(
 _directory: Directory
 )
 ```
 
----
-- MetadataStore : Class
-- constructor : Constructor
-- new MetadataStore : Constructor signature
-- _directory : Parameter
-- _metadata : Property
-- parties : Accessor
-- parties : Get signature
-- version : Accessor
-- version : Get signature
-- _save : Method
-- _save : Call signature
-- addSpace : Method
-- addSpace : Call signature
-- record : Parameter
-- clear : Method
-- clear : Call signature
-- getIdentityRecord : Method
-- getIdentityRecord : Call signature
-- load : Method
-- load : Call signature
-- setIdentityRecord : Method
-- setIdentityRecord : Call signature
-- record : Parameter
+## Properties
+
+## Functions

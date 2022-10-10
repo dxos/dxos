@@ -5,16 +5,10 @@ Plugin to sign HALO messages.
 
 ## Constructors
 ```ts
-new ClientSignerAdapter(
+const newClientSignerAdapter = new ClientSignerAdapter();
 
-)
 ```
 
----
-- ClientSignerAdapter : Class
-- constructor : Constructor
-- new ClientSignerAdapter : Constructor signature
-- sign : Method
-- sign : Call signature
-- request : Parameter
-- key : Parameter
+## Properties
+
+## Functions

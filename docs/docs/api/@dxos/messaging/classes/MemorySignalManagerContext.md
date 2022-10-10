@@ -5,15 +5,10 @@ Common signaling context that connects multiple MemorySignalManager instances.
 
 ## Constructors
 ```ts
-new MemorySignalManagerContext(
+const newMemorySignalManagerContext = new MemorySignalManagerContext();
 
-)
 ```
 
----
-- MemorySignalManagerContext : Class
-- constructor : Constructor
-- new MemorySignalManagerContext : Constructor signature
-- connections : Property
-- swarmEvent : Property
-- swarms : Property
+## Properties
+
+## Functions

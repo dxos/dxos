@@ -5,28 +5,11 @@ Main API for DXNS account and devices management.
 
 ## Constructors
 ```ts
-new AccountsClient(
+const newAccountsClient = new AccountsClient(
 _backend: AccountsClientBackend
 )
 ```
 
----
-- AccountsClient : Class
-- constructor : Constructor
-- new AccountsClient : Constructor signature
-- _backend : Parameter
-- addDevice : Method
-- addDevice : Call signature
-- account : Parameter
-- device : Parameter
-- belongsToAccount : Method
-- belongsToAccount : Call signature
-- account : Parameter
-- device : Parameter
-- createAccount : Method
-- createAccount : Call signature
-- getAccount : Method
-- getAccount : Call signature
-- account : Parameter
-- listAccounts : Method
-- listAccounts : Call signature
+## Properties
+
+## Functions

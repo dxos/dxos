@@ -3,28 +3,10 @@
 
 ## Constructors
 ```ts
-new IdentityNotInitializedError(
+const newIdentityNotInitializedError = new IdentityNotInitializedError();
 
-)
 ```
 
----
-- IdentityNotInitializedError : Class
-- constructor : Constructor
-- new IdentityNotInitializedError : Constructor signature
-- cause : Property
-- code : Property
-- dxosErrorMessage : Property
-- message : Property
-- name : Property
-- stack : Property
-- prepareStackTrace : Property
-- __type : Type literal
-- __type : Call signature
-- err : Parameter
-- stackTraces : Parameter
-- stackTraceLimit : Property
-- captureStackTrace : Method
-- captureStackTrace : Call signature
-- targetObject : Parameter
-- constructorOpt : Parameter
+## Properties
+
+## Functions

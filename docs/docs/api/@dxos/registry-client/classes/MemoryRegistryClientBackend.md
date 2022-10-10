@@ -6,45 +6,10 @@ Useful for testing code which relies on the DXNS registry without connecting to 
 
 ## Constructors
 ```ts
-new MemoryRegistryClientBackend(
+const newMemoryRegistryClientBackend = new MemoryRegistryClientBackend();
 
-)
 ```
 
----
-- MemoryRegistryClientBackend : Class
-- constructor : Constructor
-- new MemoryRegistryClientBackend : Constructor signature
-- authorities : Property
-- records : Property
-- resources : Property
-- getDomainKey : Method
-- getDomainKey : Call signature
-- domainName : Parameter
-- getRecord : Method
-- getRecord : Call signature
-- cid : Parameter
-- getResource : Method
-- getResource : Call signature
-- name : Parameter
-- listAuthorities : Method
-- listAuthorities : Call signature
-- listRecords : Method
-- listRecords : Call signature
-- listResources : Method
-- listResources : Call signature
-- registerAuthority : Method
-- registerAuthority : Call signature
-- owner : Parameter
-- registerDomainName : Method
-- registerDomainName : Call signature
-- domainName : Parameter
-- owner : Parameter
-- registerRecord : Method
-- registerRecord : Call signature
-- record : Parameter
-- registerResource : Method
-- registerResource : Call signature
-- name : Parameter
-- cid : Parameter
-- owner : Parameter
+## Properties
+
+## Functions

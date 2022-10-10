@@ -5,17 +5,12 @@ Wrapper (e.g., for Party).
 
 ## Constructors
 ```ts
-new TreeRoot(
+const newTreeRoot = new TreeRoot(
 id: string,
 children: TreeNode[]
 )
 ```
 
----
-- TreeRoot : Class
-- constructor : Constructor
-- new TreeRoot : Constructor signature
-- id : Parameter
-- children : Parameter
-- children : Property
-- id : Property
+## Properties
+
+## Functions

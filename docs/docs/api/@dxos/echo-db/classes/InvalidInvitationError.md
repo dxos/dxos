@@ -3,28 +3,10 @@
 
 ## Constructors
 ```ts
-new InvalidInvitationError(
+const newInvalidInvitationError = new InvalidInvitationError();
 
-)
 ```
 
----
-- InvalidInvitationError : Class
-- constructor : Constructor
-- new InvalidInvitationError : Constructor signature
-- cause : Property
-- code : Property
-- dxosErrorMessage : Property
-- message : Property
-- name : Property
-- stack : Property
-- prepareStackTrace : Property
-- __type : Type literal
-- __type : Call signature
-- err : Parameter
-- stackTraces : Parameter
-- stackTraceLimit : Property
-- captureStackTrace : Method
-- captureStackTrace : Call signature
-- targetObject : Parameter
-- constructorOpt : Parameter
+## Properties
+
+## Functions

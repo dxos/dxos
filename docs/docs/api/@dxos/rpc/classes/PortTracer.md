@@ -3,17 +3,11 @@
 
 ## Constructors
 ```ts
-new PortTracer(
+const newPortTracer = new PortTracer(
 _wrappedPort: RpcPort
 )
 ```
 
----
-- PortTracer : Class
-- constructor : Constructor
-- new PortTracer : Constructor signature
-- _wrappedPort : Parameter
-- _port : Property
-- message : Property
-- port : Accessor
-- port : Get signature
+## Properties
+
+## Functions

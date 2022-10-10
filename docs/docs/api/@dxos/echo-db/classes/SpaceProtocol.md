@@ -3,7 +3,7 @@
 
 ## Constructors
 ```ts
-new SpaceProtocol(
+const newSpaceProtocol = new SpaceProtocol(
 _networkManager: NetworkManager,
 topic: PublicKey,
 _swarmIdentity: SwarmIdentity,
@@ -11,29 +11,6 @@ _plugins: Plugin[]
 )
 ```
 
----
-- SpaceProtocol : Class
-- constructor : Constructor
-- new SpaceProtocol : Constructor signature
-- _networkManager : Parameter
-- topic : Parameter
-- _swarmIdentity : Parameter
-- _plugins : Parameter
-- _authenticator : Property
-- _discoveryKey : Property
-- _peerId : Property
-- _presence : Property
-- authenticationFailed : Property
-- peers : Accessor
-- peers : Get signature
-- _createProtocol : Method
-- _createProtocol : Call signature
-- credentials : Parameter
-- __namedParameters : Parameter
-- __type : Type literal
-- channel : Property
-- initiator : Property
-- start : Method
-- start : Call signature
-- stop : Method
-- stop : Call signature
+## Properties
+
+## Functions

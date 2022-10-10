@@ -7,25 +7,13 @@ A DataServiceRouter must be placed before it to route requests to different Data
 
 ## Constructors
 ```ts
-new DataServiceHost(
+const newDataServiceHost = new DataServiceHost(
 _itemManager: ItemManager,
 _itemDemuxer: ItemDemuxer,
 _writeStream: FeedWriter<EchoEnvelope>
 )
 ```
 
----
-- DataServiceHost : Class
-- constructor : Constructor
-- new DataServiceHost : Constructor signature
-- _itemManager : Parameter
-- _itemDemuxer : Parameter
-- _writeStream : Parameter
-- subscribeEntitySet : Method
-- subscribeEntitySet : Call signature
-- subscribeEntityStream : Method
-- subscribeEntityStream : Call signature
-- request : Parameter
-- write : Method
-- write : Call signature
-- request : Parameter
+## Properties
+
+## Functions

@@ -5,22 +5,12 @@ A type-safe RPC peer.
 
 ## Constructors
 ```ts
-new ProtoRpcPeer(
+const newProtoRpcPeer = new ProtoRpcPeer(
 rpc: S,
 peer: RpcPeer
 )
 ```
 
----
-- ProtoRpcPeer : Class
-- S : Type parameter
-- constructor : Constructor
-- new ProtoRpcPeer : Constructor signature
-- S : Type parameter
-- rpc : Parameter
-- peer : Parameter
-- rpc : Property
-- close : Method
-- close : Call signature
-- open : Method
-- open : Call signature
+## Properties
+
+## Functions

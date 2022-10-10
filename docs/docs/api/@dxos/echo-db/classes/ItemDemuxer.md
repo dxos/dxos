@@ -5,31 +5,13 @@ Creates a stream that consumes  `IEchoStream`  messages and routes them to the a
 
 ## Constructors
 ```ts
-new ItemDemuxer(
+const newItemDemuxer = new ItemDemuxer(
 _itemManager: ItemManager,
 _modelFactory: ModelFactory,
 _options: ItemDemuxerOptions
 )
 ```
 
----
-- ItemDemuxer : Class
-- constructor : Constructor
-- new ItemDemuxer : Constructor signature
-- _itemManager : Parameter
-- _modelFactory : Parameter
-- _options : Parameter
-- mutation : Property
-- createItemSnapshot : Method
-- createItemSnapshot : Call signature
-- item : Parameter
-- createLinkSnapshot : Method
-- createLinkSnapshot : Call signature
-- link : Parameter
-- createSnapshot : Method
-- createSnapshot : Call signature
-- open : Method
-- open : Call signature
-- restoreFromSnapshot : Method
-- restoreFromSnapshot : Call signature
-- snapshot : Parameter
+## Properties
+
+## Functions

@@ -5,22 +5,11 @@ Caching text search.
 
 ## Constructors
 ```ts
-new TextIndex(
+const newTextIndex = new TextIndex(
 __namedParameters: IndexerOptions
 )
 ```
 
----
-- TextIndex : Class
-- constructor : Constructor
-- new TextIndex : Constructor signature
-- __namedParameters : Parameter
-- _cache : Property
-- _items : Property
-- _minisearch : Property
-- search : Method
-- search : Call signature
-- text : Parameter
-- update : Method
-- update : Call signature
-- items : Parameter
+## Properties
+
+## Functions

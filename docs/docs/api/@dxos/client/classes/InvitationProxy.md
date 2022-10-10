@@ -3,26 +3,10 @@
 
 ## Constructors
 ```ts
-new InvitationProxy(
+const newInvitationProxy = new InvitationProxy();
 
-)
 ```
 
----
-- InvitationProxy : Class
-- constructor : Constructor
-- new InvitationProxy : Constructor signature
-- _isClosed : Property
-- activeInvitations : Property
-- invitationsUpdate : Property
-- _removeInvitation : Method
-- _removeInvitation : Call signature
-- invitation : Parameter
-- close : Method
-- close : Call signature
-- createInvitationRequest : Method
-- createInvitationRequest : Call signature
-- __namedParameters : Parameter
-- handleInvitationRedemption : Method
-- handleInvitationRedemption : Call signature
-- __namedParameters : Parameter
+## Properties
+
+## Functions

@@ -3,26 +3,12 @@
 
 ## Constructors
 ```ts
-new TestPeer(
+const newTestPeer = new TestPeer(
 stateManager: StateManager<M>,
 key: PublicKey
 )
 ```
 
----
-- TestPeer : Class
-- M : Type parameter
-- constructor : Constructor
-- new TestPeer : Constructor signature
-- M : Type parameter
-- stateManager : Parameter
-- key : Parameter
-- key : Property
-- mutations : Property
-- stateManager : Property
-- timeframe : Property
-- model : Accessor
-- model : Get signature
-- processMutation : Method
-- processMutation : Call signature
-- message : Parameter
+## Properties
+
+## Functions

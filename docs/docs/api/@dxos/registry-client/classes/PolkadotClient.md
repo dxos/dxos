@@ -5,17 +5,12 @@ Base functionality for derived clients.
 
 ## Constructors
 ```ts
-new PolkadotClient(
+const newPolkadotClient = new PolkadotClient(
 api: ApiPromise,
 signFn: SignTxFunction | AddressOrPair
 )
 ```
 
----
-- PolkadotClient : Class
-- constructor : Constructor
-- new PolkadotClient : Constructor signature
-- api : Parameter
-- signFn : Parameter
-- api : Property
-- transactionsHandler : Property
+## Properties
+
+## Functions

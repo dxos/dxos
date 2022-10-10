@@ -6,7 +6,8 @@ import {
   SignatureReflection,
   DeclarationReflection,
 } from "typedoc";
-import { text } from "@dxos/plate";
+import { text, ts } from "@dxos/plate";
+import { camelCase } from "change-case";
 
 export const children = (ref: Reflection, kind?: ReflectionKind) => {
   const results: Reflection[] = [];
@@ -38,9 +39,9 @@ export const param = (ref: ParameterReflection) => {
 export const signature = (ref: SignatureReflection): string => {
   return text`
   \`\`\`ts
-  ${ref.name}(
+  ${ts`const ${camelCase(ref.name)} = ${ref.name}(
     ${ref.parameters?.map(param).join("," + os.EOL)}
-  )
+  )`}
   \`\`\`
   ${comment(ref)}
   `;

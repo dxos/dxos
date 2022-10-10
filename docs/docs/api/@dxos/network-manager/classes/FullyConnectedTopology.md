@@ -3,25 +3,10 @@
 
 ## Constructors
 ```ts
-new FullyConnectedTopology(
+const newFullyConnectedTopology = new FullyConnectedTopology();
 
-)
 ```
 
----
-- FullyConnectedTopology : Class
-- constructor : Constructor
-- new FullyConnectedTopology : Constructor signature
-- _controller : Property
-- destroy : Method
-- destroy : Call signature
-- init : Method
-- init : Call signature
-- controller : Parameter
-- onOffer : Method
-- onOffer : Call signature
-- peer : Parameter
-- toString : Method
-- toString : Call signature
-- update : Method
-- update : Call signature
+## Properties
+
+## Functions

@@ -5,16 +5,10 @@ Represents a named property value.
 
 ## Constructors
 ```ts
-new KeyValueUtil(
+const newKeyValueUtil = new KeyValueUtil();
 
-)
 ```
 
----
-- KeyValueUtil : Class
-- constructor : Constructor
-- new KeyValueUtil : Constructor signature
-- createMessage : Method
-- createMessage : Call signature
-- key : Parameter
-- value : Parameter
+## Properties
+
+## Functions

@@ -18,7 +18,7 @@ The state of the model is formed from the following components (in order):
 
 ## Constructors
 ```ts
-new StateManager(
+const newStateManager = new StateManager(
 _modelType: string,
 modelConstructor: undefined | ModelConstructor<M>,
 _itemId: string,
@@ -28,46 +28,6 @@ _writeStream: null | FeedWriter<Uint8Array>
 )
 ```
 
----
-- StateManager : Class
-- M : Type parameter
-- constructor : Constructor
-- new StateManager : Constructor signature
-- M : Type parameter
-- _modelType : Parameter
-- modelConstructor : Parameter
-- _itemId : Parameter
-- _initialState : Parameter
-- _memberKey : Parameter
-- _writeStream : Parameter
-- _model : Property
-- _modelMeta : Property
-- _mutationProcessed : Property
-- _mutations : Property
-- _optimisticMutations : Property
-- _stateMachine : Property
-- initialized : Accessor
-- initialized : Get signature
-- model : Accessor
-- model : Get signature
-- modelMeta : Accessor
-- modelMeta : Get signature
-- modelType : Accessor
-- modelType : Get signature
-- _resetStateMachine : Method
-- _resetStateMachine : Call signature
-- _write : Method
-- _write : Call signature
-- mutation : Parameter
-- createSnapshot : Method
-- createSnapshot : Call signature
-- initialize : Method
-- initialize : Call signature
-- modelConstructor : Parameter
-- processMessage : Method
-- processMessage : Call signature
-- meta : Parameter
-- mutation : Parameter
-- resetToSnapshot : Method
-- resetToSnapshot : Call signature
-- snapshot : Parameter
+## Properties
+
+## Functions

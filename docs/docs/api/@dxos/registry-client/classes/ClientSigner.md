@@ -6,22 +6,13 @@ Uses a DXNS key stored in HALO.
 
 ## Constructors
 ```ts
-new ClientSigner(
+const newClientSigner = new ClientSigner(
 client: Client,
 registry: Registry,
 address: string
 )
 ```
 
----
-- ClientSigner : Class
-- constructor : Constructor
-- new ClientSigner : Constructor signature
-- client : Parameter
-- registry : Parameter
-- address : Parameter
-- id : Property
-- publicKey : Property
-- signRaw : Method
-- signRaw : Call signature
-- __namedParameters : Parameter
+## Properties
+
+## Functions

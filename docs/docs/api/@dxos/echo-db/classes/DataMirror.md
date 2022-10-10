@@ -9,22 +9,13 @@ This class is analogous to ItemDemuxer but for databases running in remote mode.
 
 ## Constructors
 ```ts
-new DataMirror(
+const newDataMirror = new DataMirror(
 _itemManager: ItemManager,
 _dataService: DataService,
 _partyKey: PublicKey
 )
 ```
 
----
-- DataMirror : Class
-- constructor : Constructor
-- new DataMirror : Constructor signature
-- _itemManager : Parameter
-- _dataService : Parameter
-- _partyKey : Parameter
-- _subscribeToUpdates : Method
-- _subscribeToUpdates : Call signature
-- entity : Parameter
-- open : Method
-- open : Call signature
+## Properties
+
+## Functions

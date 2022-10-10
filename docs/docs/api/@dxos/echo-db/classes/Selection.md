@@ -11,7 +11,7 @@ Each Selection contains a visitor
 
 ## Constructors
 ```ts
-new Selection(
+const newSelection = new Selection(
 _visitor: Function,
 _update: Event<Entity<Model<any, any>>[]>,
 _root: SelectionRoot,
@@ -19,68 +19,6 @@ _reducer: boolean
 )
 ```
 
----
-- Selection : Class
-- T : Type parameter
-- R : Type parameter
-- constructor : Constructor
-- new Selection : Constructor signature
-- T : Type parameter
-- R : Type parameter
-- _visitor : Parameter
-- __type : Type literal
-- __type : Call signature
-- options : Parameter
-- _update : Parameter
-- _root : Parameter
-- _reducer : Parameter
-- root : Accessor
-- root : Get signature
-- _createSubSelection : Method
-- _createSubSelection : Call signature
-- U : Type parameter
-- map : Parameter
-- __type : Type literal
-- __type : Call signature
-- context : Parameter
-- options : Parameter
-- call : Method
-- call : Call signature
-- visitor : Parameter
-- children : Method
-- children : Call signature
-- this : Parameter
-- filter : Parameter
-- exec : Method
-- exec : Call signature
-- options : Parameter
-- filter : Method
-- filter : Call signature
-- this : Parameter
-- filter : Parameter
-- filter : Call signature
-- U : Type parameter
-- this : Parameter
-- filter : Parameter
-- links : Method
-- links : Call signature
-- this : Parameter
-- filter : Parameter
-- parent : Method
-- parent : Call signature
-- this : Parameter
-- query : Method
-- query : Call signature
-- options : Parameter
-- refs : Method
-- refs : Call signature
-- this : Parameter
-- filter : Parameter
-- source : Method
-- source : Call signature
-- this : Parameter
-- filter : Parameter
-- target : Method
-- target : Call signature
-- this : Parameter
-- filter : Parameter
+## Properties
+
+## Functions

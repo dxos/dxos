@@ -3,29 +3,11 @@
 
 ## Constructors
 ```ts
-new SpaceNotFoundError(
+const newSpaceNotFoundError = new SpaceNotFoundError(
 partyKey: PublicKey
 )
 ```
 
----
-- SpaceNotFoundError : Class
-- constructor : Constructor
-- new SpaceNotFoundError : Constructor signature
-- partyKey : Parameter
-- cause : Property
-- code : Property
-- dxosErrorMessage : Property
-- message : Property
-- name : Property
-- stack : Property
-- prepareStackTrace : Property
-- __type : Type literal
-- __type : Call signature
-- err : Parameter
-- stackTraces : Parameter
-- stackTraceLimit : Property
-- captureStackTrace : Method
-- captureStackTrace : Call signature
-- targetObject : Parameter
-- constructorOpt : Parameter
+## Properties
+
+## Functions

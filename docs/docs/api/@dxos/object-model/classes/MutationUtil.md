@@ -5,27 +5,10 @@ Represents mutations on objects.
 
 ## Constructors
 ```ts
-new MutationUtil(
+const newMutationUtil = new MutationUtil();
 
-)
 ```
 
----
-- MutationUtil : Class
-- constructor : Constructor
-- new MutationUtil : Constructor signature
-- applyMutation : Method
-- applyMutation : Call signature
-- object : Parameter
-- mutation : Parameter
-- applyMutationSet : Method
-- applyMutationSet : Call signature
-- object : Parameter
-- message : Parameter
-- createFieldMutation : Method
-- createFieldMutation : Call signature
-- key : Parameter
-- value : Parameter
-- createMultiFieldMutation : Method
-- createMultiFieldMutation : Call signature
-- object : Parameter
+## Properties
+
+## Functions

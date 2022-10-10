@@ -5,23 +5,13 @@ Project
 
 ## Constructors
 ```ts
-new ProjectBuilder(
+const newProjectBuilder = new ProjectBuilder(
 _builder: PartyBuilder,
 _org: Item<ObjectModel>,
 _project: Item<ObjectModel>
 )
 ```
 
----
-- ProjectBuilder : Class
-- constructor : Constructor
-- new ProjectBuilder : Constructor signature
-- _builder : Parameter
-- _org : Parameter
-- _project : Parameter
-- project : Accessor
-- project : Get signature
-- createTasks : Method
-- createTasks : Call signature
-- n : Parameter
-- people : Parameter
+## Properties
+
+## Functions

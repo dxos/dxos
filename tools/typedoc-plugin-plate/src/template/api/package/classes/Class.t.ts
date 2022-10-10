@@ -8,18 +8,23 @@ import {
   SignatureReflection,
 } from "typedoc";
 import { Input, TemplateFunction, text, File } from "../..";
-import stringify from "json-stringify-safe";
 
 import { children, href, generic, method, comment } from "../..";
 
-const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
+const template: TemplateFunction<Input> = ({ input, outputDirectory }) => {
   const classes = input.project.getReflectionsByKind(ReflectionKind.Class);
 
   return classes.map((aclass) => {
     const members = children(aclass);
     const constructors = members.filter(
       (m) => m.kind == ReflectionKind.Constructor
-    );
+    ) as DeclarationReflection[];
+    const functions = members.filter(
+      m => m.kind == ReflectionKind.FunctionOrMethod
+    ) as DeclarationReflection[];
+    const properties = members.filter(
+      m => m.kind == ReflectionKind.VariableOrProperty
+    ) as DeclarationReflection[];
     return new File({
       path: [
         outputDirectory,
@@ -34,13 +39,16 @@ const t: TemplateFunction<Input> = ({ input, outputDirectory }) => {
         ${comment(aclass)}
 
         ## Constructors
-        ${constructors.map((c) => method(c as DeclarationReflection))}
-        
-        ---
-        ${generic(aclass)}
+        ${constructors.map(method)}
+
+        ## Properties
+        ${properties.map(generic)}
+
+        ## Functions
+        ${functions.map(method)}
         `,
     });
   });
 };
 
-export default t;
+export default template;

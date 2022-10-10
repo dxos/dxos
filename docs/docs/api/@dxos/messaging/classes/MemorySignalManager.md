@@ -5,43 +5,11 @@ In memory signal manager for testing.
 
 ## Constructors
 ```ts
-new MemorySignalManager(
+const newMemorySignalManager = new MemorySignalManager(
 _context: MemorySignalManagerContext
 )
 ```
 
----
-- MemorySignalManager : Class
-- constructor : Constructor
-- new MemorySignalManager : Constructor signature
-- _context : Parameter
-- commandTrace : Property
-- onMessage : Property
-- statusChanged : Property
-- swarmEvent : Property
-- destroy : Method
-- destroy : Call signature
-- getStatus : Method
-- getStatus : Call signature
-- join : Method
-- join : Call signature
-- __namedParameters : Parameter
-- __type : Type literal
-- peerId : Property
-- topic : Property
-- leave : Method
-- leave : Call signature
-- __namedParameters : Parameter
-- __type : Type literal
-- peerId : Property
-- topic : Property
-- sendMessage : Method
-- sendMessage : Call signature
-- __namedParameters : Parameter
-- __type : Type literal
-- author : Property
-- payload : Property
-- recipient : Property
-- subscribeMessages : Method
-- subscribeMessages : Call signature
-- peerId : Parameter
+## Properties
+
+## Functions
