@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './modules';
+export * from './modules.js';
 
-export * from './Contacts';
-export * from './CreateProfile';
-export * from './Devices';
-export * from './Keychain';
-export * from './Profile';
-export * from './RecoverProfile';
+export * from './Contacts.js';
+export * from './CreateProfile.js';
+export * from './Devices.js';
+export * from './Keychain.js';
+export * from './Profile.js';
+export * from './RecoverProfile.js';

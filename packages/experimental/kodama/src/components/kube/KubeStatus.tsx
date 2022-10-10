@@ -3,8 +3,8 @@
 //
 
 import { Box } from 'ink';
-import SyntaxHighlight from 'ink-syntax-highlight';
-import fetch from 'node-fetch';
+import { default as SyntaxHighlight } from 'ink-syntax-highlight';
+import { default as fetch } from 'node-fetch';
 import React, { useState } from 'react';
 
 import { sleep } from '@dxos/async';

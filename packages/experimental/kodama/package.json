@@ -17,11 +17,9 @@
     "src"
   ],
   "scripts": {
-    "build": "toolchain build",
     "check": "true",
     "debug": "npm run build && ./bin/kodama.js",
     "prepublishOnly": "npm run test && npm run build",
-    "test": "toolchain test",
     "test:app": "npm run build && ./bin/test.js",
     "test:watch": "supervisor -w src -e ts,tsx -x yarn test:app"
   },
@@ -51,7 +49,7 @@
     "npm-api": "~1.0.1",
     "qrcode-terminal": "~0.12.0",
     "react": "^17.0.2",
-    "yargs": "~16.2.0"
+    "yargs": "^17.6.0"
   },
   "devDependencies": {
     "@dxos/protocols-toolchain": "workspace:*",
@@ -61,8 +59,8 @@
     "@types/node": "^16.11.58",
     "@types/node-fetch": "^2.5.10",
     "@types/qrcode-terminal": "^0.12.0",
-    "@types/react": "^17.0.24",
-    "@types/yargs": "~16.0.1",
+    "@types/react": "^17.0.39",
+    "@types/yargs": "^17.0.13",
     "esbuild": "~0.14.1",
     "mocha": "^9.0.0",
     "supervisor": "~0.12.0",

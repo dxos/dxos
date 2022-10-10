@@ -8,8 +8,8 @@ import React from 'react';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-import { Join, Module } from './components';
-import { AppStateProvider, ModuleProvider, useModule } from './hooks';
+import { Join, Module } from './components/index.js';
+import { AppStateProvider, ModuleProvider, useModule } from './hooks/index.js';
 
 const Test = () => {
   const [activePath] = useModule();

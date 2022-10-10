@@ -3,7 +3,7 @@
 //
 
 import { Box } from 'ink';
-import SyntaxHighlight from 'ink-syntax-highlight';
+import { default as SyntaxHighlight } from 'ink-syntax-highlight';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';

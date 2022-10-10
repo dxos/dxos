@@ -2,6 +2,37 @@
   "sourceRoot": "packages/experimental/kodama/src",
   "projectType": "application",
   "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/experimental/kodama/dist",
+        "tsConfig": "packages/experimental/kodama/tsconfig.json",
+        "main": "packages/experimental/kodama/src/index.ts"
+      }
+    },
+    "test": {
+      "executor": "@dxos/mocha:mocha",
+      "outputs": [
+        "{options.outputPath}",
+        "{options.resultsPath}",
+        "{options.coveragePath}"
+      ],
+      "options": {
+        "testPatterns": [
+          "packages/experimental/kodama/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/experimental/kodama/src/**/*"
+        ],
+        "outputPath": "tmp/mocha/packages/experimental/kodama",
+        "resultsPath": "test-results/packages/experimental/kodama",
+        "coveragePath": "coverage/packages/experimental/kodama",
+        "environments": ["nodejs"]
+      }
+    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

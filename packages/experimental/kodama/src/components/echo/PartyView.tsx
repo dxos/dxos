@@ -7,10 +7,10 @@ import React, { useState } from 'react';
 
 import { useParty } from '@dxos/react-client';
 
-import { useAppState } from '../../hooks';
-import { ItemList } from './ItemList';
-import { ItemTypeList } from './ItemTypeList';
-import { PartyList } from './PartyList';
+import { useAppState } from '../../hooks/index.js';
+import { ItemList } from './ItemList.js';
+import { ItemTypeList } from './ItemTypeList.js';
+import { PartyList } from './PartyList.js';
 
 export const PartyView = () => {
   const { focus } = useFocus({ isActive: false });

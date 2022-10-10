@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './App';
-export * from './Config';
+export * from './App.js';
+export * from './Config.js';
 
-export * from './echo';
-export * from './halo';
-export * from './invitations';
-export * from './kube';
-export * from './mesh';
-export * from './util';
+export * from './echo/index.js';
+export * from './halo/index.js';
+export * from './invitations/index.js';
+export * from './kube/index.js';
+export * from './mesh/index.js';
+export * from './util/index.js';

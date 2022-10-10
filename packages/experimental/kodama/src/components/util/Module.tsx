@@ -5,7 +5,7 @@
 import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 
-import { useAppState, useModule } from '../../hooks';
+import { useAppState, useModule } from '../../hooks/index.js';
 
 export type MenuItem = {
   // Module ID must match parent item.

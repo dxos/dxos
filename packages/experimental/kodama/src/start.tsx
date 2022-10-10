@@ -8,8 +8,8 @@ import React from 'react';
 import { Client } from '@dxos/client';
 import { ClientProvider } from '@dxos/react-client';
 
-import { App } from './components';
-import { AppStateProvider } from './hooks';
+import { App } from './components/index.js';
+import { AppStateProvider } from './hooks/index.js';
 
 export interface Options {
   debug?: boolean

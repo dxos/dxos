@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './modules';
+export * from './modules.js';
 
-export * from './KubeStatus';
+export * from './KubeStatus.js';

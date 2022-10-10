@@ -7,7 +7,7 @@ import React, { FC, useEffect, useState } from 'react';
 import { PARTY_ITEM_TYPE, Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { List } from '../util';
+import { List } from '../util/index.js';
 
 // TODO(burdon): Move into react-client.
 const useTypes = (party?: Party, deps: any[] = []) => {

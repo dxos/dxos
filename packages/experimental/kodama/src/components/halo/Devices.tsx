@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 export const Devices = () => {
   return (

@@ -8,14 +8,14 @@ import React, { FC, ReactNode, useMemo } from 'react';
 import { Party } from '@dxos/client';
 import { useParty } from '@dxos/react-client';
 
-import { useAppState } from '../../hooks';
-import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
-import { CreateParty } from './CreateParty';
-import { PartyFeeds } from './PartyFeeds';
-import { PartyInfo } from './PartyInfo';
-import { PartyMembers } from './PartyMembers';
-import { PartyView } from './PartyView';
+import { useAppState } from '../../hooks/index.js';
+import { Join, Share } from '../invitations/index.js';
+import { MenuItem, Module, Panel } from '../util/index.js';
+import { CreateParty } from './CreateParty.js';
+import { PartyFeeds } from './PartyFeeds.js';
+import { PartyInfo } from './PartyInfo.js';
+import { PartyMembers } from './PartyMembers.js';
+import { PartyView } from './PartyView.js';
 
 const PartyPanel: FC<{
   children: ReactNode

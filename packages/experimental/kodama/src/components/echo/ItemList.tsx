@@ -8,7 +8,7 @@ import React, { FC } from 'react';
 import { Party } from '@dxos/client';
 import { useSelection } from '@dxos/react-client';
 
-import { List } from '../util';
+import { List } from '../util/index.js';
 
 // TODO(burdon): To make compatable with kitchen-sink/client-test.
 const LABEL_PROPERTY = 'name';

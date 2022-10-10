@@ -3,11 +3,11 @@
 //
 
 import { Box, Text, useFocus, useFocusManager, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { default as TextInput } from 'ink-text-input';
 import React, { FC, useEffect, useState } from 'react';
 
-import { useAppState } from '../../hooks';
-import { Panel } from './Panel';
+import { useAppState } from '../../hooks/index.js';
+import { Panel } from './Panel.js';
 
 export type ListItem = {
   id: string

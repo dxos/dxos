@@ -7,8 +7,8 @@ import React, { FC, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 
-import { TextInput } from '../../components';
-import { Panel } from '../util';
+import { TextInput } from '../../components/index.js';
+import { Panel } from '../util/index.js';
 
 export const CreateParty: FC<{
   onCreate: (partyKey: PublicKey) => void

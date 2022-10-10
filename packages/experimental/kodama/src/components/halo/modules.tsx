@@ -6,15 +6,15 @@ import React from 'react';
 
 import { Client } from '@dxos/client';
 
-import { useModule } from '../../hooks';
-import { Join, Share } from '../invitations';
-import { MenuItem, Module, Panel } from '../util';
-import { Contacts } from './Contacts';
-import { CreateProfile } from './CreateProfile';
-import { Devices } from './Devices';
-import { Keychain } from './Keychain';
-import { Profile } from './Profile';
-import { RecoverProfile } from './RecoverProfile';
+import { useModule } from '../../hooks/index.js';
+import { Join, Share } from '../invitations/index.js';
+import { MenuItem, Module, Panel } from '../util/index.js';
+import { Contacts } from './Contacts.js';
+import { CreateProfile } from './CreateProfile.js';
+import { Devices } from './Devices.js';
+import { Keychain } from './Keychain.js';
+import { Profile } from './Profile.js';
+import { RecoverProfile } from './RecoverProfile.js';
 
 export const createHaloMenu = (client: Client): MenuItem => {
   return {

@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { Party } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 export const PartyInfo: FC<{
   party: Party

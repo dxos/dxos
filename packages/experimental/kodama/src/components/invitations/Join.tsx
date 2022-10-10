@@ -9,8 +9,8 @@ import { InvitationDescriptor, PartyInvitation } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { useClient, useParty } from '@dxos/react-client';
 
-import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components';
-import { Panel } from '../util';
+import { ActionStatus, PartyInfo, StatusState, TextInput } from '../../components/index.js';
+import { Panel } from '../util/index.js';
 
 export const Join: FC<{
   onJoin?: (partyKey: PublicKey) => void

@@ -7,7 +7,7 @@ import React from 'react';
 import { truncateKey } from '@dxos/debug';
 import { useContacts } from '@dxos/react-client';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 export const Contacts = () => {
   const contacts = useContacts();

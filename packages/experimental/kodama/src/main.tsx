@@ -12,10 +12,11 @@ import { ConfigProto } from '@dxos/config';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { name, version } from '../package.json';
-import { start } from './start';
-import { clear, versionCheck } from './util';
-import { showVersion } from './version';
+import pkgJson from '../package.json' assert { type: 'json' };
+const { name, version } = pkgJson;
+import { start } from './start.js';
+import { clear, versionCheck } from './util.js';
+import { showVersion } from './version.js';
 
 // Note: nodemon interferes with input.
 // https://github.com/remy/nodemon/issues/2050
@@ -23,11 +24,18 @@ import { showVersion } from './version';
 
 // TODO(burdon): Global error handler.
 
+type Argv = {
+  config: string
+  username: string
+  debug: boolean
+  skipVersionCheck: boolean
+}
+
 /**
  * Command line parser.
  */
 const main = async () => {
-  yargs
+  yargs()
     .scriptName('kodama')
     .option('config', {
       description: 'Config file',
@@ -47,7 +55,7 @@ const main = async () => {
       type: 'boolean',
       default: false
     })
-    .command({
+    .command<Argv>({
       command: '*',
       handler: async ({
         config: configFile,

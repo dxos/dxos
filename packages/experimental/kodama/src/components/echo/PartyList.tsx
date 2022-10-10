@@ -8,7 +8,7 @@ import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { useParties } from '@dxos/react-client';
 
-import { List } from '../util';
+import { List } from '../util/index.js';
 
 export const PartyList: FC<{
   partyKey?: PublicKey

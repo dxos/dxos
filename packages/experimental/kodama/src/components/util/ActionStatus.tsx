@@ -3,7 +3,7 @@
 //
 
 import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
+import { default as Spinner } from 'ink-spinner';
 import React, { FC } from 'react';
 
 export type StatusState = {

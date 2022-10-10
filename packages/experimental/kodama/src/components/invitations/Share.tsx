@@ -9,8 +9,8 @@ import React, { FC, useState } from 'react';
 import { InvitationRequest } from '@dxos/client';
 import { useAsyncEffect, useMounted } from '@dxos/react-async';
 
-import { clear, copyToClipboard } from '../../util';
-import { ActionStatus, StatusState } from '../util';
+import { clear, copyToClipboard } from '../../util.js';
+import { ActionStatus, StatusState } from '../util/index.js';
 
 export const Share: FC<{
   onCreate: () => Promise<InvitationRequest>

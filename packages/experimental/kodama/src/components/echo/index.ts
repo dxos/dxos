@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './modules';
+export * from './modules.js';
 
-export * from './CreateParty';
-export * from './ItemList';
-export * from './ItemTypeList';
-export * from './PartyFeeds';
-export * from './PartyInfo';
-export * from './PartyList';
-export * from './PartyView';
-export * from './PartyMembers';
+export * from './CreateParty.js';
+export * from './ItemList.js';
+export * from './ItemTypeList.js';
+export * from './PartyFeeds.js';
+export * from './PartyInfo.js';
+export * from './PartyList.js';
+export * from './PartyView.js';
+export * from './PartyMembers.js';

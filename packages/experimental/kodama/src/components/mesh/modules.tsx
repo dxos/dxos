@@ -5,7 +5,7 @@
 import { Text } from 'ink';
 import React from 'react';
 
-import { MenuItem, Module, Panel } from '../util';
+import { MenuItem, Module, Panel } from '../util/index.js';
 
 export const createMeshMenu = (): MenuItem => {
   return {

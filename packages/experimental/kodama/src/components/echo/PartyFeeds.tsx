@@ -7,7 +7,7 @@ import React, { FC } from 'react';
 import { truncateKey } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 export const PartyFeeds: FC<{
   partyKey: PublicKey

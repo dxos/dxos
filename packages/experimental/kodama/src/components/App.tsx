@@ -8,13 +8,13 @@ import React, { useMemo } from 'react';
 
 import { useClient, useProfile } from '@dxos/react-client';
 
-import { ModuleProvider, useAppState } from '../hooks';
-import { Config } from './Config';
-import { createEchoMenu } from './echo';
-import { createHaloMenu } from './halo';
-import { createKubeMenu } from './kube';
-import { createMeshMenu } from './mesh';
-import { MenuItem, Module, Panel } from './util';
+import { ModuleProvider, useAppState } from '../hooks/index.js';
+import { Config } from './Config.js';
+import { createEchoMenu } from './echo/index.js';
+import { createHaloMenu } from './halo/index.js';
+import { createKubeMenu } from './kube/index.js';
+import { createMeshMenu } from './mesh/index.js';
+import { MenuItem, Module, Panel } from './util/index.js';
 
 /**
  * Top-level app with menu.

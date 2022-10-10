@@ -67,7 +67,7 @@ importers:
       '@types/lodash.set': ^4.3.7
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/sharedworker': 0.0.80
       '@types/uuid': ~8.3.3
       '@typescript-eslint/eslint-plugin': ^5.29.0
@@ -200,8 +200,8 @@ importers:
       '@types/markdown-it': ^12.2.3
       '@types/markdown-it-container': ^2.0.5
       '@types/prettier': ^2.7.1
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@vuepress/client': ^2.0.0-beta.51
       '@vuepress/plugin-register-components': ^2.0.0-beta.51
       '@vuepress/plugin-search': ^2.0.0-beta.51
@@ -260,8 +260,8 @@ importers:
       '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
       '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^2.0.1
       debug: ^4.3.3
       react: ^17.0.2
@@ -337,8 +337,8 @@ importers:
       '@storybook/mdx2-csf': ^0.0.3
       '@storybook/react': ^6.5.10
       '@storybook/testing-library': ^0.0.13
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^2.0.1
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -674,8 +674,8 @@ importers:
     specifiers:
       '@dxos/esbuild-plugins': ~2.29.0
       '@dxos/protocols-toolchain': workspace:*
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       immutability-helper: ^3.0.2
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -1461,9 +1461,9 @@ importers:
       '@mui/system': ^5.8.1
       '@types/color-hash': ^1.0.1
       '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/react-dom': ^17.0.9
+      '@types/react-dom': ^17.0.11
       color-hash: ^1.0.3
       faker: ^5.5.3
       moment: ^2.24.0
@@ -1544,8 +1544,8 @@ importers:
       '@types/chrome': ^0.0.125
       '@types/debug': ^4.1.7
       '@types/download': ^8.0.1
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@types/webextension-polyfill': ^0.8.0
       body-parser: 1.19.0
       chalk: ^4.1.0
@@ -1630,7 +1630,7 @@ importers:
       '@emotion/styled': ^11.8.1
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/react-copy-to-clipboard': ~5.0.1
       react: ^17.0.2
       react-copy-to-clipboard: ^5.1.0
@@ -1769,8 +1769,8 @@ importers:
       '@mui/lab': ^5.0.0-alpha.83
       '@mui/material': ^5.8.1
       '@types/debug': ^4.1.7
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       debug: ^4.3.3
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -1814,8 +1814,8 @@ importers:
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
       '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       faker: ^5.5.3
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -1879,8 +1879,8 @@ importers:
       '@types/faker': ^5.5.9
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@types/url-join': ~4.0.1
       buffer: ^6.0.3
       clsx: ^1.1.1
@@ -1980,8 +1980,8 @@ importers:
       '@types/node': ^16.11.58
       '@types/node-fetch': ^2.5.10
       '@types/qrcode-terminal': ^0.12.0
-      '@types/react': ^17.0.24
-      '@types/yargs': ~16.0.1
+      '@types/react': ^17.0.39
+      '@types/yargs': ^17.0.13
       chalk: ^4.1.0
       clipboardy: ^3.0.0
       compare-semver: ~1.1.0
@@ -2002,7 +2002,7 @@ importers:
       supervisor: ~0.12.0
       ts-node: 10.9.1
       typescript: ^4.7.2
-      yargs: ~16.2.0
+      yargs: ^17.6.0
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
@@ -2029,7 +2029,7 @@ importers:
       npm-api: 1.0.1
       qrcode-terminal: 0.12.0
       react: 17.0.2
-      yargs: 16.2.0
+      yargs: 17.6.0
     devDependencies:
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@types/copy-paste': 1.1.30
@@ -2039,7 +2039,7 @@ importers:
       '@types/node-fetch': 2.5.12
       '@types/qrcode-terminal': 0.12.0
       '@types/react': 17.0.50
-      '@types/yargs': 16.0.4
+      '@types/yargs': 17.0.13
       esbuild: 0.14.49
       mocha: 9.2.2
       supervisor: 0.12.0
@@ -2076,8 +2076,8 @@ importers:
       '@types/debug': ^4.1.7
       '@types/mocha': ^8.2.2
       '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       debug: ^4.3.3
       lexical: ~0.3.11
       mocha: ^9.0.0
@@ -2173,8 +2173,8 @@ importers:
   packages/experimental/ui-consumer:
     specifiers:
       '@dxos/react-ui': workspace:*
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@vitejs/plugin-react': ^2.0.1
       classnames: ^2.3.2
       react: ^17.0.2
@@ -2212,9 +2212,9 @@ importers:
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
       '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/react-copy-to-clipboard': ~5.0.1
-      '@types/react-dom': ^17.0.9
+      '@types/react-dom': ^17.0.11
       '@types/uuid': ~8.3.3
       '@types/webextension-polyfill': ^0.8.0
       '@types/webpack-env': ^1.16.0
@@ -2275,8 +2275,8 @@ importers:
       '@dxos/react-toolkit': workspace:*
       '@mui/icons-material': ^5.8.0
       '@mui/material': ^5.8.1
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       react: ^17.0.2
       react-dom: ^17.0.2
     dependencies:
@@ -2709,8 +2709,8 @@ importers:
       '@testing-library/user-event': ^14.4.3
       '@types/debug': ^4.1.7
       '@types/level-js': ~4.0.1
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       '@types/use-subscription': ^1.0.0
       assert: ^2.0.0
       debug: ^4.3.3
@@ -2780,8 +2780,8 @@ importers:
       '@testing-library/react': ^12.0.0
       '@testing-library/user-event': ^14.4.3
       '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
-      '@types/react-dom': ^17.0.9
+      '@types/react': ^17.0.39
+      '@types/react-dom': ^17.0.11
       faker: ^5.5.3
       react: ^17.0.2
       react-dom: ^17.0.2
@@ -2842,7 +2842,7 @@ importers:
       '@types/faker': ^5.5.9
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/string-hash': ^1.1.1
       '@types/url-join': ~4.0.1
@@ -2920,7 +2920,7 @@ importers:
       '@mui/material': ^5.8.1
       '@mui/system': ^5.8.1
       '@types/faker': ^5.5.9
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       clsx: ^1.1.1
       faker: ^5.5.3
       react: ^17.0.2
@@ -2959,7 +2959,7 @@ importers:
       '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-client': workspace:*
       '@types/node': ^16.11.58
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       ipfs-http-client: ^58.0.1
       node-fetch: ^2.6.0
       react: ^17.0.2
@@ -2988,7 +2988,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       assert: ^2.0.0
       debug: ^4.3.3
       react: ^17.0.2
@@ -3040,7 +3040,7 @@ importers:
       '@types/debug': ^4.1.7
       '@types/lodash.defaultsdeep': ^4.6.6
       '@types/lodash.isplainobject': ^4.0.6
-      '@types/react': ^17.0.24
+      '@types/react': ^17.0.39
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/url-join': ~4.0.1
       '@types/uuid': ~8.3.3
@@ -9098,7 +9098,7 @@ packages:
       react: '>=16'
     dependencies:
       '@types/mdx': 2.0.1
-      '@types/react': 18.0.15
+      '@types/react': 18.0.17
       react: 18.2.0
 
   /@mdx-js/react/2.1.3_react@17.0.2:
@@ -9854,7 +9854,7 @@ packages:
       typescript: 4.7.4
       update-notifier: 5.1.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
-      yargs: 17.5.1
+      yargs: 17.6.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -9906,7 +9906,7 @@ packages:
       toml: 3.0.0
       tomlify-j0.4: 3.0.0
       validate-npm-package-name: 4.0.0
-      yargs: 17.5.1
+      yargs: 17.6.0
     dev: true
 
   /@netlify/edge-bundler/1.14.1:
@@ -10350,7 +10350,7 @@ packages:
       tmp-promise: 3.0.3
       toml: 3.0.0
       unixify: 1.0.0
-      yargs: 17.5.1
+      yargs: 17.6.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -10392,7 +10392,7 @@ packages:
       tmp-promise: 3.0.3
       toml: 3.0.0
       unixify: 1.0.0
-      yargs: 17.5.1
+      yargs: 17.6.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -10861,7 +10861,7 @@ packages:
       semver: 7.3.4
       tmp: 0.2.1
       tslib: 2.4.0
-      yargs: 17.5.1
+      yargs: 17.6.0
       yargs-parser: 21.0.1
     transitivePeerDependencies:
       - '@swc-node/register'
@@ -15660,13 +15660,6 @@ packages:
       '@types/scheduler': 0.16.2
       csstype: 3.1.0
 
-  /@types/react/18.0.15:
-    resolution: {integrity: sha512-iz3BtLuIYH1uWdsv6wXYdhozhqj20oD4/Hk2DNXIn1kFsmp9x8d9QB6FnPhfkbhd2PgEONt9Q1x/ebkwjfFLow==}
-    dependencies:
-      '@types/prop-types': 15.7.5
-      '@types/scheduler': 0.16.2
-      csstype: 3.1.0
-
   /@types/react/18.0.17:
     resolution: {integrity: sha512-38ETy4tL+rn4uQQi7mB81G7V1g0u2ryquNmsVIOKUAEIDK+3CUjZ6rSRpdvS99dNBnkLFL83qfmtLacGOTIhwQ==}
     dependencies:
@@ -15886,6 +15879,12 @@ packages:
     resolution: {integrity: sha512-T8Yc9wt/5LbJyCaLiHPReJa0kApcIgJ7Bn735GjItUfh08Z1pJvu8QZqb9s+mMvKV6WUQRV7K2R46YbjMXTTJw==}
     dependencies:
       '@types/yargs-parser': 20.2.1
+
+  /@types/yargs/17.0.13:
+    resolution: {integrity: sha512-9sWaruZk2JGxIQU+IhI1fhPYRcQ0UuTNuKuCW9bR5fp7qi2Llf7WDzNa17Cy7TKnh3cdxDOiyTu6gaLS0eDatg==}
+    dependencies:
+      '@types/yargs-parser': 20.2.1
+    dev: true
 
   /@types/yauzl/2.9.2:
     resolution: {integrity: sha512-8uALY5LTvSuHgloDVUvWP3pIauILm+8/0pDMokuDYIoNsOkSwd5AiHBTSEJjKTDcZr5z8UpgOWZkxBF4iJftoA==}
@@ -19383,6 +19382,14 @@ packages:
 
   /cliui/7.0.4:
     resolution: {integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==}
+    dependencies:
+      string-width: 4.2.3
+      strip-ansi: 6.0.1
+      wrap-ansi: 7.0.0
+
+  /cliui/8.0.1:
+    resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
+    engines: {node: '>=12'}
     dependencies:
       string-width: 4.2.3
       strip-ansi: 6.0.1
@@ -31622,7 +31629,7 @@ packages:
       tsconfig-paths: 3.12.0
       tslib: 2.4.0
       v8-compile-cache: 2.3.0
-      yargs: 17.5.1
+      yargs: 17.6.0
       yargs-parser: 21.0.1
     dev: true
 
@@ -40287,6 +40294,18 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       cliui: 7.0.4
+      escalade: 3.1.1
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.3
+      y18n: 5.0.8
+      yargs-parser: 21.0.1
+
+  /yargs/17.6.0:
+    resolution: {integrity: sha512-8H/wTDqlSwoSnScvV2N/JHfLWOKuh5MVla9hqLjK3nsfyy6Y4kDSYSvkU5YCUEPOSnRXfIyx3Sq+B/IWudTo4g==}
+    engines: {node: '>=12'}
+    dependencies:
+      cliui: 8.0.1
       escalade: 3.1.1
       get-caller-file: 2.0.5
       require-directory: 2.1.1

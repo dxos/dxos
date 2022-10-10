@@ -7,7 +7,7 @@ import React from 'react';
 import { truncateKey } from '@dxos/debug';
 import { useProfile } from '@dxos/react-client';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 export const Profile = () => {
   const profile = useProfile();

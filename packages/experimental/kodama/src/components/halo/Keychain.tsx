@@ -10,7 +10,7 @@ import { KeyType } from '@dxos/client';
 import { truncateKey } from '@dxos/debug';
 import { useDevtools, useStream } from '@dxos/react-client';
 
-import { Table } from '../util';
+import { Table } from '../util/index.js';
 
 const formatDate = (date: Date) => format('yyyy-mm-dd hh:mm', new Date(date));
 
