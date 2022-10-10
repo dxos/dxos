@@ -34,8 +34,8 @@
     "@lexical/table": "~0.3.11",
     "@lexical/utils": "~0.3.11",
     "@lexical/yjs": "~0.3.11",
-    "@mui/icons-material": "^5.8.0",
-    "@mui/material": "^5.8.1",
+    "@mui/icons-material": "^5.10.6",
+    "@mui/material": "^5.10.8",
     "lexical": "~0.3.11",
     "y-protocols": "~1.0.5",
     "yjs": "^13.5.41"

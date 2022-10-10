@@ -33,7 +33,7 @@
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@mui/material": "^5.8.1",
+    "@mui/material": "^5.10.8",
     "@testing-library/dom": "^8.17.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/react-hooks": "^8.0.1",
