@@ -6,7 +6,8 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "moduleResolution": "node"
   },
   "exclude": [
     "/node_modules/"

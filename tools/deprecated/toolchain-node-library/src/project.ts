@@ -3,6 +3,7 @@
 //
 
 import * as fs from 'fs';
+import { createRequire } from 'module';
 import { join } from 'path';
 import { sync as pkgDir } from 'pkg-dir';
 
@@ -31,7 +32,7 @@ export class Project {
     let esbuildConfig;
     const configFile = join(packageRoot, config.esbuild.config);
     if (fs.existsSync(configFile)) {
-      esbuildConfig = require(configFile);
+      esbuildConfig = createRequire(import.meta.url)(configFile);
     }
 
     return new Project(packageRoot, packageJson, esbuildConfig);

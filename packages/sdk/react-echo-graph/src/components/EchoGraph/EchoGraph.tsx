@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import clsx from 'clsx';
+import { default as clsx } from 'clsx';
 import React, { useMemo } from 'react';
 
 import { Box } from '@mui/material';

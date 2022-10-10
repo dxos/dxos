@@ -10,3 +10,4 @@ export * from './useStateRef.js';
 export * from './useStateUpdater.js';
 export * from './useStateWithRef.js';
 export * from './useTimestamp.js';
+export * from './useAsyncEffect.js';

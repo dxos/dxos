@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { createRequire } from 'module';
 import { Config } from '../config.js';
 import { execTool } from './common.js';
 
@@ -11,6 +12,8 @@ export interface ExecMochaOpts {
   userArgs?: string[]
   jsdom?: boolean
 }
+
+const require = createRequire(import.meta.url);
 
 /**
  * https://mochajs.org/#command-line-usage

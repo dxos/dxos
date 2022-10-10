@@ -12,8 +12,8 @@
     "check": "true",
     "depcheck": "npx depcheck --specials=bin,babel,eslint,lint-staged",
     "prepublishOnly": "npm run test && npm run build",
-    "start": "toolchain start",
-    "test": "toolchain test",
+    "start": "true",
+    "test": "true",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
   "browserslist": [

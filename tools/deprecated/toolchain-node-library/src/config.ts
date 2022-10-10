@@ -30,13 +30,13 @@ export interface Config {
 
 export const defaults: Config = {
   esbuild: {
-    config: './esbuild-server.config.js',
+    config: './esbuild-server.config.cjs',
     outdir: 'out',
     book: {
       outdir: 'out/book'
     }
   },
-  protobuf: {
+protobuf: {
     base: './src/proto/',
     src: '**/*.proto',
     output: 'gen',

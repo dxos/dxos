@@ -3,7 +3,7 @@
 //
 
 import { screen, render, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { default as userEvent } from '@testing-library/user-event';
 import expect from 'expect';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
