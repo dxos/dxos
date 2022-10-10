@@ -3,7 +3,7 @@
   "main": "index.js",
   "dependencies": {
     "@dxos/eslint-plugin-rules": "workspace:*",
-    "@rushstack/eslint-plugin-packlets": "^0.4.1",
+    "@rushstack/eslint-plugin-packlets": "^0.6.0",
     "@stayradiated/eslint-plugin-prefer-arrow-functions": "^4.4.0",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",
@@ -23,5 +23,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@rushstack/eslint-plugin-packlets@0.6.0": "../../patches/@rushstack__eslint-plugin-packlets@0.6.0.patch"
+    }
   }
 }

@@ -1,0 +1,28 @@
+diff --git a/lib/PackletAnalyzer.js b/lib/PackletAnalyzer.js
+index 8b96b54c87a4c7d419cfc506afe1734b5ee8498d..0c8c9b21b3698e50376c22b45e4ca66cecdbe1b9 100644
+--- a/lib/PackletAnalyzer.js
++++ b/lib/PackletAnalyzer.js
+@@ -161,7 +161,22 @@ class PackletAnalyzer {
+                     // to the index.ts entry point.
+                     // Example: /path/to/my-project/src/other-packlet
+                     const entryPointPath = Path_1.Path.join(this.packletsFolderPath, importedPackletName);
+-                    if (!Path_1.Path.isEqual(importedPath, entryPointPath)) {
++
++                    const importedPathParts = importedPath.split(/[\/\\]+/);
++                    const lastPart = Path_1.Path.parse(importedPathParts[importedPathParts.length - 1]).name;
++                    let pathToCompare;
++                    if (lastPart.toUpperCase() === 'INDEX') {
++                        // Example:
++                        //   importedPath = /path/to/my-project/src/other-packlet/index
++                        //   pathToCompare = /path/to/my-project/src/other-packlet
++                        pathToCompare = Path_1.Path.dirname(importedPath);
++                    }
++                    else {
++                        pathToCompare = importedPath;
++                    }
++
++
++                    if (!Path_1.Path.isEqual(pathToCompare, entryPointPath)) {
+                         // Example: "../packlets/other-packlet"
+                         const entryPointModulePath = Path_1.Path.convertToSlashes(Path_1.Path.relative(inputFileFolder, entryPointPath));
+                         return {

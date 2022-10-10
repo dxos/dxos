@@ -112,7 +112,8 @@
       "memdown@5.1.0": "patches/memdown@5.1.0.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
       "vite@3.0.9": "patches/vite@3.0.9.patch",
-      "ts-node@10.9.1": "patches/ts-node@10.9.1.patch"
+      "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
+      "@rushstack/eslint-plugin-packlets@0.6.0": "patches/@rushstack__eslint-plugin-packlets@0.6.0.patch"
     }
   }
 }
