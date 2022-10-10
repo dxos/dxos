@@ -78,7 +78,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       expect(size).toBe(0);
     });
 
-    it.only('reopen and check if data is the same', async () => {
+    it('reopen and check if data is the same', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
