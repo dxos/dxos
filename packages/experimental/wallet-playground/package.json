@@ -29,7 +29,7 @@
   "devDependencies": {
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9"
+    "@types/react": "^17.0.39",
+    "@types/react-dom": "^17.0.11"
   }
 }

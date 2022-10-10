@@ -65,7 +65,7 @@
     "@types/lodash.set": "^4.3.7",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.58",
-    "@types/react": "^17.0.24",
+    "@types/react": "^17.0.39",
     "@types/sharedworker": "0.0.80",
     "@types/uuid": "~8.3.3",
     "@typescript-eslint/eslint-plugin": "^5.29.0",
