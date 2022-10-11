@@ -13,7 +13,11 @@ export default defineConfig({
   base: '', // Ensures relative path to assets.
   optimizeDeps: {
     force: true,
-    include: ['@dxos/react-ui']
+    include: [
+      '@dxos/react-client',
+      '@dxos/text-model',
+      '@dxos/react-ui',
+    ]
   },
   build: {
     outDir: 'out/experimental/app/text-editor',
@@ -45,5 +49,8 @@ export default defineConfig({
         theme_color: '#ffffff'
       }
     })
-  ]
+  ],
+  define: {
+    global: {}
+  }
 });
