@@ -11,7 +11,7 @@ import { promises as fs, constants } from 'fs';
 import path from 'path';
 
 import { File, StorageType } from '../common';
-import { storageTests } from '../testing';
+import { randomText, storageTests } from '../testing';
 import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
@@ -81,7 +81,7 @@ describe('testing node storage types', function () {
     expect(() => createStorage({ type: StorageType.IDB, root: 'error' })).toThrow(/Invalid/);
   });
 
-  it('file exists and destroyes in subDirectory', async function () {
+  it('file exists and destroys in subDirectory', async function () {
     const dir = temp();
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
@@ -92,6 +92,27 @@ describe('testing node storage types', function () {
 
     await storage.destroy();
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
+  });
+
+  it('persistance', async () => {
+    const filename = randomText();
+    const data = Buffer.from(randomText());
+
+    {
+      const storage = createStorage({root: ROOT_DIRECTORY});
+      const dir = storage.createDirectory('dir');
+      const file = await dir.getOrCreateFile(filename);
+      await file.write(0, data);
+      file.close();
+    }
+
+    {
+      const storage = createStorage({root: ROOT_DIRECTORY});
+      const dir = storage.createDirectory('dir');
+      const file = await dir.getOrCreateFile(filename);
+      const dataRead = await file.read(0, data.length);
+      expect(dataRead.equals(data)).toBeTruthy();
+    }
   });
 
   storageTests(StorageType.RAM, () => createStorage({ type: StorageType.RAM, root: ROOT_DIRECTORY }));

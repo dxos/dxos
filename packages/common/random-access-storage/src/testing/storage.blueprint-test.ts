@@ -7,11 +7,12 @@ import assert from 'node:assert';
 
 import { File, Storage, StorageType } from '../common';
 
+export const randomText = () => Math.random().toString(36).substring(2);
+
 export function storageTests (
   testGroupName: string,
   createStorage: () => Storage
 ) {
-  const randomText = () => Math.random().toString(36).substring(2);
 
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
