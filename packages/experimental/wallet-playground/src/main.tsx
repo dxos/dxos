@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
 
@@ -11,12 +11,12 @@ import { App } from './components';
 import { configProvider } from './config';
 
 const start = () => {
-  ReactDOM.render(
-    <ClientProvider config={configProvider}>
-      <App />
-    </ClientProvider>,
-    document.getElementById('root')
-  );
+  createRoot(document.getElementById('root')!)
+    .render(
+      <ClientProvider config={configProvider}>
+        <App />
+      </ClientProvider>
+    );
 };
 
 start();
