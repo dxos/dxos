@@ -55,6 +55,5 @@ describe('space-manager', function () {
     // TODO(dmaretskyi): .
     // const space = await peer1.createSpace()
     // const invitation = await space.createInvitation()
-
   });
 });

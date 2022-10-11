@@ -6,27 +6,44 @@
 
 import { expect } from 'chai';
 import faker from 'faker';
+import hypercore from 'hypercore';
 import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { HypercoreFeed } from './hypercore-feed';
+import { HypercoreFeed, wrapFeed } from './hypercore-feed';
 import { batch, createDataItem, TestDataItem } from './testing';
 import { ProtocolStream } from './types';
 
 describe('Factory', function () {
   it('construct, open and close', async function () {
-    const factory = new HypercoreFactory(ram);
-    const { publicKey } = createKeyPair();
-    const feed = factory.create(publicKey);
+    // const key = sha256(PublicKey.random().toHex());
+    const core = hypercore(ram);
+    const feed = wrapFeed(core);
+
+    expect(feed.opened).to.be.false;
+    expect(feed.closed).to.be.false;
 
     await feed.open();
     expect(feed.opened).to.be.true;
+    expect(feed.closed).to.be.false;
+
+    // Can be called multiple times.
+    await feed.open();
+    expect(feed.opened).to.be.true;
+    expect(feed.closed).to.be.false;
 
     await feed.close();
+    expect(feed.opened).to.be.true; // Expected.
     expect(feed.closed).to.be.true;
+
+    // Can be called multiple times.
+    await feed.close();
+
+    // Cannot be reopened.
+    await expect(feed.open()).to.be.rejectedWith(Error);
   });
 
   it('append to and read from multiple feeds.', async function () {
@@ -88,14 +105,10 @@ describe('Factory', function () {
 
     // Closed
     // TODO(burdon): Return function with timeout.
-    const [waitForClosed, incClosed] = latch({ count: 2 });
+    const [closed, close] = latch({ count: 2 });
 
     // Start replication.
-    stream1.pipe(stream2, () => {
-      incClosed();
-    }).pipe(stream1, () => {
-      incClosed();
-    });
+    stream1.pipe(stream2, close).pipe(stream1, close);
 
     expect(feed1.stats.peers).to.have.lengthOf(1);
     expect(feed2.stats.peers).to.have.lengthOf(1);
@@ -149,7 +162,7 @@ describe('Factory', function () {
       stream1.end();
       stream2.end();
 
-      await waitForClosed;
+      await closed;
       expect(stream1.destroyed).to.be.true;
       expect(stream2.destroyed).to.be.true;
 
@@ -164,7 +177,7 @@ describe('Factory', function () {
       console.log(feed1.opening, feed1.opened, feed1.closing, feed1.closed);
 
       // TODO(burdon): Not closed, but hypercore throws: "Feed is closed" (one of the random-access-storage is closed).
-      // await feed2.close();
+      await feed2.close();
       console.log(feed2.opening, feed2.opened, feed2.closing, feed2.closed);
     }
 

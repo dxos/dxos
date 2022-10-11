@@ -8,7 +8,9 @@
     "outDir": "dist",
     "skipLibCheck": true,
     "types": [
-      "mocha"
+      "@dxos/shims",
+      "mocha",
+      "node"
     ]
   },
   "exclude": [

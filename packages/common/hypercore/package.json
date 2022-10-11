@@ -4,12 +4,12 @@
   "description": "Hypercore wrapper and utils.",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:util": "util"
   },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"

@@ -27,9 +27,9 @@ declare module 'streamx' {
 
   export interface Readable extends Stream {
     end ()
-    pipe (dest?: Writable, cb?: Callback)
     pause ()
     resume ()
+    pipe (dest?: Writable, cb?: Callback)
   }
 
   export interface Writable extends Stream {

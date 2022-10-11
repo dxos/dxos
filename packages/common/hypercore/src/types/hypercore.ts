@@ -15,6 +15,8 @@
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
 
+import { Readable, Writable } from 'streamx';
+
 import { Callback, RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { ProtocolStream } from './hypercore-protocol';
@@ -143,10 +145,10 @@ export interface Hypercore extends Nanoresource, HypercoreProperties {
   flush (cb?: Callback<void>): void
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
-  createReadStream (options?: any): NodeJS.ReadableStream
+  createReadStream (options?: any): Readable
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
-  createWriteStream (options?: any): NodeJS.WritableStream
+  createWriteStream (options?: any): Writable
 
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
   replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream

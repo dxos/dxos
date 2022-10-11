@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import events from 'events';
+import { EventEmitter } from 'events';
 
 /**
  * Properties for `random-access-*` implementations.
@@ -10,7 +10,7 @@ import events from 'events';
  * https://www.npmjs.com/package/random-access-storage
  * https://github.com/random-access-storage/random-access-storage
  */
-export interface RandomAccessStorageProperties extends events.EventEmitter {
+export interface RandomAccessStorageProperties extends EventEmitter {
   readonly opened: boolean
   readonly suspended: boolean
   readonly closed: boolean

@@ -34,6 +34,7 @@ importers:
       '@dxos/plate': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
+      '@dxos/shims': workspace:*
       '@dxos/signal': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
@@ -119,6 +120,7 @@ importers:
       '@dxos/plate': link:tools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
+      '@dxos/shims': link:packages/common/shims
       '@dxos/signal': link:packages/core/mesh/signal
       '@mdx-js/react': 2.1.3_react@17.0.2
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
@@ -759,6 +761,9 @@ importers:
     devDependencies:
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
+
+  packages/common/shims:
+    specifiers: {}
 
   packages/common/testutils:
     specifiers:

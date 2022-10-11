@@ -77,6 +77,7 @@
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
     "rpc-tunnel-e2e": "packages/e2e/rpc-tunnel-e2e",
     "showcase": "tools/showcase",
+    "shims": "packages/common/shims",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
     "testutils": "packages/common/testutils",

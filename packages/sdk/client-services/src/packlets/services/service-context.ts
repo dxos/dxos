@@ -36,7 +36,7 @@ export class ServiceContext {
   public readonly identityManager: IdentityManager;
   public readonly haloInvitations: HaloInvitations; // TOOD(burdon): Move.
 
-  // Initialized after identity is intitialized.
+  // Initialized after identity is initialized.
   public spaceManager?: SpaceManager;
   public dataInvitations?: DataInvitations; // TOOD(burdon): Move.
 

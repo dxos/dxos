@@ -10,21 +10,22 @@ import ram from 'random-access-memory';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
-import { wrapFeed } from './hypercore-feed';
-
 chai.use(chaiAsPromised);
 
-describe('Feed', function () {
+describe('Hypercore', function () {
   it('replicates', async function () {
     const { publicKey, secretKey } = createKeyPair();
 
-    const core1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
-    const core2 = wrapFeed(hypercore(ram, publicKey));
+    const core1 = hypercore(ram, publicKey, { secretKey });
+    const core2 = hypercore(ram, publicKey);
 
     // Wait for ready.
     {
-      await core1.open();
-      await core2.open();
+      const [ready, done] = latch({ count: 2 });
+      core1.open(done);
+      core2.open(done);
+
+      await ready;
     }
 
     const numBlocks = 10;
@@ -48,7 +49,7 @@ describe('Feed', function () {
 
       // Write.
       for (let i = 0; i < numBlocks; i++) {
-        void core1.append(`test-${i}`);
+        core1.append(`test-${i}`);
       }
 
       await closed;
@@ -56,8 +57,11 @@ describe('Feed', function () {
 
     // Close.
     {
-      await core1.close();
-      await core1.close();
+      const [closed, close] = latch({ count: 2 });
+      core1.close(close);
+      core1.close(close);
+
+      await closed;
     }
 
     expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
