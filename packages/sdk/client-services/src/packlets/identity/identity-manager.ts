@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity } from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity, Database } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -16,6 +16,7 @@ import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { Identity } from '../identity';
+import { ModelFactory } from '@dxos/model-factory';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
@@ -40,7 +41,8 @@ export class IdentityManager {
     private readonly _metadataStore: MetadataStore,
     private readonly _feedStore: FeedStore,
     private readonly _keyring: Keyring,
-    private readonly _networkManager: NetworkManager
+    private readonly _networkManager: NetworkManager,
+    private readonly _modelFactory: ModelFactory,
   ) {}
 
   get identity () {
@@ -104,7 +106,8 @@ export class IdentityManager {
       feedProvider: key => this._feedStore.openReadOnlyFeed(key),
       networkManager: this._networkManager,
       networkPlugins,
-      swarmIdentity
+      swarmIdentity,
+      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey),
     });
   }
 

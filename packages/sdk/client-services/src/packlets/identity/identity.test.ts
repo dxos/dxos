@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { CredentialGenerator, verifyCredential, createCredentialSignerWithKey } from '@dxos/credentials';
-import { codec, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
+import { codec, Database, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -18,6 +18,10 @@ import { afterTest } from '@dxos/testutils';
 
 import { createHaloAuthProvider, createHaloAuthVerifier } from './authenticator';
 import { Identity } from './identity';
+import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
+
+const modelFactory = new ModelFactory().registerModel(ObjectModel);
 
 describe('halo/identity', function () {
   it('create', async function () {
@@ -51,7 +55,8 @@ describe('halo/identity', function () {
         peerKey: identityKey,
         credentialProvider: createHaloAuthProvider(createCredentialSignerWithKey(keyring, deviceKey)),
         credentialAuthenticator: createHaloAuthVerifier(() => identity.authorizedDeviceKeys)
-      }
+      },
+      databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey),
     });
 
     const identity = new Identity({
@@ -144,7 +149,8 @@ describe('halo/identity', function () {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
-        }
+        },
+        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey),
       });
 
       const identity = identity1 = new Identity({
@@ -212,7 +218,8 @@ describe('halo/identity', function () {
           peerKey: deviceKey,
           credentialProvider: MOCK_AUTH_PROVIDER, // createHaloAuthProvider(createCredentialSignerWithKey(keyring, device_key)),
           credentialAuthenticator: MOCK_AUTH_VERIFIER // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
-        }
+        },
+        databaseFactory: async ({ databaseBackend }) => new Database(modelFactory, databaseBackend, deviceKey),
       });
 
       const identity = identity2 = new Identity({

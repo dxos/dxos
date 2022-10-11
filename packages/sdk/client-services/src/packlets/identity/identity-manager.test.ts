@@ -13,6 +13,8 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { afterTest } from '@dxos/testutils';
 
 import { IdentityManager } from './identity-manager';
+import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 
 describe('identity-manager', function () {
   const setupPeer = async ({
@@ -36,7 +38,8 @@ describe('identity-manager', function () {
       metadataStore,
       feedStore,
       keyring,
-      networkManager
+      networkManager,
+      new ModelFactory().registerModel(ObjectModel),
     );
 
     return {

@@ -8,13 +8,14 @@ import { failUndefined } from '@dxos/debug';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { DataService } from '../database';
+import { Database, DataService } from '../database';
 import { MetadataStore } from '../metadata';
 import { AuthProvider, AuthVerifier } from './auth-plugin';
 import { Space } from './space';
@@ -47,6 +48,7 @@ export class SpaceManager {
     private readonly _networkManager: NetworkManager,
     private readonly _keyring: Keyring,
     private readonly _dataService: DataService,
+    private readonly _modelFactory: ModelFactory,
     private readonly _signingContext: SigningContext // TODO(burdon): Contains keyring.
   ) {}
 
@@ -149,7 +151,8 @@ export class SpaceManager {
         peerKey: this._signingContext.deviceKey,
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
-      }
+      },
+      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey),
     });
   }
 }

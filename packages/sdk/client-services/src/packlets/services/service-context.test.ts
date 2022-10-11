@@ -11,6 +11,7 @@ import { createStorage, Storage, StorageType } from '@dxos/random-access-storage
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from './service-context';
+import { ModelFactory } from '@dxos/model-factory';
 
 describe('ServiceContext', function () {
   const setupPeer = async ({
@@ -27,7 +28,8 @@ describe('ServiceContext', function () {
 
     return new ServiceContext(
       storage,
-      networkManager
+      networkManager,
+      new ModelFactory().registerModel(ObjectModel),
     );
   };
 
