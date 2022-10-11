@@ -4,9 +4,10 @@
 
 import React, { createContext, PropsWithChildren, useMemo, useState, useEffect, useContext } from 'react';
 
-import { Party } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { Loading } from '@dxos/react-ui';
+
+export type Party = Awaited<ReturnType<ReturnType<typeof useClient>['echo']['createParty']>>
 
 export interface PartyContextValue {
   party?: Party
