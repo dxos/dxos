@@ -69,14 +69,15 @@ export function storageTests (
       }
     });
 
-    it('reads from empty file', async function () {
+    it('reads from empty file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
 
       const fileName = randomText();
       const file = await directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
-      expect(size).toBe(0);
+      const data = await file.read(0, size);
+      expect(data.equals(Buffer.from(''))).toBeTruthy();
     });
 
     it('reopen and check if data is the same', async () => {
@@ -155,28 +156,6 @@ export function storageTests (
       const readBuffer = await file.read(0, buffer.length);
       expect(readBuffer).toEqual(buffer);
       await file.close();
-    });
-
-    it('delete file', async function () {
-      const storage = createStorage();
-      const directory = storage.createDirectory();
-
-      // TODO(yivlad): Works only for StorageType.RAM.
-      if (storage.type !== StorageType.RAM) {
-        this.skip();
-      }
-
-      const fileName = randomText();
-      const file = await directory.getOrCreateFile(fileName);
-
-      const buffer = Buffer.from(randomText());
-      await writeAndCheck(file, buffer);
-      await file.destroy();
-
-      const reopened = await directory.getOrCreateFile(fileName);
-      const { size } = await reopened.stat();
-      expect(size).toBe(0);
-      await reopened.close();
     });
 
     it('delete directory', async () => {
