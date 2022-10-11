@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import RAM from 'random-access-memory';
+import ram from 'random-access-memory';
 
 import { RandomAccessFile } from '../types';
 import { AbstractStorage } from './abstract-storage';
@@ -22,7 +22,7 @@ export class MemoryStorage extends AbstractStorage {
     let ramFile = this._ramFiles.get(fullPath);
 
     if (!ramFile|| ramFile?.destroyed) {
-      ramFile = new RAM();
+      ramFile = ram();
     } else {
       ramFile = ramFile.clone!()
       // Hack to reopen RAM storage.
