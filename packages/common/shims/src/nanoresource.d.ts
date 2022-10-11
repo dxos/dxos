@@ -9,11 +9,11 @@
 declare module 'nanoresource' {
   import type { EventEmitter } from 'events';
 
-  export type Callback<T> = (err: Error | null, result?: T) => void
+  type Callback<T> = (err: Error | null, result?: T) => void
 
   export interface NanoresourceOptions {
-    open: (cb: () => void) => void
-    close: (cb: () => void) => void
+    open: (cb: Callback<void>) => void
+    close: (cb: Callback<void>) => void
   }
 
   export interface NanoresourceProperties {
