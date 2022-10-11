@@ -6,7 +6,7 @@ import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
-    const worker = new SharedWorker(new URL('./shared-worker', import.meta.url));
+    const worker = new SharedWorker(new URL('./shared-worker', import.meta.url), { type: 'module' });
     const muxer = new PortMuxer(worker.port);
 
     const clientPort = muxer.createWorkerPort({ channel: 'dxos' });
