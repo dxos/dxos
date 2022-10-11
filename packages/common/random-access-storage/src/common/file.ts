@@ -22,7 +22,7 @@ export interface File extends RandomAccessStorageProperties {
   readonly native: RandomAccessFile
 
   write (offset: number, data: Buffer): Promise<void>
-  read (offset: number, size: number): Promise<Buffer>
+  read (offset: number, size: number): Promise<Buffer | Uint8Array>
   del (offset: number, size: number): Promise<void>
   stat (): Promise<FileStat>
   close (): Promise<Error>

@@ -15,7 +15,7 @@ export type FileStat = {
  */
 export interface RandomAccessFile extends RandomAccessStorageProperties {
   write (offset: number, data: Buffer, cb: Callback<any>): void
-  read (offset: number, size: number, cb: Callback<Buffer>): void
+  read (offset: number, size: number, cb: Callback<Buffer | Uint8Array>): void
   del (offset: number, size: number, cb: Callback<any>): void
   stat (cb: Callback<FileStat>): void
   close (cb: Callback<Error>): void

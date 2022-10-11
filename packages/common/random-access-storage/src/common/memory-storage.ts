@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import ram from 'random-access-memory';
+import RAM from 'random-access-memory';
 
 import { RandomAccessFile } from '../types';
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
+import { getFullPath } from './utils';
 
 /**
  * Storage interface implementation for RAM.
@@ -14,16 +15,21 @@ import { StorageType } from './storage';
  */
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
-  private _ram?: RandomAccessFile; 
+  private _ramFiles = new Map<string, RandomAccessFile>; 
 
   protected override _createFile (path: string, filename: string): RandomAccessFile {
-    if (!this._ram || this._ram?.destroyed) {
-      this._ram = ram()
+    const fullPath = getFullPath(path, filename);
+    let ramFile = this._ramFiles.get(fullPath);
+
+    if (!ramFile|| ramFile?.destroyed) {
+      ramFile = new RAM();
     } else {
-      this._ram = this._ram.clone!()
+      ramFile = ramFile.clone!()
       // Hack to reopen RAM storage.
-      this._ram.closed = false;
+      ramFile.closed = false;
     }
-    return this._ram!;
+
+    this._ramFiles.set(fullPath, ramFile!)
+    return ramFile!;
   }
 }
