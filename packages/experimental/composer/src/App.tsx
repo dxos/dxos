@@ -10,18 +10,18 @@ import { Main } from '@dxos/react-ui';
 import { Composer } from './components/Composer';
 import { PartyProvider } from './components/PartyProvider';
 import { ProfileProvider } from './components/ProfileProvider';
-import { TextModelDocumentProvider } from './components/TextModelDocumentProvider';
+import { TextItemProvider } from './components/TextItemProvider';
 
 export const App = () => {
   return (
     <ClientProvider>
       <ProfileProvider>
         <PartyProvider>
-          <TextModelDocumentProvider>
+          <TextItemProvider>
             <Main>
               <Composer />
             </Main>
-          </TextModelDocumentProvider>
+          </TextItemProvider>
         </PartyProvider>
       </ProfileProvider>
     </ClientProvider>
