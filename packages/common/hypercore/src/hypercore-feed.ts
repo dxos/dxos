@@ -3,7 +3,7 @@
 //
 
 import type { Hypercore, HypercoreProperties, ReplicationOptions } from 'hypercore';
-import type { Protocol } from 'hypercore-protocol';
+import type { ProtocolStream } from 'hypercore-protocol';
 import type { NanoresourceProperties } from 'nanoresource';
 import pify from 'pify';
 import type { Readable, Writable } from 'streamx';
@@ -29,7 +29,7 @@ export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperti
   flush (): Promise<void>
   createReadStream (options?: any): Readable
   createWriteStream (options?: any): Writable
-  replicate (initiator: boolean, options?: ReplicationOptions): Protocol
+  replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
   head (options?: any): Promise<any>
   get (index: number, options?: any): Promise<Buffer>
   /** @deprecated remove in v10 */

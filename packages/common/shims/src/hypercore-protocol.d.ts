@@ -78,12 +78,12 @@ declare module 'hypercore-protocol' {
   /**
    * https://github.com/hypercore-protocol/hypercore-protocol/blob/master/index.js#L332
    */
-  export interface ProtocolStream extends Duplex {
-    destroyed: boolean
-    publicKey: any
-    state: any
+  export class ProtocolStream extends Duplex {
+    destroyed: boolean;
+    publicKey: any;
+    state: any;
 
-    // constructor (initiator?: boolean, opts?: ProtocolOptions);
+    constructor (initiator?: boolean, opts?: ProtocolOptions);
 
     open (key: any, handlers: ChannelHandlers): Channel
     close (discoveryKey: any): void
