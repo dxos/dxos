@@ -34,7 +34,7 @@ describe('Swarm', function () {
       topic,
       peerId1,
       new FullyConnectedTopology(),
-      () => new Protocol({ initiator: true, userSession: { peerId: peerId1.toHex() } }),
+      () => new Protocol(),
       new Messenger({ signalManager: new MemorySignalManager(context) }),
       createWebRTCTransportFactory(),
       undefined
@@ -44,7 +44,7 @@ describe('Swarm', function () {
       topic,
       peerId2,
       new FullyConnectedTopology(),
-      () => new Protocol({ initiator: false, userSession: { peerId: peerId1.toHex() } }),
+      () => new Protocol(),
       new Messenger({ signalManager: new MemorySignalManager(context) }),
       createWebRTCTransportFactory(),
       undefined
