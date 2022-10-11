@@ -11,9 +11,10 @@ import React, {
   useContext
 } from 'react';
 
-import { Profile } from '@dxos/protocols/proto/dxos/client';
 import { useClient, useProfile as useNaturalProfile } from '@dxos/react-client';
 import { Loading } from '@dxos/react-ui';
+
+export type Profile = ReturnType<typeof useNaturalProfile>
 
 export interface ProfileContextValue {
   profile?: Profile

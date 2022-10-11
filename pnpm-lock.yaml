@@ -1798,8 +1798,6 @@ importers:
 
   packages/experimental/composer:
     specifiers:
-      '@dxos/client': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/text-model': workspace:*
@@ -1807,6 +1805,7 @@ importers:
       '@types/react': ^17.0.24
       '@types/react-dom': ^17.0.9
       '@vitejs/plugin-react': ^2.0.1
+      buffer: ^6.0.3
       classnames: ^2.3.2
       lexical: ~0.5.0
       react: ^17.0.2
@@ -1815,18 +1814,17 @@ importers:
       vite-plugin-pwa: ^0.12.4
       yjs: ^13.5.41
     dependencies:
-      '@dxos/client': link:../../sdk/client
+      '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/text-model': link:../../core/echo/text-model
       '@lexical/react': 0.5.0_xhx7ucct5sl44ayzo3gon7tk5i
+      buffer: 6.0.3
       classnames: 2.3.2
       lexical: 0.5.0
       react: 17.0.2
       react-dom: 17.0.2_react@17.0.2
       yjs: 13.5.41
     devDependencies:
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-client': link:../../sdk/react-client
       '@types/react': 17.0.50
       '@types/react-dom': 17.0.17
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9

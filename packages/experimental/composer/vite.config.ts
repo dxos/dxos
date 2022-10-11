@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/plugin';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig((env) => ({
   base: '', // Ensures relative path to assets.
   optimizeDeps: {
     force: true,
@@ -53,4 +53,4 @@ export default defineConfig({
   define: {
     global: {}
   }
-});
+}));
