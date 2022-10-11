@@ -23,10 +23,10 @@ const defaultTestingConfig: ConfigProto = {
 
 describe('ServiceHost', function () {
   it('device invitations', async function () {
-    const peer1 = new ClientServiceHost(new Config(defaultTestingConfig));
+    const peer1 = new ClientServiceHost({ config: new Config(defaultTestingConfig) });
     await peer1.open();
     afterTest(() => peer1.close());
-    const peer2 = new ClientServiceHost(new Config(defaultTestingConfig));
+    const peer2 = new ClientServiceHost({ config: new Config(defaultTestingConfig) });
     await peer2.open();
     afterTest(() => peer2.close());
 

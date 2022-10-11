@@ -224,7 +224,10 @@ export class Client {
   // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
   private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
-    this._serviceProvider = new ClientServiceHost(this._config, this._options.signer);
+    this._serviceProvider = new ClientServiceHost({
+      config: this._config,
+      signer: this._options.signer
+    });
     await this._serviceProvider.open(onProgressCallback);
   }
 

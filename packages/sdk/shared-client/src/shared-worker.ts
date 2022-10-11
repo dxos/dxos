@@ -4,12 +4,21 @@
 
 import { trigger } from '@dxos/async';
 import { Client, clientServiceBundle } from '@dxos/client';
+import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
+import { ClientServiceHost } from '@dxos/client-services';
+import { Config } from '@dxos/config';
+import { WebRTCTransportProxy } from '@dxos/network-manager';
 
-const client = new Client({ runtime: { client: { mode: 1 /* local */ } } });
+const transportFactory = new WebRTCTransportProxy()
+const client = new ClientServiceHost({
+  // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite. Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
+  config: new Config({ runtime: { client: { mode: 1 /* local */ } } }),
+  transportFactory: 
+});
 const [clientInitialized, resolve] = trigger();
-void client.initialize().then(resolve);
+void client.open().then(resolve);
 
 onconnect = async event => {
   const muxer = new PortMuxer(event.ports[0]);
@@ -22,6 +31,20 @@ onconnect = async event => {
     handlers: client.services,
     port
   });
+  
+  const wrtcPort = muxer.createWorkerPort({ channel: 'dxos:wrtc' });
+  const wrtcServer = createProtoRpcPeer({
+    requested: {
+      BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+    },
+    exposed: {},
+    handlers: {},
+    port: wrtcPort,
+  });
 
-  await server.open();
+  wrtcServer.open().then(() => {
+    
+  })
+
+  await server.open()
 };
