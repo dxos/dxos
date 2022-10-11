@@ -3,8 +3,8 @@
 //
 
 import ram from 'random-access-memory';
+import { RandomAccessStorage } from 'random-access-storage';
 
-import { RandomAccessFile } from '../types';
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
 
@@ -15,7 +15,7 @@ import { StorageType } from './storage';
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
 
-  protected override _createFile (path: string, filename: string): RandomAccessFile {
+  protected override _createFile (path: string, filename: string): RandomAccessStorage {
     return ram();
   }
 }

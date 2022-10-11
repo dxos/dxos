@@ -2,16 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { Hypercore, HypercoreProperties, ReplicationOptions } from 'hypercore';
+import type { Protocol } from 'hypercore-protocol';
+import type { NanoresourceProperties } from 'nanoresource';
 import pify from 'pify';
-import { Readable, Writable } from 'streamx';
-
-import type {
-  HypercoreProperties,
-  ReplicationOptions,
-  Hypercore,
-  NanoresourceProperties,
-  ProtocolStream
-} from './types';
+import type { Readable, Writable } from 'streamx';
 
 /**
  * Wrapped Hypercore.
@@ -34,7 +29,7 @@ export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperti
   flush (): Promise<void>
   createReadStream (options?: any): Readable
   createWriteStream (options?: any): Writable
-  replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
+  replicate (initiator: boolean, options?: ReplicationOptions): Protocol
   head (options?: any): Promise<any>
   get (index: number, options?: any): Promise<Buffer>
   /** @deprecated remove in v10 */

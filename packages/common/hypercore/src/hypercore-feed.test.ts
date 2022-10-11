@@ -15,7 +15,6 @@ import { createKeyPair } from '@dxos/crypto';
 import { HypercoreFactory } from './hypercore-factory';
 import { HypercoreFeed, wrapFeed } from './hypercore-feed';
 import { batch, createDataItem, TestDataItem } from './testing';
-import { ProtocolStream } from './types';
 
 describe('Factory', function () {
   it('construct, open and close', async function () {
@@ -100,8 +99,8 @@ describe('Factory', function () {
     const feed2 = factory.create(publicKey);
     await feed2.open();
 
-    const stream1: ProtocolStream = feed1.replicate(true, { live: true });
-    const stream2: ProtocolStream = feed2.replicate(false, { live: true });
+    const stream1 = feed1.replicate(true, { live: true });
+    const stream2 = feed2.replicate(false, { live: true });
 
     // Closed
     // TODO(burdon): Return function with timeout.

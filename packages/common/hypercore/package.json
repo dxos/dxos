@@ -23,6 +23,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "assert": "^2.0.0",
     "hypercore": "^9.12.0",
+    "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "pify": "~5.0.0"
   },
   "devDependencies": {
@@ -34,7 +35,6 @@
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
     "faker": "^5.5.3",
-    "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
     "random-access-memory": "^4.1.0",
     "streamx": "^2.12.5"
   },

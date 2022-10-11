@@ -4,9 +4,9 @@
 
 import del from 'del';
 import raf from 'random-access-file';
+import { RandomAccessStorage } from 'random-access-storage';
 
 import { AbstractStorage, StorageType } from '../common';
-import { RandomAccessFile } from '../types';
 
 /**
  * Storage interface implementation for Node.
@@ -14,7 +14,7 @@ import { RandomAccessFile } from '../types';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected override _createFile (path: string, filename: string, opts: any = {}): RandomAccessFile {
+  protected override _createFile (path: string, filename: string, opts: any = {}): RandomAccessStorage {
     return raf(filename, { directory: path, ...opts });
   }
 

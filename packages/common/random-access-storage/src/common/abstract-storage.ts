@@ -3,10 +3,10 @@
 //
 
 import { join } from 'node:path';
+import type { RandomAccessStorage } from 'random-access-storage';
 
 import { log } from '@dxos/log';
 
-import { RandomAccessFile } from '../types';
 import { Directory } from './directory';
 import { File, wrapFile } from './file';
 import { Storage, StorageType } from './storage';
@@ -70,7 +70,7 @@ export abstract class AbstractStorage implements Storage {
     return undefined;
   }
 
-  protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessFile;
+  protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessStorage;
 
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
