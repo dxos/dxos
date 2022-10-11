@@ -34,17 +34,16 @@
     "@dxos/protocols-toolchain": "workspace:*",
     "@mui/material": "^5.8.1",
     "@testing-library/dom": "^8.17.1",
-    "@testing-library/react": "^12.0.0",
-    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "@types/debug": "^4.1.7",
     "@types/level-js": "~4.0.1",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
     "@types/use-subscription": "^1.0.0",
     "level-js": "^5.0.2",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": "*",

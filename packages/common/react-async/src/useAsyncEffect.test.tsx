@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import React, { useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
@@ -45,7 +45,7 @@ describe('useAsyncEffect', function () {
 
   it('gets async value.', async function () {
     act(() => {
-      render(<Test />, rootContainer);
+      createRoot(rootContainer).render(<Test />);
     });
 
     const h1 = rootContainer.querySelector('h1');
