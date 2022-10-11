@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import expect from "expect";
-import assert from "node:assert";
+import expect from 'expect';
+import assert from 'node:assert';
 
-import { File, Storage, StorageType } from "../common";
+import { File, Storage, StorageType } from '../common';
 
-export function storageTests(
+export function storageTests (
   testGroupName: string,
   createStorage: () => Storage
 ) {
@@ -21,7 +21,7 @@ export function storageTests(
   };
 
   describe(testGroupName, () => {
-    it("open & close", async () => {
+    it('open & close', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -29,7 +29,7 @@ export function storageTests(
       await file.close();
     });
 
-    it("open file, read & write", async () => {
+    it('open file, read & write', async () => {
       const storage = createStorage();
       const fileName = randomText();
       const directory = storage.createDirectory();
@@ -45,7 +45,7 @@ export function storageTests(
       await file.close();
     });
 
-    it("create files", async () => {
+    it('create files', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
 
@@ -69,7 +69,7 @@ export function storageTests(
       }
     });
 
-    it("reads from empty file", async function () {
+    it('reads from empty file', async function () {
       const storage = createStorage();
       const directory = storage.createDirectory();
 
@@ -84,7 +84,7 @@ export function storageTests(
       expect(size).toBe(0);
     });
 
-    it("reopen and check if data is the same", async () => {
+    it('reopen and check if data is the same', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -104,7 +104,7 @@ export function storageTests(
       }
     });
 
-    it("destroy clears all data", async () => {
+    it('destroy clears all data', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -125,13 +125,13 @@ export function storageTests(
       }
     });
 
-    it("sub-directories", async () => {
+    it('sub-directories', async () => {
       // 1. Create storage and two subdirectories
       const storage = createStorage();
-      const dir1 = storage.createDirectory("dir1");
-      const dir2 = storage.createDirectory("dir2");
+      const dir1 = storage.createDirectory('dir1');
+      const dir2 = storage.createDirectory('dir2');
 
-      const fileName = "file";
+      const fileName = 'file';
       const buffer1 = Buffer.from(randomText());
       const buffer2 = Buffer.from(randomText());
 
@@ -148,12 +148,12 @@ export function storageTests(
       expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
     });
 
-    it("write in directory/sub-directory/file", async () => {
+    it('write in directory/sub-directory/file', async () => {
       const storage = createStorage();
-      const dir = storage.createDirectory("directory");
-      const subDir = dir.createDirectory("subDirectory");
+      const dir = storage.createDirectory('directory');
+      const subDir = dir.createDirectory('subDirectory');
 
-      const file = await subDir.getOrCreateFile("file");
+      const file = await subDir.getOrCreateFile('file');
       const buffer = Buffer.from(randomText());
       await file.write(0, buffer);
 
@@ -162,7 +162,7 @@ export function storageTests(
       await file.close();
     });
 
-    it("delete file", async function () {
+    it('delete file', async function () {
       const storage = createStorage();
       const directory = storage.createDirectory();
 
@@ -184,10 +184,10 @@ export function storageTests(
       await reopened.close();
     });
 
-    it("delete directory", async () => {
+    it('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-      const file = await directory.getOrCreateFile("file");
+      const file = await directory.getOrCreateFile('file');
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
@@ -196,11 +196,11 @@ export function storageTests(
       await assert.rejects(
         async () => await file.read(0, buffer.length),
         Error,
-        "Closed"
+        'Closed'
       );
     });
 
-    it("del method", async function () {
+    it('del method', async function () {
       const storage = createStorage();
 
       // File.del() throws 'Not deletable' error for IDb.
@@ -223,11 +223,11 @@ export function storageTests(
       await assert.rejects(
         async () => await file.read(buffer1.length, buffer2.length),
         Error,
-        "Could not satisfy length"
+        'Could not satisfy length'
       );
     });
 
-    it("stat of new file", async () => {
+    it('stat of new file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
       const file = await directory.getOrCreateFile(randomText());
