@@ -9,6 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import assert from 'assert';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
@@ -94,15 +95,55 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
     this._serviceStream.close();
-    await this._params.bridgeService.close({ proxyId: this._proxyId });
+    try {
+      await this._params.bridgeService.close({ proxyId: this._proxyId });
+    } catch(err: any) {
+      log.catch(err);
+    }
+    this.closed.emit();
+    this._closed = true;
+  }
+
+  /**
+   * Called when underlying proxy service becomes unavailable.
+   */
+  async forceClose() {
+    this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
   }
 }
 
-export const createWebRTCTransportProxyFactory = ({ bridgeService }: { bridgeService: BridgeService }): TransportFactory => {
-  return (params: TransportOptions) => new WebRTCTransportProxy({
-    bridgeService,
-    ...params
-  });
-};
+export class WebRTCTransportProxyFactory implements TransportFactory {
+  private _bridgeService: BridgeService | undefined;
+  private _connections = new Set<WebRTCTransportProxy>();
+
+  constructor () {}
+
+  /**
+   * Sets the current BridgeService to be used to open connections.
+   * Calling this method will close any existing connections.
+   */
+  setBridgeService (bridgeService: BridgeService | undefined): this {
+    this._bridgeService = bridgeService;
+
+    for (const connection of this._connections) {
+      connection.forceClose();
+    }
+
+    return this;
+  }
+
+  create (options: TransportOptions): Transport {
+    assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
+
+    const transport = new WebRTCTransportProxy({
+      ...options,
+      bridgeService: this._bridgeService
+    });
+    this._connections.add(transport);
+    transport.closed.on(() => this._connections.delete(transport));
+
+    return transport;
+  }
+}
