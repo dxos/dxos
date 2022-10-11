@@ -49,7 +49,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected getOrCreateFile (path: string, filename: string, opts?: any): File {
+  protected async getOrCreateFile (path: string, filename: string, opts?: any): Promise<File> {
     const fullPath = join(path, filename);
 
     // TODO(burdon): Check if closed. Clone only if ram.
@@ -61,6 +61,13 @@ export abstract class AbstractStorage implements Storage {
       const raw = this._createFile(path, filename, opts);
       file = wrapFile(raw, this.type);
       this._files.set(fullPath, file);
+    }
+
+    // write to initialize file
+    try {
+      await file.stat();
+    } catch (error) {
+      await file.write(0, Buffer.from(''));
     }
 
     return file;

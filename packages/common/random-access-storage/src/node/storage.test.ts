@@ -45,7 +45,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.getOrCreateFile('file');
+    const file = await storageDir.getOrCreateFile('file');
     await write(file);
     // TODO(burdon): Why test undefined?
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
@@ -56,7 +56,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.getOrCreateFile('file');
+    const file = await storageDir.getOrCreateFile('file');
     await write(file);
 
     // Check dir destroy.
@@ -69,7 +69,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = storageDir.getOrCreateFile('file');
+    const file = await storageDir.getOrCreateFile('file');
     await write(file);
 
     // Check storage destroy.
@@ -86,7 +86,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
     const storageSubDirectory = storageDir.createDirectory('sub');
-    const file = storageSubDirectory.getOrCreateFile('file');
+    const file = await storageSubDirectory.getOrCreateFile('file');
     await write(file);
     await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
 

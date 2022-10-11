@@ -13,7 +13,7 @@ export class Directory {
     public readonly path: string,
     // TODO(burdon): Create interface for these methods.
     private readonly _getFilesInPath: () => File[],
-    private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
+    private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => Promise<File>,
     private readonly _deleteFilesInPath: () => Promise<void>
   ) {}
 
@@ -39,7 +39,7 @@ export class Directory {
   /**
    * Get or create a new file.
    */
-  getOrCreateFile (filename: string, opts?: any): File {
+  async getOrCreateFile (filename: string, opts?: any): Promise<File> {
     return this._getOrCreateFile(this.path, filename, opts);
   }
 
