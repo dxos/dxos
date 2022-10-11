@@ -382,7 +382,6 @@ export function inMemoryTests () {
       joinedPeers: ComplexSet<PublicKey>
     }
 
-    
     /**
      * The real system being tested.
      */

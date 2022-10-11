@@ -110,7 +110,7 @@ export class Protocol {
     this._discoveryKey = options.discoveryKey;
     this._initiator = !!options.initiator;
 
-    assert(typeof options.userSession?.peerId === 'string', 'Peer Id (hex string type) must be set for the protocol session.')
+    assert(typeof options.userSession?.peerId === 'string', 'Peer Id (hex string type) must be set for the protocol session.');
 
     this._stream = new ProtocolStream(this._initiator, {
       ...this._streamOptions,
@@ -125,7 +125,7 @@ export class Protocol {
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {
-          if(err.message.includes('NMSG_ERR_CLOSE')) { // Connection was closed during handshake.
+          if (err.message.includes('NMSG_ERR_CLOSE')) { // Connection was closed during handshake.
             this._stream.destroy();
             return;
           }

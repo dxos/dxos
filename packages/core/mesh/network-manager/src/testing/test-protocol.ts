@@ -18,7 +18,7 @@ const EXTENSION_NAME = 'test';
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
 export const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
-  if(!peerId) {
+  if (!peerId) {
     return undefined;
   }
   return PublicKey.bufferize(peerId);
