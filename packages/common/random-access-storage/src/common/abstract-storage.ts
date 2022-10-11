@@ -55,19 +55,10 @@ export abstract class AbstractStorage implements Storage {
     // TODO(burdon): Check if closed. Clone only if ram.
     // Some variants (e.g., Node) do not allow files to be reopened.
     let file = this._getFileIfExists(fullPath);
-    if (file && file?.clone) {
-      file = wrapFile(file.clone(), file.type);
-    } else {
+    if (!file) {
       const raw = this._createFile(path, filename, opts);
       file = wrapFile(raw, this.type);
       this._files.set(fullPath, file);
-    }
-
-    // write to initialize file
-    try {
-      await file.stat();
-    } catch (error) {
-      await file.write(0, Buffer.from(''));
     }
 
     return file;
@@ -82,7 +73,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
-      if (file && !file.destroyed) {
+      if (file && !file.destroyed && !file.closed) {
         return file;
       }
     }

@@ -2,11 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import del from 'del';
-import raf from 'random-access-file';
+import del from "del";
+import raf from "random-access-file";
 
-import { AbstractStorage, StorageType } from '../common';
-import { RandomAccessFile } from '../types';
+import { AbstractStorage, StorageType } from "../common";
+import { RandomAccessFile } from "../types";
 
 /**
  * Storage interface implementation for Node.
@@ -14,11 +14,20 @@ import { RandomAccessFile } from '../types';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected override _createFile (path: string, filename: string, opts: any = {}): RandomAccessFile {
-    return raf(filename, { directory: path, ...opts });
+  protected override _createFile(
+    path: string,
+    filename: string,
+    opts: any = {}
+  ): RandomAccessFile {
+    const file = raf(filename, { directory: path, ...opts });
+
+    // Empty write to create file on a drive.
+    file.write(0, Buffer.from(""));
+
+    return file;
   }
 
-  protected override async _destroy () {
+  protected override async _destroy() {
     await del(this.path);
   }
 }

@@ -14,8 +14,16 @@ import { StorageType } from './storage';
  */
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
+  private _ram?: RandomAccessFile; 
 
   protected override _createFile (path: string, filename: string): RandomAccessFile {
-    return ram();
+    if (!this._ram || this._ram?.destroyed) {
+      this._ram = ram()
+    } else {
+      this._ram = this._ram.clone!()
+      // Hack to reopen RAM storage.
+      this._ram.closed = false;
+    }
+    return this._ram!;
   }
 }

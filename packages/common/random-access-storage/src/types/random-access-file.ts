@@ -23,6 +23,9 @@ export interface RandomAccessFile extends RandomAccessStorageProperties {
 
   truncate? (offset: number, cb: Callback<void>): void
   clone? (): RandomAccessFile
+  
+  destroyed: boolean
+  closed: boolean
 }
 
 export type RandomAccessFileConstructor = (filename: string, options?: any) => RandomAccessFile
