@@ -369,14 +369,22 @@ export function inMemoryTests () {
     }));
   });
 
-  it('property-based it', async () => {
+  // This test performs random actions in the real system and compares it's state with a simplified model.
+  it('property-based tests', async () => {
+
+    /**
+     * The simplified model of the system.
+     */
     interface Model {
       topic: PublicKey
       peers: ComplexSet<PublicKey>
       joinedPeers: ComplexSet<PublicKey>
     }
 
-    // TODO(burdon): Name?
+    
+    /**
+     * The real system being tested.
+     */
     interface Real {
       peers: ComplexMap<PublicKey, {
         networkManager: NetworkManager

@@ -18,6 +18,9 @@ const EXTENSION_NAME = 'test';
 // TODO(dboreham): This method should be added to Protocol (and one for "my ID"?).
 export const getPeerId = (protocol: Protocol) => {
   const { peerId } = protocol.getSession() ?? {};
+  if(!peerId) {
+    return undefined;
+  }
   return PublicKey.bufferize(peerId);
 };
 
@@ -109,7 +112,9 @@ export class TestProtocolPlugin extends EventEmitter {
   }
 
   async _receive (protocol: Protocol, data: any) {
-    const peerIdStr = PublicKey.stringify(getPeerId(protocol));
+    const peerId = getPeerId(protocol);
+    assert(peerId !== undefined);
+    const peerIdStr = PublicKey.stringify(peerId);
     let payload = data.data.toString();
     if (this._uppercase) {
       payload = payload.toUpperCase();
