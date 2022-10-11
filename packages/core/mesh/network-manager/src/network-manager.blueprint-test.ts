@@ -370,6 +370,7 @@ export function inMemoryTests () {
   });
 
   // This test performs random actions in the real system and compares it's state with a simplified model.
+  // TODO(dmaretskyi): Run this on with actual webrtc and signal servers.
   it('property-based tests', async () => {
 
     /**
