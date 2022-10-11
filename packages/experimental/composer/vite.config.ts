@@ -7,6 +7,7 @@ import {resolve} from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/plugin';
+import { dxosPlugin } from '@dxos/vite-plugin';
 
 // https://vitejs.dev/config/
 export default defineConfig((env) => ({
@@ -29,6 +30,7 @@ export default defineConfig((env) => ({
     }
   },
   plugins: [
+    dxosPlugin(__dirname),
     react(),
     themePlugin({
       content: [
@@ -49,8 +51,5 @@ export default defineConfig((env) => ({
         theme_color: '#ffffff'
       }
     })
-  ],
-  define: {
-    global: {}
-  }
+  ]
 }));
