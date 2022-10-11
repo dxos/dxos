@@ -5,7 +5,7 @@
 import expect from 'expect';
 import 'raf/polyfill';
 import React, { useEffect } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import waitForExpect from 'wait-for-expect';
 
@@ -48,7 +48,7 @@ describe('useStateMutator', function () {
 
   it('udpates the value.', async function () {
     act(() => {
-      render(<Test />, rootContainer);
+      createRoot(rootContainer).render(<Test />);
     });
 
     const pre = rootContainer.querySelector('pre');

@@ -3,7 +3,7 @@
 //
 
 import React, { StrictMode, useRef, useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -93,9 +93,9 @@ const App = () => {
   );
 };
 
-render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-  document.getElementById('root')
-);
+createRoot(document.getElementById('root')!)
+  .render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
