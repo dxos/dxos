@@ -73,11 +73,6 @@ export function storageTests (
       const storage = createStorage();
       const directory = storage.createDirectory();
 
-      // TODO(yivlad): Doesn't work for node.
-      if (storage.type === StorageType.NODE) {
-        this.skip();
-      }
-
       const fileName = randomText();
       const file = await directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
