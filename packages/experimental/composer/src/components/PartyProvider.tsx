@@ -21,7 +21,10 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
 
   useEffect(() => {
     if (!party) {
+      console.log('[create party]');
       void client.echo.createParty().then(party => setParty(party));
+    } else if (party) {
+      console.log('[party]', party);
     }
   }, [client, party]);
 
