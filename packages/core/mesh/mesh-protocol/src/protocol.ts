@@ -110,8 +110,6 @@ export class Protocol {
     this._discoveryKey = options.discoveryKey;
     this._initiator = !!options.initiator;
 
-    assert(typeof options.userSession?.peerId === 'string', 'Peer Id (hex string type) must be set for the protocol session.');
-
     this._stream = new ProtocolStream(this._initiator, {
       ...this._streamOptions,
       onhandshake: async () => {
