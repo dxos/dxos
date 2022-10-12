@@ -4,6 +4,7 @@
 
 import defaultHypercore from 'hypercore';
 import type { HypercoreConstructor, ReplicationOptions, ValueEncoding } from 'hypercore';
+import type { ProtocolStream } from 'hypercore-protocol';
 import assert from 'node:assert';
 import { callbackify } from 'node:util';
 import type { RandomAccessStorageConstructor } from 'random-access-storage';
@@ -29,7 +30,8 @@ type FeedDescriptorOptions = {
 /**
  * Abstract handler for an Hypercore feed.
  */
-// TODO(burdon): Rename FeedWrapper (and hide hypercore).
+// TODO(burdon): Replace with simpler wrapper that has well formed (opened) cores.
+//  Only expose append and replicate (different interfaces).
 export class FeedDescriptor {
   private readonly _directory: Directory;
   private readonly _key: PublicKey;
@@ -42,7 +44,7 @@ export class FeedDescriptor {
   // Semaphore to protect open/close.
   private readonly _lock = new Lock();
 
-  private _feed: HypercoreFeed | null;
+  private _feed?: HypercoreFeed;
 
   constructor ({
     directory,
@@ -63,13 +65,16 @@ export class FeedDescriptor {
     this._secretKey = secretKey;
     this._disableSigning = !!disableSigning;
     this._signer = signer;
-    this._feed = null;
+    this._feed = undefined;
   }
 
   get key () {
     return this._key;
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Remove.
   get secretKey () {
     return this._secretKey;
@@ -82,12 +87,16 @@ export class FeedDescriptor {
   /**
    * @deprecated
    */
-  // TODO(burdon): Remove (debug only); and remove from open().
+  // TODO(burdon): Remove.
   get feed (): HypercoreFeed {
     assert(this._feed, 'Feed not initialized.');
     return this._feed;
   }
 
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Remove.
   get initialized () {
     return !!this._feed;
   }
@@ -110,9 +119,9 @@ export class FeedDescriptor {
   }
 
   /**
-   * Open an Hypercore feed based on the related feed options.
-   * This is an atomic operation, FeedDescriptor makes sure that the feed is not going to open again.
+   * Atomically open feed.
    */
+  // TODO(burdon): Replace with factory.
   async open (): Promise<HypercoreFeed> {
     if (this.opened) {
       return this._feed ?? failUndefined();
@@ -125,33 +134,26 @@ export class FeedDescriptor {
     return this._feed ?? failUndefined();
   }
 
-  /**
-   * Close the Hypercore referenced by the descriptor.
-   */
   async close () {
+    console.log('CLOSE !!!!!!!!!!!!!!!', this._feed);
     if (!this.opened) {
       return;
     }
 
-    assert(this._feed);
-    await this._feed.close();
-    // await this._lock.executeSynchronized(async () => {
-    //   await pify(this._feed?.close.bind(this._feed))();
-    // });
+    await this._lock.executeSynchronized(async () => {
+      assert(this._feed);
+      console.log('closing...', this.opened, this._feed.opened, this._feed.closing);
+      await this._feed.close();
+      console.log('done');
+    });
   }
 
-  /**
-   * Append the message block returning the sequence number.
-   */
   append (message: any): Promise<number> {
     assert(this._feed);
     return this._feed.append(message);
   }
 
-  /**
-   * Return replication stream.
-   */
-  replicate (initiator: boolean, options?: ReplicationOptions) {
+  replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream {
     assert(this._feed);
     return this._feed?.replicate(initiator, options);
   }

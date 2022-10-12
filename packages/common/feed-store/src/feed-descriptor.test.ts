@@ -9,7 +9,6 @@ import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
 import { HypercoreFeed } from '@dxos/hypercore';
-import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -18,39 +17,36 @@ import { FeedDescriptor } from './feed-descriptor';
 describe.only('FeedDescriptor', function () {
   let feedDescriptor: FeedDescriptor;
 
-  // TODO(burdon): Is this safe?
+  // TODO(burdon): Remove.
   beforeEach(async function () {
-    const keyring = new Keyring();
-    feedDescriptor = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
-      key: await keyring.createKey(),
-      signer: keyring
-    });
+    // const keyring = new Keyring();
+    // feedDescriptor = new FeedDescriptor({
+    //   directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+    //   key: await keyring.createKey(),
+    //   signer: keyring
+    // });
   });
 
   afterEach(async function () {
-    await feedDescriptor.close(); // TODO(burdon): Error: Feed is closed.
+    // await feedDescriptor.close(); // TODO(burdon): Error: Feed is closed.
   });
 
-  it('create', function () {
-    expect(feedDescriptor).toBeInstanceOf(FeedDescriptor);
-    expect(feedDescriptor.key).toBeDefined();
-  });
-
-  it('can create feed descriptor with public key but without private key', async function () {
-    // TODO(burdon): When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
+  it.only('create without private key', async function () {
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
-      key,
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed')
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed'),
+      key
     });
 
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
+
+    await fd.open();
+    await fd.close(); // TODO(burdon): Error: Feed is closed.
   });
 
-  it.only('create custom options', async function () {
+  it('create custom options', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
@@ -63,9 +59,6 @@ describe.only('FeedDescriptor', function () {
     expect(fd.key).toBeInstanceOf(PublicKey);
     expect(fd.secretKey).toBeInstanceOf(Buffer);
     expect(fd.valueEncoding).toBe('json');
-
-    await fd.open();
-    await fd.feed.close(); // TODO(burdon): Error: Feed is closed.
   });
 
   it('open', async function () {
