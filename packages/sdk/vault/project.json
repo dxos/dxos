@@ -1,0 +1,47 @@
+{
+  "sourceRoot": "packages/sdk/vault/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/sdk/vault/dist",
+        "tsConfig": "packages/sdk/vault/tsconfig.json",
+        "main": "packages/sdk/vault/src/index.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/sdk/vault/**/*.{ts,js}"
+        ]
+      }
+    },
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/sdk/vault/out",
+        "configFile": "packages/sdk/vault/vite.config.ts"
+      }
+    },
+    "e2e": {
+      "executor": "@dxos/playwright:playwright",
+      "options": {
+        "testPatterns": [
+          "packages/sdk/vault/playwright/tests/*.spec.ts"
+        ],
+        "config": "packages/sdk/vault/playwright/config.ts"
+      }
+    }
+  },
+  "implicitDependencies": [
+    "playwright"
+  ]
+}
