@@ -34,9 +34,6 @@ export class HaloInvitations {
     log('Create invitation');
     const identity = this._identityManager.identity ?? failUndefined();
 
-    let finished = false;
-    const lock = new Lock()
-
     const swarmKey = PublicKey.random();
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
@@ -76,18 +73,10 @@ export class HaloInvitations {
         await peer.open();
         log('Inviter RPC open');
 
-
-        await lock.executeSynchronized(async () => {
-          // If for some reason the invitee reconnects we don't want to repeat the admission process.
-          if (finished) {
-            return;
-          }
-          await peer.rpc.InviteeInvitationService.acceptIdenity({
-            identityKey: identity.identityKey,
-            haloSpaceKey: identity.haloSpaceKey,
-            genesisFeedKey: identity.haloGenesisFeedKey
-          });
-          finished = true;
+        await peer.rpc.InviteeInvitationService.acceptIdenity({
+          identityKey: identity.identityKey,
+          haloSpaceKey: identity.haloSpaceKey,
+          genesisFeedKey: identity.haloGenesisFeedKey
         });
 
         onFinish?.();
@@ -103,16 +92,23 @@ export class HaloInvitations {
   async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Identity> {
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
-    let finished = false;
-
+    let connected = false;
     const done = new Trigger();
-    const lock = new Lock()
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),
       protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
         log('Invitee connected');
+        // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
+        // TODO(dmaretskyi): More robust way to handle this.
+        if (connected) {
+          // TODO(dmaretskyi): Close connection.
+          log.warn('Ignore duplicate connection')
+          return;
+        }
+        connected = true;
+
         const peer = createProtoRpcPeer({
           requested: {
             InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')
@@ -123,38 +119,31 @@ export class HaloInvitations {
           handlers: {
             InviteeInvitationService: {
               acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
-                await lock.executeSynchronized(async () => {
-                  if (finished) {
-                    throw new Error('Already accepted the identity.');
-                  }
+                try {
+                  log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
+                  const identity = await this._identityManager.acceptIdentity({
+                    identityKey,
+                    haloSpaceKey,
+                    haloGenesisFeedKey: genesisFeedKey
+                  });
 
-                  try {
-                    log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
-                    const identity = await this._identityManager.acceptIdentity({
-                      identityKey,
-                      haloSpaceKey,
-                      haloGenesisFeedKey: genesisFeedKey
-                    });
-                    finished = true;
+                  log('Try to admit device');
+                  await peer.rpc.InviterInvitationService.admitDevice({
+                    deviceKey: identity.deviceKey,
+                    controlFeedKey: PublicKey.random(),
+                    dataFeedKey: PublicKey.random()
+                  });
 
-                    log('Try to admit device');
-                    await peer.rpc.InviterInvitationService.admitDevice({
-                      deviceKey: identity.deviceKey,
-                      controlFeedKey: PublicKey.random(),
-                      dataFeedKey: PublicKey.random()
-                    });
+                  log('Waiting for identity to be ready');
+                  await identity.ready();
 
-                    log('Waiting for identity to be ready');
-                    await identity.ready();
+                  await this._onInitialize();
 
-                    await this._onInitialize();
-
-                    done.wake();
-                    log('Invitee done');
-                  } catch (err: any) {
-                    log.catch(err);
-                  }
-                })
+                  done.wake();
+                  log('Invitee done');
+                } catch (err: any) {
+                  log.catch(err);
+                }
               }
             }
           },
