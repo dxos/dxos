@@ -94,24 +94,24 @@ describe('testing node storage types', function () {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('persistance', async () => {
+  it('persistance', async function () {
     const filename = randomText();
     const data = Buffer.from(randomText());
 
     {
-      const storage = createStorage({root: ROOT_DIRECTORY});
+      const storage = createStorage({ root: ROOT_DIRECTORY });
       const dir = storage.createDirectory('dir');
       const file = await dir.getOrCreateFile(filename);
       await file.write(0, data);
-      file.close();
+      await file.close();
     }
 
     {
-      const storage = createStorage({root: ROOT_DIRECTORY});
+      const storage = createStorage({ root: ROOT_DIRECTORY });
       const dir = storage.createDirectory('dir');
       const file = await dir.getOrCreateFile(filename);
       const dataRead = await file.read(0, data.length);
-      expect(dataRead.equals(data)).toBeTruthy();
+      expect(data.equals(dataRead)).toBeTruthy();
     }
   });
 

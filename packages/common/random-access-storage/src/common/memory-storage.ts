@@ -15,21 +15,21 @@ import { getFullPath } from './utils';
  */
 export class MemoryStorage extends AbstractStorage {
   public override type: StorageType = StorageType.RAM;
-  private _ramFiles = new Map<string, RandomAccessStorage>; 
+  private _ramFiles = new Map<string, RandomAccessStorage>();
 
   protected override _createFile (path: string, filename: string): RandomAccessStorage {
     const fullPath = getFullPath(path, filename);
     let ramFile = this._ramFiles.get(fullPath);
 
-    if (!ramFile|| ramFile?.destroyed) {
+    if (!ramFile || ramFile?.destroyed) {
       ramFile = ram();
     } else {
-      ramFile = ramFile.clone!()
+      ramFile = ramFile.clone!();
       // Hack to reopen RAM storage.
       ramFile.closed = false;
     }
 
-    this._ramFiles.set(fullPath, ramFile!)
+    this._ramFiles.set(fullPath, ramFile!);
     return ramFile!;
   }
 }

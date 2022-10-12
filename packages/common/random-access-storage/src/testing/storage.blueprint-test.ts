@@ -17,7 +17,7 @@ export function storageTests (
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
-    const result = data.equals(Buffer.from(bufferRead));
+    const result = data.equals(bufferRead);
     expect(result).toBeTruthy();
   };
 
@@ -78,7 +78,7 @@ export function storageTests (
       const file = await directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
       const data = await file.read(0, size);
-      expect(Buffer.from('').equals(Buffer.from(data))).toBeTruthy();
+      expect(Buffer.from('').equals(data)).toBeTruthy();
     });
 
     it('reopen and check if data is the same', async () => {
@@ -96,14 +96,14 @@ export function storageTests (
       {
         const file = await directory.getOrCreateFile(fileName);
         const data2 = await file.read(0, data1.length);
-        expect(data1.equals(Buffer.from(data2))).toBeTruthy();
+        expect(data1.equals((data2))).toBeTruthy();
         await file.close();
       }
     });
 
     it('destroy clears all data', async () => {
-      if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)){
-        return
+      if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)) {
+        return;
       }
       const storage = createStorage();
       const directory = storage.createDirectory();
@@ -144,8 +144,8 @@ export function storageTests (
       await file2.write(0, buffer2);
 
       // 4. Check that they have correct content.
-      expect(Buffer.from(await file1.read(0, buffer1.length))).toStrictEqual(buffer1);
-      expect(Buffer.from(await file2.read(0, buffer2.length))).toStrictEqual(buffer2);
+      expect((await file1.read(0, buffer1.length))).toStrictEqual(buffer1);
+      expect((await file2.read(0, buffer2.length))).toStrictEqual(buffer2);
     });
 
     it('write in directory/sub-directory/file', async () => {
@@ -158,7 +158,7 @@ export function storageTests (
       await file.write(0, buffer);
 
       const readBuffer = await file.read(0, buffer.length);
-      expect(Buffer.from(readBuffer)).toStrictEqual(buffer);
+      expect(readBuffer).toStrictEqual(buffer);
       await file.close();
     });
 
@@ -197,7 +197,7 @@ export function storageTests (
 
       await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
-      expect(Buffer.from(await file.read(0, buffer1.length))).toStrictEqual(buffer1);
+      expect((await file.read(0, buffer1.length))).toStrictEqual(buffer1);
       await assert.rejects(
         async () => await file.read(buffer1.length, buffer2.length),
         Error,

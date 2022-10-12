@@ -22,7 +22,7 @@ export interface File extends RandomAccessStorageProperties {
   readonly native: RandomAccessStorage
 
   write (offset: number, data: Buffer): Promise<void>
-  read (offset: number, size: number): Promise<Buffer | Uint8Array>
+  read (offset: number, size: number): Promise<Buffer>
   del (offset: number, size: number): Promise<void>
   stat (): Promise<FileStat>
   close (): Promise<Error>
@@ -54,6 +54,11 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
 export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
   // NOTE: This is safe since these are interface methods only (not used internally).
   const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
+  const trueRead = file.read.bind(file);
+  file.read = async (...args) => {
+    const data = await trueRead(...args)
+    return Buffer.from(data)
+  }
   return Object.assign(file, {
     type,
     native
