@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, InvitationDescriptor } from '@dxos/client';
 
 void (async () => {
   const client = new Client({ runtime: { client: { mode: 2 /* remote */ } } });
@@ -13,4 +13,11 @@ void (async () => {
   }
 
   console.log(client.info);
+
+  (window as any).dxos = client;
+
+  (window as any).acceptInvitation = async (invitation: any) => {
+    console.log(await client.echo.acceptInvitation(InvitationDescriptor.fromQueryParameters(invitation)));
+  }
 })();
+.
