@@ -52,7 +52,7 @@ export class DataServiceHost {
           itemId: id,
           genesis: {
             itemType: entity.type,
-            modelType: entity.modelMeta.type,
+            modelType: entity.modelType,
             link: entity instanceof Link ? {
               source: entity.sourceId,
               target: entity.targetId

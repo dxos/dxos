@@ -27,20 +27,12 @@ export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
-  private readonly _modelFactory: ModelFactory;
-
+  
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
-    private readonly _haloProxy: HaloProxy
-  ) {
-
-    // TODO(dmaretskyi): .
-    this._modelFactory = new ModelFactory();
-    // _serviceProvider instanceof ClientServiceProxy
-    //   ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
-
-    this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
-  }
+    private readonly _modelFactory: ModelFactory,
+    private readonly _haloProxy: HaloProxy,
+  ) {}
 
   toString () {
     return `EchoProxy(${JSON.stringify(this.info)})`;

@@ -2493,6 +2493,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
@@ -2526,6 +2527,7 @@ importers:
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
+      '@dxos/text-model': link:../../core/echo/text-model
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/readable-stream': 2.3.9
