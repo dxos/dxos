@@ -2,8 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-// @dxos/mocha platform=nodejs
-
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 // import debug from 'debug';

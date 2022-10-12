@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import hypercore from 'hypercore';
 import pify from 'pify';
 
 import { Event } from '@dxos/async';
@@ -10,10 +9,6 @@ import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/keys';
 import { MaybePromise } from '@dxos/util';
 
 import { FeedDescriptor } from './feed-descriptor';
-
-const test = () => {
-  const core = hypercore();
-};
 
 export type WriteReceipt = {
   feedKey: PublicKey

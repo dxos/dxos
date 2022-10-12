@@ -28,9 +28,6 @@
       "path": "../random-access-storage"
     },
     {
-      "path": "../shims"
-    },
-    {
       "path": "../util"
     }
   ]

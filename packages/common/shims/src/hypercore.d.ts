@@ -175,10 +175,16 @@ declare module 'hypercore' {
     undownload (id: number): void
   }
 
+  export type HypercoreConstructor = (
+    storage: string | RandomAccessStorageConstructor,
+    key?: Buffer | string,
+    options?: HypercoreOptions
+  ) => Hypercore
+
   // Default constructor.
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
   export function hypercore (
-    storage: RandomAccessStorageConstructor,
+    storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
     options?: HypercoreOptions
   ): Hypercore

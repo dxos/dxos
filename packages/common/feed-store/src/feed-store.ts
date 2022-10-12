@@ -3,11 +3,11 @@
 //
 
 import defaultHypercore from 'hypercore';
+import type { HypercoreConstructor, ValueEncoding } from 'hypercore';
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
 import type { Signer } from '@dxos/crypto';
-import type { HypercoreConstructor, ValueEncoding } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
