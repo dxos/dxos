@@ -2,15 +2,12 @@
 // Copyright 2019 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import hypercore from 'hypercore';
 import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
-
-chai.use(chaiAsPromised);
 
 describe('Hypercore', function () {
   it('replicates', async function () {

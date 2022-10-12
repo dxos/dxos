@@ -4,7 +4,8 @@
 
 // @dxos/mocha platform=nodejs
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 // import debug from 'debug';
 import faker from 'faker';
 import hypercore from 'hypercore';
@@ -13,9 +14,10 @@ import ram from 'random-access-memory';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { HypercoreFeed, wrapFeed } from './hypercore-feed';
+import { wrapFeed } from './hypercore-feed';
 import { batch, createDataItem, TestDataItem } from './testing';
+
+chai.use(chaiAsPromised);
 
 // const log = debug('dxos:hypercore:test');
 
@@ -25,7 +27,7 @@ const logRow = (label: string, values: number[]) => {
 };
 
 describe('Feed', function () {
-  it('construct, open and close', async function () {
+  it('constructs, opens and closes', async function () {
     // const key = sha256(PublicKey.random().toHex());
     const core = hypercore(ram);
     const feed = wrapFeed(core);
@@ -55,51 +57,61 @@ describe('Feed', function () {
     await expect(feed.open()).to.be.rejectedWith(Error);
   });
 
-  it('append to and read from multiple feeds.', async function () {
-    const factory = new HypercoreFactory(ram);
-    const numFeeds = 10;
-    const numBlocks = 100;
+  it('replicates', async function () {
+    const { publicKey, secretKey } = createKeyPair();
+    const feed1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
+    const feed2 = wrapFeed(hypercore(ram, publicKey));
 
-    const feeds: HypercoreFeed[] = await Promise.all(Array.from({ length: numFeeds }).map(async () => {
-      const feed = factory.create();
-      await feed.open();
-      return feed;
-    }));
-
-    // Write data.
+    // Wait for ready.
     {
-      const data = Array.from({ length: numBlocks }).map((_, i) => createDataItem(i));
-      for await (const datum of data) {
-        const feed = faker.random.arrayElement(feeds);
-        await feed.append(Buffer.from(JSON.stringify(datum)));
+      await feed1.open();
+      await feed2.open();
+    }
+
+    const numBlocks = 10;
+
+    // Sync.
+    {
+      const stream1 = feed1.replicate(true);
+      const stream2 = feed2.replicate(false);
+
+      const [streamsClosed, onClose] = latch({ count: 2 });
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+      expect(feed1.stats.peers).to.have.lengthOf(1);
+      expect(feed2.stats.peers).to.have.lengthOf(1);
+
+      // Wait for complete sync.
+      feed2.on('sync', () => {
+        stream1.end();
+        stream2.end();
+      });
+
+      // Write.
+      for (let i = 0; i < numBlocks; i++) {
+        void feed1.append(`test-${i}`);
       }
+
+      await streamsClosed();
     }
 
-    // Test.
+    // Close.
     {
-      const total = feeds.reduce((result, feed) => result + feed.length, 0);
-      expect(total).to.eq(numBlocks);
-
-      const feed = faker.random.arrayElement(feeds);
-      const block1 = await feed.head();
-      const block2 = await feed.get(feed.length - 1);
-      expect(block1.toString()).to.eq(block2.toString());
-
-      const blocks = await feed.getBatch(0, feed.length);
-      expect(blocks.length).to.eq(feed.length);
+      await feed1.close();
+      await feed1.close();
     }
 
-    await Promise.all(feeds.map(feed => feed.close()));
+    expect(feed1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+    expect(feed2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
 
-  it('replicate messages', async function () {
-    const factory = new HypercoreFactory(ram);
+  it('replicates in batches', async function () {
     const numBlocks = 100;
 
     // Replicating feeds must have the same public key.
     const { publicKey, secretKey } = createKeyPair();
-    const feed1 = factory.create(publicKey, { secretKey });
-    const feed2 = factory.create(publicKey);
+    const feed1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
+    const feed2 = wrapFeed(hypercore(ram, publicKey));
 
     await feed1.open();
     await feed2.open();
