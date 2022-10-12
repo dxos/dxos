@@ -43,8 +43,8 @@ test.describe('multi-worker', () => {
   });
 
   test('communicates over multiple independent rpc ports.', async () => {
-    const a = await page.locator('[data-testid=parent] >> p:right-of(:text("value"), 10)').textContent();
-    const b = await page.locator('[data-testid=proxy] >> p:right-of(:text("value"), 10)').textContent();
+    const a = await page.locator('[data-testid="dxos:channel-one"] >> p:right-of(:text("value"), 10)').textContent();
+    const b = await page.locator('[data-testid="dxos:channel-two"] >> p:right-of(:text("value"), 10)').textContent();
     const [intA, intB] = [a!, b!].map(str => parseInt(str.slice(1)));
 
     expect(Math.abs(intA - intB)).toBeGreaterThanOrEqual(10000);

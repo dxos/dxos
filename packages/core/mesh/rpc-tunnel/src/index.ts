@@ -4,4 +4,4 @@
 
 export * from './message';
 export * from './ports';
-export * from './relays';
+export * from './port-muxer';

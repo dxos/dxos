@@ -211,7 +211,8 @@ export class Client {
   private initializeIFramePort () {
     const source = new URL(this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN);
     const iframe = createIFrame(source.toString(), IFRAME_ID);
-    return createIFramePort({ origin: source.origin, iframe });
+    // TODO(wittjosiah): Use well-known channel constant.
+    return createIFramePort({ origin: source.origin, iframe, channel: 'dxos' });
   }
 
   private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {

@@ -11,6 +11,7 @@ import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
+import { Channels } from './channels';
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
@@ -21,7 +22,7 @@ const App = ({ port }: { port: MessagePort }) => {
   const [value, setValue] = useState<string>();
 
   useAsyncEffect(async () => {
-    const rpcPort = await createWorkerPort({ port, source: 'parent', destination: 'child' });
+    const rpcPort = await createWorkerPort({ port, channel: Channels.ONE });
     const client = createProtoRpcPeer({
       requested: {
         TestStreamService: schema.getService('example.testing.rpc.TestStreamService')

@@ -28,7 +28,8 @@ export const AuthPage = () => {
       return;
     }
 
-    const rpcPort = createIFramePort({ origin });
+    // TODO(wittjosiah): Use channel constant defined by client.
+    const rpcPort = createIFramePort({ origin, channel: 'dxos' });
     const remoteClient = new Client(client.config, { rpcPort });
     await remoteClient.initialize();
     setRemoteClient(remoteClient);
