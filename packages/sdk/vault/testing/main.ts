@@ -20,4 +20,3 @@ void (async () => {
     console.log(await client.echo.acceptInvitation(InvitationDescriptor.fromQueryParameters(invitation)));
   }
 })();
-.
