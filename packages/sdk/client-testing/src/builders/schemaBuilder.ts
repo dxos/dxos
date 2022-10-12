@@ -6,8 +6,9 @@ import debug from 'debug';
 import faker from 'faker';
 
 import {
-  Database, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA
+  Database, Item, ObjectModel, Schema, SchemaDef, SchemaField, SchemaRef, TYPE_SCHEMA
 } from '@dxos/client';
+import type { Model } from '@dxos/model-factory';
 
 import { TestType } from './partyBuilder';
 
@@ -114,7 +115,7 @@ export class SchemaBuilder {
  * Create items for a given schema.
  * NOTE: Assumes that referenced items have already been constructed.
  */
-  async createItems ({ schema, fields }: SchemaDefWithGenerator, numItems: number) {
+  async createItems ({ schema, fields }: SchemaDefWithGenerator, numItems: number): Promise<Item<Model<any, any>>[]> {
     log(`Creating items for: ${schema}`);
 
     return await Promise.all(Array.from({ length: numItems }).map(async () => {
@@ -146,7 +147,7 @@ export class SchemaBuilder {
   /**
  * Create data for all schemas.
  */
-  async createData (customSchemas?: SchemaDefWithGenerator[], options: { [key: string]: number } = {}) {
+  async createData (customSchemas?: SchemaDefWithGenerator[], options: { [key: string]: number } = {}): Promise<Item<Model<any, any>>[][]> {
     const schemas = customSchemas ?? Object.values(DefaultSchemaDefs);
     const result = [];
     // Synchronous loop.
