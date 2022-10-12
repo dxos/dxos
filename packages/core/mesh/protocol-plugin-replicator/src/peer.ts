@@ -3,6 +3,7 @@
 //
 
 import debug from 'debug';
+import { ReplicationOptions } from 'hypercore';
 
 import { Event } from '@dxos/async';
 import { FeedDescriptor } from '@dxos/feed-store';
@@ -42,7 +43,11 @@ export class Peer {
     const message = {
       '@type': 'dxos.mesh.protocol.replicator.Container',
       type: 'share-feeds',
-      data: feeds.map(({ key, discoveryKey }) => ({ '@type': 'dxos.mesh.protocol.replicator.Feed', key, discoveryKey }))
+      data: feeds.map(({ key, discoveryKey }) => ({
+        '@type': 'dxos.mesh.protocol.replicator.Feed',
+        key,
+        discoveryKey
+      }))
     };
 
     await this._extension.send(message, { oneway: true });
@@ -88,14 +93,17 @@ export class Peer {
       return true;
     }
 
-    const replicateOptions = Object.assign({}, this._protocol.streamOptions, { stream, initiator: this._protocol.initiator });
-    if (!replicateOptions.live && replicateOptions.expectedFeeds === undefined) {
-      // TODO(burdon): These options don't match the API.
+    const options: ReplicationOptions = Object.assign({}, this._protocol.streamOptions, {
+      initiator: this._protocol.initiator,
+      stream // TODO(burdon): ???
+    });
+
+    // TODO(burdon): These options don't match the API.
+    if (!options.live && options.expectedFeeds === undefined) {
       stream.expectedFeeds = stream.feeds.length + 1;
     }
 
-    // TODO(burdon): These options don't match the API.
-    feedDescriptor.feed.replicate(replicateOptions as any);
+    feedDescriptor.feed.replicate(options as any);
     this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
 
     log('stream replicated', feedDescriptor.key.toHex());

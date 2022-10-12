@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
-import ProtocolStream, { ProtocolStreamOptions as ProtocolStreamOptionsDef } from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamOptions } from 'hypercore-protocol';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
@@ -23,7 +23,7 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
-export interface ProtocolStreamOptions extends ProtocolStreamOptionsDef {
+export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
   /**
    * You can use this to detect if you connect to yourself.
    */
@@ -46,7 +46,7 @@ export interface ProtocolOptions {
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
-  streamOptions?: ProtocolStreamOptionsDef
+  streamOptions?: ExtendedProtocolStreamOptions
 
   discoveryKey?: Buffer
 
@@ -75,25 +75,25 @@ export class Protocol {
   readonly handshake = new Event<this>();
 
   private readonly _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
-  private readonly _streamOptions: ProtocolStreamOptions | undefined;
+  private readonly _streamOptions: ExtendedProtocolStreamOptions | undefined;
   private readonly _initTimeout: number;
   private readonly _initiator!: boolean;
   private readonly _discoveryKey?: Buffer;
 
-  private _extensionInit: ExtensionInit;
-  private _init = false;
-  private _connected = false;
-  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
-
   /**
    * Protocol extensions.
    */
-  private _extensionMap = new Map<string, Extension>();
+  private readonly _extensionMap = new Map<string, Extension>();
 
   /**
    * https://github.com/mafintosh/hypercore-protocol
    */
   private readonly _stream: ProtocolStream;
+
+  private _extensionInit: ExtensionInit;
+  private _init = false;
+  private _connected = false;
+  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey

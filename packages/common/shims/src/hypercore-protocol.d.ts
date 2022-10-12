@@ -50,8 +50,6 @@ declare module 'hypercore-protocol' {
    * https://github.com/hypercore-protocol/hypercore-protocol#const-stream--new-protocolinitiator-options
    */
   export interface ProtocolStreamOptions {
-    // TODO(burdon): Not documented.
-    live?: boolean
 
     // Set to false to disable encryption if you are already piping through a encrypted stream.
     encrypted?: boolean

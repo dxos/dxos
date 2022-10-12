@@ -63,6 +63,7 @@ declare module 'hypercore' {
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
    */
   export type ReplicationOptions = {
+    initiator?: boolean
     live?: boolean
     ack?: boolean
     download?: boolean
