@@ -30,7 +30,6 @@ export const ProfileProvider = (props: PropsWithChildren<{}>) => {
 
   useEffect(() => {
     if (client && !profile) {
-      console.log('[create profile]');
       void client.halo.createProfile();
     } else if (profile) {
       console.log('[profile]', profile);
