@@ -36,7 +36,12 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
               tailwindcss({
                 theme: {
                   fontFamily: {
-                    sans: [
+                    body: [
+                      'Roboto FlexVariable',
+                      ...defaultConfig.theme.fontFamily.sans
+                    ],
+                    display: [
+                      'Space GroteskVariable',
                       'Roboto FlexVariable',
                       ...defaultConfig.theme.fontFamily.sans
                     ],
@@ -53,15 +58,28 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       error: tailwindColors.red,
                       info: tailwindColors.cyan,
                       primary: {
-                        100: '#3a1d60',
-                        200: '#373885',
-                        300: '#2555a5',
-                        400: '#0071bb',
-                        500: '#008dc9',
-                        600: '#00a9d8',
-                        700: '#00c5e6',
-                        800: '#55dfec',
-                        900: '#96f7f0'
+                        // Key color #00e0e0
+                        // Hue torsion -73.5º
+                        // C*CP black 1.0, C*CP white 1.0
+                        50: '#110c2a',
+                        100: '#101940',
+                        150: '#0b2453',
+                        200: '#003164',
+                        250: '#003e70',
+                        300: '#004b7c',
+                        350: '#005887',
+                        400: '#006693',
+                        450: '#00749e',
+                        500: '#0082a9',
+                        550: '#0091b3',
+                        600: '#00a0be',
+                        650: '#00afc7',
+                        700: '#00bed0',
+                        750: '#00ced8',
+                        800: '#00dedf',
+                        850: '#3cede4',
+                        900: '#69fae8',
+                        950: '#b9ffee'
                       },
                       transparent: 'transparent',
                       current: 'currentColor',
