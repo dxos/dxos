@@ -13,7 +13,6 @@ export function storageTests (
   testGroupName: StorageType,
   createStorage: () => Storage
 ) {
-
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
@@ -26,7 +25,7 @@ export function storageTests (
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
-      const file = await directory.getOrCreateFile(fileName);
+      const file = directory.getOrCreateFile(fileName);
       await file.close();
     });
 
@@ -34,7 +33,7 @@ export function storageTests (
       const storage = createStorage();
       const fileName = randomText();
       const directory = storage.createDirectory();
-      const file = await directory.getOrCreateFile(fileName);
+      const file = directory.getOrCreateFile(fileName);
 
       // eslint-disable-next-line unused-imports/no-unused-vars
       for (const _ of Array.from(Array(5))) {
@@ -51,10 +50,8 @@ export function storageTests (
       const directory = storage.createDirectory();
 
       const count = 10;
-      const files = await Promise.all(
-        [...Array(count)].map(
-          async () => await directory.getOrCreateFile(randomText())
-        )
+      const files = [...Array(count)].map(() =>
+        directory.getOrCreateFile(randomText())
       );
 
       for (const file of files) {
@@ -75,7 +72,7 @@ export function storageTests (
       const directory = storage.createDirectory();
 
       const fileName = randomText();
-      const file = await directory.getOrCreateFile(fileName);
+      const file = directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
       const data = await file.read(0, size);
       expect(Buffer.from('').equals(data)).toBeTruthy();
@@ -88,21 +85,25 @@ export function storageTests (
       const data1 = Buffer.from(randomText());
 
       {
-        const file = await directory.getOrCreateFile(fileName);
+        const file = directory.getOrCreateFile(fileName);
         await writeAndCheck(file, data1);
         await file.close();
       }
 
       {
-        const file = await directory.getOrCreateFile(fileName);
+        const file = directory.getOrCreateFile(fileName);
         const data2 = await file.read(0, data1.length);
-        expect(data1.equals((data2))).toBeTruthy();
+        expect(data1.equals(data2)).toBeTruthy();
         await file.close();
       }
     });
 
     it('destroy clears all data', async () => {
-      if (new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(testGroupName)) {
+      if (
+        new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(
+          testGroupName
+        )
+      ) {
         return;
       }
       const storage = createStorage();
@@ -110,7 +111,7 @@ export function storageTests (
       const fileName = randomText();
 
       {
-        const file = await directory.getOrCreateFile(fileName);
+        const file = directory.getOrCreateFile(fileName);
         const buffer = Buffer.from(randomText());
         await writeAndCheck(file, buffer);
         await file.close();
@@ -118,7 +119,7 @@ export function storageTests (
       }
 
       {
-        const file = await directory.getOrCreateFile(fileName);
+        const file = directory.getOrCreateFile(fileName);
         const { size } = await file.stat();
         expect(size).toBe(0);
         await file.close();
@@ -136,16 +137,16 @@ export function storageTests (
       const buffer2 = Buffer.from(randomText());
 
       // 2. Create a file in first subdirectory and write content
-      const file1 = await dir1.getOrCreateFile(fileName);
+      const file1 = dir1.getOrCreateFile(fileName);
       await file1.write(0, buffer1);
 
       // 3. Create a file with the same name in the second subdir and write different content
-      const file2 = await dir2.getOrCreateFile(fileName);
+      const file2 = dir2.getOrCreateFile(fileName);
       await file2.write(0, buffer2);
 
       // 4. Check that they have correct content.
-      expect((await file1.read(0, buffer1.length))).toStrictEqual(buffer1);
-      expect((await file2.read(0, buffer2.length))).toStrictEqual(buffer2);
+      expect(await file1.read(0, buffer1.length)).toStrictEqual(buffer1);
+      expect(await file2.read(0, buffer2.length)).toStrictEqual(buffer2);
     });
 
     it('write in directory/sub-directory/file', async () => {
@@ -153,7 +154,7 @@ export function storageTests (
       const dir = storage.createDirectory('directory');
       const subDir = dir.createDirectory('subDirectory');
 
-      const file = await subDir.getOrCreateFile('file');
+      const file = subDir.getOrCreateFile('file');
       const buffer = Buffer.from(randomText());
       await file.write(0, buffer);
 
@@ -165,7 +166,7 @@ export function storageTests (
     it('delete directory', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-      const file = await directory.getOrCreateFile('file');
+      const file = directory.getOrCreateFile('file');
 
       const buffer = Buffer.from(randomText());
       await writeAndCheck(file, buffer);
@@ -187,7 +188,7 @@ export function storageTests (
       }
 
       const directory = storage.createDirectory();
-      const file = await directory.getOrCreateFile(randomText());
+      const file = directory.getOrCreateFile(randomText());
 
       const buffer1 = Buffer.from(randomText());
       await file.write(0, buffer1);
@@ -197,7 +198,7 @@ export function storageTests (
 
       await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
-      expect((await file.read(0, buffer1.length))).toStrictEqual(buffer1);
+      expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
       await assert.rejects(
         async () => await file.read(buffer1.length, buffer2.length),
         Error,
@@ -208,7 +209,7 @@ export function storageTests (
     it('stat of new file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-      const file = await directory.getOrCreateFile(randomText());
+      const file = directory.getOrCreateFile(randomText());
       expect((await file.stat()).size).toBe(0);
     });
   });

@@ -45,7 +45,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = await storageDir.getOrCreateFile('file');
+    const file = storageDir.getOrCreateFile('file');
     await write(file);
     // TODO(burdon): Why test undefined?
     await expect(fs.access(path.join(dir, 'dir', 'file'), constants.F_OK)).resolves.toBeUndefined();
@@ -56,7 +56,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = await storageDir.getOrCreateFile('file');
+    const file = storageDir.getOrCreateFile('file');
     await write(file);
 
     // Check dir destroy.
@@ -69,7 +69,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
 
-    const file = await storageDir.getOrCreateFile('file');
+    const file = storageDir.getOrCreateFile('file');
     await write(file);
 
     // Check storage destroy.
@@ -86,7 +86,7 @@ describe('testing node storage types', function () {
     const storage = createStorage({ root: dir });
     const storageDir = storage.createDirectory('dir');
     const storageSubDirectory = storageDir.createDirectory('sub');
-    const file = await storageSubDirectory.getOrCreateFile('file');
+    const file = storageSubDirectory.getOrCreateFile('file');
     await write(file);
     await expect(fs.access(path.join(dir, 'dir', 'sub', 'file'), constants.F_OK)).resolves.toBeUndefined();
 
@@ -101,7 +101,7 @@ describe('testing node storage types', function () {
     {
       const storage = createStorage({ root: ROOT_DIRECTORY });
       const dir = storage.createDirectory('dir');
-      const file = await dir.getOrCreateFile(filename);
+      const file = dir.getOrCreateFile(filename);
       await file.write(0, data);
       await file.close();
     }
@@ -109,7 +109,7 @@ describe('testing node storage types', function () {
     {
       const storage = createStorage({ root: ROOT_DIRECTORY });
       const dir = storage.createDirectory('dir');
-      const file = await dir.getOrCreateFile(filename);
+      const file = dir.getOrCreateFile(filename);
       const dataRead = await file.read(0, data.length);
       expect(data.equals(dataRead)).toBeTruthy();
     }

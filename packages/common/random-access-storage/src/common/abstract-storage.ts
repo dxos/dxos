@@ -49,7 +49,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  protected async getOrCreateFile (path: string, filename: string, opts?: any): Promise<File> {
+  protected getOrCreateFile (path: string, filename: string, opts?: any): File {
     const fullPath = join(path, filename);
 
     let native;
