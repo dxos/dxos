@@ -14,8 +14,17 @@ import { AbstractStorage, StorageType } from '../common';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected override _createFile (path: string, filename: string, opts: any = {}): RandomAccessStorage {
-    return raf(filename, { directory: path, ...opts });
+  protected override _createFile (
+    path: string,
+    filename: string,
+    opts: any = {}
+  ): RandomAccessStorage {
+    const file = raf(filename, { directory: path, ...opts });
+
+    // Empty write to create file on a drive.
+    file.write(0, Buffer.from(''));
+
+    return file;
   }
 
   protected override async _destroy () {

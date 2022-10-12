@@ -62,12 +62,15 @@ describe('identity-manager', function () {
 
     const peer1 = await setupPeer({ storage });
     await peer1.identityManager.open();
+    console.log('!!!!!!!');
     const identity1 = await peer1.identityManager.createIdentity();
+    console.log('!!!!!!!');
     await peer1.identityManager.close();
     await peer1.feedStore.close();
 
     const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
+
     expect(peer2.identityManager.identity).toBeDefined();
     expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
     expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey);

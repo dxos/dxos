@@ -7,9 +7,12 @@ import assert from 'node:assert';
 
 import { File, Storage, StorageType } from '../common';
 
-export function storageTests (testGroupName: string, createStorage: () => Storage) {
-  const randomText = () => Math.random().toString(36).substring(2);
+export const randomText = () => Math.random().toString(36).substring(2);
 
+export function storageTests (
+  testGroupName: StorageType,
+  createStorage: () => Storage
+) {
   const writeAndCheck = async (file: File, data: Buffer, offset = 0) => {
     await file.write(offset, data);
     const bufferRead = await file.read(offset, data.length);
@@ -47,8 +50,9 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const directory = storage.createDirectory();
 
       const count = 10;
-      const files = Array.from(Array(count))
-        .map(() => directory.getOrCreateFile(randomText()));
+      const files = [...Array(count)].map(() =>
+        directory.getOrCreateFile(randomText())
+      );
 
       for (const file of files) {
         const buffer = Buffer.from(randomText());
@@ -63,19 +67,15 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       }
     });
 
-    it('reads from empty file', async function () {
+    it('read from empty file', async () => {
       const storage = createStorage();
       const directory = storage.createDirectory();
-
-      // TODO(yivlad): Doesn't work for node.
-      if (storage.type === StorageType.NODE) {
-        this.skip();
-      }
 
       const fileName = randomText();
       const file = directory.getOrCreateFile(fileName);
       const { size } = await file.stat();
-      expect(size).toBe(0);
+      const data = await file.read(0, size);
+      expect(Buffer.from('').equals(data)).toBeTruthy();
     });
 
     it('reopen and check if data is the same', async () => {
@@ -93,12 +93,19 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       {
         const file = directory.getOrCreateFile(fileName);
         const data2 = await file.read(0, data1.length);
-        expect(data2).toEqual(data1);
+        expect(data1.equals(data2)).toBeTruthy();
         await file.close();
       }
     });
 
-    it.skip('destroy clears all data', async () => {
+    it('destroy clears all data', async () => {
+      if (
+        new Set([StorageType.IDB, StorageType.CHROME, StorageType.FIREFOX]).has(
+          testGroupName
+        )
+      ) {
+        return;
+      }
       const storage = createStorage();
       const directory = storage.createDirectory();
       const fileName = randomText();
@@ -113,7 +120,7 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
 
       {
         const file = directory.getOrCreateFile(fileName);
-        const { size } = await file.stat(); // TODO(burdon): Error: ENOENT: no such file or directory.
+        const { size } = await file.stat();
         expect(size).toBe(0);
         await file.close();
       }
@@ -137,9 +144,9 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       const file2 = dir2.getOrCreateFile(fileName);
       await file2.write(0, buffer2);
 
-      // 4. Check that they have corrent content.
-      expect(await file1.read(0, buffer1.length)).toEqual(buffer1);
-      expect(await file2.read(0, buffer2.length)).toEqual(buffer2);
+      // 4. Check that they have correct content.
+      expect(await file1.read(0, buffer1.length)).toStrictEqual(buffer1);
+      expect(await file2.read(0, buffer2.length)).toStrictEqual(buffer2);
     });
 
     it('write in directory/sub-directory/file', async () => {
@@ -152,30 +159,8 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.write(0, buffer);
 
       const readBuffer = await file.read(0, buffer.length);
-      expect(readBuffer).toEqual(buffer);
+      expect(readBuffer).toStrictEqual(buffer);
       await file.close();
-    });
-
-    it('delete file', async function () {
-      const storage = createStorage();
-      const directory = storage.createDirectory();
-
-      // TODO(yivlad): Works only for StorageType.RAM.
-      if (storage.type !== StorageType.RAM) {
-        this.skip();
-      }
-
-      const fileName = randomText();
-      const file = directory.getOrCreateFile(fileName);
-
-      const buffer = Buffer.from(randomText());
-      await writeAndCheck(file, buffer);
-      await file.destroy();
-
-      const reopened = directory.getOrCreateFile(fileName);
-      const { size } = await reopened.stat();
-      expect(size).toBe(0);
-      await reopened.close();
     });
 
     it('delete directory', async () => {
@@ -187,13 +172,17 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await writeAndCheck(file, buffer);
 
       await directory.delete();
-      await assert.rejects(async () => await file.read(0, buffer.length), Error, 'Closed');
+      await assert.rejects(
+        async () => await file.read(0, buffer.length),
+        Error,
+        'Closed'
+      );
     });
 
-    it('truncate file', async function () {
+    it('del method', async function () {
       const storage = createStorage();
 
-      // File.truncate() throws 'Not deletable' error for IDb.
+      // File.del() throws 'Not deletable' error for IDb.
       if (storage.type === StorageType.IDB) {
         this.skip();
       }
@@ -210,7 +199,18 @@ export function storageTests (testGroupName: string, createStorage: () => Storag
       await file.del(buffer1.length, buffer2.length);
       expect((await file.stat()).size).toBe(buffer1.length);
       expect(await file.read(0, buffer1.length)).toStrictEqual(buffer1);
-      await assert.rejects(async () => await file.read(buffer1.length, buffer2.length), Error, 'Could not satisfy length');
+      await assert.rejects(
+        async () => await file.read(buffer1.length, buffer2.length),
+        Error,
+        'Could not satisfy length'
+      );
+    });
+
+    it('stat of new file', async () => {
+      const storage = createStorage();
+      const directory = storage.createDirectory();
+      const file = directory.getOrCreateFile(randomText());
+      expect((await file.stat()).size).toBe(0);
     });
   });
 }

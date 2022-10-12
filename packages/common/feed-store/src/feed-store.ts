@@ -92,13 +92,15 @@ export class FeedStore {
    */
   async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer): Promise<FeedDescriptor> {
     log('open read/write feed', { key });
-    if (this._descriptors.has(key.toHex())) {
-      const descriptor = this._descriptors.get(key.toHex())!;
+    let descriptor = this._descriptors.get(key.toHex());
+    if (descriptor) {
       assert(descriptor.writable, 'Feed already exists and is not writable.');
       return descriptor;
     }
 
-    const descriptor = await this._createDescriptor({ key, signer });
+    console.log('??');
+    descriptor = await this._createDescriptor({ key, signer });
+    console.log(':::::::::', descriptor, key);
     assert(descriptor.writable);
     return descriptor;
   }
@@ -126,7 +128,9 @@ export class FeedStore {
 
     this._descriptors.set(feedDescriptor.key.toString(), feedDescriptor);
 
+    console.log(111111111);
     await feedDescriptor.open();
+    console.log(333333333);
     this.feedOpenedEvent.emit(feedDescriptor);
     return feedDescriptor;
   }

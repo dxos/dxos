@@ -67,7 +67,6 @@ export class IdentityManager {
 
   private async _constructIdentity (identityRecord: IdentityRecord) {
     assert(!this._identity);
-
     log('Constructing identity', { identityRecord });
 
     const space = await this._constructSpace({
@@ -89,6 +88,7 @@ export class IdentityManager {
   }
 
   private async _constructSpace ({ spaceRecord, swarmIdentity, networkPlugins }: ConstructSpaceParams) {
+    console.log(':::::::::::');
     const controlFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeControlFeedKey, this._keyring);
     const dataFeed = await this._feedStore.openReadWriteFeedWithSigner(spaceRecord.writeDataFeedKey, this._keyring);
 
@@ -126,16 +126,22 @@ export class IdentityManager {
         writeDataFeedKey: await this._keyring.createKey()
       }
     };
+
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
       const credentials = [
-        ...(await generator.createSpaceGenesis(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey)),
-        await generator.createFeedAdmission(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
+        // Space genesis.
+        ...(await generator.createSpaceGenesis(
+          identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey)),
 
-        // Write device chain
+        // Feed admission.
+        await generator.createFeedAdmission(
+          identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
+
+        // Device authorization (writes device chain).
         await generator.createDeviceAuthorization(identityRecord.deviceKey)
       ];
 

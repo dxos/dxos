@@ -15,7 +15,7 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 
-describe('FeedDescriptor', function () {
+describe.only('FeedDescriptor', function () {
   let feedDescriptor: FeedDescriptor;
 
   // TODO(burdon): Is this safe?
@@ -29,7 +29,7 @@ describe('FeedDescriptor', function () {
   });
 
   afterEach(async function () {
-    await feedDescriptor.close();
+    await feedDescriptor.close(); // TODO(burdon): Error: Feed is closed.
   });
 
   it('create', function () {
@@ -43,13 +43,14 @@ describe('FeedDescriptor', function () {
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
       key,
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed') // TODO(burdon): RAM?
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed')
     });
+
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
   });
 
-  it('create custom options', function () {
+  it.only('create custom options', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
@@ -62,6 +63,9 @@ describe('FeedDescriptor', function () {
     expect(fd.key).toBeInstanceOf(PublicKey);
     expect(fd.secretKey).toBeInstanceOf(Buffer);
     expect(fd.valueEncoding).toBe('json');
+
+    await fd.open();
+    await fd.feed.close(); // TODO(burdon): Error: Feed is closed.
   });
 
   it('open', async function () {

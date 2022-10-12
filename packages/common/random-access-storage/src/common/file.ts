@@ -3,7 +3,11 @@
 //
 
 import pify from 'pify';
-import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
+import type {
+  FileStat,
+  RandomAccessStorage,
+  RandomAccessStorageProperties
+} from 'random-access-storage';
 
 import { StorageType } from './storage';
 
@@ -21,18 +25,18 @@ export interface File extends RandomAccessStorageProperties {
   readonly type: StorageType
   readonly native: RandomAccessStorage
 
-  write (offset: number, data: Buffer): Promise<void>
-  read (offset: number, size: number): Promise<Buffer>
-  del (offset: number, size: number): Promise<void>
-  stat (): Promise<FileStat>
-  close (): Promise<Error>
-  destroy (): Promise<Error>
+  write(offset: number, data: Buffer): Promise<void>
+  read(offset: number, size: number): Promise<Buffer>
+  del(offset: number, size: number): Promise<void>
+  stat(): Promise<FileStat>
+  close(): Promise<Error>
+  destroy(): Promise<Error>
 
   // Not supported in node, memory.
   truncate? (offset: number): Promise<void>
 
   // random-access-memory only.
-  clone? (): RandomAccessStorage
+  clone?(): RandomAccessStorage
 }
 
 const pifyFields = (object: any, type: StorageType, fields: string[]) => {
@@ -50,10 +54,19 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
 
 /**
  * Construct async File wrapper.
+ * NOTE: This is safe since these are interface methods only (not used internally).
  */
 export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
-  // NOTE: This is safe since these are interface methods only (not used internally).
-  const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
+  const file = pifyFields(native, type, [
+    'write',
+    'read',
+    'del',
+    'stat',
+    'close',
+    'destroy',
+    'truncate'
+  ]);
+
   return Object.assign(file, {
     type,
     native

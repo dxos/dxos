@@ -25,7 +25,7 @@ export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperti
   // Hypercore
   /** @deprecated remove in v10 (becomes property) */
   ready (): Promise<void>
-  append (data: string | Buffer | (string | Buffer)[]): Promise<void>
+  append (data: string | Buffer | (string | Buffer)[]): Promise<number>
   /** @deprecated remove in v10 */
   flush (): Promise<void>
   createReadStream (options?: any): Readable

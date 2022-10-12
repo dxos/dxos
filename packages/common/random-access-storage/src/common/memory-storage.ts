@@ -18,4 +18,11 @@ export class MemoryStorage extends AbstractStorage {
   protected override _createFile (path: string, filename: string): RandomAccessStorage {
     return ram();
   }
+
+  protected override _openFile (file: RandomAccessStorage): RandomAccessStorage {
+    console.log('???', file);
+    const newFile = file.clone!();
+    (newFile as any).closed = false;
+    return newFile;
+  }
 }
