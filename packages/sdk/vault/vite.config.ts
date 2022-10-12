@@ -22,7 +22,8 @@ export default defineConfig({
       '@dxos/log',
       '@dxos/protocols',
       '@dxos/rpc',
-      '@dxos/rpc-tunnel'
+      '@dxos/rpc-tunnel',
+      '@dxos/network-manager'
     ]
   },
   build: {
