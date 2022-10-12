@@ -15,7 +15,6 @@ chai.use(chaiAsPromised);
 describe('Hypercore', function () {
   it('replicates', async function () {
     const { publicKey, secretKey } = createKeyPair();
-
     const core1 = hypercore(ram, publicKey, { secretKey });
     const core2 = hypercore(ram, publicKey);
 
@@ -25,7 +24,7 @@ describe('Hypercore', function () {
       core1.open(done);
       core2.open(done);
 
-      await ready;
+      await ready();
     }
 
     const numBlocks = 10;
@@ -35,8 +34,8 @@ describe('Hypercore', function () {
       const stream1 = core1.replicate(true);
       const stream2 = core2.replicate(false);
 
-      const [closed, close] = latch({ count: 2 });
-      stream1.pipe(stream2, close).pipe(stream1, close);
+      const [streamsClosed, onClose] = latch({ count: 2 });
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
       expect(core1.stats.peers).to.have.lengthOf(1);
       expect(core2.stats.peers).to.have.lengthOf(1);
@@ -52,7 +51,7 @@ describe('Hypercore', function () {
         core1.append(`test-${i}`);
       }
 
-      await closed;
+      await streamsClosed();
     }
 
     // Close.
@@ -61,7 +60,7 @@ describe('Hypercore', function () {
       core1.close(close);
       core1.close(close);
 
-      await closed;
+      await closed();
     }
 
     expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);

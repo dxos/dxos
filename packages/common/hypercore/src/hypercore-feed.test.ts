@@ -5,6 +5,7 @@
 // @dxos/mocha platform=nodejs
 
 import { expect } from 'chai';
+// import debug from 'debug';
 import faker from 'faker';
 import hypercore from 'hypercore';
 import ram from 'random-access-memory';
@@ -16,7 +17,14 @@ import { HypercoreFactory } from './hypercore-factory';
 import { HypercoreFeed, wrapFeed } from './hypercore-feed';
 import { batch, createDataItem, TestDataItem } from './testing';
 
-describe('Factory', function () {
+// const log = debug('dxos:hypercore:test');
+
+// TODO(burdon): Factor out table logger.
+const logRow = (label: string, values: number[]) => {
+  // console.log(`${label.padEnd(6)} ${values.map(value => String(value).padStart(3)).join(' ')}`);
+};
+
+describe('Feed', function () {
   it('construct, open and close', async function () {
     // const key = sha256(PublicKey.random().toHex());
     const core = hypercore(ram);
@@ -25,6 +33,7 @@ describe('Factory', function () {
     expect(feed.opened).to.be.false;
     expect(feed.closed).to.be.false;
 
+    // Open.
     await feed.open();
     expect(feed.opened).to.be.true;
     expect(feed.closed).to.be.false;
@@ -34,6 +43,7 @@ describe('Factory', function () {
     expect(feed.opened).to.be.true;
     expect(feed.closed).to.be.false;
 
+    // Close.
     await feed.close();
     expect(feed.opened).to.be.true; // Expected.
     expect(feed.closed).to.be.true;
@@ -83,102 +93,98 @@ describe('Factory', function () {
   });
 
   it('replicate messages', async function () {
-    // TODO(burdon): Files must be unique since 6 cores per feed -- need one factory per feed! { key, secret_key, tree, data, bitfield, signatures).
     const factory = new HypercoreFactory(ram);
-    const numBlocks = 10;
-
-    const log = (label: string, count: number, total: number) =>
-      console.log(`${label.padEnd(6)} ${String(count).padStart(4)}/${String(total)}`);
+    const numBlocks = 100;
 
     // Replicating feeds must have the same public key.
     const { publicKey, secretKey } = createKeyPair();
-
     const feed1 = factory.create(publicKey, { secretKey });
-    await feed1.open();
-
     const feed2 = factory.create(publicKey);
+
+    await feed1.open();
     await feed2.open();
 
-    const stream1 = feed1.replicate(true, { live: true });
-    const stream2 = feed2.replicate(false, { live: true });
-
-    // Closed
-    // TODO(burdon): Return function with timeout.
-    const [closed, close] = latch({ count: 2 });
+    const stream1 = feed1.replicate(true);
+    const stream2 = feed2.replicate(false);
 
     // Start replication.
-    stream1.pipe(stream2, close).pipe(stream1, close);
+    const [streamsClosed, onClose] = latch({ count: 2 });
+    stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
     expect(feed1.stats.peers).to.have.lengthOf(1);
     expect(feed2.stats.peers).to.have.lengthOf(1);
 
-    // Wait until all uploaded.
-    const [waitForUpload, incUpload] = latch({ count: numBlocks });
+    // Replicate messages.
+    {
+      // Wait until all uploaded.
+      const [waitForDownloaded, incDownload] = latch({ count: numBlocks });
 
-    // Monitor uploads
-    let uploaded = 0;
-    feed1.on('upload', () => {
-      uploaded++;
-      log('up', uploaded, feed1.length);
-      incUpload();
-    });
+      // Monitor uploads.
+      let uploaded = 0;
+      feed1.on('upload', () => {
+        uploaded++;
+        logRow(' up', [uploaded, feed1.length]);
+      });
 
-    // Monitor downloads.
-    let downloaded = 0;
-    feed2.on('download', (seq: number, data: Buffer) => {
-      downloaded++;
-      const { id } = JSON.parse(data.toString()) as TestDataItem;
-      expect(id).to.eq(seq);
-      log('down', downloaded, feed2.length);
-      expect(downloaded).to.be.lessThanOrEqual(uploaded);
-    });
+      // Monitor downloads.
+      let downloaded = 0;
+      feed2.on('download', (seq: number, data: Buffer) => {
+        downloaded++;
+        const { id } = JSON.parse(data.toString()) as TestDataItem;
+        expect(id).to.eq(seq);
+        logRow(' down', [downloaded, feed2.length]);
+        expect(downloaded).to.be.lessThanOrEqual(uploaded);
+        incDownload();
+      });
 
-    // Monitor sync points (multiple since delayed writes).
-    feed2.on('sync', () => {
-      log('sync', uploaded, downloaded);
-      void feed2.download();
-    });
+      // Monitor sync points (multiple since delayed writes).
+      const sync = { started: 0, complete: 0 };
+      feed2.on('sync', () => {
+        logRow('=sync=', [++sync.started]);
 
-    // Write batch of messages with delay.
-    batch((next, i, remaining) => {
-      const size = faker.datatype.number({ min: 1, max: Math.min(10, remaining) });
-      for (let j = 0; j < size; j++) {
-        void feed1.append(JSON.stringify(createDataItem(i + j)));
-      }
+        // TODO(burdon): Possible race condition bug when closing feeds if callback isn't provided.
+        //  Uncaught Error: Feed is closed
+        void feed2.download(() => {
+          logRow('=done=', [++sync.complete]);
+        });
+      });
 
-      // Random delay.
-      setTimeout(() => {
-        next(size);
-      }, faker.datatype.number({ min: 0, max: 100 }));
-    }, numBlocks);
+      // Write batch of messages with delay.
+      batch((next, i, remaining) => {
+        const size = faker.datatype.number({ min: 1, max: Math.min(10, remaining) });
+        for (let j = 0; j < size; j++) {
+          void feed1.append(JSON.stringify(createDataItem(i + j)));
+        }
 
-    // Done.
-    await waitForUpload;
-    expect(uploaded).to.eq(downloaded);
+        // Random delay.
+        setTimeout(() => {
+          next(size);
+        }, faker.datatype.number({ min: 0, max: 100 }));
+      }, numBlocks);
+
+      // Done.
+      await waitForDownloaded();
+      expect(uploaded).to.eq(downloaded);
+    }
 
     // Close streams.
     {
       stream1.end();
       stream2.end();
 
-      await closed;
+      await streamsClosed();
       expect(stream1.destroyed).to.be.true;
       expect(stream2.destroyed).to.be.true;
-
-      expect(feed1.stats.totals.uploadedBlocks).to.eq(numBlocks);
-      expect(feed2.stats.totals.downloadedBlocks).to.eq(numBlocks);
-      expect(feed1.stats.totals.downloadedBytes).to.eq(feed2.stats.totals.uploadedBytes);
     }
 
     // Close feeds.
     {
       await feed1.close();
-      console.log(feed1.opening, feed1.opened, feed1.closing, feed1.closed);
-
-      // TODO(burdon): Not closed, but hypercore throws: "Feed is closed" (one of the random-access-storage is closed).
       await feed2.close();
-      console.log(feed2.opening, feed2.opened, feed2.closing, feed2.closed);
-    }
 
-  }).timeout(3000);
+      expect(feed1.writable).to.be.false;
+      expect(feed1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+      expect(feed2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+    }
+  }).timeout(5000);
 });

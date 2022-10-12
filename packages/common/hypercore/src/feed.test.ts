@@ -2,8 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import hypercore from 'hypercore';
 import ram from 'random-access-memory';
 
@@ -12,55 +11,52 @@ import { createKeyPair } from '@dxos/crypto';
 
 import { wrapFeed } from './hypercore-feed';
 
-chai.use(chaiAsPromised);
-
 describe('Feed', function () {
   it('replicates', async function () {
     const { publicKey, secretKey } = createKeyPair();
-
-    const core1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
-    const core2 = wrapFeed(hypercore(ram, publicKey));
+    const feed1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
+    const feed2 = wrapFeed(hypercore(ram, publicKey));
 
     // Wait for ready.
     {
-      await core1.open();
-      await core2.open();
+      await feed1.open();
+      await feed2.open();
     }
 
     const numBlocks = 10;
 
     // Sync.
     {
-      const stream1 = core1.replicate(true);
-      const stream2 = core2.replicate(false);
+      const stream1 = feed1.replicate(true);
+      const stream2 = feed2.replicate(false);
 
-      const [closed, close] = latch({ count: 2 });
-      stream1.pipe(stream2, close).pipe(stream1, close);
+      const [streamsClosed, onClose] = latch({ count: 2 });
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
-      expect(core1.stats.peers).to.have.lengthOf(1);
-      expect(core2.stats.peers).to.have.lengthOf(1);
+      expect(feed1.stats.peers).to.have.lengthOf(1);
+      expect(feed2.stats.peers).to.have.lengthOf(1);
 
       // Wait for complete sync.
-      core2.on('sync', () => {
+      feed2.on('sync', () => {
         stream1.end();
         stream2.end();
       });
 
       // Write.
       for (let i = 0; i < numBlocks; i++) {
-        void core1.append(`test-${i}`);
+        void feed1.append(`test-${i}`);
       }
 
-      await closed;
+      await streamsClosed();
     }
 
     // Close.
     {
-      await core1.close();
-      await core1.close();
+      await feed1.close();
+      await feed1.close();
     }
 
-    expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
-    expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+    expect(feed1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+    expect(feed2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
 });

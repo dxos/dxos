@@ -11,6 +11,7 @@ import type { Readable, Writable } from 'streamx';
 /**
  * Wrapped Hypercore.
  */
+// TODO(burdon): Rename Core.
 export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperties {
   readonly native: Hypercore
 
