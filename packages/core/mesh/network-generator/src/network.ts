@@ -10,7 +10,7 @@ import createGraph, { Graph } from 'ngraph.graph';
 import assert from 'node:assert';
 import { PassThrough, Stream } from 'stream';
 
-interface CreateStreamOptions {
+export interface CreateStreamOptions {
   initiator?: boolean
   topic?: Buffer
   channel?: Buffer
@@ -19,7 +19,7 @@ interface CreateStreamOptions {
 
 export interface Peer {
   id: Buffer
-  createStream?: (options: CreateStreamOptions) => Stream
+  createStream?: (options: CreateStreamOptions) => Stream // TODO(burdon): streamx?
 }
 
 interface Connection {

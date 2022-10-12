@@ -25,12 +25,12 @@ const kProtocol = Symbol('dxos.mesh.protocol');
 
 export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
   /**
-   * You can use this to detect if you connect to yourself.
+   * Used to detect if attempting to connect to self.
    */
   id?: Buffer
 
   /**
-   * Signal to the other peer that you want to keep this stream open forever.
+   * Keep the ProtocolStream open forever.
    */
   live?: boolean
 
@@ -41,24 +41,20 @@ export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
 }
 
 export interface ProtocolOptions {
-  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
-
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
   streamOptions?: ExtendedProtocolStreamOptions
-
-  discoveryKey?: Buffer
-
-  initTimeout?: number
 
   /**
    * Define a codec to encode/decode messages from extensions.
    */
   codec?: Codec<any>
 
+  discoveryKey?: Buffer
+  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
+  initTimeout?: number
   initiator: boolean
-
   userSession?: Record<string, any>
 }
 
@@ -106,7 +102,12 @@ export class Protocol {
   private _context: Record<string, any> = {};
 
   constructor (options: ProtocolOptions = { initiator: false }) {
-    const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
+    const {
+      discoveryToPublicKey = key => key,
+      streamOptions,
+      initTimeout = 5 * 1000
+    } = options;
+
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;
     this._initTimeout = initTimeout;
@@ -168,8 +169,10 @@ export class Protocol {
     return Array.from(this._extensionMap.keys());
   }
 
-  get streamOptions () {
-    return Object.assign({}, { id: this._stream!.publicKey }, this._streamOptions);
+  get streamOptions (): ExtendedProtocolStreamOptions {
+    return Object.assign({}, this._streamOptions, {
+      id: this._stream!.publicKey
+    });
   }
 
   get connected () {

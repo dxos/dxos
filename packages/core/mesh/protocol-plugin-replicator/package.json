@@ -25,6 +25,7 @@
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/mesh-protocol": "workspace:*",
+    "@dxos/network-generator": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "buffer-json-encoding": "^1.0.2",

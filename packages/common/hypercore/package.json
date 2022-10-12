@@ -23,7 +23,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "assert": "^2.0.0",
     "hypercore": "^9.12.0",
-    "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
+    "hypercore-protocol": "^8.0.7",
     "pify": "~5.0.0",
     "streamx": "^2.12.5"
   },

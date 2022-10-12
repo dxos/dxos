@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import crypto from 'crypto';
 import eos from 'end-of-stream';
 import multi from 'multi-read-stream';
+import { Stream } from 'stream';
 import waitForExpect from 'wait-for-expect';
 
 import { discoveryKey } from '@dxos/crypto';
@@ -13,6 +14,7 @@ import { createBatchStream, FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Protocol } from '@dxos/mesh-protocol';
+import type { Peer, CreateStreamOptions } from '@dxos/network-generator';
 import { ProtocolNetworkGenerator } from '@dxos/protocol-network-generator';
 import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -81,11 +83,9 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     }
   }));
 
-  return {
+  const peer: Peer = {
     id: peerId,
-    isClosed: () => closed,
-    getFeedsNum: () => Array.from((feedStore as any)._descriptors.values()).length,
-    createStream: ({ initiator }) => new Protocol({
+    createStream: ({ initiator }: CreateStreamOptions) => new Protocol({
       initiator: !!initiator,
       discoveryKey: discoveryKey(topic),
       streamOptions: {
@@ -96,7 +96,15 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       .setContext({ name: 'foo' })
       .setExtensions([replicator.createExtension()])
       .init()
-      .stream,
+      .stream as Stream // TODO(burdon): See network.ts which uses a different Stream interface.
+  };
+
+  return {
+    ...peer,
+
+    // TODO(burdon): This isn't part of the Peer interface.
+    isClosed: () => closed,
+    getFeedsNum: () => Array.from((feedStore as any)._descriptors.values()).length,
     append: (msg: any) => feed.append(msg),
     getMessages: () => {
       const messages: any[] = [];

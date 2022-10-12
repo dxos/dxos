@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import assert from 'assert';
 import debug from 'debug';
-import { ReplicationOptions } from 'hypercore';
 
 import { Event } from '@dxos/async';
 import { FeedDescriptor } from '@dxos/feed-store';
@@ -13,6 +13,7 @@ import { Feed as FeedData } from '@dxos/protocols/proto/dxos/mesh/replicator';
 const log = debug('dxos.replicator.peer');
 
 export class Peer {
+  // Active reeds being replicated.
   private readonly _feeds = new Map<string, FeedDescriptor>();
 
   readonly closed = new Event();
@@ -22,9 +23,10 @@ export class Peer {
     private _extension: Extension
   ) {}
 
-  get feeds () {
-    return this._feeds;
-  }
+  // TODO(burdon): Return array not map.
+  // get feeds () {
+  //   return this._feeds;
+  // }
 
   /**
    * Share feeds to the remote peer.
@@ -79,31 +81,34 @@ export class Peer {
    * @private
    */
   _replicate (feedDescriptor: FeedDescriptor): boolean {
-    if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
-      return false;
-    }
+    assert(feedDescriptor && feedDescriptor.feed.replicate); // TODO(burdon): Remvoe.
+    // if (!feedDescriptor || !feedDescriptor.feed.replicate) { // TODO(burdon): What does this test?
+    //   return false;
+    // }
 
     const { stream } = this._protocol;
     if (stream.destroyed) {
-      log('Stream already destroyed, cannot replicate.');
+      log('Stream destroyed; cannot replicate.');
       return false;
     }
 
+    // Already replicating.
     if (this._feeds.has(feedDescriptor.key.toHex())) {
       return true;
     }
 
-    const options: ReplicationOptions = Object.assign({}, this._protocol.streamOptions, {
-      initiator: this._protocol.initiator,
-      stream // TODO(burdon): ???
+    // TODO(burdon): Remove: these options don't match the API.
+    // const options: ReplicationOptions = Object.assign({}, this._protocol.streamOptions, {
+    //   stream
+    // });
+    // if (!options.live && options.expectedFeeds === undefined) {
+    //   stream.expectedFeeds = stream.feeds.length + 1;
+    // }
+
+    feedDescriptor.feed.replicate(this._protocol.initiator, {
+      stream
     });
 
-    // TODO(burdon): These options don't match the API.
-    if (!options.live && options.expectedFeeds === undefined) {
-      stream.expectedFeeds = stream.feeds.length + 1;
-    }
-
-    feedDescriptor.feed.replicate(options as any);
     this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
     log('Stream replicated', feedDescriptor.key.toHex());
     return true;

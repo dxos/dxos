@@ -63,7 +63,8 @@ declare module 'hypercore' {
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
    */
   export type ReplicationOptions = {
-    initiator?: boolean
+    initiator?: ProtocolStream | boolean
+    stream?: ProtocolStream
     live?: boolean
     ack?: boolean
     download?: boolean
@@ -153,7 +154,6 @@ declare module 'hypercore' {
     createWriteStream (options?: any): Writable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
-    replicate (options?: ReplicationOptions): ProtocolStream
     replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback

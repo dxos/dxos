@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/shims'",
+      "@dxos/shims",
       "mocha",
       "node"
     ]
@@ -30,9 +30,6 @@
     },
     {
       "path": "../../../common/feed-store"
-    },
-    {
-      "path": "../../../common/shims"
     },
     {
       "path": "../../protocols"
