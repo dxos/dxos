@@ -14,3 +14,7 @@ export default {
 export const Default = () => {
   return <Button>Hello</Button>;
 };
+
+export const Primary = () => {
+  return <Button variant='primary'>Hello</Button>;
+};
