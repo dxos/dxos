@@ -39,7 +39,8 @@ export const useProfile = (disableHaloLogin = false) => {
       iframe.setAttribute('style', 'border: 0; position: fixed; top: 0; right: 0; bottom: 0; left: 0; height: 100vh; width: 100vw;');
       document.body.appendChild(iframe);
 
-      const port = createIFramePort({ iframe, origin: source.origin });
+      // TODO(wittjosiah): Use channel constant defined by client.
+      const port = createIFramePort({ iframe, origin: source.origin, channel: 'dxos' });
       const peer = createProtoRpcPeer({
         requested: {},
         exposed: clientServiceBundle,
