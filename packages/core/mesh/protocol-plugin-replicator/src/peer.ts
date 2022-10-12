@@ -105,8 +105,7 @@ export class Peer {
 
     feedDescriptor.feed.replicate(options as any);
     this._feeds.set(feedDescriptor.key.toHex(), feedDescriptor);
-
-    log('stream replicated', feedDescriptor.key.toHex());
+    log('Stream replicated', feedDescriptor.key.toHex());
     return true;
   }
 }

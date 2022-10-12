@@ -5,7 +5,7 @@
     "types": [
       "@dxos/shims",
       "mocha",
-      "node",
+      "node"
     ]
   },
   "include": [
