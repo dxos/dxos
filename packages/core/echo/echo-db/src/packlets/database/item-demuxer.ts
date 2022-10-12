@@ -130,7 +130,7 @@ export class ItemDemuxer {
     return {
       itemId: item.id,
       itemType: item.type,
-      modelType: item.modelMeta.type,
+      modelType: item.modelType,
       parentId: item.parent?.id,
       model
     };

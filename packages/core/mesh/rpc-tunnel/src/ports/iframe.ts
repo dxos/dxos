@@ -2,17 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import debug from 'debug';
-
+import { log } from '@dxos/log';
 import { RpcPort } from '@dxos/rpc';
 
 import { MessageData } from '../message';
 
-const log = debug('dxos:rpc-tunnel:iframe-port');
-
 const sendToIFrame = (iframe: HTMLIFrameElement, origin: string, message: MessageData) => {
   if (!iframe.contentWindow) {
-    log('IFrame content window missing', { origin });
+    log.debug('IFrame content window missing', { origin });
     return;
   }
 
@@ -25,33 +22,35 @@ const sendToParentWindow = (origin: string, message: MessageData) => {
 };
 
 export type IFramePortOptions = {
-  origin: string
+  channel: string
   iframe?: HTMLIFrameElement
-  source?: string
-  destination?: string
+  origin?: string
+  onOrigin?: (origin: string) => void
 }
 
 /**
  * Create a RPC port with an iframe over window messaging.
- * @param options.origin Origin of destination window.
+ * @param options.channel Identifier for sent/recieved messages.
  * @param options.iframe Instance of the iframe if sending to child.
- * @param options.source Identifier for sent messages.
- * @param options.destination Listen for recieved messages with this source.
+ * @param options.origin Origin of the destination window.
+ * @param options.onOrigin Callback triggered when origin of destination window is verified.
  * @returns RPC port for messaging.
  */
 export const createIFramePort = ({
-  origin,
+  channel,
   iframe,
-  source: maybeSource,
-  destination: maybeDestination
+  origin,
+  onOrigin
 }: IFramePortOptions): RpcPort => {
-  const source = maybeSource ?? (iframe ? 'parent' : 'child');
-  const destination = maybeDestination ?? (iframe ? 'child' : 'parent');
-
   return {
     send: async data => {
+      if (!origin) {
+        log.warn('No origin set yet', { channel });
+        return;
+      }
+
       const payload = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-      const message = { source, payload };
+      const message = { channel, payload };
       if (iframe) {
         sendToIFrame(iframe, origin, message);
       } else {
@@ -59,13 +58,30 @@ export const createIFramePort = ({
       }
     },
     subscribe: callback => {
-      const handler = (event: MessageEvent<MessageData>) => {
-        const message = event.data;
-        if (message.source !== destination) {
+      const handler = (event: MessageEvent<unknown>) => {
+        if (!iframe && event.source !== window.parent) {
+          // Not from parent window.
+          return;
+        } else if (iframe && event.source !== iframe.contentWindow) {
+          // Not from child window.
           return;
         }
 
-        log(`Received message from ${destination}:`, message);
+        const isMessageData = event.data &&
+          typeof event.data === 'object' &&
+          'channel' in event.data &&
+          'payload' in event.data;
+        const message = isMessageData ? event.data as MessageData : undefined;
+        if (message?.channel !== channel) {
+          return;
+        }
+
+        if (!origin) {
+          origin = event.origin;
+          onOrigin?.(origin);
+        }
+
+        log.debug('Received message', message);
         callback(new Uint8Array(message.payload));
       };
 

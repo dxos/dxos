@@ -3,7 +3,7 @@
 //
 
 import EventEmitter from 'events';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { inDev } from './utils';
 
@@ -14,7 +14,8 @@ export const render = (app: JSX.Element) => {
   } // Check if `node` polyfills are correct.
 
   // Render application in DOM.
-  ReactDOM.render(app, document.getElementById('app'));
+  createRoot(document.getElementById('app')!)
+    .render(app);
 
   // Hot module replacement.
   if (inDev() && module.hot) {

@@ -1,4 +1,3 @@
-
 //
 // Copyright 2022 DXOS.org
 //
@@ -10,7 +9,7 @@ const config = {
   baseUrl: 'http://localhost:5173'
 };
 
-test.describe('worker', () => {
+test.describe('iframe-worker', () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {

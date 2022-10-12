@@ -25,12 +25,12 @@ export class HaloInvitations {
     private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
     private readonly _onInitialize: () => Promise<void>
-  ) {}
+  ) { }
 
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation ({ onFinish }: { onFinish?: () => void} = {}): Promise<InvitationDescriptor> {
+  async createInvitation ({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
     const identity = this._identityManager.identity ?? failUndefined();
 
@@ -92,6 +92,7 @@ export class HaloInvitations {
   async acceptInvitation (invitationDescriptor: InvitationDescriptor): Promise<Identity> {
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
+    let connected = false;
     const done = new Trigger();
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
@@ -99,6 +100,15 @@ export class HaloInvitations {
       topology: new StarTopology(swarmKey),
       protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
         log('Invitee connected');
+        // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
+        // TODO(dmaretskyi): More robust way to handle this.
+        if (connected) {
+          // TODO(dmaretskyi): Close connection.
+          log.warn('Ignore duplicate connection');
+          return;
+        }
+        connected = true;
+
         const peer = createProtoRpcPeer({
           requested: {
             InviterInvitationService: schema.getService('dxos.halo.invitations.InviterInvitationService')

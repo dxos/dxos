@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@dxos/credentials": "workspace:*",
+    "@dxos/text-model": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/feed-store": "workspace:*",

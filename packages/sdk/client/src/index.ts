@@ -22,6 +22,7 @@ export {
 
 export {
   clientServiceBundle,
+  ClientServiceHost,
   InvitationDescriptor
 } from '@dxos/client-services';
 
