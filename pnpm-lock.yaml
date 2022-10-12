@@ -2604,6 +2604,7 @@ importers:
       '@dxos/codec-protobuf': workspace:*
       '@dxos/config': workspace:*
       '@dxos/debug': workspace:*
+      '@dxos/model-factory': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/testutils': workspace:*
@@ -2631,6 +2632,7 @@ importers:
       faker: 5.5.3
       js-yaml: 4.1.0
     devDependencies:
+      '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/random-access-storage': link:../../common/random-access-storage
       '@dxos/testutils': link:../../common/testutils
       '@types/columnify': 1.5.1
