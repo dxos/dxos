@@ -6,18 +6,11 @@ import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
-import {
-  $getRoot,
-  $createParagraphNode,
-  $createTextNode,
-  LexicalEditor
-} from 'lexical';
 import React from 'react';
 
-import { Loading } from '@dxos/react-ui';
-
+import { useProfile } from '../context/ProfileProvider';
 import { useTextItem } from '../context/TextItemProvider';
-import { useProviderFactory } from '../hooks';
+import { useYEchoProvider } from '../y-echo/YEcho';
 
 const initialLexicalConfig = {
   namespace: 'org.dxos.composer',
@@ -33,30 +26,28 @@ const initialLexicalConfig = {
   nodes: []
 };
 
-const initialEditorState = (editor: LexicalEditor): void => {
-  const root = $getRoot();
-  const paragraph = $createParagraphNode();
-  const text = $createTextNode('Welcome to collab!');
-  paragraph.append(text);
-  root.append(paragraph);
-};
+interface ComposerProps {
+  id?: string
+}
 
-export const Composer = () => {
+export const Composer = (props: ComposerProps) => {
   const { item } = useTextItem();
+  const { profile } = useProfile();
+  const username = profile!.username || profile!.publicKey.truncate(8);
 
-  const providerFactory = useProviderFactory(item);
+  const providerFactory = useYEchoProvider(item!);
 
   return (
     <LexicalComposer initialConfig={initialLexicalConfig}>
       <div className='editor-container'>
         <PlainTextPlugin
-          contentEditable={<ContentEditable />}
-          placeholder={<Loading />}
+          contentEditable={<ContentEditable className='border-2 border-primary-500 rounded-md' />}
+          placeholder=''
         />
         <CollaborationPlugin
-          id='echo-plugin'
+          username={username}
+          id={item!.id}
           providerFactory={providerFactory}
-          initialEditorState={initialEditorState}
           shouldBootstrap={true}
         />
       </div>

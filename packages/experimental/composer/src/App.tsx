@@ -20,7 +20,6 @@ export const App = () => {
           <TextItemProvider>
             <Main>
               <Composer />
-              <Composer />
             </Main>
           </TextItemProvider>
         </PartyProvider>

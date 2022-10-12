@@ -27,6 +27,7 @@
     "yjs": "^13.5.41"
   },
   "devDependencies": {
+    "lib0": "^0.2.52",
     "@dxos/client": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/react": "^18.0.21",
