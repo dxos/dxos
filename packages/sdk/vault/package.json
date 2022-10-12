@@ -16,14 +16,10 @@
     "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-<<<<<<< HEAD:packages/sdk/vault/package.json
-=======
     "@dxos/client-services": "workspace:*",
-    "@dxos/config": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-components": "workspace:*",
->>>>>>> 96444ff... WIP Add webrtc networking to service worker:packages/sdk/shared-client/package.json
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*"
   },
