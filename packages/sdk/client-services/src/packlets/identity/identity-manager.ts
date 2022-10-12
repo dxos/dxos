@@ -112,6 +112,7 @@ export class IdentityManager {
   }
 
   async createIdentity () {
+    log(`Create identity`)
     assert(!this._identity, 'Identity already exists.');
 
     const controlFeedKey = await this._keyring.createKey();
@@ -160,6 +161,7 @@ export class IdentityManager {
    * Accept an existing identity. Expects it's device key to be authorized.
    */
   async acceptIdentity (params: JoinIdentityParams) {
+    log(`Accept identity`, { params })
     assert(!this._identity, 'Identity already exists.');
 
     const identity = await this._constructIdentity({

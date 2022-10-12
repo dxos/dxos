@@ -49,13 +49,14 @@ describe('ServiceContext', function () {
       const peer1 = await setupPeer({ signalContext });
       await peer1.open();
       afterTest(() => peer1.close());
+      const identity1 = await peer1.createIdentity();
+      expect(identity1).toBeTruthy();
 
       const peer2 = await setupPeer({ signalContext });
       await peer2.open();
       afterTest(() => peer2.close());
 
-      const identity1 = await peer1.createIdentity();
-      expect(identity1).toBeTruthy();
+      expect(peer2.identityManager.identity).toBeFalsy();
 
       const invitation = await peer1.haloInvitations.createInvitation();
       const identity2 = await peer2.haloInvitations.acceptInvitation(invitation);

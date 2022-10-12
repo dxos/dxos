@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Lock, Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,18 +21,21 @@ import { InvitationDescriptor } from '../invitations';
  * Create and process Halo (space) invitations for device management.
  */
 export class HaloInvitations {
-  constructor (
+  constructor(
     private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
     private readonly _onInitialize: () => Promise<void>
-  ) {}
+  ) { }
 
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation ({ onFinish }: { onFinish?: () => void} = {}): Promise<InvitationDescriptor> {
+  async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
     const identity = this._identityManager.identity ?? failUndefined();
+
+    let finished = false;
+    const lock = new Lock()
 
     const swarmKey = PublicKey.random();
     await this._networkManager.joinProtocolSwarm({
@@ -73,10 +76,18 @@ export class HaloInvitations {
         await peer.open();
         log('Inviter RPC open');
 
-        await peer.rpc.InviteeInvitationService.acceptIdenity({
-          identityKey: identity.identityKey,
-          haloSpaceKey: identity.haloSpaceKey,
-          genesisFeedKey: identity.haloGenesisFeedKey
+
+        await lock.executeSynchronized(async () => {
+          // If for some reason the invitee reconnects we don't want to repeat the admission process.
+          if (finished) {
+            return;
+          }
+          await peer.rpc.InviteeInvitationService.acceptIdenity({
+            identityKey: identity.identityKey,
+            haloSpaceKey: identity.haloSpaceKey,
+            genesisFeedKey: identity.haloGenesisFeedKey
+          });
+          finished = true;
         });
 
         onFinish?.();
@@ -89,10 +100,13 @@ export class HaloInvitations {
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation (invitationDescriptor: InvitationDescriptor): Promise<Identity> {
+  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Identity> {
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
+    let finished = false;
+
     const done = new Trigger();
+    const lock = new Lock()
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: PublicKey.random(),
@@ -109,31 +123,38 @@ export class HaloInvitations {
           handlers: {
             InviteeInvitationService: {
               acceptIdenity: async ({ identityKey, haloSpaceKey, genesisFeedKey }) => {
-                try {
-                  log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
-                  const identity = await this._identityManager.acceptIdentity({
-                    identityKey,
-                    haloSpaceKey,
-                    haloGenesisFeedKey: genesisFeedKey
-                  });
+                await lock.executeSynchronized(async () => {
+                  if (finished) {
+                    throw new Error('Already accepted the identity.');
+                  }
 
-                  log('Try to admit device');
-                  await peer.rpc.InviterInvitationService.admitDevice({
-                    deviceKey: identity.deviceKey,
-                    controlFeedKey: PublicKey.random(),
-                    dataFeedKey: PublicKey.random()
-                  });
+                  try {
+                    log('Accept identity', { identityKey, haloSpaceKey, genesisFeedKey });
+                    const identity = await this._identityManager.acceptIdentity({
+                      identityKey,
+                      haloSpaceKey,
+                      haloGenesisFeedKey: genesisFeedKey
+                    });
+                    finished = true;
 
-                  log('Waiting for identity to be ready');
-                  await identity.ready();
+                    log('Try to admit device');
+                    await peer.rpc.InviterInvitationService.admitDevice({
+                      deviceKey: identity.deviceKey,
+                      controlFeedKey: PublicKey.random(),
+                      dataFeedKey: PublicKey.random()
+                    });
 
-                  await this._onInitialize();
+                    log('Waiting for identity to be ready');
+                    await identity.ready();
 
-                  done.wake();
-                  log('Invitee done');
-                } catch (err: any) {
-                  log.catch(err);
-                }
+                    await this._onInitialize();
+
+                    done.wake();
+                    log('Invitee done');
+                  } catch (err: any) {
+                    log.catch(err);
+                  }
+                })
               }
             }
           },
