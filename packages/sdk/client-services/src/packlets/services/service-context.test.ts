@@ -5,13 +5,13 @@
 import expect from 'expect';
 
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { ServiceContext } from './service-context';
-import { ModelFactory } from '@dxos/model-factory';
 
 describe('ServiceContext', function () {
   const setupPeer = async ({
@@ -29,7 +29,7 @@ describe('ServiceContext', function () {
     return new ServiceContext(
       storage,
       networkManager,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(ObjectModel)
     );
   };
 

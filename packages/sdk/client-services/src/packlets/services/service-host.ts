@@ -5,10 +5,10 @@
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
-import { ModelFactory } from '@dxos/model-factory';
 
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -20,9 +20,9 @@ import { HaloSigner } from './signer';
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
 type ClientServiceHostParams = {
-  config: Config,
+  config: Config
   modelFactory?: ModelFactory
-  signer?: HaloSigner,
+  signer?: HaloSigner
 }
 
 /**
@@ -38,7 +38,7 @@ export class ClientServiceHost implements ClientServiceProvider {
   constructor ({
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
-    signer,
+    signer
   }: ClientServiceHostParams) {
     this._config = config;
     this._signer = signer;
@@ -60,7 +60,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     this._context = new ServiceContext(
       storage,
       networkManager,
-      modelFactory,
+      modelFactory
     );
 
     this._services = {

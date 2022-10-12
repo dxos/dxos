@@ -42,7 +42,7 @@ describe('space-manager', function () {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialSigner: createCredentialSignerWithKey(keyring, identityKey)
-      },
+      }
     );
   };
 

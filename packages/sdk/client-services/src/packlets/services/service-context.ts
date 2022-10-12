@@ -17,12 +17,12 @@ import {
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
 
 import { IdentityManager } from '../identity';
 import { DataInvitations, HaloInvitations, InvitationDescriptor } from '../invitations';
-import { ModelFactory } from '@dxos/model-factory';
 
 // TODO(burdon): Temporary access to infra required by all services.
 export class ServiceContext {
@@ -44,7 +44,7 @@ export class ServiceContext {
   constructor (
     public readonly storage: Storage,
     public readonly networkManager: NetworkManager,
-    public readonly modelFactory: ModelFactory,
+    public readonly modelFactory: ModelFactory
   ) {
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
@@ -54,7 +54,7 @@ export class ServiceContext {
       this.feedStore,
       this.keyring,
       networkManager,
-      modelFactory,
+      modelFactory
     );
 
     // TODO(burdon): Rename.

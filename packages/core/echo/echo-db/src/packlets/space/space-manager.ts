@@ -152,7 +152,7 @@ export class SpaceManager {
         credentialProvider: this._signingContext.credentialProvider,
         credentialAuthenticator: this._signingContext.credentialAuthenticator
       },
-      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey),
+      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, this._signingContext.identityKey)
     });
   }
 }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Lock, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,7 +21,7 @@ import { InvitationDescriptor } from '../invitations';
  * Create and process Halo (space) invitations for device management.
  */
 export class HaloInvitations {
-  constructor(
+  constructor (
     private readonly _networkManager: NetworkManager,
     private readonly _identityManager: IdentityManager,
     private readonly _onInitialize: () => Promise<void>
@@ -30,7 +30,7 @@ export class HaloInvitations {
   /**
    * Create an invitation to an exiting identity HALO.
    */
-  async createInvitation({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
+  async createInvitation ({ onFinish }: { onFinish?: () => void } = {}): Promise<InvitationDescriptor> {
     log('Create invitation');
     const identity = this._identityManager.identity ?? failUndefined();
 
@@ -89,7 +89,7 @@ export class HaloInvitations {
   /**
    * Joins an existing identity HALO by invitation.
    */
-  async acceptInvitation(invitationDescriptor: InvitationDescriptor): Promise<Identity> {
+  async acceptInvitation (invitationDescriptor: InvitationDescriptor): Promise<Identity> {
     const swarmKey = PublicKey.from(invitationDescriptor.swarmKey);
 
     let connected = false;
@@ -104,7 +104,7 @@ export class HaloInvitations {
         // TODO(dmaretskyi): More robust way to handle this.
         if (connected) {
           // TODO(dmaretskyi): Close connection.
-          log.warn('Ignore duplicate connection')
+          log.warn('Ignore duplicate connection');
           return;
         }
         connected = true;

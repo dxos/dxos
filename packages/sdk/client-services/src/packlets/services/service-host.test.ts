@@ -4,11 +4,11 @@
 
 import { until } from '@dxos/async';
 import { Config, ConfigProto } from '@dxos/config';
+import { ModelFactory } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
 import { InvitationState } from '@dxos/protocols/proto/dxos/client';
 import { InvitationDescriptor } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { afterTest } from '@dxos/testutils';
-import { ModelFactory } from '@dxos/model-factory';
 
 import { ClientServiceHost } from './service-host';
 
@@ -27,13 +27,13 @@ describe('ServiceHost', function () {
   it('device invitations', async function () {
     const peer1 = new ClientServiceHost({
       config: new Config(defaultTestingConfig),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      modelFactory: new ModelFactory().registerModel(ObjectModel)
     });
     await peer1.open();
     afterTest(() => peer1.close());
     const peer2 = new ClientServiceHost({
       config: new Config(defaultTestingConfig),
-      modelFactory: new ModelFactory().registerModel(ObjectModel),
+      modelFactory: new ModelFactory().registerModel(ObjectModel)
     });
     await peer2.open();
     afterTest(() => peer2.close());

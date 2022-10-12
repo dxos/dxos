@@ -9,9 +9,7 @@ import { failUndefined } from '@dxos/debug';
 import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { Timeframe, TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -38,7 +36,7 @@ export type SpaceParams = {
   initialTimeframe: Timeframe
   networkManager: NetworkManager
   networkPlugins: Plugin[]
-  swarmIdentity: SwarmIdentity,
+  swarmIdentity: SwarmIdentity
   databaseFactory: DatabaseFactory
 }
 

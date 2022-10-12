@@ -17,6 +17,7 @@ import {
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -28,7 +29,6 @@ import { HaloProxy } from './halo-proxy';
 import { ClientServiceProxy } from './service-proxy';
 import { OpenProgress } from './stubs';
 import { DXOS_VERSION } from './version';
-import { ObjectModel } from '@dxos/object-model';
 
 const log = debug('dxos:client-proxy');
 
@@ -84,7 +84,7 @@ export class Client {
   private readonly _config: Config;
   private readonly _options: ClientOptions;
   private readonly _mode: Runtime.Client.Mode;
-  
+
   private readonly _modelFactory = new ModelFactory()
     .registerModel(ObjectModel);
 
@@ -199,7 +199,7 @@ export class Client {
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider,  this._modelFactory, this._halo);
+    this._echo = new EchoProxy(this._serviceProvider, this._modelFactory, this._halo);
 
     await this._halo._open();
     await this._echo._open();

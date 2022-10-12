@@ -128,9 +128,9 @@ export class DataInvitations {
         log('Invitee connected');
         // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
         // TODO(dmaretskyi): More robust way to handle this.
-        if(connected) {
+        if (connected) {
           // TODO(dmaretskyi): Close connection.
-          log.warn('Ignore duplicate connection')
+          log.warn('Ignore duplicate connection');
           return;
         }
         connected = true;

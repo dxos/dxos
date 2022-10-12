@@ -10,7 +10,6 @@ import { failUndefined } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
@@ -27,11 +26,11 @@ export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
-  
+
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
     private readonly _modelFactory: ModelFactory,
-    private readonly _haloProxy: HaloProxy,
+    private readonly _haloProxy: HaloProxy
   ) {}
 
   toString () {

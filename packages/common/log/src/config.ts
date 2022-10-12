@@ -88,5 +88,5 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
         };
       });
 
-      return filters.some(filter => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
+  return filters.some(filter => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
 };

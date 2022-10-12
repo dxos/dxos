@@ -8,13 +8,13 @@ import { codec, MetadataStore } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
 import { IdentityManager } from './identity-manager';
-import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 
 describe('identity-manager', function () {
   const setupPeer = async ({
@@ -39,7 +39,7 @@ describe('identity-manager', function () {
       feedStore,
       keyring,
       networkManager,
-      new ModelFactory().registerModel(ObjectModel),
+      new ModelFactory().registerModel(ObjectModel)
     );
 
     return {

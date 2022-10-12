@@ -46,7 +46,7 @@ export class Entity<M extends Model | null = Model> {
     return this._type;
   }
 
-  get modelType(): string {
+  get modelType (): string {
     return this._stateManager.modelType;
   }
 

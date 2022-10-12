@@ -69,7 +69,7 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      databaseFactory: async ({ databaseBackend }) => new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey),
+      databaseFactory: async ({ databaseBackend }) => new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
     });
 
     return {

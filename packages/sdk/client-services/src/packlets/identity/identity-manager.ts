@@ -11,12 +11,12 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { Identity } from '../identity';
-import { ModelFactory } from '@dxos/model-factory';
 
 interface ConstructSpaceParams {
   spaceRecord: SpaceRecord
@@ -42,7 +42,7 @@ export class IdentityManager {
     private readonly _feedStore: FeedStore,
     private readonly _keyring: Keyring,
     private readonly _networkManager: NetworkManager,
-    private readonly _modelFactory: ModelFactory,
+    private readonly _modelFactory: ModelFactory
   ) {}
 
   get identity () {
@@ -107,12 +107,12 @@ export class IdentityManager {
       networkManager: this._networkManager,
       networkPlugins,
       swarmIdentity,
-      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey),
+      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
     });
   }
 
   async createIdentity () {
-    log(`Create identity`)
+    log('Create identity');
     assert(!this._identity, 'Identity already exists.');
 
     const controlFeedKey = await this._keyring.createKey();
@@ -161,7 +161,7 @@ export class IdentityManager {
    * Accept an existing identity. Expects it's device key to be authorized.
    */
   async acceptIdentity (params: JoinIdentityParams) {
-    log(`Accept identity`, { params })
+    log('Accept identity', { params });
     assert(!this._identity, 'Identity already exists.');
 
     const identity = await this._constructIdentity({
