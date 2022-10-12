@@ -14,7 +14,7 @@ export type ButtonProps = React.ComponentProps<'button'> & {
 export const buttonClassName = (variant: ButtonProps['variant']) => cx(
   'inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
   variant === 'default' && 'shadow-md border border-neutral-100 bg-white text-neutral-900 hover:bg-neutral-50 dark:border-neutral-650 dark:bg-neutral-750 dark:text-neutral-100 dark:hover:bg-neutral-800',
-  variant === 'primary' && 'shadow-md border border-primary-700 bg-primary-600 text-white hover:bg-primary-650',
+  variant === 'primary' && 'shadow-md bg-primary-600 text-white hover:bg-primary-650',
   defaultFocus,
   // Register all radix states
   'group',
