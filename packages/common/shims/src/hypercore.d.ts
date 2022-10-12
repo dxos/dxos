@@ -19,7 +19,7 @@ declare module 'hypercore' {
   import type { RandomAccessStorageConstructor } from 'random-access-storage';
   import type { Readable, Writable } from 'streamx';
 
-  import type { Protocol } from './hypercore-protocol';
+  import type { ProtocolStream } from './hypercore-protocol';
 
   export type Callback<T> = (err: Error | null, result?: T) => void
 
@@ -152,7 +152,8 @@ declare module 'hypercore' {
     createWriteStream (options?: any): Writable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
-    replicate (initiator: boolean, options?: ReplicationOptions): Protocol
+    replicate (options?: ReplicationOptions): ProtocolStream
+    replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
     /** @deprecated remove in v10 */
