@@ -19,13 +19,8 @@ if (typeof SharedWorker !== 'undefined') {
     const workerAppPort = muxer.createWorkerPort({ channel: 'dxos:app' });
     const windowAppPort = createIFramePort({ channel: 'dxos:app' });
 
-<<<<<<< HEAD:packages/sdk/vault/src/main.ts
     workerAppPort.subscribe(msg => windowAppPort.send(msg));
     windowAppPort.subscribe(msg => workerAppPort.send(msg));
-=======
-    clientPort.subscribe(msg => appPort.send(msg));
-    appPort.subscribe(msg => clientPort.send(msg));
-
 
     const wrtcPort = muxer.createWorkerPort({ channel: 'dxos:wrtc' });
     const transportService = new WebRTCTransportService();
@@ -41,7 +36,6 @@ if (typeof SharedWorker !== 'undefined') {
     })
 
     await peer.open();
->>>>>>> 96444ff... WIP Add webrtc networking to service worker:packages/sdk/shared-client/src/main.tsx
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');
