@@ -71,8 +71,8 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
     await keyring.createKey(),
     keyring
   );
-  let closed = false;
 
+  let closed = false;
   const replicator = new ReplicatorPlugin(middleware({
     feedStore,
     onLoad: () => [feed],
@@ -83,6 +83,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
 
   return {
     id: peerId,
+    isClosed: () => closed,
     getFeedsNum: () => Array.from((feedStore as any)._descriptors.values()).length,
     createStream: ({ initiator }) => new Protocol({
       initiator: !!initiator,
@@ -103,6 +104,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);
       });
+
       return new Promise((resolve, reject) => {
         eos(stream, (err: any) => {
           if (err) {
@@ -112,8 +114,7 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
           }
         });
       });
-    },
-    isClosed: () => closed
+    }
   };
 });
 

@@ -31,7 +31,7 @@ interface GenerateOptions {
 export interface ProtocolNetworkGenerator extends NetworkGenerator {}
 
 export class ProtocolNetworkGenerator extends EventEmitter {
-  private _createPeer: CreatePeerCallback;
+  private readonly _createPeer: CreatePeerCallback;
 
   constructor (createPeer: CreatePeerCallback) {
     super();

@@ -90,6 +90,7 @@ export class Peer {
 
     const replicateOptions = Object.assign({}, this._protocol.streamOptions, { stream, initiator: this._protocol.initiator });
     if (!replicateOptions.live && replicateOptions.expectedFeeds === undefined) {
+      // TODO(burdon): These options don't match the API.
       stream.expectedFeeds = stream.feeds.length + 1;
     }
 
