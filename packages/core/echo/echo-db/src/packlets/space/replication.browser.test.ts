@@ -5,9 +5,10 @@
 // @dxos/mocha platform=browser
 
 import expect from 'expect';
+import { ProtocolStream } from 'hypercore-protocol';
 import waitForExpect from 'wait-for-expect';
 
-import { FeedStore } from '@dxos/feed-store';
+import { FeedDescriptor, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage } from '@dxos/random-access-storage';
@@ -25,20 +26,19 @@ describe('replication', function () {
 
     const keyring = new Keyring();
 
-    const srcFeed = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
-    const dstFeed = await feedStore2.openReadOnlyFeed(srcFeed.key);
+    const feed1: FeedDescriptor = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
+    const feed2: FeedDescriptor = await feedStore2.openReadOnlyFeed(feed1.key);
 
-    // TODO(burdon): Export stream.d.ts to interfaces
-    const stream1 = srcFeed.feed.replicate(true) as any as NodeJS.ReadStream;
-    const stream2 = dstFeed.feed.replicate(false) as any as NodeJS.WriteStream;
+    const stream1: ProtocolStream = feed1.replicate(true);
+    const stream2: ProtocolStream = feed2.replicate(false);
     stream1.pipe(stream2).pipe(stream1);
 
-    await srcFeed.append({
-      timeframe: new Timeframe([[srcFeed.key, 123]])
+    await feed1.append({
+      timeframe: new Timeframe([[feed1.key, 123]])
     });
 
     await waitForExpect(() => {
-      expect(dstFeed.feed.length).toEqual(1);
+      expect(feed2.length).toEqual(1);
     });
   });
 });

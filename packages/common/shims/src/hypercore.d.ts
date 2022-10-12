@@ -15,11 +15,10 @@
  * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedonready
  */
 declare module 'hypercore' {
+  import type { ProtocolStream } from 'hypercore-protocol';
   import type { Nanoresource } from 'nanoresource';
   import type { RandomAccessStorageConstructor } from 'random-access-storage';
   import type { Readable, Writable } from 'streamx';
-
-  import type { ProtocolStream } from './hypercore-protocol';
 
   export type Callback<T> = (err: Error | null, result?: T) => void
 
