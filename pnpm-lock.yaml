@@ -1363,14 +1363,11 @@ importers:
 
   packages/core/mesh/rpc-tunnel:
     specifiers:
+      '@dxos/log': workspace:*
       '@dxos/rpc': workspace:*
-      '@types/debug': ^4.1.7
-      debug: ^4.3.3
     dependencies:
+      '@dxos/log': link:../../../common/log
       '@dxos/rpc': link:../rpc
-      debug: 4.3.4
-    devDependencies:
-      '@types/debug': 4.1.7
 
   packages/core/mesh/signal:
     specifiers:
@@ -1748,6 +1745,7 @@ importers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
       '@dxos/codec-protobuf': workspace:*
+      '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-components': workspace:*
@@ -1769,6 +1767,7 @@ importers:
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/log': link:../../common/log
       '@dxos/protocols': link:../../core/protocols
       '@dxos/react-async': link:../../common/react-async
       '@dxos/react-components': link:../../sdk/react-components
