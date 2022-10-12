@@ -15,6 +15,8 @@ export default defineConfig((env) => ({
   optimizeDeps: {
     force: true,
     include: [
+      '@lexical/yjs',
+      '@dxos/client',
       '@dxos/react-client',
       '@dxos/text-model',
       '@dxos/react-ui',
@@ -45,9 +47,9 @@ export default defineConfig((env) => ({
       },
       includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'DXOS UI consumer experiment',
+        name: 'DXOS UI composer experiment',
         short_name: 'UI test',
-        description: 'DXOS UI consumer experiment',
+        description: 'DXOS UI composer experiment',
         theme_color: '#ffffff'
       }
     })

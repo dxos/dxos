@@ -5,7 +5,8 @@
 // import {
 //   ProviderAwareness, ProviderFactory, UserState
 // } from '@lexical/react/LexicalCollaborationPlugin';
-import { useMemo } from 'react';
+import { Observable } from 'lib0/observable';
+import { useCallback } from 'react';
 import { Doc, RelativePosition } from 'yjs';
 
 import type { Item } from '@dxos/client';
@@ -63,57 +64,49 @@ class TestAwareness implements ProviderAwareness {
 
   setLocalState (state: UserState) {
     this._state = state;
-    console.log('TestAwareness.setLocalState', this._state);
+    // console.log('TestAwareness.setLocalState', this._state);
   }
 
   on (type: string, cb: () => void) {
-    console.log('TestAwareness.on', type);
+    // console.log('TestAwareness.on', type);
   }
 
   off (type: string, cb: () => void) {
-    console.log('TestAwareness.on', type);
+    // console.log('TestAwareness.on', type);
   }
 }
 
-class TestProvider implements Provider {
-  readonly awareness = new TestAwareness();
+export class YEchoProvider extends Observable<string> {
+  constructor (id: string, item: Item<TextModel>, {
+    awareness = new TestAwareness()
+  } = {}) {
+    super();
+    this.id = id;
+    this.item = item;
+    this.awareness = awareness;
+  }
 
-  constructor (
-    private readonly id: string
-  ) {}
+  public id: string;
+  public item: Item<TextModel>;
+  public awareness: TestAwareness;
+
+  get doc (): Doc {
+    return this.item.model.doc;
+  }
 
   connect () {
-    console.log('TestProvider.connect', this.id);
+    console.log('YEchoProvider.connect', this.id);
   }
 
   disconnect () {
-    console.log('TestProvider.disconnect', this.id);
-  }
-
-  on (type: string, cb: any) {
-    console.log('TestProvider.on', type);
-  }
-
-  off (type: string, cb: any) {
-    console.log('TestProvider.off', type);
+    console.log('YEchoProvider.disconnect', this.id);
   }
 }
 
-export const useProviderFactory = (
-  item?: Item<TextModel>
-): ProviderFactory => {
-  return useMemo<ProviderFactory>(() => (id: string, yjsDocMap: Map<string, Doc>): Provider => {
-    console.log('constructed', id, yjsDocMap);
-
-    // TODO(burdon): Get from text model (create ID externally).
-    // const doc = new Doc();
-    const doc = item!.model.doc;
+export const useYEchoProvider = (item: Item<TextModel>): ProviderFactory => {
+  return useCallback((id: string, yjsDocMap: Map<string, Doc>) => {
+    const doc = item.model.doc;
     yjsDocMap.set(id, doc);
-
-    // TODO(burdon): Initially has newlines.
-    // TODO(burdon): Typing at end of document has issues.
-    console.log('[', doc.getText().toString(), ']');
-
-    return new TestProvider(id);
+    return new YEchoProvider(id, item);
   }, [item]);
 };
