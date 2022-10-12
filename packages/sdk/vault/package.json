@@ -13,25 +13,14 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-async": "workspace:*",
-    "@dxos/react-components": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/rpc-tunnel": "workspace:*",
-    "@emotion/react": "^11.9.0",
-    "@emotion/styled": "^11.8.1",
-    "@mui/icons-material": "^5.8.0",
-    "@mui/lab": "^5.0.0-alpha.83",
-    "@mui/material": "^5.8.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "@dxos/rpc-tunnel": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
     "@dxos/vite-plugin": "workspace:*",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
     "vite": "3.0.9"
   }
 }

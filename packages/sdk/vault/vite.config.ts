@@ -18,10 +18,9 @@ export default defineConfig({
       '@dxos/async',
       '@dxos/client',
       '@dxos/codec-protobuf',
+      '@dxos/config',
       '@dxos/log',
       '@dxos/protocols',
-      '@dxos/react-async',
-      '@dxos/react-components',
       '@dxos/rpc',
       '@dxos/rpc-tunnel'
     ]
