@@ -12,8 +12,9 @@ import { FullScreen } from '@dxos/react-components';
 import { RegistryProvider } from '@dxos/react-registry-client';
 import { RpcPort, createLinkedPorts } from '@dxos/rpc';
 
-import { ErrorBoundary, PanelsContainer, sections, theme } from '../src';
+import { PanelsContainer, sections, theme } from '../src';
 import { PlaygroundControls } from './helpers';
+import { ErrorBoundary } from '@dxos/react-toolkit';
 
 export default {
   title: 'Playground'
