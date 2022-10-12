@@ -3,7 +3,7 @@
 
 <script lang='ts'>
   import { createElement } from 'react';
-  import { render } from 'react-dom';
+  import { createRoot } from 'react-dom/client';
   import { defineComponent } from 'vue';
 
   export default defineComponent({
@@ -17,10 +17,8 @@
       };
     },
     created() {
-      render(
-        createElement(this.component, {}, null),
-        document.getElementById(this.target)
-      );
+      createRoot(document.getElementById(this.target))
+        .render(createElement(this.component, {}, null));
     }
   });
 </script>

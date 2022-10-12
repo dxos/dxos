@@ -3,7 +3,7 @@
 //
 
 import React, { StrictMode, useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -58,12 +58,12 @@ if (typeof SharedWorker !== 'undefined') {
   void (async () => {
     const worker = new SharedWorker();
 
-    render(
-      <StrictMode>
-        <App port={worker.port} />
-      </StrictMode>,
-      document.getElementById('root')
-    );
+    createRoot(document.getElementById('root')!)
+      .render(
+        <StrictMode>
+          <App port={worker.port} />
+        </StrictMode>
+      );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

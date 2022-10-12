@@ -21,8 +21,8 @@
     "@dxos/react-toolkit": "workspace:*",
     "@mui/icons-material": "^5.8.0",
     "@mui/material": "^5.8.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
@@ -36,8 +36,8 @@
     "@storybook/mdx2-csf": "^0.0.3",
     "@storybook/react": "^6.5.10",
     "@storybook/testing-library": "^0.0.13",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
     "require-from-string": "^2.0.2",
     "typescript": "^4.7.2",
