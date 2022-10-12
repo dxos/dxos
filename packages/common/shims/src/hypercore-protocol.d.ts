@@ -34,7 +34,7 @@ declare module 'hypercore-protocol' {
   }
 
   export interface StreamExtension {
-    send: (message: Buffer) => void
+    send: (message: Uint8Array) => void
     destroy: () => void
   }
 
@@ -49,12 +49,15 @@ declare module 'hypercore-protocol' {
   /**
    * https://github.com/hypercore-protocol/hypercore-protocol#const-stream--new-protocolinitiator-options
    */
-  export interface ProtocolOptions {
+  export interface ProtocolStreamOptions {
+    // TODO(burdon): Not documented.
+    live?: boolean
+
     // Set to false to disable encryption if you are already piping through a encrypted stream.
-    encrypted?: true
+    encrypted?: boolean
 
     // Set to false to disable the NOISE handshake completely. Requires encrypted = false, and also disables the capability verification.
-    noise?: true
+    noise?: boolean
 
     // Stream timeout. Set to 0 or false to disable.
     timeout?: 20000
@@ -66,7 +69,7 @@ declare module 'hypercore-protocol' {
     onauthenticate?: (remotePublicKey: any, done: any) => any
 
     // Function called when the stream handshake has finished.
-    onhandshake?: (protocol: Protocol) => any
+    onhandshake?: (protocol: ProtocolStream) => any
 
     // Function called when the remote stream opens a channel you have not.
     ondiscoverykey?: (discoveryKey: any) => any
@@ -80,10 +83,11 @@ declare module 'hypercore-protocol' {
    */
   export class ProtocolStream extends Duplex {
     destroyed: boolean;
-    publicKey: any;
+    publicKey: any; // TODO(burdon): Buffer?
+    remotePublicKey: any;
     state: any;
 
-    constructor (initiator?: boolean, opts?: ProtocolOptions);
+    constructor (initiator?: boolean, opts?: ProtocolStreamOptions);
 
     open (key: any, handlers: ChannelHandlers): Channel
     close (discoveryKey: any): void

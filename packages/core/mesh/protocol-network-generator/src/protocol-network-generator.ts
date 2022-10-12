@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import pump from 'pump';
 import { Stream } from 'stream';
 
-import { getProtocolFromStream, ProtocolOptions } from '@dxos/mesh-protocol';
+import { getProtocolFromStream, ProtocolStreamOptions } from '@dxos/mesh-protocol';
 import type { Peer } from '@dxos/network-generator';
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
 
@@ -23,7 +23,7 @@ interface GenerateOptions {
   topic?: Buffer
   waitForFullConnection?: boolean
   peer?: any
-  protocol?: ProtocolOptions
+  protocol?: ProtocolStreamOptions
   parameters?: any[]
 }
 

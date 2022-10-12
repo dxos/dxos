@@ -46,7 +46,7 @@ export interface ProtocolOptions {
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
-  streamOptions?: ProtocolStreamOptions
+  streamOptions?: ProtocolStreamOptionsDef
 
   discoveryKey?: Buffer
 
@@ -123,7 +123,7 @@ export class Protocol {
           await this._initExtensions(options.userSession);
           this.extensionsInitialized.emit();
 
-          await this.streamOptions?.onhandshake?.(this);
+          await this.streamOptions?.onhandshake?.(this as any); // TODO(burdon): Cast to this.
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {

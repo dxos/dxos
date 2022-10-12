@@ -1,6 +1,6 @@
-# Interface: ProtocolOptions
+# Interface: ProtocolStreamOptions
 
-[@dxos/mesh-protocol](../modules/dxos_mesh_protocol.md).ProtocolOptions
+[@dxos/mesh-protocol](../modules/dxos_mesh_protocol.md).ProtocolStreamOptions
 
 ## Properties
 

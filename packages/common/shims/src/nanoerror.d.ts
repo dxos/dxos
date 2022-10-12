@@ -6,14 +6,16 @@
  * https://www.npmjs.com/package/nanoerror
  */
 declare module 'nanoerror' {
-  export interface Nanoerror extends Error {
-    readonly isNanoerror: boolean
+  export declare class Nanoerror extends Error {
+    readonly isNanoerror: boolean;
 
-    equals (error: any): boolean
-    from (error: any): this
+    constructor(...args: any[]);
+
+    static equals (error: any): boolean
+    static from (error: any): this
   }
 
-  declare function nanoerror (type: string, format: string): Nanoerror
+  declare function nanoerror (type: string, format: string): typeof Nanoerror
 
   export = nanoerror
 }
