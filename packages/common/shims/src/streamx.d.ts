@@ -9,11 +9,11 @@
  * https://github.com/streamxorg/streamx
  */
 declare module 'streamx' {
-  import EventEmitter from 'events';
+  import type { EventEmitter } from 'events';
 
-  type Callback = () => void
+  type Callback <T> = (value: T) => void
 
-  export interface Stream extends EventEmitter {
+  export class Stream extends EventEmitter {
     readonly readable: boolean
     readonly writable: boolean
     readonly destroyed: boolean
@@ -25,25 +25,28 @@ declare module 'streamx' {
     off (event: string, cb: Callback)
   }
 
-  export interface Readable extends Stream {
+  export class Readable extends Stream {
     end ()
-    pipe (dest?: Writable, cb?: Callback)
     pause ()
     resume ()
+    pipe (dest: Writable, cb?: Callback)
   }
 
-  export interface Writable extends Stream {
+  export class Writable extends Stream {
     end ()
   }
 
-  export interface Duplex extends Readable, Writable {}
+  export class Duplex extends Readable, Writable {}
 
-  export interface Transform extends Duplex {
+  export class Transform extends Duplex {
     _transform (data: Buffer, cb: (err: Error, mappedData: Buffer) => void): void
   }
 
-  // Last arg can be optional callback.
-  export type Pipeline = (...streams: (Stream | (() => void))[]) => Stream;
+  export class Pipeline {
+    constructor (src: Stream, dst: Stream, cb: () => void)
+  }
 
-  export const pipeline: Pipeline;
+  function pipeline (stream: Stream, ...streams: Stream[], cb?: () => void): void
+
+  export = pipeline;
 }

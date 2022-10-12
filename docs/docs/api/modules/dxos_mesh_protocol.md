@@ -9,7 +9,7 @@
 ## Interfaces
 
 - [ExtensionOptions](../interfaces/dxos_mesh_protocol.ExtensionOptions.md)
-- [ProtocolOptions](../interfaces/dxos_mesh_protocol.ProtocolOptions.md)
+- [ProtocolStreamOptions](../interfaces/dxos_mesh_protocol.ProtocolStreamOptions.md)
 - [ProtocolStreamOptions](../interfaces/dxos_mesh_protocol.ProtocolStreamOptions.md)
 
 ## Type Aliases

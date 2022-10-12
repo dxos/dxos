@@ -14,7 +14,7 @@ Wraps a hypercore-protocol object.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`ProtocolOptions`](../interfaces/dxos_mesh_protocol.ProtocolOptions.md) |
+| `options` | [`ProtocolStreamOptions`](../interfaces/dxos_mesh_protocol.ProtocolStreamOptions.md) |
 
 #### Defined in
 

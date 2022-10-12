@@ -4,19 +4,19 @@
 
 import assert from 'assert';
 import hypercore from 'hypercore';
+import type { Hypercore, HypercoreOptions } from 'hypercore';
+import type { RandomAccessStorageConstructor } from 'random-access-storage';
 
 // import { sha256 } from '@dxos/crypto';
-import type { RandomAccessFileConstructor } from '@dxos/random-access-storage';
 
 import { wrapFeed, HypercoreFeed } from './hypercore-feed';
-import type { Hypercore, HypercoreOptions } from './types';
 
 /**
  * Hypercore wrapper factory.
  */
 export class HypercoreFactory {
   constructor (
-    private readonly _storage: RandomAccessFileConstructor
+    private readonly _storage: RandomAccessStorageConstructor
   ) {
     assert(this._storage);
   }

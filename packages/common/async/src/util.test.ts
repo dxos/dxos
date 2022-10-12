@@ -12,7 +12,7 @@ import { onEvent, waitForEvent } from './util';
 it('onEvent', async function () {
   const emitter = new EventEmitter();
 
-  const [promise, resolve] = latch();
+  const [done, resolve] = latch();
 
   const off = onEvent(emitter, 'test', () => {
     off();
@@ -23,7 +23,7 @@ it('onEvent', async function () {
 
   emitter.emit('test');
 
-  await promise;
+  await done();
 });
 
 it('waitForEvent', async function () {

@@ -3,27 +3,27 @@
 //
 
 import { join } from 'node:path';
+import type { RandomAccessStorage } from 'random-access-storage';
 
 import { AbstractStorage } from '../common';
-import type { RandomAccessFile } from '../types';
 
 /**
  * Base class for random access files based on IDB.
  */
 export abstract class BrowserStorage extends AbstractStorage {
-  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessFile;
+  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessStorage;
 
   constructor (path: string) {
     super(path);
     this._fileStorage = this._createFileStorage(path);
   }
 
-  protected _createFile (path: string, filename: string): RandomAccessFile {
+  protected _createFile (path: string, filename: string): RandomAccessStorage {
     const fullPath = join(path, filename);
     return this._fileStorage(fullPath);
   }
 
-  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessFile;
+  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessStorage;
 
   protected override async _destroy () {
     // eslint-disable-next-line no-undef

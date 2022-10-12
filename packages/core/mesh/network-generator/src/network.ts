@@ -16,6 +16,7 @@ interface CreateStreamOptions {
   channel?: Buffer
   options?: any
 }
+
 export interface Peer {
   id: Buffer
   createStream?: (options: CreateStreamOptions) => Stream

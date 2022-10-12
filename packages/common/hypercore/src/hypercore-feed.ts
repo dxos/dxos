@@ -2,20 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { Hypercore, HypercoreProperties, ReplicationOptions } from 'hypercore';
+import type { ProtocolStream } from 'hypercore-protocol';
+import type { NanoresourceProperties } from 'nanoresource';
 import pify from 'pify';
-import { Readable, Writable } from 'streamx';
-
-import type {
-  HypercoreProperties,
-  ReplicationOptions,
-  Hypercore,
-  NanoresourceProperties,
-  ProtocolStream
-} from './types';
+import type { Readable, Writable } from 'streamx';
 
 /**
  * Wrapped Hypercore.
  */
+// TODO(burdon): Rename Core.
 export interface HypercoreFeed extends NanoresourceProperties, HypercoreProperties {
   readonly native: Hypercore
 
