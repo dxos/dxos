@@ -5,7 +5,9 @@
 import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { createStorageObjects } from '../storage';
@@ -17,18 +19,30 @@ import { HaloSigner } from './signer';
 
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
+type ClientServiceHostParams = {
+  config: Config
+  modelFactory?: ModelFactory
+  signer?: HaloSigner
+}
+
 /**
  * Remote service implementation.
  */
 export class ClientServiceHost implements ClientServiceProvider {
+  private readonly _config: Config;
+  private readonly _signer?: HaloSigner;
   // private readonly _devtoolsEvents = new DevtoolsHostEvents();
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
-  constructor (
-    private readonly _config: Config,
-    private readonly _signer?: HaloSigner
-  ) {
+  constructor ({
+    config,
+    modelFactory = new ModelFactory().registerModel(ObjectModel),
+    signer
+  }: ClientServiceHostParams) {
+    this._config = config;
+    this._signer = signer;
+
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(
       this._config.get('runtime.client.storage', {})!
@@ -45,7 +59,8 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     this._context = new ServiceContext(
       storage,
-      networkManager
+      networkManager,
+      modelFactory
     );
 
     this._services = {
