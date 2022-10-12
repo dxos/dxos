@@ -57,7 +57,7 @@ describe('identity-manager', function () {
     expect(identity).toBeTruthy();
   });
 
-  it('reload from storage', async function () {
+  it.only('reload from storage', async function () {
     const storage = createStorage({ type: StorageType.RAM });
 
     const peer1 = await setupPeer({ storage });
