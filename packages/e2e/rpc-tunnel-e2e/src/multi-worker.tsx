@@ -3,7 +3,7 @@
 //
 
 import React, { StrictMode, useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
@@ -68,17 +68,18 @@ if (typeof SharedWorker !== 'undefined') {
     const portOne = muxer.createWorkerPort({ channel: Channels.ONE });
     const portTwo = muxer.createWorkerPort({ channel: Channels.TWO });
 
-    render(
-      <StrictMode>
-        <div style={{
-          display: 'flex'
-        }}>
-          <App id={Channels.ONE} port={portOne} />
-          <App id={Channels.TWO} port={portTwo} />
-        </div>
-      </StrictMode>,
-      document.getElementById('root')
-    );
+    createRoot(document.getElementById('root')!)
+      .render(
+        <StrictMode>
+          <div style={{
+            display: 'flex'
+          }}>
+            {ports!.map(port => (
+              <App key={port.id} {...port} />
+            ))}
+          </div>
+        </StrictMode>
+      );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

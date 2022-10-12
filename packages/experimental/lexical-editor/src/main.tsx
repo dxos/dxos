@@ -3,10 +3,11 @@
 //
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 const main = () => {
-  ReactDOM.render(<div>TEST</div>, document.getElementById('root'));
+  createRoot(document.getElementById('root')!)
+    .render(<div>TEST</div>);
 };
 
 main();

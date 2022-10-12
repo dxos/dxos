@@ -6,6 +6,8 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { createStorageObjects } from '../storage';
@@ -17,10 +19,11 @@ import { HaloSigner } from './signer';
 
 const SIGNAL_CONTEXT = new MemorySignalManagerContext();
 
-export type ClientServiceHostOptions = {
-  config: Config;
-  signer?: HaloSigner;
+type ClientServiceHostParams = {
+  config: Config
+  modelFactory?: ModelFactory
   transportFactory?: TransportFactory
+  signer?: HaloSigner
 }
 
 /**
@@ -33,11 +36,14 @@ export class ClientServiceHost implements ClientServiceProvider {
   private readonly _context: ServiceContext;
   private readonly _services: ClientServices;
 
-  constructor (
-    options: ClientServiceHostOptions
-  ) {
-    this._config = options.config;
-    this._signer = options.signer;
+  constructor ({
+    config,
+    modelFactory = new ModelFactory().registerModel(ObjectModel),
+    signer,
+    transportFactory
+  }: ClientServiceHostParams) {
+    this._config = config;
+    this._signer = signer;
 
     // TODO(dmaretskyi): Remove keyStorage.
     const { storage } = createStorageObjects(
@@ -45,23 +51,20 @@ export class ClientServiceHost implements ClientServiceProvider {
     );
 
     const networkingEnabled = this._config.get('runtime.services.signal.server');
-
-    const transportFactory: TransportFactory = options.transportFactory ?? 
-      networkingEnabled
-        ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
-        : inMemoryTransportFactory;
-
     const networkManager = new NetworkManager({
       signalManager: networkingEnabled 
         ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory,
+      transportFactory: transportFactory ?? (networkingEnabled
+        ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
+        : inMemoryTransportFactory),
       log: true
     });
 
     this._context = new ServiceContext(
       storage,
-      networkManager
+      networkManager,
+      modelFactory
     );
 
     this._services = {

@@ -120,6 +120,7 @@ export class Pipeline implements PipelineAccessor {
 
   setWriteFeed (feed: FeedDescriptor) {
     assert(!this._writer, 'Writer already set.');
+    assert(feed.writable, 'Feed must be writable.');
     this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
   }
 
