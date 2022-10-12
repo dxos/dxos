@@ -32,6 +32,9 @@
       "path": "../../../common/feed-store"
     },
     {
+      "path": "../../../common/shims"
+    },
+    {
       "path": "../../protocols"
     },
     {
