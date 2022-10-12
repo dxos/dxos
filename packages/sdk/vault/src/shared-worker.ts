@@ -8,13 +8,13 @@ import { Config } from '@dxos/config';
 import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
-import { WebRTCTransportProxy } from '@dxos/network-manager';
+import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 
-const transportFactory = new WebRTCTransportProxy()
+const transportFactory = new WebRTCTransportProxyFactory()
 const client = new ClientServiceHost({
   // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite. Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
   config: new Config({ runtime: { client: { mode: 1 /* local */ } } }),
-  transportFactory: 
+  transportFactory,
 });
 const [clientInitialized, resolve] = trigger();
 void client.open().then(resolve);
@@ -42,7 +42,8 @@ onconnect = async event => {
   });
 
   wrtcServer.open().then(() => {
-    
+    // TODO(dmaretskyi): Do not overwrite it if is already set, handle tab closure.
+    transportFactory.setBridgeService(wrtcServer.rpc.BridgeService);
   })
 
   await server.open()
