@@ -19,12 +19,11 @@ describe('replication', function () {
   it('replicates a feed through a direct stream', async function () {
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
+    const keyring = new Keyring();
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
     const feedStore1 = new FeedStore(storage.createDirectory('feeds1'), { valueEncoding: codec });
     const feedStore2 = new FeedStore(storage.createDirectory('feeds2'), { valueEncoding: codec });
-
-    const keyring = new Keyring();
 
     const feed1: FeedDescriptor = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
     const feed2: FeedDescriptor = await feedStore2.openReadOnlyFeed(feed1.key);
