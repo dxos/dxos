@@ -637,6 +637,7 @@ importers:
       hypercore: 9.12.0
       hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
       pify: 5.0.0
+      streamx: 2.12.5
     devDependencies:
       '@types/chai': 4.3.0
       '@types/chai-as-promised': 7.1.4
@@ -649,7 +650,6 @@ importers:
       debug: 4.3.4
       faker: 5.5.3
       random-access-memory: 4.1.0
-      streamx: 2.12.5
 
   packages/common/keys:
     specifiers:
@@ -23477,6 +23477,7 @@ packages:
 
   /fast-fifo/1.0.0:
     resolution: {integrity: sha512-4VEXmjxLj7sbs8J//cn2qhRap50dGzF5n8fjay8mau+Jn4hxSeR3xPFwxMaQq/pDaq7+KQk0PAbC2+nWDkJrmQ==}
+    dev: false
 
   /fast-glob/2.2.7:
     resolution: {integrity: sha512-g1KuQwHOZAmOZMuBtHdxDtju+T2RT8jgCC9aANsbpdiDDTSnjgfuVsIBNKbUeJI3oKMRExcfNDtJl4OhbffMsw==}
@@ -36405,6 +36406,7 @@ packages:
     dependencies:
       fast-fifo: 1.0.0
       queue-tick: 1.0.0
+    dev: false
 
   /strict-uri-encode/1.1.0:
     resolution: {integrity: sha512-R3f198pcvnB+5IpnBlRkphuE9n46WyVl8I39W/ZUTZLz4nqSP/oLYUrcnJrw462Ds8he4YKMov2efsTIw1BDGQ==}

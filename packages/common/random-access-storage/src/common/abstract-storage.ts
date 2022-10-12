@@ -52,14 +52,23 @@ export abstract class AbstractStorage implements Storage {
   protected async getOrCreateFile (path: string, filename: string, opts?: any): Promise<File> {
     const fullPath = join(path, filename);
 
-    // TODO(burdon): Check if closed. Clone only if ram.
-    // Some variants (e.g., Node) do not allow files to be reopened.
+    let native;
     let file = this._getFileIfExists(fullPath);
-    if (!file) {
-      const raw = this._createFile(path, filename, opts);
-      file = wrapFile(raw, this.type);
-      this._files.set(fullPath, file);
+    if (file) {
+      if (file.closed) {
+        // Some variants (e.g., Node) do not allow files to be reopened.
+        native = this._openFile(file.native);
+      } else {
+        return file;
+      }
     }
+
+    if (!native) {
+      native = this._createFile(path, filename, opts);
+    }
+
+    file = wrapFile(native, this.type);
+    this._files.set(fullPath, file);
 
     return file;
   }
@@ -68,12 +77,16 @@ export abstract class AbstractStorage implements Storage {
     return undefined;
   }
 
+  protected _openFile (file: RandomAccessStorage): RandomAccessStorage | undefined {
+    return undefined
+  }
+
   protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessStorage;
 
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
-      if (file && !file.destroyed && !file.closed) {
+      if (file && !file.destroyed) {
         return file;
       }
     }

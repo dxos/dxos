@@ -44,6 +44,7 @@ declare module 'random-access-storage' {
     close (cb: Callback<Error>): void
     destroy (cb: Callback<Error>): void
     truncate? (offset: number, cb: Callback<void>): void
+    clone? (): this
   }
 
   export type RandomAccessStorageConstructor = (filename: string, options?: any) => RandomAccessStorage
