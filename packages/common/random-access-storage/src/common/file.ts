@@ -56,9 +56,9 @@ export const wrapFile = (native: RandomAccessStorage, type: StorageType): File =
   const file = pifyFields(native, type, ['write', 'read', 'del', 'stat', 'close', 'destroy', 'truncate']);
   const trueRead = file.read.bind(file);
   file.read = async (...args) => {
-    const data = await trueRead(...args)
-    return Buffer.from(data)
-  }
+    const data = await trueRead(...args);
+    return Buffer.from(data);
+  };
   return Object.assign(file, {
     type,
     native
