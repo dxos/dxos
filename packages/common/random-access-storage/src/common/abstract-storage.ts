@@ -78,7 +78,7 @@ export abstract class AbstractStorage implements Storage {
   }
 
   protected _openFile (file: RandomAccessStorage): RandomAccessStorage | undefined {
-    return undefined
+    return undefined;
   }
 
   protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessStorage;

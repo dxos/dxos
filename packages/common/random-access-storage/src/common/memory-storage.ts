@@ -7,7 +7,6 @@ import { RandomAccessStorage } from 'random-access-storage';
 
 import { AbstractStorage } from './abstract-storage';
 import { StorageType } from './storage';
-import { getFullPath } from './utils';
 
 /**
  * Storage interface implementation for RAM.
@@ -21,8 +20,8 @@ export class MemoryStorage extends AbstractStorage {
   }
 
   protected override _openFile (file: RandomAccessStorage): RandomAccessStorage {
-    const newFile: RandomAccessStorage = file.clone!()
+    const newFile: RandomAccessStorage = file.clone!();
     (newFile as any).closed = false;
-    return newFile;
+    return newFile!;
   }
 }
