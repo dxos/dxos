@@ -13,7 +13,7 @@ void client.initialize().then(resolve);
 
 onconnect = async event => {
   const muxer = new PortMuxer(event.ports[0]);
-  const port = muxer.createWorkerPort({ channel: 'dxos' });
+  const port = muxer.createWorkerPort({ channel: 'dxos:app' });
   await clientInitialized();
 
   const server = createProtoRpcPeer({

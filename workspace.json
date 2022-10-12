@@ -75,11 +75,6 @@
     "rpc": "packages/core/mesh/rpc",
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
     "rpc-tunnel-e2e": "packages/e2e/rpc-tunnel-e2e",
-<<<<<<< HEAD
-=======
-    "shared-client": "packages/sdk/shared-client",
-    "showcase": "tools/showcase",
->>>>>>> 469d4ec2b (feat: POC shared client architecture)
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
     "testutils": "packages/common/testutils",
@@ -87,6 +82,7 @@
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "ui-consumer": "packages/experimental/ui-consumer",
     "util": "packages/common/util",
+    "vault": "packages/sdk/vault",
     "vite-plugin": "tools/vite-plugin",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"

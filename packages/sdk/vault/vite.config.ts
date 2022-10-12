@@ -9,6 +9,9 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+  server: {
+    port: 3967
+  },
   optimizeDeps: {
     force: true,
     include: [

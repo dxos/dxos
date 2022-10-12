@@ -1,5 +1,5 @@
 {
-  "sourceRoot": "packages/sdk/shared-client/src",
+  "sourceRoot": "packages/sdk/vault/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -8,9 +8,9 @@
         "{options.outputPath}"
       ],
       "options": {
-        "outputPath": "packages/sdk/shared-client/dist",
-        "tsConfig": "packages/sdk/shared-client/tsconfig.json",
-        "main": "packages/sdk/shared-client/src/index.ts"
+        "outputPath": "packages/sdk/vault/dist",
+        "tsConfig": "packages/sdk/vault/tsconfig.json",
+        "main": "packages/sdk/vault/src/index.ts"
       }
     },
     "lint": {
@@ -20,24 +20,24 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "packages/sdk/shared-client/**/*.{ts,js}"
+          "packages/sdk/vault/**/*.{ts,js}"
         ]
       }
     },
     "serve": {
       "executor": "@nxext/vite:dev",
       "options": {
-        "outputPath": "packages/sdk/shared-client/out",
-        "configFile": "packages/sdk/shared-client/vite.config.ts"
+        "outputPath": "packages/sdk/vault/out",
+        "configFile": "packages/sdk/vault/vite.config.ts"
       }
     },
     "e2e": {
       "executor": "@dxos/playwright:playwright",
       "options": {
         "testPatterns": [
-          "packages/sdk/shared-client/playwright/tests/*.spec.ts"
+          "packages/sdk/vault/playwright/tests/*.spec.ts"
         ],
-        "config": "packages/sdk/shared-client/playwright/config.ts"
+        "config": "packages/sdk/vault/playwright/config.ts"
       }
     }
   },

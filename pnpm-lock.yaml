@@ -3158,7 +3158,7 @@ importers:
       chai-as-promised: 7.1.1_chai@4.3.4
       protobufjs: 6.11.2
 
-  packages/sdk/shared-client:
+  packages/sdk/vault:
     specifiers:
       '@babel/core': ^7.18.13
       '@dxos/async': workspace:*
