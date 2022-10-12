@@ -2,18 +2,18 @@
 // Copyright 2020 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
 import assert from 'node:assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Event } from '@dxos/async';
-import { ErrorStream } from '@dxos/debug';
+import { ErrorStream, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
+import { wrtc } from './wrtc';
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -40,7 +40,9 @@ export class WebRTCTransport implements Transport {
     log(`Creating WebRTC connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
     this._peer = new SimplePeerConstructor({
       initiator: this._initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
+        ? undefined
+        : (wrtc ?? raise(new Error('wrtc not available'))),
       config: this._webrtcConfig
     });
     this._peer.on('signal', async data => {

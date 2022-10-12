@@ -34,7 +34,7 @@ const log = debug('dxos:client-proxy');
 
 // TODO(wittjosiah): Should be kube.local or equivalent.
 const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967';
-const IFRAME_ID = '__DXOS_CLIENT__';
+const IFRAME_ID = '__DXOS_VAULT__';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
@@ -212,7 +212,7 @@ export class Client {
     const source = new URL(this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN);
     const iframe = createIFrame(source.toString(), IFRAME_ID);
     // TODO(wittjosiah): Use well-known channel constant.
-    return createIFramePort({ origin: source.origin, iframe, channel: 'dxos' });
+    return createIFramePort({ origin: source.origin, iframe, channel: 'dxos:app' });
   }
 
   private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
