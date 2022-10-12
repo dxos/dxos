@@ -18,6 +18,7 @@ import { Timeframe } from '@dxos/protocols';
 import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
+import { TextModel } from '@dxos/text-model';
 
 import { Client } from './packlets/proxies';
 
@@ -297,6 +298,20 @@ describe('Client', function () {
         const details = await party.getDetails();
         expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
         expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
+      });
+
+      it('registering a custom model', async function () {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+
+        client.echo.registerModel(TextModel);
+        const party = await client.echo.createParty();
+        const item = await party.database.createItem({ model: TextModel });
+        item.model.insert('Hello World', 0);
+        expect(item.model.textContent).toEqual('Hello World');
       });
     });
   };
