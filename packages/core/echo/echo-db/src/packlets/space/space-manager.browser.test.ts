@@ -8,7 +8,9 @@ import { createCredentialSignerWithKey } from '@dxos/credentials';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, createWebRTCTransportFactory } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { createStorage } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -33,6 +35,7 @@ describe('space-manager', function () {
       }),
       keyring,
       new DataService(),
+      new ModelFactory().registerModel(ObjectModel),
       {
         identityKey,
         deviceKey: await keyring.createKey(),

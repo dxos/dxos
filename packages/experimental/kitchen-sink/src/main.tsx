@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
 import { ProfileInitializer, useTestParty } from '@dxos/react-client-testing';
@@ -22,14 +22,14 @@ const Main = () => {
 };
 
 const start = () => {
-  ReactDOM.render(
-    <ClientProvider>
-      <ProfileInitializer>
-        <Main />
-      </ProfileInitializer>
-    </ClientProvider>,
-    document.getElementById('root')
-  );
+  createRoot(document.getElementById('root')!)
+    .render(
+      <ClientProvider>
+        <ProfileInitializer>
+          <Main />
+        </ProfileInitializer>
+      </ClientProvider>
+    );
 };
 
 start();

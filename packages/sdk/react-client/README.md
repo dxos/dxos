@@ -21,7 +21,7 @@ The snippet below illustrates a self-contained DXOS application that uses provid
 ```javascript
 import { useClient, ClientProvider, ProfileInitializer } from '@dxos/react-client';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 const App = () => {
   const client = useClient();
@@ -39,7 +39,8 @@ const Root = () => (
   </ClientProvider>
 );
 
-ReactDOM.render(<Root/>, document.getElementById('root'));
+createRoot(document.getElementById('root')!)
+  .render(<Root/>);
 ```
 
 ## Storybooks

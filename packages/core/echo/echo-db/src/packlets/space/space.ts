@@ -9,19 +9,23 @@ import { failUndefined } from '@dxos/debug';
 import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { ObjectModel } from '@dxos/object-model';
 import { Timeframe, TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AsyncCallback, Callback } from '@dxos/util';
 
-import { Database, FeedDatabaseBackend } from '../database';
+import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol, SwarmIdentity } from './space-protocol';
+
+export type DatabaseFactoryParams = {
+  databaseBackend: DatabaseBackend
+}
+
+type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
 
 export type SpaceParams = {
   spaceKey: PublicKey
@@ -33,6 +37,7 @@ export type SpaceParams = {
   networkManager: NetworkManager
   networkPlugins: Plugin[]
   swarmIdentity: SwarmIdentity
+  databaseFactory: DatabaseFactory
 }
 
 /**
@@ -47,6 +52,7 @@ export class Space {
   private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
+  private readonly _databaseFactory: DatabaseFactory;
 
   private readonly _controlPipeline: ControlPipeline;
   private readonly _replicator = new ReplicatorPlugin();
@@ -66,7 +72,8 @@ export class Space {
     initialTimeframe,
     networkManager,
     networkPlugins,
-    swarmIdentity
+    swarmIdentity,
+    databaseFactory
   }: SpaceParams) {
     assert(spaceKey && dataFeed && feedProvider);
     this._key = spaceKey;
@@ -74,6 +81,7 @@ export class Space {
     this._dataFeed = dataFeed;
     this._feedProvider = feedProvider;
     this._genesisFeedKey = genesisFeed.key;
+    this._databaseFactory = databaseFactory;
 
     this._controlPipeline = new ControlPipeline({
       spaceKey,
@@ -206,8 +214,7 @@ export class Space {
 
     // Connect pipeline to the database.
     {
-      const modelFactory = new ModelFactory().registerModel(ObjectModel);
-      this._database = new Database(modelFactory, this._databaseBackend, new PublicKey(Buffer.alloc(32))); // TODO(dmaretskyi): Fix.
+      this._database = await this._databaseFactory({ databaseBackend: this._databaseBackend });
       await this._database.initialize();
     }
 

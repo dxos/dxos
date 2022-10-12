@@ -121,6 +121,7 @@ export class DataInvitations {
 
     const done = new Trigger();
     let space: Space;
+    let connected = false;
     await this._networkManager.joinProtocolSwarm({
       topic: swarmKey,
       peerId: PublicKey.random(),
@@ -128,6 +129,15 @@ export class DataInvitations {
       protocol: createProtocolFactory(swarmKey, swarmKey, [
         new RpcPlugin(async (port) => {
           log('Invitee connected');
+          // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
+          // TODO(dmaretskyi): More robust way to handle this.
+          if (connected) {
+            // TODO(dmaretskyi): Close connection.
+            log.warn('Ignore duplicate connection');
+            return;
+          }
+
+          connected = true;
           const peer = createProtoRpcPeer({
             requested: {
               InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')

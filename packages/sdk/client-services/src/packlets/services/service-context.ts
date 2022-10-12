@@ -17,6 +17,7 @@ import {
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
 import { Storage } from '@dxos/random-access-storage';
 
@@ -41,8 +42,9 @@ export class ServiceContext {
   public dataInvitations?: DataInvitations; // TOOD(burdon): Move.
 
   constructor (
-    public storage: Storage,
-    public networkManager: NetworkManager
+    public readonly storage: Storage,
+    public readonly networkManager: NetworkManager,
+    public readonly modelFactory: ModelFactory
   ) {
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.feedStore = new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec });
@@ -51,7 +53,8 @@ export class ServiceContext {
       this.metadataStore,
       this.feedStore,
       this.keyring,
-      networkManager
+      networkManager,
+      modelFactory
     );
 
     // TODO(burdon): Rename.
@@ -98,6 +101,7 @@ export class ServiceContext {
       this.networkManager,
       this.keyring,
       this.dataService,
+      this.modelFactory,
       signingContext
     );
 

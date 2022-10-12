@@ -49,7 +49,7 @@
     "node-fetch": "^2.6.0",
     "npm-api": "~1.0.1",
     "qrcode-terminal": "~0.12.0",
-    "react": "^17.0.2",
+    "react": "^18.2.0",
     "yargs": "~16.2.0"
   },
   "devDependencies": {
@@ -60,7 +60,7 @@
     "@types/node": "^16.11.58",
     "@types/node-fetch": "^2.5.10",
     "@types/qrcode-terminal": "^0.12.0",
-    "@types/react": "^17.0.24",
+    "@types/react": "^18.0.21",
     "@types/yargs": "~16.0.1",
     "esbuild": "~0.14.1",
     "mocha": "^8.4.0",

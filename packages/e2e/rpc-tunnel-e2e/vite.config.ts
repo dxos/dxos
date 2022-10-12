@@ -14,6 +14,7 @@ export default defineConfig({
     include: [
       '@dxos/async',
       '@dxos/codec-protobuf',
+      '@dxos/log',
       '@dxos/protocols',
       '@dxos/react-async',
       '@dxos/react-components',
@@ -24,13 +25,7 @@ export default defineConfig({
   build: {
     commonjsOptions: {
       include: [
-        /async/,
-        /codec-protobuf/,
-        /protocols/,
-        /react-async/,
-        /react-components/,
-        /rpc/,
-        /rpc-worker-proxy/,
+        /packages/,
         /node_modules/
       ]
     }
