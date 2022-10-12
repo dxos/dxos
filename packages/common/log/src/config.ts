@@ -77,7 +77,7 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
   const filters = (typeof config.filter === 'number')
     ? [{ level: config.filter }]
     : config.filter
-      .split(/,\s+/)
+      .split(/,\s*/)
       .map(filter => {
         const [pattern, level] = filter.split(':');
         return level ? {
@@ -88,5 +88,5 @@ export const shouldLog = (config: LogConfig, level: LogLevel, path: string): boo
         };
       });
 
-  return filters.some(filter => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
+      return filters.some(filter => (level >= filter.level) && (!filter.pattern || path.includes(filter.pattern)));
 };
