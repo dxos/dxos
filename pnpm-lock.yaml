@@ -2489,6 +2489,7 @@ importers:
       '@dxos/rpc': workspace:*
       '@dxos/rpc-tunnel': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/text-model': workspace:*
       '@dxos/util': workspace:*
       '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
@@ -2522,6 +2523,7 @@ importers:
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
       '@dxos/testutils': link:../../common/testutils
+      '@dxos/text-model': link:../../core/echo/text-model
       '@koush/wrtc': 0.5.3
       '@types/debug': 4.1.7
       '@types/readable-stream': 2.3.9
@@ -2541,6 +2543,7 @@ importers:
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
       '@dxos/messaging': workspace:*
+      '@dxos/model-factory': workspace:*
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocol-plugin-rpc': workspace:*
@@ -2573,6 +2576,7 @@ importers:
       '@dxos/keys': link:../../common/keys
       '@dxos/log': link:../../common/log
       '@dxos/messaging': link:../../core/mesh/messaging
+      '@dxos/model-factory': link:../../core/echo/model-factory
       '@dxos/network-manager': link:../../core/mesh/network-manager
       '@dxos/object-model': link:../../core/echo/object-model
       '@dxos/protocol-plugin-rpc': link:../../core/mesh/protocol-plugin-rpc
