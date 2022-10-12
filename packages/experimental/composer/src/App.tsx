@@ -8,9 +8,9 @@ import { ClientProvider } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
 
 import { Composer } from './components/Composer';
-import { PartyProvider } from './components/PartyProvider';
-import { ProfileProvider } from './components/ProfileProvider';
-import { TextItemProvider } from './components/TextItemProvider';
+import { PartyProvider } from './context/PartyProvider';
+import { ProfileProvider } from './context/ProfileProvider';
+import { TextItemProvider } from './context/TextItemProvider';
 
 export const App = () => {
   return (
@@ -19,6 +19,7 @@ export const App = () => {
         <PartyProvider>
           <TextItemProvider>
             <Main>
+              <Composer />
               <Composer />
             </Main>
           </TextItemProvider>

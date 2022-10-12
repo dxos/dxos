@@ -1,14 +1,25 @@
 //
 // Copyright 2022 DXOS.org
 //
+
+import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
+import {
+  $getRoot,
+  $createParagraphNode,
+  $createTextNode,
+  LexicalEditor
+} from 'lexical';
 import React from 'react';
 
-import { TextModel, useTextItem } from './TextItemProvider';
+import { Loading } from '@dxos/react-ui';
 
-const editorConfig = {
+import { useTextItem } from '../context/TextItemProvider';
+import { useProviderFactory } from '../hooks';
+
+const initialLexicalConfig = {
   namespace: 'org.dxos.composer',
   theme: {
     ltr: 'ltr',
@@ -22,18 +33,31 @@ const editorConfig = {
   nodes: []
 };
 
+const initialEditorState = (editor: LexicalEditor): void => {
+  const root = $getRoot();
+  const paragraph = $createParagraphNode();
+  const text = $createTextNode('Welcome to collab!');
+  paragraph.append(text);
+  root.append(paragraph);
+};
+
 export const Composer = () => {
   const { item } = useTextItem();
-  console.log('[item]', (item?.model as TextModel).content);
+
+  const providerFactory = useProviderFactory(item);
 
   return (
-    <LexicalComposer initialConfig={editorConfig}>
+    <LexicalComposer initialConfig={initialLexicalConfig}>
       <div className='editor-container'>
         <PlainTextPlugin
-          contentEditable={<ContentEditable className='editor-input' />}
-          placeholder={
-            <div className='editor-placeholder'>Enter some plain text...</div>
-          }
+          contentEditable={<ContentEditable />}
+          placeholder={<Loading />}
+        />
+        <CollaborationPlugin
+          id='echo-plugin'
+          providerFactory={providerFactory}
+          initialEditorState={initialEditorState}
+          shouldBootstrap={true}
         />
       </div>
     </LexicalComposer>

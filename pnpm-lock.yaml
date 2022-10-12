@@ -1793,6 +1793,8 @@ importers:
 
   packages/experimental/composer:
     specifiers:
+      '@dxos/client': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/text-model': workspace:*
@@ -1820,6 +1822,8 @@ importers:
       react-dom: 18.2.0_react@18.2.0
       yjs: 13.5.41
     devDependencies:
+      '@dxos/client': link:../../sdk/client
+      '@dxos/protocols': link:../../core/protocols
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9
