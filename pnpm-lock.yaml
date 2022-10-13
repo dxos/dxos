@@ -555,6 +555,8 @@ importers:
       '@dxos/benchmark-suite': ^1.0.0-beta.1
       '@dxos/browser-runner': ^1.0.0-beta.13
       '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
+      '@dxos/hypercore': workspace:*
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/log': workspace:*
@@ -570,15 +572,19 @@ importers:
       debug: ^4.3.3
       faker: ^5.5.3
       from2: ^2.3.0
-      hypercore: ^9.10.0
+      hypercore: ^9.12.0
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
       util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
+      '@dxos/crypto': link:../crypto
+      '@dxos/debug': link:../debug
+      '@dxos/hypercore': link:../hypercore
       '@dxos/keys': link:../keys
       '@dxos/log': link:../log
+      '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
@@ -590,10 +596,8 @@ importers:
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
       '@dxos/browser-runner': 1.0.0-beta.13
-      '@dxos/crypto': link:../crypto
       '@dxos/keyring': link:../../core/halo/keyring
       '@dxos/protocols': link:../../core/protocols
-      '@dxos/random-access-storage': link:../random-access-storage
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/from2': 2.3.1
@@ -1118,7 +1122,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
-      hypercore-protocol: dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60
+      hypercore-protocol: ^8.0.7
       nanoerror: ^1.2.1
       nanomessage: ^8.4.0
       pump: ^3.0.0
@@ -1132,7 +1136,7 @@ importers:
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
       end-of-stream: 1.4.4
-      hypercore-protocol: github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60
+      hypercore-protocol: 8.0.7
       nanoerror: 1.2.1
       nanomessage: 8.4.0
       signal-promise: 1.0.3
@@ -35973,24 +35977,6 @@ packages:
   /zwitch/2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
 
-  github.com/dxos/hypercore-protocol/05513f9266f8bec4d29b144b72c59257c2d7bd60:
-    resolution: {tarball: https://codeload.github.com/dxos/hypercore-protocol/tar.gz/05513f9266f8bec4d29b144b72c59257c2d7bd60}
-    name: hypercore-protocol
-    version: 8.0.7
-    dependencies:
-      abstract-extension: 3.1.1
-      debug: 4.3.4
-      hypercore-crypto: 2.3.2
-      inspect-custom-symbol: 1.1.1
-      nanoguard: 1.3.0
-      pretty-hash: 1.0.1
-      simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
-      streamx: 2.12.5
-      timeout-refresh: 1.0.3
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576_abstract-leveldown@7.0.0:
     resolution: {tarball: https://codeload.github.com/dxos/jsondown/tar.gz/0bec0436f00973e7f2528115c72a5ab96dc45576}
     id: github.com/dxos/jsondown/0bec0436f00973e7f2528115c72a5ab96dc45576
@@ -36002,17 +35988,3 @@ packages:
       abstract-leveldown: 7.0.0
       memdown: 1.4.1
       mkdirp: 0.5.1
-
-  github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c:
-    resolution: {tarball: https://codeload.github.com/dxos/simple-hypercore-protocol/tar.gz/bc23f0747e55954ec0bd94754910c92f88ec561c}
-    name: simple-hypercore-protocol
-    version: 2.1.1
-    dependencies:
-      hypercore-crypto: 2.3.2
-      noise-protocol: 3.0.1
-      protocol-buffers-encodings: 1.1.1
-      simple-handshake: 3.0.0
-      simple-message-channels: 1.2.1
-      varint: 5.0.2
-      xsalsa20-universal: 1.0.0
-    dev: false
