@@ -16,7 +16,15 @@ void (async () => {
 
   (window as any).dxos = client;
 
-  (window as any).acceptInvitation = async (invitation: any) => {
-    console.log(await client.echo.acceptInvitation(InvitationDescriptor.fromQueryParameters(invitation)));
+  (window as any).acceptInvitation = async (invitation: string) => {
+    const inv = await client.echo.acceptInvitation(InvitationDescriptor.fromQueryParameters(JSON.parse(invitation)))
+    console.log(await inv.getParty())
+  }
+
+  (window as any).createInvitation = async () => {
+    const party = await client.echo.createParty()
+    const inv = await party.createInvitation()
+    inv.error.on(console.error)
+    console.log(JSON.stringify(inv.descriptor.toQueryParameters()))
   }
 })();
