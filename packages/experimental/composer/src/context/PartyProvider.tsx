@@ -4,7 +4,6 @@
 
 import { Buffer } from 'buffer';
 import React, {
-  ChangeEvent,
   createContext,
   PropsWithChildren,
   useCallback,
@@ -69,9 +68,9 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
     setLoading(false);
   }, [invitationCodeValue]);
 
-  const onInviteCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    console.log('[on change]', e.target.value);
-    setInvitationCodeValue(e.target.value);
+  const onInviteCodeChange = useCallback((value: string) => {
+    console.log('[invitation code value]', value);
+    setInvitationCodeValue(value);
   }, []);
 
   const inviteCodeInputProps = useMemo(
@@ -80,7 +79,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
       label: 'Invite code',
       labelVisuallyHidden: true,
       placeholder: 'Paste invite code',
-      value: invitationCodeValue,
+      initialValue: invitationCodeValue,
       disabled: loading,
       onChange: onInviteCodeChange
     }),

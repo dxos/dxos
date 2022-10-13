@@ -6,7 +6,10 @@ import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
+import cx from 'classnames';
 import React from 'react';
+
+import { defaultFocus } from '@dxos/react-ui';
 
 import { useProfile } from '../context/ProfileProvider';
 import { useTextItem } from '../context/TextItemProvider';
@@ -39,9 +42,12 @@ export const Composer = (props: ComposerProps) => {
 
   return (
     <LexicalComposer initialConfig={initialLexicalConfig}>
-      <div className='editor-container'>
+      <div role='none' className='editor-container'>
         <PlainTextPlugin
-          contentEditable={<ContentEditable className='border-2 border-primary-500 rounded-md' />}
+          contentEditable={(
+<ContentEditable
+            className={cx(defaultFocus, 'p-4 bg-white dark:bg-neutral-950 rounded')} />
+)}
           placeholder=''
         />
         <CollaborationPlugin
