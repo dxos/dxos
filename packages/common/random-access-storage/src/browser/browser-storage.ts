@@ -3,35 +3,27 @@
 //
 
 import { join } from 'node:path';
+import type { RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, File, RandomAccessFileConstructor } from '../common';
+import { AbstractStorage } from '../common';
 
 /**
  * Base class for random access files based on IDB.
- * https://www.npmjs.com/package/abstract-random-access
  */
-export abstract class RandomAccessStorage extends AbstractStorage {
-  private readonly _fileStorage: RandomAccessFileConstructor;
+export abstract class BrowserStorage extends AbstractStorage {
+  private readonly _fileStorage: (filename: string, opts?: {}) => RandomAccessStorage;
 
   constructor (path: string) {
     super(path);
     this._fileStorage = this._createFileStorage(path);
   }
 
-  protected abstract _createFileStorage (path: string): RandomAccessFileConstructor;
-
-  protected _createFile (filename: string, path: string): File {
+  protected _createFile (path: string, filename: string): RandomAccessStorage {
     const fullPath = join(path, filename);
-    const existingFile = this._getFileIfExists(fullPath);
-    if (existingFile) {
-      existingFile._reopen();
-      return existingFile;
-    }
-
-    const file = new File(this._fileStorage(fullPath));
-    this._addFile(fullPath, file);
-    return file;
+    return this._fileStorage(fullPath);
   }
+
+  protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessStorage;
 
   protected override async _destroy () {
     // eslint-disable-next-line no-undef
@@ -44,7 +36,7 @@ export abstract class RandomAccessStorage extends AbstractStorage {
         reject(new Error('Upgrade needed.'));
       };
       request.onblocked = () => {
-        reject(new Error('Blocked'));
+        reject(new Error('Blocked.'));
       };
       request.onerror = (err: any) => {
         reject(err);
