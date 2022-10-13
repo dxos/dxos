@@ -233,6 +233,7 @@ importers:
   packages/apps/halo-app:
     specifiers:
       '@babel/core': ^7.18.13
+      '@dxos/async': workspace:*
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
       '@dxos/keys': workspace:*
@@ -262,6 +263,7 @@ importers:
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
     dependencies:
+      '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
       '@dxos/keys': link:../../common/keys
@@ -3159,31 +3161,6 @@ importers:
       chai: 4.3.4
       chai-as-promised: 7.1.1_chai@4.3.4
       protobufjs: 6.11.2
-
-  packages/sdk/vault:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
-      '@dxos/vite-plugin': workspace:*
-      vite: 3.0.9
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../client
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../config
-      '@dxos/log': link:../../common/log
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-    devDependencies:
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   tools/beast:
     specifiers:
