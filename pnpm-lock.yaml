@@ -713,6 +713,9 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
 
+  packages/common/shims:
+    specifiers: {}
+
   packages/common/testutils:
     specifiers:
       '@types/node': ^16.11.58
@@ -23045,7 +23048,7 @@ packages:
       nanoguard: 1.3.0
       pretty-hash: 1.0.1
       simple-hypercore-protocol: 2.1.2
-      streamx: 2.12.0
+      streamx: 2.12.5
       timeout-refresh: 1.0.3
     transitivePeerDependencies:
       - supports-color
@@ -23054,7 +23057,7 @@ packages:
   /hypercore-streams/1.0.1:
     resolution: {integrity: sha512-OcN2zq9DEoArC84q9VCSrf9Hx1QUkR6ineCOwyOwhE4v/8aUTOx87mAk1nyjMOf76DQmF+tl2vnS2FssLx5N+Q==}
     dependencies:
-      streamx: 2.12.0
+      streamx: 2.12.5
     dev: false
 
   /hypercore/9.12.0:
@@ -26607,7 +26610,7 @@ packages:
     resolution: {integrity: sha512-TIurLf/ustQNMXi5foClGTcEsRvH6DCvxeAKu68OrwHMOSM/M1pgPXb7qe52Svk1ClvmZuAVpLtP5FWKzPr/sw==}
     dependencies:
       flat-tree: 1.9.0
-      streamx: 2.12.0
+      streamx: 2.12.5
     dev: false
 
   /methods/1.1.2:
@@ -32435,8 +32438,8 @@ packages:
       stream-to-array: 2.3.0
     dev: true
 
-  /streamx/2.12.0:
-    resolution: {integrity: sha512-PR93KgPkga2p27UhCI9lf096qPyRMDn/zemRQeAgr1azVLDMr8tZZGpgfEw2/cYY/8mTU4dshLMGNYBsNeQGQw==}
+  /streamx/2.12.5:
+    resolution: {integrity: sha512-Y+nkFw57Z5JHT3zLlqFm3GccOy2FeYdUrrqita6Dd8kr/8enPn9GKa8IYf3/DmEKfZl/E2sWoSKUnd4qhonrgg==}
     dependencies:
       fast-fifo: 1.0.0
       queue-tick: 1.0.0
@@ -35923,7 +35926,7 @@ packages:
       nanoguard: 1.3.0
       pretty-hash: 1.0.1
       simple-hypercore-protocol: github.com/dxos/simple-hypercore-protocol/bc23f0747e55954ec0bd94754910c92f88ec561c
-      streamx: 2.12.0
+      streamx: 2.12.5
       timeout-refresh: 1.0.3
     transitivePeerDependencies:
       - supports-color
