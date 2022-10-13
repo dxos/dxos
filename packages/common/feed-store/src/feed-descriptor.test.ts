@@ -21,7 +21,7 @@ describe.only('FeedDescriptor', function () {
   beforeEach(async function () {
     // const keyring = new Keyring();
     // feedDescriptor = new FeedDescriptor({
-    //   directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+    //   directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
     //   key: await keyring.createKey(),
     //   signer: keyring
     // });
@@ -35,7 +35,7 @@ describe.only('FeedDescriptor', function () {
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('/tmp/dxos/feed-store'),
       key
     });
 
@@ -49,7 +49,7 @@ describe.only('FeedDescriptor', function () {
   it('create custom options', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
       secretKey,
       valueEncoding: 'json'
@@ -90,7 +90,7 @@ describe.only('FeedDescriptor', function () {
     // If we try to close a feed that is opening should wait for the open result.
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
       secretKey
     });
@@ -104,7 +104,7 @@ describe.only('FeedDescriptor', function () {
   it.skip('close and open again', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
       secretKey
       // valueEncoding: 'utf-8'
@@ -128,7 +128,7 @@ describe.only('FeedDescriptor', function () {
   it('on open error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: () => {
@@ -142,7 +142,7 @@ describe.only('FeedDescriptor', function () {
   it.skip('on close error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: () => ({ // TODO(burdon): Use mock.
