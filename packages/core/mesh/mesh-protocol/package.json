@@ -28,7 +28,7 @@
     "buffer-json-encoding": "^1.0.2",
     "debug": "^4.3.3",
     "end-of-stream": "^1.4.1",
-    "hypercore-protocol": "dxos/hypercore-protocol#05513f9266f8bec4d29b144b72c59257c2d7bd60",
+    "hypercore-protocol": "^8.0.7",
     "nanoerror": "^1.2.1",
     "nanomessage": "^8.4.0",
     "signal-promise": "^1.0.3"
