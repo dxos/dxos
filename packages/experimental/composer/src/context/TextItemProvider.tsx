@@ -5,16 +5,16 @@
 import React, {
   createContext,
   PropsWithChildren,
-  useMemo,
-  useState,
-  useContext,
   useCallback,
-  useEffect
+  useContext,
+  useEffect,
+  useMemo,
+  useState
 } from 'react';
 
 import type { Item } from '@dxos/client';
 import { useClient, useSelection } from '@dxos/react-client';
-import { Group, Button } from '@dxos/react-ui';
+import { Button, Group } from '@dxos/react-ui';
 import { TextModel } from '@dxos/text-model';
 
 import { useParty } from './PartyProvider';
@@ -22,7 +22,7 @@ import { useParty } from './PartyProvider';
 export const DOCUMENT_TYPE = 'experimental:type/document';
 
 export interface TextItemContextValue {
-  item?: Item<TextModel>;
+  item?: Item<TextModel>
 }
 
 export const TextItemContext = createContext<TextItemContextValue>({});
@@ -48,13 +48,24 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
       .then((item) => setItem(item));
   }, [party]);
 
+  const onClose = useCallback(() => setItem(undefined), []);
+
+  useEffect(() => {
+    if (item) {
+      console.log('[item]', item);
+    }
+  }, [item]);
+
   return (
     <TextItemContext.Provider value={textModelDocumentContextValue}>
       {item ? (
-        props.children
+        <>
+          {props.children}
+          <Button onClick={onClose} className='fixed bottom-2 left-2'>Close document</Button>
+        </>
       ) : (
         <Group
-          className='my-8 mx-auto w-72 flex flex-col'
+          className='my-8 mx-auto w-72 flex flex-col gap-4'
           label={{
             level: 1,
             className: 'text-xl text-center mb-3',
@@ -64,15 +75,16 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
           <Button onClick={onCreate} className='width-full'>
             Create new document
           </Button>
-          <div className='' />
+          {itemSelect && !!itemSelect.length && <div className='border-b' />}
           {itemSelect?.map((item: Item<TextModel>) => {
+            const id = item.id;
             return (
               <Button
-                key={item.id}
+                key={id}
                 className='width-full truncate'
                 onClick={() => setItem(item)}
               >
-                {item.id}
+                {`${id.substring(0, 4)}..${id.substring(id.length - 4, id.length)}`}
               </Button>
             );
           })}

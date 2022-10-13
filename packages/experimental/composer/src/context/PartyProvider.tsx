@@ -4,26 +4,26 @@
 
 import { Buffer } from 'buffer';
 import React, {
+  ChangeEvent,
   createContext,
   PropsWithChildren,
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
   useCallback,
-  ChangeEvent
+  useContext,
+  useEffect,
+  useMemo,
+  useState
 } from 'react';
 
 import { InvitationDescriptor, Party } from '@dxos/client';
 import {
   useClient,
-  useSecretProvider,
-  usePartyInvitations
+  usePartyInvitations,
+  useSecretProvider
 } from '@dxos/react-client';
-import { Group, Button, Input } from '@dxos/react-ui';
+import { Button, Group, Input } from '@dxos/react-ui';
 
 export interface PartyContextValue {
-  party?: Party;
+  party?: Party
 }
 
 export const PartyContext = createContext<PartyContextValue>({});
@@ -60,16 +60,11 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
   }, [client]);
 
   const onJoin = useCallback(async () => {
-    console.log('[on join]');
     setLoading(true);
     const parsedInvitation = InvitationDescriptor.decode(invitationCodeValue);
-    console.log('[parsed invitation]', parsedInvitation);
     const redeemeingInvitation = client.echo.acceptInvitation(parsedInvitation);
-    console.log('[redeeming invitation]', redeemeingInvitation);
     redeemeingInvitation.authenticate(await secretProvider());
-    console.log('[getting party]', redeemeingInvitation);
     const joinedParty = await redeemeingInvitation.getParty();
-    console.log('[done joining]', joinedParty);
     setParty(joinedParty);
     setLoading(false);
   }, [invitationCodeValue]);
@@ -97,18 +92,20 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
       {party ? (
         <>
           {props.children}
-          {partyInvitations && (
-            <Button
-              className='fixed bottom-2 right-2'
-              onClick={() =>
-                navigator.clipboard.writeText(
-                  partyInvitations[0].descriptor.encode().toString()
-                )
-              }
-            >
-              Copy invite code
-            </Button>
-          )}
+          <div className='fixed bottom-2 right-2 flex gap-4'>
+            {partyInvitations && (
+              <Button
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    partyInvitations[0].descriptor.encode().toString()
+                  )
+                }
+              >
+                Copy invite code
+              </Button>
+            )}
+            <Button onClick={() => setParty(undefined)}>Exit space</Button>
+          </div>
         </>
       ) : (
         <Group
