@@ -75,6 +75,7 @@
     "rpc": "packages/core/mesh/rpc",
     "rpc-tunnel": "packages/core/mesh/rpc-tunnel",
     "rpc-tunnel-e2e": "packages/e2e/rpc-tunnel-e2e",
+    "shims": "packages/common/shims",
     "signal": "packages/core/mesh/signal",
     "spyglass": "packages/experimental/spyglass",
     "testutils": "packages/common/testutils",
@@ -82,7 +83,6 @@
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "ui-consumer": "packages/experimental/ui-consumer",
     "util": "packages/common/util",
-    "vault": "packages/sdk/vault",
     "vite-plugin": "tools/vite-plugin",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"

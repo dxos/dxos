@@ -8,10 +8,10 @@ import { Config } from '@dxos/config';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-const client = new ClientServiceHost(
+const client = new ClientServiceHost({
   // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite. Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
-  new Config({ runtime: { client: { mode: 1 /* local */ } } })
-);
+  config: new Config({ runtime: { client: { mode: 1 /* local */ } } })
+});
 const [clientReady, resolve] = trigger();
 void client.open().then(resolve);
 
