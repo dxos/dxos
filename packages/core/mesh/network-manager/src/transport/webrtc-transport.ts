@@ -2,18 +2,29 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'node:assert';
-import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import assert from "node:assert";
+import SimplePeerConstructor, { Instance as SimplePeer } from "simple-peer";
 
-import { Event } from '@dxos/async';
-import { ErrorStream, raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { Event } from "@dxos/async";
+import { ErrorStream, raise } from "@dxos/debug";
+import { PublicKey } from "@dxos/keys";
+import { log } from "@dxos/log";
+import { Signal } from "@dxos/protocols/proto/dxos/mesh/swarm";
 
-import { SignalMessage } from '../signal';
-import { Transport, TransportFactory } from './transport';
-import { wrtc } from './wrtc';
+import { SignalMessage } from "../signal";
+import { Transport, TransportFactory } from "./transport";
+import { wrtc } from "./wrtc";
+
+interface WebRTCTransportParams {
+  initiator: boolean;
+  stream: NodeJS.ReadWriteStream;
+  ownId: PublicKey;
+  remoteId: PublicKey;
+  sessionId: PublicKey;
+  topic: PublicKey;
+  sendSignal: (msg: SignalMessage) => void;
+  webrtcConfig?: any;
+}
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -25,93 +36,88 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  constructor (
-    private readonly _initiator: boolean,
-    private readonly _stream: NodeJS.ReadWriteStream,
-    private readonly _ownId: PublicKey,
-    private readonly _remoteId: PublicKey,
-    private readonly _sessionId: PublicKey,
-    private readonly _topic: PublicKey,
-    private readonly _sendSignal: (msg: SignalMessage) => void,
-    private readonly _webrtcConfig?: any
-  ) {
-    log(`Created WebRTC connection ${this._ownId} -> ${this._remoteId} initiator=${this._initiator}`);
+  constructor(private readonly params: WebRTCTransportParams) {
+    log(
+      `Created WebRTC connection ${this.params.ownId} -> ${this.params.remoteId} initiator=${this.params.initiator}`
+    );
 
-    log(`Creating WebRTC connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
+    log(
+      `Creating WebRTC connection topic=${this.params.topic} ownId=${
+        this.params.ownId
+      } remoteId=${this.params.remoteId} initiator=${
+        this.params.initiator
+      } webrtcConfig=${JSON.stringify(this.params.webrtcConfig)}`
+    );
     this._peer = new SimplePeerConstructor({
-      initiator: this._initiator,
+      initiator: this.params.initiator,
       wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
         ? undefined
-        : (wrtc ?? raise(new Error('wrtc not available'))),
-      config: this._webrtcConfig
+        : wrtc ?? raise(new Error("wrtc not available")),
+      config: this.params.webrtcConfig,
     });
-    this._peer.on('signal', async data => {
+    this._peer.on("signal", async (data) => {
       try {
-        await this._sendSignal({
-          author: this._ownId,
-          recipient: this._remoteId,
-          sessionId: this._sessionId,
-          topic: this._topic,
-          data: { signal: { json: JSON.stringify(data) } }
+        await this.params.sendSignal({
+          author: this.params.ownId,
+          recipient: this.params.remoteId,
+          sessionId: this.params.sessionId,
+          topic: this.params.topic,
+          data: { signal: { json: JSON.stringify(data) } },
         });
       } catch (err: any) {
         this.errors.raise(err);
       }
     });
-    this._peer.on('connect', () => {
-      log(`Connection established ${this._ownId} -> ${this._remoteId}`);
-      this._stream.pipe(this._peer!).pipe(this._stream);
+    this._peer.on("connect", () => {
+      log(
+        `Connection established ${this.params.ownId} -> ${this.params.remoteId}`
+      );
+      this.params.stream.pipe(this._peer!).pipe(this.params.stream);
       this.connected.emit();
     });
-    this._peer.on('error', async (err) => {
+    this._peer.on("error", async (err) => {
       this.errors.raise(err);
       await this.close();
     });
-    this._peer.on('close', async () => {
-      log(`Connection closed ${this._ownId} -> ${this._remoteId}`);
+    this._peer.on("close", async () => {
+      log(`Connection closed ${this.params.ownId} -> ${this.params.remoteId}`);
       await this._disconnectStreams();
       this.closed.emit();
     });
   }
 
-  get remoteId () {
-    return this._remoteId;
+  get remoteId() {
+    return this.params.remoteId;
   }
 
-  get sessionId () {
-    return this._sessionId;
+  get sessionId() {
+    return this.params.sessionId;
   }
 
-  get peer () {
+  get peer() {
     return this._peer;
   }
 
-  async signal (signal: Signal) {
-    assert(this._peer, 'Connection not ready to accept signals.');
-    assert(signal.json, 'Signal message must contain signal data.');
+  async signal(signal: Signal) {
+    assert(this._peer, "Connection not ready to accept signals.");
+    assert(signal.json, "Signal message must contain signal data.");
     this._peer.signal(JSON.parse(signal.json));
   }
 
-  async close () {
+  async close() {
     await this._disconnectStreams();
     this._peer!.destroy();
-    log('Closed.');
+    log("Closed.");
   }
 
-  private async _disconnectStreams () {
+  private async _disconnectStreams() {
     // TODO(rzadp): Find a way of unpiping this?
-    this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream);
+    this.params.stream.unpipe?.(this._peer)?.unpipe?.(this.params.stream);
   }
 }
 
 // TODO(burdon): Pass in opts?
-export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebRTCTransport(
-  opts.initiator,
-  opts.stream,
-  opts.ownId,
-  opts.remoteId,
-  opts.sessionId,
-  opts.topic,
-  opts.sendSignal,
-  webrtcConfig
-);
+export const createWebRTCTransportFactory =
+  (webrtcConfig?: any): TransportFactory =>
+  (opts) =>
+    new WebRTCTransport({ ...opts, webrtcConfig });
