@@ -6,11 +6,14 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { codec } from '../common';
+import { Database } from '../database';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
 import { Space } from './space';
 
@@ -65,7 +68,8 @@ export class TestAgent {
         peerKey: identityKey,
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
-      }
+      },
+      databaseFactory: async ({ databaseBackend }) => new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
     });
 
     return {

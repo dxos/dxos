@@ -17,12 +17,10 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/rpc": "workspace:*",
-    "debug": "^4.3.3"
+    "@dxos/log": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
-  "devDependencies": {
-    "@types/debug": "^4.1.7"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }
