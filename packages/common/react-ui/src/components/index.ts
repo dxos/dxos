@@ -4,6 +4,6 @@
 
 export * from './Button/Button';
 export * from './Dialog';
-export * from './Heading';
-export * from './Loading';
-export * from './Main';
+export * from './Heading/Heading';
+export * from './Loading/Loading';
+export * from './Main/Main';

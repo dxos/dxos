@@ -7,9 +7,9 @@ import React, { forwardRef } from 'react';
 
 import { defaultFocus } from '../../styles';
 
-export type ButtonProps = React.ComponentProps<'button'> & {
+export interface ButtonProps extends React.ComponentProps<'button'> {
   variant?: 'default' | 'primary'
-};
+}
 
 export const buttonClassName = (variant: ButtonProps['variant']) => cx(
   'inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium',

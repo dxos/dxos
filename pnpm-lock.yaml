@@ -699,6 +699,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-dom': ^18.0.6
       '@vitejs/plugin-react': ^2.0.1
+      alea: ^1.0.1
       autoprefixer: ^10.4.12
       classnames: ^2.3.2
       phosphor-react: ^1.4.1
@@ -718,6 +719,7 @@ importers:
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
       '@radix-ui/react-dialog': 1.0.0_rj7ozvcq3uehdlnj3cbwzbi5ce
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.1.8
+      alea: 1.0.1
       autoprefixer: 10.4.12_postcss@8.4.17
       classnames: 2.3.2
       phosphor-react: 1.4.1_react@18.2.0
@@ -15449,6 +15451,10 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
     dev: true
+
+  /alea/1.0.1:
+    resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
+    dev: false
 
   /all-node-versions/8.0.0:
     resolution: {integrity: sha512-cF8ibgj23U7ai4qjSFzpeccwDXUlPFMzKe0Z6qf6gChR+9S0JMyzYz6oYz4n0nHi/FLH9BJIefsONsMH/WDM2w==}
