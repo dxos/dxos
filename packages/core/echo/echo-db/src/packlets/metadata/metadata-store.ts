@@ -55,7 +55,7 @@ export class MetadataStore {
    */
   @synchronized
   async load (): Promise<void> {
-    const file = this._directory.createOrOpenFile('EchoMetadata');
+    const file = this._directory.getOrCreateFile('EchoMetadata');
     try {
       const { size: fileLength } = await file.stat();
       if (fileLength < 4) {
@@ -91,7 +91,7 @@ export class MetadataStore {
       updated: new Date()
     };
 
-    const file = this._directory.createOrOpenFile('EchoMetadata');
+    const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
