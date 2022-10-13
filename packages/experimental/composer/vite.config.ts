@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import {resolve} from 'path';
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { themePlugin } from '@dxos/react-ui/plugin';
@@ -17,18 +17,16 @@ export default defineConfig((env) => ({
     include: [
       '@lexical/yjs',
       '@dxos/client',
+      '@dxos/credentials',
       '@dxos/react-client',
       '@dxos/text-model',
-      '@dxos/react-ui',
+      '@dxos/react-ui'
     ]
   },
   build: {
     outDir: 'out/experimental/app/text-editor',
     commonjsOptions: {
-      include: [
-        /packages/,
-        /node_modules/
-      ]
+      include: [/packages/, /node_modules/]
     }
   },
   plugins: [

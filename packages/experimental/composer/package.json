@@ -15,11 +15,13 @@
     "access": "public"
   },
   "dependencies": {
+    "@dxos/credentials": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@lexical/react": "~0.5.0",
+    "buffer": "^6.0.3",
     "classnames": "^2.3.2",
     "lexical": "~0.5.0",
     "react": "^18.2.0",
@@ -27,12 +29,12 @@
     "yjs": "^13.5.41"
   },
   "devDependencies": {
-    "lib0": "^0.2.52",
     "@dxos/client": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
+    "lib0": "^0.2.52",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4"
   }
