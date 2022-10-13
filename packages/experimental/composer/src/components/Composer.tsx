@@ -10,6 +10,7 @@ import cx from 'classnames';
 import React, { useEffect } from 'react';
 
 import { defaultFocus } from '@dxos/react-ui';
+import type { TextModel } from '@dxos/text-model';
 
 import { useProfile } from '../context/ProfileProvider';
 import { useTextItem } from '../context/TextItemProvider';
@@ -20,7 +21,11 @@ interface ComposerProps {
 }
 
 const logDocUpdates = (update: Uint8Array, origin: any) => {
-  console.log('[doc updated]', origin);
+  console.log('[doc updated]', update.length);
+};
+
+const logModelUpdates = (model: TextModel) => {
+  console.log('[echo model updated]', model);
 };
 
 export const Composer = (props: ComposerProps) => {
@@ -32,6 +37,7 @@ export const Composer = (props: ComposerProps) => {
 
   useEffect(() => {
     item?.model.doc.on('updateV2', logDocUpdates);
+    item?.model.subscribe(logModelUpdates);
     return () => {
       item?.model.doc.off('updateV2', logDocUpdates);
     };

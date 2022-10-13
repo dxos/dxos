@@ -48,7 +48,7 @@ export class TextModel extends Model<Doc, Mutation> {
 
   constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
     super(meta, itemId, getState, writeStream);
-
+    console.log('[TextModel onUpdate]', this._getState().guid);
     this._getState().on('update', this._handleDocUpdated.bind(this));
   }
 
@@ -67,6 +67,7 @@ export class TextModel extends Model<Doc, Mutation> {
 
   private async _handleDocUpdated (update: Uint8Array, origin: any) {
     const remote = origin && origin.docClientId && origin.docClientId !== this._getState().clientID;
+    console.log('[handle doc update]', remote);
     if (!remote) {
       await this.write({
         clientId: this._getState().clientID,
