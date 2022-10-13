@@ -49,7 +49,10 @@ export class WebRTCTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.on('data', async (data: Uint8Array) => this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data }));
+        this._params.stream.on('data', async (data: Uint8Array) => {
+          console.log('data out', data);
+          this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data })
+        });
       },
       (error) => log.catch(error)
     );
@@ -73,7 +76,8 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private _handleData (dataEvent: BridgeEvent.DataEvent) {
-    this._params.stream.write(dataEvent.payload);
+    // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
+    this._params.stream.write(Buffer.from(dataEvent.payload));
   }
 
   private async _handleSignal (signalEvent: BridgeEvent.SignalEvent) {
