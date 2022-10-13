@@ -95,11 +95,11 @@ export class YEchoProvider extends Observable<string> {
   }
 
   connect () {
-    console.log('YEchoProvider.connect', this.id);
+    console.log('[y echo provider] connect', this.id);
   }
 
   disconnect () {
-    console.log('YEchoProvider.disconnect', this.id);
+    console.log('[y echo provider] disconnect', this.id);
   }
 }
 
