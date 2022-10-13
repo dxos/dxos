@@ -99,7 +99,7 @@ export class WebRTCTransportService implements BridgeService {
 
   async close ({ proxyId }: CloseRequest) {
     this.peers.get(proxyId)?.destroy();
-    this.peers.delete;
+    this.peers.delete(proxyId);
     log('Closed.');
   }
 }
