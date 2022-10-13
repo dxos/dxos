@@ -5,27 +5,25 @@
 import debug from 'debug';
 import { Readable, Transform, Writable } from 'readable-stream';
 
-import type { HypercoreFeed } from './hypercore-types';
-
 const error = debug('dxos:stream:error');
 
-/* Stream utils, `https://nodejs.org/api/stream.html`.
+/**
+ * Stream utils, `https://nodejs.org/api/stream.html`.
  * NOTE: Turn on 'dxox:*:error' to see errors within callbacks that cause the following error:
  * Error [ERR_MULTIPLE_CALLBACK]: Callback called multiple times.
  */
 
 /**
  * Returns a stream that appends messages directly to a hypercore feed.
- * @param feed
  * @returns {NodeJS.WritableStream}
  */
-// TODO(burdon): Move to @dxos/codec.
-export const createWritableFeedStream = (feed: HypercoreFeed) => new Writable({
-  objectMode: true,
-  write: (message, _, callback) => {
-    feed.append(message, callback);
-  }
-});
+// TODO(burdon): Remove.
+// export const createWritableFeedStream = (feed: HypercoreFeed) => new Writable({
+//   objectMode: true,
+//   write: (message, _, callback) => {
+//     feed.append(message, callback);
+//   }
+// });
 
 /**
  * Creates a readStream stream that can be used as a buffer into which messages can be pushed.

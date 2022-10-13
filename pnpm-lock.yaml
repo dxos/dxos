@@ -1329,6 +1329,7 @@ importers:
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/network-generator': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -1340,6 +1341,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
+      hypercore: ^9.12.0
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
     dependencies:
@@ -1348,10 +1350,12 @@ importers:
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/network-generator': link:../network-generator
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
+      hypercore: 9.12.0
     devDependencies:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/feed-store': link:../../../common/feed-store

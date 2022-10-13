@@ -3,6 +3,7 @@
 //
 
 import defaultHypercore from 'hypercore';
+import type { HypercoreConstructor, ValueEncoding } from 'hypercore';
 import assert from 'node:assert';
 
 import { synchronized, Event } from '@dxos/async';
@@ -11,34 +12,29 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Directory } from '@dxos/random-access-storage';
 
-import FeedDescriptor from './feed-descriptor';
-import type { Hypercore } from './hypercore-types';
-import type { ValueEncoding } from './types';
+import { FeedDescriptor } from './feed-descriptor';
 
-export interface CreateDescriptorOptions {
+export type CreateDescriptorOptions = {
   key: PublicKey
   secretKey?: Buffer
   signer?: Signer
 }
 
-export interface CreateReadWriteFeedOptions {
+export type CreateReadWriteFeedOptions = {
   key: PublicKey
   secretKey: Buffer
 }
 
-export interface CreateReadOnlyFeedOptions {
+export type CreateReadOnlyFeedOptions = {
   key: PublicKey
 }
 
-export interface FeedStoreOptions {
-  /**
-   * Encoding type for each feed.
-   */
+export type FeedStoreOptions = {
+  // Encoding type for each feed.
   valueEncoding?: ValueEncoding
-  /**
-   * Hypercore class to use.
-   */
-  hypercore?: Hypercore
+
+  // Hypercore class to use.
+  hypercore?: HypercoreConstructor
 }
 
 /**
@@ -48,41 +44,26 @@ export interface FeedStoreOptions {
  * into a persist repository storage.
  */
 export class FeedStore {
-  private _directory: Directory;
-  private _valueEncoding: ValueEncoding | undefined;
-  private _hypercore: Hypercore;
-  // TODO(dmaretskyi): Convert to ComplexMap.
-  private _descriptors: Map<string, FeedDescriptor>;
+  // TODO(dmaretskyi): Convert to ComplexMap (i.e., use PublicKey as index).
+  private readonly _descriptors: Map<string, FeedDescriptor> = new Map();
+
+  private readonly _directory: Directory;
+  private readonly _hypercore: HypercoreConstructor;
+  private readonly _valueEncoding: ValueEncoding | undefined;
 
   /**
-   * Is emitted when a new feed represented by FeedDescriptor is opened.
+   * Emitted when a new feed represented by FeedDescriptor is opened.
    */
   readonly feedOpenedEvent = new Event<FeedDescriptor>();
 
-  /**
-   * @param directory RandomAccessStorage to use by default by the feeds.
-   * @param options Feedstore options.
-   */
-  constructor (directory: Directory, options: FeedStoreOptions = {}) {
-    assert(directory, 'The storage is required.');
-
+  constructor (directory: Directory, { hypercore, valueEncoding }: FeedStoreOptions = {}) {
+    assert(directory);
     this._directory = directory;
-
-    const {
-      valueEncoding,
-      hypercore = defaultHypercore
-    } = options;
+    this._hypercore = hypercore ?? defaultHypercore; // TODO(burdon): Remove.
     this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
-
-    this._hypercore = hypercore;
-
-    this._descriptors = new Map();
   }
 
-  /**
-   * @type {RandomAccessStorage}
-   */
-  get storage () {
+  get storage (): Directory {
     return this._directory;
   }
 
@@ -97,26 +78,29 @@ export class FeedStore {
    * @deprecated Use openReadWriteFeedWithSigner instead.
    */
   async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
-    throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
-    // const descriptor = this._descriptors.get(key.toHex());
-    // if (descriptor && descriptor.secret_key) {
-    //   return descriptor;
-    // }
-    // return this._createDescriptor({ key, secret_key });
+    // throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
+    const descriptor = this._descriptors.get(key.toHex());
+    if (descriptor && descriptor.secretKey) {
+      return descriptor;
+    }
+
+    return this._createDescriptor({ key, secretKey });
   }
 
   /**
    * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
    */
-  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer) {
+  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer): Promise<FeedDescriptor> {
     log('open read/write feed', { key });
-    if (this._descriptors.has(key.toHex())) {
-      const descriptor = this._descriptors.get(key.toHex())!;
+    let descriptor = this._descriptors.get(key.toHex());
+    if (descriptor) {
       assert(descriptor.writable, 'Feed already exists and is not writable.');
       return descriptor;
     }
 
-    const descriptor = await this._createDescriptor({ key, signer });
+    console.log('??');
+    descriptor = await this._createDescriptor({ key, signer });
+    console.log(':::::::::', descriptor, key);
     assert(descriptor.writable);
     return descriptor;
   }
@@ -126,17 +110,14 @@ export class FeedStore {
    */
   async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
     log('Open read-only feed', { key });
-    const descriptor = this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
-    return descriptor;
+    return this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
   }
 
   /**
    * Factory to create a new FeedDescriptor.
    */
-  private async _createDescriptor (options: CreateDescriptorOptions) {
-    const { key, secretKey, signer } = options;
-
-    const descriptor = new FeedDescriptor({
+  private async _createDescriptor ({ key, secretKey, signer }: CreateDescriptorOptions): Promise<FeedDescriptor> {
+    const feedDescriptor = new FeedDescriptor({
       directory: this._directory,
       key,
       secretKey,
@@ -145,25 +126,24 @@ export class FeedStore {
       hypercore: this._hypercore
     });
 
-    this._descriptors.set(
-      descriptor.key.toString(),
-      descriptor
-    );
+    this._descriptors.set(feedDescriptor.key.toString(), feedDescriptor);
 
-    await descriptor.open();
-    this.feedOpenedEvent.emit(descriptor);
-
-    return descriptor;
+    console.log(111111111);
+    await feedDescriptor.open();
+    console.log(333333333);
+    this.feedOpenedEvent.emit(feedDescriptor);
+    return feedDescriptor;
   }
 }
 
+// TODO(burdon): Document.
 const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;
   }
 
   return {
-    encode: (x: any) => Buffer.from(encoding.encode(x)),
+    encode: (data: any) => Buffer.from(encoding.encode(data)),
     decode: encoding.decode.bind(encoding)
   };
 };

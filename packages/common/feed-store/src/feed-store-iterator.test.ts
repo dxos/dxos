@@ -10,6 +10,7 @@ import pify from 'pify';
 
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
+import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { schema, createTestItemMutation, FeedMessageBlock, Timeframe } from '@dxos/protocols';
@@ -18,7 +19,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { HypercoreFeed } from './hypercore-types';
 
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
@@ -88,7 +88,7 @@ describe('feed store iterator', function () {
       iterator.addFeedDescriptor(descriptor);
     }));
 
-    log(JSON.stringify({
+    log('?????????????', JSON.stringify({
       config,
       feeds: Array.from(feeds.keys()).map(feedKey => feedKey.toHex())
     }, undefined, 2));
@@ -153,6 +153,7 @@ describe('feed store iterator', function () {
     await feedStore.close();
 
     expect(messages).toHaveLength(3);
+
     expect(messages).toContainEqual({ key: 'feed1', value: '1' });
     expect(messages).toContainEqual({ key: 'feed2', value: '0' });
     expect(messages).toContainEqual({ key: 'feed2', value: '1' });

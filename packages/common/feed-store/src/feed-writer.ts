@@ -10,13 +10,13 @@ import { MaybePromise } from '@dxos/util';
 
 import { FeedDescriptor } from './feed-descriptor';
 
-export interface WriteReceipt {
+export type WriteReceipt = {
   feedKey: PublicKey
   seq: number
 }
 
 export interface FeedWriter<T> {
-  write: (message: T) => Promise<WriteReceipt>
+  write (message: T): Promise<WriteReceipt>
 }
 
 export const mapFeedWriter = <T, U>(map: (arg: T) => MaybePromise<U>, writer: FeedWriter<U>): FeedWriter<T> => ({
