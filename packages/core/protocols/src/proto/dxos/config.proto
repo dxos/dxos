@@ -181,6 +181,7 @@ message Runtime {
     optional P2P p2p = 5;
     optional string confhost = 6;
     repeated string env = 7;
+    repeated string alias = 8;
   }
 
   //
