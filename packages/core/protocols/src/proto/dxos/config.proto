@@ -165,6 +165,7 @@ message Runtime {
       optional string email = 3;
       optional string certfile = 4;
       optional string keyfile = 5;
+      optional string dnsprovider = 6;
     }
 
     message P2P {
@@ -179,6 +180,8 @@ message Runtime {
     optional Https https = 4;
     optional P2P p2p = 5;
     optional string confhost = 6;
+    repeated string env = 7;
+    repeated string alias = 8;
   }
 
   //
