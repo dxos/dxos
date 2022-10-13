@@ -15,6 +15,7 @@ export enum StorageType {
 export interface Storage {
   readonly type: StorageType
   readonly size: number
+
   createDirectory: (path?: string) => Directory
   destroy: () => Promise<void>
 }

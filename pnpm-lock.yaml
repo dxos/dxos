@@ -32,6 +32,7 @@ importers:
       '@dxos/plate': workspace:*
       '@dxos/playwright': workspace:*
       '@dxos/protobuf-compiler': workspace:*
+      '@dxos/shims': workspace:*
       '@dxos/signal': workspace:*
       '@mdx-js/react': ^2.1.3
       '@nrwl/devkit': 14.5.7
@@ -115,6 +116,7 @@ importers:
       '@dxos/plate': link:tools/plate
       '@dxos/playwright': link:tools/executors/playwright
       '@dxos/protobuf-compiler': link:tools/executors/protobuf-compiler
+      '@dxos/shims': link:packages/common/shims
       '@dxos/signal': link:packages/core/mesh/signal
       '@mdx-js/react': 2.1.3_react@18.2.0
       '@nrwl/devkit': 14.5.7_nx@14.5.7+typescript@4.7.4
@@ -646,7 +648,8 @@ importers:
       pify: ~5.0.0
       random-access-file: ^2.2.1
       random-access-idb: ^1.2.2
-      random-access-memory: ~3.1.2
+      random-access-memory: ^4.1.0
+      random-access-storage: ^3.0.0
       random-access-web: ^2.0.3
       source-map-support: ^0.5.12
     dependencies:
@@ -657,7 +660,8 @@ importers:
       pify: 5.0.0
       random-access-file: 2.2.1
       random-access-idb: 1.2.2
-      random-access-memory: 3.1.4
+      random-access-memory: 4.1.0
+      random-access-storage: 3.0.0
       random-access-web: 2.0.3
     devDependencies:
       '@types/pify': 3.0.2
@@ -30176,6 +30180,15 @@ packages:
       random-access-storage: 1.4.2
     dev: false
 
+  /random-access-memory/4.1.0:
+    resolution: {integrity: sha512-vVt75UQpWcaZWlysSmk7isqdhiV10WCovxuKZmBKg5zSsiEXIclJmAlIsMr8usYqfFmXzOGIonWOAyR5u3jhXQ==}
+    dependencies:
+      b4a: 1.3.1
+      inherits: 2.0.4
+      is-options: 1.0.2
+      random-access-storage: 1.4.2
+    dev: false
+
   /random-access-storage/1.3.0:
     resolution: {integrity: sha512-pdS9Mcb9TB7oICypPRALlheaSuszuAKmLVEPKJMuYor7R/zDuHh5ALuQoS+ox31XRwQUL+tDwWH2GPdyspwelA==}
     dependencies:
@@ -30186,6 +30199,13 @@ packages:
     resolution: {integrity: sha512-nW7UQGxcihvSLuK9PahoKL0jlmw2S6yGV8DsC85xHuUBLJrUoetRbQ5LzuXTt+FWp/iXgjp12x7zh55NNghaBg==}
     dependencies:
       inherits: 2.0.4
+      queue-tick: 1.0.0
+    dev: false
+
+  /random-access-storage/3.0.0:
+    resolution: {integrity: sha512-f9KeHUMhrqj0hE2d4HbUXk/Cd5vElaVzdA0PuqPTlnxsG3dDvwQaMg8POT5tWK6UxJ80zAONZpHgLPMnnff1RA==}
+    dependencies:
+      events: 3.3.0
       queue-tick: 1.0.0
     dev: false
 
