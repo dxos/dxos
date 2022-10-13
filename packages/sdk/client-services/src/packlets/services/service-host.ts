@@ -56,10 +56,10 @@ export class ClientServiceHost implements ClientServiceProvider {
       signalManager: networkingEnabled 
         ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
-      transportFactory: transportFactory ?? 
+      transportFactory: transportFactory ?? (
         networkingEnabled
           ? createWebRTCTransportFactory({ iceServers: this._config.get('runtime.services.ice') })
-          : inMemoryTransportFactory,
+          : inMemoryTransportFactory),
       log: true
     });
 
