@@ -43,7 +43,7 @@ export class ApiTransactionHandler {
       if (!signFn) {
         throw new Error('Create or select an account first.');
       }
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
           const signedTransaction = await signFn(transaction);
           signedTransaction.send(({ events = [], status }) => {

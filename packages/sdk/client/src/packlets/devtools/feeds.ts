@@ -26,7 +26,7 @@ export const subscribeToFeeds = (
 
   const feedMap = new Map<PublicKey, { feedKey: PublicKey, stream: Readable, length: number }>();
 
-  setImmediate(async () => {
+  setTimeout(async () => {
     const { value: parties } = echo.queryParties();
     const party = parties.find(party => party.key.equals(partyKey));
     if (!party) {
@@ -84,7 +84,7 @@ export const subscribeToFeedBlocks = (
   }
 
   let feedStream: Readable;
-  setImmediate(async () => {
+  setTimeout(async () => {
     const { value: parties } = echo.queryParties();
     const party = parties.find(party => party.key.equals(partyKey));
     if (!party) {

@@ -141,7 +141,7 @@ describe('feed store iterator', function () {
 
     const [counter, updateCounter] = latch({ count: 3 });
     const messages: any[] = [];
-    setImmediate(async () => {
+    setTimeout(async () => {
       for await (const message of iterator) {
         messages.push(message.data);
         updateCounter();

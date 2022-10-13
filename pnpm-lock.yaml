@@ -3531,14 +3531,12 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
-      setimmediate: 1.0.5
       vite: 3.0.9
     dependencies:
       '@dxos/config': link:../../packages/sdk/config
       '@dxos/esbuild-plugins': 2.29.0
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
-      setimmediate: 1.0.5
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
 packages:
@@ -31748,6 +31746,7 @@ packages:
 
   /setimmediate/1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
+    dev: true
 
   /setprototypeof/1.1.1:
     resolution: {integrity: sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==}

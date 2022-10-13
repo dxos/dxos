@@ -160,7 +160,7 @@ describe('Protobuf service', function () {
 
               return new Stream(({ next, close }) => {
                 next({ data: 'foo' });
-                setImmediate(async () => {
+                setTimeout(async () => {
                   next({ data: 'bar' });
                   await sleep(5);
                   next({ data: 'baz' });
