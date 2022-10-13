@@ -2,107 +2,121 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
+import assert from "assert";
+import SimplePeerConstructor, { Instance as SimplePeer } from "simple-peer";
 
-import { Stream } from '@dxos/codec-protobuf';
-import { raise } from '@dxos/debug';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { ComplexMap } from '@dxos/util';
+import { Stream } from "@dxos/codec-protobuf";
+import { raise } from "@dxos/debug";
+import { PublicKey } from "@dxos/keys";
+import { log } from "@dxos/log";
+import {
+  BridgeService,
+  ConnectionRequest,
+  SignalRequest,
+  DataRequest,
+  BridgeEvent,
+  ConnectionState,
+  CloseRequest,
+} from "@dxos/protocols/proto/dxos/mesh/bridge";
+import { ComplexMap } from "@dxos/util";
 
-import { wrtc } from './wrtc';
+import { wrtc } from "./wrtc";
+import { WebRTCTransport } from "./webrtc-transport";
+import { Duplex } from "stream";
 
 export class WebRTCTransportService implements BridgeService {
-  protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());
+  protected transports = new ComplexMap<PublicKey, WebRTCTransport>((key) =>
+    key.toHex()
+  );
 
-  constructor (
-    private readonly _webrtcConfig?: any
-  ) {
-  }
+  constructor(private readonly _webrtcConfig?: any) {}
 
-  open (request: ConnectionRequest): Stream<BridgeEvent> {
+  open(request: ConnectionRequest): Stream<BridgeEvent> {
+    const stream = new Duplex({ read: () => {}, write: () => {} });
+    const transport = new WebRTCTransport({
+      initiator: request.initiator,
+      stream,
+      ownId: PublicKey.from(""),
+      remoteId: PublicKey.from(""),
+      sessionId: PublicKey.from(""),
+      topic: PublicKey.from(""),
+      sendSignal: () => {},
+    });
+
+    this.transports.set(request.proxyId, transport);
+
     return new Stream(({ ready, next, close }) => {
-
-      log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
-      const peer = new SimplePeerConstructor({
-        initiator: request.initiator,
-        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
-          ? undefined
-          : (wrtc ?? raise(new Error('wrtc not available'))),
-        config: this._webrtcConfig
-      });
+      log(
+        `Creating webrtc connection initiator=${
+          request.initiator
+        } webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
+      );
 
       next({
         connection: {
-          state: ConnectionState.CONNECTING
-        }
+          state: ConnectionState.CONNECTING,
+        },
       });
 
-      peer.on('data', async (payload) => {
+      transport.peer.on("data", async (payload) => {
         next({
           data: {
-            payload
-          }
+            payload,
+          },
         });
       });
 
-      peer.on('signal', async data => {
+      transport.peer.on("signal", async (data) => {
         next({
           signal: {
-            payload: { json: JSON.stringify(data) }
-          }
+            payload: { json: JSON.stringify(data) },
+          },
         });
       });
 
-      peer.on('connect', () => {
+      transport.peer.on("connect", () => {
         next({
           connection: {
-            state: ConnectionState.CONNECTED
-          }
+            state: ConnectionState.CONNECTED,
+          },
         });
       });
 
-      peer.on('error', async (err) => {
+      transport.peer.on("error", async (err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
-            error: err.toString()
-          }
+            error: err.toString(),
+          },
         });
         close(err);
       });
 
-      peer.on('close', async () => {
+      transport.peer.on("close", async () => {
         next({
           connection: {
-            state: ConnectionState.CLOSED
-          }
+            state: ConnectionState.CLOSED,
+          },
         });
         close();
       });
-
-      this.peers.set(request.proxyId, peer);
 
       ready();
     });
   }
 
-  async sendSignal ({ proxyId, signal }: SignalRequest): Promise<void> {
-    assert(this.peers.has(proxyId), 'Connection not ready to accept signals.');
-    assert(signal.json, 'Signal message must contain signal data.');
-    this.peers.get(proxyId)!.signal(JSON.parse(signal.json));
+  async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
+    this.transports.get(proxyId)!.signal(signal);
   }
 
-  async sendData ({ proxyId, payload }: DataRequest): Promise<void> {
-    assert(this.peers.has(proxyId));
-    this.peers.get(proxyId)!.write(payload);
+  async sendData({ proxyId, payload }: DataRequest): Promise<void> {
+    assert(this.transports.has(proxyId));
+    this.transports.get(proxyId)!.peer.write(payload);
   }
 
-  async close ({ proxyId }: CloseRequest) {
-    this.peers.get(proxyId)?.destroy();
-    this.peers.delete;
-    log('Closed.');
+  async close({ proxyId }: CloseRequest) {
+    this.transports.get(proxyId)?.close();
+    this.transports.delete(proxyId);
+    log("Closed.");
   }
 }
