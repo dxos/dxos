@@ -14,13 +14,13 @@ import { Client, defaultTestingConfig } from './packlets/proxies';
 
 describe('Client - nonpersistent', function () {
   it('open & close', async function () {
-    const client = new Client();
+    const client = new Client(defaultTestingConfig);
     await client.initialize();
     await client.destroy();
   }).retries(10);
 
   it('create profile', async function () {
-    const client = new Client();
+    const client = new Client(defaultTestingConfig);
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),
@@ -34,7 +34,7 @@ describe('Client - nonpersistent', function () {
   }).retries(10);
 
   it('create party', async function () {
-    const client = new Client();
+    const client = new Client(defaultTestingConfig);
     await client.initialize();
     await client.halo.createProfile({
       ...createKeyPair(),

@@ -9,6 +9,7 @@ import { Client } from '@dxos/client';
 import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { ErrorBoundary } from '@dxos/react-toolkit';
+import { RpcPort } from '@dxos/rpc';
 
 import {
   AppLayout, AuthPage, DevicesPage, IdentityPage, InvitationPage, LockPage,
@@ -48,7 +49,7 @@ const Routes = () => useRoutes([
   }
 ]);
 
-export const App = () => {
+export const App = ({ rpcPort }: { rpcPort: RpcPort }) => {
   const clientRef = useRef<Client>();
 
   return (
@@ -61,6 +62,7 @@ export const App = () => {
       <ClientProvider
         clientRef={clientRef}
         config={configProvider}
+        options={{ rpcPort }}
       >
         <HashRouter>
           <Routes />
