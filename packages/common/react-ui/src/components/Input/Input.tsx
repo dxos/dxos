@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import { useDebounce } from '../../hooks/useDebounce';
-import { defaultFocus } from '../../styles';
+import { defaultDisabled, defaultFocus } from '../../styles';
 import { useId } from '../../util/useId';
 
 export interface InputProps extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange'> {
@@ -22,6 +22,7 @@ export interface InputProps extends Omit<React.ComponentProps<'input'>, 'value' 
   descriptionVisuallyHidden?: boolean
   initialValue?: string
   onChange?: (value: string) => void
+  disabled?: boolean
 }
 
 export const Input = ({
@@ -33,6 +34,7 @@ export const Input = ({
   required,
   initialValue,
   onChange,
+  disabled,
   ...props
 }: InputProps) => {
   const inputId = useId('input');
@@ -66,9 +68,11 @@ export const Input = ({
         id={inputId}
         className={cx(
           defaultFocus,
-          'bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white'
+          'bg-neutral-50/50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white',
+          disabled && defaultDisabled
         )}
         {...(required && { required: true })}
+        {...(disabled && { disabled: true })}
         {...(placeholder && { placeholder })}
         {...(description && { 'aria-describedby': descriptionId })}
         value={internalValue}
