@@ -16,6 +16,7 @@ package:
 
 runtime:
   client:
+    mode: remote
     storage:
       persistent: true
 
