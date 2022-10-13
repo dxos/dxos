@@ -97,7 +97,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
       {party ? (
         <>
           {props.children}
-          {partyInvitations && partyInvitations.length && (
+          {partyInvitations && (
             <Button
               className='fixed bottom-2 right-2'
               onClick={() =>
