@@ -3,6 +3,13 @@
 # https://docs.codecov.com/docs/codecovyml-reference
 #
 
+# Disable PR status checks for code coverage.
+# https://docs.codecov.com/docs/commit-status
+coverage:
+  status:
+    project: off
+    patch: off
+
 flags:
   nodejs:
     paths:

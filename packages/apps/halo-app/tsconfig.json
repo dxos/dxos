@@ -6,12 +6,15 @@
       "ESNext"
     ],
     "outDir": "dist",
+    "module": "ESNext",
     "types": [
-      "node"
+      "node",
+      "sharedworker"
     ]
   },
   "include": [
-    "src"
+    "src",
+    "testing"
   ],
   "references": [
     {
