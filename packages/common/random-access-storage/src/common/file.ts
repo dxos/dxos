@@ -67,6 +67,15 @@ export const wrapFile = (native: RandomAccessStorage, type: StorageType): File =
     'truncate'
   ]);
 
+  {
+    // Hack to make return type consistent on all platforms
+    const trueRead = file.read.bind(file);
+    file.read = async (offset: number, size: number) => {
+      const data = await trueRead(offset, size);
+      return Buffer.from(data);
+    };
+  }
+
   return Object.assign(file, {
     type,
     native

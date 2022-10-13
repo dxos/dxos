@@ -91,7 +91,7 @@ export class MetadataStore {
       updated: new Date()
     };
 
-    const file = this._directory.getOrCreateFile('EchoMetadata'); // TODO(burdon): Rename?
+    const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {
       const encoded = Buffer.from(schema.getCodecForType('dxos.echo.metadata.EchoMetadata').encode(data));
