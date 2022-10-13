@@ -48,17 +48,18 @@ describe.skip('Client Services', function () {
         secret: invitation.descriptor.secret ?? failUndefined()
       });
 
-      const [inviteeProfileLatch, inviteeProfileTrigger] = latch();
+      const [done, invited] = latch();
       invitee.services.ProfileService.subscribeProfile().subscribe(inviteeProfile => {
         if (inviteeProfile.profile?.username === 'test-user') {
-          inviteeProfileTrigger();
+          invited();
         }
       }, err => {
         if (!(err instanceof RpcClosedError)) {
           throw err;
         }
       });
-      await inviteeProfileLatch;
+
+      await done();
     }).timeout(5000);
   });
 });

@@ -126,10 +126,9 @@ export class EchoProxy implements Echo {
    * Creates a new party.
    */
   async createParty (): Promise<Party> {
-    const [partyReceivedPromise, partyReceived] = latch();
+    const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.createParty();
-
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -138,10 +137,9 @@ export class EchoProxy implements Echo {
 
     this._partiesChanged.on(handler);
     handler();
+    await done();
 
-    await partyReceivedPromise;
     this._partiesChanged.off(handler);
-
     return this._parties.get(party.publicKey)!;
   }
 
@@ -149,10 +147,9 @@ export class EchoProxy implements Echo {
    * Clones the party from a snapshot.
    */
   async cloneParty (snapshot: PartySnapshot): Promise<Party> {
-    const [partyReceivedPromise, partyReceived] = latch();
+    const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
-
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -161,10 +158,9 @@ export class EchoProxy implements Echo {
 
     this._partiesChanged.on(handler);
     handler();
+    await done();
 
-    await partyReceivedPromise;
     this._partiesChanged.off(handler);
-
     return this._parties.get(party.publicKey)!;
   }
 
