@@ -6,23 +6,29 @@ import '@dxosTheme';
 import React from 'react';
 
 import { templateForComponent } from '../../dev-util';
-import { Loading, LoadingProps } from './Loading';
+import { Loading, LoadingColor, LoadingProps, LoadingSize } from './Loading';
 
 export default {
   title: 'react-ui/Loading',
-  component: Loading
+  component: Loading,
+  argTypes: {
+    size: {
+      control: 'select',
+      options: LoadingSize
+    },
+    color: {
+      control: 'select',
+      options: LoadingColor
+    }
+  }
 };
 
 const Template = (props: LoadingProps) => <Loading {...props} />;
 
 export const Default = templateForComponent(Template)({});
-Default.args = { size: 'md' };
+Default.args = { size: LoadingSize.md, color: LoadingColor.primary };
 
-export const Small = templateForComponent(Template)({});
-Small.args = { size: 'sm' };
-
-export const Large = templateForComponent(Template)({});
-Large.args = { size: 'lg' };
-
-export const ExtraLarge = templateForComponent(Template)({});
-ExtraLarge.args = { size: 'xl' };
+export const Small = () => <Template size={LoadingSize.sm} />;
+export const Neutral = () => <Template color={LoadingColor.neutral} />;
+export const Large = () => <Template size={LoadingSize.lg} />;
+export const ExtraLarge = () => <Template size={LoadingSize.xl} />;

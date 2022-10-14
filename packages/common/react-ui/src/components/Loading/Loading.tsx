@@ -7,21 +7,34 @@ import React from 'react';
 
 import { useId } from '../../util/useId';
 
+export enum LoadingSize {
+  sm = 'sm',
+  md = 'md',
+  lg = 'lg',
+  xl = 'xl',
+}
+
+export enum LoadingColor {
+  primary = 'primary',
+  neutral = 'neutral'
+}
+
 export interface LoadingProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  size?: LoadingSize
+  color?: LoadingColor
   className?: string
 }
 
-const sizeMap = new Map<string, string>([
-  ['sm', 'w-4 h-4'],
-  ['md', 'w-8 h-8'],
-  ['lg', 'w-12 h-12'],
-  ['xl', 'w-16 h-16']
+const sizeMap = new Map<LoadingSize, string>([
+  [LoadingSize.sm, 'w-4 h-4'],
+  [LoadingSize.md, 'w-8 h-8'],
+  [LoadingSize.lg, 'w-12 h-12'],
+  [LoadingSize.xl, 'w-16 h-16']
 ]);
 
-export const Loading = ({ size, className }: LoadingProps) => {
+export const Loading = ({ size, color, className }: LoadingProps) => {
   const labelId = useId('loading');
-  const sizeClassName = sizeMap.get(size || 'md');
+  const sizeClassName = sizeMap.get(size || LoadingSize.md);
   return (
     <div
       role='status' className='flex justify-center p-4'
@@ -29,7 +42,12 @@ export const Loading = ({ size, className }: LoadingProps) => {
       <svg
         role='none'
         aria-hidden='true'
-        className={cx(sizeClassName, 'text-neutral-200/50 animate-spin dark:text-neutral-600/50 fill-primary-400', className)}
+        className={cx(
+          sizeClassName,
+          'text-neutral-200/50 animate-spin dark:text-neutral-600/50',
+          color === LoadingColor.neutral ? 'fill-neutral-400' : 'fill-primary-400',
+          className
+        )}
         viewBox='0 0 100 101' fill='none' xmlns='http://www.w3.org/2000/svg'
       >
         <path
