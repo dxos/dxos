@@ -16,10 +16,9 @@ export default defineConfig((env) => ({
     force: true,
     include: [
       '@dxos/client',
-      '@dxos/credentials',
       '@dxos/react-client',
-      '@dxos/text-model',
-      '@dxos/react-ui'
+      '@dxos/react-ui',
+      '@dxos/text-model'
     ],
     esbuildOptions: {
       plugins: [
