@@ -21,7 +21,19 @@ export default defineConfig((env) => ({
       '@dxos/react-client',
       '@dxos/text-model',
       '@dxos/react-ui'
-    ]
+    ],
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'yjs',
+          setup: ({ onResolve }) => {
+            onResolve({ filter: /yjs/ }, () => {
+              return { path: require.resolve('yjs').replace('.cjs', '.mjs') }
+            })
+          }
+        }
+      ]
+    }
   },
   build: {
     outDir: 'out/experimental/app/text-editor',

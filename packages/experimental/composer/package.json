@@ -20,13 +20,23 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/text-model": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
-    "@lexical/react": "~0.5.0",
+    "@tiptap/core": "2.0.0-beta.199",
+    "@tiptap/extension-collaboration": "2.0.0-beta.199",
+    "@tiptap/extension-bubble-menu": "2.0.0-beta.199",
+    "@tiptap/extension-floating-menu": "2.0.0-beta.199",
+    "@tiptap/react": "2.0.0-beta.199",
+    "@tiptap/starter-kit": "2.0.0-beta.199",
     "buffer": "^6.0.3",
     "classnames": "^2.3.2",
-    "lexical": "~0.5.0",
+    "prosemirror-model": "^1.18.1",
+    "prosemirror-state": "^1.4.1",
+    "prosemirror-view": "^1.29.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "yjs": "^13.5.41"
+    "yjs": "^13.5.41",
+    "y-prosemirror": "^1.2.0",
+    "y-protocols": "^1.0.5",
+    "y-webrtc": "^10.2.3"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
@@ -34,7 +44,6 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
-    "lib0": "^0.2.52",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4"
   }

@@ -2,75 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
-import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { ContentEditable } from '@lexical/react/LexicalContentEditable';
-import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
-import cx from 'classnames';
-import React, { useEffect } from 'react';
+import Collaboration from '@tiptap/extension-collaboration';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import React from 'react';
+// import { WebrtcProvider } from 'y-webrtc';
+// import * as Y from 'yjs';
 
-import { defaultFocus } from '@dxos/react-ui';
-import type { TextModel } from '@dxos/text-model';
-
-import { useProfile } from '../context/ProfileProvider';
+// import { useProfile } from '../context/ProfileProvider';
 import { useTextItem } from '../context/TextItemProvider';
-import { useYEchoProvider } from '../y-echo/YEcho';
 
 interface ComposerProps {
   id?: string
 }
 
-const logDocUpdates = (update: Uint8Array, origin: any) => {
-  console.log('[doc updated]', update.length);
-};
-
-const logModelUpdates = (model: TextModel) => {
-  console.log('[echo model updated]', model);
-};
+// const ydoc = new Y.Doc();
+// const provider = new WebrtcProvider('example-document', ydoc);
 
 export const Composer = (props: ComposerProps) => {
   const { item } = useTextItem();
-  const { profile } = useProfile();
-  const username = profile!.username || profile!.publicKey.truncate(8);
+  // const { profile } = useProfile();
+  // const username = profile!.username || profile!.publicKey.truncate(8);
 
-  const providerFactory = useYEchoProvider(item!);
-
-  useEffect(() => {
-    item?.model.doc.on('updateV2', logDocUpdates);
-    item?.model.subscribe(logModelUpdates);
-    return () => {
-      item?.model.doc.off('updateV2', logDocUpdates);
-    };
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ history: false }),
+      Collaboration.configure({ document: item?.model.doc })
+    ]
   }, [item]);
 
   return (
-    <LexicalComposer initialConfig={{
-      editorState: null,
-      namespace: 'org.dxos.composer',
-      theme: {
-        ltr: 'ltr',
-        rtl: 'rtl'
-      },
-      onError: (error: Error) => {
-        throw error;
-      },
-      nodes: []
-    }}>
-      <div role='none' className='relative'>
-        <PlainTextPlugin
-          contentEditable={(
-            <ContentEditable
-              className={cx(defaultFocus, 'p-4 bg-white dark:bg-neutral-950 rounded')} />
-          )}
-          placeholder=''
-        />
-        <CollaborationPlugin
-          username={username}
-          id={item!.id}
-          providerFactory={providerFactory}
-          shouldBootstrap={true}
-        />
-      </div>
-    </LexicalComposer>
+    <EditorContent editor={editor} />
   );
 };
