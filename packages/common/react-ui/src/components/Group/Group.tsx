@@ -38,7 +38,7 @@ export const Group = ({
       className={cx('bg-white dark:bg-neutral-800 rounded-lg p-4', elevationClassNameMap.get(elevation || 3), className)} {...props}>
       <Heading
         {...label} id={labelId}
-        className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label.className)} />
+        className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label?.className)} />
       {children}
     </div>
   );

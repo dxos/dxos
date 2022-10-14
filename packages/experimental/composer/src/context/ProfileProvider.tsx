@@ -7,13 +7,13 @@ import React, {
   PropsWithChildren,
   useContext,
   useEffect,
-  useMemo
+  useMemo,
+  useState
 } from 'react';
 
-import { useClient, useProfile as useNaturalProfile } from '@dxos/react-client';
+import type { Profile } from '@dxos/client';
+import { useClient } from '@dxos/react-client';
 import { Loading } from '@dxos/react-ui';
-
-export type Profile = ReturnType<typeof useNaturalProfile>;
 
 export interface ProfileContextValue {
   profile?: Profile
@@ -23,7 +23,12 @@ export const ProfileContext = createContext<ProfileContextValue>({});
 
 export const ProfileProvider = (props: PropsWithChildren<{}>) => {
   const client = useClient();
-  const profile = useNaturalProfile();
+  const [profile, setProfile] = useState(() => client.halo.profile);
+
+  useEffect(
+    () => client.halo.subscribeToProfile(() => setProfile(client.halo.profile)),
+    [client]
+  );
 
   const profileContextValue = useMemo(() => ({ profile }), [profile]);
 
