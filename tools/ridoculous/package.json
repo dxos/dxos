@@ -4,11 +4,11 @@
   "description": "Markdown processing CLI and library.",
   "license": "MIT",
   "type": "module",
-  "main": "dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "bin": {
     "ridoculous": "./bin/ridoculous.js"
   },
+  "main": "dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "check": "true",
@@ -16,10 +16,6 @@
     "test": "mocha",
     "update:docs": "ts-node --esm ./src/main.ts --files ./testing/docs/**/*.md --auto-number --dry-run",
     "update:test": "rm -rf ./out && DEBUG='dxos:ridoculous:*' ts-node --esm ./src/main.ts --files 'testing/**/*.md' --verbose"
-  },
-  "mocha": {
-    "loader": "ts-node/esm",
-    "spec": "src/**/*.test.ts"
   },
   "dependencies": {
     "@microsoft/tsdoc": "~0.14.1",
@@ -56,5 +52,9 @@
     "mocha": "^8.4.0",
     "ts-node": "10.9.1",
     "typescript": "^4.7.2"
+  },
+  "mocha": {
+    "loader": "ts-node/esm",
+    "spec": "src/**/*.test.ts"
   }
 }

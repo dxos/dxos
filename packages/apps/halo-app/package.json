@@ -2,9 +2,9 @@
   "name": "@dxos/halo-app",
   "version": "2.33.8",
   "description": "HALO PWA",
-  "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "repository": "github:dxos/dxos",
   "scripts": {
     "check": "true",
     "preview": "vite preview"
@@ -15,10 +15,10 @@
     "@dxos/config": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
