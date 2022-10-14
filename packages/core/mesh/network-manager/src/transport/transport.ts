@@ -20,7 +20,7 @@ export interface Transport {
   close (): Promise<void>
 }
 
-export interface TransportOptions {
+export type TransportOptions = {
   /**
    * Did local node initiate this connection.
    */
@@ -42,4 +42,6 @@ export interface TransportOptions {
   sendSignal: (msg: SignalMessage) => Promise<void> // TODO(burdon): Remove async?
 }
 
-export type TransportFactory = (options: TransportOptions) => Transport
+export interface TransportFactory {
+  create (options: TransportOptions): Transport
+}

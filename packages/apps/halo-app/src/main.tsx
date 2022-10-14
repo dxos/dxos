@@ -14,22 +14,9 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { App } from './App';
 
-if (typeof SharedWorker !== 'undefined') {
-  void (async () => {
-    const worker = new SharedWorker(
-      new URL('./shared-worker', import.meta.url),
-      { type: 'module' }
-    );
-    const rpcPort = createWorkerPort({ channel: 'dxos:app', port: worker.port });
-
-    // TODO(wittjosiah): StrictMode causing issues with the react sdk, re-enable once fixed.
-    createRoot(document.getElementById('root')!)
-      .render(
-          // <StrictMode>
-          <App rpcPort={rpcPort} />
-          // </StrictMode>
-      );
-  })();
-} else {
-  throw new Error('Requires a browser with support for shared workers.');
-}
+createRoot(document.getElementById('root')!)
+  .render(
+      // <StrictMode>
+      <App />
+      // </StrictMode>
+  );

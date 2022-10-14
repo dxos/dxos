@@ -4,10 +4,10 @@
   "description": "ECHO model factory.",
   "license": "MIT",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "check": "true"
   },

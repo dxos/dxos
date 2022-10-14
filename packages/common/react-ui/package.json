@@ -10,9 +10,6 @@
     "dist",
     "src"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
@@ -26,12 +23,15 @@
     "tailwindcss": "^3.1.8",
     "tailwindcss-radix": "^2.6.0"
   },
+  "devDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
   "peerDependencies": {
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
-  "devDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+  "publishConfig": {
+    "access": "public"
   }
 }
