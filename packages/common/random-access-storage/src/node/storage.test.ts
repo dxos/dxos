@@ -25,6 +25,8 @@ const write = async (file: File, data = 'test') => {
   await expect(file.read(offset, buffer.length)).resolves.toEqual(buffer);
 };
 
+// TODO(burdon): Factor out tests (move to storage.blueprint).
+
 describe('testing node storage types', function () {
   before(function () {
     return del(ROOT_DIRECTORY);
@@ -94,7 +96,7 @@ describe('testing node storage types', function () {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('persistance', async function () {
+  it('persistence', async function () {
     const filename = randomText();
     const data = Buffer.from(randomText());
 
@@ -115,6 +117,9 @@ describe('testing node storage types', function () {
     }
   });
 
-  storageTests(StorageType.RAM, () => createStorage({ type: StorageType.RAM, root: ROOT_DIRECTORY }));
-  storageTests(StorageType.NODE, () => createStorage({ type: StorageType.NODE, root: ROOT_DIRECTORY }));
+  storageTests(StorageType.RAM,
+    () => createStorage({ type: StorageType.RAM, root: ROOT_DIRECTORY }));
+
+  storageTests(StorageType.NODE,
+    () => createStorage({ type: StorageType.NODE, root: ROOT_DIRECTORY }));
 });

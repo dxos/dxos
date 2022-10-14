@@ -29,7 +29,7 @@ export type FeedSelector = (feed: FeedWrapper) => boolean
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
-export class FeedStoreIterator<T> implements AsyncIterable<number> {
+export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(burdon): Change to FeedBlock.
   private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedWrapper>(key => key.toHex());
 
   private _running = false;

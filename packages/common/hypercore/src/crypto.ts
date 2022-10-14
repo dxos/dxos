@@ -10,11 +10,12 @@ import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
 /**
- * Create encoding
+ * Create encoding (e.g., from protobuf codec).
  */
-export const createEncoding = (encoding: AbstractValueEncoding) => ({
-  encode: (data: any) => Buffer.from(encoding.encode(data)),
-  decode: encoding.decode.bind(encoding)
+// TODO(burdon): Move to feed-store?
+export const createEncoding = (codec: AbstractValueEncoding): AbstractValueEncoding => ({
+  encode: (data: any) => Buffer.from(codec.encode(data)),
+  decode: codec.decode.bind(codec)
 });
 
 /**

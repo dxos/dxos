@@ -3,6 +3,7 @@
 //
 
 import { Hypercore, HypercoreProperties } from 'hypercore';
+import util from 'node:util';
 
 import { py } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
@@ -20,20 +21,19 @@ export class FeedWrapper {
     return this._key;
   }
 
-  get core (): Hypercore {
-    return this._hypercore;
-  }
-
   get properties (): HypercoreProperties {
     return this._hypercore;
   }
 
-  open = this._py(this._hypercore.open);
-  close = this._py(this._hypercore.close);
+  open = util.promisify(this._hypercore.open).bind(this._hypercore);
 
+  // open = this._py(this._hypercore.open);
+  close = this._py(this._hypercore.close);
   append = this._py(this._hypercore.append);
 
-  _py (f: Function) {
-    return py(this._hypercore, f);
+  replicate = this._hypercore.replicate;
+
+  _py (fn: Function) {
+    return py(this._hypercore, fn);
   }
 }

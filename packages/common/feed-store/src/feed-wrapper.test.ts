@@ -15,7 +15,7 @@ import { TestBuilder } from './testing';
 describe('FeedWrapper', function () {
   const factory = new TestBuilder().createFeedFactory();
 
-  it('Creates a readable key', async function () {
+  it('Creates a readable key.', async function () {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key), key);
     await feed.open();
@@ -24,7 +24,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('Creates a writable key', async function () {
+  it('Creates a writable key.', async function () {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -48,10 +48,10 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('Appends blocks', async function () {
+  it('Appends blocks.', async function () {
     const builder = new TestBuilder();
-    const feedKey = await builder.keyring!.createKey();
     const feedFactory = builder.createFeedFactory();
+    const feedKey = await builder.keyring!.createKey();
     const feed = await feedFactory.createFeed(feedKey, { writable: true });
 
     const numBlocks = 10;
