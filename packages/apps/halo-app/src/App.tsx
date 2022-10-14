@@ -49,7 +49,7 @@ const Routes = () => useRoutes([
   }
 ]);
 
-export const App = ({ rpcPort }: { rpcPort: RpcPort }) => {
+export const App = () => {
   const clientRef = useRef<Client>();
 
   return (
@@ -62,7 +62,6 @@ export const App = ({ rpcPort }: { rpcPort: RpcPort }) => {
       <ClientProvider
         clientRef={clientRef}
         config={configProvider}
-        options={{ rpcPort }}
       >
         <HashRouter>
           <Routes />

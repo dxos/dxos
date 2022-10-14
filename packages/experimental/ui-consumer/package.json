@@ -11,9 +11,6 @@
     "dist",
     "src"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "classnames": "^2.3.2",
     "react": "^18.2.0",
@@ -26,5 +23,8 @@
     "@vitejs/plugin-react": "^2.0.1",
     "vite": "3.0.9",
     "vite-plugin-pwa": "^0.12.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

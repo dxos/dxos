@@ -13,7 +13,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { wrtc } from './wrtc';
+import { wrtc } from './webrtc';
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -105,13 +105,16 @@ export class WebRTCTransport implements Transport {
 }
 
 // TODO(burdon): Pass in opts?
-export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => opts => new WebRTCTransport(
-  opts.initiator,
-  opts.stream,
-  opts.ownId,
-  opts.remoteId,
-  opts.sessionId,
-  opts.topic,
-  opts.sendSignal,
-  webrtcConfig
-);
+// TODO(dmaretskyi): Convert to class.
+export const createWebRTCTransportFactory = (webrtcConfig?: any): TransportFactory => ({
+  create: opts => new WebRTCTransport(
+    opts.initiator,
+    opts.stream,
+    opts.ownId,
+    opts.remoteId,
+    opts.sessionId,
+    opts.topic,
+    opts.sendSignal,
+    webrtcConfig
+  )
+});
