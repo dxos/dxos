@@ -2,11 +2,10 @@
 // Copyright 2019 DXOS.org
 //
 
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { expect } from 'chai';
 import faker from 'faker';
-import path from 'path';
-import ram from 'random-access-memory';
+
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { HypercoreFeed } from './hypercore-feed';
@@ -14,7 +13,7 @@ import { createDataItem } from './testing';
 
 describe('HypercoreFactory', function () {
   it('appends to and read from multiple feeds.', async function () {
-    const directory = createStorage({type: StorageType.RAM}).createDirectory();
+    const directory = createStorage({ type: StorageType.RAM }).createDirectory();
     const factory = new HypercoreFactory((filename) => directory.getOrCreateFile(filename));
     const numFeeds = 10;
     const numBlocks = 100;
