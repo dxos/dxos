@@ -154,7 +154,7 @@ workflows:
           filters:
             branches:
               only:
-                - wittjosiah/10-13-ci_Deploy_to_KUBE
+                - release
           context:
             - Github
             - Netlify
