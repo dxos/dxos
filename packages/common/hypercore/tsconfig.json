@@ -1,0 +1,22 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": [
+      "@dxos/shims",
+      "mocha",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../random-access-storage"
+    }
+  ]
+}
