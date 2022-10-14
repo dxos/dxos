@@ -1835,6 +1835,7 @@ importers:
   packages/experimental/composer:
     specifiers:
       '@dxos/client': workspace:*
+      '@dxos/config': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/text-model': workspace:*
@@ -1858,6 +1859,7 @@ importers:
       yjs: ^13.5.41
     dependencies:
       '@dxos/client': link:../../sdk/client
+      '@dxos/config': link:../../sdk/config
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/text-model': link:../../core/echo/text-model

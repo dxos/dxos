@@ -4,21 +4,14 @@
 
 import React from 'react';
 
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { Heading, Loading, Main } from '@dxos/react-ui';
 
 import { Composer } from './components';
 import { PartyProvider, ProfileProvider, TextItemProvider } from './context';
 
-const clientConfig = {
-  runtime: {
-    services: {
-      signal: {
-        server: 'wss://halo.dxos.org/.well-known/dx/signal'
-      }
-    }
-  }
-};
+const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 const ClientFallback = () => (
   <div className='py-8 flex flex-col gap-4'>
@@ -31,7 +24,7 @@ const ClientFallback = () => (
 
 export const App = () => {
   return (
-    <ClientProvider config={clientConfig} fallback={<ClientFallback />}>
+    <ClientProvider config={configProvider} fallback={<ClientFallback />}>
       <ProfileProvider>
         <PartyProvider>
           <TextItemProvider>
