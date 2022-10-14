@@ -18,6 +18,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/react-components": "workspace:*",
     "@dxos/react-toolkit": "workspace:*",
     "@dxos/rpc": "workspace:*",
