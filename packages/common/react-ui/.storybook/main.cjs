@@ -23,9 +23,6 @@ module.exports = {
     previewMdx2: true
   },
   viteFinal: async (config) => mergeConfig(config, {
-    optimizeDeps: {
-      include: ['@dxos/react-ui', resolve(__dirname, '../dist')]
-    },
     build: {
       commonjsOptions: {
         include: [
