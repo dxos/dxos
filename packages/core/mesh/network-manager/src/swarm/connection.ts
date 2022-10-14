@@ -125,7 +125,7 @@ export class Connection {
     this._changeState(this.initiator ? ConnectionState.INITIATING_CONNECTION : ConnectionState.WAITING_FOR_CONNECTION);
 
     assert(!this._transport);
-    this._transport = this._transportFactory({
+    this._transport = this._transportFactory.create({
       topic: this.topic,
       ownId: this.ownId,
       remoteId: this.remoteId,

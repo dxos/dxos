@@ -7,9 +7,6 @@
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
-  "engines": {
-    "node": ">=12.0.0"
-  },
   "scripts": {
     "check-dependencies": "syncpack list-mismatches",
     "fix-dependencies": "syncpack fix-mismatches",
@@ -101,6 +98,9 @@
     "vite": "3.0.9",
     "wait-for-expect": "^3.0.2",
     "webpack": "^5.74.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   },
   "pnpm": {
     "patchedDependencies": {
