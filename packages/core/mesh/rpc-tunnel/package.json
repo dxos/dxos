@@ -20,7 +20,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/rpc": "workspace:*"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }
