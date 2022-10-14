@@ -48,6 +48,7 @@ export class TextModel extends Model<Doc, Mutation> {
 
   constructor (meta: ModelMeta, itemId: ItemID, getState: () => Doc, writeStream?: MutationWriter<Mutation>) {
     super(meta, itemId, getState, writeStream);
+
     this._getState().on('update', this._handleDocUpdated.bind(this));
   }
 
