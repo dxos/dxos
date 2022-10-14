@@ -4,29 +4,33 @@
 
 import { trigger } from '@dxos/async';
 import { ClientServiceHost, clientServiceBundle } from '@dxos/client';
-import { Config } from '@dxos/config';
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { WebRTCTransportProxyFactory } from '@dxos/network-manager';
 import { schema } from '@dxos/protocols';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
+let client: ClientServiceHost;
 const transportFactory = new WebRTCTransportProxyFactory();
-const client = new ClientServiceHost({
-  // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite. Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
-  config: new Config({
+const [clientReady, resolve] = trigger();
+
+const setup = async () => {
+  const config = new Config(await Dynamics(), Defaults(), {
     runtime: {
-      client: { mode: 1 /* local */ },
-      services: {
-        signal: {
-          server: 'wss://halo.dxos.org/.well-known/dx/signal'
-        }
+      client: {
+      // TODO(dmaretskyi): There's an issue with enums imported from protocols in vite.
+      //   Should be fixed after https://github.com/dxos/dxos/pull/1647 lands.
+        mode: 1 /* local */
       }
     }
-  }),
-  transportFactory
-});
-const [clientReady, resolve] = trigger();
-void client.open().then(resolve);
+  });
+
+  client = new ClientServiceHost({ config, transportFactory });
+  await client.open();
+  resolve();
+};
+
+void setup();
 
 onconnect = async event => {
   const muxer = new PortMuxer(event.ports[0]);
