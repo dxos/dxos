@@ -23,12 +23,23 @@ const elevationClassNameMap = new Map<number, string>([
   [6, 'shadow-2xl']
 ]);
 
-export const Group = ({ elevation, children, label, labelVisuallyHidden, className, ...props }: PropsWithChildren<GroupProps>) => {
+export const Group = ({
+  elevation,
+  children,
+  label,
+  labelVisuallyHidden,
+  className,
+  ...props
+}: PropsWithChildren<GroupProps>) => {
   const labelId = useId('groupLabel');
   return (
-<div role='group' aria-labelledby={labelId} className={cx('bg-white dark:bg-neutral-800 rounded-lg p-4', elevationClassNameMap.get(elevation || 3), className)} {...props}>
-    <Heading {...label} id={labelId} className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label.className)} />
-    {children}
-  </div>
+    <div
+      role='group' aria-labelledby={labelId}
+      className={cx('bg-white dark:bg-neutral-800 rounded-lg p-4', elevationClassNameMap.get(elevation || 3), className)} {...props}>
+      <Heading
+        {...label} id={labelId}
+        className={cx(labelVisuallyHidden && 'sr-only', 'mb-2', label.className)} />
+      {children}
+    </div>
   );
 };

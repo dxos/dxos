@@ -11,10 +11,10 @@ export default {
   title: 'react-ui/Group'
 };
 
-export const Level1 = () => {
+export const Default = () => {
   return (
-<Group elevation={3} label={{ level: 2, children: 'Hello' }}>
-    This is a group
-  </Group>
+    <Group elevation={3} label={{ level: 2, children: 'Hello' }}>
+      This is a group
+    </Group>
   );
 };
