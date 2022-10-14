@@ -14,6 +14,7 @@ import { createKeyPair } from '@dxos/crypto';
 
 import { wrapFeed } from './hypercore-feed';
 import { batch, createDataItem, TestDataItem } from './testing';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 chai.use(chaiAsPromised);
 
@@ -57,8 +58,10 @@ describe('Feed', function () {
 
   it('replicates', async function () {
     const { publicKey, secretKey } = createKeyPair();
-    const feed1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
-    const feed2 = wrapFeed(hypercore(ram, publicKey));
+    const directory1 = createStorage({type: StorageType.RAM}).createDirectory();
+    const feed1 = wrapFeed(hypercore((filename) => directory1.getOrCreateFile(filename), publicKey, { secretKey }));
+    const directory2 = createStorage({type: StorageType.RAM}).createDirectory();
+    const feed2 = wrapFeed(hypercore((filename) => directory2.getOrCreateFile(filename), publicKey));
 
     // Wait for ready.
     {
@@ -108,8 +111,10 @@ describe('Feed', function () {
 
     // Replicating feeds must have the same public key.
     const { publicKey, secretKey } = createKeyPair();
-    const feed1 = wrapFeed(hypercore(ram, publicKey, { secretKey }));
-    const feed2 = wrapFeed(hypercore(ram, publicKey));
+    const directory1 = createStorage({type: StorageType.RAM}).createDirectory();
+    const feed1 = wrapFeed(hypercore((filename) => directory1.getOrCreateFile(filename), publicKey, { secretKey }));
+    const directory2 = createStorage({type: StorageType.RAM}).createDirectory();
+    const feed2 = wrapFeed(hypercore((filename) => directory2.getOrCreateFile(filename), publicKey));
 
     await feed1.open();
     await feed2.open();

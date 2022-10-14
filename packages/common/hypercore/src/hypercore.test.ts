@@ -8,12 +8,15 @@ import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 
 describe('Hypercore', function () {
   it('replicates', async function () {
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = hypercore(ram, publicKey, { secretKey });
-    const core2 = hypercore(ram, publicKey);
+    const directory1 = createStorage({type: StorageType.RAM}).createDirectory();
+    const core1 = hypercore((filename) => directory1.getOrCreateFile(filename), publicKey, { secretKey });
+    const directory2 = createStorage({type: StorageType.RAM}).createDirectory();
+    const core2 = hypercore((filename) => directory2.getOrCreateFile(filename), publicKey);
 
     // Wait for ready.
     {
