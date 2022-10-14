@@ -4,21 +4,14 @@
 
 import React from 'react';
 
+import { Config, Defaults, Dynamics } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { Main } from '@dxos/react-ui';
 
 import { Composer, ProviderFallback } from './components';
 import { PartyProvider, ProfileProvider, TextItemProvider } from './context';
 
-const clientConfig = {
-  runtime: {
-    services: {
-      signal: {
-        server: 'wss://halo.dxos.org/.well-known/dx/signal'
-      }
-    }
-  }
-};
+const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
   return (

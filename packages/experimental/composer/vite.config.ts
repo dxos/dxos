@@ -16,6 +16,8 @@ export default defineConfig((env) => ({
     force: true,
     include: [
       '@dxos/client',
+      '@dxos/config',
+      '@dxos/credentials',
       '@dxos/react-client',
       '@dxos/react-ui',
       '@dxos/text-model'
