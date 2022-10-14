@@ -28,6 +28,7 @@ export default defineConfig({
       '@dxos/react-components',
       '@dxos/react-toolkit',
       '@dxos/rpc',
+      '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/util'
     ]
