@@ -39,7 +39,6 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
 
   useEffect(() => {
     if (party) {
-      console.log('[party]', party);
       void party.createInvitation();
     } else {
       secretResolver(Buffer.from('todo'));
@@ -70,7 +69,6 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
   }, [invitationCodeValue]);
 
   const onInviteCodeChange = useCallback((value: string) => {
-    console.log('[invitation code value]', value);
     setInvitationCodeValue(value);
   }, []);
 

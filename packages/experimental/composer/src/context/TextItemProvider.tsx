@@ -50,12 +50,6 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
 
   const onClose = useCallback(() => setItem(undefined), []);
 
-  useEffect(() => {
-    if (item) {
-      console.log('[item]', item);
-    }
-  }, [item]);
-
   return (
     <TextItemContext.Provider value={textModelDocumentContextValue}>
       {item ? (
