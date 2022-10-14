@@ -3,8 +3,8 @@
 @import '@fontsource/space-grotesk/variable-full.css';
 
 @tailwind base;
-
 @tailwind utilities;
+@tailwind components;
 
 @layer utilities {
   /* Font weights */
@@ -37,15 +37,17 @@
   }
 }
 
-@tailwind components;
+:root {
+  --surface-bg: theme(colors.neutral.50);
+  --surface-text: theme(colors.neutral.900);
+}
 
-@layer components {
-  body {
-    @apply bg-neutral-50 text-neutral-900
-  }
-  @media (prefers-color-scheme: dark) {
-    body {
-      @apply bg-neutral-900 text-neutral-50
-    }
-  }
+.dark {
+  --surface-bg: theme(colors.neutral.900);
+  --surface-text: theme(colors.neutral.50);
+}
+
+html {
+  background-color: var(--surface-bg);
+  color: var(--surface-text);
 }

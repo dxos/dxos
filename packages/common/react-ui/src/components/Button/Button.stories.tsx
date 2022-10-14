@@ -27,10 +27,8 @@ const Template = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
 );
 
 export const Default = templateForComponent(Template)({});
-Default.args = { children: 'Hello' };
+Default.args = { children: 'Hello', disabled: false, variant: 'default' };
 
-export const Primary = templateForComponent(Template)({});
-Primary.args = { variant: 'primary', children: 'Hello' };
+export const Primary = () => <Template {...{ variant: 'primary', children: 'Hello' }} />;
 
-export const Outline = templateForComponent(Template)({});
-Outline.args = { variant: 'outline', children: 'Hello' };
+export const Outline = () => <Template {...{ variant: 'outline', children: 'Hello' }} />;

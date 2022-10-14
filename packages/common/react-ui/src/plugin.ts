@@ -34,6 +34,7 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
           postcss: {
             plugins: [
               tailwindcss({
+                darkMode: 'class',
                 theme: {
                   fontFamily: {
                     body: [

@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>DXOS | Composer experiment</title>
+  <script>
+    function setTheme(darkMode) {
+      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+    }
+    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+      setTheme(e.matches)
+    });
+  </script>
 </head>
 <body>
 <div id="root"></div>
