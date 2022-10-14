@@ -101,13 +101,11 @@ describe('FeedStore', function () {
 
     // Delete.
     {
-      // TODO(burdon): Delete directory.
       const storage = builder.clone().setStorage(StorageType.NODE).storage;
       await storage.destroy();
-      console.log(String(storage));
     }
 
-    // Read.
+    // Read (should be empty).
     {
       const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
