@@ -17,6 +17,7 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
+      '@dxos/async',
       '@dxos/client',
       '@dxos/keys',
       '@dxos/log',
@@ -68,5 +69,8 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  worker: {
+    plugins: [dxosPlugin()]
+  }
 });

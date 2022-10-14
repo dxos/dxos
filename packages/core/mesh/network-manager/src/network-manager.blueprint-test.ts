@@ -364,7 +364,7 @@ export function inMemoryTests () {
           }
         });
 
-        await done;
+        await done();
       }));
     }));
   });

@@ -46,7 +46,7 @@ export class Keyring implements Signer {
   @synchronized
   private async _getKey (key: PublicKey): Promise<CryptoKeyPair> {
     if (!this._keyCache.has(key)) {
-      const file = this._storage.createOrOpenFile(key.toHex());
+      const file = this._storage.getOrCreateFile(key.toHex());
       const { size } = await file.stat();
       if (size === 0) {
         throw new Error('Key not found');
@@ -86,7 +86,7 @@ export class Keyring implements Signer {
       privateKey: new Uint8Array(await subtleCrypto.exportKey('pkcs8', keyPair.privateKey))
     };
 
-    const file = this._storage.createOrOpenFile(publicKey.toHex());
+    const file = this._storage.getOrCreateFile(publicKey.toHex());
     await file.write(0, Buffer.from(schema.getCodecForType('dxos.halo.keyring.KeyRecord').encode(record)));
     await file.close();
   }

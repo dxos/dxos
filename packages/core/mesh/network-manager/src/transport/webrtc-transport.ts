@@ -13,7 +13,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { wrtc } from './webrtc'
+import { wrtc } from './wrtc';
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
@@ -40,7 +40,9 @@ export class WebRTCTransport implements Transport {
     log(`Creating WebRTC connection topic=${this._topic} ownId=${this._ownId} remoteId=${this._remoteId} initiator=${this._initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
     this._peer = new SimplePeerConstructor({
       initiator: this._initiator,
-      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : (wrtc ?? raise(new Error('wrtc not available'))),
+      wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
+        ? undefined
+        : (wrtc ?? raise(new Error('wrtc not available'))),
       config: this._webrtcConfig
     });
     this._peer.on('signal', async data => {
