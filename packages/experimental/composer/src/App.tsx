@@ -40,7 +40,7 @@ const ClientFallback = () => (
   <div className='py-8 flex flex-col gap-4'>
     <Loading />
     <Heading level={1} className='text-lg font-light text-center'>
-      Loading DXOS client…
+      Starting DXOS client…
     </Heading>
   </div>
 );

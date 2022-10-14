@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Buffer } from 'buffer';
 import React, {
   createContext,
   PropsWithChildren,
@@ -26,6 +25,8 @@ export interface PartyContextValue {
   party?: Party
 }
 
+const textEncoder = new TextEncoder();
+
 export const PartyContext = createContext<PartyContextValue>({});
 
 export const PartyProvider = (props: PropsWithChildren<{}>) => {
@@ -34,14 +35,13 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [invitationCodeValue, setInvitationCodeValue] = useState('');
   const partyInvitations = usePartyInvitations(party?.key);
-  const [secretProvider, secretResolver, _resetSecret] =
-    useSecretProvider<Buffer>();
+  const [secretProvider, secretResolver, _resetSecret] = useSecretProvider<Uint8Array>();
 
   useEffect(() => {
     if (party) {
       void party.createInvitation();
     } else {
-      secretResolver(Buffer.from('todo'));
+      secretResolver(textEncoder.encode('todo'));
     }
   }, [client, party]);
 

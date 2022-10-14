@@ -24,7 +24,6 @@
     "@tiptap/extension-collaboration": "2.0.0-beta.199",
     "@tiptap/react": "2.0.0-beta.199",
     "@tiptap/starter-kit": "2.0.0-beta.199",
-    "buffer": "^6.0.3",
     "classnames": "^2.3.2",
     "prosemirror-model": "^1.7.1",
     "prosemirror-view": "^1.9.10",
