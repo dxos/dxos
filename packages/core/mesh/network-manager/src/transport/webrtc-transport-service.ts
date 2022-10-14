@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from "assert";
-import SimplePeerConstructor, { Instance as SimplePeer } from "simple-peer";
+import assert from 'assert';
+import { Duplex } from 'stream';
 
-import { Stream } from "@dxos/codec-protobuf";
-import { raise } from "@dxos/debug";
-import { PublicKey } from "@dxos/keys";
-import { log } from "@dxos/log";
+import { Stream } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import {
   BridgeService,
   ConnectionRequest,
@@ -16,31 +15,29 @@ import {
   DataRequest,
   BridgeEvent,
   ConnectionState,
-  CloseRequest,
-} from "@dxos/protocols/proto/dxos/mesh/bridge";
-import { ComplexMap } from "@dxos/util";
+  CloseRequest
+} from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ComplexMap } from '@dxos/util';
 
-import { wrtc } from "./wrtc";
-import { WebRTCTransport } from "./webrtc-transport";
-import { Duplex } from "stream";
+import { WebRTCTransport } from './webrtc-transport';
 
 export class WebRTCTransportService implements BridgeService {
   protected transports = new ComplexMap<PublicKey, WebRTCTransport>((key) =>
     key.toHex()
   );
 
-  constructor(private readonly _webrtcConfig?: any) {}
+  constructor (private readonly _webrtcConfig?: any) {}
 
-  open(request: ConnectionRequest): Stream<BridgeEvent> {
+  open (request: ConnectionRequest): Stream<BridgeEvent> {
     const stream = new Duplex({ read: () => {}, write: () => {} });
     const transport = new WebRTCTransport({
       initiator: request.initiator,
       stream,
-      ownId: PublicKey.from(""),
-      remoteId: PublicKey.from(""),
-      sessionId: PublicKey.from(""),
-      topic: PublicKey.from(""),
-      sendSignal: () => {},
+      ownId: PublicKey.from(''),
+      remoteId: PublicKey.from(''),
+      sessionId: PublicKey.from(''),
+      topic: PublicKey.from(''),
+      sendSignal: () => {}
     });
 
     this.transports.set(request.proxyId, transport);
@@ -54,49 +51,49 @@ export class WebRTCTransportService implements BridgeService {
 
       next({
         connection: {
-          state: ConnectionState.CONNECTING,
-        },
+          state: ConnectionState.CONNECTING
+        }
       });
 
-      transport.peer.on("data", async (payload) => {
+      transport.peer.on('data', async (payload) => {
         next({
           data: {
-            payload,
-          },
+            payload
+          }
         });
       });
 
-      transport.peer.on("signal", async (data) => {
+      transport.peer.on('signal', async (data) => {
         next({
           signal: {
-            payload: { json: JSON.stringify(data) },
-          },
+            payload: { json: JSON.stringify(data) }
+          }
         });
       });
 
-      transport.peer.on("connect", () => {
+      transport.peer.on('connect', () => {
         next({
           connection: {
-            state: ConnectionState.CONNECTED,
-          },
+            state: ConnectionState.CONNECTED
+          }
         });
       });
 
-      transport.peer.on("error", async (err) => {
+      transport.peer.on('error', async (err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
-            error: err.toString(),
-          },
+            error: err.toString()
+          }
         });
         close(err);
       });
 
-      transport.peer.on("close", async () => {
+      transport.peer.on('close', async () => {
         next({
           connection: {
-            state: ConnectionState.CLOSED,
-          },
+            state: ConnectionState.CLOSED
+          }
         });
         close();
       });
@@ -105,18 +102,18 @@ export class WebRTCTransportService implements BridgeService {
     });
   }
 
-  async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    this.transports.get(proxyId)!.signal(signal);
+  async sendSignal ({ proxyId, signal }: SignalRequest): Promise<void> {
+    await this.transports.get(proxyId)!.signal(signal);
   }
 
-  async sendData({ proxyId, payload }: DataRequest): Promise<void> {
+  async sendData ({ proxyId, payload }: DataRequest): Promise<void> {
     assert(this.transports.has(proxyId));
-    this.transports.get(proxyId)!.peer.write(payload);
+    await this.transports.get(proxyId)!.peer.write(payload);
   }
 
-  async close({ proxyId }: CloseRequest) {
-    this.transports.get(proxyId)?.close();
+  async close ({ proxyId }: CloseRequest) {
+    await this.transports.get(proxyId)?.close();
     this.transports.delete(proxyId);
-    log("Closed.");
+    log('Closed.');
   }
 }

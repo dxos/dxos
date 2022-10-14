@@ -2,25 +2,25 @@
 // Copyright 2020 DXOS.org
 //
 
-import expect from "expect";
-import { Duplex } from "stream";
-import waitForExpect from "wait-for-expect";
+import expect from 'expect';
+import { Duplex } from 'stream';
+import waitForExpect from 'wait-for-expect';
 
-import { sleep } from "@dxos/async";
-import { discoveryKey } from "@dxos/crypto";
-import { PublicKey } from "@dxos/keys";
-import { Protocol } from "@dxos/mesh-protocol";
-import { afterTest } from "@dxos/testutils";
+import { sleep } from '@dxos/async';
+import { discoveryKey } from '@dxos/crypto';
+import { PublicKey } from '@dxos/keys';
+import { Protocol } from '@dxos/mesh-protocol';
+import { afterTest } from '@dxos/testutils';
 
 import {
   TestProtocolPlugin,
-  testProtocolProvider,
-} from "../testing/test-protocol";
-import { WebRTCTransport } from "./webrtc-transport";
+  testProtocolProvider
+} from '../testing/test-protocol';
+import { WebRTCTransport } from './webrtc-transport';
 
-describe("WebRTCTransport", function () {
+describe('WebRTCTransport', function () {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
-  it("open and close", async function () {
+  it('open and close', async function () {
     const connection = new WebRTCTransport({
       initiator: true,
       stream: new Duplex(),
@@ -28,7 +28,7 @@ describe("WebRTCTransport", function () {
       remoteId: PublicKey.random(),
       sessionId: PublicKey.random(),
       topic: PublicKey.random(),
-      sendSignal: async (msg) => {},
+      sendSignal: async (msg) => {}
     });
 
     let callsCounter = 0;
@@ -47,7 +47,7 @@ describe("WebRTCTransport", function () {
     .timeout(1_000)
     .retries(3);
 
-  it("establish connection and send data through with protocol", async function () {
+  it('establish connection and send data through with protocol', async function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -63,7 +63,7 @@ describe("WebRTCTransport", function () {
       initiator: true,
       stream: protocolProvider1({
         channel: discoveryKey(topic),
-        initiator: true,
+        initiator: true
       }).stream,
       ownId: peer1Id,
       remoteId: peer2Id,
@@ -72,7 +72,7 @@ describe("WebRTCTransport", function () {
       sendSignal: async (msg) => {
         await sleep(10);
         await connection2.signal(msg.data.signal);
-      },
+      }
     });
     afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
@@ -87,16 +87,16 @@ describe("WebRTCTransport", function () {
       initiator: false,
       stream: protocolProvider2({
         channel: discoveryKey(topic),
-        initiator: false,
+        initiator: false
       }).stream,
       ownId: peer2Id,
       remoteId: peer1Id,
-      sessionId: sessionId,
-      topic: topic,
+      sessionId,
+      topic,
       sendSignal: async (msg) => {
         await sleep(10);
         await connection1.signal(msg.data.signal);
-      },
+      }
     });
     afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
@@ -106,9 +106,9 @@ describe("WebRTCTransport", function () {
       received.push(p, s);
       return undefined;
     };
-    plugin1.on("receive", mockReceive);
+    plugin1.on('receive', mockReceive);
 
-    plugin2.on("connect", async (protocol) => {
+    plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
 
