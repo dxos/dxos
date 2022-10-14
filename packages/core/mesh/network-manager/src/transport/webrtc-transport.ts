@@ -94,10 +94,6 @@ export class WebRTCTransport implements Transport {
     return this.params.sessionId;
   }
 
-  get peer () {
-    return this._peer;
-  }
-
   async signal (signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');

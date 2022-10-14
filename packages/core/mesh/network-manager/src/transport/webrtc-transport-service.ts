@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import assert from 'assert';
-import { Duplex } from 'stream';
+import assert from "assert";
+import { Duplex, Readable } from "stream";
 
-import { Stream } from '@dxos/codec-protobuf';
-import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { Stream } from "@dxos/codec-protobuf";
+import { PublicKey } from "@dxos/keys";
+import { log } from "@dxos/log";
 import {
   BridgeService,
   ConnectionRequest,
@@ -15,35 +15,26 @@ import {
   DataRequest,
   BridgeEvent,
   ConnectionState,
-  CloseRequest
-} from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { ComplexMap } from '@dxos/util';
+  CloseRequest,
+} from "@dxos/protocols/proto/dxos/mesh/bridge";
+import { Event } from "@dxos/async";
+import { ComplexMap } from "@dxos/util";
 
-import { WebRTCTransport } from './webrtc-transport';
+import { WebRTCTransport } from "./webrtc-transport";
+import { Signal } from "@dxos/protocols/proto/dxos/mesh/swarm";
+import { SignalMessage } from "../signal";
 
 export class WebRTCTransportService implements BridgeService {
-  protected transports = new ComplexMap<PublicKey, WebRTCTransport>((key) =>
-    key.toHex()
-  );
+  private readonly transports = new ComplexMap<
+    PublicKey,
+    { transport: WebRTCTransport; stream: Duplex }
+  >((key) => key.toHex());
 
-  constructor (private readonly _webrtcConfig?: any) {}
+  constructor(private readonly _webrtcConfig?: any) {}
 
-  open (request: ConnectionRequest): Stream<BridgeEvent> {
-    const stream = new Duplex({ read: () => {}, write: () => {} });
-    const transport = new WebRTCTransport({
-      initiator: request.initiator,
-      stream,
-      ownId: PublicKey.from(''),
-      remoteId: PublicKey.from(''),
-      sessionId: PublicKey.from(''),
-      topic: PublicKey.from(''),
-      sendSignal: () => {}
-    });
-
-    this.transports.set(request.proxyId, transport);
-
-    return new Stream(({ ready, next, close }) => {
-      log(
+  open(request: ConnectionRequest): Stream<BridgeEvent> {
+    const rpcStream: Stream<BridgeEvent> = new Stream(({ ready, next, close }) => {
+      console.log(
         `Creating webrtc connection initiator=${
           request.initiator
         } webrtcConfig=${JSON.stringify(this._webrtcConfig)}`
@@ -51,11 +42,11 @@ export class WebRTCTransportService implements BridgeService {
 
       next({
         connection: {
-          state: ConnectionState.CONNECTING
-        }
+          state: ConnectionState.CONNECTING,
+        },
       });
 
-      transport.peer.on('data', async (payload) => {
+      duplex.on('data', (payload) => {
         next({
           data: {
             payload
@@ -63,57 +54,85 @@ export class WebRTCTransportService implements BridgeService {
         });
       });
 
-      transport.peer.on('signal', async (data) => {
+      duplex.on('signal', (data) => {
+        console.log({
+          signal: {
+            payload: data
+          }
+        })
         next({
           signal: {
-            payload: { json: JSON.stringify(data) }
+            payload: data
           }
         });
       });
 
-      transport.peer.on('connect', () => {
+      transport.connected.on(() => {
         next({
           connection: {
-            state: ConnectionState.CONNECTED
-          }
+            state: ConnectionState.CONNECTED,
+          },
         });
       });
 
-      transport.peer.on('error', async (err) => {
+      transport.errors.handle((err) => {
         next({
           connection: {
             state: ConnectionState.CLOSED,
-            error: err.toString()
-          }
+            error: err.toString(),
+          },
         });
         close(err);
       });
 
-      transport.peer.on('close', async () => {
+      transport.closed.on(() => {
         next({
           connection: {
-            state: ConnectionState.CLOSED
-          }
+            state: ConnectionState.CLOSED,
+          },
         });
         close();
       });
 
       ready();
     });
+
+    let duplex: Duplex;
+    duplex = new Duplex({
+      read: () => {},
+      write: (chunk) => duplex.emit('data', chunk),
+    });
+    const transport = new WebRTCTransport({
+      initiator: request.initiator,
+      stream: duplex,
+      ownId: PublicKey.from(""),
+      remoteId: PublicKey.from(""),
+      sessionId: PublicKey.from(""),
+      topic: PublicKey.from(""),
+      sendSignal: (msg) => {
+        console.log('Signal');
+        duplex.emit('signal', msg.data.signal)},
+    });
+
+    this.transports.set(request.proxyId, { transport, stream: duplex });
+    return rpcStream;
   }
 
-  async sendSignal ({ proxyId, signal }: SignalRequest): Promise<void> {
-    await this.transports.get(proxyId)!.signal(signal);
-  }
-
-  async sendData ({ proxyId, payload }: DataRequest): Promise<void> {
+  async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
     assert(this.transports.has(proxyId));
-    await this.transports.get(proxyId)!.peer.write(payload);
+    await this.transports.get(proxyId)!.transport.signal(signal);
   }
 
-  async close ({ proxyId }: CloseRequest) {
-    await this.transports.get(proxyId)?.close();
+  async sendData({ proxyId, payload }: DataRequest): Promise<void> {
+    console.log('sendData');
+    assert(this.transports.has(proxyId));
+    await this.transports.get(proxyId)!.stream.push(payload);
+  }
+
+  async close({ proxyId }: CloseRequest) {
+    await this.transports.get(proxyId)?.transport.close();
+    await this.transports.get(proxyId)?.stream.end();
     this.transports.delete(proxyId);
-    log('Closed.');
+    log("Closed.");
   }
 }

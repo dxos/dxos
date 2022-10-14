@@ -22,7 +22,7 @@ import { TestProtocolPlugin, testProtocolProvider } from '../testing/test-protoc
 import { WebRTCTransportProxy } from './webrtc-transport-proxy';
 import { WebRTCTransportService } from './webrtc-transport-service';
 
-describe('WebRTCTransportProxy', function () {
+describe.only('WebRTCTransportProxy', function () {
   const setupProxy = async ({
     initiator = true,
     ownId = PublicKey.random(),
@@ -107,7 +107,7 @@ describe('WebRTCTransportProxy', function () {
     expect(callsCounter).toEqual(1);
   }).timeout(1_000).retries(3);
 
-  it('establish connection and send data through with protocol', async function () {
+  it.only('establish connection and send data through with protocol', async function () {
     if (mochaExecutor.environment !== 'nodejs') {
       this.skip();
     }
@@ -159,13 +159,13 @@ describe('WebRTCTransportProxy', function () {
     plugin2.on('connect', async (protocol) => {
       await plugin2.send(peer1Id.asBuffer(), '{"message": "Hello"}');
     });
-
+    console.log(1);
     await waitForExpect(() => {
       expect(received.length).toBe(2);
       expect(received[0]).toBeInstanceOf(Protocol);
       expect(received[1]).toBe('{"message": "Hello"}');
     });
-  }).timeout(2_000).retries(3);
+  }).timeout(2_000);
 
   describe('Multiplexing', function () {
     let service: any;
