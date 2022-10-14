@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { ClientProvider } from '@dxos/react-client';
-import { Heading, Loading, Main } from '@dxos/react-ui';
+import { Main } from '@dxos/react-ui';
 
-import { Composer } from './components';
+import { Composer, ProviderFallback } from './components';
 import { PartyProvider, ProfileProvider, TextItemProvider } from './context';
 
 const clientConfig = {
@@ -20,18 +20,9 @@ const clientConfig = {
   }
 };
 
-const ClientFallback = () => (
-  <div className='py-8 flex flex-col gap-4'>
-    <Loading />
-    <Heading level={1} className='text-lg font-light text-center'>
-      Starting DXOS client…
-    </Heading>
-  </div>
-);
-
 export const App = () => {
   return (
-    <ClientProvider config={clientConfig} fallback={<ClientFallback />}>
+    <ClientProvider config={clientConfig} fallback={<ProviderFallback message='Starting DXOS client…' />}>
       <ProfileProvider>
         <PartyProvider>
           <TextItemProvider>

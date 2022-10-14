@@ -13,7 +13,8 @@ import React, {
 
 import type { Profile } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
-import { Loading } from '@dxos/react-ui';
+
+import { ProviderFallback } from '../components';
 
 export interface ProfileContextValue {
   profile?: Profile
@@ -40,7 +41,7 @@ export const ProfileProvider = (props: PropsWithChildren<{}>) => {
 
   return (
     <ProfileContext.Provider value={profileContextValue}>
-      {profile ? props.children : <Loading />}
+      {profile ? props.children : <ProviderFallback message='Setting profile…' />}
     </ProfileContext.Provider>
   );
 };
