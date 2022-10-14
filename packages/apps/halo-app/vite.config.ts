@@ -3,6 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -28,6 +29,7 @@ export default defineConfig({
       '@dxos/react-components',
       '@dxos/react-toolkit',
       '@dxos/rpc',
+      '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/util'
     ]
@@ -38,6 +40,12 @@ export default defineConfig({
         /packages/,
         /node_modules/
       ]
+    },
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        headless: resolve(__dirname, 'headless.html')
+      }
     }
   },
   plugins: [
