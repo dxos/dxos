@@ -105,18 +105,10 @@ NOTE: The router may elect different tabs to provide WebRTC connectivity to diff
 
 ### 3.4. Cross-domain Routing
 
-Shared workers are available across tabs (windows) loaded from the same domain.
-However, users may wish to use their same HALO identity across multiple applications loaded or installed from different domains. There are current two solutions to this:
-
-> TODO(wittjosiah): Are both valid or is one the canonical solution?
-
-1.  The client would run in remote mode, deferring to a full client running within an iframe.
-    This full client on given domain (say, `dxos.org`) would control your identity, then applications loaded from other domains would be able to access the identity via transport proxies loaded into associated iframes.
-
-2.  Each application would authenticate with the root HALO application by exchanging a device invitation.
-    This allows a full client to run on each domain, automously operating under the same identity.
-
-> TODO(wittjosiah): Does this imply that each application has a full copy of all of your data? Presumably partial replication is possible, but how is that controlled?
+HALO can be used across multiple domains.
+Shared workers are available across windows loaded from the same domain.
+IFrames loaded within windows can communicate with their parents using window messaging.
+The Client proxy can be configured to connect to Client services (running in a shared worker in an iframe) via dxRPC over `Window.postMessage()` and `MessagePort.postMessage()`.
 
 ## 4. Reference
 
