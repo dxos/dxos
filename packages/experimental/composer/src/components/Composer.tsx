@@ -5,8 +5,8 @@
 import Collaboration from '@tiptap/extension-collaboration';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React from 'react';
-// import { WebrtcProvider } from 'y-webrtc';
+import React, { useEffect } from 'react';
+import { WebrtcProvider } from 'y-webrtc';
 // import * as Y from 'yjs';
 
 // import { useProfile } from '../context/ProfileProvider';
@@ -23,6 +23,14 @@ export const Composer = (props: ComposerProps) => {
   const { item } = useTextItem();
   // const { profile } = useProfile();
   // const username = profile!.username || profile!.publicKey.truncate(8);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    const provider = new WebrtcProvider(item.id, item.model.doc);
+  }, [item]);
 
   const editor = useEditor({
     extensions: [
