@@ -3,7 +3,7 @@
 //
 
 import { Keyring } from '@dxos/keyring';
-import { createStorage, Directory, StorageType } from '@dxos/random-access-storage';
+import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from './feed-factory';
 import { FeedStore } from './feed-store';
@@ -14,11 +14,14 @@ import { FeedStore } from './feed-store';
 //  - Avoids returning horrible bags of objects with horrible bags of properties.
 
 export type TestBuilderOptions = {
+  storage?: Storage
   directory?: Directory
   keyring?: Keyring
 }
 
 export class TestBuilder {
+  static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
+
   constructor (
     private readonly _properties: TestBuilderOptions = {}
   ) {}
@@ -27,21 +30,22 @@ export class TestBuilder {
     return new TestBuilder(Object.assign({}, this._properties));
   }
 
+  get storage (): Storage {
+    return this._properties.storage ?? (this._properties.storage = createStorage({ type: StorageType.RAM }));
+  }
+
   get directory (): Directory {
-    return this._properties.directory ?? (this._properties.directory = createStorage({ type: StorageType.RAM }).createDirectory('/root'));
+    return this._properties.directory ?? (this._properties.directory = this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring (): Keyring {
     return this._properties.keyring ?? (this._properties.keyring = new Keyring());
   }
 
-  setDirectory (directory: Directory) {
-    this._properties.directory = directory;
+  setStorage (type: StorageType, root = TestBuilder.ROOT_DIR) {
+    this._properties.storage = createStorage({ type, root });
+    this._properties.directory = this.storage.createDirectory('feeds');
     return this;
-  }
-
-  setDirectoryByType (type: StorageType, path = '/tmp/dxos/testing/feed-store') {
-    return this.setDirectory(createStorage({ type }).createDirectory(path));
   }
 
   setKeyring (keyring: Keyring) {

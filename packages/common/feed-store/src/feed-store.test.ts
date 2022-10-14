@@ -81,8 +81,9 @@ describe('FeedStore', function () {
 
     const numBlocks = 10;
 
+    // Write.
     {
-      const feedStore = builder.clone().setDirectoryByType(StorageType.NODE).createFeedStore();
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });
       for (const _ of Array.from(Array(numBlocks))) {
         await feed.append(faker.lorem.sentence());
@@ -91,10 +92,26 @@ describe('FeedStore', function () {
       expect(feed.properties.length).to.eq(numBlocks);
     }
 
+    // Read.
     {
-      const feedStore = builder.clone().setDirectoryByType(StorageType.NODE).createFeedStore();
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey);
       expect(feed.properties.length).to.eq(numBlocks);
+    }
+
+    // Delete.
+    {
+      // TODO(burdon): Delete directory.
+      const storage = builder.clone().setStorage(StorageType.NODE).storage;
+      await storage.destroy();
+      console.log(String(storage));
+    }
+
+    // Read.
+    {
+      const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
+      const feed = await feedStore.openFeed(feedKey);
+      expect(feed.properties.length).to.eq(0);
     }
   });
 });
