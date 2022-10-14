@@ -22,15 +22,23 @@ describe('FeedStoreIterator', function () {
     const feedBlockSelector: FeedBlockSelector<any> = (feeds: FeedBlock<any>[]) => undefined;
     const iterator = new FeedStoreIterator(feedSelector, feedBlockSelector, timeframe);
 
-    // Write data.
-    const numBlocks = 10;
+    const numFeeds = 3;
+    const numBlocks = 20;
+
+    // Create feeds and write data.
     {
+      // TODO(burdon): Test adding feeds on-the-fly.
       const feedStore = builder.createFeedStore();
-      const key = await builder.keyring.createKey();
-      const feed = await feedStore.openFeed(key, { writable: true });
-      iterator.addFeed(feed);
+      const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
+        const key = await builder.keyring.createKey();
+        const feed = await feedStore.openFeed(key, { writable: true });
+        iterator.addFeed(feed);
+        return feed;
+      }));
 
       for (const _ of Array.from(Array(numBlocks))) {
+        const feed = faker.random.arrayElement(feeds);
+        await sleep(faker.datatype.number({ min: 0, max: 20 }));
         await feed.append(faker.lorem.sentence());
       }
     }
@@ -44,18 +52,17 @@ describe('FeedStoreIterator', function () {
       setTimeout(async () => {
         for await (const block of iterator) {
           console.log(block);
-          inc();
-
-          // TODO(burdon): Separate generator to add data to feed.
-          await sleep(faker.datatype.number({ min: 0, max: 20 }));
+          const count = inc();
+          if (count === numBlocks) {
+            iterator.stop();
+          }
         }
       });
 
       const count = await done();
-      expect(count).to.eq(10);
+      expect(count).to.eq(numBlocks);
     }
 
-    iterator.stop();
     expect(iterator.running).to.be.false;
   }).timeout(5_000);
 });

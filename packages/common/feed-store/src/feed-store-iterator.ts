@@ -5,6 +5,7 @@
 import assert from 'assert';
 
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
@@ -48,11 +49,13 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> {
   }
 
   start () {
+    log('starting...');
     this._running = true;
     return this;
   }
 
   stop () {
+    log('stopping...');
     this._running = false;
     return this;
   }
@@ -63,7 +66,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> {
 
   // TODO(burdon): Use selectors. Trigger on feed added and on feed append.
   async nextBlock () {
-    if (this._count < 10) {
+    if (this._count < 100) {
       return ++this._count;
     }
   }
@@ -79,6 +82,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> {
     while (this._running) {
       const block = await this.nextBlock();
       if (block) {
+        log('next'); // TODO(burdon): Count.
         yield block;
       }
     }

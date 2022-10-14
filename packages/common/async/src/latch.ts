@@ -11,7 +11,7 @@ type LatchProps = {
 
 type LatchResult = [
   () => Promise<number>,
-  () => void,
+  () => number,
   (err: Error) => void
 ]
 
@@ -51,6 +51,8 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
       if (++i === count) {
         doResolve(i);
       }
+
+      return i;
     },
     (err: Error) => doReject(err)
   ];
