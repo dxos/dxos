@@ -22,7 +22,7 @@ export type CreateBatchStreamOptions = {
 }
 
 /**
- * @deprecated
+ *
  */
 export const createBatchStream = (
   feed: FeedDescriptor,
