@@ -76,7 +76,7 @@ describe('Network manager', function () {
       peer2Id = PublicKey.random();
     });
 
-    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: createWebRTCTransportFactory });
+    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: async () => createWebRTCTransportFactory() });
 
     it.skip('two peers with different signal & turn servers', async () => {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
@@ -140,14 +140,11 @@ describe('Network manager', function () {
   }).timeout(10_000);
 
   describe('WebRTC proxy transport', function () {
-    let service: ProtoRpcPeer<{}>;
-    let rpcClient: ProtoRpcPeer<{ BridgeService: BridgeService }>;
-
-    beforeEach(async function () {
+    const createTransportFactory = async () => {
       const [rpcPortA, rpcPortB] = createLinkedPorts();
 
       const webRTCTransportService: BridgeService = new WebRTCTransportService();
-      service = createProtoRpcPeer({
+      const service = createProtoRpcPeer({
         requested: {},
         exposed: {
           BridgeService: schema.getService('dxos.mesh.bridge.BridgeService')
@@ -160,7 +157,7 @@ describe('Network manager', function () {
         }
       });
 
-      rpcClient = createProtoRpcPeer({
+      const rpcClient = createProtoRpcPeer({
         requested: { BridgeService: schema.getService('dxos.mesh.bridge.BridgeService') },
         exposed: {},
         handlers: {},
@@ -172,21 +169,17 @@ describe('Network manager', function () {
       });
 
       await service.open();
+      afterTest(() => service.close());
       await rpcClient.open();
-    });
+      afterTest(() => rpcClient.close());
 
-    afterEach(function () {
-      service.close();
-      rpcClient.close();
-    });
-
-
-    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: () => new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService) });
+      return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService)
+    }
+    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: createTransportFactory  });
   });
 
   describe('In-memory transport', function () {
-    const transportFactory = inMemoryTransportFactory;
-    sharedTests({ inMemory: true, getTransportFactory: () => transportFactory });
+    sharedTests({ inMemory: true, getTransportFactory: async () => inMemoryTransportFactory });
 
     it('large amount of peers and connections', async () => {
       const numTopics = 5;
@@ -197,7 +190,7 @@ describe('Network manager', function () {
   
         await Promise.all(range(peersPerTopic).map(async (_, index) => {
           const peerId = PublicKey.random();
-          const { plugin } = await createPeer({ topic, peerId, transportFactory });
+          const { plugin } = await createPeer({ topic, peerId, transportFactory: inMemoryTransportFactory });
   
           const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
   
@@ -423,16 +416,16 @@ describe('Network manager', function () {
   }).timeout(30_000);
 });
 
-function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: boolean, signalUrl?: string, getTransportFactory: () => TransportFactory }) {
+function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: boolean, signalUrl?: string, getTransportFactory: () => Promise<TransportFactory> }) {
   it('two peers connect to each other', async () => {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
 
     const { plugin: plugin1 } =
-      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
     const { plugin: plugin2 } =
-      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
 
     const received: any[] = [];
     const mockReceive = (p: Protocol, s: string) => {
@@ -457,9 +450,9 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     const peer2Id = PublicKey.random();
 
     const { networkManager: networkManager1, plugin: plugin1 } =
-      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
     const { networkManager: networkManager2, plugin: plugin2 } =
-      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -493,9 +486,9 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     const peer2Id = PublicKey.random();
 
     const { networkManager: networkManager1, plugin: plugin1 } =
-      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer1Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
     const { networkManager: networkManager2, plugin: plugin2 } =
-      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: peer2Id, signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
 
     await Promise.all([
       Event.wrap(plugin1, 'connect').waitForCount(1),
@@ -542,7 +535,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
 
     const signalManager = inMemory ? new MemorySignalManager(signalContext) : new WebsocketSignalManager([signalUrl!]);
-    const networkManager = new NetworkManager({ signalManager, transportFactory: getTransportFactory() });
+    const networkManager = new NetworkManager({ signalManager, transportFactory: await getTransportFactory() });
     afterTest(() => networkManager.destroy());
 
     // Joining first swarm.
@@ -551,7 +544,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin1);
       await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
       // Creating and joining second peer.
-      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
     }
 
     // Joining second swarm with same peerId.
@@ -560,7 +553,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
       const protocolProvider = testProtocolProvider(topic.asBuffer(), peerId.asBuffer(), plugin2);
       await networkManager.joinProtocolSwarm({ topic, peerId, protocol: protocolProvider, topology: new FullyConnectedTopology() });
       // Creating and joining second peer.
-      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: getTransportFactory() });
+      await createPeer({ topic, peerId: PublicKey.random(), signalHosts: !inMemory ? [signalUrl!] : undefined, transportFactory: await getTransportFactory() });
     }
 
     await Promise.all([
@@ -577,10 +570,10 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     const peerB1Id = PublicKey.random();
     const peerB2Id = PublicKey.random();
 
-    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id, transportFactory: getTransportFactory() });
-    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id, transportFactory: getTransportFactory() });
-    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id, transportFactory: getTransportFactory() });
-    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id, transportFactory: getTransportFactory() });
+    const { plugin: pluginA1 } = await createPeer({ topic: topicA, peerId: peerA1Id, transportFactory: await getTransportFactory() });
+    const { plugin: pluginA2 } = await createPeer({ topic: topicA, peerId: peerA2Id, transportFactory: await getTransportFactory() });
+    const { plugin: pluginB1 } = await createPeer({ topic: topicB, peerId: peerB1Id, transportFactory: await getTransportFactory() });
+    const { plugin: pluginB2 } = await createPeer({ topic: topicB, peerId: peerB2Id, transportFactory: await getTransportFactory() });
 
     const receivedA: any[] = [];
     const mockReceiveA = (p: Protocol, s: string) => {
