@@ -13,7 +13,7 @@ import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory } from './transport';
-import { wrtc } from './wrtc';
+import { wrtc } from './webrtc';
 
 /**
  * Implements Transport for WebRTC. Uses simple-peer under the hood.
