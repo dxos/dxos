@@ -84,7 +84,6 @@
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "ui-consumer": "packages/experimental/ui-consumer",
     "util": "packages/common/util",
-    "vault": "packages/sdk/vault",
     "vite-plugin": "tools/vite-plugin",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"
