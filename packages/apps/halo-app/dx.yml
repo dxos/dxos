@@ -6,7 +6,7 @@ package:
       type: dxos:type/app
       display_name: HALO
       build:
-        command: pnpm -w run nx bundle halo-app
+        command: pnpm -w nx bundle halo-app
 
     # - name: dxos:storybook/halo
     #   type: dxos:type/app
@@ -16,6 +16,8 @@ package:
 
 runtime:
   client:
+    # For local development uncomment:
+    # remoteSource: http://localhost:3967/headless.html
     mode: remote
     storage:
       persistent: true
