@@ -31,15 +31,15 @@ export class TestBuilder {
   }
 
   get storage (): Storage {
-    return this._properties.storage ?? (this._properties.storage = createStorage({ type: StorageType.RAM }));
+    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
   }
 
   get directory (): Directory {
-    return this._properties.directory ?? (this._properties.directory = this.storage.createDirectory(TestBuilder.ROOT_DIR));
+    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring (): Keyring {
-    return this._properties.keyring ?? (this._properties.keyring = new Keyring());
+    return (this._properties.keyring ??= new Keyring());
   }
 
   setStorage (type: StorageType, root = TestBuilder.ROOT_DIR) {

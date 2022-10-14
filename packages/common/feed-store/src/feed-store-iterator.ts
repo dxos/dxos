@@ -24,24 +24,20 @@ export type FeedBlock<T> = {
 
 export type FeedBlockSelector<T> = (feeds: FeedBlock<T>[]) => number | undefined
 
-export type FeedSelector = (feed: FeedWrapper) => boolean
-
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
 export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(burdon): Change to FeedBlock.
-  private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedWrapper>(key => key.toHex());
+  private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
 
   private _running = false;
   private _count = 0;
 
   constructor (
-    private readonly _feedSelector: FeedSelector,
-    private readonly _feedBlockSelector: FeedBlockSelector<T>,
-    private readonly _skipTimeframe: Timeframe
+    private readonly _selector: FeedBlockSelector<T>,
+    private readonly _start: Timeframe
   ) {
-    assert(_feedSelector);
-    assert(_feedBlockSelector);
+    assert(_selector);
   }
 
   get running () {
@@ -72,6 +68,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(bur
   }
 
   /**
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
    */
   [Symbol.asyncIterator] () {

@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import {
-  createFeedWriter, FeedStoreIterator, FeedWriter, mapFeedWriter, FeedDescriptor
+  createFeedWriter, mapFeedWriter, FeedStoreIterator, FeedWriter, FeedDescriptor
 } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

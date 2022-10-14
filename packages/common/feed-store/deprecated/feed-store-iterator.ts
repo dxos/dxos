@@ -81,6 +81,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
   constructor (
     private readonly _feedSelector: FeedSelector,
     private readonly _messageSelector: MessageSelector<T>,
+    // TODO(burdon): Has indes for each feed of where to start.
     private readonly _skipTimeframe: Timeframe
   ) {
     assert(_feedSelector);
@@ -157,7 +158,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
     this._openFeeds.set(feedDescriptor.key.toHex(), {
       descriptor: feedDescriptor,
       iterator: stream[Symbol.asyncIterator](),
-      sendQueue: [],
+      sendQueue: [], // TODO(burdon): Just head?
       frozen: false
     });
   }

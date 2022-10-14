@@ -20,7 +20,7 @@ export interface FeedStoreOptions {
  * Persistent hypercore store.
  */
 export class FeedStore {
-  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper> = new ComplexMap(key => key.toHex());
+  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper> = new ComplexMap(PublicKey.hash);
 
   private readonly _factory: FeedFactory;
 
@@ -52,6 +52,7 @@ export class FeedStore {
   async openFeed (publicKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper> {
     let feed = this.getFeed(publicKey);
     if (feed) {
+      // TODO(burdon): Need to check that there's another instance being used (create test and break this).
       if (Boolean(feed.properties.writable) !== Boolean(writable)) {
         await feed.close();
       } else {

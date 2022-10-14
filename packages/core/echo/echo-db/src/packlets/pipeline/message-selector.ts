@@ -18,19 +18,19 @@ const log = debug('dxos:echo-db:message-selector');
  * As we encounter and process FeedAdmit messages those are added to the Party's trust,
  * and we begin processing messages from them as well.
  *
- * @param partyProcessor
  * @param timeframeClock
  */
 export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSelector<FeedMessage> => candidates => {
   // Pick the first candidate with a valid timeframe that has no gaps.
   for (let i = 0; i < candidates.length; i++) {
     const { data: { timeframe } } = candidates[i];
-
     assert(timeframe);
+
     if (!timeframeClock.hasGaps(timeframe)) {
       return i;
     }
   }
+
   // Not ready for this message yet.
   log('Skipping...');
 };

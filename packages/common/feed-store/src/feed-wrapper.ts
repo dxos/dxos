@@ -25,15 +25,16 @@ export class FeedWrapper {
     return this._hypercore;
   }
 
-  open = util.promisify(this._hypercore.open).bind(this._hypercore);
-
   // open = this._py(this._hypercore.open);
   close = this._py(this._hypercore.close);
   append = this._py(this._hypercore.append);
 
   replicate = this._hypercore.replicate;
 
+  open = util.promisify(this._hypercore.open.bind(this._hypercore));
+
   _py (fn: Function) {
+    // return util.promisify(this._hypercore.open.bind(this._hypercore))
     return py(this._hypercore, fn);
   }
 }
