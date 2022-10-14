@@ -11,6 +11,7 @@ export * from './fail';
 export * from './log-method';
 export * from './logging';
 export * from './raise';
+export * from './snoop';
 export * from './stack-trace';
 export * from './strings';
 export * from './throw';

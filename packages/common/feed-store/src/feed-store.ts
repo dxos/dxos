@@ -2,148 +2,76 @@
 // Copyright 2019 DXOS.org
 //
 
-import defaultHypercore from 'hypercore';
-import type { HypercoreConstructor, ValueEncoding } from 'hypercore';
-import assert from 'node:assert';
+import { Hypercore } from 'hypercore';
 
-import { synchronized, Event } from '@dxos/async';
-import type { Signer } from '@dxos/crypto';
+import { Event } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { Directory } from '@dxos/random-access-storage';
+import { ComplexMap } from '@dxos/util';
 
-import { FeedDescriptor } from './feed-descriptor';
+import { FeedFactory, FeedOptions } from './feed-factory';
+import { FeedWrapper } from './feed-wrapper';
 
-export type CreateDescriptorOptions = {
-  key: PublicKey
-  secretKey?: Buffer
-  signer?: Signer
-}
-
-export type CreateReadWriteFeedOptions = {
-  key: PublicKey
-  secretKey: Buffer
-}
-
-export type CreateReadOnlyFeedOptions = {
-  key: PublicKey
-}
-
-export type FeedStoreOptions = {
-  // Encoding type for each feed.
-  valueEncoding?: ValueEncoding
-
-  // Hypercore class to use.
-  hypercore?: HypercoreConstructor
+export interface FeedStoreOptions {
+  factory: FeedFactory
 }
 
 /**
- * FeedStore
- *
- * Management of multiple feeds to create, update, load, find and delete feeds
- * into a persist repository storage.
+ * Persistent hypercore store.
  */
 export class FeedStore {
-  // TODO(dmaretskyi): Convert to ComplexMap (i.e., use PublicKey as index).
-  private readonly _descriptors: Map<string, FeedDescriptor> = new Map();
+  private readonly _feeds: ComplexMap<PublicKey, FeedWrapper> = new ComplexMap(key => key.toHex());
 
-  private readonly _directory: Directory;
-  private readonly _hypercore: HypercoreConstructor;
-  private readonly _valueEncoding: ValueEncoding | undefined;
+  private readonly _factory: FeedFactory;
 
-  /**
-   * Emitted when a new feed represented by FeedDescriptor is opened.
-   */
-  readonly feedOpenedEvent = new Event<FeedDescriptor>();
+  // TODO(burdon): Use this pattern everywhere.
+  readonly onOpen = new Event<Hypercore>();
 
-  constructor (directory: Directory, { hypercore, valueEncoding }: FeedStoreOptions = {}) {
-    assert(directory);
-    this._directory = directory;
-    this._hypercore = hypercore ?? defaultHypercore; // TODO(burdon): Remove.
-    this._valueEncoding = valueEncoding && patchBufferCodec(valueEncoding);
+  constructor ({
+    factory
+  }: FeedStoreOptions) {
+    this._factory = factory;
   }
 
-  get storage (): Directory {
-    return this._directory;
-  }
-
-  @synchronized
-  async close () {
-    await Promise.all(Array.from(this._descriptors.values()).map(descriptor => descriptor.close()));
-    this._descriptors.clear();
+  get size () {
+    return this._feeds.size;
   }
 
   /**
-   * Create a feed to Feedstore
-   * @deprecated Use openReadWriteFeedWithSigner instead.
+   * Get the an open feed if it exists.
    */
-  async openReadWriteFeed (key: PublicKey, secretKey: Buffer): Promise<FeedDescriptor> {
-    // throw new Error('openReadWriteFeed is deprecated. Use openReadWriteFeedWithSigner instead.');
-    const descriptor = this._descriptors.get(key.toHex());
-    if (descriptor && descriptor.secretKey) {
-      return descriptor;
+  getFeed (publicKey: PublicKey): FeedWrapper | undefined {
+    return this._feeds.get(publicKey);
+  }
+
+  /**
+   * Gets or opens a feed.
+   * The feed is readonly unless a secret key is provided.
+   */
+  // TODO(burdon): Test if already exists.
+  // TODO(burdon): Remove from store if feed is closed externally? (remove open/close methods?)
+  async openFeed (publicKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper> {
+    let feed = this.getFeed(publicKey);
+    if (feed) {
+      if (Boolean(feed.properties.writable) !== Boolean(writable)) {
+        await feed.close();
+      } else {
+        await feed.open();
+        return feed;
+      }
     }
 
-    return this._createDescriptor({ key, secretKey });
-  }
-
-  /**
-   * Opens read-write feed that uses a provided signer instead of built-in sodium crypto.
-   */
-  async openReadWriteFeedWithSigner (key: PublicKey, signer: Signer): Promise<FeedDescriptor> {
-    log('open read/write feed', { key });
-    let descriptor = this._descriptors.get(key.toHex());
-    if (descriptor) {
-      assert(descriptor.writable, 'Feed already exists and is not writable.');
-      return descriptor;
-    }
-
-    console.log('??');
-    descriptor = await this._createDescriptor({ key, signer });
-    console.log(':::::::::', descriptor, key);
-    assert(descriptor.writable);
-    return descriptor;
-  }
-
-  /**
-   * Create a readonly feed to Feedstore
-   */
-  async openReadOnlyFeed (key: PublicKey): Promise<FeedDescriptor> {
-    log('Open read-only feed', { key });
-    return this._descriptors.get(key.toHex()) ?? (await this._createDescriptor({ key }));
-  }
-
-  /**
-   * Factory to create a new FeedDescriptor.
-   */
-  private async _createDescriptor ({ key, secretKey, signer }: CreateDescriptorOptions): Promise<FeedDescriptor> {
-    const feedDescriptor = new FeedDescriptor({
-      directory: this._directory,
-      key,
-      secretKey,
-      signer,
-      valueEncoding: this._valueEncoding,
-      hypercore: this._hypercore
+    const core = this._factory.createFeed(publicKey, {
+      writable
     });
 
-    this._descriptors.set(feedDescriptor.key.toString(), feedDescriptor);
+    feed = new FeedWrapper(core, publicKey);
+    this._feeds.set(feed.key, feed);
+    await feed.open();
+    return feed;
+  }
 
-    console.log(111111111);
-    await feedDescriptor.open();
-    console.log(333333333);
-    this.feedOpenedEvent.emit(feedDescriptor);
-    return feedDescriptor;
+  async close () {
+    await Promise.all(Array.from(this._feeds.values()).map(feed => feed.close()));
+    this._feeds.clear();
   }
 }
-
-// TODO(burdon): Document.
-const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
-  if (typeof encoding === 'string') {
-    return encoding;
-  }
-
-  return {
-    encode: (data: any) => Buffer.from(encoding.encode(data)),
-    decode: encoding.decode.bind(encoding)
-  };
-};

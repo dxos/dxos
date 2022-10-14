@@ -3,11 +3,7 @@
 //
 
 import pify from 'pify';
-import type {
-  FileStat,
-  RandomAccessStorage,
-  RandomAccessStorageProperties
-} from 'random-access-storage';
+import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
 
 import { StorageType } from './storage';
 
@@ -18,8 +14,8 @@ import { StorageType } from './storage';
 export interface File extends RandomAccessStorageProperties {
   // TODO(burdon): Document different implementations.
   readonly destroyed: boolean
-  readonly filename: string
   readonly directory: string
+  readonly filename: string
 
   // Added by factory.
   readonly type: StorageType
@@ -67,17 +63,5 @@ export const wrapFile = (native: RandomAccessStorage, type: StorageType): File =
     'truncate'
   ]);
 
-  {
-    // Hack to make return type consistent on all platforms
-    const trueRead = file.read.bind(file);
-    file.read = async (offset: number, size: number) => {
-      const data = await trueRead(offset, size);
-      return Buffer.from(data);
-    };
-  }
-
-  return Object.assign(file, {
-    type,
-    native
-  });
+  return Object.assign(file, { type, native });
 };

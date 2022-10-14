@@ -25,8 +25,10 @@ export type MochaExecutorOptions = NodeOptions & BrowserOptions & {
 };
 
 export default async (options: MochaExecutorOptions, context: ExecutorContext): Promise<{ success: boolean }> => {
-  console.info('Executing "mocha"...');
-  console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  console.info('Executing mocha...');
+  if (context.isVerbose) {
+    console.info(`Options: ${JSON.stringify(options, null, 2)}`);
+  }
 
   const resolvedOptions = {
     ...options,

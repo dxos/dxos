@@ -3,14 +3,22 @@
 //
 
 import { expect } from 'chai';
+import faker from 'faker';
 import hypercore from 'hypercore';
 import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
+import { batch, createDataItem, TestDataItem } from './testing';
+
+// TODO(burdon): Factor out table logger.
+const logRow = (label: string, values: number[]) => {
+  // console.log(`${label.padEnd(6)} ${values.map(value => String(value).padStart(3)).join(' ')}`);
+};
+
 describe('Hypercore', function () {
-  it('replicates', async function () {
+  it('replicate messages', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const core1 = hypercore(ram, publicKey, { secretKey });
     const core2 = hypercore(ram, publicKey);
@@ -63,4 +71,94 @@ describe('Hypercore', function () {
     expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
     expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
+
+  it('replicate messages in batches', async function () {
+    const numBlocks = 100;
+
+    // Replicating feeds must have the same public key.
+    const { publicKey, secretKey } = createKeyPair();
+    const core1 = hypercore(ram, publicKey, { secretKey });
+    const core2 = hypercore(ram, publicKey);
+
+    await core1.open();
+    await core2.open();
+
+    const stream1 = core1.replicate(true);
+    const stream2 = core2.replicate(false);
+
+    // Start replication.
+    const [streamsClosed, onClose] = latch({ count: 2 });
+    stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+    expect(core1.stats.peers).to.have.lengthOf(1);
+    expect(core2.stats.peers).to.have.lengthOf(1);
+
+    // Replicate messages.
+    {
+      // Wait until all uploaded.
+      const [waitForDownloaded, incDownload] = latch({ count: numBlocks });
+
+      // Monitor uploads.
+      let uploaded = 0;
+      core1.on('upload', () => {
+        uploaded++;
+        logRow(' up', [uploaded, core1.length]);
+      });
+
+      // Monitor downloads.
+      let downloaded = 0;
+      core2.on('download', (seq: number, data: Buffer) => {
+        downloaded++;
+        const { id } = JSON.parse(data.toString()) as TestDataItem;
+        expect(id).to.eq(seq);
+        logRow(' down', [downloaded, core2.length]);
+        expect(downloaded).to.be.lessThanOrEqual(uploaded);
+        incDownload();
+      });
+
+      // Monitor sync points (multiple since delayed writes).
+      const sync = { started: 0, complete: 0 };
+      core2.on('sync', () => {
+        logRow('=sync=', [++sync.started]);
+        core2.download();
+      });
+
+      // Write batch of messages with delay.
+      batch((next, i, remaining) => {
+        const size = faker.datatype.number({ min: 1, max: Math.min(10, remaining) });
+        for (let j = 0; j < size; j++) {
+          void core1.append(JSON.stringify(createDataItem(i + j)));
+        }
+
+        // Random delay.
+        setTimeout(() => {
+          next(size);
+        }, faker.datatype.number({ min: 0, max: 100 }));
+      }, numBlocks);
+
+      // Done.
+      await waitForDownloaded();
+      expect(uploaded).to.eq(downloaded);
+    }
+
+    // Close streams.
+    {
+      stream1.end();
+      stream2.end();
+
+      await streamsClosed();
+      expect(stream1.destroyed).to.be.true;
+      expect(stream2.destroyed).to.be.true;
+    }
+
+    // Close feeds.
+    {
+      await core1.close();
+      await core2.close();
+
+      expect(core1.writable).to.be.false;
+      expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
+      expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+    }
+  }).timeout(5000);
 });

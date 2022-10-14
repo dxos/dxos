@@ -21,12 +21,12 @@ export type CreateBatchStreamOptions = {
   tail?: boolean
 }
 
+// TODO(burdon): This function is WAY too long.
 export const createBatchStream = (
-  descriptor: FeedDescriptor,
+  feed: FeedDescriptor,
   opts: CreateBatchStreamOptions = {}
 ): NodeJS.ReadableStream => {
-  assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
-  const { feed } = descriptor;
+  assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1.');
 
   let start = opts.start || 0;
   let end = typeof opts.end === 'number' ? opts.end : -1;
@@ -40,7 +40,7 @@ export const createBatchStream = (
   let first = true;
   let firstSyncEnd = end;
 
-  let range = feed.native.download({ start, end, linear: true });
+  const range2 = await feed.download({ start, end, linear: true });
 
   // TODO(burdon): Make async.
   const read = (size: any, cb?: any) => {
@@ -77,12 +77,14 @@ export const createBatchStream = (
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.native.get(seq, opts, (err: any, data: any) => {
+      feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
+
         cb(null, [buildMessage(data)]);
       });
+
       return;
     }
 
@@ -94,7 +96,7 @@ export const createBatchStream = (
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.native.get(seq, opts, (err, data) => {
+      feed.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
@@ -105,8 +107,9 @@ export const createBatchStream = (
     }
 
     seq = setStart(batchEnd);
+
     // TODO(burdon): Deprecated.
-    feed.native.getBatch(seq, batchEnd, opts, (err: Error | null, blocks?: Buffer[]) => {
+    feed.getBatch(seq, batchEnd, opts, (err: Error | null, blocks?: Buffer[]) => {
       if (err || blocks?.length === 0) { // TODO(burdon): Block length 0 is not an error.
         cb(err);
         return;
@@ -135,7 +138,7 @@ export const createBatchStream = (
   };
 
   const open = (size: any, cb: (err: Error) => void) => {
-    feed.native.ready(err => {
+    feed.ready(err => {
       if (err) {
         return cb(err);
       }

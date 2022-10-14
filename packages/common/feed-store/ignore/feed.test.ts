@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
@@ -35,7 +34,7 @@ describe('Feed tests.', function () {
       createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
     expect(feed.length).toBe(0);
 
     const data: FeedMessage = {
@@ -45,10 +44,10 @@ describe('Feed tests.', function () {
       }
     };
 
-    await pify(feed.append.bind(feed))(data);
+    await feed.append(data);
     expect(feed.length).toBe(1);
 
-    const block = await pify(feed.get.bind(feed))(0);
+    const block = await feed.get(0);
     expect(block).toEqual(data);
   });
 
@@ -75,9 +74,9 @@ describe('Feed tests.', function () {
     const receipt = await writer.write(data);
     expect(receipt.feedKey.equals(feedDescriptor.key)).toBe(true);
     expect(receipt.seq).toEqual(0);
-    expect(feedDescriptor.feed.length).toEqual(1);
+    expect(feedDescriptor.length).toEqual(1);
 
-    const block = await pify(feedDescriptor.feed.get.bind(feedDescriptor))(0);
+    const block = await feedDescriptor.get(0);
     expect(block).toEqual(data);
   });
 });

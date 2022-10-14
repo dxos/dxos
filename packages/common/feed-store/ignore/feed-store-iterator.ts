@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
 import { createBatchStream } from './create-batch-stream';
@@ -17,6 +17,19 @@ import { FeedBlock } from './types';
 const log = debug('dxos:echo:feed-store-iterator:log');
 
 const STALL_TIMEOUT = 1000;
+
+/**
+ * Hypercore message block.
+ * https://github.com/hypercore-protocol/hypercore
+ */
+// TODO(burdon): Move to hypercore?
+export type FeedBlock<T> = {
+  key: PublicKey
+  seq: number
+  sync: boolean
+  path: string
+  data: T
+}
 
 //
 // TODO(burdon): Redesign FeedStore:

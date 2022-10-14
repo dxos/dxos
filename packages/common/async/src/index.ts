@@ -7,6 +7,7 @@ export * from './callback';
 export * from './event';
 export * from './latch';
 export * from './lock';
+export * from './pify';
 export * from './sink';
 export * from './stream-to-array';
 export * from './trigger';

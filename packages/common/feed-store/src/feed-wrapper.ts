@@ -1,30 +1,39 @@
 //
-// Copyright 2019 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-import type { Hypercore } from 'hypercore';
+import { Hypercore, HypercoreProperties } from 'hypercore';
 
-import { wrapFeed } from '@dxos/hypercore';
-import type { HypercoreFeed } from '@dxos/hypercore';
+import { py } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
 
-// TODO(burdon): New wrapper.
-// TODO(burdon): Use factor to create mocks (why is that required?)
-// TODO(burdon): Why is the semaphore required on open.
-export class Wrapper {
-  private readonly _feed: HypercoreFeed;
-
+/**
+ * Async feed wrapper.
+ */
+export class FeedWrapper {
   constructor (
-    private readonly _hypercore: Hypercore
-  ) {
-    this._feed = wrapFeed(this._hypercore);
+    private _hypercore: Hypercore,
+    private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
+  ) {}
+
+  get key (): PublicKey {
+    return this._key;
   }
 
-  // TODO(burdon): Internal only.
-  get hypercore (): Hypercore {
+  get core (): Hypercore {
     return this._hypercore;
   }
 
-  get feed (): HypercoreFeed {
-    return this._feed;
+  get properties (): HypercoreProperties {
+    return this._hypercore;
+  }
+
+  open = this._py(this._hypercore.open);
+  close = this._py(this._hypercore.close);
+
+  append = this._py(this._hypercore.append);
+
+  _py (f: Function) {
+    return py(this._hypercore, f);
   }
 }

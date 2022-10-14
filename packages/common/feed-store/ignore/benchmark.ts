@@ -28,7 +28,7 @@ void (async () => {
   suite.beforeAll(() => Promise.all(range(maxFeeds).map(async i => {
     const name = `feed/${i}`;
     const { publicKey, secretKey } = createKeyPair();
-    const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
 
     // TODO(burdon): Can we use a plain for loop for await?
     for (let i = 0; i < maxMessages; i++) {
@@ -41,6 +41,7 @@ void (async () => {
   suite.test('getBatch', async () => {
     let count = 0;
 
+    // TODO(burdon): Remove cast.
     await Promise.all(Array.from((feedStore as any)._descriptors.values()).map(({ feed }: any) => new Promise<void>((resolve, reject) => {
       feed.getBatch(0, maxMessages, (err: Error, result: any) => {
         count += result.length;
@@ -53,7 +54,7 @@ void (async () => {
 
     check(count);
   });
-  const results = await suite.run();
 
+  const results = await suite.run();
   suite.print(results);
 })();

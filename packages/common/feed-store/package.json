@@ -32,7 +32,6 @@
     "debug": "^4.3.3",
     "from2": "^2.3.0",
     "hypercore": "^9.12.0",
-    "pify": "~5.0.0",
     "readable-stream": "^3.6.0",
     "util": "^0.12.4"
   },
@@ -45,7 +44,6 @@
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
     "@types/from2": "~2.3.1",
-    "@types/pify": "^3.0.2",
     "@types/readable-stream": "^2.3.9",
     "faker": "^5.5.3",
     "tempy": "~1.0.1"

@@ -6,17 +6,16 @@ import debug from 'debug';
 import expect from 'expect';
 import faker from 'faker';
 import assert from 'node:assert';
-import pify from 'pify';
 
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
-import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { schema, createTestItemMutation, FeedMessageBlock, Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { ComplexMap } from '@dxos/util';
 
+import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
 import { FeedSelector, FeedStoreIterator } from './feed-store-iterator';
 
@@ -79,16 +78,15 @@ describe('feed store iterator', function () {
     // Create feeds.
     //
 
-    const feeds = new ComplexMap<PublicKey, HypercoreFeed>(key => key.toHex());
+    const feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
     await Promise.all(Array.from({ length: config.numFeeds }, (_, i) => i + 1).map(async () => {
       const keyring = new Keyring();
       const descriptor = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
-      const feed = descriptor.feed;
-      feeds.set(PublicKey.from(feed.key), feed);
+      feeds.set(PublicKey.from(descriptor.key), descriptor);
       iterator.addFeedDescriptor(descriptor);
     }));
 
-    log('?????????????', JSON.stringify({
+    log(JSON.stringify({
       config,
       feeds: Array.from(feeds.keys()).map(feedKey => feedKey.toHex())
     }, undefined, 2));
@@ -112,10 +110,9 @@ describe('feed store iterator', function () {
       const message = createTestItemMutation(createId(), String(i), word, timeframe);
 
       // Write data.
-      await pify(feed.append.bind(feed))(message);
-      log('Write:', PublicKey.stringify(feed.key), value, timeframe);
+      await feed.append(message);
+      log('Write:', feed.key.toHex(), value, timeframe);
     }
-
   });
 
   it.skip('skipping initial messages', async function () {
@@ -124,20 +121,18 @@ describe('feed store iterator', function () {
     });
 
     const keyring = new Keyring();
-    const descriptor1 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
-    const descriptor2 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
+    const feed1 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
+    const feed2 = await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 
-    const feed1 = descriptor1.feed; const feed2 = descriptor2.feed;
-
-    await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '0' });
-    await pify(feed1.append.bind(feed1))({ key: 'feed1', value: '1' });
-    await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '0' });
-    await pify(feed2.append.bind(feed2))({ key: 'feed2', value: '1' });
+    await feed1.append({ key: 'feed1', value: '0' });
+    await feed1.append({ key: 'feed1', value: '1' });
+    await feed2.append({ key: 'feed2', value: '0' });
+    await feed2.append({ key: 'feed2', value: '1' });
 
     const timeframe = new Timeframe([[PublicKey.from(feed1.key), 0]]);
     const iterator = new FeedStoreIterator(() => true, () => 0, timeframe);
-    iterator.addFeedDescriptor(descriptor1);
-    iterator.addFeedDescriptor(descriptor2);
+    iterator.addFeedDescriptor(feed1);
+    iterator.addFeedDescriptor(feed1);
 
     const [done, updateCounter] = latch({ count: 3 });
     const messages: any[] = [];

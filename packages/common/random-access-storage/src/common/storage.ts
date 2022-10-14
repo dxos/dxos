@@ -16,6 +16,7 @@ export interface Storage {
   readonly type: StorageType
   readonly size: number
 
+  // TODO(burdon): Make required.
   createDirectory: (path?: string) => Directory
   destroy: () => Promise<void>
 }

@@ -5,10 +5,8 @@
 // @dxos/mocha platform=nodejs
 
 import expect from 'expect';
-import pify from 'pify';
 
 import { createKeyPair } from '@dxos/crypto';
-import { HypercoreFeed } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -35,7 +33,7 @@ describe.only('FeedDescriptor', function () {
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('/tmp/dxos/feed-store'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key
     });
 
@@ -43,7 +41,7 @@ describe.only('FeedDescriptor', function () {
     expect(fd.secretKey).toBeUndefined();
 
     await fd.open();
-    await fd.close(); // TODO(burdon): Error: Feed is closed.
+    await fd.close();
   });
 
   it('create custom options', async function () {
@@ -61,18 +59,17 @@ describe.only('FeedDescriptor', function () {
     expect(fd.valueEncoding).toBe('json');
   });
 
+  // TODO(burdon): Rewrite.
   it('open', async function () {
     expect(feedDescriptor.opened).toBe(false);
 
     // Opening multiple times should actually open once.
-    const [feed1, feed2]: HypercoreFeed[] = await Promise.all([feedDescriptor.open(), feedDescriptor.open()]);
+    const [feed1, feed2]: FeedDescriptor[] = await Promise.all([feedDescriptor.open(), feedDescriptor.open()]);
 
     expect(feed1).toEqual(feed2);
     expect(feed1.key).toEqual(feed2.key);
-    expect(feedDescriptor.feed).toBeDefined();
-    expect(feedDescriptor.feed).toBe(feed1);
-    expect(feedDescriptor.feed.key).toBeInstanceOf(Buffer);
-    expect(feedDescriptor.opened).toBe(true);
+    expect(feed1.key).toBeInstanceOf(Buffer);
+    expect(feed1.opened).toBe(true);
   });
 
   it('close', async function () {
@@ -81,11 +78,12 @@ describe.only('FeedDescriptor', function () {
     // Closing multiple times should actually close once.
     await Promise.all([feedDescriptor.close(), feedDescriptor.close()]);
     expect(feedDescriptor.opened).toBe(false);
-    feedDescriptor.feed.native.append('test', (err: Error | null) => {
-      if (err) {
-        expect(err.message).toContain('This feed is not writable.');
-      }
-    });
+    await feedDescriptor.append('test');
+    // , (err: Error | null) => {
+    //   if (err) {
+    //     expect(err.message).toContain('This feed is not writable.');
+    //   }
+    // });
 
     // If we try to close a feed that is opening should wait for the open result.
     const { publicKey, secretKey } = createKeyPair();
@@ -106,20 +104,19 @@ describe.only('FeedDescriptor', function () {
     const fd = new FeedDescriptor({
       directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
       key: PublicKey.from(publicKey),
-      secretKey
-      // valueEncoding: 'utf-8'
+      secretKey,
+      valueEncoding: 'utf-8'
     });
 
     await fd.open();
     expect(fd.opened).toBe(true);
-    // await fd.append('test');
-    await pify(fd.feed.append.bind(fd.feed))('test');
+    await fd.append('test');
 
-    // await fd.close();
-    // expect(fd.opened).toBe(false);
+    await fd.close();
+    expect(fd.opened).toBe(false);
 
-    // await fd.open();
-    // expect(fd.opened).toBe(true);
+    await fd.open();
+    expect(fd.opened).toBe(true);
 
     // const msg = await pify(fd.feed.head.bind(fd.feed))();
     // expect(msg).toBe('test');

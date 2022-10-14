@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+declare module 'hypercore-crypto';
+
 /**
  * Hypercore Typescript Definitions version 9.12.0
  * NOTE: Must not clash with 'hypercore' package name.
@@ -16,7 +18,7 @@
  */
 declare module 'hypercore' {
   import type { ProtocolStream } from 'hypercore-protocol';
-  import type { Nanoresource } from 'nanoresource';
+  import type { Nanoresource, NanoresourceProperties } from 'nanoresource';
   import type { RandomAccessStorageConstructor } from 'random-access-storage';
   import type { Readable, Writable } from 'streamx';
 
@@ -96,12 +98,13 @@ declare module 'hypercore' {
     secretKey?: Buffer
     valueEncoding?: ValueEncoding
     crypto?: Crypto
+    writable?: boolean
   }
 
   /**
    * Shared property definitions for raw and wrapped objects.
    */
-  export interface HypercoreProperties {
+  export interface HypercoreProperties extends NanoresourceProperties {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedwritable
     readonly writable: boolean
@@ -159,6 +162,9 @@ declare module 'hypercore' {
     /** @deprecated remove in v10 */
     head (options?: any, cb?: Callback<FeedBlock>): void
 
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
+    has (start: number, end?: number): boolean
+
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
     get (index: number, options: any, cb: Callback<Buffer>): void
 
@@ -167,10 +173,11 @@ declare module 'hypercore' {
     getBatch (start: number, end: number, options: any, cb: Callback<Buffer[]>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-    download (range?: Range, cb?: Callback<number>): any
+    download (range: Range, cb?: Callback<number>): any
+    download (cb?: Callback<number>): any
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
-    downloaded (start: number, end: number): boolean
+    downloaded (start?: number, end?: number): boolean
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedundownloaddownloadid
     undownload (id: number): void

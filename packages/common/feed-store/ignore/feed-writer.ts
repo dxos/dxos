@@ -2,9 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import pify from 'pify';
-
-import { Event } from '@dxos/async';
+import { Event, py } from '@dxos/async';
 import { PublicKey, PUBLIC_KEY_LENGTH } from '@dxos/keys';
 import { MaybePromise } from '@dxos/util';
 
@@ -33,9 +31,10 @@ export const createFeedWriter = <T>(feed: FeedDescriptor): FeedWriter<T> => ({
   }
 });
 
-export const createMockFeedWriterFromStream = (strem: NodeJS.WritableStream): FeedWriter<any> => ({
+export const createMockFeedWriterFromStream = (stream: NodeJS.WritableStream): FeedWriter<any> => ({
   write: async message => {
-    await pify(strem.write.bind(strem))(message);
+    await py(stream, stream.write)(message);
+
     return {
       feedKey: PublicKey.from(Buffer.alloc(PUBLIC_KEY_LENGTH)),
       seq: 0

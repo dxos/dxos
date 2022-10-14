@@ -3,7 +3,6 @@
 //
 
 import expect from 'expect';
-import pify from 'pify';
 import waitForExpect from 'wait-for-expect';
 
 import { Keyring } from '@dxos/keyring';
@@ -22,11 +21,6 @@ const createFeed = async (): Promise<FeedDescriptor> => {
   return await feedStore.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
 };
 
-const append = async (descriptor: FeedDescriptor, message: any) => {
-  const feed = descriptor.feed;
-  await pify(feed.append.bind(feed))(message);
-};
-
 describe('Batch stream', function () {
   it('Write single message', async function () {
     const feedDescriptor = await createFeed();
@@ -39,7 +33,7 @@ describe('Batch stream', function () {
     });
 
     const msg = PublicKey.random().toString();
-    await append(feedDescriptor, msg);
+    await feedDescriptor.append(msg);
     await waitForExpect(() => {
       expect(messages).toContain(msg);
     });
@@ -57,7 +51,7 @@ describe('Batch stream', function () {
 
     const sent = Array.from(Array(5)).map(() => PublicKey.random().toString());
     for (const msg of sent) {
-      await append(feedDescriptor, msg);
+      await feedDescriptor.append(msg);
     }
 
     await waitForExpect(() => {

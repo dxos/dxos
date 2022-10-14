@@ -2,17 +2,15 @@
 // Copyright 2019 DXOS.org
 //
 
-import defaultHypercore from 'hypercore';
-import type { HypercoreConstructor, ReplicationOptions, ValueEncoding } from 'hypercore';
+import hypercore, { Range } from 'hypercore';
+import type { Hypercore, HypercoreConstructor, ReplicationOptions, ValueEncoding } from 'hypercore';
 import type { ProtocolStream } from 'hypercore-protocol';
 import assert from 'node:assert';
-import { callbackify } from 'node:util';
 import type { RandomAccessStorageConstructor } from 'random-access-storage';
 
-import { Lock } from '@dxos/async';
-import { sha256, verifySignature, Signer } from '@dxos/crypto';
-import { failUndefined } from '@dxos/debug';
-import { HypercoreFeed, wrapFeed } from '@dxos/hypercore';
+import { Lock, py } from '@dxos/async';
+import { sha256, Signer } from '@dxos/crypto';
+import { createCrypto } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { Directory } from '@dxos/random-access-storage';
 
@@ -24,7 +22,7 @@ type FeedDescriptorOptions = {
   secretKey?: Buffer
   valueEncoding?: ValueEncoding
   disableSigning?: boolean
-  signer?: Signer
+  signer: Signer
 }
 
 /**
@@ -39,19 +37,19 @@ export class FeedDescriptor {
   private readonly _valueEncoding?: ValueEncoding;
   private readonly _hypercore: HypercoreConstructor;
   private readonly _disableSigning: boolean;
-  private readonly _signer?: Signer;
+  private readonly _signer: Signer;
 
   // Semaphore to protect open/close.
   private readonly _lock = new Lock();
 
-  private _feed?: HypercoreFeed;
+  private _feed?: Hypercore;
 
   constructor ({
     directory,
     key,
     secretKey, // TODO(burdon): Remove: https://github.com/dxos/dxos/pull/1611#discussion_r989888001
     valueEncoding, // TODO(burdon): Default or required?
-    hypercore = defaultHypercore, // TODO(burdon): Remove.
+    hypercore: hypercoreConstructor = hypercore,
     disableSigning = false,
     signer
   }: FeedDescriptorOptions) {
@@ -60,7 +58,7 @@ export class FeedDescriptor {
 
     this._directory = directory;
     this._valueEncoding = valueEncoding;
-    this._hypercore = hypercore;
+    this._hypercore = hypercoreConstructor ?? hypercore;
     this._key = key;
     this._secretKey = secretKey;
     this._disableSigning = !!disableSigning;
@@ -88,10 +86,10 @@ export class FeedDescriptor {
    * @deprecated
    */
   // TODO(burdon): Remove.
-  get feed (): HypercoreFeed {
-    assert(this._feed, 'Feed not initialized.');
-    return this._feed;
-  }
+  // get feed (): {} {
+  //   assert(this._feed, 'Feed not initialized.');
+  //   return this._feed;
+  // }
 
   /**
    * @deprecated
@@ -110,8 +108,12 @@ export class FeedDescriptor {
     return this._feed?.length ?? 0;
   }
 
+  get readable () {
+    return !!this._feed?.readable;
+  }
+
   get writable () {
-    return !!this._signer;
+    return !!this._signer; // TODO(burdon): ???
   }
 
   get valueEncoding () {
@@ -122,20 +124,17 @@ export class FeedDescriptor {
    * Atomically open feed.
    */
   // TODO(burdon): Replace with factory.
-  async open (): Promise<HypercoreFeed> {
-    if (this.opened) {
-      return this._feed ?? failUndefined();
+  async open (): Promise<FeedDescriptor> {
+    if (!this.opened) {
+      await this._lock.executeSynchronized(async () => {
+        return await this._open();
+      });
     }
 
-    await this._lock.executeSynchronized(async () => {
-      return await this._open();
-    });
-
-    return this._feed ?? failUndefined();
+    return this;
   }
 
   async close () {
-    console.log('CLOSE !!!!!!!!!!!!!!!', this._feed);
     if (!this.opened) {
       return;
     }
@@ -150,7 +149,17 @@ export class FeedDescriptor {
 
   append (message: any): Promise<number> {
     assert(this._feed);
-    return this._feed.append(message);
+    return py(this._feed, this._feed.append)(message);
+  }
+
+  get (start: number): Promise<any> {
+    assert(this._feed);
+    return py(this._feed, this._feed.get)(start);
+  }
+
+  download (range?: Range): Promise<number> {
+    assert(this._feed);
+    return py(this._feed, this._feed.download)(range);
   }
 
   replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream {
@@ -176,41 +185,22 @@ export class FeedDescriptor {
     // NOTE: This might cause a bug where descriptor.key !== descriptor.feed.key.
     // TODO(dmaretskyi): Replace sha256 from hypercore-crypto with a web-crypto equivalent.
     const key = sha256(this._key.toHex());
-
     const storage: RandomAccessStorageConstructor = this._createStorage(key);
-
     const hypercore = this._hypercore(storage, key, {
       // TODO(dmaretskyi): Can we just pass undefined. We might need this for hypercore to consider this feed as writable.
       secretKey: this._signer ? Buffer.from('secret') : undefined,
       valueEncoding: this._valueEncoding,
-      crypto: {
-        sign: (data: any, secretKey: any, cb: any) => {
-          assert(this._signer, 'Signer was not provided to the writable feed (writable feeds without an injected signer are deprecated).');
-          callbackify(this._signer!.sign.bind(this._signer!))(this._key, data, (err, res) => {
-            if (err) {
-              cb(err);
-              return;
-            }
-
-            cb(null, Buffer.from(res));
-          });
-        },
-
-        verify: async (data: any, signature: any, key: any, cb: any) => {
-          callbackify(verifySignature)(this._key, data, signature, cb);
-        }
-      }
+      crypto: createCrypto(this._signer, this._key)
     });
 
     // Wrap feed.
-    const feed = wrapFeed(hypercore);
-    this._feed = feed;
+    this._feed = hypercore;
 
     // TODO(burdon): This isn't required unless sparse is set with options?
     // Request the feed to eagerly download everything.
-    void feed.download();
+    void hypercore.download();
 
     // Wait until ready.
-    await feed.open();
+    await py(hypercore, hypercore.open)();
   }
 }
