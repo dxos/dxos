@@ -47,8 +47,7 @@ export class FeedStore {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  // TODO(burdon): Test if already exists.
-  // TODO(burdon): Remove from store if feed is closed externally? (remove open/close methods?)
+  // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
   async openFeed (publicKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper> {
     let feed = this.getFeed(publicKey);
     if (feed) {
