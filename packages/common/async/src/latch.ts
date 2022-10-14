@@ -9,12 +9,18 @@ type LatchProps = {
   timeout?: number
 }
 
+type LatchResult = [
+  () => Promise<number>,
+  () => void,
+  (err: Error) => void
+]
+
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
  * @deprecated Use `until`.
  */
 // TODO(burdon): Reconcile with until/trigger.
-export const latch = ({ count = 1, timeout }: LatchProps = {}) => {
+export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
   assert(count > 0);
 
   let t: ReturnType<typeof setTimeout>;
@@ -40,12 +46,12 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}) => {
 
   let i = 0;
   return [
-    promise,
+    async () => await promise,
     () => {
       if (++i === count) {
         doResolve(i);
       }
     },
     (err: Error) => doReject(err)
-  ] as const;
+  ];
 };
