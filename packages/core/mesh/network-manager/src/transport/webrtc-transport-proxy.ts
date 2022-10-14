@@ -53,8 +53,8 @@ export class WebRTCTransportProxy implements Transport {
         this._params.stream.on('data', async (data: Uint8Array) => {
           try {
             await this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data });
-          } catch(err) {
-            log.catch(err)
+          } catch (err) {
+            log.catch(err);
           }
         });
       },
@@ -125,8 +125,6 @@ export class WebRTCTransportProxy implements Transport {
 export class WebRTCTransportProxyFactory implements TransportFactory {
   private _bridgeService: BridgeService | undefined;
   private _connections = new Set<WebRTCTransportProxy>();
-
-  constructor () {}
 
   /**
    * Sets the current BridgeService to be used to open connections.

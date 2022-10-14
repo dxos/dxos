@@ -56,7 +56,7 @@ onconnect = async event => {
       transportFactory.setBridgeService(wrtcServer.rpc.BridgeService);
     },
     err => {
-      console.error(err)
+      console.error(err);
     }
   );
 
