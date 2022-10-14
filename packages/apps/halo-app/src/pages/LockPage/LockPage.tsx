@@ -25,7 +25,7 @@ export interface RegistrationPageProps {
  */
 export const LockPage = () => {
   const client = useClient();
-  const profile = useProfile(true);
+  const profile = useProfile();
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

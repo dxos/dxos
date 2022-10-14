@@ -8,8 +8,8 @@ runtime:
 
   services:
     ipfs:
-      server: "https://kube.dxos.org/ipfs/api"
-      gateway: "https://kube.dxos.org/ipfs/gateway"
+      server: "http://kube.dxos.org:5001/"
+      gateway: "http://kube.dxos.org:8888/ipfs"
     signal:
       server: 'wss://kube.dxos.org/.well-known/dx/signal'
     ice:
