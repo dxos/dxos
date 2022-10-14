@@ -2,10 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { schema } from '@dxos/protocols';
-import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createLinkedPorts, createProtoRpcPeer, ProtoRpcPeer } from '@dxos/rpc';
-
 import expect from 'expect';
 import * as fc from 'fast-check';
 import { ModelRunSetup } from 'fast-check';
@@ -17,6 +13,9 @@ import { log } from '@dxos/log';
 import { Protocol } from '@dxos/mesh-protocol';
 import { MemorySignalManagerContext, MemorySignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import { PresencePlugin } from '@dxos/protocol-plugin-presence';
+import { schema } from '@dxos/protocols';
+import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 import { range, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -24,12 +23,10 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory } from './transport';
-
-import { WebRTCTransportService } from './transport';
+import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory, WebRTCTransportService } from './transport';
 
 // Signal server will be started by the setup script.
-const SIGNAL_URL = `ws://localhost:4000/.well-known/dx/signal`;
+const SIGNAL_URL = 'ws://localhost:4000/.well-known/dx/signal';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -70,7 +67,7 @@ describe('Network manager', function () {
     let peer1Id: PublicKey;
     let peer2Id: PublicKey;
 
-    beforeEach(() => {
+    beforeEach(function () {
       topic = PublicKey.random();
       peer1Id = PublicKey.random();
       peer2Id = PublicKey.random();
@@ -78,7 +75,7 @@ describe('Network manager', function () {
 
     sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: async () => createWebRTCTransportFactory() });
 
-    it.skip('two peers with different signal & turn servers', async () => {
+    it.skip('two peers with different signal & turn servers', async function () {
       const { networkManager: networkManager1, plugin: plugin1 } = await createPeer({
         topic,
         peerId: peer1Id,
@@ -114,8 +111,8 @@ describe('Network manager', function () {
       await networkManager2.destroy();
     }).timeout(10_000);
 
-    describe('StarTopology', () => {
-      it('two peers connect to each other', async () => {
+    describe('StarTopology', function () {
+      it('two peers connect to each other', async function () {
         const { plugin: plugin1 } = await createPeer({ topic, peerId: peer1Id, topology: new StarTopology(peer1Id), transportFactory: createWebRTCTransportFactory() });
         const { plugin: plugin2 } = await createPeer({ topic, peerId: peer2Id, topology: new StarTopology(peer1Id), transportFactory: createWebRTCTransportFactory() });
 
@@ -173,38 +170,38 @@ describe('Network manager', function () {
       await rpcClient.open();
       afterTest(() => rpcClient.close());
 
-      return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService)
-    }
-    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: createTransportFactory  });
+      return new WebRTCTransportProxyFactory().setBridgeService(rpcClient.rpc.BridgeService);
+    };
+    sharedTests({ inMemory: false, signalUrl: SIGNAL_URL, getTransportFactory: createTransportFactory });
   });
 
   describe('In-memory transport', function () {
     sharedTests({ inMemory: true, getTransportFactory: async () => inMemoryTransportFactory });
 
-    it('large amount of peers and connections', async () => {
+    it('large amount of peers and connections', async function () {
       const numTopics = 5;
       const peersPerTopic = 5;
-  
+
       await Promise.all(range(numTopics).map(async () => {
         const topic = PublicKey.random();
-  
+
         await Promise.all(range(peersPerTopic).map(async (_, index) => {
           const peerId = PublicKey.random();
           const { plugin } = await createPeer({ topic, peerId, transportFactory: inMemoryTransportFactory });
-  
+
           const [done, pongReceived] = latch({ count: peersPerTopic - 1 });
-  
+
           plugin.on('connect', async (protocol: Protocol) => {
             const { peerId } = protocol.getSession() ?? {};
             const remoteId = PublicKey.from(peerId);
-  
+
             await plugin.send(remoteId.asBuffer(), 'ping');
           });
-  
+
           plugin.on('receive', async (protocol: Protocol, data: any) => {
             const { peerId } = protocol.getSession() ?? {};
             const remoteId = PublicKey.from(peerId);
-  
+
             if (data === 'ping') {
               await plugin.send(remoteId.asBuffer(), 'pong');
             } else if (data === 'pong') {
@@ -213,7 +210,7 @@ describe('Network manager', function () {
               throw new Error(`Invalid message: ${data}`);
             }
           });
-  
+
           await done();
         }));
       }));
@@ -221,7 +218,7 @@ describe('Network manager', function () {
 
     // This test performs random actions in the real system and compares it's state with a simplified model.
     // TODO(dmaretskyi): Run this on with actual webrtc and signal servers.
-    it('property-based tests', async () => {
+    it('property-based tests', async function () {
 
       /**
        * The simplified model of the system.
@@ -266,11 +263,11 @@ describe('Network manager', function () {
       };
 
       class CreatePeerCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(readonly peerId: PublicKey) { }
+        constructor (readonly peerId: PublicKey) { }
 
         check = (model: Model) => !model.peers.has(this.peerId);
 
-        async run(model: Model, real: Real) {
+        async run (model: Model, real: Real) {
           model.peers.add(this.peerId);
 
           const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
@@ -287,11 +284,11 @@ describe('Network manager', function () {
       }
 
       class RemovePeerCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(readonly peerId: PublicKey) { }
+        constructor (readonly peerId: PublicKey) { }
 
         check = (model: Model) => model.peers.has(this.peerId);
 
-        async run(model: Model, real: Real) {
+        async run (model: Model, real: Real) {
           model.peers.delete(this.peerId);
           model.joinedPeers.delete(this.peerId);
 
@@ -306,11 +303,11 @@ describe('Network manager', function () {
       }
 
       class JoinTopicCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(readonly peerId: PublicKey) { }
+        constructor (readonly peerId: PublicKey) { }
 
         check = (model: Model) => model.peers.has(this.peerId) && !model.joinedPeers.has(this.peerId);
 
-        async run(model: Model, real: Real) {
+        async run (model: Model, real: Real) {
           model.joinedPeers.add(this.peerId);
 
           const peer = real.peers.get(this.peerId)!;
@@ -336,11 +333,11 @@ describe('Network manager', function () {
       }
 
       class LeaveTopicCommand implements fc.AsyncCommand<Model, Real> {
-        constructor(readonly peerId: PublicKey) { }
+        constructor (readonly peerId: PublicKey) { }
 
         check = (model: Model) => model.peers.has(this.peerId) && model.joinedPeers.has(this.peerId);
 
-        async run(model: Model, real: Real) {
+        async run (model: Model, real: Real) {
           model.joinedPeers.delete(this.peerId);
 
           const peer = real.peers.get(this.peerId)!;
@@ -416,8 +413,8 @@ describe('Network manager', function () {
   }).timeout(30_000);
 });
 
-function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: boolean, signalUrl?: string, getTransportFactory: () => Promise<TransportFactory> }) {
-  it('two peers connect to each other', async () => {
+function sharedTests ({ inMemory, signalUrl, getTransportFactory }: { inMemory: boolean, signalUrl?: string, getTransportFactory: () => Promise<TransportFactory> }) {
+  it('two peers connect to each other', async function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -444,7 +441,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     });
   }).timeout(10_000).retries(10);
 
-  it('join and leave swarm', async () => {
+  it('join and leave swarm', async function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -480,7 +477,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     log('Peer2 destroyed');
   }).timeout(10_000).retries(10);
 
-  it('join and leave swarm and reconnect', async () => {
+  it('join and leave swarm and reconnect', async function () {
     const topic = PublicKey.random();
     const peer1Id = PublicKey.random();
     const peer2Id = PublicKey.random();
@@ -529,7 +526,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     log('Peer2 destroyed');
   }).timeout(10_000).retries(10);
 
-  it('join 2 swarms', async () => {
+  it('join 2 swarms', async function () {
     const peerId = PublicKey.random();
     const plugin1 = new TestProtocolPlugin(peerId.asBuffer());
     const plugin2 = new TestProtocolPlugin(peerId.asBuffer());
@@ -562,7 +559,7 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
     ]);
   });
 
-  it('two swarms at the same time', async () => {
+  it('two swarms at the same time', async function () {
     const topicA = PublicKey.random();
     const topicB = PublicKey.random();
     const peerA1Id = PublicKey.random();
@@ -604,4 +601,4 @@ function sharedTests({ inMemory, signalUrl, getTransportFactory }: { inMemory: b
       expect(receivedB[1]).toBe('Foo B');
     });
   });
-};
+}
