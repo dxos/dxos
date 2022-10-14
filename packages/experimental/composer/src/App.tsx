@@ -15,21 +15,7 @@ const clientConfig = {
     services: {
       signal: {
         server: 'wss://halo.dxos.org/.well-known/dx/signal'
-      },
-      ice: [
-        { urls: 'stun:demo.kube.dxos.org:3478' },
-        {
-          urls: 'turn:demo.kube.dxos.org:3478',
-          username: 'dxos',
-          credential: 'dxos'
-        },
-        { urls: 'stun:kube.dxos.org:3478' },
-        {
-          urls: 'turn:kube.dxos.org:3478',
-          username: 'dxos',
-          credential: 'dxos'
-        }
-      ]
+      }
     }
   }
 };
