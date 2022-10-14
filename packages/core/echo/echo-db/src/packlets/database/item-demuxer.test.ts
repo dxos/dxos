@@ -63,7 +63,7 @@ describe('Item demuxer', function () {
     // Wait for mutations to be processed.
     //
 
-    await updatedItems;
+    await updatedItems();
 
     //
     // Update item (causes mutation to be propagated).
@@ -86,7 +86,7 @@ describe('Item demuxer', function () {
     // TODO(burdon): Should trigger itemManager update?
     //
 
-    await updated;
+    await updated();
 
     log('Properties', model.keys);
     expect(model.keys.length).toBe(1);

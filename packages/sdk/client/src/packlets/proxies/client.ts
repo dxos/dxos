@@ -33,8 +33,8 @@ import { DXOS_VERSION } from './version';
 const log = debug('dxos:client-proxy');
 
 // TODO(wittjosiah): Should be kube.local or equivalent.
-const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967';
-const IFRAME_ID = '__DXOS_VAULT__';
+const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967/headless.html';
+const IFRAME_ID = '__DXOS_CLIENT__';
 const EXPECTED_CONFIG_VERSION = 1;
 
 export const defaultConfig: ConfigProto = { version: 1 };
@@ -42,6 +42,9 @@ export const defaultConfig: ConfigProto = { version: 1 };
 export const defaultTestingConfig: ConfigProto = {
   version: 1,
   runtime: {
+    client: {
+      mode: Runtime.Client.Mode.LOCAL
+    },
     services: {
       signal: {
         server: 'ws://localhost:4000/.well-known/dx/signal'
@@ -55,11 +58,6 @@ export interface ClientOptions {
    * Only used when remote=true.
    */
   rpcPort?: RpcPort
-
-  /**
-   *
-   */
-  serviceProvider?: ClientServiceProvider
 
   /**
    *
@@ -170,6 +168,10 @@ export class Client {
     return this._serviceProvider.services;
   }
 
+  private get timeout () {
+    return this._options.timeout ?? 10_000;
+  }
+
   /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
@@ -180,11 +182,10 @@ export class Client {
       return;
     }
 
-    const t = this._options.timeout ?? 10000;
     const timeout = setTimeout(() => {
       // TODO(burdon): Tie to global error handling (or event).
-      throw new TimeoutError(`Initialize timed out after ${t / 1000}s.`);
-    }, t);
+      throw new TimeoutError(`Initialize timed out after ${this.timeout / 1000}s.`);
+    }, this.timeout);
 
     if (this._mode === Runtime.Client.Mode.REMOTE) {
       await this.initializeRemote(onProgressCallback);
@@ -221,7 +222,10 @@ export class Client {
     }
 
     log('Creating client proxy.');
-    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? this.initializeIFramePort());
+    this._serviceProvider = new ClientServiceProxy(
+      this._options.rpcPort ?? this.initializeIFramePort(),
+      this.timeout / 2
+    );
     await this._serviceProvider.open(onProgressCallback);
   }
 

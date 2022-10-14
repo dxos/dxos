@@ -21,7 +21,7 @@ import { NetworkManager } from './network-manager';
 import { createProtocolFactory } from './protocol-factory';
 import { TestProtocolPlugin, testProtocolProvider } from './testing/test-protocol';
 import { FullyConnectedTopology, StarTopology, Topology } from './topology';
-import { createWebRTCTransportFactory, createWebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory } from './transport';
+import { createWebRTCTransportFactory, WebRTCTransportProxyFactory, inMemoryTransportFactory, TransportFactory } from './transport';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -279,7 +279,7 @@ export const webRTCTests = ({ signalUrl }: { signalUrl?: string } = {}) => {
 };
 
 export const webRTCProxyTests = ({ signalUrl, bridgeService }: { signalUrl: string, bridgeService: BridgeService }) => {
-  const transportFactory = createWebRTCTransportProxyFactory({ bridgeService });
+  const transportFactory = new WebRTCTransportProxyFactory().setBridgeService(bridgeService);
 
   sharedTests({ inMemory: false, signalUrl, transportFactory });
 };
@@ -364,7 +364,7 @@ export function inMemoryTests () {
           }
         });
 
-        await done;
+        await done();
       }));
     }));
   });

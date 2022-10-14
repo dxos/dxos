@@ -128,19 +128,18 @@ export class FeedDescriptor {
    * Defines the real path where the Hypercore is going
    * to work with the RandomAccessStorage specified.
    */
-
   private _createStorage (dir = ''): (name: string) => HypercoreFile {
     return (name) => {
-      const file = this._directory.createOrOpenFile(`${dir}/${name}`);
+      const file = this._directory.getOrCreateFile(`${dir}/${name}`);
       // Separation between our internal File API and Hypercore's.
       return {
         read: callbackify(file.read.bind(file)),
         write: callbackify(file.write.bind(file)),
-        del: callbackify(file.truncate.bind(file)),
+        del: callbackify(file.del.bind(file)),
         stat: callbackify(file.stat.bind(file)),
         close: callbackify(file.close.bind(file)),
-        destroy: callbackify(file.delete.bind(file))
-      } as HypercoreFile;
+        destroy: callbackify(file.destroy.bind(file))
+      } as any as HypercoreFile;
     };
   }
 

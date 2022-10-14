@@ -17,6 +17,7 @@ export default defineConfig({
   optimizeDeps: {
     force: true,
     include: [
+      '@dxos/async',
       '@dxos/client',
       '@dxos/keys',
       '@dxos/log',
@@ -27,6 +28,7 @@ export default defineConfig({
       '@dxos/react-components',
       '@dxos/react-toolkit',
       '@dxos/rpc',
+      '@dxos/network-manager',
       '@dxos/rpc-tunnel',
       '@dxos/util'
     ]
@@ -68,5 +70,8 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  worker: {
+    plugins: [dxosPlugin()]
+  }
 });
