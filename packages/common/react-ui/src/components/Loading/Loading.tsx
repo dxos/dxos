@@ -2,18 +2,34 @@
 // Copyright 2022 DXOS.org
 //
 
+import cx from 'classnames';
 import React from 'react';
 
 import { useId } from '../../util/useId';
 
-export const Loading = () => {
+export interface LoadingProps {
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  className?: string
+}
+
+const sizeMap = new Map<string, string>([
+  ['sm', 'w-4 h-4'],
+  ['md', 'w-8 h-8'],
+  ['lg', 'w-12 h-12'],
+  ['xl', 'w-16 h-16']
+]);
+
+export const Loading = ({ size, className }: LoadingProps) => {
   const labelId = useId('loading');
+  const sizeClassName = sizeMap.get(size || 'md');
   return (
-    <div role='status' className='flex justify-center p-4' aria-labelledby={labelId}>
+    <div
+      role='status' className='flex justify-center p-4'
+      aria-labelledby={labelId}>
       <svg
         role='none'
         aria-hidden='true'
-        className='mr-2 w-8 h-8 text-neutral-200 animate-spin dark:text-neutral-600 fill-primary-600'
+        className={cx(sizeClassName, 'text-neutral-200/50 animate-spin dark:text-neutral-600/50 fill-primary-400', className)}
         viewBox='0 0 100 101' fill='none' xmlns='http://www.w3.org/2000/svg'
       >
         <path

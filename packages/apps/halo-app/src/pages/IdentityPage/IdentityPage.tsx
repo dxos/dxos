@@ -11,7 +11,7 @@ import { QRCode } from '@dxos/react-components';
 
 export const IdentityPage = () => {
   const client = useClient();
-  const profile = useProfile(true);
+  const profile = useProfile();
   const [username, setUsername] = useState(profile?.username ?? '');
 
   return (

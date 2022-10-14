@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React, { createElement, PropsWithChildren } from 'react';
 
 export interface HeadingProps extends React.ComponentProps<'h1'> {
-  level: 1 | 2 | 3 | 4 | 5 | 6
+  level?: 1 | 2 | 3 | 4 | 5 | 6
 }
 
 const levelClassNameMap = new Map<number, string>([
@@ -19,5 +19,6 @@ const levelClassNameMap = new Map<number, string>([
 ]);
 
 export const Heading = ({ level, ...props }: PropsWithChildren<HeadingProps>) => {
-  return createElement(`h${level || 1}`, { ...props, className: cx('font-bold font-display', levelClassNameMap.get(level), props.className) });
+  const resolvedLevel = level || 1;
+  return createElement(`h${resolvedLevel}`, { ...props, className: cx('font-bold font-display', levelClassNameMap.get(resolvedLevel), props.className) });
 };

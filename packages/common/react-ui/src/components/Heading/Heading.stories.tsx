@@ -5,32 +5,34 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { Heading } from './Heading';
+import { templateForComponent } from '../../dev-util';
+import { Heading, HeadingProps } from './Heading';
 
 export default {
-  title: 'react-ui/Heading'
+  title: 'react-ui/Heading',
+  component: Heading
 };
 
-export const Level1 = () => {
-  return <Heading level={1}>Hello</Heading>;
+const Template = ({ children, ...props }: HeadingProps) => {
+  return <Heading {...props}>{children}</Heading>;
 };
 
-export const Level2 = () => {
-  return <Heading level={2}>Hello</Heading>;
-};
+const defaultProps = { level: 1 as const };
 
-export const Level3 = () => {
-  return <Heading level={3}>Hello</Heading>;
-};
+export const Level1 = templateForComponent(Template)(defaultProps);
+Level1.args = { level: 1, children: 'Hello' };
 
-export const Level4 = () => {
-  return <Heading level={4}>Hello</Heading>;
-};
+export const Level2 = templateForComponent(Template)(defaultProps);
+Level2.args = { level: 2, children: 'Hello' };
 
-export const Level5 = () => {
-  return <Heading level={5}>Hello</Heading>;
-};
+export const Level3 = templateForComponent(Template)(defaultProps);
+Level3.args = { level: 3, children: 'Hello' };
 
-export const Level6 = () => {
-  return <Heading level={6}>Hello</Heading>;
-};
+export const Level4 = templateForComponent(Template)(defaultProps);
+Level4.args = { level: 4, children: 'Hello' };
+
+export const Level5 = templateForComponent(Template)(defaultProps);
+Level5.args = { level: 5, children: 'Hello' };
+
+export const Level6 = templateForComponent(Template)(defaultProps);
+Level6.args = { level: 6, children: 'Hello' };

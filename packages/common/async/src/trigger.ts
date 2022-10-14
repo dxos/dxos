@@ -18,18 +18,10 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
   });
 
   const provider = () => promise;
-
   const resolver = (value: T) => callback(value);
 
   return [provider, resolver];
 }
-
-/**
- * Use `trigger` instead.
- * @deprecated
- */
-// TODO(burdon): Remove.
-export const useValue = trigger;
 
 /**
  * Multiple-use version of `trigger`.
