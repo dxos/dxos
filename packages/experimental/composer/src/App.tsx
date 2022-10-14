@@ -7,10 +7,8 @@ import React from 'react';
 import { ClientProvider } from '@dxos/react-client';
 import { Heading, Loading, Main } from '@dxos/react-ui';
 
-import { Composer } from './components/Composer';
-import { PartyProvider } from './context/PartyProvider';
-import { ProfileProvider } from './context/ProfileProvider';
-import { TextItemProvider } from './context/TextItemProvider';
+import { Composer } from './components';
+import { PartyProvider, ProfileProvider, TextItemProvider } from './context';
 
 const clientConfig = {
   runtime: {

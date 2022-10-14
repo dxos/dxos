@@ -11,7 +11,7 @@ import { WebrtcProvider } from 'y-webrtc';
 
 import { defaultFocus } from '@dxos/react-ui';
 
-import { useTextItem } from '../context/TextItemProvider';
+import { useTextItem } from '../context';
 
 export const Composer = () => {
   const { item } = useTextItem();
