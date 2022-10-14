@@ -1835,16 +1835,12 @@ importers:
   packages/experimental/composer:
     specifiers:
       '@dxos/client': workspace:*
-      '@dxos/credentials': workspace:*
-      '@dxos/protocols': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/text-model': workspace:*
       '@dxos/vite-plugin': workspace:*
       '@tiptap/core': 2.0.0-beta.199
-      '@tiptap/extension-bubble-menu': 2.0.0-beta.199
       '@tiptap/extension-collaboration': 2.0.0-beta.199
-      '@tiptap/extension-floating-menu': 2.0.0-beta.199
       '@tiptap/react': 2.0.0-beta.199
       '@tiptap/starter-kit': 2.0.0-beta.199
       '@types/react': ^18.0.21
@@ -1852,43 +1848,35 @@ importers:
       '@vitejs/plugin-react': ^2.0.1
       buffer: ^6.0.3
       classnames: ^2.3.2
-      prosemirror-model: ^1.18.1
-      prosemirror-state: ^1.4.1
-      prosemirror-view: ^1.29.0
+      prosemirror-model: ^1.7.1
+      prosemirror-view: ^1.9.10
       react: ^18.2.0
       react-dom: ^18.2.0
       vite: 3.0.9
       vite-plugin-pwa: ^0.12.4
-      y-prosemirror: ^1.2.0
       y-protocols: ^1.0.5
       y-webrtc: ^10.2.3
       yjs: ^13.5.41
     dependencies:
-      '@dxos/credentials': link:../../core/halo/credentials
+      '@dxos/client': link:../../sdk/client
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/text-model': link:../../core/echo/text-model
       '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@tiptap/core': 2.0.0-beta.199
-      '@tiptap/extension-bubble-menu': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/extension-collaboration': 2.0.0-beta.199_cqilutfevdyuwlti5pasjm52fe
-      '@tiptap/extension-floating-menu': 2.0.0-beta.199_4focsuckzeocqotdxlryrtksam
       '@tiptap/react': 2.0.0-beta.199_la4wgmshzfaebh4rq27xtbsa3y
       '@tiptap/starter-kit': 2.0.0-beta.199
       buffer: 6.0.3
       classnames: 2.3.2
       prosemirror-model: 1.18.1
-      prosemirror-state: 1.4.1
       prosemirror-view: 1.29.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      y-prosemirror: 1.2.0_cq3c4vt7cxoxfm3ze5dkz3beye
       y-protocols: 1.0.5
       y-webrtc: 10.2.3
       yjs: 13.5.41
     devDependencies:
-      '@dxos/client': link:../../sdk/client
-      '@dxos/protocols': link:../../core/protocols
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
       '@vitejs/plugin-react': 2.0.1_vite@3.0.9
@@ -34673,12 +34661,6 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
 
-  /typescript/4.8.4:
-    resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-    dev: false
-
   /uc.micro/1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
     dev: true
@@ -36468,24 +36450,6 @@ packages:
       prosemirror-model: 1.18.1
       prosemirror-state: 1.4.1
       prosemirror-view: 1.29.0
-      y-protocols: 1.0.5
-      yjs: 13.5.41
-    dev: false
-
-  /y-prosemirror/1.2.0_cq3c4vt7cxoxfm3ze5dkz3beye:
-    resolution: {integrity: sha512-t3uxuX4HIkb1GNt8jV+dplRbNH2OmQD/BNeCCbjLD3Mq0o6JEXxHedv58ZIPFDE6ma24jljlL+u8pGvN6B37XQ==}
-    peerDependencies:
-      prosemirror-model: ^1.7.1
-      prosemirror-state: ^1.2.3
-      prosemirror-view: ^1.9.10
-      y-protocols: ^1.0.1
-      yjs: ^13.5.38
-    dependencies:
-      lib0: 0.2.52
-      prosemirror-model: 1.18.1
-      prosemirror-state: 1.4.1
-      prosemirror-view: 1.29.0
-      typescript: 4.8.4
       y-protocols: 1.0.5
       yjs: 13.5.41
     dev: false

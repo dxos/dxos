@@ -3,40 +3,33 @@
 //
 
 import Collaboration from '@tiptap/extension-collaboration';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import cx from 'classnames';
 import React, { useEffect } from 'react';
 import { WebrtcProvider } from 'y-webrtc';
-// import * as Y from 'yjs';
 
-// import { useProfile } from '../context/ProfileProvider';
+import { defaultFocus } from '@dxos/react-ui';
+
 import { useTextItem } from '../context/TextItemProvider';
 
-interface ComposerProps {
-  id?: string
-}
-
-// const ydoc = new Y.Doc();
-// const provider = new WebrtcProvider('example-document', ydoc);
-
-export const Composer = (props: ComposerProps) => {
+export const Composer = () => {
   const { item } = useTextItem();
-  // const { profile } = useProfile();
-  // const username = profile!.username || profile!.publicKey.truncate(8);
 
   useEffect(() => {
-    if (!item) {
-      return;
-    }
-
-    const provider = new WebrtcProvider(item.id, item.model.doc);
+    item && new WebrtcProvider(item.id, item.model.doc);
   }, [item]);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ history: false }),
       Collaboration.configure({ document: item?.model.doc })
-    ]
+    ],
+    editorProps: {
+      attributes: {
+        class: cx(defaultFocus, 'bg-neutral-50/25 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full p-4 dark:bg-neutral-700/25 dark:border-neutral-600 dark:text-white')
+      }
+    }
   }, [item]);
 
   return (

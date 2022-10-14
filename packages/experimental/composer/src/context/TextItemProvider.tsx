@@ -61,7 +61,8 @@ export const TextItemProvider = (props: PropsWithChildren<{}>) => {
       {item ? (
         <>
           {props.children}
-          <Button onClick={onClose} className='fixed bottom-2 left-2'>Close document</Button>
+          <Button onClick={onClose} className='fixed bottom-2 left-2'>Close
+            document</Button>
         </>
       ) : (
         <Group

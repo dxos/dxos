@@ -13,7 +13,8 @@ import React, {
   useState
 } from 'react';
 
-import { InvitationDescriptor, Party } from '@dxos/client';
+import { InvitationDescriptor } from '@dxos/client';
+import type { Party } from '@dxos/client';
 import {
   useClient,
   usePartyInvitations,
@@ -54,7 +55,7 @@ export const PartyProvider = (props: PropsWithChildren<{}>) => {
     setLoading(true);
     void client.echo
       .createParty()
-      .then((party) => setParty(party))
+      .then((party: Party) => setParty(party))
       .finally(() => setLoading(false));
   }, [client]);
 

@@ -1,4 +1,3 @@
-
 //
 // Copyright 2022 DXOS.org
 //
@@ -6,15 +5,15 @@
 import React, {
   createContext,
   PropsWithChildren,
+  useContext,
   useEffect,
-  useMemo,
-  useContext
+  useMemo
 } from 'react';
 
 import { useClient, useProfile as useNaturalProfile } from '@dxos/react-client';
 import { Loading } from '@dxos/react-ui';
 
-export type Profile = ReturnType<typeof useNaturalProfile>
+export type Profile = ReturnType<typeof useNaturalProfile>;
 
 export interface ProfileContextValue {
   profile?: Profile
