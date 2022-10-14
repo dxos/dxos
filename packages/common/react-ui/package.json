@@ -10,12 +10,17 @@
     "dist",
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/roboto-flex": "^4.5.2",
+    "@fontsource/space-grotesk": "^4.5.10",
     "@headlessui/react": "^1.7.3",
     "@radix-ui/react-dialog": "^1.0.0",
     "@tailwindcss/forms": "^0.5.3",
+    "alea": "^1.0.1",
     "autoprefixer": "^10.4.12",
     "classnames": "^2.3.2",
     "phosphor-react": "^1.4.1",
@@ -23,15 +28,28 @@
     "tailwindcss": "^3.1.8",
     "tailwindcss-radix": "^2.6.0"
   },
-  "devDependencies": {
+  "peerDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
-  "peerDependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
-  },
-  "publishConfig": {
-    "access": "public"
+  "devDependencies": {
+    "@babel/core": "^7.18.13",
+    "@dxos/vite-plugin": "workspace:*",
+    "@storybook/addon-actions": "^6.5.10",
+    "@storybook/addon-essentials": "^6.5.10",
+    "@storybook/addon-interactions": "^6.5.10",
+    "@storybook/addon-links": "^6.5.10",
+    "@storybook/builder-vite": "^0.2.2",
+    "@storybook/react": "^6.5.10",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "require-from-string": "^2.0.2",
+    "storybook-dark-mode": "^1.1.2",
+    "typescript": "^4.7.2",
+    "vite": "3.0.9",
+    "webpack": "^5.74.0"
   }
 }
