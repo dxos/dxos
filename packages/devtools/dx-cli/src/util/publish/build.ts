@@ -23,8 +23,8 @@ export const build = ({ verbose }: BuildArgs, { log, module }: BuildParams) => {
   // Build with configuration.
   const { status } = spawnSync(command, args, {
     env: {
-      ...process.env
-      // CONFIG_DYNAMIC: 'true'
+      ...process.env,
+      CONFIG_DYNAMIC: 'true'
     },
     stdio: verbose ? 'inherit' : undefined
   });
