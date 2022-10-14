@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
@@ -14,12 +13,7 @@ import { TestBuilder } from './testing';
 // TODO(burdon): Exception types.
 // TODO(burdon): patchBufferCodec => createEncoding (@dxos/hypercore)
 
-chai.use(chaiAsPromised);
-
 describe('FeedStore', function () {
-
-  // TODO(burdon): Test persistent Node storage (and clean-up after test).
-
   it('Creates feeds.', async function () {
     const feedStore = new TestBuilder().createFeedStore();
 

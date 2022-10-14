@@ -7,6 +7,7 @@ import type { Hypercore, HypercoreOptions } from 'hypercore';
 import { RandomAccessStorageConstructor } from 'random-access-storage';
 
 import { sha256, Signer } from '@dxos/crypto';
+import { failUndefined } from '@dxos/debug';
 import { createCrypto } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -37,9 +38,10 @@ export class FeedFactory {
     signer,
     options
   }: FeedFactoryOptions) {
-    this._root = root;
-    this._signer = signer;
+    this._root = root ?? failUndefined();
+    this._signer = signer ?? failUndefined();
     this._options = options;
+
     this._storage = (publicKey: PublicKey) => (filename) => {
       const dir = this._root.createDirectory(publicKey.toHex());
       const { type, native } = dir.getOrCreateFile(filename);

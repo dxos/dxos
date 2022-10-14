@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
-import { PublicKey, PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/protocols';
 
 import { createBatchStream } from './create-batch-stream';
@@ -30,13 +30,6 @@ export type FeedBlock<T> = {
   path: string
   data: T
 }
-
-//
-// TODO(burdon): Redesign FeedStore:
-// - Event handlers.
-// - Remove path and metadata.
-// - Construction separate from open.
-//
 
 export type MessageSelector<T> = (candidates: FeedBlock<T>[]) => number | undefined
 
@@ -288,6 +281,7 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
         // TODO(burdon): Add feedKey (FeedMessage)?
         yield message;
       }
+
       await this._waitForData();
     }
   }

@@ -5,6 +5,7 @@
 import { Hypercore } from 'hypercore';
 
 import { Event } from '@dxos/async';
+import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
@@ -29,7 +30,7 @@ export class FeedStore {
   constructor ({
     factory
   }: FeedStoreOptions) {
-    this._factory = factory;
+    this._factory = factory ?? failUndefined();
   }
 
   get size () {

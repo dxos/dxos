@@ -21,7 +21,9 @@ export type CreateBatchStreamOptions = {
   tail?: boolean
 }
 
-// TODO(burdon): This function is WAY too long.
+/**
+ * @deprecated
+ */
 export const createBatchStream = (
   feed: FeedDescriptor,
   opts: CreateBatchStreamOptions = {}

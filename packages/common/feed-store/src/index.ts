@@ -4,4 +4,5 @@
 
 export * from './feed-factory';
 export * from './feed-store';
+export * from './feed-store-iterator';
 export * from './feed-wrapper';
