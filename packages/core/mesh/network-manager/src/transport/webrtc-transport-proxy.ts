@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
@@ -9,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionState, BridgeEvent, BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import assert from 'assert';
 
 import { SignalMessage } from '../signal';
 import { Transport, TransportFactory, TransportOptions } from './transport';
@@ -50,7 +51,11 @@ export class WebRTCTransportProxy implements Transport {
         });
 
         this._params.stream.on('data', async (data: Uint8Array) => {
-          this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data })
+          try {
+            await this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data });
+          } catch(err) {
+            log.catch(err)
+          }
         });
       },
       (error) => log.catch(error)
@@ -100,7 +105,7 @@ export class WebRTCTransportProxy implements Transport {
     this._serviceStream.close();
     try {
       await this._params.bridgeService.close({ proxyId: this._proxyId });
-    } catch(err: any) {
+    } catch (err: any) {
       log.catch(err);
     }
     this.closed.emit();
@@ -110,7 +115,7 @@ export class WebRTCTransportProxy implements Transport {
   /**
    * Called when underlying proxy service becomes unavailable.
    */
-  async forceClose() {
+  forceClose () {
     this._serviceStream.close();
     this.closed.emit();
     this._closed = true;

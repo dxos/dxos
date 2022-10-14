@@ -6,8 +6,8 @@ import { Config } from '@dxos/config';
 import { todo } from '@dxos/debug';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
 
 import { createStorageObjects } from '../storage';
@@ -23,7 +23,7 @@ type ClientServiceHostParams = {
   config: Config
   modelFactory?: ModelFactory
   transportFactory?: TransportFactory
-  signer?: HaloSigner;
+  signer?: HaloSigner
 }
 
 /**
@@ -40,7 +40,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     config,
     modelFactory = new ModelFactory().registerModel(ObjectModel),
     signer,
-    transportFactory,
+    transportFactory
   }: ClientServiceHostParams) {
     this._config = config;
     this._signer = signer;
@@ -53,7 +53,7 @@ export class ClientServiceHost implements ClientServiceProvider {
     const networkingEnabled = this._config.get('runtime.services.signal.server');
 
     const networkManager = new NetworkManager({
-      signalManager: networkingEnabled 
+      signalManager: networkingEnabled
         ? new WebsocketSignalManager([this._config.get('runtime.services.signal.server')!])
         : new MemorySignalManager(SIGNAL_CONTEXT),
       transportFactory: transportFactory ?? (

@@ -25,7 +25,7 @@ export class WebRTCTransport implements Transport {
   readonly connected = new Event();
   readonly errors = new ErrorStream();
 
-  constructor(
+  constructor (
     private readonly _initiator: boolean,
     private readonly _stream: NodeJS.ReadWriteStream,
     private readonly _ownId: PublicKey,
@@ -74,31 +74,31 @@ export class WebRTCTransport implements Transport {
     });
   }
 
-  get remoteId() {
+  get remoteId () {
     return this._remoteId;
   }
 
-  get sessionId() {
+  get sessionId () {
     return this._sessionId;
   }
 
-  get peer() {
+  get peer () {
     return this._peer;
   }
 
-  async signal(signal: Signal) {
+  async signal (signal: Signal) {
     assert(this._peer, 'Connection not ready to accept signals.');
     assert(signal.json, 'Signal message must contain signal data.');
     this._peer.signal(JSON.parse(signal.json));
   }
 
-  async close() {
+  async close () {
     await this._disconnectStreams();
     this._peer!.destroy();
     log('Closed.');
   }
 
-  private async _disconnectStreams() {
+  private async _disconnectStreams () {
     // TODO(rzadp): Find a way of unpiping this?
     this._stream.unpipe?.(this._peer)?.unpipe?.(this._stream);
   }

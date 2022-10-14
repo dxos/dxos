@@ -386,7 +386,7 @@ importers:
       '@dxos/protocol-plugin-rpc': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/rpc': workspace:*
-      '@koush/wrtc': 0.5.3
+      '@koush/wrtc': ^0.5.3
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
@@ -3217,39 +3217,6 @@ importers:
       chai: 4.3.4
       chai-as-promised: 7.1.1_chai@4.3.4
       protobufjs: 6.11.2
-
-  packages/sdk/vault:
-    specifiers:
-      '@dxos/async': workspace:*
-      '@dxos/client': workspace:*
-      '@dxos/client-services': workspace:*
-      '@dxos/codec-protobuf': workspace:*
-      '@dxos/config': workspace:*
-      '@dxos/log': workspace:*
-      '@dxos/network-manager': workspace:*
-      '@dxos/protocols': workspace:*
-      '@dxos/react-async': workspace:*
-      '@dxos/react-components': workspace:*
-      '@dxos/rpc': workspace:*
-      '@dxos/rpc-tunnel': workspace:*
-      '@dxos/vite-plugin': workspace:*
-      vite: 3.0.9
-    dependencies:
-      '@dxos/async': link:../../common/async
-      '@dxos/client': link:../client
-      '@dxos/client-services': link:../client-services
-      '@dxos/codec-protobuf': link:../../common/codec-protobuf
-      '@dxos/config': link:../config
-      '@dxos/log': link:../../common/log
-      '@dxos/network-manager': link:../../core/mesh/network-manager
-      '@dxos/protocols': link:../../core/protocols
-      '@dxos/react-async': link:../../common/react-async
-      '@dxos/react-components': link:../react-components
-      '@dxos/rpc': link:../../core/mesh/rpc
-      '@dxos/rpc-tunnel': link:../../core/mesh/rpc-tunnel
-    devDependencies:
-      '@dxos/vite-plugin': link:../../../tools/vite-plugin
-      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
   tools/beast:
     specifiers:

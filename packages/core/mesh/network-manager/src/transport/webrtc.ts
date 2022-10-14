@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 let wrtc: any = null;
 
 try {

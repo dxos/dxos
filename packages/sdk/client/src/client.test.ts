@@ -10,9 +10,11 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
 import { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
+import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
 import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -21,8 +23,6 @@ import { afterTest } from '@dxos/testutils';
 import { TextModel } from '@dxos/text-model';
 
 import { Client } from './packlets/proxies';
-import { Config } from '@dxos/config';
-import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 
 describe('Client', function () {
   //
@@ -357,14 +357,14 @@ describe('Client', function () {
 
   describe('remote - wrtc proxy', function () {
     testSuite(async () => {
-      const transportFactory = new WebRTCTransportProxyFactory()
+      const transportFactory = new WebRTCTransportProxyFactory();
       transportFactory.setBridgeService(new WebRTCTransportService());
 
       const [proxyPort, hostPort] = createLinkedPorts();
       const hostClient = new ClientServiceHost({
         config: new Config({}),
         modelFactory: new ModelFactory().registerModel(ObjectModel),
-        transportFactory,
+        transportFactory
       });
       await hostClient.open();
       afterTest(() => hostClient.close());

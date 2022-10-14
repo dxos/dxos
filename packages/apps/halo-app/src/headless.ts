@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 import { WebRTCTransportService } from '@dxos/network-manager';
-import { createProtoRpcPeer } from '@dxos/rpc';
 import { schema } from '@dxos/protocols';
 import { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { createProtoRpcPeer } from '@dxos/rpc';
+import { createIFramePort, PortMuxer } from '@dxos/rpc-tunnel';
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
@@ -33,7 +33,7 @@ if (typeof SharedWorker !== 'undefined') {
         BridgeService: transportService as BridgeService
       },
       port: wrtcPort
-    })
+    });
 
     await peer.open();
   })();
