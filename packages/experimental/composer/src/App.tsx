@@ -15,7 +15,7 @@ const configProvider = async () => new Config(await Dynamics(), Defaults());
 
 export const App = () => {
   return (
-    <ClientProvider config={clientConfig} fallback={<ProviderFallback message='Starting DXOS client…' />}>
+    <ClientProvider config={configProvider} fallback={<ProviderFallback message='Starting DXOS client…' />}>
       <ProfileProvider>
         <PartyProvider>
           <TextItemProvider>
