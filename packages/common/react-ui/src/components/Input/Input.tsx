@@ -11,11 +11,12 @@ import React, {
   useState
 } from 'react';
 
-import { useDebounce } from '../../hooks/useDebounce';
+import { useDebounce } from '../../hooks';
 import { defaultDisabled, defaultFocus } from '../../styles';
 import { useId } from '../../util/useId';
 
-export interface InputProps extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange'> {
+export interface InputProps
+  extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange'> {
   label: ReactNode
   labelVisuallyHidden?: boolean
   description?: ReactNode
