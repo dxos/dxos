@@ -7,11 +7,10 @@ import React, {
   ChangeEvent,
   ReactNode,
   useCallback,
-  useEffect,
-  useState
+  useState,
+  useTransition
 } from 'react';
 
-import { useDebounce } from '../../hooks';
 import { defaultDisabled, defaultFocus } from '../../styles';
 import { useId } from '../../util/useId';
 
@@ -41,17 +40,22 @@ export const Input = ({
   const inputId = useId('input');
   const descriptionId = useId('input-description');
 
+  const [_isPending, startTransition] = useTransition();
+
   const [internalValue, setInternalValue] = useState<string>(
     initialValue?.toString() || ''
   );
-  const debouncedValue = useDebounce(internalValue, 200);
 
   const onInternalChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setInternalValue(e.target?.value || ''),
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const nextValue = e.target?.value || '';
+      setInternalValue(nextValue);
+      onChange && startTransition(() => {
+        onChange(nextValue);
+      });
+    },
     [onChange]
   );
-
-  useEffect(() => (onChange && onChange(debouncedValue)), [debouncedValue, onChange]);
 
   return (
     <div {...props} role='none'>
