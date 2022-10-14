@@ -107,15 +107,14 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
+      - run: pnpm nx build dx-cli
       - run:
-          command: pnpm nx bundle halo-app
+          name: Deploy HALO
+          working_directory: ./packages/apps/halo-app
+          command: ../../devtools/dx-cli/bin/run app publish --verbose
           environment:
-            NODE_OPTIONS: --max_old_space_size=8198
-      - run:
-          name: "Deploy HALO"
-          command: ./node_modules/.bin/netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_ACCESS_TOKEN --prod --dir apps/halo/out/halo
-          environment:
-            NETLIFY_SITE_ID: 8ba86553-e00c-4694-bab5-45f973a97011
+            DX_CONFIG: ../../devtools/dx-cli/config/config.yml
+            NODE_OPTIONS: --max_old_space_size=3072
 
   #
   # Nightly test run without Nx cache.
@@ -155,7 +154,7 @@ workflows:
           filters:
             branches:
               only:
-                - production
+                - release
           context:
             - Github
             - Netlify

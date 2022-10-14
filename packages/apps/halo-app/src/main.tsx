@@ -4,10 +4,9 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 // import debug from 'debug'
 // import { log } from '@dxos/log'
-
-import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 // debug.enable('dxos:*')
 // log.config.filter='debug'
