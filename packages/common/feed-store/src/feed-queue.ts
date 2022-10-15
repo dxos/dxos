@@ -102,7 +102,7 @@ export class FeedQueue<T> {
       // console.log('peeked', String(value), done);
 
       if (done) {
-        // NOTE: Only called if live = false.
+        // NOTE: Only called if live=false.
         throw new Error('No more blocks.');
       }
 

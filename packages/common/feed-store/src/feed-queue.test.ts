@@ -11,6 +11,9 @@ import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { TestBuilder } from './testing';
 
+// TODO(burdon): Break into smaller test with larger stress test.
+// TODO(burdon): Move codec into iterators.
+
 describe('FeedQueue', function () {
   const builder = new TestBuilder();
   const factory = builder.createFeedFactory();
@@ -20,11 +23,8 @@ describe('FeedQueue', function () {
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
-    // TODO(burdon): Break into smaller test with larger stress test.
-    // TODO(burdon): Move codec into iterators.
-
     const start = 5;
-    const numBlocks = 31;
+    const numBlocks = 25;
     const numChunks = 3;
 
     // Create queue.

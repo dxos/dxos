@@ -24,10 +24,12 @@ export type FeedBlock<T> = {
 
 export type FeedBlockSelector<T> = (feeds: FeedBlock<T>[]) => number | undefined
 
+// TODO(burdon): Create single and multi iterator.
+
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
-export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(burdon): Change to FeedBlock.
+export class FeedIterator<T> implements AsyncIterable<number> { // TODO(burdon): Change to FeedBlock.
   private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
 
   private _running = false;
@@ -60,13 +62,6 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(bur
     this._candidateFeeds.set(feed.key, feed);
   }
 
-  // TODO(burdon): Use selectors. Trigger on feed added and on feed append.
-  async nextBlock () {
-    if (this._count < 100) {
-      return ++this._count;
-    }
-  }
-
   /**
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
@@ -77,11 +72,18 @@ export class FeedStoreIterator<T> implements AsyncIterable<number> { // TODO(bur
 
   async * _generator () {
     while (this._running) {
-      const block = await this.nextBlock();
+      const block = await this._nextBlock();
       if (block) {
         log('next'); // TODO(burdon): Count.
         yield block;
       }
+    }
+  }
+
+  // TODO(burdon): Use selectors. Trigger on feed added and on feed append.
+  async _nextBlock () {
+    if (this._count < 100) {
+      return ++this._count;
     }
   }
 }
