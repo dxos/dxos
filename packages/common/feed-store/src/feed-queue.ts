@@ -21,6 +21,8 @@ export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
 };
 
+export type FeedQueueOptions = {}
+
 /**
  * Async queue using an AsyncIterator created from a hypercore.
  */
@@ -31,7 +33,8 @@ export class FeedQueue<T> {
   private _nextSeq = -1;
 
   constructor (
-    private readonly _feed: FeedWrapper
+    private readonly _feed: FeedWrapper,
+    private readonly _options: FeedQueueOptions = {}
   ) {}
 
   get opened (): boolean {
@@ -88,7 +91,6 @@ export class FeedQueue<T> {
   /**
    * Get the block at the head of the queue without removing it.
    */
-  // TODO(burdon): Timeout in options.
   async peek (): Promise<FeedBlock<T>> {
     if (!this.opened) {
       throw new Error('Not open'); // TODO(burdon): Common error format?
@@ -98,6 +100,7 @@ export class FeedQueue<T> {
       // console.log('peeking...', this._feed.properties.length);
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
       // console.log('peeked', String(value), done);
+
       if (done) {
         // NOTE: Only called if live = false.
         throw new Error('No more blocks.');

@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
-import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
@@ -21,7 +20,7 @@ describe('FeedQueue', function () {
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
-    // TODO(burdon): Break into smaller test with stress test.
+    // TODO(burdon): Break into smaller test with larger stress test.
     // TODO(burdon): Move codec into iterators.
 
     const start = 5;
@@ -40,7 +39,7 @@ describe('FeedQueue', function () {
         const batch = async (n: number) => {
           console.log(`batch[${n}]`);
           for (const _ of Array.from(Array(n))) {
-            const data = `test-${String(++count).padStart(2, '0')}`;
+            const data = `test-${String(count++).padStart(2, '0')}`;
             const seq = await feed.append(data);
             console.log('>>', { seq, data });
             await sleep(faker.datatype.number({ min: 0, max: 100 }));
@@ -67,23 +66,27 @@ describe('FeedQueue', function () {
     setTimeout(async () => {
       {
         const { seq, data } = await queue.peek();
-        log('peek', { block: seq, data: String(data) });
+        expect(seq).to.eq(start);
+        expect(data).not.to.be.undefined;
       }
 
       {
         const { seq, data } = await queue.peek();
-        log('peek', { block: seq, data: String(data) });
+        expect(seq).to.eq(start);
+        expect(data).not.to.be.undefined;
       }
 
       {
         const { seq, data } = await queue.pop();
-        log('pop', { block: seq, data: String(data) });
+        expect(seq).to.eq(start);
+        expect(data).not.to.be.undefined;
         received();
       }
 
       {
         const { seq, data } = await queue.peek();
-        log('peek', { block: seq, data: String(data) });
+        expect(seq).to.eq(start + 1);
+        expect(data).not.to.be.undefined;
       }
 
       // Read until end.
