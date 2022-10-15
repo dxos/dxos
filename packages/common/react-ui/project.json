@@ -26,6 +26,20 @@
           "packages/common/react-ui/src/**/*.{js,jsx,ts,tsx}"
         ]
       }
+    },
+    "storybook": {
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "uiFramework": "@storybook/react",
+        "config": {
+          "configFolder": "packages/common/react-ui/.storybook"
+        }
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
     }
   }
 }
