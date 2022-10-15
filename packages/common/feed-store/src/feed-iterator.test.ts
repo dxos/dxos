@@ -8,7 +8,8 @@ import faker from 'faker';
 import { latch, sleep } from '@dxos/async';
 import { Timeframe } from '@dxos/protocols';
 
-import { FeedBlock, FeedBlockSelector, FeedIterator } from './feed-iterator';
+import { FeedBlockSelector, FeedIterator } from './feed-iterator';
+import { FeedBlock } from './feed-queue';
 import { TestBuilder } from './testing';
 
 describe('FeedStoreIterator', function () {

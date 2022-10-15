@@ -9,22 +9,15 @@ import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
+import { FeedBlock } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
-/**
- * Hypercore message block.
- */
-export type FeedBlock<T> = {
-  key: PublicKey
-  seq: number
-  sync: boolean
-  path: string // TODO(burdon): ???
-  data: T
-}
-
-export type FeedBlockSelector<T> = (feeds: FeedBlock<T>[]) => number | undefined
-
 // TODO(burdon): Create single and multi iterator.
+
+/**
+ * Select next block.
+ */
+export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined
 
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
