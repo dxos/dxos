@@ -6,7 +6,7 @@
 
 import faker from 'faker';
 
-// TODO(burdon): Replace with proto.
+// TODO(burdon): Replace with proto def.
 export type TestDataItem = { id: number, text: string }
 
 export const createDataItem = (n: number): TestDataItem => ({
@@ -16,6 +16,7 @@ export const createDataItem = (n: number): TestDataItem => ({
 
 type BatchCallback = (next: (num: number) => void, index: number, remaining: number) => void
 
+// TODO(burdon): Factor out.
 export const batch = (cb: BatchCallback, total: number) => {
   let i = 0;
   const f = () => {

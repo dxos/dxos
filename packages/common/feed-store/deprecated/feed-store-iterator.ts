@@ -45,7 +45,7 @@ type FeedState<T> = {
 /**
  * We are using an iterator here instead of a stream to ensure we have full control over how and at what time
  * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
- * (Streams would not be suitable since NodeJS streams have intenal buffer that the system tends to eagerly fill.)
+ * (Streams would not be suitable since Node.js streams have internal buffer that the system tends to eagerly fill.)
  */
 // TODO(marik-d): Add stop method.
 export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {

@@ -10,7 +10,7 @@ import ram from 'random-access-memory';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
-import { createReadable } from './crypto';
+import { createReadable } from './streams';
 import { batch, createDataItem, TestDataItem } from './testing';
 
 // TODO(burdon): Factor out table logger.

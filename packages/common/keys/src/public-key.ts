@@ -170,7 +170,7 @@ export class PublicKey {
   }
 
   /**
-   * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
   // TODO(burdon): Factor out for testing.
   [inspect.custom] (depth: number, options: InspectOptionsStylized) {

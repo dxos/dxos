@@ -5,22 +5,9 @@
 import assert from 'assert';
 import { AbstractValueEncoding, Crypto } from 'hypercore';
 import { callbackify } from 'node:util';
-import { Readable } from 'readable-stream';
-import { Readable as XReadable } from 'streamx';
 
 import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-
-/**
- * Converts streamx.Readable to iterable Readable.
- *
- * https://nodejs.org/dist/v18.9.0/docs/api/stream.html#readablewrapstream
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
- */
-export const createReadable = (stream: XReadable): Readable => {
-  return new Readable({ objectMode: true }).wrap(stream as any);
-};
 
 /**
  * Create encoding (e.g., from protobuf codec).
