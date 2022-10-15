@@ -7,11 +7,23 @@ import Visitor from '@swc/core/Visitor';
 
 export const preprocess = (code: string, filename: string) => {
   return transformSync(code, {
+    // will emit the source map as a separate property of the output.
     sourceMaps: true,
+    // ???
     inlineSourcesContent: true,
     sourceFileName: filename,
     plugin: (m) => new TraceInjector(filename, code).visitProgram(m),
     jsc: {
+      // Does not seem to work.
+      preserveAllComments: true,
+      minify: {
+        compress: false,
+        format: {
+          // Does not seem to preserve comments.
+          comments: 'all',
+        },
+        mangle: false,
+      },
       target: 'es2022',
       parser: {
         syntax: 'typescript',
