@@ -2,13 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import faker from 'faker';
 
 import { PublicKey } from '@dxos/keys';
 import { StorageType } from '@dxos/random-access-storage';
 
 import { TestBuilder } from './testing';
+
+chai.use(chaiAsPromised);
 
 // TODO(burdon): Exception types.
 // TODO(burdon): patchBufferCodec => createEncoding (@dxos/hypercore)
@@ -36,7 +39,7 @@ describe('FeedStore', function () {
     }
 
     {
-      await feedStore.close();
+      await feedStore.clear();
       expect(feedStore.size).to.eq(0);
     }
   });
@@ -59,13 +62,23 @@ describe('FeedStore', function () {
       expect(feed.properties.writable).to.be.false;
       expect(feedStore.size).to.eq(1);
     }
+  });
 
-    // Reopen as writable.
+  it('tries to open an existing readable feed as writable', async function () {
+    const feedStore = new TestBuilder().createFeedStore();
+
+    const key = PublicKey.random();
+
     {
-      const feed = await feedStore.openFeed(key, { writable: true });
+      const feed = await feedStore.openFeed(key);
       expect(feed.key).to.eq(key);
-      expect(feed.properties.writable).to.be.true;
+      expect(feed.properties.writable).to.be.false;
       expect(feedStore.size).to.eq(1);
+    }
+
+    // Attempt to reopen as writable (fail).
+    {
+      await expect(feedStore.openFeed(key, { writable: true })).to.be.rejected;
     }
   });
 

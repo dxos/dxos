@@ -48,14 +48,13 @@ export class FeedStore {
    * Gets or opens a feed.
    * The feed is readonly unless a secret key is provided.
    */
-  // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
   async openFeed (publicKey: PublicKey, { writable }: FeedOptions = {}): Promise<FeedWrapper> {
     let feed = this.getFeed(publicKey);
     if (feed) {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).
+      // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
       if (Boolean(feed.properties.writable) !== Boolean(writable)) {
-        console.warn('Upgrading from readonly.');
-        await feed.close();
+        throw new Error(`Readonly feed is already open: ${feed.key.toHex()}`);
       } else {
         await feed.open();
         return feed;
@@ -72,7 +71,10 @@ export class FeedStore {
     return feed;
   }
 
-  async close () {
+  /**
+   * Close all feeds.
+   */
+  async clear () {
     await Promise.all(Array.from(this._feeds.values()).map(feed => feed.close()));
     this._feeds.clear();
   }
