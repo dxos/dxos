@@ -4,10 +4,10 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
-// import { Readable } from 'streamx';
 
 import { latch } from '@dxos/async';
 import { createAsyncIterator, createReadable } from '@dxos/hypercore';
+import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 
@@ -51,6 +51,7 @@ export class FeedQueue<T> {
       await this.close();
     }
 
+    log('opening...');
     this._feedStream = createReadable(this._feed.core.createReadStream(options));
     this._iterator = createAsyncIterator(this._feedStream);
     this._currentSeq = options.start ?? 0;
@@ -63,6 +64,7 @@ export class FeedQueue<T> {
     };
 
     this._feedStream.on('close', onClose);
+    log('opened');
   }
 
   /**
@@ -71,7 +73,7 @@ export class FeedQueue<T> {
   async close () {
     if (this.opened) {
       assert(this._feedStream);
-      console.log('closing...');
+      log('closing...');
 
       this._feedStream.destroy();
       const [closed, setClosed] = latch();
@@ -80,12 +82,11 @@ export class FeedQueue<T> {
       });
 
       await closed();
-      console.log('closed');
+      log('closed');
     }
   }
 
   // TODO(burdon): Timeout?
-
   async peek (): Promise<T | undefined> {
     if (!this.opened) {
       throw new Error('Not open'); // TODO(burdon): Common error format?
@@ -95,7 +96,7 @@ export class FeedQueue<T> {
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
       this._current = done ? undefined : value;
       if (done) {
-        console.log('### END ###');
+        log('### END ###');
       }
     }
 
