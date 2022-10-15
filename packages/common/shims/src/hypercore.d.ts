@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-declare module 'hypercore-crypto';
-
 /**
  * Hypercore Typescript Definitions version 9.12.0
  * NOTE: Must not clash with 'hypercore' package name.
@@ -61,6 +59,27 @@ declare module 'hypercore' {
   }
 
   /**
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
+   */
+  export type ReadStreamOptions = {
+    start?: number
+    end?: number
+    snapshot?: boolean
+    tail?: boolean
+    live?: boolean
+    timeout?: number
+    wait?: boolean
+    batch?: number
+  }
+
+  /**
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
+   */
+  export type WriteStreamOptions = {
+    maxBlockSize?: number
+  }
+
+  /**
    * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
    */
   export type ReplicationOptions = {
@@ -115,7 +134,7 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
     readonly key: Buffer
 
-    // TODO(burdon): Need to fake otherwise readonly. Inject crypto instead.
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
     readonly secretKey: Buffer
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#discoveryKey
@@ -150,10 +169,10 @@ declare module 'hypercore' {
     flush (cb?: Callback<void>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
-    createReadStream (options?: any): Readable
+    createReadStream (options?: ReadStreamOptions): Readable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
-    createWriteStream (options?: any): Writable
+    createWriteStream (options?: WriteStreamOptions): Writable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream

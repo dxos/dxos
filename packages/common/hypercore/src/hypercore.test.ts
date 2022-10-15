@@ -10,6 +10,7 @@ import ram from 'random-access-memory';
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 
+import { createReadable } from './crypto';
 import { batch, createDataItem, TestDataItem } from './testing';
 
 // TODO(burdon): Factor out table logger.
@@ -18,17 +19,16 @@ const logRow = (label: string, values: number[]) => {
 };
 
 describe('Hypercore', function () {
-  it('replicate messages', async function () {
+  it('replicates feeds', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const core1 = hypercore(ram, publicKey, { secretKey });
     const core2 = hypercore(ram, publicKey);
 
-    // Wait for ready.
+    // Open.
     {
       const [ready, done] = latch({ count: 2 });
       core1.open(done);
       core2.open(done);
-
       await ready();
     }
 
@@ -72,7 +72,7 @@ describe('Hypercore', function () {
     expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
   });
 
-  it('replicate messages in batches', async function () {
+  it('replicates feeds in batches', async function () {
     const numBlocks = 100;
 
     // Replicating feeds must have the same public key.
@@ -80,8 +80,13 @@ describe('Hypercore', function () {
     const core1 = hypercore(ram, publicKey, { secretKey });
     const core2 = hypercore(ram, publicKey);
 
-    await core1.open();
-    await core2.open();
+    // Open.
+    {
+      const [ready, done] = latch({ count: 2 });
+      core1.open(done);
+      core2.open(done);
+      await ready();
+    }
 
     const stream1 = core1.replicate(true);
     const stream2 = core2.replicate(false);
@@ -161,5 +166,73 @@ describe('Hypercore', function () {
       expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
       expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
     }
+  }).timeout(5_000);
+
+  it('replicates feeds with read stream', async function () {
+    const numBlocks = 10;
+
+    const { publicKey, secretKey } = createKeyPair();
+    const core1 = hypercore(ram, publicKey, { secretKey });
+    const core2 = hypercore(ram, publicKey);
+
+    // Open.
+    {
+      const [ready, done] = latch({ count: 2 });
+      core1.open(done);
+      core2.open(done);
+      await ready();
+    }
+
+    expect(core1.opened).to.be.true;
+    expect(core2.opened).to.be.true;
+
+    const stream1 = core1.replicate(true, { live: true });
+    const stream2 = core2.replicate(false, { live: true });
+
+    const [done, onClose] = latch({ count: 2 });
+
+    // Start replication.
+    {
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+      expect(core1.stats.peers).to.have.lengthOf(1);
+      expect(core2.stats.peers).to.have.lengthOf(1);
+
+      let sync = 0;
+      core2.on('sync', () => {
+        logRow('=sync=', [++sync]);
+      });
+    }
+
+    // Writer.
+    {
+      setTimeout(async () => {
+        for (const _ of Array.from(Array(numBlocks))) {
+          const block = {
+            text: faker.lorem.sentence()
+          };
+
+          core1.append(JSON.stringify(block));
+        }
+      });
+    }
+
+    // Reader.
+    {
+      const [done, inc] = latch({ count: numBlocks });
+
+      setTimeout(async () => {
+        for await (const block of createReadable(core2)) {
+          inc();
+        }
+      });
+
+      await done();
+
+      stream1.end();
+      stream2.end();
+    }
+
+    await done();
   }).timeout(5_000);
 });

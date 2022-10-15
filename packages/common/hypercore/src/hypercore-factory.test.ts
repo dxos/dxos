@@ -12,7 +12,7 @@ import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';
 
 describe('HypercoreFactory', function () {
-  it('appends to and read from multiple feeds.', async function () {
+  it('appends to, and read from, multiple feeds', async function () {
     const factory = new HypercoreFactory(ram);
     const numFeeds = 10;
     const numBlocks = 100;

@@ -8,6 +8,7 @@ import faker from 'faker';
 import { latch, sleep } from '@dxos/async';
 import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { TestBuilder } from './testing';
@@ -51,24 +52,24 @@ describe('FeedWrapper', function () {
   });
 
   it('Appends blocks', async function () {
+    const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
     const feedKey = await builder.keyring!.createKey();
     const feed = await feedFactory.createFeed(feedKey, { writable: true });
 
-    const numBlocks = 10;
     for (const _ of Array.from(Array(numBlocks))) {
       await feed.append(faker.lorem.sentence());
     }
   });
 
   it('Reads blocks from a feed stream', async function () {
+    const numBlocks = 10;
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
     const feed = factory.createFeed(key, { writable: true });
 
-    const numBlocks = 10;
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await sleep(faker.datatype.number({ min: 0, max: 20 }));
       await feed.append(JSON.stringify({
@@ -82,7 +83,7 @@ describe('FeedWrapper', function () {
       for await (const block of createReadable(feed)) {
         const { id } = JSON.parse(String(block));
         const i = inc();
-        // console.log(block.toString());
+        log(block.toString());
         expect(id).to.eq(i);
       }
     });
@@ -90,7 +91,8 @@ describe('FeedWrapper', function () {
     await done();
   });
 
-  it.only('Replicates with streams', async function () {
+  it('Replicates with streams', async function () {
+    const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
 
@@ -117,11 +119,9 @@ describe('FeedWrapper', function () {
       expect(feed2.properties.stats.peers).to.have.lengthOf(1);
 
       feed2.core.on('sync', () => {
-        console.log('S');
+        log('S');
       });
     }
-
-    const numBlocks = 10;
 
     // Writer.
     {
@@ -132,7 +132,7 @@ describe('FeedWrapper', function () {
           };
 
           const i = await feed1.append(JSON.stringify(block));
-          console.log('W', i, JSON.stringify(block));
+          log('W', { i, block });
         }
       });
     }
@@ -143,7 +143,8 @@ describe('FeedWrapper', function () {
 
       setTimeout(async () => {
         for await (const block of createReadable(feed2.core)) {
-          console.log('R', JSON.stringify(JSON.parse(block.toString())));
+          const data = JSON.parse(block.toString());
+          log('R', data);
           inc();
         }
       });
