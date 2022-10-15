@@ -5,6 +5,7 @@
 import { expect } from 'chai';
 
 import { latch } from '@dxos/async';
+import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
@@ -33,7 +34,7 @@ describe('FeedQueue', function () {
       for (const i of Array.from(Array(numBlocks)).keys()) {
         const block = `test-${i}`;
         const seq = await feed.append(block);
-        console.log('>>', block, seq);
+        log('>>', { block, seq });
       }
 
       expect(feed.properties.length).to.eq(numBlocks);
@@ -47,23 +48,23 @@ describe('FeedQueue', function () {
 
       {
         const block = await queue.peek();
-        console.log('??', block?.toString(), queue.seq, queue.length);
+        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
       }
 
       {
         const block = await queue.peek();
-        console.log('??', block?.toString(), queue.seq, queue.length);
+        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
       }
 
       {
         const block = await queue.pop();
-        console.log('??', block?.toString(), queue.seq, queue.length);
+        log('pop', { block: String(block), seq: queue.seq, length: queue.length });
         inc();
       }
 
       {
         const block = await queue.peek();
-        console.log('<<', block?.toString(), queue.seq, queue.length);
+        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
       }
 
       // Read until end.
@@ -73,7 +74,7 @@ describe('FeedQueue', function () {
         const remaining = queue.remaining;
         for (let i = 0; i < remaining; i++) {
           const block = await queue.pop();
-          console.log('<<', block?.toString(), queue.seq, queue.length);
+          log('pop', { block: String(block), seq: queue.seq, length: queue.length });
           inc();
         }
       }
