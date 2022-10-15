@@ -3439,7 +3439,6 @@ importers:
       '@swc-node/sourcemap-support': ^0.2.0
       '@swc/core': ~1.2.248
       '@types/node': ^16.11.58
-      '@types/source-map': ^0.5.7
       pirates: ~4.0.5
       sorcery: ^0.10.0
       source-map: ^0.6.1
@@ -3452,7 +3451,6 @@ importers:
       source-map: 0.6.1
     devDependencies:
       '@types/node': 16.11.62
-      '@types/source-map': 0.5.7
       typescript: 4.7.4
 
   tools/plate:
@@ -12880,13 +12878,6 @@ packages:
 
   /@types/source-list-map/0.1.2:
     resolution: {integrity: sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==}
-    dev: true
-
-  /@types/source-map/0.5.7:
-    resolution: {integrity: sha512-LrnsgZIfJaysFkv9rRJp4/uAyqw87oVed3s1hhF83nwbo9c7MG9g5DqR0seHP+lkX4ldmMrVolPjQSe2ZfD0yA==}
-    deprecated: This is a stub types definition for source-map (https://github.com/mozilla/source-map). source-map provides its own type definitions, so you don't need @types/source-map installed!
-    dependencies:
-      source-map: 0.7.3
     dev: true
 
   /@types/stack-utils/2.0.1:
