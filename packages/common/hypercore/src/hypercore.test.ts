@@ -87,6 +87,7 @@ describe('Hypercore', function () {
     const stream2 = core2.replicate(false);
 
     // Start replication.
+    // NOTE: Replication won't start unless the public keys on both sides are the same.
     const [streamsClosed, onClose] = latch({ count: 2 });
     stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
@@ -160,5 +161,5 @@ describe('Hypercore', function () {
       expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
       expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
     }
-  }).timeout(5000);
+  }).timeout(5_000);
 });

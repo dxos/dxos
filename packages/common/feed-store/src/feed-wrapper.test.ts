@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
+import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 
 import { FeedWrapper } from './feed-wrapper';
@@ -76,18 +77,9 @@ describe('FeedWrapper', function () {
       }));
     }
 
-    const feedStream = feed.createReadStream({ live: true }) as any;
-
-    // TODO(burdon): Move issue to hypercore (possible wrapper?)
-    // import { Readable } from 'readable-stream';
-    // https://nodejs.org/dist/v18.9.0/docs/api/stream.html#readablewrapstream
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
-    // const feedIterable = new Readable().wrap(feedStream as any);
-
     const [done, inc] = latch({ count: numBlocks });
     setTimeout(async () => {
-      for await (const block of feedStream as any) {
+      for await (const block of createReadable(feed)) {
         const { id } = JSON.parse(String(block));
         const i = inc();
         // console.log(block.toString());
@@ -98,28 +90,36 @@ describe('FeedWrapper', function () {
     await done();
   });
 
-  it('Replicates with streams', async function () {
+  it.only('Replicates with streams', async function () {
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
-    const key2 = await builder.keyring!.createKey();
-
-    // TODO(burdon): ABOVE!!!
     const feed1 = new FeedWrapper(feedFactory.createFeed(key1, { writable: true }), key1);
-    const feed2 = new FeedWrapper(feedFactory.createFeed(key2), key2);
+    const feed2 = new FeedWrapper(feedFactory.createFeed(key1), key1);
 
     await feed1.open();
     await feed2.open();
 
-    const stream1 = feed1.replicate(true);
-    const stream2 = feed2.replicate(false);
+    expect(feed1.properties.opened).to.be.true;
+    expect(feed2.properties.opened).to.be.true;
+
+    const stream1 = feed1.core.replicate(true, { live: true });
+    const stream2 = feed2.core.replicate(false, { live: true });
 
     const [done, onClose] = latch({ count: 2 });
-    stream1.pipe(stream2, onClose).pipe(stream1, onClose);
 
-    expect(feed1.properties.stats.peers).to.have.lengthOf(1);
-    expect(feed2.properties.stats.peers).to.have.lengthOf(1);
+    // Start replication.
+    {
+      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+
+      expect(feed1.properties.stats.peers).to.have.lengthOf(1);
+      expect(feed2.properties.stats.peers).to.have.lengthOf(1);
+
+      feed2.core.on('sync', () => {
+        console.log('S');
+      });
+    }
 
     const numBlocks = 10;
 
@@ -127,11 +127,12 @@ describe('FeedWrapper', function () {
     {
       setTimeout(async () => {
         for (const _ of Array.from(Array(numBlocks))) {
-          await feed1.append(JSON.stringify({
+          const block = {
             text: faker.lorem.sentence()
-          }));
+          };
 
-          console.log('write');
+          const i = await feed1.append(JSON.stringify(block));
+          console.log('W', i, JSON.stringify(block));
         }
       });
     }
@@ -141,17 +142,18 @@ describe('FeedWrapper', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        // const feedStream = feed2.createReadStream({ live: true }) as any;
-        for await (const block of stream2 as any) {
-          // const { id } = JSON.parse(String(block));
-          console.log(block.toString());
+        for await (const block of createReadable(feed2.core)) {
+          console.log('R', JSON.stringify(JSON.parse(block.toString())));
           inc();
         }
       });
 
       await done();
+
+      stream1.end();
+      stream2.end();
     }
 
     await done();
-  });
+  }).timeout(5_000);
 });

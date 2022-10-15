@@ -3,11 +3,22 @@
 //
 
 import assert from 'assert';
-import { AbstractValueEncoding, Callback, Crypto } from 'hypercore';
+import { AbstractValueEncoding, Crypto, Hypercore } from 'hypercore';
 import { callbackify } from 'node:util';
+import { Readable } from 'readable-stream';
 
 import { Signer, verifySignature } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
+
+// TODO(burdon): Move to hypercore.
+// TODO(burdon): Missing block info (e.g., seq).
+// https://nodejs.org/dist/v18.9.0/docs/api/stream.html#readablewrapstream
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
+export const createReadable = (feed: Hypercore): Readable => {
+  const feedStream = feed.createReadStream({ live: true }) as any;
+  return new Readable({ objectMode: true }).wrap(feedStream as any);
+};
 
 /**
  * Create encoding (e.g., from protobuf codec).
@@ -27,7 +38,7 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
   assert(publicKey);
 
   return {
-    sign: (data: any, secretKey: any, cb: Callback<Buffer>) => {
+    sign: (data, secretKey, cb) => {
       callbackify(signer.sign.bind(signer!))(publicKey, data, (err, result) => {
         if (err) {
           cb(err);
@@ -38,8 +49,9 @@ export const createCrypto = (signer: Signer, publicKey: PublicKey): Crypto => {
       });
     },
 
-    verify: async (data: any, signature: any, key: any, cb: any) => {
-      callbackify(verifySignature)(key, data, signature, cb);
+    verify: async (data, signature, key, cb) => {
+      // NOTE: Uses the public key passed into function.
+      callbackify(verifySignature)(publicKey, data, signature, cb);
     }
   };
 };

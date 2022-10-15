@@ -8,8 +8,7 @@ import faker from 'faker';
 import { latch, sleep } from '@dxos/async';
 import { Timeframe } from '@dxos/protocols';
 
-import { FeedBlock, FeedBlockSelector, FeedSelector, FeedStoreIterator } from './feed-store-iterator';
-import { FeedWrapper } from './feed-wrapper';
+import { FeedBlock, FeedBlockSelector, FeedStoreIterator } from './feed-store-iterator';
 import { TestBuilder } from './testing';
 
 describe('FeedStoreIterator', function () {
@@ -18,10 +17,9 @@ describe('FeedStoreIterator', function () {
     const timeframe = new Timeframe();
 
     // TODO(burdon): Round-robin selector.
-    const feedSelector: FeedSelector = (feed: FeedWrapper) => false;
     const feedBlockSelector: FeedBlockSelector<any> = (feeds: FeedBlock<any>[]) => undefined;
 
-    const iterator = new FeedStoreIterator(feedSelector, feedBlockSelector, timeframe);
+    const iterator = new FeedStoreIterator(feedBlockSelector, timeframe);
 
     const numFeeds = 3;
     const numBlocks = 20;
