@@ -80,6 +80,13 @@ To Install dependencies from the root directory:
 pnpm install
 ```
 
+On Ubuntu or other linux systems, the following dependencies may be needed for install to succeed:
+
+```bash
+# From https://github.com/octalmage/robotjs/#building
+sudo apt-get install libxtst-dev libpng++-dev
+```
+
 To build all packages:
 
 ```bash

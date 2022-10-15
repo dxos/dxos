@@ -15,7 +15,7 @@ export const createId = (): string => PublicKey.stringify(randomBytes(32));
 
 export const SIGNATURE_LENGTH = 64;
 
-export const zeroKey = () => new Uint8Array(32); // TOOD(burdon): Remove?
+export const zeroKey = () => new Uint8Array(32); // TODO(burdon): Remove?
 
 export const createKeyPair = (seed?: Buffer): KeyPair => {
   if (seed) {
@@ -26,7 +26,9 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
   return crypto.keyPair();
 };
 
-export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) => crypto.validateKeyPair({ publicKey, secretKey });
+// TODO(burdon): Buffer.
+export const validateKeyPair = (publicKey: PublicKey, secretKey: Buffer) =>
+  crypto.validateKeyPair({ publicKey: publicKey.asBuffer(), secretKey });
 
 // TODO(dmaretskyi): Slicing because webcrypto keys are too long.
 export const discoveryKey = (key: PublicKeyLike): Buffer => crypto.discoveryKey(PublicKey.from(key).asBuffer().slice(1));

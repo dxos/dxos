@@ -7,9 +7,6 @@
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
-  "engines": {
-    "node": ">=12.0.0"
-  },
   "scripts": {
     "check-dependencies": "syncpack list-mismatches",
     "fix-dependencies": "syncpack fix-mismatches",
@@ -86,7 +83,6 @@
     "mocha": "^8.4.0",
     "mocha-junit-reporter": "^2.1.0",
     "mocha-multi-reporters": "^1.5.1",
-    "netlify-cli": "^11.5.1",
     "nx": "14.5.7",
     "nyc": "^15.1.0",
     "pkg-up": "^3.1.0",
@@ -103,6 +99,9 @@
     "vite": "3.0.9",
     "wait-for-expect": "^3.0.2",
     "webpack": "^5.74.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   },
   "pnpm": {
     "patchedDependencies": {

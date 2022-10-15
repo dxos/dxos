@@ -32,8 +32,7 @@ import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
 
-// TODO(wittjosiah): Should be kube.local or equivalent.
-const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967/headless.html';
+const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
 const IFRAME_ID = '__DXOS_CLIENT__';
 const EXPECTED_CONFIG_VERSION = 1;
 
