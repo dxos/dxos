@@ -6,9 +6,9 @@ import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
-import { loadSync } from 'sorcery';
 
 import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import { combineSourceMaps } from './source-map';
 
 // TODO(dmaretskyi): Move to separate package in tools.
 
@@ -107,39 +107,3 @@ function patchSourceMaps () {
     }
   } as any;
 }
-
-/**
- * Combines two source maps for the same file and outputs a new source map.
- *
- * @param prevMap Source map from the first compilation step.
- * @param newMap Source map from the second compilation step.
- */
-const combineSourceMaps = (prevMap: string, nextMap: string) => {
-  const prev = JSON.parse(prevMap);
-  const newMap = JSON.parse(nextMap);
-  try {
-
-    newMap.sources[0] = '/prev';
-    const generated = loadSync('/new', {
-      content: {
-        '/new': newMap.sourcesContent[0],
-        '/prev': prev.sourcesContent[0]
-      },
-      sourcemaps: {
-        '/new': newMap,
-        '/prev': prev
-      }
-    }).apply();
-
-    generated.sources[0] = '/' + generated.sources[0];
-
-    return JSON.stringify(generated);
-  } catch (err) {
-    console.error(err);
-    console.log({
-      prev,
-      newMap
-    });
-    throw err;
-  }
-};
