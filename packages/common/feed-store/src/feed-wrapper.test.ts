@@ -18,7 +18,7 @@ import { TestBuilder } from './testing';
 describe('FeedWrapper', function () {
   const factory = new TestBuilder().createFeedFactory();
 
-  it('Creates a readable feed', async function () {
+  it('creates a readable feed', async function () {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key), key);
     await feed.open();
@@ -27,7 +27,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('Creates a writable feed', async function () {
+  it('creates a writable feed', async function () {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -36,7 +36,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('Creates, opens, and closes a feed multiple times', async function () {
+  it('creates, opens, and closes a feed multiple times', async function () {
     const key = PublicKey.random();
     const feed = new FeedWrapper(factory.createFeed(key), key);
 
@@ -51,7 +51,7 @@ describe('FeedWrapper', function () {
     await feed.close();
   });
 
-  it('Appends blocks', async function () {
+  it('appends blocks', async function () {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
@@ -63,7 +63,7 @@ describe('FeedWrapper', function () {
     }
   });
 
-  it('Reads blocks from a feed stream', async function () {
+  it('reads blocks from a feed stream', async function () {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
@@ -91,7 +91,7 @@ describe('FeedWrapper', function () {
     await done();
   });
 
-  it('Replicates with streams', async function () {
+  it('replicates with streams', async function () {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();

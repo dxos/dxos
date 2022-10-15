@@ -12,7 +12,7 @@ import { FeedBlock, FeedBlockSelector, FeedStoreIterator } from './feed-store-it
 import { TestBuilder } from './testing';
 
 describe('FeedStoreIterator', function () {
-  it('Reads blocks in order.', async function () {
+  it('reads blocks in order', async function () {
     const builder = new TestBuilder();
     const timeframe = new Timeframe();
 

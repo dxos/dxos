@@ -14,7 +14,7 @@ import { TestBuilder } from './testing';
 // TODO(burdon): patchBufferCodec => createEncoding (@dxos/hypercore)
 
 describe('FeedStore', function () {
-  it('Creates feeds.', async function () {
+  it('creates feeds', async function () {
     const feedStore = new TestBuilder().createFeedStore();
 
     const keys = await Promise.all(Array.from(Array(10)).map(async () => {
@@ -41,7 +41,7 @@ describe('FeedStore', function () {
     }
   });
 
-  it('Gets an opened feed.', async function () {
+  it('gets an opened feed', async function () {
     const feedStore = new TestBuilder().createFeedStore();
 
     const key = PublicKey.random();
@@ -69,7 +69,7 @@ describe('FeedStore', function () {
     }
   });
 
-  it('Reopens a feed and reads data from disk', async function () {
+  it('reopens a feed and reads data from disk', async function () {
     const builder = new TestBuilder();
     const feedKey = await builder.keyring!.createKey();
 
