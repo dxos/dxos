@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
 import { Hypercore, HypercoreProperties } from 'hypercore';
 import { Readable } from 'readable-stream';
 
@@ -18,7 +19,10 @@ export class FeedWrapper {
   constructor (
     private _hypercore: Hypercore,
     private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
-  ) {}
+  ) {
+    assert(this._hypercore);
+    assert(this._key);
+  }
 
   get key (): PublicKey {
     return this._key;

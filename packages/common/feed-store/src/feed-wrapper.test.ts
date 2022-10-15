@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
+import { FeedWriter } from './feed-writer';
 import { TestBuilder } from './testing';
 
 // TODO(burdon): Test codec/proto encoding.
@@ -102,9 +103,6 @@ describe('FeedWrapper', function () {
     await feed1.open();
     await feed2.open();
 
-    expect(feed1.properties.opened).to.be.true;
-    expect(feed2.properties.opened).to.be.true;
-
     const stream1 = feed1.replicate(true, { live: true });
     const stream2 = feed2.replicate(false, { live: true });
 
@@ -124,13 +122,14 @@ describe('FeedWrapper', function () {
 
     // Writer.
     {
+      const writer = new FeedWriter(feed1.core);
       setTimeout(async () => {
         for (const _ of Array.from(Array(numBlocks))) {
           const block = {
             text: faker.lorem.sentence()
           };
 
-          const i = await feed1.append(JSON.stringify(block));
+          const i = await writer.append(JSON.stringify(block));
           log('W', { i, block });
         }
       });
