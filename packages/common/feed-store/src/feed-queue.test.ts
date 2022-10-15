@@ -3,8 +3,9 @@
 //
 
 import { expect } from 'chai';
+import faker from 'faker';
 
-import { latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
@@ -16,7 +17,7 @@ describe('FeedQueue', function () {
   const factory = builder.createFeedFactory();
 
   it('peaks and pops from a queue', async function () {
-    const numBlocks = 10;
+    const numBlocks = 20;
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -29,22 +30,26 @@ describe('FeedQueue', function () {
     await queue.open({ start, live: true });
     expect(queue.opened).to.be.true;
 
+    // TODO(burdon): Blocked when items written async.
+
     // Write.
     {
-      for (const i of Array.from(Array(numBlocks)).keys()) {
-        const block = `test-${i}`;
-        const seq = await feed.append(block);
-        log('>>', { block, seq });
-      }
+      setTimeout(async () => {
+        for (const i of Array.from(Array(numBlocks)).keys()) {
+          const block = `test-${String(i).padStart(2, '0')}`;
+          const seq = await feed.append(block);
+          console.log('>>', { block, seq });
+          await sleep(faker.datatype.number({ min: 0, max: 20 }));
+        }
 
-      expect(feed.properties.length).to.eq(numBlocks);
+        expect(feed.properties.length).to.eq(numBlocks);
+      });
     }
 
     // Read.
     const [done, inc] = latch({ count: numBlocks - start });
     setTimeout(async () => {
       expect(queue.seq).to.be.eq(start);
-      expect(queue.length).to.eq(numBlocks);
 
       {
         const block = await queue.peek();
@@ -83,6 +88,7 @@ describe('FeedQueue', function () {
     await done();
     expect(queue.remaining).to.eq(0);
 
+    // Close.
     await queue.close();
     expect(queue.opened).to.be.false;
   });

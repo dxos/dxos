@@ -73,19 +73,19 @@ export class FeedQueue<T> {
   async close () {
     if (this.opened) {
       assert(this._feedStream);
-      log('closing...');
 
+      log('closing...');
       this._feedStream.destroy();
       const [closed, setClosed] = latch();
-      this._feedStream.on('close', () => {
-        setClosed();
-      });
-
+      this._feedStream.on('close', setClosed);
       await closed();
       log('closed');
     }
   }
 
+  /**
+   * Get the block at the head of the queue without removing it.
+   */
   // TODO(burdon): Timeout?
   async peek (): Promise<T | undefined> {
     if (!this.opened) {
@@ -93,7 +93,9 @@ export class FeedQueue<T> {
     }
 
     if (this._current === undefined) {
+      console.log('peeking...', this._feed.properties.length);
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
+      console.log('==', value, done);
       this._current = done ? undefined : value;
       if (done) {
         log('### END ###');
@@ -103,6 +105,9 @@ export class FeedQueue<T> {
     return this._current;
   }
 
+  /**
+   * Pop block at the head of the queue.
+   */
   async pop (): Promise<T | undefined> {
     if (!this.opened) {
       throw new Error('Not open'); // TODO(burdon): Common error format?
