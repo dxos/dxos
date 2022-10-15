@@ -4,7 +4,7 @@
 
 import { CallExpression, Expression, Import, ObjectExpression, Program, Span, Super, transformSync, TsType } from '@swc/core';
 import Visitor from '@swc/core/Visitor';
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { SourceMapConsumer } from 'source-map';
 
@@ -23,9 +23,9 @@ export const preprocess = (code: string, filename: string) => {
         compress: false,
         format: {
           // Does not seem to preserve comments.
-          comments: 'all',
+          comments: 'all'
         },
-        mangle: false,
+        mangle: false
       },
       target: 'es2022',
       parser: {
@@ -42,9 +42,9 @@ export const ID_GET_CURRENT_OWNERSHIP_SCOPE = 'dxlog_getCurrentOwnershipScope';
 export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
 
 interface SourcePosition {
-  line: number;
-  column: number;
-  filename: string;
+  line: number
+  column: number
+  filename: string
 }
 
 class TraceInjector extends Visitor {
@@ -54,7 +54,7 @@ class TraceInjector extends Visitor {
 
   private _sourceMap?: SourceMapConsumer;
 
-  constructor(
+  constructor (
     private readonly filename: string,
     private readonly code: string
   ) {
@@ -72,9 +72,9 @@ class TraceInjector extends Visitor {
     } catch { }
   }
 
-  private _getPosition(span: Span): SourcePosition {
+  private _getPosition (span: Span): SourcePosition {
     // Account for SWC bugs & quirks.
-    const position = span.start - this.programSpan.start + this.spanOffset
+    const position = span.start - this.programSpan.start + this.spanOffset;
 
     let line = this._linePositions.findIndex((linePosition) => linePosition > position);
     if (line === -1) {
@@ -89,15 +89,14 @@ class TraceInjector extends Visitor {
       }
     }
 
-
     return { line, column, filename: this.filename };
   }
 
-  override visitTsType(n: TsType) {
+  override visitTsType (n: TsType) {
     return n;
   }
 
-  override visitProgram(node: Program) {
+  override visitProgram (node: Program) {
     this.spanOffset = this.code.indexOf('import');
     if (this.spanOffset === -1) {
       this.spanOffset = 0;
@@ -107,7 +106,7 @@ class TraceInjector extends Visitor {
     return super.visitProgram(node);
   }
 
-  override visitCallExpression(n: CallExpression): Expression {
+  override visitCallExpression (n: CallExpression): Expression {
     if (isLoggerInvocation(n)) {
       if (n.arguments.length === 1) {
         // Add empty context.
@@ -122,7 +121,7 @@ class TraceInjector extends Visitor {
 
       if (n.arguments.length === 2) {
         n.arguments.push({
-          expression: this._createMetadataExpression(n.span),
+          expression: this._createMetadataExpression(n.span)
         });
       }
 
@@ -132,7 +131,7 @@ class TraceInjector extends Visitor {
     }
   }
 
-  private _createMetadataExpression(span: Span): Expression {
+  private _createMetadataExpression (span: Span): Expression {
     const position = this._getPosition(span);
     return createObjectExpression({
       file: {
@@ -167,10 +166,9 @@ class TraceInjector extends Visitor {
         optional: false,
         span: ZERO_SPAN
       }
-    })
+    });
   }
 }
-
 
 /**
  * Matches expressions of form:
@@ -181,16 +179,16 @@ class TraceInjector extends Visitor {
  */
 const isLoggerInvocation = (e: CallExpression) =>
   isLoggerFuncExpression(e.callee) ||
-  (e.callee.type === 'MemberExpression' && isLoggerFuncExpression(e.callee.object))
+  (e.callee.type === 'MemberExpression' && isLoggerFuncExpression(e.callee.object));
 
 const isLoggerFuncExpression =
   (e: Expression | Super | Import) =>
-    e.type === 'Identifier' && e.value === 'log' ||
+    (e.type === 'Identifier' && e.value === 'log') ||
     isCjsImportedLoggerExpression(e) || (
       e.type === 'ParenthesisExpression' && e.expression.type === 'SequenceExpression' && e.expression.expressions.length === 2 &&
       e.expression.expressions[0].type === 'NumericLiteral' && e.expression.expressions[0].value === 0 &&
       isCjsImportedLoggerExpression(e.expression.expressions[1])
-    )
+    );
 
 /**
  * Matches:
@@ -201,7 +199,7 @@ const isCjsImportedLoggerExpression = (e: Expression | Super | Import) =>
   e.object.type === 'Identifier' &&
   e.object.value !== 'console' && e.object.value !== 'debug' &&
   e.property.type === 'Identifier' &&
-  e.property.value === 'log'
+  e.property.value === 'log';
 
 const createObjectExpression = (properties: Record<string, Expression>): ObjectExpression => ({
   type: 'ObjectExpression',
@@ -216,4 +214,4 @@ const createObjectExpression = (properties: Record<string, Expression>): ObjectE
     value
   })),
   span: ZERO_SPAN
-})
+});

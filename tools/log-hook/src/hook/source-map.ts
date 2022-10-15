@@ -1,3 +1,7 @@
+//
+// Copyright 2022 DXOS.org
+//
+
 import { loadSync } from 'sorcery';
 
 /**
@@ -6,7 +10,7 @@ import { loadSync } from 'sorcery';
  * @param prevMap Source map from the first compilation step.
  * @param newMap Source map from the second compilation step.
  */
- export const combineSourceMaps = (prevMap: string, nextMap: string) => {
+export const combineSourceMaps = (prevMap: string, nextMap: string) => {
   const prev = JSON.parse(prevMap);
   const newMap = JSON.parse(nextMap);
   try {
