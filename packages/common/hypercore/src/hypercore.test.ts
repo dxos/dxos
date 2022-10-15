@@ -222,7 +222,7 @@ describe('Hypercore', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        for await (const block of createReadable(core2)) {
+        for await (const _ of createReadable(core2.createReadStream({ live: true }))) {
           inc();
         }
       });

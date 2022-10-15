@@ -19,11 +19,9 @@
   },
   "dependencies": {
     "@dxos/debug": "workspace:*",
-    "assert": "^2.0.0",
-    "pify": "~5.0.0"
+    "assert": "^2.0.0"
   },
   "devDependencies": {
-    "@types/pify": "^3.0.2",
     "events": "^3.3.0"
   },
   "publishConfig": {

@@ -54,6 +54,7 @@ export class FeedStore {
     if (feed) {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).
       if (Boolean(feed.properties.writable) !== Boolean(writable)) {
+        console.warn('Upgrading from readonly.');
         await feed.close();
       } else {
         await feed.open();

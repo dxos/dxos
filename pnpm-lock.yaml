@@ -574,11 +574,12 @@ importers:
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/from2': ~2.3.1
+      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
-      from2: ^2.3.0
       hypercore: ^9.12.0
+      readable-stream: ^3.6.0
       tempy: ~1.0.1
       util: ^0.12.4
     dependencies:
@@ -592,8 +593,8 @@ importers:
       '@dxos/util': link:../util
       assert: 2.0.0
       debug: 4.3.4
-      from2: 2.3.0
       hypercore: 9.12.0
+      readable-stream: 3.6.0
       util: 0.12.4
     devDependencies:
       '@dxos/benchmark-suite': 1.0.0-beta.3
@@ -603,6 +604,7 @@ importers:
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
       '@types/from2': 2.3.1
+      '@types/readable-stream': 2.3.9
       faker: 5.5.3
       tempy: 1.0.1
 

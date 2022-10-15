@@ -126,7 +126,7 @@ export const createBatchStream = (
       key: PublicKey.from(feed.key), // TODO(burdon): Document.
       seq: seq++,
       data,
-      sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
+      fn: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
   };

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './binder';
 export * from './complex';
 export * from './default-map';
 export * from './human-hash';

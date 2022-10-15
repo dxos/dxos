@@ -32,7 +32,7 @@ export const Primary = () => {
   const messages: FeedBlock<any>[] = [...new Array(20)].map((_, i) => ({
     key: PublicKey.random(),
     seq: i,
-    sync: true,
+    fn: true,
     path: '',
     data: generateTree({}, 3)
   }));

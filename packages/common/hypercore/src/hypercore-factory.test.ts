@@ -4,12 +4,14 @@
 
 import { expect } from 'chai';
 import faker from 'faker';
+import util from 'node:util';
 import ram from 'random-access-memory';
-
-import { py } from '@dxos/async';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createDataItem } from './testing';
+
+// Bind function.
+const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
 
 describe('HypercoreFactory', function () {
   it('appends to, and read from, multiple feeds', async function () {

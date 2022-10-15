@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
-import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -55,8 +54,8 @@ describe('FeedWrapper', function () {
     const numBlocks = 10;
     const builder = new TestBuilder();
     const feedFactory = builder.createFeedFactory();
-    const feedKey = await builder.keyring!.createKey();
-    const feed = await feedFactory.createFeed(feedKey, { writable: true });
+    const key = await builder.keyring!.createKey();
+    const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
 
     for (const _ of Array.from(Array(numBlocks))) {
       await feed.append(faker.lorem.sentence());
@@ -68,7 +67,7 @@ describe('FeedWrapper', function () {
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
-    const feed = factory.createFeed(key, { writable: true });
+    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
 
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await sleep(faker.datatype.number({ min: 0, max: 20 }));
@@ -80,7 +79,7 @@ describe('FeedWrapper', function () {
 
     const [done, inc] = latch({ count: numBlocks });
     setTimeout(async () => {
-      for await (const block of createReadable(feed)) {
+      for await (const block of feed.createReadableStream()) {
         const { id } = JSON.parse(String(block));
         const i = inc();
         log(block.toString());
@@ -106,8 +105,8 @@ describe('FeedWrapper', function () {
     expect(feed1.properties.opened).to.be.true;
     expect(feed2.properties.opened).to.be.true;
 
-    const stream1 = feed1.core.replicate(true, { live: true });
-    const stream2 = feed2.core.replicate(false, { live: true });
+    const stream1 = feed1.replicate(true, { live: true });
+    const stream2 = feed2.replicate(false, { live: true });
 
     const [done, onClose] = latch({ count: 2 });
 
@@ -142,7 +141,7 @@ describe('FeedWrapper', function () {
       const [done, inc] = latch({ count: numBlocks });
 
       setTimeout(async () => {
-        for await (const block of createReadable(feed2.core)) {
+        for await (const block of feed2.createReadableStream()) {
           const data = JSON.parse(block.toString());
           log('R', data);
           inc();

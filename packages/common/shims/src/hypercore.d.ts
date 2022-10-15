@@ -165,9 +165,6 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedappenddata-callback
     append (data: string | Buffer | (string | Buffer)[], cb?: Callback<number>): void
 
-    // Undocumented.
-    flush (cb?: Callback<void>): void
-
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
     createReadStream (options?: ReadStreamOptions): Readable
 
@@ -177,12 +174,12 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
 
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
+    has (start: number, end?: number): boolean
+
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
     /** @deprecated remove in v10 */
     head (options?: any, cb?: Callback<FeedBlock>): void
-
-    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
-    has (start: number, end?: number): boolean
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
     get (index: number, options: any, cb: Callback<Buffer>): void
@@ -192,8 +189,7 @@ declare module 'hypercore' {
     getBatch (start: number, end: number, options: any, cb: Callback<Buffer[]>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
-    download (range: Range, cb?: Callback<number>): any
-    download (cb?: Callback<number>): any
+    download (range?: Range, cb?: Callback<number>): any
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
     downloaded (start?: number, end?: number): boolean
