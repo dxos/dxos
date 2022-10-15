@@ -9,7 +9,8 @@ import { latch, sleep } from '@dxos/async';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
-import { TestBuilder } from './testing';
+import { FeedWriter } from './feed-writer';
+import { TestBuilder, TestGenerator, defaultGenerator } from './testing';
 
 // TODO(burdon): Break into smaller test with larger stress test.
 // TODO(burdon): Move codec into iterators.
@@ -34,18 +35,20 @@ describe('FeedQueue', function () {
 
     // Write blocks in batches.
     {
+      const writer = new FeedWriter(feed.core);
+      const generator = new TestGenerator(defaultGenerator);
+
       setTimeout(async () => {
         let count = 0;
         const batch = async (n: number) => {
           console.log(`batch[${n}]`);
-          for (const _ of Array.from(Array(n))) {
-            const data = `test-${String(count++).padStart(2, '0')}`;
-            const seq = await feed.append(data);
-            console.log('>>', { seq, data });
-            await sleep(faker.datatype.number({ min: 0, max: 100 }));
-          }
-
-          return n;
+          count += await generator.writeBlocks(writer, {
+            count: n,
+            delay: {
+              min: 0,
+              max: 100
+            }
+          });
         };
 
         const size = Math.floor(numBlocks / numChunks);

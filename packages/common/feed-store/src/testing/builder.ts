@@ -5,8 +5,8 @@
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
-import { FeedFactory } from './feed-factory';
-import { FeedStore } from './feed-store';
+import { FeedFactory } from '../feed-factory';
+import { FeedStore } from '../feed-store';
 
 // TODO(burdon): Apply test pattern elsewhere.
 //  - Each package has an exported testing.ts builder (which is composable across packages).

@@ -12,7 +12,7 @@ import { FeedBlockSelector, FeedIterator } from './feed-iterator';
 import { FeedBlock } from './feed-queue';
 import { TestBuilder } from './testing';
 
-describe('FeedStoreIterator', function () {
+describe('FeedIterator', function () {
   it('reads blocks in order', async function () {
     const builder = new TestBuilder();
     const timeframe = new Timeframe();
@@ -23,7 +23,7 @@ describe('FeedStoreIterator', function () {
     const iterator = new FeedIterator(feedBlockSelector, timeframe);
 
     const numFeeds = 3;
-    const numBlocks = 20;
+    const numBlocks = 25;
 
     // Create feeds and write data.
     {
