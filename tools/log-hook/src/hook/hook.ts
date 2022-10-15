@@ -33,7 +33,7 @@ export const register = () => {
       if (DUMP) {
         // TODO(burdon): Decide on better place to put debug files.
         const sourceMap = getSourceMap(filename);
-        const path = join('/tmp/dx-log', '.trace-compiled', filename);
+        const path = join('/tmp/dx-log', 'trace-compiled', filename);
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, output.code, { encoding: 'utf-8' });
         writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
@@ -48,7 +48,7 @@ export const register = () => {
       throw err;
     }
   }, {
-    extensions: ['.ts']
+    extensions: ['.ts', '.js']
   });
 
   const getSourceMap = (filename: string): string | undefined => {
@@ -78,7 +78,7 @@ export const register = () => {
   patchSourceMaps();
 };
 
-const BUGCHECK_STRING = 'FOO If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
+const BUGCHECK_STRING = 'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
 ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
 const registerGlobals = () => {

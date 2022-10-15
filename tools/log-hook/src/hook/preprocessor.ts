@@ -68,15 +68,9 @@ class TraceInjector extends Visitor {
   }
 
   override visitCallExpression (n: CallExpression): Expression {
-    if (
-      isLoggerFuncExpression(n.callee) ||
-      (n.callee.type === 'MemberExpression' && isLoggerFuncExpression(n.callee.object))
-    ) {
-      // Matches expressions of form:
-      // log(...)
-      // log.<level>(...)
-
+    if (isLoggerInvocation(n)) {
       if (n.arguments.length === 1) {
+        // Add empty context.
         n.arguments.push({
           expression: {
             type: 'ObjectExpression',
@@ -88,82 +82,7 @@ class TraceInjector extends Visitor {
 
       if (n.arguments.length === 2) {
         n.arguments.push({
-          expression: {
-            type: 'ObjectExpression',
-            properties: [
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'file',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'Identifier',
-                  value: '__filename',
-                  optional: false,
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'line',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'NumericLiteral',
-
-                  value: this._getLineAndColumn(n.span.start - this.programSpan.start + this.spanOffset).line,
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'ownershipScope',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'CallExpression',
-                  callee: {
-                    type: 'Identifier',
-                    value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
-                    optional: false,
-                    span: ZERO_SPAN
-                  },
-                  arguments: [{
-                    expression: {
-                      type: 'ThisExpression',
-                      span: ZERO_SPAN
-                    }
-                  }],
-                  span: ZERO_SPAN
-                }
-              },
-              {
-                type: 'KeyValueProperty',
-                key: {
-                  type: 'Identifier',
-                  value: 'bugcheck',
-                  optional: false,
-                  span: ZERO_SPAN
-                },
-                value: {
-                  type: 'Identifier',
-                  value: ID_BUGCHECK_STRING,
-                  optional: false,
-                  span: ZERO_SPAN
-                }
-              }
-            ],
-            span: ZERO_SPAN
-          }
+          expression: this._createMetadataExpression(n.span),
         });
       }
 
@@ -172,7 +91,110 @@ class TraceInjector extends Visitor {
       return super.visitCallExpression(n);
     }
   }
+
+  private _createMetadataExpression(span: Span): Expression {
+    return {
+      type: 'ObjectExpression',
+      properties: [
+        {
+          type: 'KeyValueProperty',
+          key: {
+            type: 'Identifier',
+            value: 'file',
+            optional: false,
+            span: ZERO_SPAN
+          },
+          value: {
+            type: 'Identifier',
+            value: '__filename',
+            optional: false,
+            span: ZERO_SPAN
+          }
+        },
+        {
+          type: 'KeyValueProperty',
+          key: {
+            type: 'Identifier',
+            value: 'line',
+            optional: false,
+            span: ZERO_SPAN
+          },
+          value: {
+            type: 'NumericLiteral',
+
+            value: this._getLineAndColumn(span.start - this.programSpan.start + this.spanOffset).line,
+            span: ZERO_SPAN
+          }
+        },
+        {
+          type: 'KeyValueProperty',
+          key: {
+            type: 'Identifier',
+            value: 'ownershipScope',
+            optional: false,
+            span: ZERO_SPAN
+          },
+          value: {
+            type: 'CallExpression',
+            callee: {
+              type: 'Identifier',
+              value: ID_GET_CURRENT_OWNERSHIP_SCOPE,
+              optional: false,
+              span: ZERO_SPAN
+            },
+            arguments: [{
+              expression: {
+                type: 'ThisExpression',
+                span: ZERO_SPAN
+              }
+            }],
+            span: ZERO_SPAN
+          }
+        },
+        {
+          type: 'KeyValueProperty',
+          key: {
+            type: 'Identifier',
+            value: 'bugcheck',
+            optional: false,
+            span: ZERO_SPAN
+          },
+          value: {
+            type: 'Identifier',
+            value: ID_BUGCHECK_STRING,
+            optional: false,
+            span: ZERO_SPAN
+          }
+        }
+      ],
+      span: ZERO_SPAN
+    }
+  }
 }
 
+
+/**
+ * Matches expressions of form:
+ *   log(...)
+ *   log.<level>(...)
+ *   (0, <ident>.log)(...)
+ */
+const isLoggerInvocation = (e: CallExpression) =>
+  isLoggerFuncExpression(e.callee) ||
+  (e.callee.type === 'MemberExpression' && isLoggerFuncExpression(e.callee.object))
+
 const isLoggerFuncExpression =
-  (e: Expression | Super | Import) => e.type === 'Identifier' && e.value === 'log';
+  (e: Expression | Super | Import) =>
+    e.type === 'Identifier' && e.value === 'log' ||
+    isCjsImportedLoggerExpression(e) || (
+      e.type === 'ParenthesisExpression' && e.expression.type === 'SequenceExpression' && e.expression.expressions.length === 2  &&
+      e.expression.expressions[0].type === 'NumericLiteral' && e.expression.expressions[0].value === 0 &&
+      isCjsImportedLoggerExpression(e.expression.expressions[1])
+    )
+
+const isCjsImportedLoggerExpression = (e: Expression | Super | Import) =>
+  e.type === 'MemberExpression' &&
+  e.object.type === 'Identifier' &&
+  e.object.value !== 'console' && e.object.value !== 'debug' &&
+  e.property.type === 'Identifier' &&
+  e.property.value === 'log'
