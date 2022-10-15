@@ -11,14 +11,24 @@ import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 
+// TODO(burdon): Reconcile with other def.
+export type FeedBlock<T> = {
+  seq: number
+  data: T
+}
+
+export const defaultReadStreamOptions: ReadStreamOptions = {
+  live: true // Keep reading until closed.
+};
+
 /**
  * Async queue using an AsyncIterator created from a hypercore.
  */
 export class FeedQueue<T> {
   private _iterator?: AsyncIterator<T>;
   private _feedStream?: any;
-  private _current?: T = undefined;
-  private _currentSeq = -1;
+  private _currentBlock?: FeedBlock<T> = undefined;
+  private _nextSeq = -1;
 
   constructor (
     private readonly _feed: FeedWrapper
@@ -28,19 +38,8 @@ export class FeedQueue<T> {
     return Boolean(this._feedStream);
   }
 
-  /**
-   * Sequence number of the next element to be read.
-   */
-  get seq (): number {
-    return this._currentSeq;
-  }
-
   get length (): number {
     return this._feed.properties.length;
-  }
-
-  get remaining (): number {
-    return this.length - this._currentSeq;
   }
 
   /**
@@ -52,18 +51,21 @@ export class FeedQueue<T> {
     }
 
     log('opening...');
-    this._feedStream = createReadable(this._feed.core.createReadStream(options));
+    const opts = Object.assign({}, defaultReadStreamOptions, options);
+    this._feedStream = createReadable(this._feed.core.createReadStream(opts));
     this._iterator = createAsyncIterator(this._feedStream);
-    this._currentSeq = options.start ?? 0;
+    this._nextSeq = options.start ?? 0;
 
     const onClose = () => {
       this._feedStream.off('close', onClose);
       this._feedStream = undefined;
       this._iterator = undefined;
-      this._currentSeq = -1;
+      this._currentBlock = undefined;
+      this._nextSeq = -1;
     };
 
     this._feedStream.on('close', onClose);
+
     log('opened');
   }
 
@@ -86,39 +88,44 @@ export class FeedQueue<T> {
   /**
    * Get the block at the head of the queue without removing it.
    */
-  // TODO(burdon): Timeout?
-  async peek (): Promise<T | undefined> {
+  // TODO(burdon): Timeout in options.
+  async peek (): Promise<FeedBlock<T>> {
     if (!this.opened) {
       throw new Error('Not open'); // TODO(burdon): Common error format?
     }
 
-    if (this._current === undefined) {
-      console.log('peeking...', this._feed.properties.length);
+    if (this._currentBlock === undefined) {
+      // console.log('peeking...', this._feed.properties.length);
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
-      console.log('==', value, done);
-      this._current = done ? undefined : value;
+      // console.log('peeked', String(value), done);
       if (done) {
-        log('### END ###');
+        // NOTE: Only called if live = false.
+        throw new Error('No more blocks.');
       }
+
+      this._currentBlock = {
+        seq: this._nextSeq,
+        data: value
+      };
     }
 
-    return this._current;
+    return this._currentBlock;
   }
 
   /**
    * Pop block at the head of the queue.
    */
-  async pop (): Promise<T | undefined> {
+  async pop (): Promise<FeedBlock<T>> {
     if (!this.opened) {
       throw new Error('Not open'); // TODO(burdon): Common error format?
     }
 
     const value = await this.peek();
+    this._currentBlock = undefined;
     if (value) {
-      this._currentSeq++;
+      this._nextSeq++;
     }
 
-    this._current = undefined;
     return value;
   }
 }

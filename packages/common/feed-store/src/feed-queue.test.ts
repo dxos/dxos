@@ -17,29 +17,45 @@ describe('FeedQueue', function () {
   const factory = builder.createFeedFactory();
 
   it('peaks and pops from a queue', async function () {
-    const numBlocks = 20;
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
+    // TODO(burdon): Break into smaller test with stress test.
     // TODO(burdon): Move codec into iterators.
 
+    const start = 5;
+    const numBlocks = 31;
+    const numChunks = 3;
+
     // Create queue.
-    const start = 3;
     const queue = new FeedQueue<any>(feed);
-    await queue.open({ start, live: true });
+    await queue.open({ start });
     expect(queue.opened).to.be.true;
 
-    // TODO(burdon): Blocked when items written async.
-
-    // Write.
+    // Write blocks in batches.
     {
       setTimeout(async () => {
-        for (const i of Array.from(Array(numBlocks)).keys()) {
-          const block = `test-${String(i).padStart(2, '0')}`;
-          const seq = await feed.append(block);
-          console.log('>>', { block, seq });
-          await sleep(faker.datatype.number({ min: 0, max: 20 }));
+        let count = 0;
+        const batch = async (n: number) => {
+          console.log(`batch[${n}]`);
+          for (const _ of Array.from(Array(n))) {
+            const data = `test-${String(++count).padStart(2, '0')}`;
+            const seq = await feed.append(data);
+            console.log('>>', { seq, data });
+            await sleep(faker.datatype.number({ min: 0, max: 100 }));
+          }
+
+          return n;
+        };
+
+        const size = Math.floor(numBlocks / numChunks);
+        for (const i of Array.from(Array(numChunks)).keys()) {
+          const last = i === numChunks - 1;
+          await batch(last ? Math.max(size, numBlocks - count) : size);
+          if (!last) {
+            await sleep(faker.datatype.number({ min: 100, max: 500 }));
+          }
         }
 
         expect(feed.properties.length).to.eq(numBlocks);
@@ -47,49 +63,44 @@ describe('FeedQueue', function () {
     }
 
     // Read.
-    const [done, inc] = latch({ count: numBlocks - start });
+    const [receivedAll, received] = latch({ count: numBlocks - start });
     setTimeout(async () => {
-      expect(queue.seq).to.be.eq(start);
-
       {
-        const block = await queue.peek();
-        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
+        const { seq, data } = await queue.peek();
+        log('peek', { block: seq, data: String(data) });
       }
 
       {
-        const block = await queue.peek();
-        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
+        const { seq, data } = await queue.peek();
+        log('peek', { block: seq, data: String(data) });
       }
 
       {
-        const block = await queue.pop();
-        log('pop', { block: String(block), seq: queue.seq, length: queue.length });
-        inc();
+        const { seq, data } = await queue.pop();
+        log('pop', { block: seq, data: String(data) });
+        received();
       }
 
       {
-        const block = await queue.peek();
-        log('peek', { block: String(block), seq: queue.seq, length: queue.length });
+        const { seq, data } = await queue.peek();
+        log('peek', { block: seq, data: String(data) });
       }
 
       // Read until end.
       {
-        expect(queue.seq).to.eq(start + 1);
-
-        const remaining = queue.remaining;
-        for (let i = 0; i < remaining; i++) {
-          const block = await queue.pop();
-          log('pop', { block: String(block), seq: queue.seq, length: queue.length });
-          inc();
+        for (let i = start + 1; i < numBlocks; i++) {
+          const { seq, data } = await queue.pop();
+          console.log('<<', { seq, data: String(data) });
+          await sleep(faker.datatype.number({ min: 0, max: 100 }));
+          received();
         }
       }
     });
 
-    await done();
-    expect(queue.remaining).to.eq(0);
+    await receivedAll();
 
     // Close.
     await queue.close();
     expect(queue.opened).to.be.false;
-  });
+  }).timeout(5_000);
 });
