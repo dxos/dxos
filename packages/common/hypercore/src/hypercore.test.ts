@@ -33,12 +33,11 @@ describe('Hypercore', function () {
     }
   });
 
-  it.only('encoding with typed hypercore', async function () {
+  it('encoding with typed hypercore', async function () {
     // TODO(burdon): Create separate proto testing package.
     const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
     const valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(codec);
 
-    // TODO(burdon): Create generic type for hypercore.
     const { publicKey, secretKey } = createKeyPair();
     const core = hypercore<TestItemMutation>(ram, publicKey, { secretKey, valueEncoding });
 
@@ -49,7 +48,7 @@ describe('Hypercore', function () {
       const seq = await append({
         key: 'test-1',
         value: 'test'
-      } as any);
+      });
 
       expect(core.length).to.eq(1);
       expect(seq).to.eq(0);
