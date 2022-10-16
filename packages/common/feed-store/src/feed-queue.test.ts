@@ -6,17 +6,20 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
+import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { FeedWriter } from './feed-writer';
-import { TestBuilder, TestGenerator, defaultGenerator } from './testing';
-
-// TODO(burdon): Break into smaller test with larger stress test.
-// TODO(burdon): Move codec into iterators.
+import { TestBuilder, defaultValueEncoding, defaultTestGenerator } from './testing';
 
 describe('FeedQueue', function () {
-  const builder = new TestBuilder();
+  const builder = new TestBuilder<TestItemMutation>({
+    valueEncoding: defaultValueEncoding,
+    generator: defaultTestGenerator
+  });
+
   const factory = builder.createFeedFactory();
 
   it('peaks and pops from a queue', async function () {
@@ -36,13 +39,12 @@ describe('FeedQueue', function () {
     // Write blocks in batches.
     {
       const writer = new FeedWriter(feed.core);
-      const generator = new TestGenerator(defaultGenerator);
 
       setTimeout(async () => {
         let count = 0;
         const batch = async (n: number) => {
-          console.log(`batch[${n}]`);
-          count += await generator.writeBlocks(writer, {
+          log(`batch[${n}]`);
+          count += await builder.generator.writeBlocks(writer, {
             count: n,
             delay: {
               min: 0,
@@ -96,7 +98,7 @@ describe('FeedQueue', function () {
       {
         for (let i = start + 1; i < numBlocks; i++) {
           const { seq, data } = await queue.pop();
-          console.log('<<', { seq, data: String(data) });
+          log('<<', { seq, data: JSON.stringify(data) });
           await sleep(faker.datatype.number({ min: 0, max: 100 }));
           received();
         }

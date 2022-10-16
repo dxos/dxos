@@ -10,11 +10,15 @@ import { Timeframe } from '@dxos/protocols';
 
 import { FeedBlock } from './feed-queue';
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
-import { TestBuilder } from './testing';
+import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
 
 describe('FeedSetIterator', function () {
   it('reads blocks in order', async function () {
-    const builder = new TestBuilder();
+    const builder = new TestBuilder({
+      valueEncoding: defaultValueEncoding,
+      generator: defaultTestGenerator
+    });
+
     const timeframe = new Timeframe();
 
     // TODO(burdon): Round-robin selector.
@@ -25,8 +29,9 @@ describe('FeedSetIterator', function () {
     const numFeeds = 3;
     const numBlocks = 25;
 
-    // Create feeds and write data.
+    // Write blocks.
     {
+      // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
       const feedStore = builder.createFeedStore();
       const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
@@ -38,6 +43,7 @@ describe('FeedSetIterator', function () {
 
       expect(iterator.size).to.eq(numFeeds);
 
+      // Write blocks.
       for (const _ of Array.from(Array(numBlocks))) {
         const feed = faker.random.arrayElement(feeds);
         await feed.append(faker.lorem.sentence());

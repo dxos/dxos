@@ -3,24 +3,36 @@
 //
 
 import faker from 'faker';
+import { AbstractValueEncoding } from 'hypercore';
 
 import { sleep } from '@dxos/async';
+import { Codec } from '@dxos/codec-protobuf';
+import { createCodecEncoding } from '@dxos/hypercore';
+import { schema } from '@dxos/protocols';
+import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { FeedWriter } from '../feed-writer';
 
-export type GenerateItem<T> = (i: number) => T
+export const defaultCodec: Codec<TestItemMutation> = schema.getCodecForType('example.testing.data.TestItemMutation');
 
-export const defaultGenerator: GenerateItem<string> = (i) => `test-${i}`;
+export const defaultValueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(defaultCodec);
+
+export type TestBlockGenerator<T extends {}> = (i: number) => T
+
+export const defaultTestBlockGenerator: TestBlockGenerator<TestItemMutation> = () => ({
+  key: faker.datatype.uuid(),
+  value: faker.lorem.sentence()
+});
 
 /**
  * Writes data to feeds.
  */
 // TODO(burdon): Use in other tests.
-export class TestGenerator<T> {
+export class TestGenerator<T = {}> {
   _count = 0;
 
   constructor (
-    private readonly _generate: GenerateItem<T>
+    private readonly _generate: TestBlockGenerator<T>
   ) {}
 
   async writeBlocks (writer: FeedWriter<T>, {
@@ -44,3 +56,5 @@ export class TestGenerator<T> {
     return count;
   }
 }
+
+export const defaultTestGenerator = new TestGenerator<TestItemMutation>(defaultTestBlockGenerator);

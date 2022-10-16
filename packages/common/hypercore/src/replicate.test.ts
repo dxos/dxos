@@ -9,15 +9,10 @@ import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
+import { log } from '@dxos/log';
 
 import { createReadable } from './streams';
 import { batch, createDataItem, TestDataItem } from './testing';
-
-// TODO(burdon): Add logging.
-// TODO(burdon): Factor out table logger.
-const logRow = (label: string, values: number[]) => {
-  // console.log(`${label.padEnd(6)} ${values.map(value => String(value).padStart(3)).join(' ')}`);
-};
 
 const noop = () => {};
 
@@ -111,7 +106,7 @@ describe('Hypercore replication', function () {
       let uploaded = 0;
       core1.on('upload', () => {
         uploaded++;
-        logRow(' up', [uploaded, core1.length]);
+        log('up', { uploaded, length: core1.length });
       });
 
       // Monitor downloads.
@@ -120,7 +115,7 @@ describe('Hypercore replication', function () {
         downloaded++;
         const { id } = JSON.parse(data.toString()) as TestDataItem;
         expect(id).to.eq(seq);
-        logRow(' down', [downloaded, core2.length]);
+        log('down', { downloaded, length: core2.length });
         expect(downloaded).to.be.lessThanOrEqual(uploaded);
         incDownload();
       });
@@ -128,7 +123,7 @@ describe('Hypercore replication', function () {
       // Monitor sync points (multiple since delayed writes).
       const sync = { started: 0, complete: 0 };
       core2.on('sync', () => {
-        logRow('=sync=', [++sync.started]);
+        log('sync', { events: ++sync.started });
         core2.download();
       });
 
@@ -203,7 +198,7 @@ describe('Hypercore replication', function () {
 
       let sync = 0;
       core2.on('sync', () => {
-        logRow('=sync=', [++sync]);
+        log('sync', { events: ++sync });
       });
     }
 

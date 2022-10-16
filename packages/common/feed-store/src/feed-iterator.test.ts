@@ -8,14 +8,16 @@ import faker from 'faker';
 import { latch } from '@dxos/async';
 
 import { FeedIterator } from './feed-iterator';
-import { TestBuilder } from './testing';
+import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
 
 describe('FeedIterator', function () {
   it.only('reads blocks in order', async function () {
-    const builder = new TestBuilder();
-    const numBlocks = 20;
+    const builder = new TestBuilder({
+      valueEncoding: defaultValueEncoding,
+      generator: defaultTestGenerator
+    });
 
-    // TODO(burdon): Use codec.
+    const numBlocks = 20;
 
     // Create feeds and write data.
     const feedStore = builder.createFeedStore();
@@ -41,7 +43,7 @@ describe('FeedIterator', function () {
     {
       const [done, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
-        for await (const block of iterator) {
+        for await (const _ of iterator) {
           const count = inc();
           if (count === numBlocks) {
             await iterator.stop();
