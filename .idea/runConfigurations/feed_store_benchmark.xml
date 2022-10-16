@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="feed-store benchmark" type="NodeJSConfigurationType" path-to-js-file="dist/src/tests/benchmark.js" working-dir="$PROJECT_DIR$/packages/common/feed-store">
+    <method v="2">
+      <option name="NpmBeforeRunTask" enabled="true">
+        <package-json value="$PROJECT_DIR$/package.json" />
+        <command value="run" />
+        <scripts>
+          <script value="nx" />
+        </scripts>
+        <arguments value="build feed-store &quot;${RANDOM}&quot;" />
+        <node-interpreter value="project" />
+        <envs />
+      </option>
+    </method>
+  </configuration>
+</component>

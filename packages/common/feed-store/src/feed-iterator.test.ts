@@ -36,6 +36,8 @@ describe('FeedIterator', function () {
         return feed;
       }));
 
+      expect(iterator.size).to.eq(numFeeds);
+
       for (const _ of Array.from(Array(numBlocks))) {
         const feed = faker.random.arrayElement(feeds);
         await sleep(faker.datatype.number({ min: 0, max: 20 }));
@@ -51,7 +53,7 @@ describe('FeedIterator', function () {
       const [done, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
         for await (const block of iterator) {
-          // console.log(block);
+          console.log(block);
           const count = inc();
           if (count === numBlocks) {
             iterator.stop();

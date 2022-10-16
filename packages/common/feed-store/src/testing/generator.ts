@@ -15,6 +15,7 @@ export const defaultGenerator: GenerateItem<string> = (i) => `test-${i}`;
 /**
  * Writes data to feeds.
  */
+// TODO(burdon): Use in other tests.
 export class TestGenerator<T> {
   _count = 0;
 

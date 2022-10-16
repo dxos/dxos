@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
-import { FeedBlock } from './feed-queue';
+import { FeedBlock, FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 // TODO(burdon): Create single and multi iterator.
@@ -22,8 +22,8 @@ export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefine
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
-export class FeedIterator<T> implements AsyncIterable<number> { // TODO(burdon): Change to FeedBlock.
-  private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
+export class FeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
+  private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
   private _running = false;
   private _count = 0;
@@ -33,6 +33,10 @@ export class FeedIterator<T> implements AsyncIterable<number> { // TODO(burdon):
     private readonly _start: Timeframe
   ) {
     assert(_selector);
+  }
+
+  get size () {
+    return this._candidateFeeds.size;
   }
 
   get running () {
@@ -52,7 +56,7 @@ export class FeedIterator<T> implements AsyncIterable<number> { // TODO(burdon):
   }
 
   addFeed (feed: FeedWrapper) {
-    this._candidateFeeds.set(feed.key, feed);
+    this._candidateFeeds.set(feed.key, new FeedQueue(feed));
   }
 
   /**
@@ -74,9 +78,17 @@ export class FeedIterator<T> implements AsyncIterable<number> { // TODO(burdon):
   }
 
   // TODO(burdon): Use selectors. Trigger on feed added and on feed append.
-  async _nextBlock () {
-    if (this._count < 100) {
-      return ++this._count;
-    }
+  async _nextBlock (): Promise<FeedBlock<T> | undefined> {
+
+    // for (const queue of Array.from(this._candidateFeeds.values())) {
+    //   console.log(queue.length);
+    // }
+
+    const block: FeedBlock<T> = {
+      seq: this._count++,
+      data: '???' as any
+    };
+
+    return block;
   }
 }

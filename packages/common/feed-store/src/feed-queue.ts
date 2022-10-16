@@ -37,6 +37,10 @@ export class FeedQueue<T> {
     private readonly _options: FeedQueueOptions = {}
   ) {}
 
+  get feed () {
+    return this._feed;
+  }
+
   get opened (): boolean {
     return Boolean(this._feedStream);
   }
@@ -87,6 +91,8 @@ export class FeedQueue<T> {
       log('closed');
     }
   }
+
+  // TODO(burdon): Need method that doesn't block to see if available.
 
   /**
    * Get the block at the head of the queue without removing it.
