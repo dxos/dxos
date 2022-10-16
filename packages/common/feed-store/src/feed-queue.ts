@@ -103,9 +103,9 @@ export class FeedQueue<T> {
     }
 
     if (this._currentBlock === undefined) {
-      // console.log('peeking...', this._feed.properties.length);
+      console.log('peeking...', this._nextSeq, this._feed.properties.length);
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
-      // console.log('peeked', String(value), done);
+      console.log('peeked', String(value), done);
 
       if (done) {
         // NOTE: Only called if live=false.

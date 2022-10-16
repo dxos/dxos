@@ -5,58 +5,44 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { latch, sleep } from '@dxos/async';
-import { Timeframe } from '@dxos/protocols';
+import { latch } from '@dxos/async';
 
-import { FeedBlockSelector, FeedIterator } from './feed-iterator';
-import { FeedBlock } from './feed-queue';
+import { FeedIterator } from './feed-iterator';
 import { TestBuilder } from './testing';
 
 describe('FeedIterator', function () {
   it('reads blocks in order', async function () {
     const builder = new TestBuilder();
-    const timeframe = new Timeframe();
 
-    // TODO(burdon): Round-robin selector.
-    const feedBlockSelector: FeedBlockSelector<any> = (feeds: FeedBlock<any>[]) => undefined;
-
-    const iterator = new FeedIterator(feedBlockSelector, timeframe);
-
-    const numFeeds = 3;
-    const numBlocks = 25;
+    const numBlocks = 20;
 
     // Create feeds and write data.
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+
+    const iterator = new FeedIterator(feed);
+    await iterator.start();
+    expect(iterator.running).to.be.true;
+
+    // Write blocks.
     {
-      // TODO(burdon): Test adding feeds on-the-fly.
-      const feedStore = builder.createFeedStore();
-      const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
-        const key = await builder.keyring.createKey();
-        const feed = await feedStore.openFeed(key, { writable: true });
-        iterator.addFeed(feed);
-        return feed;
-      }));
-
-      expect(iterator.size).to.eq(numFeeds);
-
-      for (const _ of Array.from(Array(numBlocks))) {
-        const feed = faker.random.arrayElement(feeds);
-        await sleep(faker.datatype.number({ min: 0, max: 20 }));
+      // TODO(burdon): Do async to test race conditions.
+      for (const i of Array.from(Array(numBlocks)).keys()) {
         await feed.append(faker.lorem.sentence());
+        console.log(i);
       }
     }
-
-    iterator.start();
-    expect(iterator.running).to.be.true;
 
     // Read blocks.
     {
       const [done, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
         for await (const block of iterator) {
-          console.log(block);
           const count = inc();
+          console.log('====', count, block);
           if (count === numBlocks) {
-            iterator.stop();
+            await iterator.stop();
           }
         }
       });

@@ -2,67 +2,47 @@
 // Copyright 2020 DXOS.org
 //
 
-import assert from 'assert';
-
-import { PublicKey } from '@dxos/keys';
+import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
-import { ComplexMap } from '@dxos/util';
 
 import { FeedBlock, FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
-
-// TODO(burdon): Create single and multi iterator.
-
-/**
- * Select next block.
- */
-export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined
 
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
 export class FeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
-  private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
+  private readonly _queue: FeedQueue<T>;
 
   private _running = false;
-  private _count = 0;
 
   constructor (
-    private readonly _selector: FeedBlockSelector<T>,
-    private readonly _start: Timeframe
+    private readonly _feed: FeedWrapper
   ) {
-    assert(_selector);
-  }
-
-  get size () {
-    return this._candidateFeeds.size;
+    this._queue = new FeedQueue(this._feed);
   }
 
   get running () {
     return this._running;
   }
 
-  start () {
+  async start () {
     log('starting...');
     this._running = true;
+    await this._queue.open();
     return this;
   }
 
-  stop () {
+  async stop () {
     log('stopping...');
     this._running = false;
     return this;
   }
 
-  addFeed (feed: FeedWrapper) {
-    this._candidateFeeds.set(feed.key, new FeedQueue(feed));
-  }
+  //
+  // AsyncIterable
+  //
 
-  /**
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
-   */
   [Symbol.asyncIterator] () {
     return this._generator();
   }
@@ -71,24 +51,18 @@ export class FeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
     while (this._running) {
       const block = await this._nextBlock();
       if (block) {
-        log('next'); // TODO(burdon): Count.
         yield block;
+      } else {
+        await sleep(1000); // TODO(burdon): Config.
       }
     }
   }
 
-  // TODO(burdon): Use selectors. Trigger on feed added and on feed append.
+  // TODO(burdon): Needs to be woken up?
   async _nextBlock (): Promise<FeedBlock<T> | undefined> {
-
-    // for (const queue of Array.from(this._candidateFeeds.values())) {
-    //   console.log(queue.length);
-    // }
-
-    const block: FeedBlock<T> = {
-      seq: this._count++,
-      data: '???' as any
-    };
-
+    console.log('popping...');
+    const block = await this._queue.pop();
+    console.log('popped');
     return block;
   }
 }

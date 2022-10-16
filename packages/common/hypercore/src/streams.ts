@@ -17,8 +17,6 @@ import { Readable as StreamXReadable } from 'streamx';
  * https://github.com/nodejs/readable-stream
  * https://nodejs.org/api/stream.html#readable-streams
  * https://nodejs.org/dist/v18.9.0/docs/api/stream.html#readablewrapstream
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
  */
 export const createReadable = (stream: StreamXReadable): Readable => {
   return new Readable({ objectMode: true }).wrap(stream as any);
@@ -29,6 +27,8 @@ export const createReadable = (stream: StreamXReadable): Readable => {
  *
  * https://github.com/tc39/proposal-async-iteration
  * https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-3.html#async-iteration
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
  */
 export const createAsyncIterator = (stream: StreamXReadable): AsyncIterator<any> => {
   return (stream as any)[Symbol.asyncIterator]();
