@@ -16,7 +16,7 @@ import { Directory } from '@dxos/random-access-storage';
 export type FeedFactoryOptions = {
   root: Directory
   signer: Signer
-  options?: HypercoreOptions
+  hypercore?: HypercoreOptions
 }
 
 export type FeedOptions = HypercoreOptions & {
@@ -26,21 +26,21 @@ export type FeedOptions = HypercoreOptions & {
 /**
  * Hypercore factory.
  */
-export class FeedFactory {
+export class FeedFactory<T = {}> {
   private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
 
   private readonly _root: Directory;
   private readonly _signer: Signer;
-  private readonly _options?: HypercoreOptions;
+  private readonly _hypercoreOptions?: HypercoreOptions;
 
   constructor ({
     root,
     signer,
-    options
+    hypercore
   }: FeedFactoryOptions) {
     this._root = root ?? failUndefined();
     this._signer = signer ?? failUndefined();
-    this._options = options;
+    this._hypercoreOptions = hypercore;
 
     this._storage = (publicKey: PublicKey) => (filename) => {
       const dir = this._root.createDirectory(publicKey.toHex());
@@ -50,7 +50,7 @@ export class FeedFactory {
     };
   }
 
-  createFeed (publicKey: PublicKey, options?: FeedOptions): Hypercore {
+  createFeed (publicKey: PublicKey, options?: FeedOptions): Hypercore<T> {
     if (options?.secretKey) {
       console.warn('Secret key ignored due to signer.');
     }
@@ -58,7 +58,7 @@ export class FeedFactory {
     // TODO(burdon): Current hack due to key-length restriction (move to @dxos/hypercore).
     const key = sha256(publicKey.toHex());
 
-    return hypercore(this._storage(publicKey), key, Object.assign({}, this._options, {
+    return hypercore(this._storage(publicKey), key, Object.assign({}, this._hypercoreOptions, {
       // TODO(burdon): Test if can omit (given crypto signer) in v10.
       secretKey: (this._signer && options?.writable) ? Buffer.from('dummy') : undefined,
       crypto: createCrypto(this._signer, publicKey)

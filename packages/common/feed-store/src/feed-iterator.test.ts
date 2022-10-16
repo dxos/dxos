@@ -11,10 +11,11 @@ import { FeedIterator } from './feed-iterator';
 import { TestBuilder } from './testing';
 
 describe('FeedIterator', function () {
-  it('reads blocks in order', async function () {
+  it.only('reads blocks in order', async function () {
     const builder = new TestBuilder();
-
     const numBlocks = 20;
+
+    // TODO(burdon): Use codec.
 
     // Create feeds and write data.
     const feedStore = builder.createFeedStore();
@@ -27,11 +28,13 @@ describe('FeedIterator', function () {
 
     // Write blocks.
     {
-      // TODO(burdon): Do async to test race conditions.
-      for (const i of Array.from(Array(numBlocks)).keys()) {
-        await feed.append(faker.lorem.sentence());
-        console.log(i);
-      }
+      setTimeout(async () => {
+        for (const _ of Array.from(Array(numBlocks)).keys()) {
+          await feed.append(faker.lorem.sentence());
+        }
+
+        expect(feed.properties.length).to.eq(numBlocks);
+      });
     }
 
     // Read blocks.
@@ -40,7 +43,6 @@ describe('FeedIterator', function () {
       setTimeout(async () => {
         for await (const block of iterator) {
           const count = inc();
-          console.log('====', count, block);
           if (count === numBlocks) {
             await iterator.stop();
           }

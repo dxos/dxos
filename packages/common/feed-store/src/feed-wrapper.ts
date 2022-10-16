@@ -13,7 +13,7 @@ import { createBinder } from '@dxos/util';
 /**
  * Async feed wrapper.
  */
-export class FeedWrapper {
+export class FeedWrapper<T = {}> {
   private readonly _binder = createBinder(this._hypercore);
 
   constructor (
@@ -28,7 +28,7 @@ export class FeedWrapper {
     return this._key;
   }
 
-  get core (): Hypercore {
+  get core (): Hypercore<T> {
     return this._hypercore;
   }
 

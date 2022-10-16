@@ -11,7 +11,7 @@ import { FeedWrapper } from './feed-wrapper';
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
-export class FeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
+export class FeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
   private readonly _queue: FeedQueue<T>;
 
   private _running = false;
@@ -60,9 +60,9 @@ export class FeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
 
   // TODO(burdon): Needs to be woken up?
   async _nextBlock (): Promise<FeedBlock<T> | undefined> {
-    console.log('popping...');
+    // console.log('popping...');
     const block = await this._queue.pop();
-    console.log('popped');
+    // console.log('popped');
     return block;
   }
 }

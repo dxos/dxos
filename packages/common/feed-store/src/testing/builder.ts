@@ -2,7 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
+import { AbstractValueEncoding } from 'hypercore';
+
+import { Codec } from '@dxos/codec-protobuf';
+import { createCodecEncoding } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
+import { schema } from '@dxos/protocols';
+import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from '../feed-factory';
@@ -21,6 +27,9 @@ export type TestBuilderOptions = {
 
 export class TestBuilder {
   static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
+
+  readonly codec: Codec<TestItemMutation> = schema.getCodecForType('example.testing.data.TestItemMutation');
+  readonly valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(this.codec);
 
   constructor (
     private readonly _properties: TestBuilderOptions = {}
@@ -54,9 +63,12 @@ export class TestBuilder {
   }
 
   createFeedFactory () {
-    return new FeedFactory({
+    return new FeedFactory<TestItemMutation>({
       root: this.directory,
-      signer: this.keyring
+      signer: this.keyring,
+      hypercore: {
+        valueEncoding: this.valueEncoding
+      }
     });
   }
 

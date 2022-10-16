@@ -26,7 +26,7 @@ export type FeedQueueOptions = {}
 /**
  * Async queue using an AsyncIterator created from a hypercore.
  */
-export class FeedQueue<T> {
+export class FeedQueue<T = {}> {
   private _iterator?: AsyncIterator<T>;
   private _feedStream?: any;
   private _currentBlock?: FeedBlock<T> = undefined;
@@ -103,10 +103,7 @@ export class FeedQueue<T> {
     }
 
     if (this._currentBlock === undefined) {
-      console.log('peeking...', this._nextSeq, this._feed.properties.length);
       const { value, done }: IteratorResult<T> = await this._iterator!.next();
-      console.log('peeked', String(value), done);
-
       if (done) {
         // NOTE: Only called if live=false.
         throw new Error('No more blocks.');

@@ -22,7 +22,7 @@ export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefine
 /**
  * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
  */
-export class FeedSetIterator<T> implements AsyncIterable<FeedBlock<T>> {
+export class FeedSetIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
   private readonly _candidateFeeds = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
   private _running = false;
