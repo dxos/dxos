@@ -5,14 +5,17 @@
 import { expect } from 'chai';
 import faker from 'faker';
 import hypercore from 'hypercore';
+import util from 'node:util';
 import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
+import { log } from '@dxos/log';
 
-import { createReadable } from './streams';
+import { createAsyncIterator, createReadable } from './streams';
 import { batch, createDataItem, TestDataItem } from './testing';
 
+// TODO(burdon): Add logging.
 // TODO(burdon): Factor out table logger.
 const logRow = (label: string, values: number[]) => {
   // console.log(`${label.padEnd(6)} ${values.map(value => String(value).padStart(3)).join(' ')}`);
@@ -235,4 +238,75 @@ describe('Hypercore', function () {
 
     await done();
   }).timeout(5_000);
+
+  it('iterates a feed until reached end', async function () {
+    const numBlocks = 10;
+    const { publicKey, secretKey } = createKeyPair();
+    const core = hypercore(ram, publicKey, { secretKey });
+
+    // Write.
+    {
+      const append = util.promisify(core.append.bind(core));
+      for (let i = 0; i < numBlocks; i++) {
+        await append(`test-${i}`);
+      }
+    }
+
+    // Read until end.
+    {
+      const stream = createReadable(core.createReadStream({ live: false }));
+      const iterator = createAsyncIterator(stream);
+      while (true) {
+        const { value, done } = await iterator.next();
+        if (done) {
+          break;
+        }
+
+        log(String(value));
+      }
+    }
+  });
+
+  it('iterates a feed until stopped', async function () {
+    const numBlocks = 10;
+    const { publicKey, secretKey } = createKeyPair();
+    const core = hypercore(ram, publicKey, { secretKey });
+
+    // Write.
+    {
+      const append = util.promisify(core.append.bind(core));
+      for (let i = 0; i < numBlocks; i++) {
+        await append(`test-${i}`);
+      }
+    }
+
+    // Read until stopped.
+    {
+      // Read forever.
+      // NOTE: Uses wrapper to normalize stream; otherwise done isn't called after destroying the stream.
+      const stream = createReadable(core.createReadStream({ live: true }));
+
+      // Use util to create reliable iterators.
+      const iterator = createAsyncIterator(stream);
+
+      const [reachedEnd, end] = latch();
+      const [readAll, inc] = latch({ count: numBlocks });
+      setTimeout(async () => {
+        while (true) {
+          const { value, done } = await iterator.next();
+          if (done) {
+            end();
+            break;
+          }
+
+          log(String(value));
+          inc();
+        }
+      });
+
+      await readAll();
+      stream.destroy();
+      await reachedEnd();
+    }
+  });
 });
