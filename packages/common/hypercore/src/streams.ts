@@ -6,7 +6,7 @@ import { Readable } from 'readable-stream';
 import { Readable as StreamXReadable } from 'streamx';
 
 /**
- * Converts streamx.Readable (hypercore.createReadStream) to a standard Readable stream.
+ * Wraps streamx.Readable (hypercore.createReadStream) to a standard Readable stream.
  *
  * The read-stream package is mirror of the streams implementations in Node.js 18.9.0.
  * This function is here to standardize the cast in case there are incompatibilities
@@ -31,5 +31,5 @@ export const createReadable = (stream: StreamXReadable): Readable => {
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
  */
 export const createAsyncIterator = (stream: Readable): AsyncIterator<any> => {
-  return (stream as any)[Symbol.asyncIterator]();
+  return (stream)[Symbol.asyncIterator]();
 };
