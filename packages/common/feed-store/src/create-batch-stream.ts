@@ -7,11 +7,9 @@ import assert from 'node:assert';
 
 import { PublicKey } from '@dxos/keys';
 
-import { FeedDescriptor } from './feed-descriptor';
+import { HypercoreFeed } from './hypercore-types';
 
-// TODO(burdon): Reconcile with feed-store iterator.
-//  https://github.com/dxos/dxos/pull/1611#discussion_r989889196
-export type CreateBatchStreamOptions = {
+export interface CreateBatchStreamOptions {
   start?: number
   end?: number
   live?: boolean
@@ -21,12 +19,8 @@ export type CreateBatchStreamOptions = {
   tail?: boolean
 }
 
-export const createBatchStream = (
-  descriptor: FeedDescriptor,
-  opts: CreateBatchStreamOptions = {}
-): NodeJS.ReadableStream => {
+export const createBatchStream = (feed: HypercoreFeed, opts: CreateBatchStreamOptions = {}) => {
   assert(!opts.batch || opts.batch > 0, 'batch must be major or equal to 1');
-  const { feed } = descriptor;
 
   let start = opts.start || 0;
   let end = typeof opts.end === 'number' ? opts.end : -1;
@@ -40,9 +34,8 @@ export const createBatchStream = (
   let first = true;
   let firstSyncEnd = end;
 
-  let range = feed.native.download({ start, end, linear: true });
+  let range = feed.download({ start, end, linear: true });
 
-  // TODO(burdon): Make async.
   const read = (size: any, cb?: any) => {
     if (!feed.opened) {
       return open(size, cb);
@@ -62,11 +55,9 @@ export const createBatchStream = (
           return cb(null, null);
         }
       }
-
       if (opts.tail) {
         start = feed.length;
       }
-
       firstSyncEnd = end === Infinity ? feed.length : end;
       first = false;
     }
@@ -77,7 +68,7 @@ export const createBatchStream = (
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.native.get(seq, opts, (err: any, data: any) => {
+      feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -94,36 +85,36 @@ export const createBatchStream = (
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.native.get(seq, opts, (err, data) => {
+      feed.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
-
         cb(null, [buildMessage(data as any)]);
       });
       return;
     }
 
     seq = setStart(batchEnd);
-    // TODO(burdon): Deprecated.
-    feed.native.getBatch(seq, batchEnd, opts, (err: Error | null, blocks?: Buffer[]) => {
-      if (err || blocks?.length === 0) { // TODO(burdon): Block length 0 is not an error.
+    feed.getBatch(seq, batchEnd, opts, (err: Error, messages: any[]) => {
+      if (err || messages.length === 0) {
         cb(err);
         return;
       }
 
-      cb(null, blocks!.map(buildMessage));
+      cb(null, messages.map(buildMessage));
     });
   };
 
   const buildMessage = (data: object) => {
-    return {
-      key: PublicKey.from(feed.key), // TODO(burdon): Document.
+    const message = {
+      key: PublicKey.from(feed.key),
       seq: seq++,
       data,
       sync: feed.length === seq || firstSyncEnd === 0 || firstSyncEnd === seq,
       ...metadata
     };
+
+    return message;
   };
 
   const cleanup = () => {
@@ -135,11 +126,10 @@ export const createBatchStream = (
   };
 
   const open = (size: any, cb: (err: Error) => void) => {
-    feed.native.ready(err => {
+    feed.ready((err: Error) => {
       if (err) {
         return cb(err);
       }
-
       read(size, cb);
     });
   };
@@ -151,11 +141,8 @@ export const createBatchStream = (
     if (range.iterator) {
       range.iterator.start = start;
     }
-
     return prevStart;
   };
 
-  return streamFrom.obj(read)
-    .on('end', cleanup)
-    .on('close', cleanup);
+  return streamFrom.obj(read).on('end', cleanup).on('close', cleanup);
 };

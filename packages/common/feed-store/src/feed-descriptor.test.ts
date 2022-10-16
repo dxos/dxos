@@ -5,54 +5,62 @@
 // @dxos/mocha platform=nodejs
 
 import expect from 'expect';
+import defaultHypercore from 'hypercore';
+import assert from 'node:assert';
 import pify from 'pify';
+import tempy from 'tempy';
 
 import { createKeyPair } from '@dxos/crypto';
-import { HypercoreFeed } from '@dxos/hypercore';
+import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
-import { FeedDescriptor } from './feed-descriptor';
+import FeedDescriptor from './feed-descriptor';
 
-describe.only('FeedDescriptor', function () {
-  let feedDescriptor: FeedDescriptor;
+describe('FeedDescriptor', function () {
+  let fd: FeedDescriptor;
 
-  // TODO(burdon): Remove.
   beforeEach(async function () {
-    // const keyring = new Keyring();
-    // feedDescriptor = new FeedDescriptor({
-    //   directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
-    //   key: await keyring.createKey(),
-    //   signer: keyring
-    // });
+    const keyring = new Keyring();
+    fd = new FeedDescriptor({
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
+      key: await keyring.createKey(),
+      hypercore: defaultHypercore,
+      signer: keyring
+    });
   });
 
   afterEach(async function () {
-    // await feedDescriptor.close(); // TODO(burdon): Error: Feed is closed.
+    await fd.close();
   });
 
-  it.only('create without private key', async function () {
+  it('Create', function () {
+    expect(fd).toBeInstanceOf(FeedDescriptor);
+    expect(fd.key).toBeDefined();
+  });
+
+  it('Can create feed descriptor with public key but without private key', async function () {
+    // When this behaviour was changed, suddenly `protocol-plugin-replicator` tests started hanging forever on network generation.
     const { publicKey } = createKeyPair();
     const key = PublicKey.from(publicKey);
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.NODE }).createDirectory('/tmp/dxos/feed-store'),
-      key
+      key,
+      directory: createStorage({ type: StorageType.NODE }).createDirectory('feed'),
+      hypercore: defaultHypercore
     });
-
     expect(fd.key).toEqual(key);
     expect(fd.secretKey).toBeUndefined();
-
-    await fd.open();
-    await fd.close(); // TODO(burdon): Error: Feed is closed.
   });
 
-  it('create custom options', async function () {
+  it('Create custom options', function () {
     const { publicKey, secretKey } = createKeyPair();
+
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
-      valueEncoding: 'json'
+      valueEncoding: 'json',
+      hypercore: defaultHypercore
     });
 
     expect(fd).toBeInstanceOf(FeedDescriptor);
@@ -61,74 +69,79 @@ describe.only('FeedDescriptor', function () {
     expect(fd.valueEncoding).toBe('json');
   });
 
-  it('open', async function () {
-    expect(feedDescriptor.opened).toBe(false);
+  it('Open', async function () {
+    expect(fd.opened).toBe(false);
 
     // Opening multiple times should actually open once.
-    const [feed1, feed2]: HypercoreFeed[] = await Promise.all([feedDescriptor.open(), feedDescriptor.open()]);
+    const [feed1, feed2] = await Promise.all([fd.open(), fd.open()]);
+    expect(feed1).toBe(feed2);
 
-    expect(feed1).toEqual(feed2);
-    expect(feed1.key).toEqual(feed2.key);
-    expect(feedDescriptor.feed).toBeDefined();
-    expect(feedDescriptor.feed).toBe(feed1);
-    expect(feedDescriptor.feed.key).toBeInstanceOf(Buffer);
-    expect(feedDescriptor.opened).toBe(true);
+    assert(fd.feed);
+
+    expect(fd.feed).toBe(feed1);
+    expect(fd.feed.key).toBeInstanceOf(Buffer);
+    expect(fd.opened).toBe(true);
   });
 
-  it('close', async function () {
-    await feedDescriptor.open();
-
+  it('Close', async function () {
+    await fd.open();
     // Closing multiple times should actually close once.
-    await Promise.all([feedDescriptor.close(), feedDescriptor.close()]);
-    expect(feedDescriptor.opened).toBe(false);
-    feedDescriptor.feed.native.append('test', (err: Error | null) => {
-      if (err) {
-        expect(err.message).toContain('This feed is not writable.');
-      }
+    await Promise.all([fd.close(), fd.close()]);
+    expect(fd.opened).toBe(false);
+
+    assert(fd.feed);
+
+    fd.feed.append('test', (err: any) => {
+      expect(err.message).toContain('This feed is not writable');
     });
 
     // If we try to close a feed that is opening should wait for the open result.
     const { publicKey, secretKey } = createKeyPair();
-    const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
+    const fd2 = new FeedDescriptor({
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
-      secretKey
+      secretKey,
+      hypercore: defaultHypercore
     });
 
-    await fd.open();
-    await expect(fd.close()).resolves.toBeUndefined();
-    expect(feedDescriptor.opened).toBe(false);
+    await fd2.open();
+    await expect(fd2.close()).resolves.toBeUndefined();
+    expect(fd.opened).toBe(false);
   });
 
-  // TODO(burdon): This doesn't work.
-  it.skip('close and open again', async function () {
+  it.skip('Close and open again', async function () {
+    const root = tempy.directory();
+
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
+      directory: createStorage({ type: StorageType.NODE, root }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
-      secretKey
-      // valueEncoding: 'utf-8'
+      secretKey,
+      valueEncoding: 'utf-8',
+      hypercore: defaultHypercore
     });
 
     await fd.open();
     expect(fd.opened).toBe(true);
-    // await fd.append('test');
+
+    assert(fd.feed);
+
     await pify(fd.feed.append.bind(fd.feed))('test');
 
-    // await fd.close();
-    // expect(fd.opened).toBe(false);
+    await fd.close();
+    expect(fd.opened).toBe(false);
 
-    // await fd.open();
-    // expect(fd.opened).toBe(true);
+    await fd.open();
+    expect(fd.opened).toBe(true);
 
-    // const msg = await pify(fd.feed.head.bind(fd.feed))();
-    // expect(msg).toBe('test');
+    const msg = await pify(fd.feed.head.bind(fd.feed))();
+    expect(msg).toBe('test');
   });
 
   it('on open error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
       hypercore: () => {
@@ -142,10 +155,10 @@ describe.only('FeedDescriptor', function () {
   it.skip('on close error should unlock the resource', async function () {
     const { publicKey, secretKey } = createKeyPair();
     const fd = new FeedDescriptor({
-      directory: createStorage({ type: StorageType.RAM }).createDirectory('/tmp/dxos/feed-store'),
+      directory: createStorage({ type: StorageType.RAM }).createDirectory('feed'),
       key: PublicKey.from(publicKey),
       secretKey,
-      hypercore: () => ({ // TODO(burdon): Use mock.
+      hypercore: () => ({
         opened: true,
         on: () => {},
         ready: (cb: () => void) => {
@@ -158,6 +171,7 @@ describe.only('FeedDescriptor', function () {
     });
 
     await fd.open();
+
     await expect(fd.close()).rejects.toThrow(/close error/);
   });
 });

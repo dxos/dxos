@@ -14,9 +14,10 @@ import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { FeedStore } from './feed-store';
 import { createFeedWriter } from './feed-writer';
 
+// TODO(burdon): Replace with existing def.
 const codec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
-describe('Feed tests.', function () {
+describe('Feed tests:', function () {
   it('codec', function () {
     const message1: FeedMessage = {
       timeframe: new Timeframe(),
@@ -31,8 +32,7 @@ describe('Feed tests.', function () {
   });
 
   it.skip('hypercore', async function () {
-    const feedStore = new FeedStore(
-      createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
     const { feed } = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
@@ -46,19 +46,18 @@ describe('Feed tests.', function () {
     };
 
     await pify(feed.append.bind(feed))(data);
-    expect(feed.length).toBe(1);
 
+    expect(feed.length).toBe(1);
     const block = await pify(feed.get.bind(feed))(0);
     expect(block).toEqual(data);
   });
 
   it.skip('feed writer', async function () {
-    const feedStore = new FeedStore(
-      createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
+    const feedStore = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory('feed'), { valueEncoding: codec });
 
     const { publicKey, secretKey } = createKeyPair();
-    const feedDescriptor = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
-    const writer = createFeedWriter<FeedMessage>(feedDescriptor);
+    const feed = await feedStore.openReadWriteFeed(PublicKey.from(publicKey), secretKey);
+    const writer = createFeedWriter<FeedMessage>(feed);
 
     const data: FeedMessage = {
       timeframe: new Timeframe(),
@@ -71,13 +70,14 @@ describe('Feed tests.', function () {
         }
       }
     };
-
     const receipt = await writer.write(data);
-    expect(receipt.feedKey.equals(feedDescriptor.key)).toBe(true);
-    expect(receipt.seq).toEqual(0);
-    expect(feedDescriptor.feed.length).toEqual(1);
 
-    const block = await pify(feedDescriptor.feed.get.bind(feedDescriptor))(0);
+    expect(receipt.feedKey.equals(feed.key)).toBe(true);
+    expect(receipt.seq).toEqual(0);
+
+    expect(feed.feed.length).toEqual(1);
+
+    const block = await pify(feed.feed.get.bind(feed))(0);
     expect(block).toEqual(data);
   });
 });

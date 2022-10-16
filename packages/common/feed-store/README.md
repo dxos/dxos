@@ -28,7 +28,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 
 (async () => {
   const feedStore = new FeedStore('./db', {
-    HypercoreOptions: { valueEncoding: 'utf-8' }
+    feedOptions: { valueEncoding: 'utf-8' }
   });
   await feedStore.open();
 
@@ -61,7 +61,7 @@ import { PublicKey, createKeyPair } from '@dxos/crypto';
 - `storage: RandomAccessStorage`: Storage used by the feeds to store their data.
 - `options`:
   - `database: () => Hypertrie`: Defines a custom hypertrie database to index the feeds.
-  - `HypercoreOptions: Object`: Default hypercore options for each feed.
+  - `feedOptions: Object`: Default hypercore options for each feed.
   - `codecs: Object`: Defines a list of available codecs to work with the feeds.
   - `hypercore: Hypercore`: Defines the Hypercore class to create feeds.
 

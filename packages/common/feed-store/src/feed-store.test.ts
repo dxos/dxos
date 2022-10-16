@@ -15,13 +15,13 @@ import waitForExpect from 'wait-for-expect';
 
 import { sleep } from '@dxos/async';
 import { createKeyPair, verifySignature } from '@dxos/crypto';
-import { HypercoreFeed } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { FeedDescriptor } from './feed-descriptor';
 import { FeedStore } from './feed-store';
+import { HypercoreFeed } from './hypercore-types';
 
 interface KeyPair {
   key: PublicKey
@@ -29,29 +29,25 @@ interface KeyPair {
 
 const feedNames = ['booksFeed', 'usersFeed', 'groupsFeed'];
 
-const keyring = new Keyring();
-
 const createFeedStore = (storage: Storage, options = {}) => {
   return new FeedStore(storage.createDirectory('feed'), options);
 };
 
 const createDefault = async () => {
   const directory = tempy.directory();
+
   return {
     directory,
     feedStore: createFeedStore(createStorage({ type: StorageType.NODE, root: directory }), { valueEncoding: 'utf-8' })
   };
 };
+const keyring = new Keyring();
 
-const createFeeds = async (
-  feedStore: FeedStore,
-  keys: Record<string, KeyPair>
-): Promise<Record<string, FeedDescriptor>> => {
-  return Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) => [
-    feed,
-    await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)
-  ])));
-};
+const defaultFeeds = async (feedStore: FeedStore, keys: Record<string, KeyPair>):
+  Promise<Record<string, FeedDescriptor>> =>
+  Object.fromEntries(await Promise.all(Object.entries<KeyPair>(keys).map(async ([feed, keyPair]) =>
+    [feed, await feedStore.openReadWriteFeedWithSigner(keyPair.key, keyring)]
+  )));
 
 const append = (feed: HypercoreFeed, message: any) => pify(feed.append.bind(feed))(message);
 
@@ -79,7 +75,7 @@ describe.skip('FeedStore', function () {
 
   it('Create feed', async function () {
     const { feedStore } = await createDefault();
-    const { booksFeed: descriptor } = await createFeeds(feedStore, keys);
+    const { booksFeed: descriptor } = await defaultFeeds(feedStore, keys);
     const { feed: booksFeed } = descriptor;
 
     expect(booksFeed).toBeInstanceOf(hypercore);
@@ -97,12 +93,12 @@ describe.skip('FeedStore', function () {
   it.skip('Create duplicate feed', async function () {
     const { feedStore } = await createDefault();
 
-    const { feed } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
-    assert(feed.secretKey);
+    const { feed: fds } = await feedStore.openReadWriteFeedWithSigner(keys.usersFeed.key, keyring);
+    assert(fds.secretKey);
 
     const [usersFeed, feed2] = await Promise.all([
-      feedStore.openReadWriteFeed(PublicKey.from(feed.key), feed.secretKey),
-      feedStore.openReadWriteFeed(PublicKey.from(feed.key), feed.secretKey)
+      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey),
+      feedStore.openReadWriteFeed(PublicKey.from(fds.key), fds.secretKey)
     ]);
     expect(usersFeed.feed).toBe(feed2.feed);
 
@@ -123,7 +119,7 @@ describe.skip('FeedStore', function () {
 
   it('Descriptors', async function () {
     const { feedStore } = await createDefault();
-    await createFeeds(feedStore, keys);
+    await defaultFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
       .toEqual(Object.entries(keys).map(([, keyPair]) => keyPair.key)
@@ -132,7 +128,7 @@ describe.skip('FeedStore', function () {
 
   it('Feeds', async function () {
     const { feedStore } = await createDefault();
-    const { booksFeed, usersFeed, groupsFeed } = await createFeeds(feedStore, keys);
+    const { booksFeed, usersFeed, groupsFeed } = await defaultFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key))
       .toEqual([booksFeed.key, usersFeed.key, groupsFeed.key]);
@@ -140,7 +136,7 @@ describe.skip('FeedStore', function () {
 
   it('Close feedStore and their feeds', async function () {
     const { feedStore } = await createDefault();
-    await createFeeds(feedStore, keys);
+    await defaultFeeds(feedStore, keys);
 
     expect(Array.from((feedStore as any)._descriptors.values()).map((fd: any) => fd.key).length).toBe(3);
     await feedStore.close();
@@ -208,9 +204,9 @@ describe.skip('FeedStore', function () {
     const feed1 = await feedStore1.openReadWriteFeedWithSigner(key, keyring);
     const feed2 = await feedStore2.openReadOnlyFeed(key);
 
-    // TODO(burdon): Export stream.d.ts to interfaces
-    const stream1 = feed1.replicate(true) as any as NodeJS.ReadStream;
-    const stream2 = feed2.replicate(false) as any as NodeJS.WriteStream;
+    const stream1 = feed1.feed.replicate(true);
+    const stream2 = feed2.feed.replicate(false);
+
     stream1.pipe(stream2).pipe(stream1);
 
     await feed1.append('test');
@@ -226,6 +222,7 @@ describe.skip('FeedStore', function () {
 
     const stream1 = hypercore1.replicate(true);
     const stream2 = hypercore2.replicate(false);
+
     stream1.pipe(stream2).pipe(stream1);
 
     hypercore1.append('test');
@@ -254,6 +251,7 @@ describe.skip('FeedStore', function () {
 
     const hypercore1 = hypercore('/tmp/test-' + Math.random(), publicKey, { secretKey, crypto: MOCK_CRYPTO });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), publicKey, { crypto: MOCK_CRYPTO });
+
     const stream1 = hypercore1.replicate(true);
     const stream2 = hypercore2.replicate(false);
 
@@ -277,7 +275,6 @@ describe.skip('FeedStore', function () {
             cb(err);
             return;
           }
-
           console.log('sign', Buffer.from(res).toString('hex'));
           cb(null, Buffer.from(res));
         });
@@ -289,14 +286,13 @@ describe.skip('FeedStore', function () {
           key: key.toString(),
           result: await verifySignature(key, data, signature)
         });
-
         callbackify(verifySignature)(key, data, signature, cb);
       }
     };
 
     const secretKey = Buffer.from('secret');
 
-    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto, secretKey });
+    const hypercore1 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { secretKey, crypto });
     const hypercore2 = hypercore('/tmp/test-' + Math.random(), hypercoreKey, { crypto });
 
     const stream1 = hypercore1.replicate(true);
