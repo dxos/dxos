@@ -83,6 +83,7 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
         }
       }
 
+      // TODO(burdon): Replace polling with trigger (on new feed, message).
       log('Polling...');
       await sleep(this._options.polling ?? 1000);
     }
