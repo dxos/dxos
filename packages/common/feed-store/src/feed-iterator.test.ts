@@ -3,15 +3,15 @@
 //
 
 import { expect } from 'chai';
-import faker from 'faker';
 
 import { latch } from '@dxos/async';
 
 import { FeedIterator } from './feed-iterator';
+import { FeedWriter } from './feed-writer';
 import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
 
 describe('FeedIterator', function () {
-  it.only('reads blocks in order', async function () {
+  it('reads blocks in order', async function () {
     const builder = new TestBuilder({
       valueEncoding: defaultValueEncoding,
       generator: defaultTestGenerator
@@ -23,6 +23,7 @@ describe('FeedIterator', function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
+    const writer = new FeedWriter(feed.core);
 
     const iterator = new FeedIterator(feed);
     await iterator.start();
@@ -32,7 +33,7 @@ describe('FeedIterator', function () {
     {
       setTimeout(async () => {
         for (const _ of Array.from(Array(numBlocks)).keys()) {
-          await feed.append(faker.lorem.sentence());
+          await builder.generator.writeBlocks(writer, { count: 1 });
         }
 
         expect(feed.properties.length).to.eq(numBlocks);

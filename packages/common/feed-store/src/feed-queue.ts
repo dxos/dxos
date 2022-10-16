@@ -7,12 +7,14 @@ import { ReadStreamOptions } from 'hypercore';
 
 import { latch } from '@dxos/async';
 import { createAsyncIterator, createReadable } from '@dxos/hypercore';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 
 // TODO(burdon): Reconcile with other def.
 export type FeedBlock<T> = {
+  feed: PublicKey
   seq: number
   data: T
 }
@@ -47,6 +49,10 @@ export class FeedQueue<T = {}> {
 
   get length (): number {
     return this._feed.properties.length;
+  }
+
+  get next () {
+    return this._nextSeq;
   }
 
   /**
@@ -92,8 +98,6 @@ export class FeedQueue<T = {}> {
     }
   }
 
-  // TODO(burdon): Need method that doesn't block to see if available.
-
   /**
    * Get the block at the head of the queue without removing it.
    */
@@ -110,6 +114,7 @@ export class FeedQueue<T = {}> {
       }
 
       this._currentBlock = {
+        feed: this._feed.key,
         seq: this._nextSeq,
         data: value
       };

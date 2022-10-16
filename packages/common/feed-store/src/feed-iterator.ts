@@ -9,18 +9,10 @@ import { FeedBlock, FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 /**
- * Asynchronous iterator that reads blocks from multiple feeds in timeframe order.
+ * Base class for an async iterable feed.
  */
-export class FeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
-  private readonly _queue: FeedQueue<T>;
-
-  private _running = false;
-
-  constructor (
-    private readonly _feed: FeedWrapper
-  ) {
-    this._queue = new FeedQueue(this._feed);
-  }
+export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
+  protected _running = false;
 
   get running () {
     return this._running;
@@ -28,15 +20,21 @@ export class FeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
 
   async start () {
     log('starting...');
+    await this._onOpen();
     this._running = true;
-    await this._queue.open();
-    return this;
   }
 
   async stop () {
     log('stopping...');
     this._running = false;
-    return this;
+  }
+
+  async open () {
+    await this._onOpen();
+  }
+
+  async close () {
+    await this._onClose();
   }
 
   //
@@ -58,11 +56,33 @@ export class FeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
     }
   }
 
-  // TODO(burdon): Needs to be woken up?
-  async _nextBlock (): Promise<FeedBlock<T> | undefined> {
-    // console.log('popping...');
-    const block = await this._queue.pop();
-    // console.log('popped');
-    return block;
+  abstract _onOpen (): Promise<void>
+  abstract _onClose (): Promise<void>
+  abstract _nextBlock (): Promise<FeedBlock<T> | undefined>;
+}
+
+/**
+ * Iterator that reads blocks from a single feed.
+ */
+export class FeedIterator<T = {}> extends AbstractFeedIterator<T> {
+  private readonly _queue: FeedQueue<T>;
+
+  constructor (
+    private readonly _feed: FeedWrapper
+  ) {
+    super();
+    this._queue = new FeedQueue(this._feed);
+  }
+
+  override async _onOpen (): Promise<void> {
+    await this._queue.open();
+  }
+
+  override async _onClose (): Promise<void> {
+    await this._queue.close();
+  }
+
+  override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
+    return this._queue.pop();
   }
 }

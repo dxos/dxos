@@ -5,11 +5,14 @@
 import { expect } from 'chai';
 import faker from 'faker';
 
-import { latch, sleep } from '@dxos/async';
+import { latch } from '@dxos/async';
+import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Timeframe } from '@dxos/protocols';
 
 import { FeedBlock } from './feed-queue';
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
+import { FeedWriter } from './feed-writer';
 import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
 
 describe('FeedSetIterator', function () {
@@ -19,36 +22,42 @@ describe('FeedSetIterator', function () {
       generator: defaultTestGenerator
     });
 
+    // Random selector.
+    // TODO(burdon): Implement Timeframe selector.
+    const feedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
+      faker.datatype.number({ min: 0, max: blocks.length - 1 });
+
     const timeframe = new Timeframe();
-
-    // TODO(burdon): Round-robin selector.
-    const feedBlockSelector: FeedBlockSelector<any> = (feeds: FeedBlock<any>[]) => undefined;
-
     const iterator = new FeedSetIterator(feedBlockSelector, timeframe);
 
     const numFeeds = 3;
     const numBlocks = 25;
 
     // Write blocks.
+    const feedKeys: PublicKey[] = [];
     {
+      const feedStore = builder.createFeedStore();
+
       // Create feeds.
       // TODO(burdon): Test adding feeds on-the-fly.
-      const feedStore = builder.createFeedStore();
-      const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
+      log('writing', { numFeeds, numBlocks });
+      const writers = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
         const key = await builder.keyring.createKey();
         const feed = await feedStore.openFeed(key, { writable: true });
         iterator.addFeed(feed);
-        return feed;
+        feedKeys.push(feed.key);
+        return new FeedWriter(feed.core);
       }));
 
       expect(iterator.size).to.eq(numFeeds);
 
       // Write blocks.
-      for (const _ of Array.from(Array(numBlocks))) {
-        const feed = faker.random.arrayElement(feeds);
-        await feed.append(faker.lorem.sentence());
-        await sleep(faker.datatype.number({ min: 0, max: 20 }));
-      }
+      setTimeout(async () => {
+        for (const _ of Array.from(Array(numBlocks))) {
+          const writer = faker.random.arrayElement(writers);
+          await builder.generator.writeBlocks(writer, { count: 1 });
+        }
+      });
     }
 
     await iterator.start();
@@ -59,7 +68,10 @@ describe('FeedSetIterator', function () {
       const [done, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
         for await (const block of iterator) {
-          console.log(block);
+          const { feed, seq } = block;
+          const feedIndex = feedKeys.findIndex(key => PublicKey.equals(key, feed));
+          log('read', { feedIndex, seq });
+
           const count = inc();
           if (count === numBlocks) {
             await iterator.stop();

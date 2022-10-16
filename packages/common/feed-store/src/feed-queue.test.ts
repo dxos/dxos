@@ -58,7 +58,7 @@ describe('FeedQueue', function () {
           const last = i === numChunks - 1;
           await batch(last ? Math.max(size, numBlocks - count) : size);
           if (!last) {
-            await sleep(faker.datatype.number({ min: 100, max: 500 }));
+            await sleep(faker.datatype.number({ min: 0, max: 50 }));
           }
         }
 
@@ -99,7 +99,7 @@ describe('FeedQueue', function () {
         for (let i = start + 1; i < numBlocks; i++) {
           const { seq, data } = await queue.pop();
           log('<<', { seq, data: JSON.stringify(data) });
-          await sleep(faker.datatype.number({ min: 0, max: 100 }));
+          await sleep(faker.datatype.number({ min: 0, max: 50 }));
           received();
         }
       }
