@@ -40,6 +40,13 @@ npm i -g n
 npm i -g pnpm@7.9.0
 ```
 
+On Ubuntu or other linux systems, the following dependencies may be needed for pnpm install to succeed:
+
+```bash
+# From https://github.com/octalmage/robotjs/#building
+sudo apt-get install libxtst-dev libpng++-dev
+```
+
 To prevent the need for `sudo` when running tools it is recommended to `chown` the relevant bin folders:
 
 ```bash
@@ -78,13 +85,6 @@ To Install dependencies from the root directory:
 
 ```bash
 pnpm install
-```
-
-On Ubuntu or other linux systems, the following dependencies may be needed for install to succeed:
-
-```bash
-# From https://github.com/octalmage/robotjs/#building
-sudo apt-get install libxtst-dev libpng++-dev
 ```
 
 To build all packages:
