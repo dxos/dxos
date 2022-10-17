@@ -5,10 +5,10 @@
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
 import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
+import { Timeframe } from '@dxos/timeframe';
 
 import { TYPES } from './proto';
 import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
-import { Timeframe } from './timeframe';
 
 export type TypedMessage = TypedProtoMessage<TYPES>
 

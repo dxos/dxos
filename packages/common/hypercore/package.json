@@ -32,7 +32,6 @@
     "util": "^0.12.4"
   },
   "devDependencies": {
-    "@dxos/protocols": "workspace:*",
     "@dxos/log": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",

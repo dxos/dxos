@@ -7,19 +7,14 @@ import faker from 'faker';
 
 import { latch, sleep } from '@dxos/async';
 import { log } from '@dxos/log';
-import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { FeedWriter } from './feed-writer';
-import { TestBuilder, defaultValueEncoding, defaultTestGenerator } from './testing';
+import { TestBuilder } from './testing';
 
 describe('FeedQueue', function () {
-  const builder = new TestBuilder<TestItemMutation>({
-    valueEncoding: defaultValueEncoding,
-    generator: defaultTestGenerator
-  });
-
+  const builder = new TestBuilder();
   const factory = builder.createFeedFactory();
 
   it('peaks and pops from a queue', async function () {

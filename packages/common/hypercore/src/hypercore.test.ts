@@ -7,11 +7,22 @@ import hypercore, { AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
 import ram from 'random-access-memory';
 
+import { Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
-import { schema } from '@dxos/protocols';
-import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { createCodecEncoding } from './crypto';
+
+type TestItem = {
+  key: string
+  value: string
+}
+
+const codec: Codec<TestItem> = {
+  encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
+  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
+};
+
+const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
 describe('Hypercore', function () {
   it('sanity', async function () {
@@ -34,12 +45,8 @@ describe('Hypercore', function () {
   });
 
   it('encoding with typed hypercore', async function () {
-    // TODO(burdon): Create separate proto testing package.
-    const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
-    const valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(codec);
-
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore<TestItemMutation>(ram, publicKey, { secretKey, valueEncoding });
+    const core = hypercore<TestItem>(ram, publicKey, { secretKey, valueEncoding });
 
     {
       const append = util.promisify(core.append.bind(core));

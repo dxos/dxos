@@ -7,12 +7,12 @@ import assert from 'node:assert';
 import { Readable } from 'readable-stream';
 
 import { Event, Trigger } from '@dxos/async';
+import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 
 import { createBatchStream } from './create-batch-stream';
 import { FeedDescriptor } from './feed-descriptor';
-import { FeedBlock } from './types';
 
 const log = debug('dxos:echo:feed-store-iterator:log');
 

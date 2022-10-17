@@ -6,7 +6,6 @@ export * from './buffer-patch';
 export * from './codec';
 export * from './common';
 export * from './encoding';
-export * from './interface';
 export * from './mapping';
 export * from './sanitizer';
 export * from './schema';

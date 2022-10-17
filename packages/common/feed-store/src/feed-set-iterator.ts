@@ -5,12 +5,13 @@
 import assert from 'assert';
 
 import { sleep } from '@dxos/async';
+import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
-import { FeedBlock, FeedQueue } from './feed-queue';
+import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 /**

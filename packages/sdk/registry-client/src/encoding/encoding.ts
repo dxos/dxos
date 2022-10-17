@@ -48,6 +48,7 @@ export const decodeExtensionPayload = async (
       dataType.decode(Buffer.from(extension.data)),
       OBJECT_CONVERSION_OPTIONS
     );
+
     return { '@type': typeCid, ...(await mapMessage(dataType, mapper, dataJson)) };
   };
   return mapper(extension, RECORD_EXTENSION_NAME);

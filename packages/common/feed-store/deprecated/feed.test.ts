@@ -6,9 +6,10 @@ import expect from 'expect';
 
 import { createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
-import { schema, Timeframe } from '@dxos/protocols';
+import { schema } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 
 import { FeedStore } from './feed-store';
 import { createFeedWriter } from './feed-writer';

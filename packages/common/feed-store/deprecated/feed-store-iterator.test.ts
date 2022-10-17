@@ -9,10 +9,12 @@ import assert from 'node:assert';
 
 import { latch } from '@dxos/async';
 import { createId } from '@dxos/crypto';
+import { FeedBlock } from '@dxos/hypercore';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { schema, createTestItemMutation, FeedMessageBlock, Timeframe } from '@dxos/protocols';
+import { schema, createTestItemMutation } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { FeedDescriptor } from './feed-descriptor';
@@ -44,7 +46,7 @@ describe('feed store iterator', function () {
 
     // TODO(burdon): Factor out/generalize.
     // Select message based on timeframe.
-    const messageSelector = (candidates: FeedMessageBlock[]) => {
+    const messageSelector = (candidates: FeedBlock[]) => {
       log('Current:', currentTimeframe);
 
       // Create list of allowed candidates.

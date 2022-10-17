@@ -8,18 +8,24 @@ import { AbstractValueEncoding } from 'hypercore';
 import { sleep } from '@dxos/async';
 import { Codec } from '@dxos/codec-protobuf';
 import { createCodecEncoding } from '@dxos/hypercore';
-import { schema } from '@dxos/protocols';
-import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { FeedWriter } from '../feed-writer';
 
-export const defaultCodec: Codec<TestItemMutation> = schema.getCodecForType('example.testing.data.TestItemMutation');
+type TestItem = {
+  key: string
+  value: string
+}
 
-export const defaultValueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(defaultCodec);
+const defaultCodec: Codec<TestItem> = {
+  encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
+  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
+};
+
+export const defaultValueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(defaultCodec);
 
 export type TestBlockGenerator<T extends {}> = (i: number) => T
 
-export const defaultTestBlockGenerator: TestBlockGenerator<TestItemMutation> = () => ({
+export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = () => ({
   key: faker.datatype.uuid(),
   value: faker.lorem.sentence()
 });
@@ -57,4 +63,4 @@ export class TestGenerator<T = {}> {
   }
 }
 
-export const defaultTestGenerator = new TestGenerator<TestItemMutation>(defaultTestBlockGenerator);
+export const defaultTestGenerator = new TestGenerator<TestItem>(defaultTestBlockGenerator);
