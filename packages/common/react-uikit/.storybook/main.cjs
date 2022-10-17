@@ -13,7 +13,7 @@ module.exports = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    'storybook-dark-mode',
+    'storybook-dark-mode'
   ],
   framework: '@storybook/react',
   core: {
@@ -24,6 +24,12 @@ module.exports = {
     previewMdx2: true
   },
   viteFinal: async (config) => mergeConfig(config, {
+    optimizeDeps: {
+      force: true,
+      include: [
+        '@dxos/react-ui'
+      ]
+    },
     build: {
       commonjsOptions: {
         include: [
@@ -34,6 +40,6 @@ module.exports = {
     },
     plugins: [dxosPlugin(), themePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
-    })],
+    })]
   })
 };

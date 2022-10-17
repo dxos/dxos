@@ -4,6 +4,10 @@
 
 import React from 'react';
 
+import { Button } from '@dxos/react-ui';
+
+import { useTranslation } from '../../translations';
+
 export interface AuthChoicesProps {
   create?: boolean
   recover?: boolean
@@ -11,5 +15,6 @@ export interface AuthChoicesProps {
 }
 
 export const AuthChoices = (props: AuthChoicesProps) => {
-  return <div role='main'>Auth choices</div>;
+  const { t } = useTranslation();
+  return <section><Button>{t('create profile action')}</Button></section>;
 };
