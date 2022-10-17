@@ -27,12 +27,12 @@ export class ReplicatorPlugin extends AbstractReplicatorPlugin {
       load: async () => {
         const feeds = Array.from(this._feeds);
         log('Loading feeds', { feeds: feeds.map(feed => feed.key) });
-        return feeds.map((feed) => ({ discoveryKey: feed.discoveryKey }));
+        return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
       },
 
       subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._feedAdded.on(async (feed) => {
         log('Adding feed', { feed: feed.key });
-        addFeedToReplicatedSet({ discoveryKey: feed.discoveryKey });
+        addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
       }),
 
       replicate: async (remoteFeeds, info) => {

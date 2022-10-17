@@ -79,14 +79,14 @@ describe('space/replicator-plugin', function () {
     await replicator2.addFeed(feed2);
 
     await waitForExpect(() => {
-      expect(feed2.length).toEqual(1);
+      expect(feed2.feed.length).toEqual(1);
     });
 
     await feed1.append({
       timeframe: new Timeframe()
     });
     await waitForExpect(() => {
-      expect(feed2.length).toEqual(2);
+      expect(feed2.feed.length).toEqual(2);
     });
   });
 });

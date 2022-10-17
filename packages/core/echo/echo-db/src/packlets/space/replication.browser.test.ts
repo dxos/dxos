@@ -28,8 +28,8 @@ describe('replication', function () {
     const feed1: FeedDescriptor = await feedStore1.openReadWriteFeedWithSigner(await keyring.createKey(), keyring);
     const feed2: FeedDescriptor = await feedStore2.openReadOnlyFeed(feed1.key);
 
-    const stream1: ProtocolStream = feed1.replicate(true);
-    const stream2: ProtocolStream = feed2.replicate(false);
+    const stream1 = feed1.feed.replicate(true);
+    const stream2 = feed2.feed.replicate(false);
     stream1.pipe(stream2).pipe(stream1);
 
     await feed1.append({
@@ -37,7 +37,7 @@ describe('replication', function () {
     });
 
     await waitForExpect(() => {
-      expect(feed2.length).toEqual(1);
+      expect(feed2.feed.length).toEqual(1);
     });
   });
 });
