@@ -72,6 +72,7 @@
     "react-registry-client": "packages/sdk/react-registry-client",
     "react-toolkit": "packages/sdk/react-toolkit",
     "react-ui": "packages/common/react-ui",
+    "react-uikit": "packages/common/react-uikit",
     "registry-client": "packages/sdk/registry-client",
     "ridoculous": "tools/ridoculous",
     "rpc": "packages/core/mesh/rpc",

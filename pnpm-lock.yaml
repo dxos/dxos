@@ -800,6 +800,53 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       webpack: 5.74.0
 
+  packages/common/react-uikit:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/react-ui': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@storybook/addon-actions': ^6.5.10
+      '@storybook/addon-essentials': ^6.5.10
+      '@storybook/addon-interactions': ^6.5.10
+      '@storybook/addon-links': ^6.5.10
+      '@storybook/builder-vite': ^0.2.2
+      '@storybook/react': ^6.5.10
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      alea: ^1.0.1
+      classnames: ^2.3.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      require-from-string: ^2.0.2
+      storybook-dark-mode: ^1.1.2
+      typescript: ^4.7.2
+      vite: 3.0.9
+      webpack: ^5.74.0
+    dependencies:
+      alea: 1.0.1
+      classnames: 2.3.2
+    devDependencies:
+      '@babel/core': 7.18.13
+      '@dxos/react-ui': link:../react-ui
+      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@storybook/addon-actions': 6.5.10_biqbaboplfbrettd7655fr4n2y
+      '@storybook/addon-essentials': 6.5.10_mlovdwii52utbxpe4cy7chdr7u
+      '@storybook/addon-interactions': 6.5.10_xzp6vooxmdn6yqi7fy5dnsg5wi
+      '@storybook/addon-links': 6.5.10_biqbaboplfbrettd7655fr4n2y
+      '@storybook/builder-vite': 0.2.2_bvarfisbvb3oys73ofqc3jr76q
+      '@storybook/react': 6.5.10_iymb4gek2b34ofvhsgkkbkrfii
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.0.1_vite@3.0.9
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      require-from-string: 2.0.2
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
+      typescript: 4.7.4
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      webpack: 5.74.0
+
   packages/common/shims:
     specifiers: {}
 
