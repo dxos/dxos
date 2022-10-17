@@ -29,7 +29,7 @@ export const register = () => {
       }
 
       // Dump code for debugging
-      const DUMP = true;
+      const DUMP = false;
       if (DUMP) {
         // TODO(burdon): Decide on better place to put debug files.
         const sourceMap = getSourceMap(filename);
