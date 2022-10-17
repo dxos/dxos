@@ -8,6 +8,8 @@ import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { SourceMapConsumer } from 'source-map';
 
+import { SourcePosition } from './source-map';
+
 export const preprocess = (code: string, filename: string) => {
   return transformSync(code, {
     // will emit the source map as a separate property of the output.
@@ -41,12 +43,6 @@ const ZERO_SPAN: Span = { ctxt: 0, end: 0, start: 0 };
 export const ID_GET_CURRENT_OWNERSHIP_SCOPE = 'dxlog_getCurrentOwnershipScope';
 export const ID_BUGCHECK_STRING = 'dxlog_bugcheckString';
 
-interface SourcePosition {
-  line: number
-  column: number
-  filename: string
-}
-
 class TraceInjector extends Visitor {
   programSpan!: Span;
   spanOffset = 0;
@@ -69,7 +65,7 @@ class TraceInjector extends Visitor {
 
     try {
       this._sourceMap = new SourceMapConsumer(JSON.parse(readFileSync(`${filename}.map`, 'utf-8')));
-    } catch { }
+    } catch { } // Ignore.
   }
 
   private _getPosition (span: Span): SourcePosition {
@@ -177,9 +173,9 @@ class TraceInjector extends Visitor {
  *   <ident>.log.<level>(...)   // CJS import in compiled JS.
  *   (0, <ident>.log)(...)      // CJS import in compiled JS.
  */
-const isLoggerInvocation = (e: CallExpression) =>
-  isLoggerFuncExpression(e.callee) ||
-  (e.callee.type === 'MemberExpression' && isLoggerFuncExpression(e.callee.object));
+const isLoggerInvocation = (expr: CallExpression) =>
+  isLoggerFuncExpression(expr.callee) ||
+  (expr.callee.type === 'MemberExpression' && isLoggerFuncExpression(expr.callee.object));
 
 const isLoggerFuncExpression =
   (e: Expression | Super | Import) =>
@@ -194,12 +190,12 @@ const isLoggerFuncExpression =
  * Matches:
  *  <ident>.log
  */
-const isCjsImportedLoggerExpression = (e: Expression | Super | Import) =>
-  e.type === 'MemberExpression' &&
-  e.object.type === 'Identifier' &&
-  e.object.value !== 'console' && e.object.value !== 'debug' &&
-  e.property.type === 'Identifier' &&
-  e.property.value === 'log';
+const isCjsImportedLoggerExpression = (expr: Expression | Super | Import) =>
+  expr.type === 'MemberExpression' &&
+  expr.object.type === 'Identifier' &&
+  expr.object.value !== 'console' && expr.object.value !== 'debug' &&
+  expr.property.type === 'Identifier' &&
+  expr.property.value === 'log';
 
 const createObjectExpression = (properties: Record<string, Expression>): ObjectExpression => ({
   type: 'ObjectExpression',

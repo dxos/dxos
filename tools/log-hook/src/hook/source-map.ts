@@ -14,7 +14,6 @@ export const combineSourceMaps = (prevMap: string, nextMap: string) => {
   const prev = JSON.parse(prevMap);
   const newMap = JSON.parse(nextMap);
   try {
-
     newMap.sources[0] = '/prev';
     const generated = loadSync('/new', {
       content: {
@@ -32,10 +31,12 @@ export const combineSourceMaps = (prevMap: string, nextMap: string) => {
     return JSON.stringify(generated);
   } catch (err) {
     console.error(err);
-    console.log({
-      prev,
-      newMap
-    });
     throw err;
   }
 };
+
+export type SourcePosition = {
+  line: number
+  column: number
+  filename: string
+}
