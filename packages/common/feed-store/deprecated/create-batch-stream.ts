@@ -44,7 +44,6 @@ export const createBatchStream = (
 
   const range2 = await feed.download({ start, end, linear: true });
 
-  // TODO(burdon): Make async.
   const read = (size: any, cb?: any) => {
     if (!feed.opened) {
       return open(size, cb);

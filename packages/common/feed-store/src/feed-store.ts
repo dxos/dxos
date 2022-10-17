@@ -2,8 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-import { Hypercore } from 'hypercore';
-
 import { Event } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
@@ -25,7 +23,7 @@ export class FeedStore<T = {}> {
   private readonly _factory: FeedFactory;
 
   // TODO(burdon): Use this pattern everywhere.
-  readonly onOpen = new Event<Hypercore>();
+  readonly onOpen = new Event<FeedWrapper>();
 
   constructor ({
     factory
@@ -35,6 +33,10 @@ export class FeedStore<T = {}> {
 
   get size () {
     return this._feeds.size;
+  }
+
+  get feeds () {
+    return Array.from(this._feeds.values());
   }
 
   /**
@@ -66,6 +68,7 @@ export class FeedStore<T = {}> {
     feed = new FeedWrapper<T>(core, publicKey);
     this._feeds.set(feed.key, feed);
     await feed.open();
+    this.onOpen.emit(feed);
     return feed;
   }
 
