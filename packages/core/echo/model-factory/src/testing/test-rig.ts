@@ -61,7 +61,7 @@ export class TestRig<M extends Model<any>> {
   createPeer (): TestPeer<M> {
     const key = PublicKey.random();
     const writer = new MockFeedWriter<Uint8Array>((mutation: Uint8Array) => {
-      return this._writeMessage(key, mutation);
+      return Promise.resolve(this._writeMessage(key, mutation));
     });
 
     const id = PublicKey.random().toHex();
