@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { FeedBlock, FeedQueue } from './feed-queue';
@@ -48,11 +47,11 @@ export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<Feed
   async * _generator () {
     while (this._running) {
       const block = await this._nextBlock();
-      if (block) {
-        yield block;
-      } else {
-        await sleep(1000); // TODO(burdon): Config.
+      if (!block) {
+        break;
       }
+
+      yield block;
     }
   }
 

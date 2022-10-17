@@ -66,7 +66,6 @@ describe('FeedStore', function () {
 
   it('tries to open an existing readable feed as writable', async function () {
     const feedStore = new TestBuilder().createFeedStore();
-
     const key = PublicKey.random();
 
     {
@@ -82,13 +81,18 @@ describe('FeedStore', function () {
     }
   });
 
-  it('reopens a feed and reads data from disk', async function () {
+  it('reopens a feed and reads data from storage', async function () {
+    if (mochaExecutor.environment !== 'nodejs') {
+      this.skip();
+    }
+
     const builder = new TestBuilder();
     const feedKey = await builder.keyring!.createKey();
 
     const numBlocks = 10;
 
     // Write.
+    // Note: Node is required to make this persistent across invocations.
     {
       const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });

@@ -628,6 +628,7 @@ importers:
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
       streamx: ^2.12.5
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -640,6 +641,7 @@ importers:
       hypercore-protocol: 8.0.7
       readable-stream: 3.6.0
       streamx: 2.12.5
+      util: 0.12.4
     devDependencies:
       '@dxos/log': link:../log
       '@dxos/protocols': link:../../core/protocols
