@@ -11,29 +11,28 @@ import { createCodecEncoding } from '@dxos/hypercore';
 
 import { FeedWriter } from '../feed-writer';
 
-type TestItem = {
-  key: string
+export type TestItem = {
+  id: string
   value: string
 }
 
-const defaultCodec: Codec<TestItem> = {
-  encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
+export const defaultCodec: Codec<any> = {
+  encode: (obj: any) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
 };
 
-export const defaultValueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(defaultCodec);
+export const defaultValueEncoding: AbstractValueEncoding<any> = createCodecEncoding(defaultCodec);
 
 export type TestBlockGenerator<T extends {}> = (i: number) => T
 
 export const defaultTestBlockGenerator: TestBlockGenerator<TestItem> = () => ({
-  key: faker.datatype.uuid(),
+  id: faker.datatype.uuid(),
   value: faker.lorem.sentence()
 });
 
 /**
  * Writes data to feeds.
  */
-// TODO(burdon): Use in other tests.
 export class TestGenerator<T = {}> {
   _count = 0;
 

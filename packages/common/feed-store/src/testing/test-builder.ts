@@ -4,14 +4,22 @@
 
 import type { ValueEncoding } from 'hypercore';
 
+import { Codec } from '@dxos/codec-protobuf';
 import { Keyring } from '@dxos/keyring';
 import { createStorage, Directory, Storage, StorageType } from '@dxos/random-access-storage';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
-import { defaultTestBlockGenerator, TestBlockGenerator, TestGenerator } from './generator';
+import {
+  defaultCodec,
+  defaultTestBlockGenerator,
+  defaultValueEncoding,
+  TestBlockGenerator,
+  TestGenerator
+} from './test-generator';
 
 export type TestBuilderOptions<T> = {
+  codec?: Codec<T>
   storage?: Storage
   directory?: Directory
   keyring?: Keyring
@@ -80,6 +88,18 @@ export class TestBuilder<T = any> {
   createFeedStore () {
     return new FeedStore({
       factory: this.createFeedFactory()
+    });
+  }
+}
+
+/**
+ * Builder with default encoder.
+ */
+export class TestItemBuilder extends TestBuilder {
+  constructor () {
+    super({
+      codec: defaultCodec,
+      valueEncoding: defaultValueEncoding
     });
   }
 }

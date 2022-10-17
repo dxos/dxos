@@ -9,7 +9,8 @@ import { Event } from '@dxos/async';
 import { FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
+import { FeedMessageBlock, TypedMessage } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { createMessageSelector, createFeedWriterWithTimeframe } from './message-selector';

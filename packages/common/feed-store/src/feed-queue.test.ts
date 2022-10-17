@@ -11,10 +11,10 @@ import { log } from '@dxos/log';
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { FeedWriter } from './feed-writer';
-import { TestBuilder } from './testing';
+import { TestItemBuilder } from './testing';
 
 describe('FeedQueue', function () {
-  const builder = new TestBuilder();
+  const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 
   it('peaks and pops from a queue', async function () {

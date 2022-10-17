@@ -6,10 +6,10 @@ import { expect } from 'chai';
 import faker from 'faker';
 
 import { latch } from '@dxos/async';
+import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { FeedBlock } from './feed-queue';
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
 import { FeedWriter } from './feed-writer';
 import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';

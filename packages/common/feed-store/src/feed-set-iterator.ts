@@ -5,7 +5,7 @@
 import assert from 'assert';
 
 import { sleep } from '@dxos/async';
-import { FeedBlock } from '@dxos/hypercore';
+import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
@@ -13,6 +13,8 @@ import { ComplexMap } from '@dxos/util';
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
+
+export type FeedBlock<T> = HypercoreFeedBlock<T>
 
 /**
  * Select next block.

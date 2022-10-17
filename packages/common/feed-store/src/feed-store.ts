@@ -61,9 +61,7 @@ export class FeedStore<T = {}> {
       }
     }
 
-    const core = this._factory.createFeed(publicKey, {
-      writable
-    });
+    const core = this._factory.createFeed(publicKey, { writable });
 
     feed = new FeedWrapper<T>(core, publicKey);
     this._feeds.set(feed.key, feed);

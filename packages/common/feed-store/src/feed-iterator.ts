@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { FeedBlock } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
-import { FeedBlock, FeedQueue } from './feed-queue';
+import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 
 /**

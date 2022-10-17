@@ -10,6 +10,7 @@ import { Timeframe } from '@dxos/timeframe';
 import { TYPES } from './proto';
 import { EchoEnvelope, FeedMessage, CredentialsMessage } from './proto/gen/dxos/echo/feed';
 
+// TODO(burdon): Rename ProtocolMessage.
 export type TypedMessage = TypedProtoMessage<TYPES>
 
 // TODO(burdon): Replace with proto definition.

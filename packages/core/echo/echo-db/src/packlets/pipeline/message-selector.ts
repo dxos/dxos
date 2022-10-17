@@ -5,9 +5,11 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { FeedWriter, MessageSelector } from '@dxos/feed-store';
-import { Timeframe, TypedMessage } from '@dxos/protocols';
+import { FeedWriter, FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store/src';
+import { TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Timeframe } from '@dxos/timeframe';
 
 import { TimeframeClock } from './timeframe-clock';
 
@@ -21,19 +23,21 @@ const log = debug('dxos:echo-db:message-selector');
  *
  * @param timeframeClock
  */
-export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSelector<FeedMessage> => candidates => {
-  // Pick the first candidate with a valid timeframe that has no gaps.
-  for (let i = 0; i < candidates.length; i++) {
-    const { data: { timeframe } } = candidates[i];
-    assert(timeframe);
+export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlockSelector<FeedMessage> => {
+  return (messages: FeedBlock<FeedMessage>) => {
+    // Pick the first candidate with a valid timeframe that has no gaps.
+    for (let i = 0; i < messages.length; i++) {
+      const { data: { timeframe } } = messages[i];
+      assert(timeframe);
 
-    if (!timeframeClock.hasGaps(timeframe)) {
-      return i;
+      if (!timeframeClock.hasGaps(timeframe)) {
+        return i;
+      }
     }
-  }
 
-  // Not ready for this message yet.
-  log('Skipping...');
+    // Not ready for this message yet.
+    log('Skipping...');
+  };
 };
 
 /**
@@ -41,7 +45,7 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSe
  * @param feed
  * @param getTimeframe
  */
-const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
+const createFeedWriterWithTimeframe = (feed: FeedWrapper, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
   const writer = createFeedWriter<FeedMessage>(feed);
 
   return mapFeedWriter(payload => ({

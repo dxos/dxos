@@ -34,6 +34,7 @@
     "@dxos/protocol-plugin-replicator": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/timeframe": "workspace:*",
     "@dxos/util": "workspace:*",
     "assert": "^2.0.0",
     "debug": "^4.3.3"

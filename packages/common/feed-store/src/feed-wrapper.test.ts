@@ -11,9 +11,7 @@ import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 import { FeedWriter } from './feed-writer';
-import { TestBuilder } from './testing';
-
-// TODO(burdon): Test codec/proto encoding.
+import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
 
 describe('FeedWrapper', function () {
   const factory = new TestBuilder().createFeedFactory();
@@ -58,9 +56,33 @@ describe('FeedWrapper', function () {
     const key = await builder.keyring!.createKey();
     const feed = new FeedWrapper(feedFactory.createFeed(key, { writable: true }), key);
 
-    for (const _ of Array.from(Array(numBlocks))) {
+    for (const _ of Array.from(Array(numBlocks)).keys()) {
       await feed.append(faker.lorem.sentence());
     }
+
+    expect(feed.properties.length).to.eq(numBlocks);
+  });
+
+  it('appends blocks with encoding', async function () {
+    const numBlocks = 10;
+    const builder = new TestBuilder();
+    const feedFactory = builder.createFeedFactory();
+    const key = await builder.keyring!.createKey();
+    const feed = new FeedWrapper<TestItem>(feedFactory.createFeed(key, {
+      writable: true,
+      valueEncoding: defaultValueEncoding
+    }), key);
+
+    for (const i of Array.from(Array(numBlocks)).keys()) {
+      await feed.append({
+        id: String(i + 1),
+        value: faker.lorem.sentence()
+      });
+    }
+
+    expect(feed.properties.length).to.eq(numBlocks);
+    const { id } = await feed.get(0);
+    expect(id).to.eq('1');
   });
 
   it('reads blocks from a feed stream', async function () {
@@ -68,23 +90,26 @@ describe('FeedWrapper', function () {
     const builder = new TestBuilder();
     const factory = builder.createFeedFactory();
     const key = await builder.keyring.createKey();
-    const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
+    const feed = new FeedWrapper(factory.createFeed(key, {
+      writable: true,
+      valueEncoding: defaultValueEncoding
+    }), key);
 
+    // TODO(burdon): Use generator.
     for (const i of Array.from(Array(numBlocks)).keys()) {
       await sleep(faker.datatype.number({ min: 0, max: 20 }));
-      await feed.append(JSON.stringify({
-        id: i + 1,
-        text: faker.lorem.sentence()
-      }));
+      await feed.append({
+        id: String(i + 1),
+        value: faker.lorem.sentence()
+      });
     }
 
     const [done, inc] = latch({ count: numBlocks });
     setTimeout(async () => {
       for await (const block of feed.createReadableStream()) {
-        const { id } = JSON.parse(String(block));
+        const { id } = block;
         const i = inc();
-        log(block.toString());
-        expect(id).to.eq(i);
+        expect(id).to.eq(String(i));
       }
     });
 
@@ -93,7 +118,7 @@ describe('FeedWrapper', function () {
 
   it('replicates with streams', async function () {
     const numBlocks = 10;
-    const builder = new TestBuilder();
+    const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
 
     const key1 = await builder.keyring!.createKey();
@@ -124,13 +149,14 @@ describe('FeedWrapper', function () {
     {
       const writer = new FeedWriter(feed1.core);
       setTimeout(async () => {
-        for (const _ of Array.from(Array(numBlocks))) {
+        for (const i of Array.from(Array(numBlocks).keys())) {
           const block = {
-            text: faker.lorem.sentence()
+            id: String(i + 1),
+            value: faker.lorem.sentence()
           };
 
-          const i = await writer.append(JSON.stringify(block));
-          log('W', { i, block });
+          const seq = await writer.append(block);
+          log('W', { seq, block });
         }
       });
     }
@@ -141,8 +167,7 @@ describe('FeedWrapper', function () {
 
       setTimeout(async () => {
         for await (const block of feed2.createReadableStream()) {
-          const data = JSON.parse(block.toString());
-          log('R', data);
+          log('R', block);
           inc();
         }
       });

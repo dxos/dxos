@@ -9,7 +9,7 @@ import faker from 'faker';
 import { PublicKey } from '@dxos/keys';
 import { StorageType } from '@dxos/random-access-storage';
 
-import { TestBuilder } from './testing';
+import { TestItemBuilder } from './testing';
 
 chai.use(chaiAsPromised);
 
@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 
 describe('FeedStore', function () {
   it('creates feeds', async function () {
-    const feedStore = new TestBuilder().createFeedStore();
+    const feedStore = new TestItemBuilder().createFeedStore();
 
     const keys = await Promise.all(Array.from(Array(10)).map(async () => {
       const key = PublicKey.random();
@@ -45,7 +45,7 @@ describe('FeedStore', function () {
   });
 
   it('gets an opened feed', async function () {
-    const feedStore = new TestBuilder().createFeedStore();
+    const feedStore = new TestItemBuilder().createFeedStore();
 
     const key = PublicKey.random();
 
@@ -65,7 +65,7 @@ describe('FeedStore', function () {
   });
 
   it('tries to open an existing readable feed as writable', async function () {
-    const feedStore = new TestBuilder().createFeedStore();
+    const feedStore = new TestItemBuilder().createFeedStore();
     const key = PublicKey.random();
 
     {
@@ -86,7 +86,8 @@ describe('FeedStore', function () {
       this.skip();
     }
 
-    const builder = new TestBuilder();
+    const builder = new TestItemBuilder();
+
     const feedKey = await builder.keyring!.createKey();
 
     const numBlocks = 10;
@@ -96,8 +97,12 @@ describe('FeedStore', function () {
     {
       const feedStore = builder.clone().setStorage(StorageType.NODE).createFeedStore();
       const feed = await feedStore.openFeed(feedKey, { writable: true });
-      for (const _ of Array.from(Array(numBlocks))) {
-        await feed.append(faker.lorem.sentence());
+
+      for (const i of Array.from(Array(numBlocks)).keys()) {
+        await feed.append({
+          id: String(i),
+          value: faker.lorem.sentence()
+        });
       }
 
       expect(feed.properties.length).to.eq(numBlocks);

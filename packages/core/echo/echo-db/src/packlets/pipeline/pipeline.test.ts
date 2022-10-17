@@ -3,9 +3,9 @@
 //
 
 import { TestBuilder } from '@dxos/feed-store';
-import { Timeframe } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { afterTest } from '@dxos/testutils';
+import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline';

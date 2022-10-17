@@ -862,6 +862,7 @@ importers:
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
       '@dxos/testutils': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -887,6 +888,7 @@ importers:
       '@dxos/protocol-plugin-replicator': link:../../mesh/protocol-plugin-replicator
       '@dxos/protocols': link:../../protocols
       '@dxos/random-access-storage': link:../../../common/random-access-storage
+      '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4
