@@ -45,7 +45,7 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlock
  * @param feed
  * @param getTimeframe
  */
-const createFeedWriterWithTimeframe = (feed: FeedWrapper, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
+export const createFeedWriterWithTimeframe = (feed: FeedWrapper, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
   const writer = createFeedWriter<FeedMessage>(feed);
 
   return mapFeedWriter(payload => ({

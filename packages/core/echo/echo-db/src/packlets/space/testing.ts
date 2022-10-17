@@ -55,14 +55,14 @@ export class TestAgent {
     const controlFeed = await this.createFeed();
     const dataFeed = await this.createFeed();
 
-    const genesisFeed = genesisKey ? await this.feedStore.openReadOnlyFeed(genesisKey) : controlFeed;
+    const genesisFeed = genesisKey ? await this.feedStore.openFeed(genesisKey) : controlFeed;
 
     const space = new Space({
       spaceKey,
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: key => this.feedStore.openReadOnlyFeed(key),
+      feedProvider: key => this.feedStore.openFeed(key),
       initialTimeframe: new Timeframe(),
       networkManager: new NetworkManager({ signalManager: this._signalManager, transportFactory: inMemoryTransportFactory }),
       networkPlugins: [],

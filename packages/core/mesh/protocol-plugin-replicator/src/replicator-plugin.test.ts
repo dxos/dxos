@@ -114,7 +114,6 @@ const generator = new ProtocolNetworkGenerator(async (topic, peerId) => {
       const messages: any[] = [];
 
       // Create combined stream.
-      // TODO(burdon): Move to feed-store.
       const stream = multi.obj(feedStore.feeds.map((feed: FeedWrapper) => feed.createReadableStream()));
       stream.on('data', (data: any[]) => {
         messages.push(data[0].data);

@@ -57,7 +57,8 @@ describe('Item demuxer', function () {
         modelType: TestModel.meta.type
       }
     };
-    await feedWriter.write(message);
+
+    await feedWriter.append(message);
 
     //
     // Wait for mutations to be processed.
@@ -97,12 +98,14 @@ describe('Item demuxer', function () {
     const modelFactory = new ModelFactory()
       .registerModel(ObjectModel);
 
+    // TODO(burdon): Create mock.
     const itemManager = new ItemManager(modelFactory, PublicKey.random(), {
       write: async (message) => {
         void processEchoMessage(message);
         return { feedKey: PublicKey.random(), seq: 0 };
       }
     });
+
     const itemDemuxer = new ItemDemuxer(itemManager, modelFactory);
     const processor = itemDemuxer.open();
     const processEchoMessage = (message: EchoEnvelope) => processor({
@@ -121,6 +124,7 @@ describe('Item demuxer', function () {
         modelType: TestModel.meta.type
       }
     }));
+
     void processEchoMessage(checkType<EchoEnvelope>({
       itemId: 'bar',
       genesis: {

@@ -141,6 +141,7 @@ export class Pipeline implements PipelineAccessor {
 
     for await (const block of this._iterator) {
       yield block;
+
       this._timeframeClock.updateTimeframe(PublicKey.from(block.key), block.seq);
     }
 
