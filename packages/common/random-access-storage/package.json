@@ -25,7 +25,6 @@
     "path-browserify": "^1.0.1",
     "pify": "~5.0.0",
     "random-access-file": "^2.2.1",
-    "random-access-storage": "^3.0.0",
     "random-access-idb": "^1.2.2",
     "random-access-memory": "^4.1.0",
     "random-access-storage": "^3.0.0",
