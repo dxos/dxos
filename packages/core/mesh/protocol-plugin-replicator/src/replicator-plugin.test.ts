@@ -33,7 +33,7 @@ interface MiddlewareOptions {
 const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: MiddlewareOptions): ReplicatorMiddleware => {
   const encodeFeed = (feed: FeedDescriptor): FeedData => ({
     key: feed.key.asBuffer(), // TODO(dmaretskyi): Has to be buffer because of broken encoding.
-    discoveryKey: feed.discoveryKey
+    discoveryKey: feed.feed.discoveryKey
   });
 
   return {

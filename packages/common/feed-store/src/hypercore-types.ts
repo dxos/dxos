@@ -1,7 +1,7 @@
 //
 // Copyright 2021 DXOS.org
 //
-
+import { ReplicationOptions } from 'hypercore';
 // TODO(burdon): Create TS defs?
 
 export interface Message {
@@ -52,7 +52,8 @@ export interface HypercoreFeed {
   downloaded: (start: number, batchEnd: number) => boolean
   undownload: (args: any) => void
 
-  replicate(isInitiator: boolean): NodeJS.ReadWriteStream
+  // TODO(mykola): Use type ReplicationOptions for options
+  replicate(isInitiator: boolean, options?: any): NodeJS.ReadWriteStream
   close: (arg: any) => any
 }
 
