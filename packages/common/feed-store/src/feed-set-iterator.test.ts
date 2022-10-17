@@ -67,8 +67,8 @@ describe('FeedSetIterator', function () {
       const [done, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
         for await (const block of iterator) {
-          const { feed, seq } = block;
-          const feedIndex = feedKeys.findIndex(key => PublicKey.equals(key, feed));
+          const { key, seq } = block;
+          const feedIndex = feedKeys.findIndex(feedKey => PublicKey.equals(feedKey, key));
           log('read', { feedIndex, seq });
 
           const count = inc();

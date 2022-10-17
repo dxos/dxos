@@ -5,16 +5,13 @@
 import { inspect } from 'node:util';
 
 import { PublicKey } from '@dxos/keys';
+import { ComplexMap } from '@dxos/util';
 
 /**
- * A mapping of feed key to a sequence number on that feed.
- * Describes how many messages have been processed.
+ * A vector clock that implements ordering over a set of feed messages.
  */
-// TODO(burdon): Move out of protocols.
 export class Timeframe {
-  // Cannot use ComplexMap because @dxos/util depends on @dxos/protocols for PublicKey.
-  private readonly _keys = new Map<string, PublicKey>();
-  private readonly _frames = new Map<string, number>();
+  private readonly _frames = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
   constructor (frames: [PublicKey, number][] = []) {
     for (const [key, seq] of frames) {
@@ -22,28 +19,18 @@ export class Timeframe {
     }
   }
 
+  // TODO(burdon): Rename getFrame.
   get (key: PublicKey) {
-    const keyString = key.toString();
-    return this._frames.get(keyString);
+    return this._frames.get(key);
   }
 
   set (key: PublicKey, value: number) {
-    const keyString = key.toString();
-    this._frames.set(keyString, value);
-    this._keys.set(keyString, key);
+    this._frames.set(key, value);
   }
 
   // TODO(burdon): Change to getter.
   frames (): [PublicKey, number][] {
     return Array.from(this._frames.entries())
-      .map(([keyString, value]): [PublicKey, number] | undefined => {
-        const key = this._keys.get(keyString);
-        if (!key) {
-          return undefined;
-        }
-
-        return [key, value];
-      })
       .filter((frame): frame is [PublicKey, number] => !!frame);
   }
 
@@ -70,7 +57,7 @@ export class Timeframe {
    * Returns a total amount of messages represented by this timeframe.
    */
   totalMessages (): number {
-    return Array.from(this._frames.values()).reduce((acc, seq) => acc + seq + 1, 0);
+    return Array.from(this._frames.values()).reduce((result, seq) => (result + seq + 1), 0);
   }
 
   toJSON () {
@@ -85,7 +72,7 @@ export class Timeframe {
   }
 
   /**
-   * Used by NodeJS to get textual representation of this object when it's printed with a `console.log` statement.
+   * Used by NodeJS to get textual representation of this object in `console.log`.
    */
   [inspect.custom] () {
     return `Timeframe${this.toString()}`;
@@ -112,9 +99,6 @@ export class Timeframe {
   /**
    * Compares two timeframes and returns an array of frames from the first timeframe where the sequence number
    * is greater than the associated sequence number from the second timeframe.
-   *
-   * @param tf1
-   * @param tf2
    */
   static dependencies (
     tf1: Timeframe, tf2: Timeframe
@@ -131,11 +115,16 @@ export class Timeframe {
   }
 }
 
+/**
+ * Protobuf substitutions.
+ */
+// TODO(burdon): Move to protocols.
 export const timeframeSubstitutions = {
   'dxos.echo.timeframe.TimeframeVector': {
     encode: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq }))
     }),
+
     decode: (vector: any) => new Timeframe(
       (vector.frames ?? [])
         .filter((frame: any) => frame.feedKey != null && frame.seq != null)

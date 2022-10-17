@@ -3,6 +3,7 @@
 //
 
 import { TypedProtoMessage } from '@dxos/codec-protobuf';
+import { FeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 
 import { TYPES } from './proto';
@@ -17,12 +18,7 @@ export type FeedMeta = {
   seq: number
 }
 
-// TODO(burdon): Replace with proto definition.
-export type FeedMessageBlock = {
-  key: PublicKey
-  seq: number
-  data: FeedMessage
-}
+export type FeedMessageBlock = FeedBlock<FeedMessage>
 
 export interface MutationMeta extends FeedMeta {
   memberKey: PublicKey

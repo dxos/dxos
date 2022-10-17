@@ -26,6 +26,7 @@ describe('space/control-pipeline', function () {
 
     const feedStore = new FeedStore(
       createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+
     const createFeed = async () => {
       const feedKey = await keyring.createKey();
       return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);

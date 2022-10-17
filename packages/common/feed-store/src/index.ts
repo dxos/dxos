@@ -8,3 +8,4 @@ export * from './feed-queue';
 export * from './feed-store';
 export * from './feed-wrapper';
 export * from './feed-writer';
+export * from './testing';

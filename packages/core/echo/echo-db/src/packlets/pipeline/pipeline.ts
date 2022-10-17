@@ -3,29 +3,19 @@
 //
 
 import assert from 'assert';
+import { FeedSetIterator } from 'packages/common/feed-store/src/feed-set-iterator';
 
 import { Event } from '@dxos/async';
-import {
-  createFeedWriter, mapFeedWriter, FeedStoreIterator, FeedWriter, FeedDescriptor
-} from '@dxos/feed-store';
+import { FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, Timeframe, TypedMessage } from '@dxos/protocols';
-import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ComplexMap } from '@dxos/util';
 
-import { createMessageSelector } from './message-selector';
+import { createMessageSelector, createFeedWriterWithTimeframe } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
 
 const STALL_TIMEOUT = 1000;
-
-const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
-  const writer = createFeedWriter<FeedMessage>(feed);
-  return mapFeedWriter(payload => ({
-    payload,
-    timeframe: getTimeframe()
-  }), writer);
-};
 
 export type PipelineState = {
   readonly timeframeUpdate: Event<Timeframe>
@@ -74,16 +64,20 @@ export interface PipelineAccessor {
  */
 export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
-  private readonly _feeds = new ComplexMap<PublicKey, FeedDescriptor>(key => key.toHex());
-  private readonly _iterator = new FeedStoreIterator(
-    () => true,
-    createMessageSelector(this._timeframeClock),
-    this._initialTimeframe
+
+  // TODO(burdon): Not used.
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
+
+  private readonly _iterator = new FeedSetIterator(
+    createMessageSelector(this._timeframeClock), {
+      start: this._initialTimeframe
+    }
   );
 
   private readonly _state: PipelineState;
 
   private _writer: FeedWriter<TypedMessage> | undefined;
+
   private _isOpen = false;
 
   constructor (
@@ -118,16 +112,22 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
-  setWriteFeed (feed: FeedDescriptor) {
+  addFeed (feed: FeedWrapper) {
+    assert(!this._feeds.has(feed.key), 'Feed already added.');
+
+    this._feeds.set(feed.key, feed);
+    this._iterator.addFeed(feed);
+  }
+
+  setWriteFeed (feed: FeedWrapper) {
     assert(!this._writer, 'Writer already set.');
-    assert(feed.writable, 'Feed must be writable.');
+    assert(feed.properties.writable, 'Feed must be writable.');
+
     this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
   }
 
-  addFeed (feed: FeedDescriptor) {
-    assert(!this._feeds.has(feed.key), 'Feed already added.');
-    this._feeds.set(feed.key, feed);
-    this._iterator.addFeedDescriptor(feed);
+  async stop () {
+    await this._iterator.close();
   }
 
   /**
@@ -145,9 +145,5 @@ export class Pipeline implements PipelineAccessor {
 
     // TODO(burdon): Test re-entrant?
     this._isOpen = false;
-  }
-
-  async stop () {
-    await this._iterator.close();
   }
 }

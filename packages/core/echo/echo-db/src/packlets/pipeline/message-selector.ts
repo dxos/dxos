@@ -5,7 +5,8 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { MessageSelector } from '@dxos/feed-store';
+import { FeedWriter, MessageSelector } from '@dxos/feed-store';
+import { Timeframe, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 
 import { TimeframeClock } from './timeframe-clock';
@@ -33,4 +34,18 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): MessageSe
 
   // Not ready for this message yet.
   log('Skipping...');
+};
+
+/**
+ *
+ * @param feed
+ * @param getTimeframe
+ */
+const createFeedWriterWithTimeframe = (feed: FeedDescriptor, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
+  const writer = createFeedWriter<FeedMessage>(feed);
+
+  return mapFeedWriter(payload => ({
+    payload,
+    timeframe: getTimeframe()
+  }), writer);
 };

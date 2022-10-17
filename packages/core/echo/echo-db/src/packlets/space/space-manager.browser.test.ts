@@ -24,8 +24,8 @@ describe('space-manager', function () {
   const createPeer = async () => {
     const storage = createStorage();
     const keyring = new Keyring(storage.createDirectory('keyring'));
-
     const identityKey = await keyring.createKey();
+
     return new SpaceManager(
       new MetadataStore(storage.createDirectory('metadata')),
       new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec }),
@@ -55,9 +55,8 @@ describe('space-manager', function () {
     await peer2.open();
     afterTest(() => peer2.close());
 
-    // TODO(dmaretskyi): .
+    // TODO(dmaretskyi): ???
     // const space = await peer1.createSpace()
     // const invitation = await space.createInvitation()
-
   });
 });

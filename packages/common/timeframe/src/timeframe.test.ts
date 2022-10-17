@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { Timeframe } from './timeframe';
 
-const log = debug('dxos:protocols:timeframe:test');
+const log = debug('dxos:timeframe:test');
 
 describe('spacetime', function () {
   it('constructors', function () {

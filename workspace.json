@@ -82,6 +82,7 @@
     "spyglass": "packages/experimental/spyglass",
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
+    "timeframe": "packages/common/timeframe",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
     "util": "packages/common/util",
     "vite-plugin": "tools/vite-plugin",

@@ -109,15 +109,16 @@ describe('space/space-protocol', function () {
     await protocol2.start();
     afterTest(() => protocol2.stop());
 
-    const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
     const keyring1 = new Keyring();
-    const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
+    const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
 
+    const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
     await feed1.append({
       timeframe: new Timeframe()
     });
 
     const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+
     const feed2 = await feedStore2.openReadOnlyFeed(feed1.key);
 
     await replicator1.addFeed(feed1);
@@ -187,15 +188,16 @@ describe('space/space-protocol', function () {
     await protocol2.start();
     afterTest(() => protocol2.stop());
 
-    const feedStore1 = new FeedStore(storage.createDirectory('feeds1'), { valueEncoding: codec });
     const keyring1 = new Keyring();
-    const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
+    const feedStore1 = new FeedStore(storage.createDirectory('feeds1'), { valueEncoding: codec });
 
+    const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
     await feed1.append({
       timeframe: new Timeframe()
     });
 
     const feedStore2 = new FeedStore(storage.createDirectory('feeds2'), { valueEncoding: codec });
+
     const feed2 = await feedStore2.openReadOnlyFeed(feed1.key);
 
     await replicator1.addFeed(feed1);

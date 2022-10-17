@@ -30,16 +30,18 @@ export type TestSpaceContext = {
  * Independent agent able to swarm and create spaces.
  */
 export class TestAgent {
-  public readonly feedStore = new FeedStore(
-    createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec }
-  );
+  public readonly feedStore: FeedStore;
 
   constructor (
     public readonly keyring: Keyring,
     public readonly identityKey: PublicKey,
     public readonly deviceKey: PublicKey,
     private readonly _signalManager: SignalManager
-  ) {}
+  ) {
+    this.feedStore = new FeedStore(
+      createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec }
+    );
+  }
 
   async createSpace (
     identityKey: PublicKey,
@@ -69,7 +71,8 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER
       },
-      databaseFactory: async ({ databaseBackend }) => new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
+      databaseFactory: async ({ databaseBackend }) =>
+        new Database(new ModelFactory().registerModel(ObjectModel), databaseBackend, identityKey)
     });
 
     return {
@@ -81,8 +84,8 @@ export class TestAgent {
   }
 
   async createFeed () {
-    const feedKey = await this.keyring.createKey();
-    return this.feedStore.openReadWriteFeedWithSigner(feedKey, this.keyring);
+    const key = await this.keyring.createKey();
+    return this.feedStore.openReadWriteFeedWithSigner(key, this.keyring);
   }
 }
 

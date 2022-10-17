@@ -6,18 +6,10 @@ import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
 
 import { latch } from '@dxos/async';
-import { createAsyncIterator, createReadable } from '@dxos/hypercore';
-import { PublicKey } from '@dxos/keys';
+import { FeedBlock, createAsyncIterator, createReadable } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
-
-// TODO(burdon): Reconcile with other def.
-export type FeedBlock<T> = {
-  feed: PublicKey
-  seq: number
-  data: T
-}
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
@@ -115,7 +107,7 @@ export class FeedQueue<T = {}> {
       }
 
       this._currentBlock = {
-        feed: this._feed.key,
+        key: this._feed.key,
         seq: this._nextSeq,
         data: value
       };
