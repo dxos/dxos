@@ -139,7 +139,7 @@ export class Protocol {
 
     (this._stream as any)[kProtocol] = this;
     this._stream.on('error', (err: any) => this.error.emit(err));
-    this.error.on(error => log(error));
+    this.error.on(error => console.error(error));
 
     this._extensionInit = new ExtensionInit({ timeout: this._initTimeout });
   }

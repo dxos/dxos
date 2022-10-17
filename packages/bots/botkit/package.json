@@ -4,13 +4,13 @@
   "description": "Bot",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/src/index.js",
-  "browser": {
-    "node:assert": "assert"
-  },
-  "types": "dist/src/index.d.ts",
   "bin": {
     "bot-factory": "bin/main.js"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "browser": {
+    "node:assert": "assert"
   },
   "files": [
     "bin",

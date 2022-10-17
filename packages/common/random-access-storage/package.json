@@ -5,12 +5,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:path": "path-browserify",
     "./dist/src/index.js": "./dist/src/browser/index.js"
   },
-  "types": "./dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -28,6 +28,7 @@
     "random-access-storage": "^3.0.0",
     "random-access-idb": "^1.2.2",
     "random-access-memory": "^4.1.0",
+    "random-access-storage": "^3.0.0",
     "random-access-web": "^2.0.3"
   },
   "devDependencies": {

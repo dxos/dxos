@@ -5,12 +5,12 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert",
     "node:util": "util",
     "./dist/src/index.js": "./dist/browser.js"
   },
-  "types": "./dist/src/index.d.ts",
   "scripts": {
     "check": "true",
     "generate:defs": "NODE_OPTIONS='-r ts-node/register/transpile-only' node_modules/.bin/polkadot-types-from-defs --package sample-polkadotjs-typegen/interfaces --input ./src/polkadot/interfaces",

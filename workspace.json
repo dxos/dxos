@@ -9,6 +9,7 @@
     "broadcast": "packages/core/mesh/broadcast",
     "client": "packages/sdk/client",
     "codemods": "tools/codemods",
+    "composer": "packages/experimental/composer",
     "client-services": "packages/sdk/client-services",
     "client-testing": "packages/sdk/client-testing",
     "codec-protobuf": "packages/common/codec-protobuf",
@@ -82,9 +83,7 @@
     "testutils": "packages/common/testutils",
     "text-model": "packages/core/echo/text-model",
     "toolchain-node-library": "tools/deprecated/toolchain-node-library",
-    "ui-consumer": "packages/experimental/ui-consumer",
     "util": "packages/common/util",
-    "vault": "packages/sdk/vault",
     "vite-plugin": "tools/vite-plugin",
     "wallet-extension": "packages/experimental/wallet-extension",
     "wallet-playground": "packages/experimental/wallet-playground"

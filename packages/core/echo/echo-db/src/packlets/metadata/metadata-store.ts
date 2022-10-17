@@ -55,9 +55,7 @@ export class MetadataStore {
    */
   @synchronized
   async load (): Promise<void> {
-    // TODO(burdon): Create const.
     const file = this._directory.getOrCreateFile('EchoMetadata');
-
     try {
       const { size: fileLength } = await file.stat();
       if (fileLength < 4) {
@@ -93,7 +91,6 @@ export class MetadataStore {
       updated: new Date()
     };
 
-    // TODO(burdon): Create const.
     const file = this._directory.getOrCreateFile('EchoMetadata');
 
     try {

@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import assert from 'assert';
+
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ErrorStream } from '@dxos/debug';
@@ -48,7 +50,13 @@ export class WebRTCTransportProxy implements Transport {
           }
         });
 
-        this._params.stream.on('data', async (data: Uint8Array) => this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data }));
+        this._params.stream.on('data', async (data: Uint8Array) => {
+          try {
+            await this._params.bridgeService.sendData({ proxyId: this._proxyId, payload: data });
+          } catch (err: any) {
+            log.catch(err);
+          }
+        });
       },
       (error) => log.catch(error)
     );
@@ -72,7 +80,8 @@ export class WebRTCTransportProxy implements Transport {
   }
 
   private _handleData (dataEvent: BridgeEvent.DataEvent) {
-    this._params.stream.write(dataEvent.payload);
+    // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
+    this._params.stream.write(Buffer.from(dataEvent.payload));
   }
 
   private async _handleSignal (signalEvent: BridgeEvent.SignalEvent) {
@@ -94,15 +103,53 @@ export class WebRTCTransportProxy implements Transport {
       return;
     }
     this._serviceStream.close();
-    await this._params.bridgeService.close({ proxyId: this._proxyId });
+    try {
+      await this._params.bridgeService.close({ proxyId: this._proxyId });
+    } catch (err: any) {
+      log.catch(err);
+    }
+    this.closed.emit();
+    this._closed = true;
+  }
+
+  /**
+   * Called when underlying proxy service becomes unavailable.
+   */
+  forceClose () {
+    this._serviceStream.close();
     this.closed.emit();
     this._closed = true;
   }
 }
 
-export const createWebRTCTransportProxyFactory = ({ bridgeService }: { bridgeService: BridgeService }): TransportFactory => {
-  return (params: TransportOptions) => new WebRTCTransportProxy({
-    bridgeService,
-    ...params
-  });
-};
+export class WebRTCTransportProxyFactory implements TransportFactory {
+  private _bridgeService: BridgeService | undefined;
+  private _connections = new Set<WebRTCTransportProxy>();
+
+  /**
+   * Sets the current BridgeService to be used to open connections.
+   * Calling this method will close any existing connections.
+   */
+  setBridgeService (bridgeService: BridgeService | undefined): this {
+    this._bridgeService = bridgeService;
+
+    for (const connection of this._connections) {
+      connection.forceClose();
+    }
+
+    return this;
+  }
+
+  create (options: TransportOptions): Transport {
+    assert(this._bridgeService, 'WebRTCTransportProxyFactory is not ready to open connections');
+
+    const transport = new WebRTCTransportProxy({
+      ...options,
+      bridgeService: this._bridgeService
+    });
+    this._connections.add(transport);
+    transport.closed.on(() => this._connections.delete(transport));
+
+    return transport;
+  }
+}
