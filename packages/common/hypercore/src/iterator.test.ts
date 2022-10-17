@@ -4,19 +4,19 @@
 
 import hypercore from 'hypercore';
 import util from 'node:util';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { createAsyncIterator, createReadable } from './streams';
+import { ramFactory } from './testing';
 
 describe('Hypercore AsyncIterator', function () {
   it('iterates a feed until stopped', async function () {
     const numBlocks = 10;
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore(ram, publicKey, { secretKey });
+    const core = hypercore(ramFactory(), publicKey, { secretKey });
 
     // Write.
     {

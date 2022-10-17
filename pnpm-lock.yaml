@@ -620,6 +620,7 @@ importers:
       '@dxos/log': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
+      '@dxos/testutils': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
       '@types/randombytes': ^2.0.0
@@ -632,6 +633,7 @@ importers:
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
       streamx: ^2.12.5
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
       '@dxos/codec-protobuf': link:../codec-protobuf
@@ -639,11 +641,13 @@ importers:
       '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
       '@dxos/random-access-storage': link:../random-access-storage
+      '@dxos/testutils': link:../testutils
       assert: 2.0.0
       hypercore: 9.12.0
       hypercore-protocol: 8.0.7
       readable-stream: 3.6.0
       streamx: 2.12.5
+      util: 0.12.4
     devDependencies:
       '@dxos/log': link:../log
       '@dxos/protocols': link:../../core/protocols

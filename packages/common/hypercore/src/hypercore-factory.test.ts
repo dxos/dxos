@@ -5,17 +5,16 @@
 import { expect } from 'chai';
 import faker from 'faker';
 import util from 'node:util';
-import ram from 'random-access-memory';
 
 import { HypercoreFactory } from './hypercore-factory';
-import { createDataItem } from './testing';
+import { createDataItem, ramFactory } from './testing';
 
 // Bind function.
 const py = (obj: any, fn: Function) => util.promisify(fn.bind(obj));
 
 describe('HypercoreFactory', function () {
   it('appends to, and read from, multiple feeds', async function () {
-    const factory = new HypercoreFactory(ram);
+    const factory = new HypercoreFactory(ramFactory());
     const numFeeds = 10;
     const numBlocks = 100;
 

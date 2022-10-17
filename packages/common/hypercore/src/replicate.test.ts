@@ -5,22 +5,21 @@
 import { expect } from 'chai';
 import faker from 'faker';
 import hypercore from 'hypercore';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
 import { createReadable } from './streams';
-import { batch, createDataItem, TestDataItem } from './testing';
+import { batch, createDataItem, ramFactory, TestDataItem } from './testing';
 
 const noop = () => {};
 
 describe('Hypercore replication', function () {
   it('replicates feeds', async function () {
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = hypercore(ram, publicKey, { secretKey });
-    const core2 = hypercore(ram, publicKey);
+    const core1 = hypercore(ramFactory(), publicKey, { secretKey });
+    const core2 = hypercore(ramFactory(), publicKey);
 
     // Open.
     {
@@ -75,8 +74,8 @@ describe('Hypercore replication', function () {
 
     // Replicating feeds must have the same public key.
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = hypercore(ram, publicKey, { secretKey });
-    const core2 = hypercore(ram, publicKey);
+    const core1 = hypercore(ramFactory(), publicKey, { secretKey });
+    const core2 = hypercore(ramFactory(), publicKey);
 
     // Open.
     {
@@ -170,8 +169,8 @@ describe('Hypercore replication', function () {
     const numBlocks = 10;
 
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = hypercore(ram, publicKey, { secretKey });
-    const core2 = hypercore(ram, publicKey);
+    const core1 = hypercore(ramFactory(), publicKey, { secretKey });
+    const core2 = hypercore(ramFactory(), publicKey);
 
     // Open.
     {

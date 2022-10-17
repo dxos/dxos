@@ -5,18 +5,18 @@
 import { expect } from 'chai';
 import hypercore, { AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
-import ram from 'random-access-memory';
 
 import { createKeyPair } from '@dxos/crypto';
 import { schema } from '@dxos/protocols';
 import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { createCodecEncoding } from './crypto';
+import { ramFactory } from './testing';
 
 describe('Hypercore', function () {
   it('sanity', async function () {
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore(ram, publicKey, { secretKey });
+    const core = hypercore(ramFactory(), publicKey, { secretKey });
 
     {
       expect(core.length).to.eq(0);
@@ -39,7 +39,7 @@ describe('Hypercore', function () {
     const valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(codec);
 
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore<TestItemMutation>(ram, publicKey, { secretKey, valueEncoding });
+    const core = hypercore<TestItemMutation>(ramFactory(), publicKey, { secretKey, valueEncoding });
 
     {
       const append = util.promisify(core.append.bind(core));

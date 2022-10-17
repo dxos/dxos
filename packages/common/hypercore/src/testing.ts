@@ -4,6 +4,7 @@
 
 // @dxos/mocha platform=nodejs
 
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import faker from 'faker';
 
 // TODO(burdon): Replace with proto def.
@@ -31,3 +32,8 @@ export const batch = (cb: BatchCallback, total: number) => {
 
   f();
 };
+
+export const ramFactory = () => {
+  const directory = createStorage({type: StorageType.RAM}).createDirectory();
+  return (filename: string) => directory.getOrCreateFile(filename);
+}

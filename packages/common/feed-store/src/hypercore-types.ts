@@ -9,6 +9,7 @@ export interface Message {
   data: Buffer
 }
 
+// TODO(mykola): What a difference with packages/common/shims/src/hypercore.d.ts?
 export interface HypercoreFeed {
   ready: any
   key: Buffer
