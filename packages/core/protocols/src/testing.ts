@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Timeframe } from '@dxos/timeframe';
+
 import { schema } from './proto';
 import { FeedMessage } from './proto/gen/dxos/echo/feed';
-import { Timeframe } from './timeframe';
 import { ItemID } from './types';
 
 //
