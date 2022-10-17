@@ -5,7 +5,6 @@
 // @dxos/mocha platform=browser
 
 import expect from 'expect';
-import { ProtocolStream } from 'hypercore-protocol';
 import waitForExpect from 'wait-for-expect';
 
 import { FeedDescriptor, FeedStore } from '@dxos/feed-store';

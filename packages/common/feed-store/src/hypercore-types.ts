@@ -1,7 +1,6 @@
 //
 // Copyright 2021 DXOS.org
 //
-import { ReplicationOptions } from 'hypercore';
 // TODO(burdon): Create TS defs?
 
 export interface Message {
