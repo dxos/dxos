@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 // import debug from 'debug'
 // import { log } from '@dxos/log'
 
@@ -12,10 +13,9 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App';
 
-// TODO(wittjosiah): StrictMode causing issues with the react sdk, re-enable once fixed.
 createRoot(document.getElementById('root')!)
   .render(
-    // <StrictMode>
-    <App />
-    // </StrictMode>
+      // <StrictMode>
+      <App />
+      // </StrictMode>
   );

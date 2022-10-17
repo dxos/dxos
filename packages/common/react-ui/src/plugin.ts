@@ -34,9 +34,15 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
           postcss: {
             plugins: [
               tailwindcss({
+                darkMode: 'class',
                 theme: {
                   fontFamily: {
-                    sans: [
+                    body: [
+                      'Roboto FlexVariable',
+                      ...defaultConfig.theme.fontFamily.sans
+                    ],
+                    display: [
+                      'Space GroteskVariable',
                       'Roboto FlexVariable',
                       ...defaultConfig.theme.fontFamily.sans
                     ],
@@ -47,21 +53,57 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                   },
                   extend: {
                     colors: {
-                      neutral: tailwindColors.zinc,
                       success: tailwindColors.emerald,
                       warning: tailwindColors.amber,
                       error: tailwindColors.red,
                       info: tailwindColors.cyan,
+                      neutral: {
+                        // Key color #707076
+                        // Hue torsion 0.0º
+                        // C*CP black 0.80, C*CP white 0.88
+                        950: '#101012',
+                        900: '#1b1b1e',
+                        850: '#252529',
+                        800: '#303034',
+                        750: '#3b3b3f',
+                        700: '#46464b',
+                        650: '#525257',
+                        600: '#5e5e64',
+                        550: '#6a6a70',
+                        500: '#77767d',
+                        450: '#838389',
+                        400: '#909096',
+                        350: '#9d9da4',
+                        300: '#ababb1',
+                        250: '#b8b8be',
+                        200: '#c6c6cc',
+                        150: '#d4d4d9',
+                        100: '#e2e2e7',
+                        50: '#f1f1f4'
+                      },
                       primary: {
-                        100: '#3a1d60',
-                        200: '#373885',
-                        300: '#2555a5',
-                        400: '#0071bb',
-                        500: '#008dc9',
-                        600: '#00a9d8',
-                        700: '#00c5e6',
-                        800: '#55dfec',
-                        900: '#96f7f0'
+                        // Key color #00e0e0
+                        // Hue torsion -73.5º
+                        // C*CP black 1.0, C*CP white 1.0
+                        950: '#110c2a',
+                        900: '#101940',
+                        850: '#0b2453',
+                        800: '#003164',
+                        750: '#003e70',
+                        700: '#004b7c',
+                        650: '#005887',
+                        600: '#006693',
+                        550: '#00749e',
+                        500: '#0082a9',
+                        450: '#0091b3',
+                        400: '#00a0be',
+                        350: '#00afc7',
+                        300: '#00bed0',
+                        250: '#00ced8',
+                        200: '#00dedf',
+                        150: '#3cede4',
+                        100: '#69fae8',
+                        50: '#b9ffee'
                       },
                       transparent: 'transparent',
                       current: 'currentColor',

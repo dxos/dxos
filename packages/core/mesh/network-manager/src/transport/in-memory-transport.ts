@@ -110,13 +110,15 @@ export class InMemoryTransport implements Transport {
 }
 
 // TODO(burdon): Remove.
-export const inMemoryTransportFactory: TransportFactory = opts => new InMemoryTransport(
-  opts.ownId,
-  opts.remoteId,
-  opts.sessionId,
-  opts.topic,
-  opts.stream
-);
+export const inMemoryTransportFactory: TransportFactory = {
+  create: opts => new InMemoryTransport(
+    opts.ownId,
+    opts.remoteId,
+    opts.sessionId,
+    opts.topic,
+    opts.stream
+  )
+};
 
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.

@@ -204,11 +204,12 @@ describe('Protobuf service', function () {
       const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
 
       let lastData: string | undefined;
-      const [closedPromise, closedLatch] = latch();
+      const [closed, close] = latch();
       stream.subscribe(msg => {
         lastData = msg.data;
-      }, closedLatch);
-      await closedPromise;
+      }, close);
+
+      await closed();
 
       expect(lastData).toEqual('baz');
     });

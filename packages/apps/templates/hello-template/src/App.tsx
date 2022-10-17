@@ -139,7 +139,22 @@ export const App = () => {
   const profile = useProfile();
 
   if (!profile) {
-    return null;
+    return (
+      <Box sx={{
+        marginY: 2,
+        marginX: 'auto',
+        width: 300,
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
+        <Button
+          variant='contained'
+          onClick={() => window.open('https://halo.dxos.org', '_blank')}
+        >
+          Create a HALO identity
+        </Button>
+      </Box>
+    );
   }
 
   return (
