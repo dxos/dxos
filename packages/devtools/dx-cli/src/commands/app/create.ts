@@ -44,7 +44,7 @@ export default class Create extends BaseCommand {
 
     // TODO(wittjosiah): Cross-platform.
     const tmpDirectory = `/tmp/dxos-app-create-${Date.now()}`;
-    const templateDirectory = `${tmpDirectory}/apps/templates/${template}-template`;
+    const templateDirectory = `${tmpDirectory}/packages/apps/templates/${template}-template`;
     const outputDirectory = `${cwd()}/${name}`;
 
     try {
@@ -52,7 +52,7 @@ export default class Create extends BaseCommand {
       await promisify(exec)(`
         git clone --filter=blob:none --no-checkout git@github.com:dxos/dxos.git ${tmpDirectory} &&
           cd ${tmpDirectory} &&
-          git sparse-checkout set --cone tsconfig.json patches apps/templates/${template} &&
+          git sparse-checkout set --cone tsconfig.json patches packages/apps/templates/${template} &&
           git checkout ${tag}
       `);
 
