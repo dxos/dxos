@@ -941,6 +941,7 @@ importers:
       '@dxos/feed-store': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/protocols': workspace:*
+      '@dxos/timeframe': workspace:*
       '@dxos/util': workspace:*
       '@types/debug': ^4.1.7
       assert: ^2.0.0
@@ -952,6 +953,7 @@ importers:
       '@dxos/feed-store': link:../../../common/feed-store
       '@dxos/keys': link:../../../common/keys
       '@dxos/protocols': link:../../protocols
+      '@dxos/timeframe': link:../../../common/timeframe
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       debug: 4.3.4

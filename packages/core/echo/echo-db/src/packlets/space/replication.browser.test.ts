@@ -9,8 +9,8 @@ import waitForExpect from 'wait-for-expect';
 
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
-import { Timeframe } from '@dxos/protocols';
 import { createStorage } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
 

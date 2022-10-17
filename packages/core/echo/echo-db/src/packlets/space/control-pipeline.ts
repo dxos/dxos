@@ -3,11 +3,10 @@
 //
 
 import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
-import { FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Pipeline, PipelineAccessor } from '../pipeline';

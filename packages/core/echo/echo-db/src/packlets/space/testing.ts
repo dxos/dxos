@@ -9,8 +9,8 @@ import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '
 import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
 import { Database } from '../database';

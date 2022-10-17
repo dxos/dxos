@@ -33,7 +33,7 @@ type OptimisticMutation = {
   meta: MutationProcessMeta
 
   /**
-   * Contains the receipt afer this mutation has been written to the feed.
+   * Contains the receipt after this mutation has been written to the feed.
    */
   receipt?: WriteReceipt
 }
@@ -81,7 +81,7 @@ export class StateManager<M extends Model> {
     private readonly _itemId: ItemID,
     private _initialState: ModelSnapshot,
     private readonly _memberKey: PublicKey,
-    private readonly _writeStream: FeedWriter<Uint8Array> | null
+    private readonly _feedWriter: FeedWriter<Uint8Array> | null
   ) {
     if (modelConstructor) {
       this.initialize(modelConstructor);
@@ -111,7 +111,7 @@ export class StateManager<M extends Model> {
    */
   private async _write (mutation: MutationOf<M>): Promise<MutationWriteReceipt> {
     log(`Write ${JSON.stringify(mutation)}`);
-    if (!this._writeStream) {
+    if (!this._feedWriter) {
       throw new Error(`Read-only model: ${this._itemId}`);
     }
 
@@ -134,7 +134,7 @@ export class StateManager<M extends Model> {
 
     // Write mutation to the feed store and assign metadata from the receipt.
     // Confirms that the optimistic mutation has been written to the feed store.
-    const receipt = await this._writeStream.write(mutationEncoded);
+    const receipt = await this._feedWriter.append(mutationEncoded);
     log(`Confirm ${JSON.stringify(mutation)}`);
     optimisticMutation.receipt = receipt;
 
@@ -214,7 +214,7 @@ export class StateManager<M extends Model> {
       this._modelMeta,
       this._itemId,
       () => this._stateMachine!.getState(),
-      this._writeStream ? mutation => this._write(mutation) : undefined
+      this._feedWriter ? mutation => this._write(mutation) : undefined
     );
   }
 

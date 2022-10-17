@@ -10,9 +10,10 @@ import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { Timeframe, TypedMessage } from '@dxos/protocols';
+import { TypedMessage } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';

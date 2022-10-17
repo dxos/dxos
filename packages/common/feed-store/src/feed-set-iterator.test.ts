@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
-import { FeedWriter } from './feed-writer';
+import { FeedWriterImpl } from './feed-writer';
 import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
 
 describe('FeedSetIterator', function () {
@@ -45,7 +45,7 @@ describe('FeedSetIterator', function () {
         const feed = await feedStore.openFeed(key, { writable: true });
         iterator.addFeed(feed);
         feedKeys.push(feed.key);
-        return new FeedWriter(feed.core);
+        return new FeedWriterImpl(feed.core);
       }));
 
       expect(iterator.size).to.eq(numFeeds);

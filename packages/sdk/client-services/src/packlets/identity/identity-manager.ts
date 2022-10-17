@@ -13,8 +13,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
-import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Identity } from '../identity';
 

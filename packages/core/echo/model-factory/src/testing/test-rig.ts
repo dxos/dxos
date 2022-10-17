@@ -7,7 +7,7 @@ import debug from 'debug';
 import { Trigger } from '@dxos/async';
 import type { FeedWriter, WriteReceipt } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
 import { Model } from '../model';
@@ -17,6 +17,7 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
+// TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex());
@@ -52,7 +53,7 @@ export class TestRig<M extends Model<any>> {
 
     // eslint-disable-next-line unused-imports/no-unused-vars
     const writer: FeedWriter<Uint8Array> = {
-      write: async (mutation) => {
+      append: async (mutation) => {
         return this._writeMessage(key, mutation);
       }
     };

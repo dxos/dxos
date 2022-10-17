@@ -9,10 +9,10 @@ import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
+import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
 import { ControlPipeline } from './control-pipeline';
@@ -24,12 +24,12 @@ describe('space/control-pipeline', function () {
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    const feedStore = new FeedStore(
-      createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const directory = createStorage({ type: StorageType.RAM }).createDirectory();
+    const feedStore = new FeedStore(directory, { valueEncoding: codec });
 
     const createFeed = async () => {
       const feedKey = await keyring.createKey();
-      return feedStore.openReadWriteFeedWithSigner(feedKey, keyring);
+      return feedStore.openFeed(feedKey, { writable: true });
     };
 
     // TODO(dmaretskyi): Separate test for cold start after genesis.

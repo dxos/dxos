@@ -3,7 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 
 import { ModelMessage } from './types';
 

@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
-import { FeedWriter } from './feed-writer';
+import { FeedWriterImpl } from './feed-writer';
 import { defaultValueEncoding, TestBuilder, TestItem, TestItemBuilder } from './testing';
 
 describe('FeedWrapper', function () {
@@ -147,7 +147,7 @@ describe('FeedWrapper', function () {
 
     // Writer.
     {
-      const writer = new FeedWriter(feed1.core);
+      const writer = new FeedWriterImpl(feed1.core);
       setTimeout(async () => {
         for (const i of Array.from(Array(numBlocks).keys())) {
           const block = {

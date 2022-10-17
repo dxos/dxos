@@ -12,8 +12,8 @@ import { MockFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory, TestModel } from '@dxos/model-factory';
 import { ObjectModel } from '@dxos/object-model';
-import { Timeframe } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { Timeframe } from '@dxos/timeframe';
 
 import { Item } from './item';
 import { ItemDemuxer } from './item-demuxer';

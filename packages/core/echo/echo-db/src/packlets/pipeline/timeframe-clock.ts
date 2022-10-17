@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { timed } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
+import { Timeframe } from '@dxos/timeframe';
 
 /**
  * Keeps state of the last timeframe that was processed by ECHO.

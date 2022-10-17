@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
-import { FeedWriter } from './feed-writer';
+import { FeedWriterImpl } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
 describe('FeedQueue', function () {
@@ -33,7 +33,7 @@ describe('FeedQueue', function () {
 
     // Write blocks in batches.
     {
-      const writer = new FeedWriter(feed.core);
+      const writer = new FeedWriterImpl(feed.core);
 
       setTimeout(async () => {
         let count = 0;
