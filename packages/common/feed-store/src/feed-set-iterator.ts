@@ -7,7 +7,6 @@ import assert from 'assert';
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
@@ -19,8 +18,14 @@ import { FeedWrapper } from './feed-wrapper';
  */
 export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined
 
+export type FeedIndex = {
+  feed: PublicKey
+  index: number
+}
+
 export type FeedSetIteratorOptions = {
   polling?: number
+  start?: FeedIndex[] // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
 }
 
 export const defaultFeedSetIteratorOptions = {
@@ -35,7 +40,6 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
 
   constructor (
     private readonly _selector: FeedBlockSelector<T>,
-    private readonly _start: Timeframe,
     private readonly _options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions
   ) {
     super();

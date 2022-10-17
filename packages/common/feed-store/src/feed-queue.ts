@@ -64,6 +64,7 @@ export class FeedQueue<T = {}> {
     }
 
     log('opening...');
+    // TODO(burdon): Test performance/stability vs. using hypercore.get and managing an index.
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
     this._iterator = createAsyncIterator(this._feedStream);

@@ -21,12 +21,12 @@ export interface File extends RandomAccessStorageProperties {
   readonly type: StorageType
   readonly native: RandomAccessStorage
 
-  write(offset: number, data: Buffer): Promise<void>
-  read(offset: number, size: number): Promise<Buffer>
-  del(offset: number, size: number): Promise<void>
-  stat(): Promise<FileStat>
-  close(): Promise<Error>
-  destroy(): Promise<Error>
+  write (offset: number, data: Buffer): Promise<void>
+  read (offset: number, size: number): Promise<Buffer>
+  del (offset: number, size: number): Promise<void>
+  stat (): Promise<FileStat>
+  close (): Promise<Error>
+  destroy (): Promise<Error>
 
   // Not supported in node, memory.
   truncate? (offset: number): Promise<void>

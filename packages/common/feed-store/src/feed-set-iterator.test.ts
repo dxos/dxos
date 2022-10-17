@@ -8,7 +8,6 @@ import faker from 'faker';
 import { latch } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Timeframe } from '@dxos/protocols';
 
 import { FeedBlock } from './feed-queue';
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
@@ -23,12 +22,12 @@ describe('FeedSetIterator', function () {
     });
 
     // Random selector.
-    // TODO(burdon): Implement Timeframe selector.
+    // TODO(burdon): Implement Timeframe (index) selector.
     const feedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
       faker.datatype.number({ min: 0, max: blocks.length - 1 });
 
-    const timeframe = new Timeframe();
-    const iterator = new FeedSetIterator(feedBlockSelector, timeframe);
+    // TODO(burdon): Test with starting index.
+    const iterator = new FeedSetIterator(feedBlockSelector);
 
     const numFeeds = 3;
     const numBlocks = 25;
