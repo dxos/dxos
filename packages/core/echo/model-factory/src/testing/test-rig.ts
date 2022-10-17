@@ -17,6 +17,16 @@ import { ModelConstructor, ModelMessage } from '../types';
 
 const log = debug('dxos:echo:model-test-rig');
 
+class MockFeedWriter<T> implements FeedWriter<T> {
+  constructor (
+    private readonly _writer: (data: T) => Promise<WriteReceipt>
+  ) {}
+
+  async append (data: T): Promise<WriteReceipt> {
+    return this._writer(data);
+  }
+}
+
 // TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
@@ -50,13 +60,9 @@ export class TestRig<M extends Model<any>> {
 
   createPeer (): TestPeer<M> {
     const key = PublicKey.random();
-
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const writer: FeedWriter<Uint8Array> = {
-      append: async (mutation) => {
-        return this._writeMessage(key, mutation);
-      }
-    };
+    const writer = new MockFeedWriter<Uint8Array>((mutation: Uint8Array) => {
+      return this._writeMessage(key, mutation);
+    });
 
     const id = PublicKey.random().toHex();
     const stateManager = this._modelFactory.createModel<M>(this._modelConstructor.meta.type, id, {}, key, writer);
@@ -66,7 +72,7 @@ export class TestRig<M extends Model<any>> {
     return peer;
   }
 
-  private _writeMessage (peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
+  _writeMessage (peerKey: PublicKey, mutation: Uint8Array): WriteReceipt {
     const peer = this._peers.get(peerKey)!;
     const seq = peer.mutations.length;
     const timeframe = peer.timeframe;
