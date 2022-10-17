@@ -115,6 +115,12 @@ jobs:
           command: ../../../.circleci/scripts/publish.sh
           environment:
             NODE_OPTIONS: --max_old_space_size=3072
+      - run:
+          name: Deploy Docs
+          working_directory: ./docs
+          command: ../.circleci/scripts/publish.sh
+          environment:
+            NODE_OPTIONS: --max_old_space_size=5120
 
 workflows:
   main:
