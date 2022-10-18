@@ -3521,12 +3521,14 @@ importers:
       '@types/node': ^16.11.58
       pirates: ~4.0.5
       sorcery: ^0.10.0
+      source-map: ^0.6.1
       typescript: ^4.7.2
     dependencies:
       '@swc-node/sourcemap-support': 0.2.2
       '@swc/core': 1.2.249
       pirates: 4.0.5
       sorcery: 0.10.0
+      source-map: 0.6.1
     devDependencies:
       '@types/node': 16.11.66
       typescript: 4.8.4
