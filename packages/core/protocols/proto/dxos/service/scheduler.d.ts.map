@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "scheduler.d.ts",
+  "sourceRoot": "",
+  "sources": [
+    "../../../src/proto/dxos/service/scheduler.proto"
+  ],
+  "names": [],
+  "mappings": "AAIA,cAAc,SAAS,CAAC;AACxB,cAAc,cAAc,CAAC;AAC7B,cAAc,aAAa,CAAC"
+}
