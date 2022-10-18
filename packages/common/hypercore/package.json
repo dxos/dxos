@@ -18,6 +18,7 @@
     "check": "true"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",

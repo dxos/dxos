@@ -22,6 +22,7 @@ declare module 'random-access-storage' {
     readonly opened: boolean
     readonly suspended: boolean
     readonly closed: boolean
+    readonly destroyed: boolean
     readonly unlinked: boolean
     readonly writing: boolean
 

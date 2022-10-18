@@ -54,7 +54,7 @@ export abstract class AbstractStorage implements Storage {
 
     let file = this._getFileIfExists(fullPath);
     if (file) {
-      if (!file.closed) {
+      if (!file.native.closed) {
         return file;
       }
 
@@ -85,7 +85,7 @@ export abstract class AbstractStorage implements Storage {
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {
       const file = this._files.get(filename);
-      if (file && !file.destroyed) {
+      if (file && !file.native.destroyed) {
         return file;
       }
     }

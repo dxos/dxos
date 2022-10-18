@@ -15,14 +15,7 @@ import { StorageType } from './storage';
  * Random access file wrapper.
  * https://github.com/random-access-storage/random-access-storage
  */
-export interface File extends RandomAccessStorageProperties {
-  // TODO(burdon): Document different implementations.
-  readonly destroyed: boolean
-  readonly filename: string
-  readonly directory: string
-
-  // Added by factory.
-  readonly type: StorageType
+export interface File {
   readonly native: RandomAccessStorage
 
   write(offset: number, data: Buffer): Promise<void>

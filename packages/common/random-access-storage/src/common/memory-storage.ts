@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { promisify } from "node:util";
 import ram from "random-access-memory";
 import { Callback, RandomAccessStorage } from "random-access-storage";
 
@@ -9,9 +10,16 @@ import { AbstractStorage } from "./abstract-storage";
 import { File, wrapFile } from "./file";
 import { StorageType } from "./storage";
 
-// class FileRAM implements File {
-//   constructor(private native: RandomAccessStorage) {}
-// }
+class FileRAM implements File {
+  constructor(readonly native: RandomAccessStorage) {}
+
+  write = promisify(this.native.write.bind(this.native)) as any;
+  read = promisify(this.native.read.bind(this.native)) as any;
+  del = promisify(this.native.del.bind(this.native)) as any;
+  stat = promisify(this.native.stat.bind(this.native)) as any;
+  close = promisify(this.native.close.bind(this.native)) as any;
+  destroy = promisify(this.native.destroy.bind(this.native)) as any;
+}
 
 /**
  * Storage interface implementation for RAM.
@@ -23,17 +31,17 @@ export class MemoryStorage extends AbstractStorage {
   protected override _createFile(
     path: string,
     filename: string
-  ): File {
+  ): FileRAM {
     return this._castReadToBuffer(ram());
   }
 
-  protected override _openFile(file: File): File {
-    // const newFile = file.clone!();
-    (file as any).closed = false;
-    return this._castReadToBuffer(file);
+  protected override _openFile(file: File): FileRAM {
+    const native = file.native;
+    (native as any).closed = false;
+    return this._castReadToBuffer(native);
   }
 
-  private _castReadToBuffer(file: RandomAccessStorage): File {
+  private _castReadToBuffer(file: RandomAccessStorage): FileRAM {
     // Hack to make return type consistent on all platforms
     const trueRead = file.read.bind(file);
     file.read = (offset: number, size: number, cb: Callback<Buffer>) =>
@@ -44,6 +52,6 @@ export class MemoryStorage extends AbstractStorage {
           return cb(error, Buffer.from(data!));
         }
       });
-    return  wrapFile(file);
+    return new FileRAM(file);
   }
 }
