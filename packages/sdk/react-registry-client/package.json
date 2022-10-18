@@ -5,10 +5,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "scripts": {
     "book": "toolchain book",
     "build:book": "toolchain build:book",
@@ -28,9 +28,9 @@
     "@dxos/esbuild-plugins": "~2.29.0",
     "@dxos/protocols-toolchain": "workspace:*",
     "@types/debug": "^4.1.7",
-    "@types/react": "^17.0.24",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "@types/react": "^18.0.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": "*",

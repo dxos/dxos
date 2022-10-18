@@ -10,7 +10,6 @@ import { failUndefined } from '@dxos/debug';
 import { ResultSet } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
-import { ObjectModel } from '@dxos/object-model';
 import { PartySnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { ComplexMap, SubscriptionGroup } from '@dxos/util';
 
@@ -27,20 +26,12 @@ export class EchoProxy implements Echo {
   private readonly _parties = new ComplexMap<PublicKey, PartyProxy>(key => key.toHex());
   private readonly _partiesChanged = new Event();
   private readonly _subscriptions = new SubscriptionGroup();
-  private readonly _modelFactory: ModelFactory;
 
   constructor (
     private readonly _serviceProvider: ClientServiceProvider,
+    private readonly _modelFactory: ModelFactory,
     private readonly _haloProxy: HaloProxy
-  ) {
-
-    // TODO(dmaretskyi): .
-    this._modelFactory = new ModelFactory();
-    // _serviceProvider instanceof ClientServiceProxy
-    //   ? new ModelFactory() : (_serviceProvider as any).echo.modelFactory;
-
-    this._modelFactory.registerModel(ObjectModel); // Register object-model by default.
-  }
+  ) {}
 
   toString () {
     return `EchoProxy(${JSON.stringify(this.info)})`;
@@ -135,10 +126,9 @@ export class EchoProxy implements Echo {
    * Creates a new party.
    */
   async createParty (): Promise<Party> {
-    const [partyReceivedPromise, partyReceived] = latch();
+    const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.createParty();
-
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -147,10 +137,9 @@ export class EchoProxy implements Echo {
 
     this._partiesChanged.on(handler);
     handler();
+    await done();
 
-    await partyReceivedPromise;
     this._partiesChanged.off(handler);
-
     return this._parties.get(party.publicKey)!;
   }
 
@@ -158,10 +147,9 @@ export class EchoProxy implements Echo {
    * Clones the party from a snapshot.
    */
   async cloneParty (snapshot: PartySnapshot): Promise<Party> {
-    const [partyReceivedPromise, partyReceived] = latch();
+    const [done, partyReceived] = latch();
 
     const party = await this._serviceProvider.services.PartyService.cloneParty(snapshot);
-
     const handler = () => {
       if (this._parties.has(party.publicKey)) {
         partyReceived();
@@ -170,10 +158,9 @@ export class EchoProxy implements Echo {
 
     this._partiesChanged.on(handler);
     handler();
+    await done();
 
-    await partyReceivedPromise;
     this._partiesChanged.off(handler);
-
     return this._parties.get(party.publicKey)!;
   }
 

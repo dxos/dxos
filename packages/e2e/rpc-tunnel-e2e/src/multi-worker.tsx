@@ -3,14 +3,15 @@
 //
 
 import React, { StrictMode, useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { schema } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-async';
 import { JsonTreeView } from '@dxos/react-components';
 import { createProtoRpcPeer, RpcPort } from '@dxos/rpc';
-import { createWorkerPort, MessageChannel } from '@dxos/rpc-tunnel';
+import { PortMuxer } from '@dxos/rpc-tunnel';
 
+import { Channels } from './channels';
 // eslint-disable-next-line
 // @ts-ignore
 import SharedWorker from './test-worker?sharedworker';
@@ -62,41 +63,22 @@ const App = ({ id, port }: { id: string, port: RpcPort }) => {
 
 if (typeof SharedWorker !== 'undefined') {
   void (async () => {
-    let ports: { id: string, port: RpcPort }[];
     const worker = new SharedWorker();
-    const channel = new MessageChannel(async (channel, port) => {
-      ports = await Promise.all([
-        {
-          channel,
-          port,
-          source: 'parent',
-          destination: 'child'
-        },
-        {
-          channel,
-          port,
-          source: 'proxy',
-          destination: 'router'
-        }
-      ].map(options => ({
-        id: options.source,
-        port: createWorkerPort(options)
-      })));
-    });
-    await channel.addPort(worker.port);
+    const muxer = new PortMuxer(worker.port);
+    const portOne = muxer.createWorkerPort({ channel: Channels.ONE });
+    const portTwo = muxer.createWorkerPort({ channel: Channels.TWO });
 
-    render(
-      <StrictMode>
-        <div style={{
-          display: 'flex'
-        }}>
-          {ports!.map(port => (
-            <App key={port.id} {...port} />
-          ))}
-        </div>
-      </StrictMode>,
-      document.getElementById('root')
-    );
+    createRoot(document.getElementById('root')!)
+      .render(
+        <StrictMode>
+          <div style={{
+            display: 'flex'
+          }}>
+            <App id={Channels.ONE} port={portOne} />
+            <App id={Channels.TWO} port={portTwo} />
+          </div>
+        </StrictMode>
+      );
   })();
 } else {
   throw new Error('Requires a browser with support for shared workers.');

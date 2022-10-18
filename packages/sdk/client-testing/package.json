@@ -4,10 +4,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -30,6 +30,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@dxos/model-factory": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/testutils": "workspace:*",
     "@types/columnify": "^1.5.1",

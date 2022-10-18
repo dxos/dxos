@@ -11,9 +11,6 @@
     "pack:webext": "web-ext build --source-dir ./dist",
     "start:firefox": "web-ext run --source-dir ./dist"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@babel/runtime": "^7.9.6",
     "@dxos/async": "workspace:*",
@@ -36,9 +33,9 @@
     "color-hash": "^1.0.3",
     "debug": "^4.3.3",
     "moment": "^2.24.0",
-    "react": "^17.0.2",
+    "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
-    "react-dom": "^17.0.2",
+    "react-dom": "^18.2.0",
     "webextension-polyfill": "^0.8.0"
   },
   "devDependencies": {
@@ -47,8 +44,8 @@
     "@types/chrome": "^0.0.125",
     "@types/debug": "^4.1.7",
     "@types/download": "^8.0.1",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
     "@types/webextension-polyfill": "^0.8.0",
     "body-parser": "1.19.0",
     "chalk": "^4.1.0",
@@ -59,5 +56,8 @@
     "rmdir": "~1.2.0",
     "safe-compare": "~1.1.4",
     "web-ext": "~6.6.0"
-  }
+  },
+  "browserslist": [
+    "> 5%"
+  ]
 }

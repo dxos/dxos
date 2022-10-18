@@ -21,9 +21,6 @@
     "test": "toolchain test",
     "watch": "babel-watch src --out-dir ./dist --source-maps"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/client-testing": "workspace:*",
@@ -69,8 +66,8 @@
     "@types/faker": "^5.5.9",
     "@types/mocha": "^8.2.2",
     "@types/node": "^16.11.58",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
     "@types/url-join": "~4.0.1",
     "buffer": "^6.0.3",
     "concurrently": "~7.0.0",
@@ -79,10 +76,13 @@
     "esbuild-plugin-yaml": "~0.0.1",
     "faker": "^5.5.3",
     "mocha": "^8.4.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "robotjs": "~0.6.0",
     "ts-node": "10.9.1",
     "typescript": "^4.7.2"
-  }
+  },
+  "browserslist": [
+    "> 5%"
+  ]
 }

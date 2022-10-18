@@ -9,15 +9,18 @@ import assert from 'node:assert';
 import waitForExpect from 'wait-for-expect';
 
 import { sleep, waitForCondition } from '@dxos/async';
-import { clientServiceBundle, InvitationDescriptor } from '@dxos/client-services';
+import { clientServiceBundle, ClientServiceHost, InvitationDescriptor } from '@dxos/client-services';
+import { Config } from '@dxos/config';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { throwUnhandledRejection } from '@dxos/debug';
-import { TestModel } from '@dxos/model-factory';
+import { ModelFactory, TestModel } from '@dxos/model-factory';
+import { WebRTCTransportProxyFactory, WebRTCTransportService } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { Timeframe } from '@dxos/protocols';
-import { Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 import { createBundledRpcServer, createLinkedPorts } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
+import { TextModel } from '@dxos/text-model';
 
 import { Client } from './packlets/proxies';
 
@@ -298,11 +301,31 @@ describe('Client', function () {
         expect(details.processedTimeframe).toBeInstanceOf(Timeframe);
         expect(details.processedTimeframe.frames().some(([key, seq]) => seq > 0)).toBe(true);
       });
+
+      it('registering a custom model', async function () {
+        const client = await createClient();
+        await client.initialize();
+        afterTest(() => client.destroy());
+
+        await client.halo.createProfile();
+
+        client.echo.registerModel(TextModel);
+        const party = await client.echo.createParty();
+        const item = await party.database.createItem({ model: TextModel });
+        item.model.insert('Hello World', 0);
+        expect(item.model.textContent).toEqual('Hello World');
+      });
     });
   };
 
   describe('local', function () {
-    testSuite(async () => new Client());
+    testSuite(async () => new Client({
+      runtime: {
+        client: {
+          mode: Runtime.Client.Mode.LOCAL
+        }
+      }
+    }));
   });
 
   describe('remote', function () {
@@ -322,7 +345,46 @@ describe('Client', function () {
       void server.open(); // This blocks until the other client connects.
       afterTest(() => server.close());
 
-      return new Client({}, { rpcPort: proxyPort });
+      return new Client({
+        runtime: {
+          client: {
+            mode: Runtime.Client.Mode.REMOTE
+          }
+        }
+      }, { rpcPort: proxyPort });
+    });
+  });
+
+  describe('remote - wrtc proxy', function () {
+    testSuite(async () => {
+      const transportFactory = new WebRTCTransportProxyFactory();
+      transportFactory.setBridgeService(new WebRTCTransportService());
+
+      const [proxyPort, hostPort] = createLinkedPorts();
+      const hostClient = new ClientServiceHost({
+        config: new Config({}),
+        modelFactory: new ModelFactory().registerModel(ObjectModel),
+        transportFactory
+      });
+      await hostClient.open();
+      afterTest(() => hostClient.close());
+
+      const server = createBundledRpcServer({
+        services: clientServiceBundle,
+        handlers: hostClient.services,
+        port: hostPort
+      });
+
+      void server.open(); // This blocks until the other client connects.
+      afterTest(() => server.close());
+
+      return new Client({
+        runtime: {
+          client: {
+            mode: Runtime.Client.Mode.REMOTE
+          }
+        }
+      }, { rpcPort: proxyPort });
     });
   });
 

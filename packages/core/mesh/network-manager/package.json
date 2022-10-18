@@ -5,10 +5,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src",
@@ -42,7 +42,8 @@
   "devDependencies": {
     "@dxos/signal": "workspace:*",
     "@dxos/testutils": "workspace:*",
-    "@swc-node/register": "~1.5.1",
+    "@swc/core": "^1.3.9",
+    "@swc-node/register": "^1.5.4",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",

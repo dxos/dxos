@@ -76,7 +76,7 @@ export class RegistrySearchModel implements SearchModel<ResourceSet> {
   }
 
   doUpdate () {
-    setImmediate(async () => {
+    setTimeout(async () => {
       // TODO(burdon): Push predicates (e.g., type).
       let resources = await this._registry.listResources({ text: this._text });
       if (this._filters.length) {

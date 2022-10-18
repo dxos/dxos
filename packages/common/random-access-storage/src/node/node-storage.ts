@@ -3,10 +3,10 @@
 //
 
 import del from 'del';
-import { join } from 'node:path';
 import raf from 'random-access-file';
+import { RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage, File, StorageType } from '../common';
+import { AbstractStorage, StorageType } from '../common';
 
 /**
  * Storage interface implementation for Node.
@@ -14,13 +14,20 @@ import { AbstractStorage, File, StorageType } from '../common';
 export class NodeStorage extends AbstractStorage {
   public override type: StorageType = StorageType.NODE;
 
-  protected _createFile (filename: string, path: string, opts: any = {}): File {
-    const file = new File(raf(filename, { directory: path, ...opts }));
-    this._addFile(join(path, filename), file);
+  protected override _createFile (
+    path: string,
+    filename: string,
+    opts: any = {}
+  ): RandomAccessStorage {
+    const file = raf(filename, { directory: path, ...opts });
+
+    // Empty write to create file on a drive.
+    file.write(0, Buffer.from(''));
+
     return file;
   }
 
-  async _destroy () {
-    await del(this.path);
+  protected override async _destroy () {
+    await del(this.path, { force: true });
   }
 }

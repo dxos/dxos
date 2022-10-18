@@ -6,11 +6,12 @@ import assert from 'assert';
 
 import { Event } from '@dxos/async';
 import { CredentialGenerator } from '@dxos/credentials';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity } from '@dxos/echo-db';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, MetadataStore, Space, SwarmIdentity, Database } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/protocols';
 import { AdmittedFeed, IdentityRecord, SpaceRecord } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -40,7 +41,8 @@ export class IdentityManager {
     private readonly _metadataStore: MetadataStore,
     private readonly _feedStore: FeedStore,
     private readonly _keyring: Keyring,
-    private readonly _networkManager: NetworkManager
+    private readonly _networkManager: NetworkManager,
+    private readonly _modelFactory: ModelFactory
   ) {}
 
   get identity () {
@@ -65,7 +67,6 @@ export class IdentityManager {
 
   private async _constructIdentity (identityRecord: IdentityRecord) {
     assert(!this._identity);
-
     log('Constructing identity', { identityRecord });
 
     const space = await this._constructSpace({
@@ -104,11 +105,13 @@ export class IdentityManager {
       feedProvider: key => this._feedStore.openReadOnlyFeed(key),
       networkManager: this._networkManager,
       networkPlugins,
-      swarmIdentity
+      swarmIdentity,
+      databaseFactory: async ({ databaseBackend }) => new Database(this._modelFactory, databaseBackend, swarmIdentity.peerKey)
     });
   }
 
   async createIdentity () {
+    log('Create identity');
     assert(!this._identity, 'Identity already exists.');
 
     const controlFeedKey = await this._keyring.createKey();
@@ -122,16 +125,22 @@ export class IdentityManager {
         writeDataFeedKey: await this._keyring.createKey()
       }
     };
+
     const identity = await this._constructIdentity(identityRecord);
     await identity.open();
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
       const credentials = [
-        ...(await generator.createSpaceGenesis(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey)),
-        await generator.createFeedAdmission(identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
+        // Space genesis.
+        ...(await generator.createSpaceGenesis(
+          identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.genesisFeedKey)),
 
-        // Write device chain
+        // Feed admission.
+        await generator.createFeedAdmission(
+          identityRecord.haloSpace.spaceKey, identityRecord.haloSpace.writeDataFeedKey, AdmittedFeed.Designation.DATA),
+
+        // Device authorization (writes device chain).
         await generator.createDeviceAuthorization(identityRecord.deviceKey)
       ];
 
@@ -157,6 +166,7 @@ export class IdentityManager {
    * Accept an existing identity. Expects it's device key to be authorized.
    */
   async acceptIdentity (params: JoinIdentityParams) {
+    log('Accept identity', { params });
     assert(!this._identity, 'Identity already exists.');
 
     const identity = await this._constructIdentity({

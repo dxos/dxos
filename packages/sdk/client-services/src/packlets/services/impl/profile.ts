@@ -67,7 +67,7 @@ export class ProfileService implements ProfileServiceRpc {
 
   createInvitation (): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
-      setImmediate(async () => {
+      setTimeout(async () => {
         const secret = Buffer.from(generatePasscode());
         // TODO(burdon): Not used.
         // const secretProvider = async () => {
@@ -91,7 +91,7 @@ export class ProfileService implements ProfileServiceRpc {
   acceptInvitation (request: InvitationDescriptorProto): Stream<RedeemedInvitation> {
     return new Stream(({ next, close }) => {
       const id = v4();
-      const [_secretLatch, secretTrigger] = latch();
+      const [, secretTrigger] = latch();
       const inviteeInvitation: InviteeInvitation = { secretTrigger };
 
       // Secret will be provided separately (in AuthenticateInvitation).

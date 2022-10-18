@@ -2,15 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import wrtc from '@koush/wrtc';
 import assert from 'assert';
 import SimplePeerConstructor, { Instance as SimplePeer } from 'simple-peer';
 
 import { Stream } from '@dxos/codec-protobuf';
+import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { BridgeService, ConnectionRequest, SignalRequest, DataRequest, BridgeEvent, ConnectionState, CloseRequest } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
+
+import { wrtc } from './webrtc';
 
 export class WebRTCTransportService implements BridgeService {
   protected peers = new ComplexMap<PublicKey, SimplePeer>(key => key.toHex());
@@ -26,7 +28,9 @@ export class WebRTCTransportService implements BridgeService {
       log(`Creating webrtc connection initiator=${request.initiator} webrtcConfig=${JSON.stringify(this._webrtcConfig)}`);
       const peer = new SimplePeerConstructor({
         initiator: request.initiator,
-        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT ? undefined : wrtc,
+        wrtc: SimplePeerConstructor.WEBRTC_SUPPORT
+          ? undefined
+          : (wrtc ?? raise(new Error('wrtc not available'))),
         config: this._webrtcConfig
       });
 
@@ -98,7 +102,7 @@ export class WebRTCTransportService implements BridgeService {
 
   async close ({ proxyId }: CloseRequest) {
     this.peers.get(proxyId)?.destroy();
-    this.peers.delete;
+    this.peers.delete(proxyId);
     log('Closed.');
   }
 }

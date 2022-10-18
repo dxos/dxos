@@ -6,9 +6,9 @@ import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
 import { addHook } from 'pirates';
-import { loadSync } from 'sorcery';
 
 import { ID_BUGCHECK_STRING, ID_GET_CURRENT_OWNERSHIP_SCOPE, preprocess } from './preprocessor';
+import { combineSourceMaps } from './source-map';
 
 // TODO(dmaretskyi): Move to separate package in tools.
 
@@ -33,7 +33,7 @@ export const register = () => {
       if (DUMP) {
         // TODO(burdon): Decide on better place to put debug files.
         const sourceMap = getSourceMap(filename);
-        const path = join('/tmp/dx-log', '.trace-compiled', filename);
+        const path = join('/tmp/dx-log', 'trace-compiled', filename);
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, output.code, { encoding: 'utf-8' });
         writeFileSync(`${dirname(path)}/${parse(path).name}.orig${extname(path)}`, code, { encoding: 'utf-8' });
@@ -48,7 +48,7 @@ export const register = () => {
       throw err;
     }
   }, {
-    extensions: ['.ts']
+    extensions: ['.ts', '.js']
   });
 
   const getSourceMap = (filename: string): string | undefined => {
@@ -78,7 +78,7 @@ export const register = () => {
   patchSourceMaps();
 };
 
-const BUGCHECK_STRING = 'FOO If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
+const BUGCHECK_STRING = 'If you see this message then it means that the source code preprocessor for @dxos/log is broken.' +
 ' It probably has misinterpreted an unrelated call for a logger invocation.';
 
 const registerGlobals = () => {
@@ -107,39 +107,3 @@ function patchSourceMaps () {
     }
   } as any;
 }
-
-/**
- * Combines two source maps for the same file and outputs a new source map.
- *
- * @param prevMap Source map from the first compilation step.
- * @param newMap Source map from the second compilation step.
- */
-const combineSourceMaps = (prevMap: string, nextMap: string) => {
-  const prev = JSON.parse(prevMap);
-  const newMap = JSON.parse(nextMap);
-  try {
-
-    newMap.sources[0] = '/prev';
-    const generated = loadSync('/new', {
-      content: {
-        '/new': newMap.sourcesContent[0],
-        '/prev': prev.sourcesContent[0]
-      },
-      sourcemaps: {
-        '/new': newMap,
-        '/prev': prev
-      }
-    }).apply();
-
-    generated.sources[0] = '/' + generated.sources[0];
-
-    return JSON.stringify(generated);
-  } catch (err) {
-    console.error(err);
-    console.log({
-      prev,
-      newMap
-    });
-    throw err;
-  }
-};

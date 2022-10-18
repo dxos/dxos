@@ -2,16 +2,11 @@
   "name": "@dxos/gem-core",
   "version": "2.2.1-beta.11",
   "description": "Gem core components and utils.",
-  "homepage": "https://github.com/dxos/gem#readme",
-  "bugs": {
-    "url": "https://github.com/dxos/gem/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dxos/gem.git"
-  },
   "license": "MIT",
   "author": "DXOS.org",
+  "homepage": "https://github.com/dxos/gem#readme",
+  "bugs": "https://github.com/dxos/gem/issues",
+  "repository": "dxos/gem.git",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
@@ -21,9 +16,6 @@
   "scripts": {
     "book": "esbuild-server book"
   },
-  "browserslist": [
-    "> 5%"
-  ],
   "dependencies": {
     "assert": "^2.0.0",
     "csstype": "^3.0.10",
@@ -44,8 +36,8 @@
     "@types/jest": "^27.4.1",
     "@types/lodash": "^4.14.182",
     "faker": "^5.5.3",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "@emotion/css": ">=11.0.0",
@@ -53,6 +45,9 @@
     "react": "*",
     "react-dom": "*"
   },
+  "browserslist": [
+    "> 5%"
+  ],
   "publishConfig": {
     "access": "public"
   }

@@ -139,21 +139,20 @@ describe('feed store iterator', function () {
     iterator.addFeedDescriptor(descriptor1);
     iterator.addFeedDescriptor(descriptor2);
 
-    const [counter, updateCounter] = latch({ count: 3 });
+    const [done, updateCounter] = latch({ count: 3 });
     const messages: any[] = [];
-    setImmediate(async () => {
+    setTimeout(async () => {
       for await (const message of iterator) {
         messages.push(message.data);
         updateCounter();
       }
     });
 
-    await counter;
+    await done();
     await iterator.close();
     await feedStore.close();
 
     expect(messages).toHaveLength(3);
-
     expect(messages).toContainEqual({ key: 'feed1', value: '1' });
     expect(messages).toContainEqual({ key: 'feed2', value: '0' });
     expect(messages).toContainEqual({ key: 'feed2', value: '1' });

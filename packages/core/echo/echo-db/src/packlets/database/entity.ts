@@ -46,6 +46,10 @@ export class Entity<M extends Model | null = Model> {
     return this._type;
   }
 
+  get modelType (): string {
+    return this._stateManager.modelType;
+  }
+
   get modelMeta (): ModelMeta {
     return this._stateManager.model.modelMeta;
   }

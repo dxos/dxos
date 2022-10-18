@@ -47,15 +47,15 @@
     "@types/faker": "^5.5.9",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.isplainobject": "^4.0.6",
-    "@types/react": "^17.0.24",
+    "@types/react": "^18.0.21",
     "@types/react-copy-to-clipboard": "~5.0.1",
     "@types/string-hash": "^1.1.1",
     "@types/url-join": "~4.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "clsx": "^1.1.1",
     "faker": "^5.5.3",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "@emotion/react": ">=11.0.0",

@@ -8,7 +8,9 @@ import { codec, MetadataStore } from '@dxos/echo-db';
 import { FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
+import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { ObjectModel } from '@dxos/object-model';
 import { createStorage, Storage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
 
@@ -36,7 +38,8 @@ describe('identity-manager', function () {
       metadataStore,
       feedStore,
       keyring,
-      networkManager
+      networkManager,
+      new ModelFactory().registerModel(ObjectModel)
     );
 
     return {
@@ -65,6 +68,7 @@ describe('identity-manager', function () {
 
     const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
+
     expect(peer2.identityManager.identity).toBeDefined();
     expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
     expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey);

@@ -3,6 +3,7 @@
 //
 
 import { File } from './file';
+import { StorageType } from './storage';
 import { getFullPath } from './utils';
 
 /**
@@ -10,33 +11,49 @@ import { getFullPath } from './utils';
  */
 export class Directory {
   constructor (
+    public readonly type: StorageType,
     public readonly path: string,
-    private readonly _getFilesInPath: () => File[],
-    private readonly _createFile: (filename: string, path: string, opts?: any) => File,
-    private readonly _deleteFilesInPath: () => Promise<void>
+    // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
+    private readonly _getFiles: () => File[],
+    private readonly _getOrCreateFile: (path: string, filename: string, opts?: any) => File,
+    private readonly _delete: () => Promise<void>
   ) {}
 
-  getFiles (): File[] {
-    return this._getFilesInPath();
+  toString () {
+    return `Directory(${JSON.stringify({ type: this.type, path: this.path })})`;
   }
 
-  createOrOpenFile (filename: string, opts?: any): File {
-    return this._createFile(filename, this.path, opts);
-  }
-
+  /**
+   * Create a new sub-directory.
+   */
   createDirectory (path: string): Directory {
     return new Directory(
+      this.type,
       getFullPath(this.path, path),
-      this._getFilesInPath,
-      this._createFile,
-      this._deleteFilesInPath
+      this._getFiles,
+      this._getOrCreateFile,
+      this._delete
     );
   }
 
   /**
-   * Close and delete all files in the directory and all its subdirectories.
+   * Get all files in the current directory.
+   */
+  getFiles (): File[] {
+    return this._getFiles();
+  }
+
+  /**
+   * Get or create a new file.
+   */
+  getOrCreateFile (filename: string, opts?: any): File {
+    return this._getOrCreateFile(this.path, filename, opts);
+  }
+
+  /**
+   * Close and delete all files in the directory and all its sub-directories.
    */
   async delete () {
-    await this._deleteFilesInPath();
+    await this._delete();
   }
 }

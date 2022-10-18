@@ -1,0 +1,24 @@
+{
+  "sourceRoot": "packages/experimental/composer/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "@nxext/vite:dev",
+      "options": {
+        "outputPath": "packages/experimental/composer/out/composer",
+        "configFile": "packages/experimental/composer/vite.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "packages/experimental/composer/src/**/*.{js,jsx,ts,tsx}"
+        ]
+      }
+    }
+  }
+}

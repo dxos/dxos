@@ -16,7 +16,8 @@ import {
 } from '@dxos/client-services';
 import { Config, ConfigProto } from '@dxos/config';
 import { InvalidParameterError, TimeoutError } from '@dxos/debug';
-import { ModelConstructor } from '@dxos/model-factory';
+import { ModelConstructor, ModelFactory } from '@dxos/model-factory';
+import { ObjectModel } from '@dxos/object-model';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { RpcPort } from '@dxos/rpc';
 import { createIFrame, createIFramePort } from '@dxos/rpc-tunnel';
@@ -31,8 +32,7 @@ import { DXOS_VERSION } from './version';
 
 const log = debug('dxos:client-proxy');
 
-// TODO(wittjosiah): Should be kube.local or equivalent.
-const DEFAULT_CLIENT_ORIGIN = 'http://localhost:3967';
+const DEFAULT_CLIENT_ORIGIN = 'https://halo.dxos.org/headless.html';
 const IFRAME_ID = '__DXOS_CLIENT__';
 const EXPECTED_CONFIG_VERSION = 1;
 
@@ -41,6 +41,9 @@ export const defaultConfig: ConfigProto = { version: 1 };
 export const defaultTestingConfig: ConfigProto = {
   version: 1,
   runtime: {
+    client: {
+      mode: Runtime.Client.Mode.LOCAL
+    },
     services: {
       signal: {
         server: 'ws://localhost:4000/.well-known/dx/signal'
@@ -54,11 +57,6 @@ export interface ClientOptions {
    * Only used when remote=true.
    */
   rpcPort?: RpcPort
-
-  /**
-   *
-   */
-  serviceProvider?: ClientServiceProvider
 
   /**
    *
@@ -83,6 +81,9 @@ export class Client {
   private readonly _config: Config;
   private readonly _options: ClientOptions;
   private readonly _mode: Runtime.Client.Mode;
+
+  private readonly _modelFactory = new ModelFactory()
+    .registerModel(ObjectModel);
 
   private _initialized = false;
   private _serviceProvider!: ClientServiceProvider;
@@ -166,6 +167,10 @@ export class Client {
     return this._serviceProvider.services;
   }
 
+  private get timeout () {
+    return this._options.timeout ?? 10_000;
+  }
+
   /**
    * Initializes internal resources in an idempotent way.
    * Required before using the Client instance.
@@ -176,11 +181,10 @@ export class Client {
       return;
     }
 
-    const t = this._options.timeout ?? 10000;
     const timeout = setTimeout(() => {
       // TODO(burdon): Tie to global error handling (or event).
-      throw new TimeoutError(`Initialize timed out after ${t / 1000}s.`);
-    }, t);
+      throw new TimeoutError(`Initialize timed out after ${this.timeout / 1000}s.`);
+    }, this.timeout);
 
     if (this._mode === Runtime.Client.Mode.REMOTE) {
       await this.initializeRemote(onProgressCallback);
@@ -195,7 +199,7 @@ export class Client {
     }
 
     this._halo = new HaloProxy(this._serviceProvider);
-    this._echo = new EchoProxy(this._serviceProvider, this._halo);
+    this._echo = new EchoProxy(this._serviceProvider, this._modelFactory, this._halo);
 
     await this._halo._open();
     await this._echo._open();
@@ -207,7 +211,8 @@ export class Client {
   private initializeIFramePort () {
     const source = new URL(this._config.get('runtime.client.remoteSource') ?? DEFAULT_CLIENT_ORIGIN);
     const iframe = createIFrame(source.toString(), IFRAME_ID);
-    return createIFramePort({ origin: source.origin, iframe });
+    // TODO(wittjosiah): Use well-known channel constant.
+    return createIFramePort({ origin: source.origin, iframe, channel: 'dxos:app' });
   }
 
   private async initializeRemote (onProgressCallback: Parameters<this['initialize']>[0]) {
@@ -216,14 +221,21 @@ export class Client {
     }
 
     log('Creating client proxy.');
-    this._serviceProvider = new ClientServiceProxy(this._options.rpcPort ?? this.initializeIFramePort());
+    this._serviceProvider = new ClientServiceProxy(
+      this._options.rpcPort ?? this.initializeIFramePort(),
+      this.timeout / 2
+    );
     await this._serviceProvider.open(onProgressCallback);
   }
 
   // TODO(wittjosiah): Factor out local mode so that ClientServices can be tree shaken out of bundles.
   private async initializeLocal (onProgressCallback: Parameters<this['initialize']>[0]) {
     log('Creating client host.');
-    this._serviceProvider = new ClientServiceHost(this._config, this._options.signer);
+    this._serviceProvider = new ClientServiceHost({
+      config: this._config,
+      modelFactory: this._modelFactory,
+      signer: this._options.signer
+    });
     await this._serviceProvider.open(onProgressCallback);
   }
 
@@ -281,7 +293,7 @@ export class Client {
    */
   // TODO(burdon): Remove (moved to echo).
   registerModel (constructor: ModelConstructor<any>): this {
-    this._echo.modelFactory.registerModel(constructor);
+    this._modelFactory.registerModel(constructor);
     return this;
   }
 }

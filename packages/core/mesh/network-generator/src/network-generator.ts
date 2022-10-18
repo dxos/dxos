@@ -21,6 +21,7 @@ export const TOPOLOGIES = [
   'cliqueCircle',
   'wattsStrogatz'
 ] as const;
+
 export type Topology = typeof TOPOLOGIES[number];
 
 type Generator = (...args: any) => Promise<Network>

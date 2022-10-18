@@ -5,10 +5,10 @@
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "browser": {
     "node:assert": "assert"
   },
-  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -17,11 +17,8 @@
     "check": "true"
   },
   "dependencies": {
-    "@dxos/rpc": "workspace:*",
-    "debug": "^4.3.3"
-  },
-  "devDependencies": {
-    "@types/debug": "^4.1.7"
+    "@dxos/log": "workspace:*",
+    "@dxos/rpc": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
