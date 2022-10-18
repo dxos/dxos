@@ -14,7 +14,7 @@ export const buttonClassName = (props: ButtonProps) => {
   return cx(
     'inline-flex select-none items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
     defaultHover(props),
-    resolvedVariant === 'default' && 'border border-neutral-100 hover:border-transparent bg-white text-neutral-900 dark:border-neutral-650 dark:bg-neutral-750 dark:text-neutral-50',
+    resolvedVariant === 'default' && 'border border-neutral-100 hover:focus:border-neutral-100 hover:border-transparent bg-white text-neutral-900 dark:border-neutral-650 dark:bg-neutral-750 dark:text-neutral-50',
     resolvedVariant === 'primary' && 'border border-primary-500 hover:border-transparent bg-primary-500 text-white hover:bg-primary-550',
     resolvedVariant === 'outline' && 'text-neutral-700 border border-neutral-600 font-medium rounded-lg text-sm text-center dark:border-neutral-300 dark:text-neutral-150',
     defaultFocus,

@@ -6,7 +6,7 @@ import cx from 'classnames';
 import React, { PropsWithChildren, ReactNode } from 'react';
 
 import { ButtonProps } from '../../props';
-import { buttonClassName } from '../../styles';
+import { buttonClassName, defaultDescription, primaryDescription } from '../../styles';
 import { useId } from '../../util/useId';
 
 export interface CompoundButtonProps extends ButtonProps {
@@ -48,9 +48,7 @@ export const CompoundButton = ({
             id={descriptionId}
             className={cx(
               'text-xs font-normal',
-              variant === 'default' && 'text-neutral-650 dark:text-neutral-300',
-              variant === 'outline' && 'text-neutral-650 dark:text-neutral-300',
-              variant === 'primary' && 'text-white/75'
+              variant === 'primary' ? primaryDescription : defaultDescription
             )}
           >
             {description}
