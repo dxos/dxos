@@ -58,7 +58,7 @@ describe('Item demuxer', function () {
       }
     };
 
-    await feedWriter.append(message);
+    await feedWriter.write(message);
 
     //
     // Wait for mutations to be processed.

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": [
-      "@dxos/mocha"
+      "@dxos/mocha",
+      "@dxos/shims"
     ]
   },
   "include": [

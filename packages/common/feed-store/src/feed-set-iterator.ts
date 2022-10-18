@@ -22,13 +22,15 @@ export type FeedBlock<T> = HypercoreFeedBlock<T>
 export type FeedBlockSelector<T> = (blocks: FeedBlock<T>[]) => number | undefined
 
 export type FeedIndex = {
-  feed: PublicKey
+  feedKey: PublicKey
   index: number
 }
 
 export type FeedSetIteratorOptions = {
   polling?: number
-  start?: FeedIndex[] // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
+  // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
+  //  Currently does not use this.
+  start?: FeedIndex[]
 }
 
 export const defaultFeedSetIteratorOptions = {
@@ -51,6 +53,10 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
 
   get size () {
     return this._feedQueues.size;
+  }
+
+  get feeds (): FeedWrapper[] {
+    return Array.from(this._feedQueues.values()).map(feedQueue => feedQueue.feed);
   }
 
   addFeed (feed: FeedWrapper) {

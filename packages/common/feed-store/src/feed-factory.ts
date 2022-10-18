@@ -15,7 +15,7 @@ import { Directory } from '@dxos/random-access-storage';
 
 export type FeedFactoryOptions = {
   root: Directory
-  signer: Signer
+  signer?: Signer
   hypercore?: HypercoreOptions
 }
 

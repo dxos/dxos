@@ -3,10 +3,9 @@
 //
 
 import assert from 'assert';
-import { FeedSetIterator } from 'packages/common/feed-store/src/feed-set-iterator';
 
 import { Event } from '@dxos/async';
-import { FeedWrapper, FeedWriter } from '@dxos/feed-store';
+import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, TypedMessage } from '@dxos/protocols';
@@ -69,11 +68,9 @@ export class Pipeline implements PipelineAccessor {
   // TODO(burdon): Not used.
   private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
 
-  private readonly _iterator = new FeedSetIterator(
-    createMessageSelector(this._timeframeClock), {
-      start: this._initialTimeframe
-    }
-  );
+  private readonly _iterator = new FeedSetIterator(createMessageSelector(this._timeframeClock), {
+    start: this._initialTimeframe.frames().map(([feedKey, index]) => ({ feedKey, index }))
+  });
 
   private readonly _state: PipelineState;
 
@@ -89,12 +86,14 @@ export class Pipeline implements PipelineAccessor {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
+    const self = this; // TODO(burdon): Create class or closure.
     this._state = {
       get timeframe () {
         return self._timeframeClock.timeframe;
       },
       get endTimeframe () {
+        // TODO(burdon): Construct from iterator
+        const feeds = self._iterator.feeds;
         return self._iterator.getEndTimeframe();
       },
       timeframeUpdate: this._timeframeClock.update,

@@ -16,7 +16,7 @@ export class MockFeedWriter<T> implements FeedWriter<T> {
     readonly feedKey = PublicKey.random()
   ) {}
 
-  async append (data: T): Promise<WriteReceipt> {
+  async write (data: T): Promise<WriteReceipt> {
     this.messages.push(data);
 
     const receipt: WriteReceipt = {

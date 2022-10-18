@@ -5,7 +5,7 @@
 import expect from 'expect';
 
 import { CredentialGenerator, createCredential } from '@dxos/credentials';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,8 +24,15 @@ describe('space/control-pipeline', function () {
     const identityKey = await keyring.createKey();
     const deviceKey = await keyring.createKey();
 
-    const directory = createStorage({ type: StorageType.RAM }).createDirectory();
-    const feedStore = new FeedStore(directory, { valueEncoding: codec });
+    const feedStore = new FeedStore({
+      factory: new FeedFactory({
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring,
+        hypercore: {
+          valueEncoding: codec
+        }
+      })
+    });
 
     const createFeed = async () => {
       const feedKey = await keyring.createKey();
@@ -39,7 +46,7 @@ describe('space/control-pipeline', function () {
       spaceKey,
       genesisFeed,
       initialTimeframe: new Timeframe(),
-      feedProvider: key => feedStore.openReadOnlyFeed(key)
+      feedProvider: key => feedStore.openFeed(key)
     });
 
     const admittedFeeds: PublicKey[] = [];

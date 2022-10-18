@@ -52,7 +52,7 @@ export class TestGenerator<T = {}> {
   } = {}) {
     for (const _ of Array.from(Array(count))) {
       const data = this._generate(this._count++);
-      await writer.append(data);
+      await writer.write(data);
       if (delay) {
         await sleep(faker.datatype.number(delay));
       }

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '@dxos/messaging';
@@ -38,9 +38,15 @@ export class TestAgent {
     public readonly deviceKey: PublicKey,
     private readonly _signalManager: SignalManager
   ) {
-    this.feedStore = new FeedStore(
-      createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec }
-    );
+    this.feedStore = new FeedStore({
+      factory: new FeedFactory({
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring,
+        hypercore: {
+          valueEncoding: codec
+        }
+      })
+    });
   }
 
   async createSpace (
@@ -62,9 +68,12 @@ export class TestAgent {
       genesisFeed,
       controlFeed,
       dataFeed,
-      feedProvider: key => this.feedStore.openFeed(key),
+      feedProvider: feedKey => this.feedStore.openFeed(feedKey),
       initialTimeframe: new Timeframe(),
-      networkManager: new NetworkManager({ signalManager: this._signalManager, transportFactory: inMemoryTransportFactory }),
+      networkManager: new NetworkManager({
+        signalManager: this._signalManager,
+        transportFactory: inMemoryTransportFactory
+      }),
       networkPlugins: [],
       swarmIdentity: {
         peerKey: identityKey,
@@ -85,7 +94,7 @@ export class TestAgent {
 
   async createFeed () {
     const key = await this.keyring.createKey();
-    return this.feedStore.openReadWriteFeedWithSigner(key, this.keyring);
+    return this.feedStore.openFeed(key, { writable: true });
   }
 }
 

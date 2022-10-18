@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { mapFeedWriter, FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper, mapFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
@@ -30,10 +30,10 @@ type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
 
 export type SpaceParams = {
   spaceKey: PublicKey
-  genesisFeed: FeedDescriptor
-  controlFeed: FeedDescriptor
-  dataFeed: FeedDescriptor
-  feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>
+  genesisFeed: FeedWrapper
+  controlFeed: FeedWrapper
+  dataFeed: FeedWrapper
+  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper>
   initialTimeframe: Timeframe
   networkManager: NetworkManager
   networkPlugins: Plugin[]
@@ -48,9 +48,9 @@ export class Space {
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   private readonly _key: PublicKey;
-  private readonly _dataFeed: FeedDescriptor;
-  private readonly _controlFeed: FeedDescriptor;
-  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedDescriptor>;
+  private readonly _dataFeed: FeedWrapper;
+  private readonly _controlFeed: FeedWrapper;
+  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper>;
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;

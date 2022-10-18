@@ -22,7 +22,7 @@ class MockFeedWriter<T> implements FeedWriter<T> {
     private readonly _writer: (data: T) => Promise<WriteReceipt>
   ) {}
 
-  async append (data: T): Promise<WriteReceipt> {
+  async write (data: T): Promise<WriteReceipt> {
     return this._writer(data);
   }
 }
@@ -30,7 +30,7 @@ class MockFeedWriter<T> implements FeedWriter<T> {
 // TODO(burdon): Rewrite with TestBuilder pattern from feed-store.
 // TODO(burdon): Rename and/or move to separate testing package.
 export class TestRig<M extends Model<any>> {
-  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(key => key.toHex());
+  private readonly _peers = new ComplexMap<PublicKey, TestPeer<M>>(PublicKey.hash);
 
   private readonly _replicationFinished = new Trigger();
 

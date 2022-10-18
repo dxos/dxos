@@ -5,7 +5,9 @@
 import debug from 'debug';
 import assert from 'node:assert';
 
-import { FeedWriter, FeedBlock, FeedBlockSelector } from '@dxos/feed-store';
+import {
+  FeedWriter, FeedBlock, FeedBlockSelector, createFeedWriter, mapFeedWriter
+} from '@dxos/feed-store';
 import { FeedWrapper } from '@dxos/feed-store/src';
 import { TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -20,11 +22,11 @@ const log = debug('dxos:echo-db:message-selector');
  * The first message we wish to process is the PartyGenesis, which will admit a Feed.
  * As we encounter and process FeedAdmit messages those are added to the Party's trust,
  * and we begin processing messages from them as well.
- *
- * @param timeframeClock
  */
-export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlockSelector<FeedMessage> => {
-  return (messages: FeedBlock<FeedMessage>) => {
+export const createMessageSelector = (
+  timeframeClock: TimeframeClock
+): FeedBlockSelector<FeedMessage> => {
+  return (messages: FeedBlock<FeedMessage>[]) => {
     // Pick the first candidate with a valid timeframe that has no gaps.
     for (let i = 0; i < messages.length; i++) {
       const { data: { timeframe } } = messages[i];
@@ -41,15 +43,16 @@ export const createMessageSelector = (timeframeClock: TimeframeClock): FeedBlock
 };
 
 /**
- *
- * @param feed
- * @param getTimeframe
+ * Creates a writer that injects the current timeframe.
  */
-export const createFeedWriterWithTimeframe = (feed: FeedWrapper, getTimeframe: () => Timeframe): FeedWriter<TypedMessage> => {
+export const createFeedWriterWithTimeframe = (
+  feed: FeedWrapper<FeedMessage>,
+  timeframeProvider: () => Timeframe
+): FeedWriter<TypedMessage> => {
   const writer = createFeedWriter<FeedMessage>(feed);
 
-  return mapFeedWriter(payload => ({
-    payload,
-    timeframe: getTimeframe()
+  return mapFeedWriter<TypedMessage, FeedMessage>((data: TypedMessage) => ({
+    timeframe: timeframeProvider(),
+    payload: data
   }), writer);
 };

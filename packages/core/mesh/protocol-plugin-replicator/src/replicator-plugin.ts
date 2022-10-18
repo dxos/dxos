@@ -28,7 +28,9 @@ export type ReplicatorContextInfo = {
 }
 
 type LoadFunction = (info: ReplicatorContextInfo) => Promise<FeedData[]>;
+
 type SubscribeFunction = (share: (feeds: FeedData[]) => Promise<void> | undefined, info: ReplicatorContextInfo) => () => void;
+
 type ReplicateFunction = (feeds: FeedData[], info: ReplicatorContextInfo) => Promise<FeedWrapper[]>;
 
 const defaultSubscribe: SubscribeFunction = () => () => {};

@@ -155,7 +155,7 @@ describe('FeedWrapper', function () {
             value: faker.lorem.sentence()
           };
 
-          const seq = await writer.append(block);
+          const seq = await writer.write(block);
           log('W', { seq, block });
         }
       });

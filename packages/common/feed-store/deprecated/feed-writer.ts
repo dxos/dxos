@@ -17,9 +17,12 @@ export interface FeedWriter<T> {
   write (message: T): Promise<WriteReceipt>
 }
 
-export const mapFeedWriter = <T, U>(map: (arg: T) => MaybePromise<U>, writer: FeedWriter<U>): FeedWriter<T> => ({
-  write: async message => writer.write(await map(message))
-});
+export const mapFeedWriter = <T, U>(
+  map: (arg: T) => MaybePromise<U>,
+  writer: FeedWriter<U>
+): FeedWriter<T> => ({
+    write: async message => writer.write(await map(message))
+  });
 
 export const createFeedWriter = <T>(feed: FeedDescriptor): FeedWriter<T> => ({
   write: async message => {

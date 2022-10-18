@@ -47,7 +47,7 @@ describe('pipeline/Pipeline', function () {
     pipeline.setWriteFeed(feed);
 
     for (const msgIdx in range(messagesPerFeed)) {
-      await pipeline.writer!.append({
+      await pipeline.writer!.write({
         '@type': 'dxos.echo.feed.EchoEnvelope',
         itemId: `local-${msgIdx}`
       });

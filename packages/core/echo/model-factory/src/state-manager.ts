@@ -134,7 +134,7 @@ export class StateManager<M extends Model> {
 
     // Write mutation to the feed store and assign metadata from the receipt.
     // Confirms that the optimistic mutation has been written to the feed store.
-    const receipt = await this._feedWriter.append(mutationEncoded);
+    const receipt = await this._feedWriter.write(mutationEncoded);
     log(`Confirm ${JSON.stringify(mutation)}`);
     optimisticMutation.receipt = receipt;
 

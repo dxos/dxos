@@ -3,18 +3,18 @@
 //
 
 import { Event } from '@dxos/async';
-import { FeedDescriptor } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
 import { log } from '@dxos/log';
-import { Replicator } from '@dxos/protocol-plugin-replicator';
+import { ReplicatorPlugin as AbstractReplicatorPlugin } from '@dxos/protocol-plugin-replicator';
 
 /**
  * Protocol plugin for feed replication.
  */
-export class ReplicatorPlugin extends Replicator {
-  private readonly _feedAdded = new Event<FeedDescriptor>();
-  private readonly _feeds = new Set<FeedDescriptor>();
+export class ReplicatorPlugin extends AbstractReplicatorPlugin {
+  private readonly _feedAdded = new Event<FeedWrapper>();
+  private readonly _feeds = new Set<FeedWrapper>();
 
-  addFeed (feed: FeedDescriptor) {
+  addFeed (feed: FeedWrapper) {
     log('Adding feed', { feed: feed.key });
 
     this._feeds.add(feed);
@@ -26,18 +26,18 @@ export class ReplicatorPlugin extends Replicator {
       load: async () => {
         const feeds = Array.from(this._feeds);
         log('Loading feeds', { feeds: feeds.map(feed => feed.key) });
-        return feeds.map((feed) => ({ discoveryKey: feed.feed.discoveryKey }));
+        return feeds.map((feed) => ({ discoveryKey: feed.properties.discoveryKey }));
       },
 
       subscribe: (addFeedToReplicatedSet: (feed: any) => void) => this._feedAdded.on(async (feed) => {
         log('Adding feed', { feed: feed.key });
-        addFeedToReplicatedSet({ discoveryKey: feed.feed.discoveryKey });
+        addFeedToReplicatedSet({ discoveryKey: feed.properties.discoveryKey });
       }),
 
       replicate: async (remoteFeeds, info) => {
         const feeds = Array.from(this._feeds);
         log('Replicating', { peerId: info.session, feeds: feeds.map(feed => feed.key) });
-        return feeds.map(feed => feed.feed);
+        return Array.from(feeds.values());
       }
     });
   }

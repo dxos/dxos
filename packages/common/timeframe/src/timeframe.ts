@@ -24,6 +24,7 @@ export class Timeframe {
     return this._frames.get(key);
   }
 
+  // TODO(burdon): Rename setFrame.
   set (key: PublicKey, value: number) {
     this._frames.set(key, value);
   }

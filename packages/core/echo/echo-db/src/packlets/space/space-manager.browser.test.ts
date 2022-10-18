@@ -5,7 +5,7 @@
 // @dxos/mocha platform=browser
 
 import { createCredentialSignerWithKey } from '@dxos/credentials';
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { WebsocketSignalManager } from '@dxos/messaging';
 import { ModelFactory } from '@dxos/model-factory';
@@ -28,8 +28,17 @@ describe('space-manager', function () {
 
     return new SpaceManager(
       new MetadataStore(storage.createDirectory('metadata')),
-      new FeedStore(storage.createDirectory('feeds'), { valueEncoding: codec }),
+      new FeedStore({
+        factory: new FeedFactory({
+          root: storage.createDirectory('feeds'),
+          signer: keyring,
+          hypercore: {
+            valueEncoding: codec
+          }
+        })
+      }),
       new NetworkManager({
+        // TODO(burdon): Config.
         signalManager: new WebsocketSignalManager(['ws://localhost:4000/.well-known/dx/signal']),
         transportFactory: createWebRTCTransportFactory()
       }),

@@ -5,7 +5,7 @@
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
-import { FeedStore } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
@@ -65,29 +65,44 @@ describe('space/replicator-plugin', function () {
     afterTest(() => protocol2.stop());
 
     const keyring1 = new Keyring();
-    const feedStore1 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const feedStore1 = new FeedStore({
+      factory: new FeedFactory({
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring1,
+        hypercore: {
+          valueEncoding: codec
+        }
+      })
+    });
 
-    const feed1 = await feedStore1.openReadWriteFeedWithSigner(await keyring1.createKey(), keyring1);
+    const feed1 = await feedStore1.openFeed(await keyring1.createKey(), { writable: true });
     await feed1.append({
       timeframe: new Timeframe()
     });
 
-    const feedStore2 = new FeedStore(createStorage({ type: StorageType.RAM }).createDirectory(), { valueEncoding: codec });
+    const feedStore2 = new FeedStore({
+      factory: new FeedFactory({
+        root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        hypercore: {
+          valueEncoding: codec
+        }
+      })
+    });
 
-    const feed2 = await feedStore2.openReadOnlyFeed(feed1.key);
+    const feed2 = await feedStore2.openFeed(feed1.key);
 
     await replicator1.addFeed(feed1);
     await replicator2.addFeed(feed2);
 
     await waitForExpect(() => {
-      expect(feed2.length).toEqual(1);
+      expect(feed2.properties.length).toEqual(1);
     });
 
     await feed1.append({
       timeframe: new Timeframe()
     });
     await waitForExpect(() => {
-      expect(feed2.length).toEqual(2);
+      expect(feed2.properties.length).toEqual(2);
     });
   });
 });

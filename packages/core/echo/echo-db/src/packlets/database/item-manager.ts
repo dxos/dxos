@@ -194,8 +194,8 @@ export class ItemManager {
     modelType, itemId, snapshot
   }: ModelConstructionOptions): Promise<StateManager<Model>> {
     // Convert model-specific outbound mutation to outbound envelope message.
-    const outboundTransform = this._writeStream && mapFeedWriter<Uint8Array, EchoEnvelope>(
-      mutation => ({ itemId, mutation }), this._writeStream);
+    const outboundTransform = this._writeStream &&
+      mapFeedWriter<Uint8Array, EchoEnvelope>(mutation => ({ itemId, mutation }), this._writeStream);
 
     // Create the model with the outbound stream.
     return this._modelFactory.createModel<Model>(modelType, itemId, snapshot, this._memberKey, outboundTransform);
