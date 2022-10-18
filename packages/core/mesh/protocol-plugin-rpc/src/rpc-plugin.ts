@@ -9,47 +9,32 @@ import { Extension, Protocol } from '@dxos/mesh-protocol';
 import { RpcPort } from '@dxos/rpc';
 import { MaybePromise } from '@dxos/util';
 
-type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>;
+type OnConnect = (port: RpcPort, peerId: string) => MaybePromise<(() => MaybePromise<void>) | void>
 
-interface SerializedObject {
+type SerializedObject = {
   data: Buffer
 }
 
-interface Connection {
+type Connection = {
   peer: Protocol
   cleanup?: () => Promise<void> | void
   receive: Event<SerializedObject>
 }
 
-export const getPeerId = (peer: Protocol) => {
-  const { peerId } = peer.getSession() ?? {};
-  return peerId as string;
-};
+/**
+ *
+ */
+export class RpcPlugin {
+  static readonly EXTENSION = 'dxos.mesh.protocol.rpc';
 
-export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
-  send: async (msg) => {
-    const extension = peer.getExtension(PluginRpc.extensionName);
-    assert(extension, 'Extension is not set');
-    await extension.send(msg);
-  },
-  subscribe: (cb) => {
-    const adapterCallback = (obj: SerializedObject) => {
-      cb(obj.data);
-    };
-    receive.on(adapterCallback);
-    return () => receive.off(adapterCallback);
-  }
-});
+  private readonly _peers: Map<string, Connection> = new Map();
 
-export class PluginRpc {
-  static extensionName = 'dxos.mesh.protocol.rpc';
-
-  private _peers: Map<string, Connection> = new Map();
-
-  constructor (private _onConnect: OnConnect) {}
+  constructor (
+    private _onConnect: OnConnect
+  ) {}
 
   createExtension (): Extension {
-    return new Extension(PluginRpc.extensionName)
+    return new Extension(RpcPlugin.EXTENSION)
       .setHandshakeHandler(this._onPeerConnect.bind(this))
       .setMessageHandler(this._onMessage.bind(this))
       .setCloseHandler(this._onPeerDisconnect.bind(this));
@@ -93,3 +78,23 @@ export class PluginRpc {
     }
   }
 }
+
+export const getPeerId = (peer: Protocol) => {
+  const { peerId } = peer.getSession() ?? {};
+  return peerId as string;
+};
+
+export const createPort = async (peer: Protocol, receive: Event<SerializedObject>): Promise<RpcPort> => ({
+  send: async (msg) => {
+    const extension = peer.getExtension(RpcPlugin.EXTENSION);
+    assert(extension, 'Extension is not set');
+    await extension.send(msg);
+  },
+  subscribe: (cb) => {
+    const adapterCallback = (obj: SerializedObject) => {
+      cb(obj.data);
+    };
+    receive.on(adapterCallback);
+    return () => receive.off(adapterCallback);
+  }
+});

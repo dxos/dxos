@@ -3,7 +3,7 @@
 //
 
 import debug from 'debug';
-import { ProtocolExtension } from 'hypercore-protocol';
+import { StreamExtension } from 'hypercore-protocol';
 import { Nanomessage, errors as nanomessageErrors } from 'nanomessage';
 import assert from 'node:assert';
 
@@ -60,9 +60,7 @@ export class Extension extends Nanomessage {
   public nmOptions: any;
 
   private _protocol: Protocol | null = null;
-
-  private _protocolExtension: ProtocolExtension | null = null;
-
+  private _protocolExtension: StreamExtension | null = null;
   private _initHandler: InitHandler | null = null;
 
   /**
@@ -320,6 +318,7 @@ export class Extension extends Nanomessage {
     if (this._protocol.stream.destroyed) {
       return;
     }
+
     this._protocolExtension.send(chunk);
   }
 
