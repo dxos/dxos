@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { sleep } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -43,9 +43,11 @@ export const defaultFeedSetIteratorOptions = {
 export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
 
+  public readonly stalled = new Event<FeedSetIterator<T>>();
+
   constructor (
     private readonly _selector: FeedBlockSelector<T>,
-    private readonly _options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions
+    public readonly options: FeedSetIteratorOptions = defaultFeedSetIteratorOptions
   ) {
     super();
     assert(_selector);
@@ -59,8 +61,15 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     return Array.from(this._feedQueues.values()).map(feedQueue => feedQueue.feed);
   }
 
-  addFeed (feed: FeedWrapper) {
-    this._feedQueues.set(feed.key, new FeedQueue(feed));
+  get indexes (): FeedIndex[] {
+    return Array.from(this._feedQueues.values()).map(feedQueue => ({
+      feedKey: feedQueue.feed.key,
+      index: feedQueue.index
+    }));
+  }
+
+  addFeed (feed: FeedWrapper<T>) {
+    this._feedQueues.set(feed.key, new FeedQueue<T>(feed));
   }
 
   override async _onOpen (): Promise<void> {
@@ -79,7 +88,7 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     while (this._running) {
       // Get candidates.
       const queues = Array.from(this._feedQueues.values()).filter(queue => {
-        return (queue.next < queue.length);
+        return (queue.index < queue.length);
       });
 
       // Select feed.
@@ -98,7 +107,8 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
 
       // TODO(burdon): Replace polling with trigger (on new feed, message).
       log('Polling...');
-      await sleep(this._options.polling ?? 1000);
+      this.stalled.emit(this);
+      await sleep(this.options.polling ?? 1000);
     }
   }
 }

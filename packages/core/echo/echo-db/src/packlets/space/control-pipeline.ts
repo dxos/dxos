@@ -6,6 +6,7 @@ import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/crede
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
@@ -14,8 +15,8 @@ import { Pipeline, PipelineAccessor } from '../pipeline';
 
 export type ControlPipelineParams = {
   spaceKey: PublicKey
-  genesisFeed: FeedWrapper
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper>
+  genesisFeed: FeedWrapper<FeedMessage>
+  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>
   initialTimeframe: Timeframe
 }
 
@@ -66,7 +67,7 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  setWriteFeed (feed: FeedWrapper) {
+  setWriteFeed (feed: FeedWrapper<FeedMessage>) {
     this._pipeline.setWriteFeed(feed);
   }
 

@@ -59,7 +59,7 @@ export interface StateMachine<TState, TMutation, TSnapshot> {
 export type ModelMeta<TState = any, TMutation = any, TSnasphot = any> = {
   type: ModelType
 
-  // TODO(marik-d): Specify generic type param here to match model's expected message type.
+  // TODO(dmaretskyi): Specify generic type param here to match model's expected message type.
   mutationCodec: Codec<TMutation>
 
   // Snapshot codecs are distinct from the mutation codecs.

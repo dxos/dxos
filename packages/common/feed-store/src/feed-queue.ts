@@ -24,10 +24,10 @@ export class FeedQueue<T = {}> {
   private _iterator?: AsyncIterator<T>;
   private _feedStream?: any;
   private _currentBlock?: FeedBlock<T> = undefined;
-  private _nextSeq = -1;
+  private _index = -1;
 
   constructor (
-    private readonly _feed: FeedWrapper,
+    private readonly _feed: FeedWrapper<T>,
     private readonly _options: FeedQueueOptions = {}
   ) {}
 
@@ -43,8 +43,11 @@ export class FeedQueue<T = {}> {
     return this._feed.properties.length;
   }
 
-  get next () {
-    return this._nextSeq;
+  /**
+   * Current index (seq) at the head of the stream.
+   */
+  get index () {
+    return this._index;
   }
 
   /**
@@ -60,14 +63,17 @@ export class FeedQueue<T = {}> {
     const opts = Object.assign({}, defaultReadStreamOptions, options);
     this._feedStream = createReadable(this._feed.core.createReadStream(opts));
     this._iterator = createAsyncIterator(this._feedStream);
-    this._nextSeq = options.start ?? 0;
+    this._index = options.start ?? 0;
+    if (this._index !== 0) {
+      console.warn('Start index not yet supported');
+    }
 
     const onClose = () => {
       this._feedStream.off('close', onClose);
       this._feedStream = undefined;
       this._iterator = undefined;
       this._currentBlock = undefined;
-      this._nextSeq = -1;
+      this._index = -1;
     };
 
     this._feedStream.on('close', onClose);
@@ -108,7 +114,7 @@ export class FeedQueue<T = {}> {
 
       this._currentBlock = {
         key: this._feed.key,
-        seq: this._nextSeq,
+        seq: this._index,
         data: value
       };
     }
@@ -127,7 +133,7 @@ export class FeedQueue<T = {}> {
     const value = await this.peek();
     this._currentBlock = undefined;
     if (value) {
-      this._nextSeq++;
+      this._index++;
     }
 
     return value;

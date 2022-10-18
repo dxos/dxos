@@ -163,7 +163,7 @@ export class NetworkManager {
   /**
    * @deprecated
    */
-  // TODO(marik-d): Remove.
+  // TODO(dmaretskyi): Remove.
   async start () {
     console.warn('NetworkManger.start is deprecated.');
   }

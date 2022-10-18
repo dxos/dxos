@@ -117,7 +117,7 @@ export class TextModel extends Model<Doc, Mutation> {
       node.insert(0, [paragraph]);
     }
 
-    // TODO(marik-d): What is the type of `node` here?
+    // TODO(dmaretskyi): What is the type of `node` here?
     for (const childNode of (node as any).toArray()) {
       const inserted = this._insertInner(childNode as any, innerIndex, text);
       if (inserted === true) {

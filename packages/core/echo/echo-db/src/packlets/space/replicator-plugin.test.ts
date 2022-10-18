@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Timeframe } from '@dfxos/timeframe';
 import expect from 'expect';
 import waitForExpect from 'wait-for-expect';
 
@@ -13,6 +12,7 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest } from '@dxos/testutils';
+import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER } from './auth-plugin';
@@ -20,6 +20,7 @@ import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
 
 describe('space/replicator-plugin', function () {
+  // TODO(burdon): Exact same test from space-protocol.browser.test
   it('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();

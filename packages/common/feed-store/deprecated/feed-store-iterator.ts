@@ -47,7 +47,7 @@ type FeedState<T> = {
  * data is read. This allows the consumer (e.g., PartyProcessor) to control the order in which data is generated.
  * (Streams would not be suitable since Node.js streams have internal buffer that the system tends to eagerly fill.)
  */
-// TODO(marik-d): Add stop method.
+// TODO(dmaretskyi): Add stop method.
 export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
   // Currently active feeds.
   private readonly _candidateFeeds = new Set<FeedDescriptor>();
@@ -219,10 +219,10 @@ export class FeedStoreIterator<T> implements AsyncIterable<FeedBlock<T>> {
           }, (err) => {
             if (err.message.includes('Feed is closed')) {
               // When feeds are closed the iterator errors with "Feed is closed" error message. This is fine and we can just stop iterating.
-              // TODO(marik-d): Should we remove this feed from the set of tracked ones?
+              // TODO(dmaretskyi): Should we remove this feed from the set of tracked ones?
               return;
             }
-            // TODO(marik-d): Proper error handling.
+            // TODO(dmaretskyi): Proper error handling.
             console.error('Feed read error:');
             console.error(err);
           });

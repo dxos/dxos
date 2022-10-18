@@ -42,10 +42,8 @@
     "@dxos/keys": "workspace:*",
     "@types/debug": "^4.1.7",
     "@types/faker": "^5.5.9",
-    "@types/from2": "~2.3.1",
     "@types/readable-stream": "^2.3.9",
-    "faker": "^5.5.3",
-    "tempy": "~1.0.1"
+    "faker": "^5.5.3"
   },
   "publishConfig": {
     "access": "public"

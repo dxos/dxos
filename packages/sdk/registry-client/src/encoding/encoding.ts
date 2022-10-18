@@ -21,7 +21,7 @@ const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   longs: String,
 
   // Will set empty repeated fields to [] instead of undefined.
-  // TODO(marik-d): Type repeated fields as non-optional arrays.
+  // TODO(dmaretskyi): Type repeated fields as non-optional arrays.
   arrays: true
 };
 

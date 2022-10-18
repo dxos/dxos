@@ -166,7 +166,7 @@ export class PolkadotRegistry extends PolkadotClient implements RegistryClientBa
         const cid = CID.from(key.args[0]);
 
         try {
-        // TODO(marik-d): Moderately unoptimized.
+        // TODO(dmaretskyi): Moderately unoptimized.
           return { cid, ...this._decodeRecord(record.unwrap()) };
         } catch (err: any) {
           return undefined;

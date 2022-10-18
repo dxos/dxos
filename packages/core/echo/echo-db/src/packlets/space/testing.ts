@@ -9,6 +9,7 @@ import { MemorySignalManager, MemorySignalManagerContext, SignalManager } from '
 import { ModelFactory } from '@dxos/model-factory';
 import { inMemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -30,7 +31,7 @@ export type TestSpaceContext = {
  * Independent agent able to swarm and create spaces.
  */
 export class TestAgent {
-  public readonly feedStore: FeedStore;
+  public readonly feedStore: FeedStore<FeedMessage>;
 
   constructor (
     public readonly keyring: Keyring,
@@ -38,8 +39,8 @@ export class TestAgent {
     public readonly deviceKey: PublicKey,
     private readonly _signalManager: SignalManager
   ) {
-    this.feedStore = new FeedStore({
-      factory: new FeedFactory({
+    this.feedStore = new FeedStore<FeedMessage>({
+      factory: new FeedFactory<FeedMessage>({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
         signer: keyring,
         hypercore: {

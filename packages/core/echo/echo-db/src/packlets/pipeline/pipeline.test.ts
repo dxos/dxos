@@ -15,7 +15,7 @@ describe('pipeline/Pipeline', function () {
     const pipeline = new Pipeline(new Timeframe());
     afterTest(() => pipeline.stop());
 
-    const builder = new TestBuilder();
+    const builder = new TestBuilder<FeedMessage>();
     const feedStore = builder.createFeedStore();
 
     // Remote feeds from other peers.

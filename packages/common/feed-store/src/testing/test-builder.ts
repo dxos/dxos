@@ -86,7 +86,7 @@ export class TestBuilder<T = any> {
   }
 
   createFeedStore () {
-    return new FeedStore({
+    return new FeedStore<T>({
       factory: this.createFeedFactory()
     });
   }

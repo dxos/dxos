@@ -5,17 +5,22 @@
 import assert from 'assert';
 
 import { Event } from '@dxos/async';
-import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
+import { createFeedWriter, FeedIndex, FeedSetIterator, FeedWrapper, FeedWriter, mapFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, TypedMessage } from '@dxos/protocols';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMessageSelector, createFeedWriterWithTimeframe } from './message-selector';
+import { createMessageSelector } from './message-selector';
 import { TimeframeClock } from './timeframe-clock';
 
-const STALL_TIMEOUT = 1000;
+const mapTimeframeToFeedIndexes = (timeframe: Timeframe): FeedIndex[] =>
+  timeframe.frames().map(([feedKey, index]) => ({ feedKey, index }));
+
+const mapFeedIndexesToTimeframe = (indexes: FeedIndex[]): Timeframe =>
+  new Timeframe(indexes.map(({ feedKey, index }) => [feedKey, index]));
 
 export type PipelineState = {
   readonly timeframeUpdate: Event<Timeframe>
@@ -65,11 +70,12 @@ export interface PipelineAccessor {
 export class Pipeline implements PipelineAccessor {
   private readonly _timeframeClock = new TimeframeClock(this._initialTimeframe);
 
-  // TODO(burdon): Not used.
-  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper>(PublicKey.hash);
+  // TODO(burdon): Not used?
+  private readonly _feeds = new ComplexMap<PublicKey, FeedWrapper<FeedMessage>>(PublicKey.hash);
 
   private readonly _iterator = new FeedSetIterator(createMessageSelector(this._timeframeClock), {
-    start: this._initialTimeframe.frames().map(([feedKey, index]) => ({ feedKey, index }))
+    polling: 1000,
+    start: mapTimeframeToFeedIndexes(this._initialTimeframe)
   });
 
   private readonly _state: PipelineState;
@@ -81,8 +87,8 @@ export class Pipeline implements PipelineAccessor {
   constructor (
     private readonly _initialTimeframe: Timeframe
   ) {
-    this._iterator.stalled.on(candidates => {
-      log.warn(`Feed store reader stalled: no message candidates were accepted after ${STALL_TIMEOUT}ms timeout.\nCurrent candidates:`, candidates);
+    this._iterator.stalled.on((iterator) => {
+      log.warn(`Feed store reader stalled after ${iterator.options.polling}ms with ${iterator.size} feeds.`);
     });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -91,12 +97,14 @@ export class Pipeline implements PipelineAccessor {
       get timeframe () {
         return self._timeframeClock.timeframe;
       },
+
       get endTimeframe () {
-        // TODO(burdon): Construct from iterator
-        const feeds = self._iterator.feeds;
-        return self._iterator.getEndTimeframe();
+        return mapFeedIndexesToTimeframe(self._iterator.indexes);
       },
+
+      // TODO(burdon): Getter.
       timeframeUpdate: this._timeframeClock.update,
+
       waitUntilReached: async (target) => {
         await self._timeframeClock.waitUntilReached(target);
       }
@@ -112,18 +120,22 @@ export class Pipeline implements PipelineAccessor {
     return this._writer;
   }
 
-  addFeed (feed: FeedWrapper) {
+  addFeed (feed: FeedWrapper<FeedMessage>) {
     assert(!this._feeds.has(feed.key), 'Feed already added.');
 
     this._feeds.set(feed.key, feed);
     this._iterator.addFeed(feed);
   }
 
-  setWriteFeed (feed: FeedWrapper) {
+  setWriteFeed (feed: FeedWrapper<FeedMessage>) {
     assert(!this._writer, 'Writer already set.');
     assert(feed.properties.writable, 'Feed must be writable.');
 
-    this._writer = createFeedWriterWithTimeframe(feed, () => this._timeframeClock.timeframe);
+    const writer = createFeedWriter<FeedMessage>(feed);
+    return mapFeedWriter<TypedMessage, FeedMessage>((data: TypedMessage) => ({
+      timeframe: this._timeframeClock.timeframe,
+      payload: data
+    }), writer);
   }
 
   async stop () {

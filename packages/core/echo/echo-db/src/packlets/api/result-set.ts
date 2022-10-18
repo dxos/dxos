@@ -33,7 +33,7 @@ export class ResultSet<T> {
   }
 
   get value (): T[] {
-    // TODO(marik-d): Discuss whether this needs optimization.
+    // TODO(dmaretskyi): Discuss whether this needs optimization.
     return this._getter();
   }
 

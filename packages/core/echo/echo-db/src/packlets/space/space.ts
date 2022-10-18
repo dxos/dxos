@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
 import { TypedMessage } from '@dxos/protocols';
-import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
+import { EchoEnvelope, FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
@@ -30,10 +30,10 @@ type DatabaseFactory = (params: DatabaseFactoryParams) => Promise<Database>;
 
 export type SpaceParams = {
   spaceKey: PublicKey
-  genesisFeed: FeedWrapper
-  controlFeed: FeedWrapper
-  dataFeed: FeedWrapper
-  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper>
+  genesisFeed: FeedWrapper<FeedMessage>
+  controlFeed: FeedWrapper<FeedMessage>
+  dataFeed: FeedWrapper<FeedMessage>
+  feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>
   initialTimeframe: Timeframe
   networkManager: NetworkManager
   networkPlugins: Plugin[]
@@ -48,9 +48,9 @@ export class Space {
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
 
   private readonly _key: PublicKey;
-  private readonly _dataFeed: FeedWrapper;
-  private readonly _controlFeed: FeedWrapper;
-  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper>;
+  private readonly _dataFeed: FeedWrapper<FeedMessage>;
+  private readonly _controlFeed: FeedWrapper<FeedMessage>;
+  private readonly _feedProvider: (feedKey: PublicKey) => Promise<FeedWrapper<FeedMessage>>;
   // TODO(dmaretskyi): This is only recorded here for invitations.
   private readonly _genesisFeedKey: PublicKey;
   private readonly _databaseFactory: DatabaseFactory;

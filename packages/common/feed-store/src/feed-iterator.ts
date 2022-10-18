@@ -68,7 +68,7 @@ export class FeedIterator<T = {}> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
   constructor (
-    private readonly _feed: FeedWrapper
+    private readonly _feed: FeedWrapper<T>
   ) {
     super();
     this._queue = new FeedQueue(this._feed);

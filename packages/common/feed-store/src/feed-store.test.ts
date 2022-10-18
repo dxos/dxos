@@ -87,7 +87,6 @@ describe('FeedStore', function () {
     }
 
     const builder = new TestItemBuilder();
-
     const feedKey = await builder.keyring!.createKey();
 
     const numBlocks = 10;

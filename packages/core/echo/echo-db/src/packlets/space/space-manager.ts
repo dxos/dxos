@@ -10,6 +10,7 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { ModelFactory } from '@dxos/model-factory';
 import { NetworkManager } from '@dxos/network-manager';
+import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { PartyMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
@@ -45,7 +46,7 @@ export class SpaceManager {
   // TODO(burdon): Convert to object.
   constructor (
     private readonly _metadataStore: MetadataStore,
-    private readonly _feedStore: FeedStore,
+    private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _networkManager: NetworkManager,
     private readonly _keyring: Keyring,
     private readonly _dataService: DataService,

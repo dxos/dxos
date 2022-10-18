@@ -56,6 +56,9 @@ export const createFeedWriter = <T> (feed: FeedWrapper<T>): FeedWriter<T> => ({
   }
 });
 
+/**
+ * Maps the written arguments into a different message type.
+ */
 // TODO(burdon): Replace with optional mapper in createFeedWriter.
 export const mapFeedWriter = <Source, Target> (
   mapper: (arg: Source) => MaybePromise<Target>,
