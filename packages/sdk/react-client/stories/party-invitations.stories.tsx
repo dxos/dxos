@@ -49,7 +49,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateParty = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const party = await client.echo.createParty();
       setPartyKey(party.key);
       resetInvitations();
@@ -57,7 +57,7 @@ const PartyInvitationContainer = () => {
   };
 
   const handleCreateInvitation = () => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       resetInvitations();
 
       const invitation = await client.echo.getParty(partyKey!)!.createInvitation({

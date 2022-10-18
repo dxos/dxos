@@ -22,7 +22,7 @@ export const SnapshotsPanel = () => {
   const handlePartyChange = (key: PublicKey | undefined) => {
     setSelectedPartyKey(key);
     if (key) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         const { snapshot } = await devtoolsHost.getPartySnapshot({ partyKey: key });
         setSnapshot(snapshot);
       });
