@@ -57,14 +57,12 @@ describe('identity-manager', function () {
     expect(identity).toBeTruthy();
   });
 
-  it.only('reload from storage', async function () {
+  it('reload from storage', async function () {
     const storage = createStorage({ type: StorageType.RAM });
 
     const peer1 = await setupPeer({ storage });
     await peer1.identityManager.open();
-    console.log('!!!!!!!');
     const identity1 = await peer1.identityManager.createIdentity();
-    console.log('!!!!!!!');
     await peer1.identityManager.close();
     await peer1.feedStore.close();
 
