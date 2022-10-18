@@ -23,6 +23,10 @@ versionGroups:
       - '@dxos/docs'
     dependencies:
       - '@mdx-js/react'
+  - packages:
+      - '@dxos/log-hook'
+    dependencies:
+      - '@swc/core'
 sortFirst:
   - name
   - version

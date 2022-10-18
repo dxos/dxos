@@ -17,8 +17,7 @@
     "check": "true"
   },
   "dependencies": {
-    "@swc/core": "^1.3.9",
-    "@swc-node/register": "^1.5.4",
+    "@swc/core": "~1.2.248",
     "@swc-node/sourcemap-support": "^0.2.0",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
