@@ -1,7 +1,6 @@
 //
 // Copyright 2021 DXOS.org
 //
-
 // TODO(burdon): Create TS defs?
 
 export interface Message {
@@ -9,6 +8,7 @@ export interface Message {
   data: Buffer
 }
 
+// TODO(mykola): What a difference with packages/common/shims/src/hypercore.d.ts?
 export interface HypercoreFeed {
   ready: any
   key: Buffer
@@ -52,7 +52,8 @@ export interface HypercoreFeed {
   downloaded: (start: number, batchEnd: number) => boolean
   undownload: (args: any) => void
 
-  replicate(isInitiator: boolean): NodeJS.ReadWriteStream
+  // TODO(mykola): Use type ReplicationOptions for options
+  replicate(isInitiator: boolean, options?: any): NodeJS.ReadWriteStream
   close: (arg: any) => any
 }
 

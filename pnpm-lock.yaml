@@ -57,6 +57,7 @@ importers:
       '@storybook/testing-library': ^0.0.13
       '@swc-node/register': ~1.5.1
       '@types/chai': ^4.2.15
+      '@types/chai-as-promised': ^7.1.5
       '@types/glob': ~7.1.3
       '@types/lodash.get': ^4.4.7
       '@types/lodash.set': ^4.3.7
@@ -69,6 +70,7 @@ importers:
       '@typescript-eslint/parser': ^5.29.0
       babel-loader: ^8.2.5
       chai: ^4.3.4
+      chai-as-promised: ^7.1.1
       chalk: ^4.1.0
       esbuild: ~0.14.1
       esbuild-node-externals: ^1.4.1
@@ -87,7 +89,7 @@ importers:
       nx: 14.5.7
       nyc: ^15.1.0
       pkg-up: ^3.1.0
-      playwright: ^1.25.1
+      playwright: 1.27.1
       raf: ^3.4.1
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -140,6 +142,7 @@ importers:
       '@storybook/testing-library': 0.0.13_biqbaboplfbrettd7655fr4n2y
       '@swc-node/register': 1.5.1_typescript@4.7.4
       '@types/chai': 4.3.0
+      '@types/chai-as-promised': 7.1.5
       '@types/glob': 7.1.4
       '@types/lodash.get': 4.4.7
       '@types/lodash.set': 4.3.7
@@ -152,6 +155,7 @@ importers:
       '@typescript-eslint/parser': 5.30.5_typescript@4.7.4
       babel-loader: 8.2.5_tb6moc662p5idmcg3l5ipbhpta
       chai: 4.3.4
+      chai-as-promised: 7.1.1_chai@4.3.4
       chalk: 4.1.2
       esbuild: 0.14.49
       esbuild-node-externals: 1.4.1_esbuild@0.14.49
@@ -170,7 +174,7 @@ importers:
       nx: 14.5.7_@swc-node+register@1.5.1
       nyc: 15.1.0
       pkg-up: 3.1.0
-      playwright: 1.25.1
+      playwright: 1.27.1
       raf: 3.4.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -609,44 +613,48 @@ importers:
   packages/common/hypercore:
     specifiers:
       '@dxos/async': workspace:*
+      '@dxos/codec-protobuf': workspace:*
       '@dxos/crypto': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/keys': workspace:*
+      '@dxos/log': workspace:*
+      '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
-      '@types/chai': ^4.2.15
-      '@types/chai-as-promised': ^7.1.3
+      '@dxos/testutils': workspace:*
       '@types/debug': ^4.1.7
       '@types/faker': ^5.5.9
-      '@types/pify': ^3.0.2
       '@types/randombytes': ^2.0.0
+      '@types/readable-stream': ^2.3.9
       assert: ^2.0.0
-      chai: ^4.3.4
-      chai-as-promised: ^7.1.1
       debug: ^4.3.3
       faker: ^5.5.3
       hypercore: 9.10.0
       hypercore-protocol: ^8.0.7
-      pify: ~5.0.0
       random-access-memory: ^4.1.0
+      readable-stream: ^3.6.0
       streamx: ^2.12.5
+      util: ^0.12.4
     dependencies:
       '@dxos/async': link:../async
+      '@dxos/codec-protobuf': link:../codec-protobuf
       '@dxos/crypto': link:../crypto
+      '@dxos/debug': link:../debug
       '@dxos/keys': link:../keys
       '@dxos/random-access-storage': link:../random-access-storage
+      '@dxos/testutils': link:../testutils
       assert: 2.0.0
       hypercore: 9.10.0
       hypercore-protocol: 8.0.7
-      pify: 5.0.0
+      readable-stream: 3.6.0
       streamx: 2.12.5
+      util: 0.12.4
     devDependencies:
-      '@types/chai': 4.3.0
-      '@types/chai-as-promised': 7.1.4
+      '@dxos/log': link:../log
+      '@dxos/protocols': link:../../core/protocols
       '@types/debug': 4.1.7
       '@types/faker': 5.5.9
-      '@types/pify': 3.0.2
       '@types/randombytes': 2.0.0
-      chai: 4.3.4
-      chai-as-promised: 7.1.1_chai@4.3.4
+      '@types/readable-stream': 2.3.9
       debug: 4.3.4
       faker: 5.5.3
       random-access-memory: 4.1.0
@@ -853,6 +861,7 @@ importers:
       '@types/debug': ^4.1.7
       assert: ^2.0.0
       debug: ^4.3.3
+      hypercore-protocol: ^8.0.7
       source-map-support: ^0.5.12
       wait-for-expect: ^3.0.2
     dependencies:
@@ -880,6 +889,7 @@ importers:
     devDependencies:
       '@dxos/testutils': link:../../../common/testutils
       '@types/debug': 4.1.7
+      hypercore-protocol: 8.0.7
       source-map-support: 0.5.21
       wait-for-expect: 3.0.2
 
@@ -1367,6 +1377,7 @@ importers:
       '@dxos/keyring': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/mesh-protocol': workspace:*
+      '@dxos/network-generator': workspace:*
       '@dxos/protocol-network-generator': workspace:*
       '@dxos/protocols': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -1378,6 +1389,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
+      hypercore: 9.10.0
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
     dependencies:
@@ -1386,10 +1398,12 @@ importers:
       '@dxos/keyring': link:../../halo/keyring
       '@dxos/keys': link:../../../common/keys
       '@dxos/mesh-protocol': link:../mesh-protocol
+      '@dxos/network-generator': link:../network-generator
       '@dxos/util': link:../../../common/util
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
+      hypercore: 9.10.0
     devDependencies:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/feed-store': link:../../../common/feed-store
@@ -2333,7 +2347,7 @@ importers:
       chalk: ^4.1.0
       copy: ~0.3.2
       faker: ^5.5.3
-      playwright: ^1.25.1
+      playwright: 1.27.1
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
@@ -2372,7 +2386,7 @@ importers:
       chalk: 4.1.2
       copy: 0.3.2
       faker: 5.5.3
-      playwright: 1.25.1
+      playwright: 1.27.1
       rmdir: 1.2.0
       uuid: 8.3.2_rxfbstxgb7ip2ka7npjixuqpye
 
@@ -3234,7 +3248,7 @@ importers:
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
       '@types/chai': ^4.2.15
-      '@types/chai-as-promised': ^7.1.3
+      '@types/chai-as-promised': ^7.1.5
       '@types/faker': ^5.5.9
       '@types/fs-extra': ^9.0.4
       '@types/randombytes': ^2.0.0
@@ -3274,7 +3288,7 @@ importers:
       '@polkadot/util': 6.11.1
       '@polkadot/util-crypto': 6.11.1
       '@types/chai': 4.3.0
-      '@types/chai-as-promised': 7.1.4
+      '@types/chai-as-promised': 7.1.5
       '@types/faker': 5.5.9
       '@types/fs-extra': 9.0.13
       '@types/randombytes': 2.0.0
@@ -3628,14 +3642,12 @@ importers:
       '@dxos/esbuild-plugins': ~2.29.0
       rollup: ~2.77.3
       rollup-plugin-polyfill-node: ^0.10.2
-      setimmediate: 1.0.5
       vite: 3.0.9
     dependencies:
       '@dxos/config': link:../../packages/sdk/config
       '@dxos/esbuild-plugins': 2.29.0
       rollup: 2.77.3
       rollup-plugin-polyfill-node: 0.10.2_rollup@2.77.3
-      setimmediate: 1.0.5
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
 
 packages:
@@ -12863,8 +12875,8 @@ packages:
       '@types/node': 16.11.27
       '@types/responselike': 1.0.0
 
-  /@types/chai-as-promised/7.1.4:
-    resolution: {integrity: sha512-1y3L1cHePcIm5vXkh1DSGf/zQq5n5xDKG1fpCvf18+uOkpce0Z1ozNFPkyWsVswK7ntN1sZBw3oU6gmN+pDUcA==}
+  /@types/chai-as-promised/7.1.5:
+    resolution: {integrity: sha512-jStwss93SITGBwt/niYrkf2C+/1KTeZCZl1LaeezTlqppAKeoQC7jxyqYuP72sxBGKCIbw7oHgbYssIRzT5FCQ==}
     dependencies:
       '@types/chai': 4.3.0
     dev: true
@@ -14603,7 +14615,6 @@ packages:
     resolution: {integrity: sha512-qmUIqQEh6ZZBKN6JfysKgCEBqI4qVexE6/N/MUJjqtQhhuGR8a16GKnK6SGFKv/n1cAlbYxLDXbtyhkxSnVYRQ==}
     dependencies:
       codecs: 2.2.0
-    dev: false
 
   /abstract-leveldown/2.7.2:
     resolution: {integrity: sha512-+OVvxH2rHVEhWLdbudP6p0+dNMXu8JA1CbhP19T8paTYAcX7oJ4OVjT+ZUVpv7mITxXHqDMej+GdqXBmXkw09w==}
@@ -15833,14 +15844,12 @@ packages:
     dependencies:
       b4a: 1.3.1
       nanoassert: 2.0.0
-    dev: false
 
   /blake2b/2.1.4:
     resolution: {integrity: sha512-AyBuuJNI64gIvwx13qiICz6H6hpmjvYS5DGkG6jbXMOT8Z3WUJ3V1X0FlhIoT1b/5JtHE3ki+xjtMvu1nn+t9A==}
     dependencies:
       blake2b-wasm: 2.4.0
       nanoassert: 2.0.0
-    dev: false
 
   /blakejs/1.1.1:
     resolution: {integrity: sha512-bLG6PHOCZJKNshTjGRBvET0vTciwQE6zFKOKKXPDJfwFBd4Ac0yBfPZqcGvGJap50l7ktvlpFqc2jGVaUgbJgg==}
@@ -16457,7 +16466,6 @@ packages:
     resolution: {integrity: sha512-/IOxdWWNa7nRabfe7+oF+jVkGjlr2xUL4J8l/OvzZhj+c9RpMqoo3Dq+5nU1j/BflRV4BKnaQ4+4oH1yBpQG1Q==}
     dependencies:
       nanoassert: 2.0.0
-    dev: false
 
   /chai-as-promised/7.1.1_chai@4.3.4:
     resolution: {integrity: sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==}
@@ -16841,7 +16849,6 @@ packages:
   /clone/2.1.2:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
-    dev: false
 
   /cloneable-readable/1.1.3:
     resolution: {integrity: sha512-2EF8zTQOxYq70Y4XKtorQupqF0m49MBz2/yf5Bj+MHjvpG3Hy7sImifnqD6UA+TKYxeSV+u6qqQPawN5UvnpKQ==}
@@ -16893,7 +16900,6 @@ packages:
 
   /codecs/2.2.0:
     resolution: {integrity: sha512-+xi2ENsvchtUNa8oBUU58gHgmyN6BEEeZ8NIEgeQ0XnC+AoyihivgZYe+OOiNi+fLy/NUowugwV5gP8XWYDm0Q==}
-    dev: false
 
   /collapse-white-space/1.0.6:
     resolution: {integrity: sha512-jEovNnrhMuqyCcjfEJA56v0Xq8SkIoPKDyaHahwo3POf4qcSXqMYuwNcOTzp74vTsR9Tn08z4MxWqAhcekogkQ==}
@@ -20227,7 +20233,6 @@ packages:
 
   /fast-fifo/1.0.0:
     resolution: {integrity: sha512-4VEXmjxLj7sbs8J//cn2qhRap50dGzF5n8fjay8mau+Jn4hxSeR3xPFwxMaQq/pDaq7+KQk0PAbC2+nWDkJrmQ==}
-    dev: false
 
   /fast-glob/2.2.7:
     resolution: {integrity: sha512-g1KuQwHOZAmOZMuBtHdxDtju+T2RT8jgCC9aANsbpdiDDTSnjgfuVsIBNKbUeJI3oKMRExcfNDtJl4OhbffMsw==}
@@ -21826,7 +21831,6 @@ packages:
       nanoassert: 1.1.0
       sodium-native: 3.3.0
       sodium-universal: 3.0.4
-    dev: false
 
   /hmac-drbg/1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
@@ -22126,7 +22130,6 @@ packages:
     dependencies:
       sodium-universal: 3.0.4
       uint64be: 3.0.0
-    dev: false
 
   /hypercore-default-storage/1.1.1:
     resolution: {integrity: sha512-y7dSX3VUT4I/X5Cj0h6hcKN2R+/QQIi1HnElnCqY3tQYbVaWYljdbVe3aBQIvkRCfOgWMfe2RbCLX4N78D5syg==}
@@ -22150,7 +22153,6 @@ packages:
       timeout-refresh: 1.0.3
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /hypercore-streams/1.0.1:
     resolution: {integrity: sha512-OcN2zq9DEoArC84q9VCSrf9Hx1QUkR6ineCOwyOwhE4v/8aUTOx87mAk1nyjMOf76DQmF+tl2vnS2FssLx5N+Q==}
@@ -22499,7 +22501,6 @@ packages:
 
   /inspect-custom-symbol/1.1.1:
     resolution: {integrity: sha512-GOucsp9EcdlLdhPUyOTvQDnbFJtp2WBWZV1Jqe+mVnkJQBL3w96+fB84C+JL+EKXOspMdB0eMDQPDp5w9fkfZA==}
-    dev: false
 
   /interface-datastore/6.1.0:
     resolution: {integrity: sha512-oNHdsrWBsI/kDwUtEgt+aaZtQFKtQYN0TGZzc3SGiIA6m+plZ6malhmsygtbmDpfpIsNNC7ce9Gyaj+Tki+gVw==}
@@ -26187,11 +26188,9 @@ packages:
 
   /nanoassert/1.1.0:
     resolution: {integrity: sha512-C40jQ3NzfkP53NsO8kEOFd79p4b9kDXQMwgiY1z8ZwrDZgUyom0AHwGegF4Dm99L+YoYhuaB0ceerUcXmqr1rQ==}
-    dev: false
 
   /nanoassert/2.0.0:
     resolution: {integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==}
-    dev: false
 
   /nanocustomassert/1.0.0:
     resolution: {integrity: sha512-oIezVMlrrzPkCtK32NM5y4gU7JPi12NPWrIsXLyH7KL2D3IFYCtNEHSNgabBzoXCMkXI8AO6SMBUSPvJVf6NCA==}
@@ -26205,7 +26204,6 @@ packages:
 
   /nanoguard/1.3.0:
     resolution: {integrity: sha512-K/ON5wyflyPyZskdeT3m7Y2gJVkm3QLdKykMCquAbK8A2erstyMpZUc3NG8Nz5jKdfatiYndONrlmLF8+pGl+A==}
-    dev: false
 
   /nanoid/3.1.20:
     resolution: {integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==}
@@ -26545,7 +26543,6 @@ packages:
       hmac-blake2b: 2.0.0
       nanoassert: 2.0.0
       sodium-universal: 3.0.4
-    dev: false
 
   /noop-logger/0.1.1:
     resolution: {integrity: sha512-6kM8CLXvuW5crTxsAtva2YLrRrDaiTIkIePWs9moLHqbFWT94WpNFjwS/5dfLfECg5i/lkmw3aoqVidxt23TEQ==}
@@ -27729,13 +27726,19 @@ packages:
     hasBin: true
     dev: true
 
-  /playwright/1.25.1:
-    resolution: {integrity: sha512-kOlW7mllnQ70ALTwAor73q/FhdH9EEXLUqjdzqioYLcSVC4n4NBfDqeCikGuayFZrLECLkU6Hcbziy/szqTXSA==}
+  /playwright-core/1.27.1:
+    resolution: {integrity: sha512-9EmeXDncC2Pmp/z+teoVYlvmPWUC6ejSSYZUln7YaP89Z6lpAaiaAnqroUt/BoLo8tn7WYShcfaCh+xofZa44Q==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
+
+  /playwright/1.27.1:
+    resolution: {integrity: sha512-xXYZ7m36yTtC+oFgqH0eTgullGztKSRMb4yuwLPl8IYSmgBM88QiB+3IWb1mRIC9/NNwcgbG0RwtFlg+EAFQHQ==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.25.1
+      playwright-core: 1.27.1
     dev: true
 
   /pnp-webpack-plugin/1.6.4_typescript@4.7.4:
@@ -28024,7 +28027,6 @@ packages:
 
   /pretty-hash/1.0.1:
     resolution: {integrity: sha512-2jybsj3Vz6wLSyOtlRWgbUmQ/K4ROta4iR4voYeC3tgJekeWTn9NcwTVFlhqVVPB2qvVOtLTvUF6yMtG3SUIZA==}
-    dev: false
 
   /pretty-hrtime/1.0.3:
     resolution: {integrity: sha512-66hKPCr+72mlfiSjlEB1+45IjXSqvVAIy6mocupoww4tBFE9R9IhwwUGoI4G++Tc9Aq+2rxOt0RFU6gPcrte0A==}
@@ -28249,7 +28251,6 @@ packages:
     dependencies:
       signed-varint: 2.0.1
       varint: 5.0.0
-    dev: false
 
   /protocol-buffers-schema/3.6.0:
     resolution: {integrity: sha512-TdDRD+/QNdrCGCE7v8340QyuXd4kIWIgapsE2+n/SaGiSSbomYl4TjHlvIoCWRpE7wFt02EpB35VVA2ImcBVqw==}
@@ -30013,6 +30014,7 @@ packages:
 
   /setimmediate/1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
+    dev: true
 
   /setprototypeof/1.1.1:
     resolution: {integrity: sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==}
@@ -30034,28 +30036,24 @@ packages:
     dependencies:
       b4a: 1.3.1
       sha256-wasm: 2.2.2
-    dev: false
 
   /sha256-wasm/2.2.2:
     resolution: {integrity: sha512-qKSGARvao+JQlFiA+sjJZhJ/61gmW/3aNLblB2rsgIxDlDxsJPHo8a1seXj12oKtuHVgJSJJ7QEGBUYQN741lQ==}
     dependencies:
       b4a: 1.3.1
       nanoassert: 2.0.0
-    dev: false
 
   /sha512-universal/1.2.1:
     resolution: {integrity: sha512-kehYuigMoRkIngCv7rhgruLJNNHDnitGTBdkcYbCbooL8Cidj/bS78MDxByIjcc69M915WxcQTgZetZ1JbeQTQ==}
     dependencies:
       b4a: 1.3.1
       sha512-wasm: 2.3.3
-    dev: false
 
   /sha512-wasm/2.3.3:
     resolution: {integrity: sha512-x8McxarTu+Wv5hu5TQE4qgSSGQ3JOX/OmkhLGVty+ajcEN6zLPqTS6Ljt/N6Gl2jI+3y0wjj+RxDxy8Ca9Krfw==}
     dependencies:
       b4a: 1.3.1
       nanoassert: 2.0.0
-    dev: false
 
   /shallow-clone/3.0.1:
     resolution: {integrity: sha512-/6KqX+GVUdqPuPPd2LxDDxzX6CAbjJehAAOKlNpqqUpAqPM6HeL8f+o3a+JsyGjn2lv0WY8UsTgUJjU9Ok55NA==}
@@ -30152,7 +30150,6 @@ packages:
     resolution: {integrity: sha512-abgDPg1106vuZZOvw7cFwdCABddfJRz5akcCcchzTbhyhYnsG31y4AlZEgp315T7W3nQq5P4xeOm186ZiPVFzw==}
     dependencies:
       varint: 5.0.2
-    dev: false
 
   /simple-concat/1.0.1:
     resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
@@ -30171,7 +30168,6 @@ packages:
     dependencies:
       nanoassert: 2.0.0
       noise-protocol: 3.0.1
-    dev: false
 
   /simple-hypercore-protocol/2.1.2:
     resolution: {integrity: sha512-zCwEMw/Evd5iDPkVEjO+1T3OJqbuDukJSuZtMZ7A7Wfn0RxmaJFbwngfUnDNyQFbPMxiINNxGBMD85fFJF8ghA==}
@@ -30183,13 +30179,11 @@ packages:
       simple-message-channels: 1.2.1
       varint: 5.0.2
       xsalsa20-universal: 1.0.0
-    dev: false
 
   /simple-message-channels/1.2.1:
     resolution: {integrity: sha512-knSr69GKW9sCjzpoy817xQelpOASUQ53TXCBcSLDKLE7GTGpUAhZzOZYrdbX2Ig//m+8AIrNp7sM7HDNHBRzXw==}
     dependencies:
       varint: 5.0.2
-    dev: false
 
   /simple-peer/9.11.0:
     resolution: {integrity: sha512-qvdNu/dGMHBm2uQ7oLhQBMhYlrOZC1ywXNCH/i8I4etxR1vrjCnU6ZSQBptndB1gcakjo2+w4OHo7Sjza1SHxg==}
@@ -30209,7 +30203,6 @@ packages:
     resolution: {integrity: sha512-2HvNPUYcmoFks2IX2wI5D80NspdlgSJlCmPencbBMWhrZnNW3sgiC7owaB2Jj/9IiV9bdN2A00LaM8IcojB8rw==}
     dependencies:
       nanoassert: 2.0.0
-    dev: false
 
   /sisteransi/1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
@@ -30311,14 +30304,12 @@ packages:
       sha512-universal: 1.2.1
       siphash24: 1.3.0
       xsalsa20: 1.2.0
-    dev: false
 
   /sodium-native/3.3.0:
     resolution: {integrity: sha512-rg6lCDM/qa3p07YGqaVD+ciAbUqm6SoO4xmlcfkbU5r1zIGrguXztLiEtaLYTV5U6k8KSIUFmnU3yQUSKmf6DA==}
     requiresBuild: true
     dependencies:
       node-gyp-build: 4.3.0
-    dev: false
 
   /sodium-universal/3.0.4:
     resolution: {integrity: sha512-WnBQ0GDo/82shKQHZBZT9h4q4miCtxkbzcwVLsCBPWNq4qbq8BXhKICt9nPwQAsJ43ct/rF61FKu4t0druUBug==}
@@ -30333,7 +30324,6 @@ packages:
       sodium-javascript: 0.7.4
       sodium-native: 3.3.0
       xsalsa20: 1.2.0
-    dev: false
 
   /sonic-boom/2.4.1:
     resolution: {integrity: sha512-WgtVLfGl347/zS1oTuLaOAvVD5zijgjphAJHgbbnBJGgexnr+C1ULSj0j7ftoGxpuxR4PaV635NkwFemG8m/5w==}
@@ -30683,7 +30673,6 @@ packages:
     dependencies:
       fast-fifo: 1.0.0
       queue-tick: 1.0.0
-    dev: false
 
   /strict-uri-encode/1.1.0:
     resolution: {integrity: sha512-R3f198pcvnB+5IpnBlRkphuE9n46WyVl8I39W/ZUTZLz4nqSP/oLYUrcnJrw462Ds8he4YKMov2efsTIw1BDGQ==}
@@ -31456,7 +31445,6 @@ packages:
 
   /timeout-refresh/1.0.3:
     resolution: {integrity: sha512-Mz0CX4vBGM5lj8ttbIFt7o4ZMxk/9rgudJRh76EvB7xXZMur7T/cjRiH2w4Fmkq0zxf2QpM8IFvOSRn8FEu3gA==}
-    dev: false
 
   /timers-browserify/2.0.12:
     resolution: {integrity: sha512-9phl76Cqm6FhSX9Xe1ZUAMLtm1BLkKj2Qd5ApyWkXzsMRaA7dgr81kf4wJmQf/hAvg8EEyJxDo3du/0KlhPiKQ==}
@@ -31996,7 +31984,6 @@ packages:
 
   /uint64be/3.0.0:
     resolution: {integrity: sha512-mliiCSrsE29aNBI7O9W5gGv6WmA9kBR8PtTt6Apaxns076IRdYrrtFhXHEWMj5CSum3U7cv7/pi4xmi4XsIOqg==}
-    dev: false
 
   /uint8arrays/3.0.0:
     resolution: {integrity: sha512-HRCx0q6O9Bfbp+HHSfQQKD7wU70+lydKVt4EghkdOvlK/NlrF90z+eXV34mUd48rNvVJXwkrMSPpCATkct8fJA==}
@@ -32591,11 +32578,9 @@ packages:
 
   /varint/5.0.0:
     resolution: {integrity: sha512-gC13b/bWrqQoKY2EmROCZ+AR0jitc6DnDGaQ6Ls9QpKmuSgJB1eQ7H3KETtQm7qSdMWMKCmsshyCmUwMLh3OAA==}
-    dev: false
 
   /varint/5.0.2:
     resolution: {integrity: sha512-lKxKYG6H03yCZUpAGOPOsMcGxd1RHCu1iKvEHYDPmTyq2HueGhD73ssNBqqQWfvYs04G9iUFRvmAVLW20Jw6ow==}
-    dev: false
 
   /varint/6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -33651,11 +33636,9 @@ packages:
     dependencies:
       sodium-native: 3.3.0
       xsalsa20: 1.2.0
-    dev: false
 
   /xsalsa20/1.2.0:
     resolution: {integrity: sha512-FIr/DEeoHfj7ftfylnoFt3rAIRoWXpx2AoDfrT2qD2wtp7Dp+COajvs/Icb7uHqRW9m60f5iXZwdsJJO3kvb7w==}
-    dev: false
 
   /xtend/4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}

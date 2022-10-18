@@ -108,7 +108,7 @@ export class PartyService implements PartyServiceRpc {
         });
       };
 
-      setImmediate(async () => {
+      setTimeout(async () => {
         if (!this.serviceContext.spaceManager) {
           next({ parties: [] });
         }
@@ -182,7 +182,7 @@ export class PartyService implements PartyServiceRpc {
 
   createInvitation (request: CreateInvitationRequest): Stream<InvitationRequest> {
     return new Stream(({ next, close }) => {
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
           let invitation: InvitationDescriptor;
           if (!request.inviteeKey) {

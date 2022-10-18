@@ -40,7 +40,6 @@ describe('Registry Client', function () {
   describe('Types', function () {
     it('Adds type to registry', async function () {
       const hash = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
-
       expect(hash.value.length).to.be.greaterThan(0);
     });
 
@@ -51,7 +50,6 @@ describe('Registry Client', function () {
 
     it('Retrieves type details', async function () {
       const domainKey = await registryClient.registerAuthority(account);
-
       const typeCid = await registryClient.registerTypeRecord('.dxos.type.App', protoSchema);
       await registryClient.registerResource(DXN.fromDomainKey(domainKey, randomName(), 'latest'), typeCid, account);
 

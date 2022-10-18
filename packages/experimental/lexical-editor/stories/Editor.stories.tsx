@@ -83,7 +83,7 @@ const EditorContainer: FC<{
 
   useEffect(() => {
     if (onInvite) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         client.echo.registerModel(TextModel);
         const party = await client.echo.createParty();
         const invitation = await party.createInvitation();
@@ -101,7 +101,7 @@ const EditorContainer: FC<{
     }
 
     if (invitation) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         client.echo.registerModel(TextModel);
         const accept = await client.echo.acceptInvitation(invitation.descriptor);
         accept.authenticate(Buffer.from(invitation.secret));

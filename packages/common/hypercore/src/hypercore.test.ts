@@ -3,66 +3,71 @@
 //
 
 import { expect } from 'chai';
-import hypercore from 'hypercore';
+import hypercore, { AbstractValueEncoding } from 'hypercore';
+import util from 'node:util';
 
-import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { schema } from '@dxos/protocols';
+import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
+
+import { createCodecEncoding } from './crypto';
+import { ramFactory } from './testing';
 
 describe('Hypercore', function () {
-  it('replicates', async function () {
+  it('sanity', async function () {
     const { publicKey, secretKey } = createKeyPair();
-    const directory1 = createStorage({ type: StorageType.RAM }).createDirectory();
-    const core1 = hypercore((filename) => directory1.getOrCreateFile(filename), publicKey, { secretKey });
-    const directory2 = createStorage({ type: StorageType.RAM }).createDirectory();
-    const core2 = hypercore((filename) => directory2.getOrCreateFile(filename), publicKey);
+    const core = hypercore(ramFactory(), publicKey, { secretKey });
 
-    // Wait for ready.
     {
-      const [ready, done] = latch({ count: 2 });
-      core1.open(done);
-      core2.open(done);
-
-      await ready();
+      expect(core.length).to.eq(0);
+      const append = util.promisify(core.append.bind(core));
+      const seq = await append('test');
+      expect(core.length).to.eq(1);
+      expect(seq).to.eq(0);
     }
 
-    const numBlocks = 10;
-
-    // Sync.
     {
-      const stream1 = core1.replicate(true);
-      const stream2 = core2.replicate(false);
+      const get = util.promisify(core.get.bind(core));
+      const block: any = await get(0);
+      expect(block.toString()).to.eq('test');
+    }
+  });
 
-      const [streamsClosed, onClose] = latch({ count: 2 });
-      stream1.pipe(stream2, onClose).pipe(stream1, onClose);
+  it('encoding with typed hypercore', async function () {
+    // TODO(burdon): Create separate proto testing package.
+    const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
+    const valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(codec);
 
-      expect(core1.stats.peers).to.have.lengthOf(1);
-      expect(core2.stats.peers).to.have.lengthOf(1);
+    const { publicKey, secretKey } = createKeyPair();
+    const core = hypercore<TestItemMutation>(ramFactory(), publicKey, { secretKey, valueEncoding });
 
-      // Wait for complete sync.
-      core2.on('sync', () => {
-        stream1.end();
-        stream2.end();
+    {
+      const append = util.promisify(core.append.bind(core));
+
+      expect(core.length).to.eq(0);
+      const seq = await append({
+        key: 'test-1',
+        value: 'test'
       });
 
-      // Write.
-      for (let i = 0; i < numBlocks; i++) {
-        core1.append(`test-${i}`);
-      }
-
-      await streamsClosed();
+      expect(core.length).to.eq(1);
+      expect(seq).to.eq(0);
     }
 
-    // Close.
     {
-      const [closed, close] = latch({ count: 2 });
-      core1.close(close);
-      core1.close(close);
+      const head = util.promisify(core.head.bind(core));
 
-      await closed();
+      const { key, value } = await head();
+      expect(key).to.eq('test-1');
+      expect(value).to.eq('test');
     }
 
-    expect(core1.stats.totals.uploadedBlocks).to.eq(numBlocks);
-    expect(core2.stats.totals.downloadedBlocks).to.eq(numBlocks);
+    {
+      const get = util.promisify(core.get.bind(core));
+
+      const { key, value } = await get(0);
+      expect(key).to.eq('test-1');
+      expect(value).to.eq('test');
+    }
   });
 });

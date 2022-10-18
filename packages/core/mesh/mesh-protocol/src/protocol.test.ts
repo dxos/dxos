@@ -25,24 +25,22 @@ describe('Protocol', function () {
       initiator: true,
       streamOptions: {
         onhandshake: async (protocol) => {
-          expect(protocol.getSession().peerId).toEqual('user2');
+          expect((protocol as any as Protocol).getSession()?.peerId).toEqual('user2');
         }
       },
       userSession: { peerId: 'user1' }
-    })
-      .init();
+    }).init();
 
     const protocol2 = new Protocol({
       discoveryKey: topic,
       initiator: false,
       streamOptions: {
         onhandshake: async (protocol) => {
-          expect(protocol.getSession().peerId).toEqual('user1');
+          expect((protocol as any as Protocol).getSession()?.peerId).toEqual('user1');
         }
       },
       userSession: { peerId: 'user2' }
-    })
-      .init();
+    }).init();
 
     protocol1.error.on(err => console.log('protocol1', err));
     protocol2.error.on(err => console.log('protocol2', err));
@@ -66,8 +64,7 @@ describe('Protocol', function () {
         }
       },
       userSession: { peerId: 'user1' }
-    })
-      .init();
+    }).init();
 
     const protocol2 = new Protocol({
       discoveryKey: topic,
@@ -80,8 +77,7 @@ describe('Protocol', function () {
         }
       },
       userSession: { peerId: 'user2' }
-    })
-      .init();
+    }).init();
 
     protocol1.error.on(err => console.log('protocol1', err));
     protocol2.error.on(err => console.log('protocol2', err));

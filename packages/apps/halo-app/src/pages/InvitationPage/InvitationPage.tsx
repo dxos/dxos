@@ -19,7 +19,7 @@ export const InvitationPage = () => {
 
   const redirect = (path: string) => {
     // Wait to close.
-    setImmediate(() => {
+    setTimeout(() => {
       isMounted() && navigate(path);
     });
   };
