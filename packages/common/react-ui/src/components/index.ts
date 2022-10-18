@@ -3,6 +3,7 @@
 //
 
 export * from './Button/Button';
+export * from './CompoundButton/CompoundButton';
 export * from './Group/Group';
 export * from './Heading/Heading';
 export * from './Input/Input';

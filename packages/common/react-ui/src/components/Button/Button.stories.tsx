@@ -5,8 +5,9 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
+import { ButtonProps } from '../../props';
 import { templateForComponent } from '../../testing';
-import { Button, ButtonProps } from './Button';
+import { Button } from './Button';
 
 export default {
   title: 'react-ui/Button',

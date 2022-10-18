@@ -16,4 +16,4 @@ export default {
 const Template = (args: AuthChoicesProps) => <AuthChoices {...args} className='max-w-md mx-auto my-4' />;
 
 export const Default = templateForComponent(Template)({});
-Default.args = { create: true };
+Default.args = { };

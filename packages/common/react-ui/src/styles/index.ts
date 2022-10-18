@@ -4,3 +4,4 @@
 
 export * from './disabled';
 export * from './focus';
+export * from './button';

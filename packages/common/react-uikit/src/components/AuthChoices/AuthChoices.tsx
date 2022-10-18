@@ -5,20 +5,27 @@
 import React, { ReactNode } from 'react';
 
 import {
-  Button,
-  GroupProps,
+  CaretRight,
+  CompoundButton,
   Group,
-  HeadingProps
+  GroupProps,
+  HeadingProps,
+  Plus,
+  QrCode,
+  Textbox
 } from '@dxos/react-ui';
 
-import { useTranslation, TFunction } from '../../translations';
+import { TFunction, useTranslation } from '../../translations';
 
-export interface AuthChoicesProps extends Pick<GroupProps, 'labelVisuallyHidden' | 'elevation' | 'className'> {
+export interface AuthChoicesProps {
   label?: HeadingProps
   description?: ReactNode
-  create?: boolean
-  recover?: boolean
-  inviteDevice?: boolean
+  excludeCreate?: boolean
+  excludeRecover?: boolean
+  excludeInviteDevice?: boolean
+  labelVisuallyHidden?: boolean
+  elevation?: GroupProps['elevation']
+  className?: string
 }
 
 const AuthChoicesDefaultLabel = (t: TFunction): HeadingProps => {
@@ -29,8 +36,41 @@ const AuthChoicesDefaultLabel = (t: TFunction): HeadingProps => {
   };
 };
 
-export const AuthChoices = ({ create, recover, inviteDevice, label, ...groupProps }: AuthChoicesProps) => {
+export const AuthChoices = ({
+  label,
+  excludeCreate,
+  excludeInviteDevice,
+  excludeRecover,
+  ...groupProps
+}: AuthChoicesProps) => {
   const { t } = useTranslation();
 
-  return <Group label={label || AuthChoicesDefaultLabel(t)} {...groupProps}><Button>{t('create profile label')}</Button></Group>;
+  return (
+    <Group label={label || AuthChoicesDefaultLabel(t)} {...groupProps}>
+      {!excludeCreate && (
+        <CompoundButton
+          description={t('create profile description')}
+          before={<Plus className='w-6 h-6' />}
+          after={<CaretRight className='w-4 h-4' weight='bold' />}
+          className='w-full mb-4'
+        >{t('create profile label')}</CompoundButton>
+      )}
+      {!excludeInviteDevice && (
+        <CompoundButton
+          description={t('invite device description')}
+          before={<QrCode className='w-6 h-6' />}
+          after={<CaretRight className='w-4 h-4' weight='bold' />}
+          className='w-full mb-4'
+        >{t('invite device label')}</CompoundButton>
+      )}
+      {!excludeRecover && (
+        <CompoundButton
+          description={t('recover profile description')}
+          before={<Textbox className='w-6 h-6' />}
+          after={<CaretRight className='w-4 h-4' weight='bold' />}
+          className='w-full mb-4'
+        >{t('recover profile label')}</CompoundButton>
+      )}
+    </Group>
+  );
 };

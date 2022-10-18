@@ -3,25 +3,25 @@
 //
 
 import cx from 'classnames';
-import React, { ReactNode } from 'react';
+import React, { PropsWithChildren, ReactNode } from 'react';
 
-import { buttonClassName, ButtonProps } from '../Button/Button';
+import { ButtonProps } from '../../props';
+import { buttonClassName } from '../../styles';
 
-export interface CompoundButtonProps
-  extends Omit<ButtonProps, 'children'> {
-  label: ReactNode
+export interface CompoundButtonProps extends ButtonProps {
   description?: ReactNode
   before?: ReactNode
   after?: ReactNode
 }
 
 export const CompoundButton = ({
-  label,
+  children,
   description,
   before,
   after,
   ...buttonProps
-}: CompoundButtonProps) => {
+}: PropsWithChildren<CompoundButtonProps>) => {
+  const variant = buttonProps.variant || 'default';
   return (
     <button
       {...buttonProps}
@@ -37,8 +37,19 @@ export const CompoundButton = ({
         </div>
       )}
       <div role='none' className='grow flex flex-col gap-1 text-left'>
-        <p>{label}</p>
-        {description && <p className='text-xs'>{description}</p>}
+        <p>{children}</p>
+        {description && (
+          <p
+            className={cx(
+              'text-xs font-normal',
+              variant === 'default' && 'text-neutral-650 dark:text-neutral-300',
+              variant === 'outline' && 'text-neutral-650 dark:text-neutral-300',
+              variant === 'primary' && 'text-white/75'
+            )}
+          >
+            {description}
+          </p>
+        )}
       </div>
       {after && (
         <div role='none' className='grow-0'>

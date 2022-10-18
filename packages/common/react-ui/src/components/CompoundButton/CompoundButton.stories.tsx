@@ -25,9 +25,9 @@ const Template = ({ ...args }: Omit<CompoundButtonProps, 'ref'>) => (
   </Container>
 );
 
-export const Default = templateForComponent(Template)({ label: '' });
+export const Default = templateForComponent(Template)({ });
 Default.args = {
-  label: 'Hello',
+  children: 'Hello',
   description: 'This is a compound button',
   before: <ClockCounterClockwise className='w-5 h-5' />,
   after: <ArrowRight className='w-5 h-5' />,
@@ -37,7 +37,7 @@ Default.args = {
 export const Primary = () => (
   <Template
     {...{
-      label: 'Hello',
+      children: 'Hello',
       description: 'This is a compound button',
       before: <ClockCounterClockwise className='w-5 h-5' />,
       after: <ArrowRight className='w-5 h-5' />,
