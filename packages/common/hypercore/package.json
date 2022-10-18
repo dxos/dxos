@@ -26,7 +26,7 @@
     "@dxos/testutils": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "assert": "^2.0.0",
-    "hypercore": "9.10.0",
+    "hypercore": "^9.12.0",
     "hypercore-protocol": "^8.0.7",
     "readable-stream": "^3.6.0",
     "streamx": "^2.12.5",

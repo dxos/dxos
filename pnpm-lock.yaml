@@ -576,7 +576,7 @@ importers:
       debug: ^4.3.3
       faker: ^5.5.3
       from2: ^2.3.0
-      hypercore: 9.10.0
+      hypercore: ^9.12.0
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
@@ -593,7 +593,7 @@ importers:
       assert: 2.0.0
       debug: 4.3.4
       from2: 2.3.0
-      hypercore: 9.10.0
+      hypercore: 9.12.0
       pify: 5.0.0
       readable-stream: 3.6.0
       util: 0.12.4
@@ -628,7 +628,7 @@ importers:
       assert: ^2.0.0
       debug: ^4.3.3
       faker: ^5.5.3
-      hypercore: 9.10.0
+      hypercore: ^9.12.0
       hypercore-protocol: ^8.0.7
       random-access-memory: ^4.1.0
       readable-stream: ^3.6.0
@@ -643,7 +643,7 @@ importers:
       '@dxos/random-access-storage': link:../random-access-storage
       '@dxos/testutils': link:../testutils
       assert: 2.0.0
-      hypercore: 9.10.0
+      hypercore: 9.12.0
       hypercore-protocol: 8.0.7
       readable-stream: 3.6.0
       streamx: 2.12.5
@@ -1389,7 +1389,7 @@ importers:
       buffer-json-encoding: ^1.0.2
       debug: ^4.3.3
       end-of-stream: ^1.4.1
-      hypercore: 9.10.0
+      hypercore: ^9.12.0
       multi-read-stream: ^2.0.0
       pify: ~5.0.0
     dependencies:
@@ -1403,7 +1403,7 @@ importers:
       assert: 2.0.0
       buffer-json-encoding: 1.0.2
       debug: 4.3.4
-      hypercore: 9.10.0
+      hypercore: 9.12.0
     devDependencies:
       '@dxos/crypto': link:../../../common/crypto
       '@dxos/feed-store': link:../../../common/feed-store
@@ -22160,8 +22160,8 @@ packages:
       streamx: 2.12.5
     dev: false
 
-  /hypercore/9.10.0:
-    resolution: {integrity: sha512-vMaUNcYvtiiXbnjjhj3YbBK/KZEofXfrajiJxJ8rlWVXSyh2fIJcyxTJewfh58IW5bVYNrBPui/CpPyBZiXuZQ==}
+  /hypercore/9.12.0:
+    resolution: {integrity: sha512-wIlM4Iwl618NcmsY+1O/X08Cx/bY6ti3LXmQhRnPZFGQPqAeX0x53hASckW082IIAVWzXD3zcmREw5yEINzb4w==}
     dependencies:
       abstract-extension: 3.1.1
       atomic-batcher: 1.0.2
