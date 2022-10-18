@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { PropsWithChildren } from 'react';
 
-import { templateForComponent } from '../../dev-util';
+import { templateForComponent } from '../../testing';
 import { Button, ButtonProps } from './Button';
 
 export default {
