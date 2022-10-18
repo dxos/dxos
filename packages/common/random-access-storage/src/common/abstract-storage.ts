@@ -22,27 +22,35 @@ export abstract class AbstractStorage implements Storage {
 
   public readonly abstract type: StorageType
 
+  // TODO(burdon): Make required.
   constructor (
     protected readonly path: string
   ) {}
+
+  toString () {
+    return `Storage(${JSON.stringify({ type: this.type, path: this.path })})`;
+  }
 
   public get size () {
     return this._files.size;
   }
 
+  // TODO(burdon): Make required.
   public createDirectory (sub = ''): Directory {
+    // assert(sub.length);
     return new Directory(
+      this.type,
       getFullPath(this.path, sub),
-      () => Array.from(this._getFilesInPath(sub).values()),
+      () => Array.from(this._getFiles(sub).values()),
       (...args) => this.getOrCreateFile(...args),
-      () => this._deleteFilesInPath(sub)
+      () => this._delete(sub)
     );
   }
 
   async destroy () {
     try {
       await this._closeFilesInPath('');
-      await this._deleteFilesInPath('');
+      await this._delete('');
       await this._destroy();
     } catch (err: any) {
       log.catch(err);
@@ -93,7 +101,7 @@ export abstract class AbstractStorage implements Storage {
     }
   }
 
-  private _getFilesInPath (path: string): Map<string, File> {
+  private _getFiles (path: string): Map<string, File> {
     const fullPath = getFullPath(this.path, path);
     return new Map(
       Array.from(this._files.entries()).filter(([path]) => {
@@ -103,13 +111,14 @@ export abstract class AbstractStorage implements Storage {
   }
 
   private async _closeFilesInPath (path: string): Promise<void> {
-    await Promise.all(Array.from(this._getFilesInPath(path).values()).map(
+    await Promise.all(Array.from(this._getFiles(path).values()).map(
       file => file.close().catch((err: any) => log.catch(err))
     ));
   }
 
-  protected async _deleteFilesInPath (path: string): Promise<void> {
-    await Promise.all(Array.from(this._getFilesInPath(path)).map(([path, file]) => {
+  // TODO(burdon): Delete directory (not just listed files).
+  protected async _delete (path: string): Promise<void> {
+    await Promise.all(Array.from(this._getFiles(path)).map(([path, file]) => {
       return file.destroy()
         .then(() => this._files.delete(path))
         .catch((err: any) => log.error(err.message));

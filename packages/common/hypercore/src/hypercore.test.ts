@@ -3,20 +3,32 @@
 //
 
 import { expect } from 'chai';
-import hypercore, { AbstractValueEncoding } from 'hypercore';
+import { AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
 
+import { Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
-import { schema } from '@dxos/protocols';
-import { TestItemMutation } from '@dxos/protocols/proto/example/testing/data';
 
 import { createCodecEncoding } from './crypto';
-import { ramFactory } from './testing';
+import { HypercoreFactory } from './hypercore-factory';
+
+type TestItem = {
+  key: string
+  value: string
+}
+
+const codec: Codec<TestItem> = {
+  encode: (obj: TestItem) => Buffer.from(JSON.stringify(obj)),
+  decode: (buffer: Uint8Array) => JSON.parse(buffer.toString())
+};
+
+const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec);
 
 describe('Hypercore', function () {
   it('sanity', async function () {
+    const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore(ramFactory(), publicKey, { secretKey });
+    const core = factory.createFeed(publicKey, { secretKey });
 
     {
       expect(core.length).to.eq(0);
@@ -34,12 +46,9 @@ describe('Hypercore', function () {
   });
 
   it('encoding with typed hypercore', async function () {
-    // TODO(burdon): Create separate proto testing package.
-    const codec = schema.getCodecForType('example.testing.data.TestItemMutation');
-    const valueEncoding: AbstractValueEncoding<TestItemMutation> = createCodecEncoding(codec);
-
+    const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore<TestItemMutation>(ramFactory(), publicKey, { secretKey, valueEncoding });
+    const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
 
     {
       const append = util.promisify(core.append.bind(core));

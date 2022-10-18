@@ -5,7 +5,7 @@
 import { MemoryStorage, Storage, StorageConstructor, StorageType } from '../common';
 import { NodeStorage } from './node-storage';
 
-export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
+export const createStorage: StorageConstructor = ({ type, root = '/tmp/dxos' } = {}): Storage => {
   if (type === undefined) {
     return new NodeStorage(root);
   }

@@ -28,6 +28,6 @@ export class NodeStorage extends AbstractStorage {
   }
 
   protected override async _destroy () {
-    await del(this.path);
+    await del(this.path, { force: true });
   }
 }
