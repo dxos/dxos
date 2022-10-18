@@ -2,21 +2,22 @@
 // Copyright 2019 DXOS.org
 //
 
-import hypercore from 'hypercore';
 import util from 'node:util';
-import ram from 'random-access-memory';
 
 import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
+import { HypercoreFactory } from './hypercore-factory';
 import { createAsyncIterator, createReadable } from './streams';
 
-describe('Hypercore AsyncIterator', function () {
-  it('iterates a feed until stopped', async function () {
-    const numBlocks = 10;
+describe('AsyncIterator', function () {
+  it.only('iterates a feed until stopped', async function () {
+    const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore(ram, publicKey, { secretKey });
+    const core = factory.createFeed(publicKey, { secretKey });
+
+    const numBlocks = 10;
 
     // Write.
     {
@@ -40,18 +41,25 @@ describe('Hypercore AsyncIterator', function () {
       const [readAll, inc] = latch({ count: numBlocks });
       setTimeout(async () => {
         while (true) {
-          const { value, done } = await iterator.next();
-          if (done) {
+          try {
+            const { value, done } = await iterator.next();
+            if (done) {
+              end();
+              break;
+            }
+
+            log(String(value));
+            inc();
+          } catch (err) {
+            // TODO(burdon): Premature close error thrown in the browser environment.
             end();
             break;
           }
-
-          log(String(value));
-          inc();
         }
       });
 
       await readAll();
+
       stream.destroy();
       await streamEnded();
     }

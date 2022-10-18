@@ -12,8 +12,9 @@ import { StorageType } from './storage';
  * https://github.com/random-access-storage/random-access-storage
  */
 export interface File extends RandomAccessStorageProperties {
-  // TODO(burdon): Document different implementations.
   readonly destroyed: boolean
+
+  // TODO(burdon): Can we remove these since they are not standard across implementations?
   readonly directory: string
   readonly filename: string
 

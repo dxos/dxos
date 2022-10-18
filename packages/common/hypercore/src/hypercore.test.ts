@@ -3,14 +3,14 @@
 //
 
 import { expect } from 'chai';
-import hypercore, { AbstractValueEncoding } from 'hypercore';
+import { AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
-import ram from 'random-access-memory';
 
 import { Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
 
 import { createCodecEncoding } from './crypto';
+import { HypercoreFactory } from './hypercore-factory';
 
 type TestItem = {
   key: string
@@ -26,8 +26,9 @@ const valueEncoding: AbstractValueEncoding<TestItem> = createCodecEncoding(codec
 
 describe('Hypercore', function () {
   it('sanity', async function () {
+    const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore(ram, publicKey, { secretKey });
+    const core = factory.createFeed(publicKey, { secretKey });
 
     {
       expect(core.length).to.eq(0);
@@ -45,8 +46,9 @@ describe('Hypercore', function () {
   });
 
   it('encoding with typed hypercore', async function () {
+    const factory = new HypercoreFactory();
     const { publicKey, secretKey } = createKeyPair();
-    const core = hypercore<TestItem>(ram, publicKey, { secretKey, valueEncoding });
+    const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
 
     {
       const append = util.promisify(core.append.bind(core));

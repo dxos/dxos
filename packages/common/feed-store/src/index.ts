@@ -2,6 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
+export * from './errors';
 export * from './feed-factory';
 export * from './feed-iterator';
 export * from './feed-set-iterator';

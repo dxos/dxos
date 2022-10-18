@@ -33,6 +33,8 @@ export class FeedFactory<T = {}> {
   private readonly _signer: Signer;
   private readonly _hypercoreOptions?: HypercoreOptions;
 
+  // TODO(burdon): Must patch codec here createCodecEncoding.
+
   constructor ({
     root,
     signer,
