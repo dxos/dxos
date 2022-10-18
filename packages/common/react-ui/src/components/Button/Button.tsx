@@ -3,11 +3,11 @@
 //
 
 import cx from 'classnames';
-import React, { forwardRef } from 'react';
+import React, { ComponentProps, forwardRef } from 'react';
 
 import { defaultDisabled, defaultFocus } from '../../styles';
 
-export interface ButtonProps extends React.ComponentProps<'button'> {
+export interface ButtonProps extends ComponentProps<'button'> {
   variant?: 'default' | 'primary' | 'outline'
   disabled?: boolean
 }
