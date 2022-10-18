@@ -8,6 +8,7 @@ import type {
   RandomAccessStorage,
   RandomAccessStorageProperties
 } from 'random-access-storage';
+import { promisify } from 'util';
 
 import { StorageType } from './storage';
 
@@ -27,40 +28,23 @@ export interface File {
 
   // Not supported in node, memory.
   truncate? (offset: number): Promise<void>
-
-  // random-access-memory only.
-  clone?(): RandomAccessStorage
 }
 
-const pifyFields = (object: any, fields: string[]) => {
-  for (const field of fields) {
-    if (!object[field]) {
-      // TODO(burdon): Suppress warning and throw error if used.
-      // console.warn(`Field not supported for type: ${JSON.stringify({ type, field })}`);
-    } else {
-      object[field] = pify(object[field].bind(object));
-    }
+export class FileWrap implements File {
+  constructor(readonly native: RandomAccessStorage) { }
+
+  write = promisifyField(this.native, 'write') as any;
+  read = promisifyField(this.native, 'read') as any;
+  del = promisifyField(this.native, 'del') as any;
+  stat = promisifyField(this.native, 'stat') as any;
+  close = promisifyField(this.native, 'close') as any;
+  destroy = promisifyField(this.native, 'destroy') as any;
+  truncate = promisifyField(this.native, 'truncate') as any;
+}
+
+
+const promisifyField = (object: any, fieldName: string) => {
+  if (!!object[fieldName]) {
+    return promisify(object[fieldName].bind(object));
   }
-
-  return object;
-};
-
-/**
- * Construct async File wrapper.
- * NOTE: This is safe since these are interface methods only (not used internally).
- */
-export const wrapFile = (native: RandomAccessStorage): File => {
-  const file = pifyFields(native, [
-    'write',
-    'read',
-    'del',
-    'stat',
-    'close',
-    'destroy',
-    'truncate'
-  ]);
-
-  return Object.assign(file, {
-    native
-  });
-};
+}
