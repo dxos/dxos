@@ -14,7 +14,7 @@ export const until = <T = void> (cb: UntilCallback<T>, timeout?: number): Promis
       reject(new Error(`Timeout after ${t}ms`));
     }, timeout);
 
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         await cb((value: T) => {
           t && clearTimeout(t);

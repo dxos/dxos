@@ -275,7 +275,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
 
   private async _trigger (listener: (data: T) => void, data: T) {
     try {
-      await waitImmediate(); // Acts like setImmediate but preserves the stack-trace.
+      await waitImmediate(); // Acts like setTimeout but preserves the stack-trace.
       listener(data);
     } catch (err: any) {
       // Stop error propagation.
@@ -361,6 +361,6 @@ export interface ReadOnlyEvent<T = void> {
 }
 
 /**
- * Like setImmediate but for async/await API. Useful for preserving stack-traces.
+ * Like setTimeout but for async/await API. Useful for preserving stack-traces.
  */
-const waitImmediate = () => new Promise((resolve) => setImmediate(resolve));
+const waitImmediate = () => new Promise((resolve) => setTimeout(resolve));
