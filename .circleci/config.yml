@@ -38,7 +38,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
+      - run: pnpm -w run install-playwright
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=build
@@ -73,7 +73,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
+      - run: pnpm -w run install-playwright
       - *cache_save
       - nx/set-shas
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e
@@ -128,7 +128,7 @@ jobs:
       - checkout
       - *cache_restore
       - run: pnpm install
-      - run: pnpx playwright@1.25.1 install
+      - run: pnpm -w run install-playwright
       - *cache_save
       - nx/set-shas
       - run: pnpm nx run-many --target=test --skip-nx-cache

@@ -44,19 +44,7 @@ export const dxosPlugin = (configPath?: string): Plugin => ({
           // https://github.com/FredKSchott/rollup-plugin-polyfill-node#options
           // TODO(wittjosiah): Specifically target our deps?
           RollupNodeGlobalsPlugin({ include: null }),
-          RollupConfigPlugin({ configPath }),
-          // TODO(wittjosiah): Is there a better way to do this? Can we eliminate setImmediate usage?
-          {
-            name: 'setimmediate-polyfill',
-            transform (code, module) {
-              const contents = `import "${require.resolve('setimmediate')}";`;
-              // eslint-disable-next-line
-              // @ts-ignore
-              if (this.getModuleInfo(module).isEntry) {
-                return contents + code;
-              }
-            }
-          }
+          RollupConfigPlugin({ configPath })
         ]
       }
     }

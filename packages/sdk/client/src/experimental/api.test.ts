@@ -58,13 +58,13 @@ describe.skip('Experimental API', function () {
 
         // Accept new device.
         const challenge = client1.halo.createDeviceAdmissionChallenge(request.requestKey);
-        setImmediate(async () => {
+        setTimeout(async () => {
           const deviceKey = await challenge.wait();
           expect(PublicKey.equals(deviceKey, client2.halo.device.deviceKey)).toBeTruthy();
         });
 
         // Authenticate.
-        setImmediate(async () => {
+        setTimeout(async () => {
           await request.accept(challenge.secret);
         });
       }
@@ -88,7 +88,7 @@ describe.skip('Experimental API', function () {
       // Create Space.
       const space = await client1.brane.createSpace();
       const invitation = space.createInvitation(Role.ADMIN);
-      setImmediate(async () => {
+      setTimeout(async () => {
         await invitation.wait();
         const members = space.queryMembers();
         expect(members.elements).toHaveLength(2);
