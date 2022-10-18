@@ -1,11 +1,12 @@
 #!/bin/bash
 
-BRANCH = $(git branch --show-current)
+BRANCH=$(git branch --show-current)
+ROOT=$(git rev-parse --show-toplevel)
 
-if [ $BRANCH -eq "release" ]; then
-  DX_CONFIG = ../../packages/devtools/dx-cli/config/config.yml
+if [ $BRANCH = "release" ]; then
+  export DX_CONFIG="$ROOT/packages/devtools/dx-cli/config/config.yml"
 else
-  DX_CONFIG = ../../packages/devtools/dx-cli/config/dev-config.yml
+  export DX_CONFIG="$ROOT/packages/devtools/dx-cli/config/config-dev.yml"
 fi
 
-  ../../packages/devtools/dx-cli/bin/run app publish --verbose
+$ROOT/packages/devtools/dx-cli/bin/run app publish --verbose
