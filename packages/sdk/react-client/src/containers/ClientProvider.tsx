@@ -94,7 +94,7 @@ export const ClientProvider = ({
         await done(client);
       }
     }
-  }, []);
+  }, [clientProvider, configProvider, options]);
 
   if (!client) {
     return fallback as JSX.Element;

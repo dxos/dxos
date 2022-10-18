@@ -2,8 +2,13 @@ version: 1
 
 package:
   modules:
-    - name: dxos:story/devtools
+    - name: devtools
       type: dxos:type/app
       build:
-        command: npm run build:book
-        outdir: out/book
+        command: pnpm -w nx bundle devtools
+
+runtime:
+  client:
+    # For local development uncomment:
+    remoteSource: http://localhost:3967/headless.html
+    mode: remote

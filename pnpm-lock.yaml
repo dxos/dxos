@@ -1540,7 +1540,6 @@ importers:
       '@dxos/network-manager': workspace:*
       '@dxos/object-model': workspace:*
       '@dxos/protocols': workspace:*
-      '@dxos/protocols-toolchain': workspace:*
       '@dxos/react-async': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-components': workspace:*
@@ -1549,6 +1548,7 @@ importers:
       '@dxos/registry-client': workspace:*
       '@dxos/rpc': workspace:*
       '@dxos/text-model': workspace:*
+      '@dxos/vite-plugin': workspace:*
       '@emotion/react': ^11.9.0
       '@emotion/styled': ^11.8.1
       '@mui/icons-material': ^5.8.0
@@ -1560,6 +1560,7 @@ importers:
       '@types/react': ^18.0.21
       '@types/react-copy-to-clipboard': ~5.0.1
       '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
       color-hash: ^1.0.3
       faker: ^5.5.3
       moment: ^2.24.0
@@ -1567,11 +1568,15 @@ importers:
       react: ^18.2.0
       react-copy-to-clipboard: ^5.1.0
       react-dom: ^18.2.0
+      typescript: ^4.7.2
+      vite: 3.0.9
+      vite-plugin-pwa: ^0.12.4
     dependencies:
       '@dxos/async': link:../../common/async
       '@dxos/client': link:../../sdk/client
       '@dxos/client-services': link:../../sdk/client-services
       '@dxos/codec-protobuf': link:../../common/codec-protobuf
+      '@dxos/config': link:../../sdk/config
       '@dxos/credentials': link:../../core/halo/credentials
       '@dxos/debug': link:../../common/debug
       '@dxos/devtools-mesh': link:../devtools-mesh
@@ -1604,17 +1609,20 @@ importers:
       react-dom: 18.2.0_react@18.2.0
     devDependencies:
       '@babel/core': 7.19.3
-      '@dxos/config': link:../../sdk/config
       '@dxos/echo-db': link:../../core/echo/echo-db
       '@dxos/esbuild-plugins': 2.29.0
-      '@dxos/protocols-toolchain': link:../../../tools/deprecated/protocols-toolchain
+      '@dxos/vite-plugin': link:../../../tools/vite-plugin
       '@mui/system': 5.10.9_h33l6npc22g7vcra72cibfsrvm
       '@types/color-hash': 1.0.2
       '@types/faker': 5.5.9
       '@types/react': 18.0.21
       '@types/react-copy-to-clipboard': 5.0.4
       '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
       faker: 5.5.3
+      typescript: 4.8.4
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      vite-plugin-pwa: 0.12.8_vite@3.0.9
 
   packages/devtools/devtools-extension:
     specifiers:
