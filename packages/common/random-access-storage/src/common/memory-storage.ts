@@ -29,10 +29,10 @@ export class MemoryStorage extends AbstractStorage {
     return this._castReadToBuffer(native);
   }
 
-  private _castReadToBuffer(file: RandomAccessStorage): FileWrap {
+  private _castReadToBuffer(native: RandomAccessStorage): FileWrap {
     // Hack to make return type consistent on all platforms
-    const trueRead = file.read.bind(file);
-    file.read = (offset: number, size: number, cb: Callback<Buffer>) =>
+    const trueRead = native.read.bind(native);
+    native.read = (offset: number, size: number, cb: Callback<Buffer>) =>
       trueRead(offset, size, (error: Error | null, data?: Buffer) => {
         if (error) {
           return cb(error);
@@ -40,6 +40,6 @@ export class MemoryStorage extends AbstractStorage {
           return cb(error, Buffer.from(data!));
         }
       });
-    return new FileWrap(file);
+    return new FileWrap(native);
   }
 }

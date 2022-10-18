@@ -3,12 +3,11 @@
 //
 
 import { join } from 'node:path';
-import type { RandomAccessStorage } from 'random-access-storage';
 
 import { log } from '@dxos/log';
 
 import { Directory } from './directory';
-import { File, wrapFile } from './file';
+import { File } from './file';
 import { Storage, StorageType } from './storage';
 import { getFullPath } from './utils';
 
