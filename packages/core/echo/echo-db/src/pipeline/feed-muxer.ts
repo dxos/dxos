@@ -28,7 +28,7 @@ export const consumePipeline = (
   onError: (err: Error) => Promise<void>
 ) => {
   // This will exit cleanly once FeedStoreIterator is closed.
-  setImmediate(async () => {
+  setTimeout(async () => {
     for await (const block of iterator) {
       try {
         const { data: message } = block;

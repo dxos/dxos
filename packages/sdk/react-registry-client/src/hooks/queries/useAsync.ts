@@ -23,7 +23,7 @@ export const useAsync = <T>(getData: () => MaybePromise<T> | undefined, initalVa
   const [data, setData] = useState<T>(initalValue);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         const data = await getData();
         data && setData(data);

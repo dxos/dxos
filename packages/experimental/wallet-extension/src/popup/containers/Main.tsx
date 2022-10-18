@@ -21,7 +21,7 @@ export const Main = () => {
   const [DXNSAccount, setDXNSAccount] = useState<string | undefined>();
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         const remoteConfig = new Config(await client.services.SystemService.getConfig());
         setPolkadotAddress(remoteConfig.get('runtime.services.dxns.address') ?? await client.halo.getDevicePreference('DXNSAddress'));

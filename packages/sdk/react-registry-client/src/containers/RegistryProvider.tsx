@@ -37,7 +37,7 @@ export const RegistryProvider = ({
 
   useEffect(() => {
     if (!registry) {
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
           const context = await createRegistryContext(config);
           setContext(context);
