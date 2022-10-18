@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, createElement} from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
 
 export const parameters = {
@@ -20,9 +20,5 @@ const ThemeWrapper = ({ children }) => {
 };
 
 export const decorators = [
-  (Story) => (
-    <ThemeWrapper>
-      <Story />
-    </ThemeWrapper>
-  )
+  (Story) => createElement(ThemeWrapper, {children: createElement(Story)})
 ];

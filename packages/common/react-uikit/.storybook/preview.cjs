@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { createElement, useEffect } from 'react';
 import { useDarkMode } from 'storybook-dark-mode';
 import { TranslationsProvider } from '../src/translations';
 
@@ -17,17 +17,17 @@ const ThemeWrapper = ({ children }) => {
   const darkMode = useDarkMode();
   console.log('[darkMode]', darkMode);
   useEffect(() => {
-    document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
-  }, [darkMode])
+    document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+  }, [darkMode]);
   return children;
 };
 
 export const decorators = [
   (Story) => (
-    <TranslationsProvider>
-      <ThemeWrapper>
-        <Story />
-      </ThemeWrapper>
-    </TranslationsProvider>
+    createElement(TranslationsProvider, {
+      children: createElement(ThemeWrapper, {
+        children: createElement(Story)
+      })
+    })
   )
 ];
