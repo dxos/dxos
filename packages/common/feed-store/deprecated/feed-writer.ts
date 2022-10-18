@@ -17,7 +17,7 @@ export interface FeedWriter<T> {
   write (message: T): Promise<WriteReceipt>
 }
 
-export const mapFeedWriter = <T, U>(
+export const createMappedFeedWriter = <T, U>(
   map: (arg: T) => MaybePromise<U>,
   writer: FeedWriter<U>
 ): FeedWriter<T> => ({

@@ -7,15 +7,12 @@ import { expect } from 'chai';
 import { latch } from '@dxos/async';
 
 import { FeedIterator } from './feed-iterator';
-import { FeedWriterImpl } from './feed-writer';
-import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
+import { createFeedWriter } from './feed-writer';
+import { TestItemBuilder } from './testing';
 
 describe('FeedIterator', function () {
   it('reads blocks in order', async function () {
-    const builder = new TestBuilder({
-      valueEncoding: defaultValueEncoding,
-      generator: defaultTestGenerator
-    });
+    const builder = new TestItemBuilder();
 
     const numBlocks = 20;
 
@@ -23,7 +20,7 @@ describe('FeedIterator', function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    const writer = new FeedWriterImpl(feed.core);
+    const writer = createFeedWriter(feed);
 
     const iterator = new FeedIterator(feed);
     await iterator.start();

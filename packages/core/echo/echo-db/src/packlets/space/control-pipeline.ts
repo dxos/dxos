@@ -71,7 +71,7 @@ export class ControlPipeline {
     this._pipeline.setWriteFeed(feed);
   }
 
-  start () {
+  async start () {
     log('Starting control pipeline');
     setImmediate(async () => {
       for await (const msg of this._pipeline.consume()) {
@@ -89,7 +89,7 @@ export class ControlPipeline {
       }
     });
 
-    return this;
+    await this._pipeline.start();
   }
 
   async stop () {

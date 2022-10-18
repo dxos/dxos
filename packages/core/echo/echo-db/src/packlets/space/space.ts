@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { FeedWrapper, mapFeedWriter } from '@dxos/feed-store';
+import { FeedWrapper, createMappedFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
@@ -199,7 +199,7 @@ export class Space {
 
     // Create database backend.
     {
-      const feedWriter = mapFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
+      const feedWriter = createMappedFeedWriter<EchoEnvelope, TypedMessage>(msg => ({
         '@type': 'dxos.echo.feed.EchoEnvelope',
         ...msg
       }), this._dataPipeline.writer ?? failUndefined());

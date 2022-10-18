@@ -22,8 +22,7 @@ export class FeedStore<T = {}> {
 
   private readonly _factory: FeedFactory;
 
-  // TODO(burdon): Use this pattern everywhere.
-  readonly onOpen = new Event<FeedWrapper>();
+  readonly feedOpened = new Event<FeedWrapper>();
 
   constructor ({
     factory
@@ -55,8 +54,8 @@ export class FeedStore<T = {}> {
     if (feed) {
       // TODO(burdon): Need to check that there's another instance being used (create test and break this).
       // TODO(burdon): Remove from store if feed is closed externally? (remove wrapped open/close methods?)
-      if (Boolean(feed.properties.writable) !== Boolean(writable)) {
-        throw new Error(`Readonly feed is already open: ${feed.key.toHex()}`);
+      if (writable && !feed.properties.writable) {
+        throw new Error(`Read-only feed is already open: ${publicKey.truncate()}`);
       } else {
         await feed.open();
         return feed;
@@ -68,7 +67,7 @@ export class FeedStore<T = {}> {
     feed = new FeedWrapper<T>(core, publicKey);
     this._feeds.set(feed.key, feed);
     await feed.open();
-    this.onOpen.emit(feed);
+    this.feedOpened.emit(feed);
     return feed;
   }
 

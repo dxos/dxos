@@ -43,7 +43,7 @@ describe('space/space', function () {
       }
 
       // TODO(burdon): Don't expose.
-      await space.controlPipeline.state!.waitUntilReached(space.controlPipeline.state!.endTimeframe);
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
 
     {
@@ -99,7 +99,7 @@ describe('space/space', function () {
           });
         }
 
-        await space.controlPipeline.state!.waitUntilReached(space.controlPipeline.state!.endTimeframe);
+        await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
       }
 
       return [agent, spaceContext];
@@ -148,11 +148,11 @@ describe('space/space', function () {
       // Initial data exchange.
 
       // Agent 1 reads all feed messages.
-      await spaceContext1.space.controlPipeline.state!.waitUntilReached(
+      await spaceContext1.space.controlPipeline.state!.waitUntilTimeframe(
         spaceContext1.space.controlPipeline.state!.endTimeframe);
 
       // Agent 2 reads all feed messages.
-      await spaceContext2.space.controlPipeline.state!.waitUntilReached(
+      await spaceContext2.space.controlPipeline.state!.waitUntilTimeframe(
         spaceContext1.space.controlPipeline.state!.endTimeframe);
     }
 

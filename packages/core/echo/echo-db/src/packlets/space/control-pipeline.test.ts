@@ -16,10 +16,11 @@ import { afterTest } from '@dxos/testutils';
 import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from '../common';
+import { mapFeedIndexesToTimeframe } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', function () {
-  it('admits feeds', async function () {
+  it.only('admits feeds', async function () {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();
@@ -58,7 +59,8 @@ describe('space/control-pipeline', function () {
     expect(admittedFeeds).toEqual([]);
 
     controlPipeline.setWriteFeed(genesisFeed);
-    controlPipeline.start();
+    await controlPipeline.start();
+
     afterTest(() => controlPipeline.stop());
 
     //
@@ -67,6 +69,7 @@ describe('space/control-pipeline', function () {
     {
       const generator = new CredentialGenerator(keyring, identityKey, deviceKey);
       const credentials = await generator.createSpaceGenesis(spaceKey, genesisFeed.key);
+      expect(credentials).toHaveLength(3);
 
       for (const credential of credentials) {
         await controlPipeline.pipeline.writer?.write({
@@ -75,51 +78,64 @@ describe('space/control-pipeline', function () {
         });
       }
 
-      await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
+      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
+      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 2 }]);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
+      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
     // New control feed.
     const controlFeed2 = await createFeed();
-    await controlPipeline.pipeline.writer!.write({
-      '@type': 'dxos.echo.feed.CredentialsMessage',
-      credential: await createCredential({
-        signer: keyring,
-        issuer: identityKey,
-        subject: controlFeed2.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: spaceKey,
-          identityKey,
-          deviceKey,
-          designation: AdmittedFeed.Designation.CONTROL
-        }
-      })
-    });
+    {
+      await controlPipeline.pipeline.writer!.write({
+        '@type': 'dxos.echo.feed.CredentialsMessage',
+        credential: await createCredential({
+          signer: keyring,
+          issuer: identityKey,
+          subject: controlFeed2.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: spaceKey,
+            identityKey,
+            deviceKey,
+            designation: AdmittedFeed.Designation.CONTROL
+          }
+        })
+      });
 
-    await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
-    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
+      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
+      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 3 }]);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
+      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
+    }
 
     // New data feed.
     const dataFeed1 = await createFeed();
-    await controlPipeline.pipeline.writer!.write({
-      '@type': 'dxos.echo.feed.CredentialsMessage',
-      credential: await createCredential({
-        signer: keyring,
-        issuer: identityKey,
-        subject: dataFeed1.key,
-        assertion: {
-          '@type': 'dxos.halo.credentials.AdmittedFeed',
-          partyKey: spaceKey,
-          identityKey,
-          deviceKey,
-          designation: AdmittedFeed.Designation.DATA
-        }
-      })
-    });
+    {
+      await controlPipeline.pipeline.writer!.write({
+        '@type': 'dxos.echo.feed.CredentialsMessage',
+        credential: await createCredential({
+          signer: keyring,
+          issuer: identityKey,
+          subject: dataFeed1.key,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            partyKey: spaceKey,
+            identityKey,
+            deviceKey,
+            designation: AdmittedFeed.Designation.DATA
+          }
+        })
+      });
 
-    await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
-    expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
+      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
+      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 4 }]);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
+      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
+      expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
+    }
 
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
@@ -143,9 +159,14 @@ describe('space/control-pipeline', function () {
         timeframe: new Timeframe()
       });
 
+      // TODO(burdon): FeedIterator timeframe is not updated until consumed!
+      const end = mapFeedIndexesToTimeframe([{ feedKey: genesisFeed.key, index: 4 }]);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
       // TODO(dmaretskyi): Count ignored messages.
-      await controlPipeline.pipeline.state.waitUntilReached(controlPipeline.pipeline.state.endTimeframe);
+      // await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
+
+    // TODO(burdon): Fails with not open.
   });
 });

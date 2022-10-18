@@ -19,6 +19,17 @@ export class Timeframe {
     }
   }
 
+  toJSON () {
+    return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
+      frames[key.truncate()] = seq;
+      return frames;
+    }, {});
+  }
+
+  toString () {
+    return `([${this.frames().map(([key, seq]) => `${key.truncate()} => ${seq}`).join(', ')}])`;
+  }
+
   // TODO(burdon): Rename getFrame.
   get (key: PublicKey) {
     return this._frames.get(key);
@@ -59,17 +70,6 @@ export class Timeframe {
    */
   totalMessages (): number {
     return Array.from(this._frames.values()).reduce((result, seq) => (result + seq + 1), 0);
-  }
-
-  toJSON () {
-    return this.frames().reduce((frames: Record<string, number>, [key, seq]) => {
-      frames[key.truncate()] = seq;
-      return frames;
-    }, {});
-  }
-
-  toString () {
-    return `(${this.frames().map(([key, seq]) => `${key.truncate()} => ${seq}`).join(', ')})`;
   }
 
   /**

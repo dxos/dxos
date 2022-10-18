@@ -3,8 +3,6 @@
 //
 
 import assert from 'assert';
-import { Hypercore } from 'hypercore';
-import util from 'node:util';
 
 import { PublicKey } from '@dxos/keys';
 import { MaybePromise } from '@dxos/util';
@@ -16,55 +14,41 @@ export type WriteReceipt = {
   seq: number
 }
 
+/**
+ * Async feed writer.
+ */
 export interface FeedWriter<T> {
   write (data: T): Promise<WriteReceipt>
 }
 
 /**
- * Async feed writer.
+ * Creates a wrapper function that appends to the feed.
  */
-export class FeedWriterImpl<T> implements FeedWriter<T> {
-  private readonly _feedKey: PublicKey;
+export const createFeedWriter = <T> (feed: FeedWrapper<T>): FeedWriter<T> => {
+  assert(feed);
 
-  constructor (
-    private readonly _hypercore: Hypercore
-  ) {
-    assert(this._hypercore);
-    this._feedKey = PublicKey.from(this._hypercore.key);
-  }
-
-  // TODO(burdon): Returning the feed key is a convenience that should be provided by a closure.
-  async write (data: T): Promise<WriteReceipt> {
-    const seq = await this._append(data as any);
-    return {
-      feedKey: this._feedKey,
-      seq
-    };
-  }
-
-  _append = util.promisify(this._hypercore.append.bind(this._hypercore));
-}
-
-// TODO(burdon): Why do we need this and FeedWriterImpl?
-export const createFeedWriter = <T> (feed: FeedWrapper<T>): FeedWriter<T> => ({
-  write: async (data: T) => {
-    const seq = await feed.append(data);
-    return {
-      feedKey: feed.key,
-      seq
-    };
-  }
-});
+  return {
+    write: async (data: T) => {
+      const seq = await feed.append(data);
+      return {
+        feedKey: feed.key,
+        seq
+      };
+    }
+  };
+};
 
 /**
- * Maps the written arguments into a different message type.
+ * Maps the written arguments onto a different message type.
  */
-// TODO(burdon): Replace with optional mapper in createFeedWriter.
-export const mapFeedWriter = <Source, Target> (
+export const createMappedFeedWriter = <Source, Target> (
   mapper: (arg: Source) => MaybePromise<Target>,
   writer: FeedWriter<Target>
 ): FeedWriter<Source> => {
+  assert(mapper);
+  assert(writer);
+
   return {
-    write: async (data: Source) => writer.write(await mapper(data))
+    write: async (data: Source) => await writer.write(await mapper(data))
   };
 };

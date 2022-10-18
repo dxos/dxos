@@ -4,12 +4,40 @@
 
 import assert from 'assert';
 import { ReadStreamOptions } from 'hypercore';
+import throught2 from 'through2';
 
 import { latch } from '@dxos/async';
-import { FeedBlock, createAsyncIterator, createReadable } from '@dxos/hypercore';
+import { FeedBlock, createReadable } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
+
+/**
+ * Blocks until awakened.
+ */
+// TODO(burdon): Factor out to @dxos/async.
+export class Trigger<T = void> {
+  _wake!: (value?: T) => void;
+
+  constructor (
+    private readonly _timeout: number = 0
+  ) {}
+
+  async wait (timeout: number = this._timeout): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this._wake = (value?: T) => resolve(value as T);
+      if (timeout) {
+        setTimeout(() => {
+          reject(new Error(`Timed out after ${timeout}ms`));
+        }, timeout);
+      }
+    });
+  }
+
+  wake (value?: T) {
+    this._wake?.(value);
+  }
+}
 
 export const defaultReadStreamOptions: ReadStreamOptions = {
   live: true // Keep reading until closed.
@@ -21,10 +49,11 @@ export type FeedQueueOptions = {}
  * Async queue using an AsyncIterator created from a hypercore.
  */
 export class FeedQueue<T = {}> {
-  private _iterator?: AsyncIterator<T>;
+  private readonly _trigger = new Trigger<FeedBlock<T>>();
   private _feedStream?: any;
   private _currentBlock?: FeedBlock<T> = undefined;
   private _index = -1;
+  private _next?: () => void;
 
   constructor (
     private readonly _feed: FeedWrapper<T>,
@@ -44,7 +73,7 @@ export class FeedQueue<T = {}> {
   }
 
   /**
-   * Current index (seq) at the head of the stream.
+   * Index (seq) of next block to be read.
    */
   get index () {
     return this._index;
@@ -58,20 +87,37 @@ export class FeedQueue<T = {}> {
       await this.close();
     }
 
-    log('opening...');
-    // TODO(burdon): Test performance/stability vs. using hypercore.get and managing an index.
-    const opts = Object.assign({}, defaultReadStreamOptions, options);
-    this._feedStream = createReadable(this._feed.core.createReadStream(opts));
-    this._iterator = createAsyncIterator(this._feedStream);
     this._index = options.start ?? 0;
     if (this._index !== 0) {
-      console.warn('Start index not yet supported');
+      console.warn('Start index not yet supported.');
     }
 
+    log('opening...');
+    const opts = Object.assign({}, defaultReadStreamOptions, options);
+    this._feedStream = createReadable(this._feed.core.createReadStream(opts));
+
+    // TODO(burdon): Is back-pressure relevant? Buffering?
+    //  https://nodejs.org/en/docs/guides/backpressuring-in-streams
+    const transform = this._feedStream.pipe(throught2.obj((data: any, encoding: string, next: () => void) => {
+      this._next = () => {
+        this._currentBlock = undefined;
+        this._index++;
+        next();
+      };
+
+      this._currentBlock = {
+        key: this._feed.key,
+        seq: this._index,
+        data
+      };
+
+      this._trigger.wake(this._currentBlock);
+    }));
+
     const onClose = () => {
+      this._feedStream.unpipe(transform);
       this._feedStream.off('close', onClose);
       this._feedStream = undefined;
-      this._iterator = undefined;
       this._currentBlock = undefined;
       this._index = -1;
     };
@@ -100,25 +146,7 @@ export class FeedQueue<T = {}> {
   /**
    * Get the block at the head of the queue without removing it.
    */
-  async peek (): Promise<FeedBlock<T>> {
-    if (!this.opened) {
-      throw new Error('Not open'); // TODO(burdon): Common error format?
-    }
-
-    if (this._currentBlock === undefined) {
-      const { value, done }: IteratorResult<T> = await this._iterator!.next();
-      if (done) {
-        // NOTE: Only called if live=false.
-        throw new Error('No more blocks.');
-      }
-
-      this._currentBlock = {
-        key: this._feed.key,
-        seq: this._index,
-        data: value
-      };
-    }
-
+  peek (): FeedBlock<T> | undefined {
     return this._currentBlock;
   }
 
@@ -127,15 +155,15 @@ export class FeedQueue<T = {}> {
    */
   async pop (): Promise<FeedBlock<T>> {
     if (!this.opened) {
-      throw new Error('Not open'); // TODO(burdon): Common error format?
+      throw new Error(`Queue not open: ${this.feed.key.truncate()}`);
     }
 
-    const value = await this.peek();
-    this._currentBlock = undefined;
-    if (value) {
-      this._index++;
+    let block = this.peek();
+    if (!block) {
+      block = await this._trigger.wait();
+      this._next?.();
     }
 
-    return value;
+    return block;
   }
 }

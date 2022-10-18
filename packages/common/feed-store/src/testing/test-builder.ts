@@ -12,10 +12,10 @@ import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
 import {
   defaultCodec,
-  defaultTestBlockGenerator,
+  defaultTestGenerator,
   defaultValueEncoding,
-  TestBlockGenerator,
-  TestGenerator
+  TestGenerator,
+  TestItem
 } from './test-generator';
 
 export type TestBuilderOptions<T> = {
@@ -37,7 +37,7 @@ export class TestBuilder<T = any> {
   static readonly ROOT_DIR = '/tmp/dxos/testing/feed-store';
 
   constructor (
-    private readonly _properties: TestBuilderOptions<T> = {}
+    protected readonly _properties: TestBuilderOptions<T> = {}
   ) {}
 
   clone (): TestBuilder<T> {
@@ -45,23 +45,15 @@ export class TestBuilder<T = any> {
   }
 
   get storage (): Storage {
-    return (this._properties.storage ??=
-      createStorage({ type: StorageType.RAM }));
+    return (this._properties.storage ??= createStorage({ type: StorageType.RAM }));
   }
 
   get directory (): Directory {
-    return (this._properties.directory ??=
-      this.storage.createDirectory(TestBuilder.ROOT_DIR));
+    return (this._properties.directory ??= this.storage.createDirectory(TestBuilder.ROOT_DIR));
   }
 
   get keyring (): Keyring {
-    return (this._properties.keyring ??=
-      new Keyring());
-  }
-
-  get generator (): TestGenerator<T> {
-    return (this._properties.generator ??=
-      new TestGenerator<T>(defaultTestBlockGenerator as any as TestBlockGenerator<T>));
+    return (this._properties.keyring ??= new Keyring());
   }
 
   setStorage (type: StorageType, root = TestBuilder.ROOT_DIR) {
@@ -93,13 +85,26 @@ export class TestBuilder<T = any> {
 }
 
 /**
- * Builder with default encoder.
+ * Builder with default encoder and generator.
  */
-export class TestItemBuilder extends TestBuilder {
+export class TestItemBuilder extends TestBuilder<TestItem> {
   constructor () {
     super({
       codec: defaultCodec,
-      valueEncoding: defaultValueEncoding
+      valueEncoding: defaultValueEncoding,
+      generator: defaultTestGenerator
     });
+  }
+
+  get codec () {
+    return this._properties.codec!;
+  }
+
+  get valueEncoding () {
+    return this._properties.valueEncoding!;
+  }
+
+  get generator () {
+    return this._properties.generator!;
   }
 }

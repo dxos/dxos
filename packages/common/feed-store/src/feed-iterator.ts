@@ -71,7 +71,7 @@ export class FeedIterator<T = {}> extends AbstractFeedIterator<T> {
     private readonly _feed: FeedWrapper<T>
   ) {
     super();
-    this._queue = new FeedQueue(this._feed);
+    this._queue = new FeedQueue<T>(this._feed);
   }
 
   override async _onOpen (): Promise<void> {

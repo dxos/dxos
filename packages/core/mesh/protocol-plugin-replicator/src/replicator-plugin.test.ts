@@ -38,7 +38,7 @@ const middleware = ({ feedStore, onUnsubscribe = noop, onLoad = () => [] }: Midd
 
   return {
     subscribe: (next) => {
-      const unsubscribe = feedStore.onOpen.on((feed) => next([encodeFeed(feed)]));
+      const unsubscribe = feedStore.feedOpened.on((feed) => next([encodeFeed(feed)]));
       return () => {
         onUnsubscribe(feedStore);
         unsubscribe();

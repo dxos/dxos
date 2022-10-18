@@ -4,10 +4,9 @@
 
 import assert from 'assert';
 
-import { Event, sleep } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
@@ -27,14 +26,14 @@ export type FeedIndex = {
 }
 
 export type FeedSetIteratorOptions = {
-  polling?: number
   // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
   //  Currently does not use this.
   start?: FeedIndex[]
+  timeout?: number
 }
 
 export const defaultFeedSetIteratorOptions = {
-  polling: 1000
+  timeout: 1000
 };
 
 /**
@@ -42,6 +41,7 @@ export const defaultFeedSetIteratorOptions = {
  */
 export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   private readonly _feedQueues = new ComplexMap<PublicKey, FeedQueue<T>>(PublicKey.hash);
+  private readonly _trigger = new Trigger(this.options.timeout);
 
   public readonly stalled = new Event<FeedSetIterator<T>>();
 
@@ -68,8 +68,17 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     }));
   }
 
+  /**
+   * Adds the feed to the iterator, then asynchronously opens it and adds it to the candidates.
+   */
   addFeed (feed: FeedWrapper<T>) {
-    this._feedQueues.set(feed.key, new FeedQueue<T>(feed));
+    assert(feed.properties.opened);
+    setTimeout(async () => {
+      const queue = new FeedQueue<T>(feed);
+      await queue.open();
+      this._feedQueues.set(feed.key, queue);
+      this._trigger.wake();
+    });
   }
 
   override async _onOpen (): Promise<void> {
@@ -84,7 +93,10 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     }
   }
 
+  // TODO(burdon): Iterator may not work since can't get update event.
+
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
+    console.log('############## next', this.indexes);
     while (this._running) {
       // Get candidates.
       const queues = Array.from(this._feedQueues.values()).filter(queue => {
@@ -93,22 +105,29 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
 
       // Select feed.
       if (queues.length > 0) {
+        // TODO(burdon): This is wrong -- peeks shouldn't block.
         const blocks = await Promise.all(queues.map(queue => queue.peek()!));
-        const idx = this._selector(blocks);
-        if (idx !== undefined) {
-          if (idx >= blocks.length) {
-            throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
-          }
+        if (blocks.length) {
+          const idx = this._selector(blocks);
+          if (idx !== undefined) {
+            if (idx >= blocks.length) {
+              throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
+            }
 
-          const queue = queues[idx];
-          return queue.pop();
+            const queue = queues[idx];
+            return queue.pop();
+          }
         }
       }
 
-      // TODO(burdon): Replace polling with trigger (on new feed, message).
-      log('Polling...');
-      this.stalled.emit(this);
-      await sleep(this.options.polling ?? 1000);
+      try {
+        console.log('Waiting...', this.indexes);
+        await this._trigger.wait();
+        console.log('############ ok', this.indexes);
+      } catch (err) {
+        console.log(err);
+        this.stalled.emit(this);
+      }
     }
   }
 }

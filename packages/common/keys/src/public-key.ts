@@ -6,6 +6,8 @@ import assert from 'node:assert';
 import { inspect, InspectOptionsStylized } from 'node:util';
 import randomBytes from 'randombytes';
 
+import { truncateKey } from '@dxos/debug';
+
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
 
@@ -54,6 +56,7 @@ export class PublicKey {
    * Creates a new key.
    */
   static random (): PublicKey {
+    // TODO(burdon): Enable seed for debugging.
     return PublicKey.from(randomBytes(32));
   }
 
@@ -125,48 +128,30 @@ export class PublicKey {
     }
   }
 
-  /**
-   * Return underlying Uint8Array representation.
-   */
-  asUint8Array (): Uint8Array {
-    return this._value;
+  // TODO(burdon): Rename toDebugHex? Make default for toString?
+  truncate () {
+    return truncateKey(this);
   }
 
-  /**
-   * Covert this key to buffer.
-   */
-  asBuffer (): Buffer {
-    return Buffer.from(this._value);
-  }
-
-  /**
-   * Convert this key to hex-encoded string.
-   */
-  toHex (): string {
-    return this.asBuffer().toString('hex');
-  }
-
-  /**
-   * Same as `PublicKey.humanize()`.
-   */
   toString (): string {
     return this.toHex();
   }
 
-  /**
-   * Same as `PublicKey.humanize()`.
-   */
+  // TODO(burdon): How is this used?
   toJSON () {
     return this.toHex();
   }
 
-  truncate (n = 4) {
-    const key = this.toHex();
-    if (key.length < n * 2 + 2) {
-      return key;
-    }
+  toHex (): string {
+    return this.asBuffer().toString('hex');
+  }
 
-    return `${key.substring(0, n)}..${key.substring(key.length - n)}`;
+  asBuffer (): Buffer {
+    return Buffer.from(this._value);
+  }
+
+  asUint8Array (): Uint8Array {
+    return this._value;
   }
 
   /**

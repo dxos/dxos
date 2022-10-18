@@ -57,13 +57,16 @@ export class FeedFactory<T = {}> {
       console.warn('Secret key ignored due to signer.');
     }
 
-    // TODO(burdon): Current hack due to key-length restriction (move to @dxos/hypercore).
+    // Required due to hypercore's 32-byte key limit.
+    // TODO(burdon): Add details.
     const key = sha256(publicKey.toHex());
 
-    return hypercore(this._storage(publicKey), key, Object.assign({}, this._hypercoreOptions, {
+    const opts = Object.assign({}, this._hypercoreOptions, {
       // TODO(burdon): Test if can omit (given crypto signer) in v10.
       secretKey: (this._signer && options?.writable) ? Buffer.from('dummy') : undefined,
       crypto: createCrypto(this._signer, publicKey)
-    }, options));
+    }, options);
+
+    return hypercore(this._storage(publicKey), key, opts);
   }
 }

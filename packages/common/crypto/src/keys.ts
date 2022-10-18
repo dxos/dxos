@@ -23,6 +23,7 @@ export const createKeyPair = (seed?: Buffer): KeyPair => {
     return crypto.keyPair(seed.slice(0, 32));
   }
 
+  // TODO(burdon): Enable seed for debugging.
   return crypto.keyPair();
 };
 

@@ -17,7 +17,6 @@ type LatchResult = [
 
 /**
  * Returns a callback and a promise that's resolved when the callback is called n times.
- * @deprecated Use `until`.
  */
 // TODO(burdon): Reconcile with until/trigger.
 export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {

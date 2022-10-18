@@ -11,23 +11,51 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
-import { FeedWriterImpl } from './feed-writer';
-import { defaultTestGenerator, defaultValueEncoding, TestBuilder } from './testing';
+import { createFeedWriter } from './feed-writer';
+import { TestItemBuilder } from './testing';
+
+// Random selector.
+const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
+  faker.datatype.number({ min: 0, max: blocks.length - 1 });
 
 describe('FeedSetIterator', function () {
+  const builder = new TestItemBuilder();
+
+  // TODO(burdon): Test when feed is added.
+  it('responds immediately when a feed is appended', async function () {
+    const feedStore = builder.createFeedStore();
+    const iterator = new FeedSetIterator(randomFeedBlockSelector);
+
+    const numFeeds = 3;
+    const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
+      const key = await builder.keyring.createKey();
+      const feed = await feedStore.openFeed(key, { writable: true });
+      iterator.addFeed(feed);
+      return feed;
+    }));
+
+    const [done, received] = latch();
+
+    {
+      setTimeout(async () => {
+        for await (const block of iterator) {
+          console.log('>>>>>', block);
+          received();
+        }
+      });
+
+      setTimeout(async () => {
+        await builder.generator.writeBlocks(createFeedWriter(faker.random.arrayElement(feeds)));
+      }, 10);
+    }
+
+    await done();
+    await iterator.close();
+  });
+
   it('reads blocks in order', async function () {
-    const builder = new TestBuilder({
-      valueEncoding: defaultValueEncoding,
-      generator: defaultTestGenerator
-    });
-
-    // Random selector.
-    // TODO(burdon): Implement Timeframe (index) selector.
-    const feedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
-      faker.datatype.number({ min: 0, max: blocks.length - 1 });
-
     // TODO(burdon): Test with starting index.
-    const iterator = new FeedSetIterator(feedBlockSelector);
+    const iterator = new FeedSetIterator(randomFeedBlockSelector);
 
     const numFeeds = 3;
     const numBlocks = 25;
@@ -45,7 +73,7 @@ describe('FeedSetIterator', function () {
         const feed = await feedStore.openFeed(key, { writable: true });
         iterator.addFeed(feed);
         feedKeys.push(feed.key);
-        return new FeedWriterImpl(feed.core);
+        return createFeedWriter(feed);
       }));
 
       expect(iterator.size).to.eq(numFeeds);
