@@ -49,7 +49,7 @@ export const createFeedWriterWithTimeframe = (
   feed: FeedWrapper<FeedMessage>,
   timeframeProvider: () => Timeframe
 ): FeedWriter<TypedMessage> => {
-  const writer = createFeedWriter<FeedMessage>(feed);
+  const writer = createFeedWriter<TypedMessage>(feed);
 
   return mapFeedWriter<TypedMessage, FeedMessage>((data: TypedMessage) => ({
     timeframe: timeframeProvider(),
