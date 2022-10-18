@@ -5,9 +5,9 @@
 import del from 'del';
 import raf from 'random-access-file';
 import { RandomAccessStorage } from 'random-access-storage';
-import { File, FileWrap } from '../common/file'
 
 import { AbstractStorage, StorageType } from '../common';
+import { File, FileWrap } from '../common/file';
 
 /**
  * Storage interface implementation for Node.

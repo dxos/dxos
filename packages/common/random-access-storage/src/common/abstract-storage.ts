@@ -58,7 +58,7 @@ export abstract class AbstractStorage implements Storage {
       }
 
       file = this._openFile(file);
-    } 
+    }
 
     if (!file) {
       file = this._createFile(path, filename, opts);
@@ -79,7 +79,7 @@ export abstract class AbstractStorage implements Storage {
     return undefined;
   }
 
-  protected abstract _createFile (path: string, filename: string, opts?: any): File | undefined;
+  protected abstract _createFile (path: string, filename: string, opts?: any): File;
 
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {

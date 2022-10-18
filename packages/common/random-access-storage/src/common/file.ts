@@ -2,15 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import pify from 'pify';
 import type {
   FileStat,
-  RandomAccessStorage,
-  RandomAccessStorageProperties
+  RandomAccessStorage
 } from 'random-access-storage';
 import { promisify } from 'util';
-
-import { StorageType } from './storage';
 
 /**
  * Random access file wrapper.
@@ -31,7 +27,7 @@ export interface File {
 }
 
 export class FileWrap implements File {
-  constructor(readonly native: RandomAccessStorage) { }
+  constructor (readonly native: RandomAccessStorage) { }
 
   write = promisifyField(this.native, 'write') as any;
   read = promisifyField(this.native, 'read') as any;
@@ -42,9 +38,8 @@ export class FileWrap implements File {
   truncate = promisifyField(this.native, 'truncate') as any;
 }
 
-
 const promisifyField = (object: any, fieldName: string) => {
-  if (!!object[fieldName]) {
+  if (object[fieldName]) {
     return promisify(object[fieldName].bind(object));
   }
-}
+};
