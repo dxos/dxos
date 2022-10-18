@@ -111,9 +111,8 @@ jobs:
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
-          command: ../../devtools/dx-cli/bin/run app publish --verbose
+          command: ../../../.circleci/scripts/upload-codecov.sh
           environment:
-            DX_CONFIG: ../../devtools/dx-cli/config/config.yml
             NODE_OPTIONS: --max_old_space_size=3072
 
   #
@@ -154,10 +153,10 @@ workflows:
           filters:
             branches:
               only:
+                - main
                 - release
           context:
             - Github
-            - Netlify
 
   nightly:
     triggers:
