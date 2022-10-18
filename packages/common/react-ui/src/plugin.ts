@@ -126,6 +126,9 @@ export const themePlugin = (options: VitePluginTailwindOptions) => {
                       '7xl': ['2.566rem', { lineHeight: '1' }],
                       '8xl': ['2.887rem', { lineHeight: '1' }],
                       '9xl': ['3.247rem', { lineHeight: '1' }]
+                    },
+                    outlineWidth: {
+                      3: '3px'
                     }
                   }
                 },

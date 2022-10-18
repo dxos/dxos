@@ -21,9 +21,9 @@ import { TFunction, useTranslation } from '../../translations';
 export interface AuthChoicesProps {
   label?: HeadingProps
   description?: ReactNode
-  excludeCreate?: boolean
-  excludeRecover?: boolean
-  excludeInviteDevice?: boolean
+  onClickCreate?: () => void
+  onClickInviteDevice?: () => void
+  onClickRecover?: () => void
   labelVisuallyHidden?: boolean
   elevation?: GroupProps['elevation']
   className?: string
@@ -39,40 +39,46 @@ const AuthChoicesDefaultLabel = (t: TFunction): HeadingProps => {
 
 export const AuthChoices = ({
   label,
-  excludeCreate,
-  excludeInviteDevice,
-  excludeRecover,
+  onClickCreate,
+  onClickInviteDevice,
+  onClickRecover,
   ...groupProps
 }: AuthChoicesProps) => {
   const { t } = useTranslation();
 
   return (
-    <Group elevation={5} label={label || AuthChoicesDefaultLabel(t)} {...groupProps} className={cx('p-6', groupProps.className)}>
-      <div role='none' className='flex flex-col gap-2'>
-      {!excludeCreate && (
-        <CompoundButton
-          description={t('create profile description')}
-          before={<Plus className='w-6 h-6' />}
-          after={<CaretRight className='w-4 h-4' weight='bold' />}
-          className='text-lg w-full'
-        >{t('create profile label')}</CompoundButton>
-      )}
-      {!excludeInviteDevice && (
-        <CompoundButton
-          description={t('invite device description')}
-          before={<QrCode className='w-6 h-6' />}
-          after={<CaretRight className='w-4 h-4' weight='bold' />}
-          className='text-lg w-full'
-        >{t('invite device label')}</CompoundButton>
-      )}
-      {!excludeRecover && (
-        <CompoundButton
-          description={t('recover profile description')}
-          before={<Textbox className='w-6 h-6' />}
-          after={<CaretRight className='w-4 h-4' weight='bold' />}
-          className='text-lg w-full'
-        >{t('recover profile label')}</CompoundButton>
-      )}
+    <Group
+      elevation={5}
+      label={label || AuthChoicesDefaultLabel(t)} {...groupProps}
+      className={cx('p-6', groupProps.className)}>
+      <div role='none' className='flex flex-col gap-2 mt-4'>
+        {onClickCreate && (
+          <CompoundButton
+            description={t('create profile description')}
+            before={<Plus className='w-6 h-6' />}
+            after={<CaretRight className='w-4 h-4' weight='bold' />}
+            className='text-lg w-full'
+            onClick={onClickCreate}
+          >{t('create profile label')}</CompoundButton>
+        )}
+        {onClickInviteDevice && (
+          <CompoundButton
+            description={t('invite device description')}
+            before={<QrCode className='w-6 h-6' />}
+            after={<CaretRight className='w-4 h-4' weight='bold' />}
+            className='text-lg w-full'
+            onClick={onClickInviteDevice}
+          >{t('invite device label')}</CompoundButton>
+        )}
+        {onClickRecover && (
+          <CompoundButton
+            description={t('recover profile description')}
+            before={<Textbox className='w-6 h-6' />}
+            after={<CaretRight className='w-4 h-4' weight='bold' />}
+            className='text-lg w-full'
+            onClick={onClickRecover}
+          >{t('recover profile label')}</CompoundButton>
+        )}
       </div>
     </Group>
   );

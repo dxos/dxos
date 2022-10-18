@@ -10,10 +10,17 @@ import { AuthChoices, AuthChoicesProps } from './AuthChoices';
 
 export default {
   title: 'react-uikit/AuthChoices',
-  component: AuthChoices
+  component: AuthChoices,
+  argTypes: {
+    onClickCreate: { action: 'create' },
+    onClickRecover: { action: 'recover' },
+    onClickInviteDevice: { action: 'inviteDevice' }
+  }
 };
 
-const Template = (args: AuthChoicesProps) => <AuthChoices {...args} className='max-w-md mx-auto my-4' />;
+const Template = (args: AuthChoicesProps) => (
+  <AuthChoices {...args} className='max-w-md mx-auto my-4' />
+);
 
 export const Default = templateForComponent(Template)({});
-Default.args = { };
+Default.args = {};

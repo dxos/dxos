@@ -24,6 +24,7 @@ export const CompoundButton = ({
 }: PropsWithChildren<CompoundButtonProps>) => {
   const variant = buttonProps.variant || 'default';
   const labelId = useId('compoundButton-label');
+  const descriptionId = useId('compoundButton-description');
   return (
     <button
       {...buttonProps}
@@ -33,6 +34,7 @@ export const CompoundButton = ({
         buttonProps.className
       )}
       aria-labelledby={labelId}
+      {...(description && { 'aria-describedby': descriptionId })}
     >
       {before && (
         <div role='none' className='grow-0'>
@@ -43,6 +45,7 @@ export const CompoundButton = ({
         <p id={labelId}>{children}</p>
         {description && (
           <p
+            id={descriptionId}
             className={cx(
               'text-xs font-normal',
               variant === 'default' && 'text-neutral-650 dark:text-neutral-300',
