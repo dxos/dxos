@@ -7,7 +7,7 @@ import { SigningContext, Space, SpaceManager } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { InvitationDescriptor as InvitationDescriptorProto } from '@dxos/protocols/proto/dxos/echo/invitation';
 import { AdmittedFeed, PartyMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -38,73 +38,75 @@ export class DataInvitations {
       topic: swarmKey,
       peerId: swarmKey,
       topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
-        log('Inviter connected');
-        const peer = createProtoRpcPeer({
-          requested: {
-            InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
-          },
-          exposed: {
-            InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
-          },
-          handlers: {
-            InviterInvitationService: {
-              admit: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
-                await space.controlPipeline.writer.write({
-                  '@type': 'dxos.echo.feed.CredentialsMessage',
-                  credential: await this._signingContext.credentialSigner.createCredential({
-                    subject: identityKey,
-                    assertion: {
-                      '@type': 'dxos.halo.credentials.PartyMember',
-                      partyKey: space.key,
-                      role: PartyMember.Role.ADMIN
-                    }
-                  })
-                });
+      protocol: createProtocolFactory(swarmKey, swarmKey, [
+        new RpcPlugin(async (port) => {
+          log('Inviter connected');
+          const peer = createProtoRpcPeer({
+            requested: {
+              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+            },
+            exposed: {
+              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+            },
+            handlers: {
+              InviterInvitationService: {
+                admit: async ({ identityKey, deviceKey, controlFeedKey, dataFeedKey }) => {
+                  await space.controlPipeline.writer.write({
+                    '@type': 'dxos.echo.feed.CredentialsMessage',
+                    credential: await this._signingContext.credentialSigner.createCredential({
+                      subject: identityKey,
+                      assertion: {
+                        '@type': 'dxos.halo.credentials.PartyMember',
+                        partyKey: space.key,
+                        role: PartyMember.Role.ADMIN
+                      }
+                    })
+                  });
 
-                await space.controlPipeline.writer.write({
-                  '@type': 'dxos.echo.feed.CredentialsMessage',
-                  credential: await this._signingContext.credentialSigner.createCredential({
-                    subject: controlFeedKey,
-                    assertion: {
-                      '@type': 'dxos.halo.credentials.AdmittedFeed',
-                      partyKey: space.key,
-                      deviceKey,
-                      identityKey,
-                      designation: AdmittedFeed.Designation.CONTROL
-                    }
-                  })
-                });
+                  await space.controlPipeline.writer.write({
+                    '@type': 'dxos.echo.feed.CredentialsMessage',
+                    credential: await this._signingContext.credentialSigner.createCredential({
+                      subject: controlFeedKey,
+                      assertion: {
+                        '@type': 'dxos.halo.credentials.AdmittedFeed',
+                        partyKey: space.key,
+                        deviceKey,
+                        identityKey,
+                        designation: AdmittedFeed.Designation.CONTROL
+                      }
+                    })
+                  });
 
-                await space.controlPipeline.writer.write({
-                  '@type': 'dxos.echo.feed.CredentialsMessage',
-                  credential: await this._signingContext.credentialSigner.createCredential({
-                    subject: dataFeedKey,
-                    assertion: {
-                      '@type': 'dxos.halo.credentials.AdmittedFeed',
-                      partyKey: space.key,
-                      deviceKey,
-                      identityKey,
-                      designation: AdmittedFeed.Designation.DATA
-                    }
-                  })
-                });
+                  await space.controlPipeline.writer.write({
+                    '@type': 'dxos.echo.feed.CredentialsMessage',
+                    credential: await this._signingContext.credentialSigner.createCredential({
+                      subject: dataFeedKey,
+                      assertion: {
+                        '@type': 'dxos.halo.credentials.AdmittedFeed',
+                        partyKey: space.key,
+                        deviceKey,
+                        identityKey,
+                        designation: AdmittedFeed.Designation.DATA
+                      }
+                    })
+                  });
+                }
               }
-            }
-          },
-          port
-        });
+            },
+            port
+          });
 
-        await peer.open();
-        log('Inviter RPC open');
+          await peer.open();
+          log('Inviter RPC open');
 
-        await peer.rpc.InviteeInvitationService.accept({
-          spaceKey: space.key,
-          genesisFeedKey: space.genesisFeedKey
-        });
+          await peer.rpc.InviteeInvitationService.accept({
+            spaceKey: space.key,
+            genesisFeedKey: space.genesisFeedKey
+          });
 
-        onFinish?.();
-      })])
+          onFinish?.();
+        })
+      ])
     });
 
     return new InvitationDescriptor(InvitationDescriptorProto.Type.INTERACTIVE, swarmKey, new Uint8Array());
@@ -124,56 +126,58 @@ export class DataInvitations {
       topic: swarmKey,
       peerId: PublicKey.random(),
       topology: new StarTopology(swarmKey),
-      protocol: createProtocolFactory(swarmKey, swarmKey, [new PluginRpc(async (port) => {
-        log('Invitee connected');
-        // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
-        // TODO(dmaretskyi): More robust way to handle this.
-        if (connected) {
-          // TODO(dmaretskyi): Close connection.
-          log.warn('Ignore duplicate connection');
-          return;
-        }
-        connected = true;
+      protocol: createProtocolFactory(swarmKey, swarmKey, [
+        new RpcPlugin(async (port) => {
+          log('Invitee connected');
+          // Peers might get connected twice because of certain network conditions. We ignore any subsequent connections.
+          // TODO(dmaretskyi): More robust way to handle this.
+          if (connected) {
+            // TODO(dmaretskyi): Close connection.
+            log.warn('Ignore duplicate connection');
+            return;
+          }
 
-        const peer = createProtoRpcPeer({
-          requested: {
-            InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
-          },
-          exposed: {
-            InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
-          },
-          handlers: {
-            InviteeInvitationService: {
-              accept: async ({ spaceKey, genesisFeedKey }) => {
-                try {
-                  log('Accept space', { spaceKey, genesisFeedKey });
-                  space = await this._spaceManager.acceptSpace({
-                    spaceKey,
-                    genesisFeedKey
-                  });
+          connected = true;
+          const peer = createProtoRpcPeer({
+            requested: {
+              InviterInvitationService: schema.getService('dxos.echo.invitation_protocol.InviterInvitationService')
+            },
+            exposed: {
+              InviteeInvitationService: schema.getService('dxos.echo.invitation_protocol.InviteeInvitationService')
+            },
+            handlers: {
+              InviteeInvitationService: {
+                accept: async ({ spaceKey, genesisFeedKey }) => {
+                  try {
+                    log('Accept space', { spaceKey, genesisFeedKey });
+                    space = await this._spaceManager.acceptSpace({
+                      spaceKey,
+                      genesisFeedKey
+                    });
 
-                  log('Try to admit member');
-                  await peer.rpc.InviterInvitationService.admit({
-                    identityKey: this._signingContext.identityKey,
-                    deviceKey: this._signingContext.deviceKey,
-                    controlFeedKey: space.controlFeedKey,
-                    dataFeedKey: space.dataFeedKey
-                  });
+                    log('Try to admit member');
+                    await peer.rpc.InviterInvitationService.admit({
+                      identityKey: this._signingContext.identityKey,
+                      deviceKey: this._signingContext.deviceKey,
+                      controlFeedKey: space.controlFeedKey,
+                      dataFeedKey: space.dataFeedKey
+                    });
 
-                  done.wake();
-                  log('Invitee done');
-                } catch (err: any) {
-                  log.catch(err);
+                    done.wake();
+                    log('Invitee done');
+                  } catch (err: any) {
+                    log.catch(err);
+                  }
                 }
               }
-            }
-          },
-          port
-        });
+            },
+            port
+          });
 
-        await peer.open();
-        log('Invitee RPC open');
-      })])
+          await peer.open();
+          log('Invitee RPC open');
+        })
+      ])
     });
 
     await done.wait();

@@ -9,7 +9,7 @@ import { promiseTimeout } from '@dxos/async';
 import type { Party } from '@dxos/client';
 import { PublicKey } from '@dxos/keys';
 import { createProtocolFactory, NetworkManager, StarTopology } from '@dxos/network-manager';
-import { PluginRpc } from '@dxos/protocol-plugin-rpc';
+import { RpcPlugin } from '@dxos/protocol-plugin-rpc';
 import { schema } from '@dxos/protocols';
 import { BotFactoryService, BotPackageSpecifier } from '@dxos/protocols/proto/dxos/bot';
 import { createRpcClient, ProtoRpcPeer, RpcPort } from '@dxos/rpc';
@@ -62,10 +62,12 @@ export class BotFactoryClient {
         topic,
         peerId,
         topology: new StarTopology(topic),
-        protocol: createProtocolFactory(topic, peerId, [new PluginRpc(async (port) => {
-          log('Connected.');
-          resolve(port);
-        })])
+        protocol: createProtocolFactory(topic, peerId, [
+          new RpcPlugin(async (port) => {
+            log('Connected.');
+            resolve(port);
+          })
+        ])
       }).catch(err => log(err));
     });
 

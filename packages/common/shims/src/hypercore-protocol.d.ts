@@ -87,8 +87,6 @@ declare module 'hypercore-protocol' {
 
     constructor (initiator?: boolean, opts?: ProtocolStreamOptions);
 
-    fuck (): void
-
     open (key: any, handlers: ChannelHandlers): Channel
     close (discoveryKey: any): void
     destroy (error?: Error): void

@@ -15,7 +15,7 @@ import { TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { RpcPeer, createRpcServer, createRpcClient, RpcPort, ProtoRpcPeer } from '@dxos/rpc';
 import { afterTest } from '@dxos/testutils';
 
-import { PluginRpc } from './plugin-rpc';
+import { RpcPlugin } from './rpc-plugin';
 
 const signalContext = new MemorySignalManagerContext();
 
@@ -24,9 +24,13 @@ const createPeer = async (
   peerId: PublicKey,
   onConnect: (port: RpcPort, peerId: string) => void
 ) => {
-  const networkManager = new NetworkManager({ signalManager: new MemorySignalManager(signalContext), transportFactory: inMemoryTransportFactory });
+  const networkManager = new NetworkManager({
+    signalManager: new MemorySignalManager(signalContext),
+    transportFactory: inMemoryTransportFactory
+  });
+
   afterTest(() => networkManager.destroy());
-  const plugin = new PluginRpc(onConnect);
+  const plugin = new RpcPlugin(onConnect);
   await networkManager.joinProtocolSwarm({
     topic,
     peerId,
