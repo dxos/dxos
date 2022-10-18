@@ -27,7 +27,8 @@ module.exports = {
     optimizeDeps: {
       force: true,
       include: [
-        '@dxos/react-ui'
+        '@dxos/react-ui',
+        'storybook-dark-mode'
       ]
     },
     build: {

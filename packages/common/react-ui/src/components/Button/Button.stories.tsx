@@ -7,6 +7,7 @@ import React, { PropsWithChildren } from 'react';
 
 import { ButtonProps } from '../../props';
 import { templateForComponent } from '../../testing';
+import { Group } from '../Group/Group';
 import { Button } from './Button';
 
 export default {
@@ -15,7 +16,10 @@ export default {
 };
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
-  <div className='flex gap-4'>{children}</div>
+<>
+  <div className='flex gap-4 mb-4 px-5'>{children}</div>
+  <Group label={{ children: null }} elevation={5} className='flex gap-4 px-1'>{children}</Group>
+</>
 );
 
 const Template = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (

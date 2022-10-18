@@ -7,6 +7,7 @@ import React, { PropsWithChildren, ReactNode } from 'react';
 
 import { ButtonProps } from '../../props';
 import { buttonClassName } from '../../styles';
+import { useId } from '../../util/useId';
 
 export interface CompoundButtonProps extends ButtonProps {
   description?: ReactNode
@@ -22,6 +23,7 @@ export const CompoundButton = ({
   ...buttonProps
 }: PropsWithChildren<CompoundButtonProps>) => {
   const variant = buttonProps.variant || 'default';
+  const labelId = useId('compoundButton-label');
   return (
     <button
       {...buttonProps}
@@ -30,6 +32,7 @@ export const CompoundButton = ({
         'flex items-center gap-4',
         buttonProps.className
       )}
+      aria-labelledby={labelId}
     >
       {before && (
         <div role='none' className='grow-0'>
@@ -37,7 +40,7 @@ export const CompoundButton = ({
         </div>
       )}
       <div role='none' className='grow flex flex-col gap-1 text-left'>
-        <p>{children}</p>
+        <p id={labelId}>{children}</p>
         {description && (
           <p
             className={cx(
