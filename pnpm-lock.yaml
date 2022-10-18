@@ -572,7 +572,7 @@ importers:
       debug: ^4.3.3
       faker: ^5.5.3
       from2: ^2.3.0
-      hypercore: ^9.12.0
+      hypercore: 9.10.0
       pify: ~5.0.0
       readable-stream: ^3.6.0
       tempy: ~1.0.1
@@ -589,7 +589,7 @@ importers:
       assert: 2.0.0
       debug: 4.3.4
       from2: 2.3.0
-      hypercore: 9.12.0
+      hypercore: 9.10.0
       pify: 5.0.0
       readable-stream: 3.6.0
       util: 0.12.4
@@ -608,6 +608,7 @@ importers:
 
   packages/common/hypercore:
     specifiers:
+      '@dxos/async': workspace:*
       '@dxos/crypto': workspace:*
       '@dxos/keys': workspace:*
       '@dxos/random-access-storage': workspace:*
@@ -622,17 +623,18 @@ importers:
       chai-as-promised: ^7.1.1
       debug: ^4.3.3
       faker: ^5.5.3
-      hypercore: ^9.12.0
+      hypercore: 9.10.0
       hypercore-protocol: ^8.0.7
       pify: ~5.0.0
       random-access-memory: ^4.1.0
       streamx: ^2.12.5
     dependencies:
+      '@dxos/async': link:../async
       '@dxos/crypto': link:../crypto
       '@dxos/keys': link:../keys
       '@dxos/random-access-storage': link:../random-access-storage
       assert: 2.0.0
-      hypercore: 9.12.0
+      hypercore: 9.10.0
       hypercore-protocol: 8.0.7
       pify: 5.0.0
       streamx: 2.12.5
@@ -22156,8 +22158,8 @@ packages:
       streamx: 2.12.5
     dev: false
 
-  /hypercore/9.12.0:
-    resolution: {integrity: sha512-wIlM4Iwl618NcmsY+1O/X08Cx/bY6ti3LXmQhRnPZFGQPqAeX0x53hASckW082IIAVWzXD3zcmREw5yEINzb4w==}
+  /hypercore/9.10.0:
+    resolution: {integrity: sha512-vMaUNcYvtiiXbnjjhj3YbBK/KZEofXfrajiJxJ8rlWVXSyh2fIJcyxTJewfh58IW5bVYNrBPui/CpPyBZiXuZQ==}
     dependencies:
       abstract-extension: 3.1.1
       atomic-batcher: 1.0.2
