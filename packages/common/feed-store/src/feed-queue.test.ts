@@ -3,21 +3,19 @@
 //
 
 import { expect } from 'chai';
-import faker from 'faker';
 
-import { latch, promiseTimeout, sleep } from '@dxos/async';
-import { log } from '@dxos/log';
+import { latch, promiseTimeout } from '@dxos/async';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
 import { createFeedWriter } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
-describe('FeedQueue', function () {
+describe.only('FeedQueue', function () {
   const builder = new TestItemBuilder();
   const factory = builder.createFeedFactory();
 
-  it.only('responds immediately when feed is appended', async function () {
+  it('responds immediately when feed is appended', async function () {
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
@@ -25,127 +23,78 @@ describe('FeedQueue', function () {
     const queue = new FeedQueue<any>(feed);
     await queue.open();
 
-    const [done, readAll] = latch();
-
     const numBlocks = 10;
+    const [done, received] = latch({ count: numBlocks });
 
     {
+      // Read blocks.
       setTimeout(async () => {
-        expect(feed.properties.length).to.eq(0);
+        expect(queue.peek()).to.be.undefined;
         expect(queue.length).to.eq(0);
+        expect(feed.properties.length).to.eq(0);
+
         const next = await promiseTimeout(queue.pop(), 500);
         expect(next).not.to.be.undefined;
+        received();
 
         // Check called immediately (i.e., after first block is written).
-        expect(feed.properties.length).to.eq(1);
         expect(queue.length).to.eq(1);
+        expect(feed.properties.length).to.eq(1);
 
-        for await (const _ of Array.from(Array(9))) {
+        for await (const _ of Array.from(Array(numBlocks - 1))) {
           await queue.pop();
-          if (queue.index === numBlocks) {
-            readAll();
-          }
+          const i = received();
+          expect(i).to.eq(queue.index);
         }
       });
 
+      // Write blocks.
       setTimeout(async () => {
         await builder.generator.writeBlocks(createFeedWriter(feed), { count: numBlocks });
         expect(feed.properties.length).to.eq(numBlocks);
         expect(queue.length).to.eq(numBlocks);
-      }, 100);
+      }, 100); // Make sure reader waits.
     }
 
     await done();
     await queue.close();
   });
 
-  it('peaks and pops from a queue', async function () {
+  it('peeks ahead', async function () {
     const key = await builder.keyring.createKey();
     const feed = new FeedWrapper(factory.createFeed(key, { writable: true }), key);
     await feed.open();
 
-    const start = 5;
-    const numBlocks = 25;
-    const numChunks = 3;
-
-    // Create queue.
     const queue = new FeedQueue<any>(feed);
-    await queue.open({ start });
-    expect(queue.opened).to.be.true;
+    await queue.open();
 
-    // Write blocks in batches.
+    const numBlocks = 10;
+    const [done, received] = latch({ count: numBlocks });
+
     {
-      const writer = createFeedWriter(feed);
+      // Write blocks.
+      await builder.generator.writeBlocks(createFeedWriter(feed), { count: numBlocks });
+      expect(feed.properties.length).to.eq(numBlocks);
+      expect(queue.length).to.eq(numBlocks);
 
-      setTimeout(async () => {
-        let count = 0;
-        const batch = async (n: number) => {
-          log(`batch[${n}]`);
-          count += await builder.generator.writeBlocks(writer, {
-            count: n,
-            delay: {
-              min: 0,
-              max: 100
-            }
-          });
-        };
+      // Peek and read first block.
+      const peek = queue.peek();
+      const next = await queue.pop();
+      received();
+      expect(peek).to.eq(next);
+      expect(queue.index).to.eq(1);
+      expect(queue.length).to.eq(numBlocks);
+      expect(feed.properties.length).to.eq(numBlocks);
 
-        const size = Math.floor(numBlocks / numChunks);
-        for (const i of Array.from(Array(numChunks)).keys()) {
-          const last = i === numChunks - 1;
-          await batch(last ? Math.max(size, numBlocks - count) : size);
-          if (!last) {
-            await sleep(faker.datatype.number({ min: 0, max: 50 }));
-          }
-        }
-
-        expect(feed.properties.length).to.eq(numBlocks);
-      });
+      // Read the rest.
+      for await (const _ of Array.from(Array(numBlocks - 1))) {
+        await queue.pop();
+        const i = received();
+        expect(i).to.eq(queue.index);
+      }
     }
 
-    // Read.
-    const [receivedAll, received] = latch({ count: numBlocks - start });
-    setTimeout(async () => {
-      {
-        const { seq, data } = await queue.peek();
-        expect(seq).to.eq(start);
-        expect(data).not.to.be.undefined;
-      }
-
-      {
-        const { seq, data } = await queue.peek();
-        expect(seq).to.eq(start);
-        expect(data).not.to.be.undefined;
-      }
-
-      {
-        const { seq, data } = await queue.pop();
-        expect(seq).to.eq(start);
-        expect(data).not.to.be.undefined;
-        received();
-      }
-
-      {
-        const { seq, data } = await queue.peek();
-        expect(seq).to.eq(start + 1);
-        expect(data).not.to.be.undefined;
-      }
-
-      // Read until end.
-      {
-        for (let i = start + 1; i < numBlocks; i++) {
-          const { seq, data } = await queue.pop();
-          log('<<', { seq, data: JSON.stringify(data) });
-          await sleep(faker.datatype.number({ min: 0, max: 50 }));
-          received();
-        }
-      }
-    });
-
-    await receivedAll();
-
-    // Close.
+    await done();
     await queue.close();
-    expect(queue.opened).to.be.false;
-  }).timeout(5_000);
+  });
 });

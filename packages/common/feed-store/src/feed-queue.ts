@@ -161,6 +161,9 @@ export class FeedQueue<T = {}> {
     let block = this.peek();
     if (!block) {
       block = await this._trigger.wait();
+    }
+
+    if (block) {
       this._next?.();
     }
 
