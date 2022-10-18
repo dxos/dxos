@@ -111,7 +111,7 @@ jobs:
       - run:
           name: Deploy HALO
           working_directory: ./packages/apps/halo-app
-          command: ../../.circleci/scripts/upload-codecov.sh
+          command: ../../../.circleci/scripts/upload-codecov.sh
           environment:
             NODE_OPTIONS: --max_old_space_size=3072
 
