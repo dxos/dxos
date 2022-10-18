@@ -40,4 +40,4 @@ alias ci="px run-many --target build && px run-many --target test && px run-many
 #
 # Clean and build everything (frequently added clean-up).
 #
-alias fak="git pull && git clean -xdf && pnpm i && px run-many --target build"
+alias fak="git pull && git clean -xdf -e .idea && pnpm i && px run-many --target build"

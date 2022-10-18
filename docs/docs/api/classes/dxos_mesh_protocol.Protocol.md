@@ -14,7 +14,7 @@ Wraps a hypercore-protocol object.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`ProtocolOptions`](../interfaces/dxos_mesh_protocol.ProtocolOptions.md) |
+| `options` | [`ProtocolStreamOptions`](../interfaces/dxos_mesh_protocol.ProtocolStreamOptions.md) |
 
 #### Defined in
 
@@ -162,7 +162,7 @@ ___
 
 ### \_streamOptions
 
- `Private` `Readonly` **\_streamOptions**: `undefined` \| `ProtocolStreamCtorOpts`
+ `Private` `Readonly` **\_streamOptions**: `undefined` \| `ProtocolStreamOptions`
 
 #### Defined in
 
@@ -310,11 +310,11 @@ ___
 
 ### streamOptions
 
-`get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamCtorOpts`
+`get` **streamOptions**(): { `id`: `any`  } & `ProtocolStreamOptions`
 
 #### Returns
 
-{ `id`: `any`  } & `ProtocolStreamCtorOpts`
+{ `id`: `any`  } & `ProtocolStreamOptions`
 
 #### Defined in
 

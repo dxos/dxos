@@ -4,7 +4,7 @@
 
 import debug from 'debug';
 import eos from 'end-of-stream';
-import ProtocolStream, { ProtocolStreamCtorOpts } from 'hypercore-protocol';
+import ProtocolStream, { ProtocolStreamOptions } from 'hypercore-protocol';
 import assert from 'node:assert';
 
 import { Event, synchronized } from '@dxos/async';
@@ -23,15 +23,17 @@ const log = debug('dxos:protocol');
 
 const kProtocol = Symbol('dxos.mesh.protocol');
 
-export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtorOpts {
+export interface ExtendedProtocolStreamOptions extends ProtocolStreamOptions {
   /**
-   * You can use this to detect if you connect to yourself.
+   * Used to detect if attempting to connect to self.
    */
   id?: Buffer
+
   /**
-   * Signal to the other peer that you want to keep this stream open forever.
+   * Keep the ProtocolStream open forever.
    */
   live?: boolean
+
   /**
    * Match the discovery_key with a public_key to do the handshake.
    */
@@ -39,21 +41,19 @@ export interface ProtocolStreamOptions extends ProtocolStream.ProtocolStreamCtor
 }
 
 export interface ProtocolOptions {
-  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-stream--protocoloptions
    */
-  streamOptions?: ProtocolStreamOptions
-
-  discoveryKey?: Buffer
-
-  initTimeout?: number
+  streamOptions?: ExtendedProtocolStreamOptions
 
   /**
    * Define a codec to encode/decode messages from extensions.
    */
   codec?: Codec<any>
 
+  discoveryKey?: Buffer
+  discoveryToPublicKey?: (discoveryKey: Buffer) => (Buffer | undefined)
+  initTimeout?: number
   initiator: boolean
   userSession?: Record<string, any>
 }
@@ -71,25 +71,25 @@ export class Protocol {
   readonly handshake = new Event<this>();
 
   private readonly _discoveryToPublicKey: ProtocolOptions['discoveryToPublicKey'];
-  private readonly _streamOptions: ProtocolStreamCtorOpts | undefined;
+  private readonly _streamOptions: ExtendedProtocolStreamOptions | undefined;
   private readonly _initTimeout: number;
   private readonly _initiator!: boolean;
   private readonly _discoveryKey?: Buffer;
 
-  private _extensionInit: ExtensionInit;
-  private _init = false;
-  private _connected = false;
-  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
-
   /**
    * Protocol extensions.
    */
-  private _extensionMap = new Map<string, Extension>();
+  private readonly _extensionMap = new Map<string, Extension>();
 
   /**
    * https://github.com/mafintosh/hypercore-protocol
    */
   private readonly _stream: ProtocolStream;
+
+  private _extensionInit: ExtensionInit;
+  private _init = false;
+  private _connected = false;
+  private _handshakes: ((protocol: Protocol) => Promise<void>)[] = [];
 
   /**
    * https://github.com/mafintosh/hypercore-protocol#var-feed--streamfeedkey
@@ -102,7 +102,12 @@ export class Protocol {
   private _context: Record<string, any> = {};
 
   constructor (options: ProtocolOptions = { initiator: false }) {
-    const { discoveryToPublicKey = key => key, streamOptions, initTimeout = 5 * 1000 } = options;
+    const {
+      discoveryToPublicKey = key => key,
+      streamOptions,
+      initTimeout = 5 * 1000
+    } = options;
+
     this._discoveryToPublicKey = discoveryToPublicKey;
     this._streamOptions = streamOptions;
     this._initTimeout = initTimeout;
@@ -119,7 +124,7 @@ export class Protocol {
           await this._initExtensions(options.userSession);
           this.extensionsInitialized.emit();
 
-          await this.streamOptions?.onhandshake?.(this);
+          await this.streamOptions?.onhandshake?.(this as any); // TODO(burdon): Cast to this.
           await this._handshakeExtensions();
           this.extensionsHandshake.emit();
         } catch (err: any) {
@@ -168,8 +173,10 @@ export class Protocol {
     return Array.from(this._extensionMap.keys());
   }
 
-  get streamOptions () {
-    return Object.assign({}, { id: this._stream!.publicKey }, this._streamOptions);
+  get streamOptions (): ExtendedProtocolStreamOptions {
+    return Object.assign({}, this._streamOptions, {
+      id: this._stream!.publicKey
+    });
   }
 
   get connected () {

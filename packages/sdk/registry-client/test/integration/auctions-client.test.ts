@@ -73,7 +73,6 @@ describe('Auctions Client', function () {
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
       await expect(auctionsApi.bidAuction(auctionName, 1000001)).to.be.fulfilled;
-
       await expect(auctionsApi.bidAuction(auctionName, 1000000)).to.be.rejectedWith(expectedError);
     });
   });
@@ -83,18 +82,15 @@ describe('Auctions Client', function () {
       const auctionName = Math.random().toString(36).substring(2);
 
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
-
       await expect(auctionsApi.closeAuction(auctionName)).to.be.eventually.rejected;
       await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.rejected;
     });
 
     it('Can claim an auction (after force-closing it)', async function () {
       const auctionName = Math.random().toString(36).substring(2);
-
       await expect(auctionsApi.createAuction(auctionName, 100000)).to.be.fulfilled;
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
-
       await expect(auctionsApi.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
 
@@ -109,7 +105,6 @@ describe('Auctions Client', function () {
       await expect(winner.bidAuction(auctionName, 100002)).to.be.fulfilled;
 
       await auctionsApi.forceCloseAuction(auctionName, sudoer);
-
       await expect(loser.claimAuction(auctionName, account)).to.be.eventually.rejected;
       await expect(winner.claimAuction(auctionName, account)).to.be.eventually.fulfilled;
     });
