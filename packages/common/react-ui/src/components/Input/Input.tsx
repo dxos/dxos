@@ -11,7 +11,13 @@ import React, {
   useTransition
 } from 'react';
 
-import { defaultDisabled, defaultFocus } from '../../styles';
+import {
+  defaultDescription,
+  defaultDisabled,
+  defaultFocus,
+  defaultHover,
+  defaultPlaceholder
+} from '../../styles';
 import { useId } from '../../util/useId';
 
 export interface InputProps
@@ -73,7 +79,9 @@ export const Input = ({
         id={inputId}
         className={cx(
           defaultFocus,
-          'bg-neutral-50/50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white',
+          defaultPlaceholder,
+          defaultHover({ disabled }),
+          'bg-white/50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:border-neutral-600 dark:text-white',
           disabled && defaultDisabled
         )}
         {...(required && { required: true })}
@@ -84,7 +92,7 @@ export const Input = ({
         onChange={onInternalChange}
       />
       {description && (
-        <p className='mt-2 text-sm text-gray-500 dark:text-gray-400'>
+        <p className={cx(defaultDescription, 'mt-2')}>
           {description}
         </p>
       )}

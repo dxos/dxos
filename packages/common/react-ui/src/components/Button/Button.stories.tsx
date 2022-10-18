@@ -17,7 +17,7 @@ export default {
 
 const Container = ({ children }: PropsWithChildren<{}>) => (
 <>
-  <div className='flex gap-4 mb-4 px-5'>{children}</div>
+  <Group label={{ children: null }} elevation={0} className='flex gap-4 px-1 mb-4'>{children}</Group>
   <Group label={{ children: null }} elevation={5} className='flex gap-4 px-1'>{children}</Group>
 </>
 );
