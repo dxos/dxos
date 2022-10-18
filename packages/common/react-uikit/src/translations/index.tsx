@@ -6,7 +6,8 @@ import i18Next from 'i18next';
 import React, { PropsWithChildren, ReactNode, Suspense } from 'react';
 import {
   initReactI18next,
-  useTranslation as useNaturalTranslation
+  useTranslation as useNaturalTranslation,
+  TFunction as NaturalTFunction
 } from 'react-i18next';
 
 import { Loading } from '@dxos/react-ui';
@@ -14,6 +15,8 @@ import { Loading } from '@dxos/react-ui';
 import * as enUS from './en-US';
 
 export const useTranslation = useNaturalTranslation;
+
+export type TFunction = NaturalTFunction
 
 export const resources = {
   'en-US': enUS
