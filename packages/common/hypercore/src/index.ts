@@ -5,5 +5,4 @@
 export * from './crypto';
 export * from './defaults';
 export * from './hypercore-factory';
-export * from './testing';
 export * from './streams';

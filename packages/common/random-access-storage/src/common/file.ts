@@ -3,11 +3,7 @@
 //
 
 import pify from 'pify';
-import type {
-  FileStat,
-  RandomAccessStorage,
-  RandomAccessStorageProperties
-} from 'random-access-storage';
+import type { FileStat, RandomAccessStorage, RandomAccessStorageProperties } from 'random-access-storage';
 
 import { StorageType } from './storage';
 
@@ -16,21 +12,22 @@ import { StorageType } from './storage';
  * https://github.com/random-access-storage/random-access-storage
  */
 export interface File extends RandomAccessStorageProperties {
-  // TODO(burdon): Document different implementations.
   readonly destroyed: boolean
-  readonly filename: string
+
+  // TODO(burdon): Can we remove these since they are not standard across implementations?
   readonly directory: string
+  readonly filename: string
 
   // Added by factory.
   readonly type: StorageType
   readonly native: RandomAccessStorage
 
-  write(offset: number, data: Buffer): Promise<void>
-  read(offset: number, size: number): Promise<Buffer>
-  del(offset: number, size: number): Promise<void>
-  stat(): Promise<FileStat>
-  close(): Promise<Error>
-  destroy(): Promise<Error>
+  write (offset: number, data: Buffer): Promise<void>
+  read (offset: number, size: number): Promise<Buffer>
+  del (offset: number, size: number): Promise<void>
+  stat (): Promise<FileStat>
+  close (): Promise<Error>
+  destroy (): Promise<Error>
 
   // Not supported in node, memory.
   truncate? (offset: number): Promise<void>
@@ -67,8 +64,5 @@ export const wrapFile = (native: RandomAccessStorage, type: StorageType): File =
     'truncate'
   ]);
 
-  return Object.assign(file, {
-    type,
-    native
-  });
+  return Object.assign(file, { type, native });
 };
