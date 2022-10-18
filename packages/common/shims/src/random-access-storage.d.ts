@@ -37,7 +37,7 @@ declare module 'random-access-storage' {
   }
 
   export interface RandomAccessStorage extends RandomAccessStorageProperties {
-    write (offset: number, data: Buffer, cb: Callback<any>): void
+    write (offset: number, data: Buffer, cb?: Callback<any>): void
     read (offset: number, size: number, cb: Callback<Buffer>): void
     del (offset: number, size: number, cb: Callback<any>): void
     stat (cb: Callback<FileStat>): void

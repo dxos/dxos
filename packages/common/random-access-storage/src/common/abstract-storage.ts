@@ -52,23 +52,21 @@ export abstract class AbstractStorage implements Storage {
   protected getOrCreateFile (path: string, filename: string, opts?: any): File {
     const fullPath = join(path, filename);
 
-    let native;
     let file = this._getFileIfExists(fullPath);
     if (file) {
       if (!file.closed) {
         return file;
       }
 
-      native = this._openFile(file.native);
+      file = this._openFile(file);
+    } 
+
+    if (!file) {
+      file = this._createFile(path, filename, opts);
     }
 
-    if (!native) {
-      native = this._createFile(path, filename, opts);
-    }
-
-    file = wrapFile(native, this.type);
-    this._files.set(fullPath, file);
-    return file;
+    this._files.set(fullPath, file!);
+    return file!;
   }
 
   protected _destroy (): Promise<void> | undefined {
@@ -78,11 +76,11 @@ export abstract class AbstractStorage implements Storage {
   /**
    * Attempt to reopen file.
    */
-  protected _openFile (file: RandomAccessStorage): RandomAccessStorage | undefined {
+  protected _openFile (file: File): File | undefined {
     return undefined;
   }
 
-  protected abstract _createFile (path: string, filename: string, opts?: any): RandomAccessStorage;
+  protected abstract _createFile (path: string, filename: string, opts?: any): File | undefined;
 
   private _getFileIfExists (filename: string): File | undefined {
     if (this._files.has(filename)) {

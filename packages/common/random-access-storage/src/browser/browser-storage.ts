@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import type { RandomAccessStorage } from 'random-access-storage';
 
-import { AbstractStorage } from '../common';
+import { AbstractStorage, File, wrapFile } from '../common';
 
 /**
  * Base class for random access files based on IDB.
@@ -18,9 +18,9 @@ export abstract class BrowserStorage extends AbstractStorage {
     this._fileStorage = this._createFileStorage(path);
   }
 
-  protected _createFile (path: string, filename: string): RandomAccessStorage {
+  protected _createFile (path: string, filename: string): File {
     const fullPath = join(path, filename);
-    return this._fileStorage(fullPath);
+    return wrapFile(this._fileStorage(fullPath));
   }
 
   protected abstract _createFileStorage (path: string): (filename: string, opts?: {}) => RandomAccessStorage;

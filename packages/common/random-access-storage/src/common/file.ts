@@ -39,7 +39,7 @@ export interface File extends RandomAccessStorageProperties {
   clone?(): RandomAccessStorage
 }
 
-const pifyFields = (object: any, type: StorageType, fields: string[]) => {
+const pifyFields = (object: any, fields: string[]) => {
   for (const field of fields) {
     if (!object[field]) {
       // TODO(burdon): Suppress warning and throw error if used.
@@ -56,8 +56,8 @@ const pifyFields = (object: any, type: StorageType, fields: string[]) => {
  * Construct async File wrapper.
  * NOTE: This is safe since these are interface methods only (not used internally).
  */
-export const wrapFile = (native: RandomAccessStorage, type: StorageType): File => {
-  const file = pifyFields(native, type, [
+export const wrapFile = (native: RandomAccessStorage): File => {
+  const file = pifyFields(native, [
     'write',
     'read',
     'del',
@@ -68,7 +68,6 @@ export const wrapFile = (native: RandomAccessStorage, type: StorageType): File =
   ]);
 
   return Object.assign(file, {
-    type,
     native
   });
 };
