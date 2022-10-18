@@ -17,6 +17,7 @@
   "dependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-uikit": "workspace:*",

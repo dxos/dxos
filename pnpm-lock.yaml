@@ -1978,6 +1978,7 @@ importers:
     specifiers:
       '@dxos/client': workspace:*
       '@dxos/config': workspace:*
+      '@dxos/debug': workspace:*
       '@dxos/react-client': workspace:*
       '@dxos/react-ui': workspace:*
       '@dxos/react-uikit': workspace:*
@@ -2003,6 +2004,7 @@ importers:
     dependencies:
       '@dxos/client': link:../../sdk/client
       '@dxos/config': link:../../sdk/config
+      '@dxos/debug': link:../../common/debug
       '@dxos/react-client': link:../../sdk/react-client
       '@dxos/react-ui': link:../../common/react-ui
       '@dxos/react-uikit': link:../../common/react-uikit

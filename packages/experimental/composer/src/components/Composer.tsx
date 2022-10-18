@@ -16,14 +16,14 @@ import { useTextItem } from '../context';
 export const Composer = () => {
   const { item } = useTextItem();
 
-  useEffect(() => {
-    item && new WebrtcProvider(item.id, item.model.doc);
-  }, [item]);
+  // useEffect(() => {
+  //   item && new WebrtcProvider(item.id, item.model.doc);
+  // }, [item]);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ history: false }),
-      Collaboration.configure({ document: item?.model.doc })
+      Collaboration.configure({ document: item?.model.doc, field: 'content' })
     ],
     editorProps: {
       attributes: {
