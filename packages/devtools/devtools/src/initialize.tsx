@@ -31,9 +31,11 @@ const Devtools = ({ clientReady }: { clientReady: Event<Client> }) => {
         <CssBaseline />
         <FullScreen>
           <Loader loading={!client} label='Loading DXOS Client...' />
-          <ClientProvider client={client}>
-            <PanelsContainer sections={sections} />
-          </ClientProvider>
+          {client && (
+            <ClientProvider client={client}>
+              <PanelsContainer sections={sections} />
+            </ClientProvider>
+          )}
         </FullScreen>
       </ThemeProvider>
     </ErrorBoundary>
