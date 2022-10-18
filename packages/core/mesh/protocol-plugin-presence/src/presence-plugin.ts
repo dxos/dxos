@@ -19,37 +19,37 @@ import { Alive } from '@dxos/protocols/proto/dxos/mesh/presence';
 
 const log = debug('dxos:mesh:presence');
 
-export interface PresenceOptions {
+export type PresenceOptions = {
   peerTimeout?: number
   metadata?: any
 }
 
-interface GraphNode {
+type GraphNode = {
   metadata?: any
   lastUpdate?: number
 }
 
-interface Peer {
+type Peer = {
   id: Buffer
   protocol: Protocol
 }
 
-interface ConnectionEventDetails {
+type ConnectionEventDetails = {
   fromId: Buffer
   toId: Buffer
 }
 
-interface ProtocolMessageEventDetails {
+type ProtocolMessageEventDetails = {
   protocol: Protocol
   message: any
 }
 
-interface NeighborJoinedEventDetails {
+type NeighborJoinedEventDetails = {
   peerId: string
   protocol: Protocol
 }
 
-interface GraphUpdatedEventDetails {
+type GraphUpdatedEventDetails = {
   graph: any
   changes: any
 }
@@ -58,9 +58,8 @@ interface GraphUpdatedEventDetails {
  * Presence protocol plugin.
  */
 export class PresencePlugin {
-  static EXTENSION_NAME = 'dxos.mesh.protocol.presence';
+  static readonly EXTENSION = 'dxos.mesh.protocol.presence';
 
-  private extensionsCreated = 0;
   private readonly _peerTimeout: number;
   private readonly _limit = pLimit(1);
   private readonly _codec = schema.getCodecForType('dxos.mesh.presence.Alive');
@@ -77,12 +76,15 @@ export class PresencePlugin {
   private readonly _neighborAlreadyConnected = new Event<string>();
   private readonly _neighborJoined = new Event<NeighborJoinedEventDetails>();
   private readonly _neighborLeft = new Event<string>();
+
   readonly graphUpdated = new Event<GraphUpdatedEventDetails>();
 
   private _metadata: any;
   private _graph!: Graph<GraphNode, any> & EventedType;
   private _broadcast!: Broadcast<Peer>;
   private _scheduler: NodeJS.Timeout | null = null;
+
+  private _extensionsCreated = 0; // TODO(burdon): Debug only?
 
   constructor (
     private readonly _peerId: Buffer,
@@ -132,14 +134,14 @@ export class PresencePlugin {
    */
   createExtension (): Extension {
     this.start();
-    this.extensionsCreated++;
+    this._extensionsCreated++;
 
-    return new Extension(PresencePlugin.EXTENSION_NAME)
+    return new Extension(PresencePlugin.EXTENSION)
       .setInitHandler(async (protocol) => this._addPeer(protocol))
       .setMessageHandler(async (protocol, chunk) => this._peerMessageHandler(protocol, chunk))
       .setCloseHandler(async (protocol) => {
         await this._removePeer(protocol);
-        if (--this.extensionsCreated === 0) {
+        if (--this._extensionsCreated === 0) {
           // The last extension got closed so the plugin can be stopped.
           await this.stop();
         }
@@ -239,7 +241,7 @@ export class PresencePlugin {
         });
       },
       send: async (packet, { protocol }) => {
-        const presence = protocol.getExtension(PresencePlugin.EXTENSION_NAME);
+        const presence = protocol.getExtension(PresencePlugin.EXTENSION);
         assert(presence);
         await presence.send(packet, { oneway: true });
       },

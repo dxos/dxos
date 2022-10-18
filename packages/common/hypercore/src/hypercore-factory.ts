@@ -7,27 +7,18 @@ import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
 import type { RandomAccessStorageConstructor } from 'random-access-storage';
 
-// import { sha256 } from '@dxos/crypto';
-
-import { wrapFeed, HypercoreFeed } from './hypercore-feed';
-
 /**
- * Hypercore wrapper factory.
+ * Creates feeds with default properties.
  */
 export class HypercoreFactory {
   constructor (
-    private readonly _storage: RandomAccessStorageConstructor
+    private readonly _storage: RandomAccessStorageConstructor,
+    private readonly _options?: HypercoreOptions
   ) {
     assert(this._storage);
   }
 
-  /**
-   * Creates a pify wrapped hypercore object.
-   */
-  create (publicKey?: Buffer, options?: HypercoreOptions): HypercoreFeed {
-    // TODO(burdon): Make this pluggable.
-    // const key = publicKey ? Buffer.from(sha256(publicKey.toString('hex'))) : undefined;
-    const feed: Hypercore = hypercore(this._storage, publicKey, options);
-    return wrapFeed(feed);
+  createFeed (publicKey?: Buffer, options?: HypercoreOptions): Hypercore {
+    return hypercore(this._storage, publicKey, Object.assign({}, this._options, options));
   }
 }
