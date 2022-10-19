@@ -9,12 +9,8 @@ import { definitions } from './definitions';
 import { ConfigPluginOpts } from './types';
 
 // TODO(wittjosiah): Test config plugin properly injects config when used with loaders.
-export const ConfigPlugin = ({
-  configPath,
-  dynamic = false,
-  publicUrl = ''
-}: ConfigPluginOpts = {}): Plugin => {
-  dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : dynamic;
+export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
+  const dynamic = process.env.CONFIG_DYNAMIC === 'true' ? true : (options.dynamic ?? false);
   assert(typeof dynamic === 'boolean', `dynamic: Expected boolean, got: ${typeof dynamic}`);
 
   return {
@@ -32,7 +28,7 @@ export const ConfigPlugin = ({
 
       onLoad({ filter: /^dxos-config-globals$/, namespace: 'dxos-config' }, () => ({
         resolveDir: process.cwd(),
-        contents: Object.entries(definitions({ configPath, dynamic, publicUrl }))
+        contents: Object.entries(definitions({ ...options, dynamic }))
           .map(([key, value]) => `globalThis.${key} = ${JSON.stringify(value)};`)
           .join('\n')
       }));

@@ -4,6 +4,7 @@
     "async": "packages/common/async",
     "beast": "tools/beast",
     "bare-template": "packages/apps/templates/bare-template",
+    "bender-bot": "packages/bots/bender-bot",
     "bot-factory-client": "packages/bots/bot-factory-client",
     "botkit": "packages/bots/botkit",
     "broadcast": "packages/core/mesh/broadcast",
