@@ -3,6 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -11,18 +12,39 @@ import { dxosPlugin } from '@dxos/vite-plugin';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '', // Ensures relative path to assets.
+  server: {
+    host: true
+  },
   optimizeDeps: {
     force: true,
     include: [
+      '@dxos/async',
       '@dxos/client',
+      '@dxos/client-services',
+      '@dxos/codec-protobuf',
       '@dxos/config',
+      '@dxos/credentials',
+      '@dxos/debug',
+      '@dxos/devtools-mesh',
+      '@dxos/feed-store',
+      '@dxos/keys',
+      '@dxos/messaging',
+      '@dxos/messenger-model',
+      '@dxos/model-factory',
+      '@dxos/network-manager',
+      '@dxos/object-model',
+      '@dxos/protocols',
+      '@dxos/react-async',
       '@dxos/react-client',
       '@dxos/react-components',
-      '@dxos/react-toolkit'
+      '@dxos/react-registry-client',
+      '@dxos/react-toolkit',
+      '@dxos/registry-client',
+      '@dxos/rpc',
+      '@dxos/text-model'
     ]
   },
   build: {
-    outDir: 'out/example/app/hello',
     commonjsOptions: {
       include: [
         /packages/,
@@ -31,18 +53,19 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(),
+    dxosPlugin(__dirname),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // TODO(wittjosiah): Bundle size is massive.
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000
       },
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Hello DXOS',
-        short_name: 'Hello',
-        description: 'DXOS Hello World Application',
+        name: 'DXOS Devtools',
+        short_name: 'Devtools',
+        description: 'DXOS Devtools Application',
         theme_color: '#ffffff',
         icons: [
           {
@@ -58,5 +81,8 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  worker: {
+    plugins: [dxosPlugin()]
+  }
 });

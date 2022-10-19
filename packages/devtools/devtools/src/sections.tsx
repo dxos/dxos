@@ -13,7 +13,7 @@ import {
   FilterTiltShift as SwarmIcon,
   Group as PartiesIcon,
   List as FeedsIcon,
-  AppRegistration as RegistryIcon,
+  // AppRegistration as RegistryIcon,
   Router as SignalIcon,
   Settings as ConfigIcon,
   SettingsBackupRestore as SnapshotsIcon,
@@ -31,7 +31,7 @@ import {
   // NetworkPanel,
   PartiesPanel,
   ProfilePanel,
-  RegistryPanel,
+  // RegistryPanel,
   RpcTracePanel,
   Section,
   SignalPanel,
@@ -135,17 +135,17 @@ export const sections: Section[] = [
       }
     ]
   },
-  {
-    title: 'DXNS',
-    items: [
-      {
-        id: 'dxns.registry',
-        title: 'Registry',
-        icon: <RegistryIcon />,
-        panel: <RegistryPanel />
-      }
-    ]
-  },
+  // {
+  //   title: 'DXNS',
+  //   items: [
+  //     {
+  //       id: 'dxns.registry',
+  //       title: 'Registry',
+  //       icon: <RegistryIcon />,
+  //       panel: <RegistryPanel />
+  //     }
+  //   ]
+  // },
   {
     title: 'DEBUG',
     items: [
