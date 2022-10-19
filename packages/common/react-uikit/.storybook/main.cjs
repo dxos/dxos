@@ -28,7 +28,8 @@ module.exports = {
       force: true,
       include: [
         '@dxos/react-ui',
-        'storybook-dark-mode'
+        'storybook-dark-mode',
+        'i18next'
       ]
     },
     build: {

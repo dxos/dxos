@@ -6,6 +6,7 @@ import cx from 'classnames';
 import React, {
   ChangeEvent,
   ReactNode,
+  ComponentProps,
   useCallback,
   useState,
   useTransition
@@ -20,8 +21,13 @@ import {
 } from '../../styles';
 import { useId } from '../../util/useId';
 
+export enum InputSize {
+  md = 'md',
+  lg = 'lg'
+}
+
 export interface InputProps
-  extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange'> {
+  extends Omit<ComponentProps<'input'>, 'value' | 'onChange' | 'size'> {
   label: ReactNode
   labelVisuallyHidden?: boolean
   description?: ReactNode
@@ -29,21 +35,28 @@ export interface InputProps
   initialValue?: string
   onChange?: (value: string) => void
   disabled?: boolean
+  size?: InputSize
 }
+
+const sizeMap = new Map<InputSize, string>([
+  [InputSize.md, ''],
+  [InputSize.lg, 'text-base']
+]);
 
 export const Input = ({
   label,
   labelVisuallyHidden,
-  type,
   placeholder,
   description,
   required,
   initialValue,
   onChange,
   disabled,
-  ...props
+  className,
+  size,
+  ...inputProps
 }: InputProps) => {
-  const inputId = useId('input');
+  const inputId = inputProps.id || useId('input');
   const descriptionId = useId('input-description');
 
   const [_isPending, startTransition] = useTransition();
@@ -64,23 +77,24 @@ export const Input = ({
   );
 
   return (
-    <div {...props} role='none'>
+    <div className={cx('my-4', className)} role='none'>
       <label
         htmlFor={inputId}
         className={cx(
-          'block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300',
+          'block mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-300',
           labelVisuallyHidden && 'sr-only'
         )}
       >
         {label}
       </label>
       <input
-        type={type}
         id={inputId}
+        {...inputProps}
         className={cx(
           defaultFocus,
           defaultPlaceholder,
           defaultHover({ disabled }),
+          sizeMap.get(size || InputSize.md),
           'bg-white/50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:border-neutral-600 dark:text-white',
           disabled && defaultDisabled
         )}
@@ -92,7 +106,7 @@ export const Input = ({
         onChange={onInternalChange}
       />
       {description && (
-        <p className={cx(defaultDescription, 'mt-2')}>
+        <p className={cx(defaultDescription, 'mt-1')}>
           {description}
         </p>
       )}

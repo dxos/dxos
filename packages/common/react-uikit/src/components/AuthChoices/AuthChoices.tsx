@@ -3,7 +3,8 @@
 //
 
 import cx from 'classnames';
-import React, { ReactNode } from 'react';
+import React from 'react';
+import { TFunction, useTranslation } from 'react-i18next';
 
 import {
   CaretRight,
@@ -16,17 +17,11 @@ import {
   Textbox
 } from '@dxos/react-ui';
 
-import { TFunction, useTranslation } from '../../translations';
-
-export interface AuthChoicesProps {
+export interface AuthChoicesProps extends Omit<GroupProps, 'label'> {
   label?: HeadingProps
-  description?: ReactNode
   onClickCreate?: () => void
   onClickInviteDevice?: () => void
   onClickRecover?: () => void
-  labelVisuallyHidden?: boolean
-  elevation?: GroupProps['elevation']
-  className?: string
 }
 
 const AuthChoicesDefaultLabel = (t: TFunction): HeadingProps => {
@@ -49,7 +44,8 @@ export const AuthChoices = ({
   return (
     <Group
       elevation={5}
-      label={label || AuthChoicesDefaultLabel(t)} {...groupProps}
+      label={label || AuthChoicesDefaultLabel(t)}
+      {...groupProps}
       className={cx('p-6', groupProps.className)}>
       <div role='none' className='flex flex-col gap-2 mt-4'>
         {onClickCreate && (

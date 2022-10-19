@@ -11,5 +11,9 @@ export const translation = {
   'recover profile description': 'Enter your seed phrase to log in manually.',
   'invite device label': 'Use an authed device',
   'invite device description':
-    'Add this device to an identity you’re already logged into on another device.'
+    'Add this device to an identity you’re already logged into on another device.',
+  'username label': 'Username',
+  'username placeholder': 'Enter your preferred username here',
+  'back label': 'Back',
+  'next label': 'Next'
 };
