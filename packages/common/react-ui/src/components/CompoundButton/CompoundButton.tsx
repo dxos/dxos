@@ -6,8 +6,8 @@ import cx from 'classnames';
 import React, { PropsWithChildren, ReactNode } from 'react';
 
 import { useId } from '../../hooks';
-import { ButtonProps } from '../../props';
-import { buttonClassName, defaultDescription, primaryDescription } from '../../styles';
+import { defaultDescription, primaryDescription } from '../../styles';
+import { ButtonProps, buttonStyles } from '../Button';
 
 export interface CompoundButtonProps extends ButtonProps {
   description?: ReactNode
@@ -29,7 +29,7 @@ export const CompoundButton = ({
     <button
       {...buttonProps}
       className={cx(
-        buttonClassName(buttonProps),
+        buttonStyles(buttonProps),
         'flex items-center gap-4 py-2.5',
         buttonProps.className
       )}

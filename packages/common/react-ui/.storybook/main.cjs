@@ -24,6 +24,12 @@ module.exports = {
     previewMdx2: true
   },
   viteFinal: async (config) => mergeConfig(config, {
+    optimizeDeps: {
+      force: true,
+      include: [
+        'storybook-dark-mode'
+      ]
+    },
     build: {
       commonjsOptions: {
         include: [
