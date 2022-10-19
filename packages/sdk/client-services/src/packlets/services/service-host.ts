@@ -9,6 +9,7 @@ import { ModelFactory } from '@dxos/model-factory';
 import { createWebRTCTransportFactory, inMemoryTransportFactory, NetworkManager, TransportFactory } from '@dxos/network-manager';
 import { ObjectModel } from '@dxos/object-model';
 import { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools';
+import { createDevtoolsHost, DevtoolsServiceDependencies } from '../devtools';
 
 import { createStorageObjects } from '../storage';
 import { ServiceContext } from './service-context';
@@ -71,7 +72,7 @@ export class ClientServiceHost implements ClientServiceProvider {
 
     this._services = {
       ...createServices({ config: this._config, echo: null, context: this._context, signer: this._signer }),
-      DevtoolsHost: this._createDevtoolsService() // TODO(burdon): Move into createServices.
+      DevtoolsHost: this._createDevtoolsService(networkManager) // TODO(burdon): Move into createServices.
     };
   }
 
@@ -97,19 +98,18 @@ export class ClientServiceHost implements ClientServiceProvider {
    * Returns devtools context.
    * Used by the DXOS DevTool Extension.
    */
-  private _createDevtoolsService (): DevtoolsHost {
-    // const dependencies: DevtoolsServiceDependencies = {
-    //   config: this._config,
-    //   echo: this._echo,
-    //   feedStore: this._echo.feedStore,
-    //   networkManager: this._echo.networkManager,
-    //   modelFactory: this._echo.modelFactory,
-    //   keyring: this._echo.halo.keyring,
-    //   debug // Export debug lib.
-    // };
+  private _createDevtoolsService (networkManager: NetworkManager): DevtoolsHost {
+    const dependencies: DevtoolsServiceDependencies = {
+      config: this._config,
+      echo: this._echo,
+      feedStore: this._echo.feedStore,
+      networkManager,
+      modelFactory: this._echo.modelFactory,
+      keyring: this._echo.halo.keyring,
+      debug // Export debug lib.
+    };
 
-    // return createDevtoolsHost(dependencies, this._devtoolsEvents);
+    return createDevtoolsHost(dependencies, this._devtoolsEvents);
     // TODO(dmaretskyi): Implement.
-    return {} as any;
   }
 }
