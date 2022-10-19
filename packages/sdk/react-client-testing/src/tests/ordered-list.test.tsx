@@ -8,6 +8,7 @@ import expect from 'expect';
 import faker from 'faker';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { EventSubscriptions } from '@dxos/async';
 import { defaultTestingConfig, Item, ObjectModel, OrderedList, Client } from '@dxos/client';
 
 const createTestComponents = async () => {
@@ -35,7 +36,7 @@ const Test = ({ items, orderedList }: {items: Item<ObjectModel>[], orderedList: 
     setOrder(() => orderedList.values);
     const unsuscribeOrderedListListener = orderedList.update.on(() => setOrder(orderedList.values));
     subscriptions.add(unsuscribeOrderedListListener);
-    return () => subscriptions.unsubscribe();
+    return () => subscriptions.clear();
   }, [orderedList]);
 
   const handleChangeOrder = async () => {

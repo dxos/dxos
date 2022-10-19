@@ -4,6 +4,7 @@
 
 import assert from 'node:assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { ObjectModel } from '@dxos/object-model';
 import {
@@ -67,10 +68,10 @@ export class HaloService implements HaloServiceRpc {
 
         const resultSet = this.echo.halo.queryContacts();
         next({ contacts: resultSet.value });
-        subscriptions.push(resultSet.update.on(() => next({ contacts: resultSet.value })));
+        subscriptions.add(resultSet.update.on(() => next({ contacts: resultSet.value })));
       });
 
-      return () => subscriptions.unsubscribe();
+      return () => subscriptions.clear();
     });
   }
 

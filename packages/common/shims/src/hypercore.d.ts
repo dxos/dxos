@@ -168,7 +168,7 @@ declare module 'hypercore' {
    * Raw hypercore feed.
    * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
    */
-  export interface Hypercore<T = any> extends Nanoresource, HypercoreProperties {
+  export interface Hypercore<T extends {}> extends Nanoresource, HypercoreProperties {
 
     // Alias for open.
     ready (cb: Callback<void>): void
@@ -219,7 +219,7 @@ declare module 'hypercore' {
 
   // Default constructor.
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-  export function hypercore <T = any> (
+  export function hypercore <T extends {}> (
     storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
     options?: HypercoreOptions
