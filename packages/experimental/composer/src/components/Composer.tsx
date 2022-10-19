@@ -30,7 +30,7 @@ export const Composer = () => {
         class: cx(defaultFocus, 'bg-neutral-50/25 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full p-4 dark:bg-neutral-700/25 dark:border-neutral-600 dark:text-white')
       }
     }
-  }, [item]);
+  }, [item, item?.model.doc]);
 
   return (
     <EditorContent editor={editor} />
