@@ -16,11 +16,11 @@
  */
 declare module 'hypercore' {
   import type { ProtocolStream } from 'hypercore-protocol';
-  import type { Nanoresource } from 'nanoresource';
+  import type { Nanoresource, NanoresourceProperties } from 'nanoresource';
   import type { RandomAccessStorageConstructor } from 'random-access-storage';
-  import type { Readable, Writable } from 'streamx';
+  import { Readable, Writable } from 'streamx';
 
-  export type Callback<T> = (err: Error | null, result?: T) => void
+  export type Callback<T> = (err: Error | null, result: T) => void
 
   /**
    * Feed data block.
@@ -43,12 +43,12 @@ declare module 'hypercore' {
   /**
    * https://github.com/mafintosh/abstract-encoding
    */
-  export type AbstractValueEncoding = {
-    encode: (data: any) => Uint8Array
-    decode: (data: Uint8Array) => any
+  export type AbstractValueEncoding<T> = {
+    encode: (obj: T) => Buffer
+    decode: (buffer: Buffer) => T
   }
 
-  export type ValueEncoding = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding
+  export type ValueEncoding<T> = 'json' | 'utf-8' | 'binary' | AbstractValueEncoding<T>
 
   /**
    * Crypto
@@ -56,6 +56,38 @@ declare module 'hypercore' {
   export interface Crypto {
     sign: (data: any, secretKey: Buffer, cb: Callback<any>) => void
     verify: (signature: any, data: any, key: Buffer, cb: Callback<boolean>) => void
+  }
+
+  /**
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
+   */
+  export type ReadStreamOptions = {
+    start?: number
+    end?: number
+    snapshot?: boolean
+    tail?: boolean
+    live?: boolean
+    timeout?: number
+    wait?: boolean
+    batch?: number
+  }
+
+  /**
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
+   */
+  // TODO(burdon): Change all value defs to default.
+  export type GetOptions = {
+    wait?: true
+    onwait?: () => {}
+    timeout?: 0
+    valueEncoding?: ValueEncoding
+  }
+
+  /**
+   * https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
+   */
+  export type WriteStreamOptions = {
+    maxBlockSize?: number
   }
 
   /**
@@ -96,12 +128,13 @@ declare module 'hypercore' {
     secretKey?: Buffer
     valueEncoding?: ValueEncoding
     crypto?: Crypto
+    writable?: boolean
   }
 
   /**
    * Shared property definitions for raw and wrapped objects.
    */
-  export interface HypercoreProperties {
+  export interface HypercoreProperties extends NanoresourceProperties {
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedwritable
     readonly writable: boolean
@@ -112,7 +145,7 @@ declare module 'hypercore' {
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
     readonly key: Buffer
 
-    // TODO(burdon): Need to fake otherwise readonly. Inject crypto instead.
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedkey
     readonly secretKey: Buffer
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#discoveryKey
@@ -135,42 +168,44 @@ declare module 'hypercore' {
    * Raw hypercore feed.
    * https://github.com/hypercore-protocol/hypercore/blob/v9.12.0/index.js#L53
    */
-  export interface Hypercore extends Nanoresource, HypercoreProperties {
+  export interface Hypercore<T = any> extends Nanoresource, HypercoreProperties {
 
     // Alias for open.
-    ready (cb?: Callback<void>): void
+    ready (cb: Callback<void>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedappenddata-callback
-    append (data: string | Buffer | (string | Buffer)[], cb?: Callback<number>): void
-
-    // Undocumented.
-    flush (cb?: Callback<void>): void
+    append (data: T | (T)[], cb: Callback<number>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatereadstreamoptions
-    createReadStream (options?: any): Readable
+    createReadStream (options?: ReadStreamOptions): Readable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedcreatewritestreamopts
-    createWriteStream (options?: any): Writable
+    createWriteStream (options?: WriteStreamOptions): Writable
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-stream--feedreplicateisinitiator-options
     replicate (initiator: boolean, options?: ReplicationOptions): ProtocolStream
 
+    // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-bool--feedhasindex
+    has (start: number, end?: number): boolean
+
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedheadoptions-callback
     /** @deprecated remove in v10 */
-    head (options?: any, cb?: Callback<FeedBlock>): void
+    head (options: any, cb: Callback<T>): void
+    head (cb: Callback<T>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feedgetindex-options-callback
-    get (index: number, options: any, cb: Callback<Buffer>): void
+    get (index: number, options: GetOptions, cb: Callback<T>): void
+    get (index: number, cb: Callback<T>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedgetbatchstart-end-options-callback
     /** @deprecated remove in v10 */
-    getBatch (start: number, end: number, options: any, cb: Callback<Buffer[]>): void
+    getBatch (start: number, end: number, options?: GetOptions, cb: Callback<T[]>): void
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#const-id--feeddownloadrange-callback
     download (range?: Range, cb?: Callback<number>): any
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-number--feeddownloadedstart-end
-    downloaded (start: number, end: number): boolean
+    downloaded (start?: number, end?: number): boolean
 
     // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#feedundownloaddownloadid
     undownload (id: number): void
@@ -184,11 +219,11 @@ declare module 'hypercore' {
 
   // Default constructor.
   // https://github.com/hypercore-protocol/hypercore/tree/v9.12.0#var-feed--hypercorestorage-key-options
-  export function hypercore (
+  export function hypercore <T> (
     storage: string | RandomAccessStorageConstructor,
     key?: Buffer | string,
     options?: HypercoreOptions
-  ): Hypercore
+  ): Hypercore<T>
 
   export = hypercore
 }

@@ -25,6 +25,11 @@ const write = async (file: File, data = 'test') => {
   await expect(file.read(offset, buffer.length)).resolves.toEqual(buffer);
 };
 
+// TODO(burdon): storage.test.ts here and in browser should have the same format.
+
+/**
+ * Node file system specific tests.
+ */
 describe('testing node storage types', function () {
   before(function () {
     return del(ROOT_DIRECTORY);
@@ -33,6 +38,10 @@ describe('testing node storage types', function () {
   after(function () {
     return del(ROOT_DIRECTORY);
   });
+
+  for (const storageType of [StorageType.RAM, StorageType.NODE] as StorageType[]) {
+    storageTests(storageType, () => createStorage({ type: storageType, root: ROOT_DIRECTORY }));
+  }
 
   it('create storage with node file by default', async function () {
     const dir = temp();
@@ -94,7 +103,8 @@ describe('testing node storage types', function () {
     await expect(fs.access(dir, constants.F_OK)).rejects.toThrow(/ENOENT/);
   });
 
-  it('persistance', async function () {
+  // TODO(burdon): Factor out into suites of blueprints.
+  it('persistence', async function () {
     const filename = randomText();
     const data = Buffer.from(randomText());
 
@@ -114,7 +124,4 @@ describe('testing node storage types', function () {
       expect(data.equals(dataRead)).toBeTruthy();
     }
   });
-
-  storageTests(StorageType.RAM, () => createStorage({ type: StorageType.RAM, root: ROOT_DIRECTORY }));
-  storageTests(StorageType.NODE, () => createStorage({ type: StorageType.NODE, root: ROOT_DIRECTORY }));
 });

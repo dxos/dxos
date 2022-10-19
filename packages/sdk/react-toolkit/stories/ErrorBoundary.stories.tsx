@@ -47,7 +47,7 @@ const TestApp = () => {
       case ErrorType.Promise:
       case ErrorType.PromiseFatal: {
         const code = trigger === ErrorType.Promise ? 'NON_FATAL' : 'FATAL';
-        setImmediate(async () => await new Promise((resolve, reject) => {
+        setTimeout(async () => await new Promise((resolve, reject) => {
           t = setTimeout(() => {
             setTrigger(undefined);
             reject(new DXOSError(code, 'Promise rejected.'));

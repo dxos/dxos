@@ -7,7 +7,7 @@ import assert from 'node:assert';
 import pump from 'pump';
 import { Stream } from 'stream';
 
-import { getProtocolFromStream, ProtocolOptions } from '@dxos/mesh-protocol';
+import { getProtocolFromStream, ExtendedProtocolStreamOptions } from '@dxos/mesh-protocol';
 import type { Peer } from '@dxos/network-generator';
 import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-generator';
 
@@ -15,7 +15,8 @@ import { Network, NetworkGenerator, Topology, TOPOLOGIES } from '@dxos/network-g
  * @param topic Buffer to initialize the stream protocol
  * @param id Random buffer of 32 bytes to represent the id of the peer
  */
-type CreatePeerCallback = (topic: Buffer, id: Buffer, options: any) => Promise<Peer>
+// TODO(burdon): Defined in network.ts
+type CreatePeerCallback = (topic: Buffer, id: Buffer, options?: any) => Promise<Peer>
 
 const isStream = (stream: any) => typeof stream === 'object' && typeof stream.pipe === 'function';
 
@@ -23,7 +24,7 @@ interface GenerateOptions {
   topic?: Buffer
   waitForFullConnection?: boolean
   peer?: any
-  protocol?: ProtocolOptions
+  protocol?: ExtendedProtocolStreamOptions
   parameters?: any[]
 }
 
@@ -31,7 +32,7 @@ interface GenerateOptions {
 export interface ProtocolNetworkGenerator extends NetworkGenerator {}
 
 export class ProtocolNetworkGenerator extends EventEmitter {
-  private _createPeer: CreatePeerCallback;
+  private readonly _createPeer: CreatePeerCallback;
 
   constructor (createPeer: CreatePeerCallback) {
     super();

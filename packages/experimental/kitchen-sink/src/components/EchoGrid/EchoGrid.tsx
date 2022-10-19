@@ -40,7 +40,7 @@ const useColumns = (itemAdapter: ItemAdapter): GridColDef[] => useMemo(() => [
     field: 'name',
     headerName: 'Name',
     flex: 1,
-    valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row)
+    valueGetter: (params: GridValueGetterParams) => itemAdapter.title(params.row as any) // TODO(dmaretskyi): Not sure whats going on here (cc TODO(richburdon)).
   }
 ], []);
 

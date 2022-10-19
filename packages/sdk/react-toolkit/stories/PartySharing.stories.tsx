@@ -153,7 +153,7 @@ const AutoInvitationGenerator = ({
   const [pin, setPin] = useState('');
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const party = await client.echo.createParty();
       const invitation = await party.createInvitation();
       invitation.finished.on(() => setPin(''));

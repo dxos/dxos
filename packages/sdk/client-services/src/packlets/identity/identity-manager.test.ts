@@ -68,6 +68,7 @@ describe('identity-manager', function () {
 
     const peer2 = await setupPeer({ storage });
     await peer2.identityManager.open();
+
     expect(peer2.identityManager.identity).toBeDefined();
     expect(peer2.identityManager.identity!.identityKey).toEqual(identity1.identityKey);
     expect(peer2.identityManager.identity!.deviceKey).toEqual(identity1.deviceKey);
