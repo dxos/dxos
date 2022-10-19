@@ -1,15 +1,20 @@
-import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from "vuepress";
-import { promises as fs, stat } from "node:fs";
-import path from "path";
-import { API_SECTIONS, PINNED_PACKAGES } from "../constants";
-import { capitalCase } from "change-case";
+//
+// Copyright 2022 DXOS.org
+//
 
-const apiPath = path.resolve(__dirname, "../../docs/api");
+import { capitalCase } from 'change-case';
+import { promises as fs } from 'node:fs';
+import path from 'path';
+import { SidebarItem, SidebarGroup, SidebarGroupCollapsible } from 'vuepress';
+
+import { API_SECTIONS, PINNED_PACKAGES } from '../constants';
+
+const apiPath = path.resolve(__dirname, '../../docs/api');
 
 export const link = {
   package: (name: string) => `/api/${name}`,
   sectionItem: (pkg: string, section: string, name: string) =>
-    `/api/${pkg}/${section}/${name}`,
+    `/api/${pkg}/${section}/${name}`
 };
 
 type AnySidebarItem = SidebarItem | SidebarGroup | SidebarGroupCollapsible;
@@ -20,7 +25,9 @@ const isMarkdown = (file: string) => /\.md$/.test(file);
 const dirExists = async (path: string) => {
   try {
     const stats = await fs.stat(path);
-    if (!stats.isDirectory()) return false;
+    if (!stats.isDirectory()) {
+      return false;
+    }
     return true;
   } catch (err) {
     return false;
@@ -30,37 +37,35 @@ const dirExists = async (path: string) => {
 const fileName = (name: string) => path.parse(name)?.name;
 
 const sidebarItem: {
-  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>;
+  [k: string]: (...args: any[]) => MaybePromise<AnySidebarItem>
 } = {
-  async package(pkg: string) {
-    return {
-      text: pkg,
-      link: link.package(pkg),
-      collapsible: true,
-      children: [
-        ...(
-          await Promise.all(
-            API_SECTIONS.map(async (section) =>
-              (await dirExists(path.resolve(apiPath, pkg, section)))
-                ? ({
-                    text: capitalCase(section),
-                    collapsible: true,
-                    children: (
-                      await fs.readdir(path.resolve(apiPath, pkg, section))
-                    )
-                      .filter(isMarkdown)
-                      .map((file) => ({
-                        text: fileName(file),
-                        link: link.sectionItem(pkg, section, fileName(file)),
-                      })),
-                  } as AnySidebarItem)
-                : null
-            )
+  package: async (pkg: string) => ({
+    text: pkg,
+    link: link.package(pkg),
+    collapsible: true,
+    children: [
+      ...(
+        await Promise.all(
+          API_SECTIONS.map(async (section) =>
+            (await dirExists(path.resolve(apiPath, pkg, section)))
+              ? ({
+                  text: capitalCase(section),
+                  collapsible: true,
+                  children: (
+                    await fs.readdir(path.resolve(apiPath, pkg, section))
+                  )
+                    .filter(isMarkdown)
+                    .map((file) => ({
+                      text: fileName(file),
+                      link: link.sectionItem(pkg, section, fileName(file))
+                    }))
+                } as AnySidebarItem)
+              : null
           )
-        ).filter((s) => s),
-      ],
-    };
-  },
+        )
+      ).filter((s) => s)
+    ]
+  })
 };
 
 export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
@@ -70,7 +75,7 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
   const packagesByScope = await Promise.all(
     allscopes.map(async (scope) => {
       const dircontents = await fs.readdir(path.resolve(apiPath, scope.name), {
-        withFileTypes: true,
+        withFileTypes: true
       });
       const folders = dircontents.filter((entry) => entry.isDirectory());
       return folders.map((pkg) => `${scope.name}/${pkg.name}`);
@@ -83,9 +88,9 @@ export const apiSidebar = async (): Promise<AnySidebarItem[]> => {
   return [
     ...(await Promise.all(PINNED_PACKAGES.map(sidebarItem.package))),
     ...(otherPackages?.length ? [{
-      text: "Other packages",
+      text: 'Other packages',
       collapsible: true,
-      children: await Promise.all(otherPackages.map(sidebarItem.package)),
-    }] : []),
+      children: await Promise.all(otherPackages.map(sidebarItem.package))
+    }] : [])
   ];
 };

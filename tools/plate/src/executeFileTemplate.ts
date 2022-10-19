@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import path from "path";
+import path from 'path';
 // import { promises as fs } from "fs";
-import * as tsnode from "ts-node";
+import * as tsnode from 'ts-node';
 
-import { File, MaybePromise, promise } from "./file";
+import { File, MaybePromise, promise } from './file';
 
-/**Include all template files that end with .t.ts or .t.js */
+/** Include all template files that end with .t.ts or .t.js */
 export const TEMPLATE_FILE_INCLUDE = /(.*)\.t\.[tj]s$/;
-/**Do not process files that are compilation noise like .map and .t.d.ts */
+/** Do not process files that are compilation noise like .map and .t.d.ts */
 export const TEMPLATE_FILE_IGNORE = [/\.t\.d\./, /\.map$/];
 
 export const isTemplateFile = (file: string): boolean =>
@@ -38,19 +38,19 @@ const loadTemplate = async <I = any>(
     skipIgnore: true,
     compilerOptions: {
       strict: false,
-      target: "es5",
-      module: "commonjs",
-    },
+      target: 'es5',
+      module: 'commonjs'
+    }
   });
   let mod;
   try {
     mod = await import(p);
     const fn = mod?.default ?? mod;
-    return typeof fn === "function"
+    return typeof fn === 'function'
       ? fn
-      : typeof fn == "string"
-      ? () => fn
-      : null;
+      : typeof fn === 'string'
+        ? () => fn
+        : null;
   } catch (err) {
     console.error(`problem while loading template ${p}`);
     console.error(err);
@@ -59,16 +59,16 @@ const loadTemplate = async <I = any>(
 };
 
 export type ExecuteFileTemplateOptions<TInput = {}> = {
-  templateFile: string;
-  templateRelativeTo?: string;
-  outputDirectory: string;
-  input?: TInput;
+  templateFile: string
+  templateRelativeTo?: string
+  outputDirectory: string
+  input?: TInput
 };
 
 export type TemplateContext<TInput = {}> =
   ExecuteFileTemplateOptions<TInput> & {
-    input: TInput;
-    defaultOutputFile: string;
+    input: TInput
+    defaultOutputFile: string
   };
 
 export type TemplatingResult<R = any> = File<R>[];
@@ -89,7 +89,7 @@ export const executeFileTemplate = async <TInput>(
   options: ExecuteFileTemplateOptions<TInput>
 ): Promise<TemplatingResult> => {
   const { templateFile, outputDirectory, templateRelativeTo } = options;
-  const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? "");
+  const absoluteTemplateRelativeTo = path.resolve(templateRelativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, templateFile);
   const templateFunction = await loadTemplate(templateFullPath);
   if (!templateFunction) {
@@ -109,15 +109,15 @@ export const executeFileTemplate = async <TInput>(
         defaultOutputFile: nominalOutputPath,
         ...(templateRelativeTo
           ? { templateRelativeTo: absoluteTemplateRelativeTo }
-          : { templateRelativeTo: path.dirname(templateFullPath) }),
+          : { templateRelativeTo: path.dirname(templateFullPath) })
       })
     );
-    return typeof result === "string"
+    return typeof result === 'string'
       ? [
           new File({
             content: result,
-            path: nominalOutputPath,
-          }),
+            path: nominalOutputPath
+          })
         ]
       : result;
   } catch (err) {

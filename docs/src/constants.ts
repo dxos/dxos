@@ -12,19 +12,19 @@ export const PINNED_PACKAGES = [
 ];
 
 export const API_SECTIONS = [
-  "values",
-  "enums",
-  "types",
-  "interfaces",
-  "classes",
-  "functions",
-]
+  'values',
+  'enums',
+  'types',
+  'interfaces',
+  'classes',
+  'functions'
+];
 
 // [
-  // ['interfaces', 'Interfaces'],
-  // ['types', 'Types'],
-  // ['enums', 'Enums'],
-  // ['classes', 'Classes'],
-  // ['functions', 'Functions'],
-  // ['variables', 'Constants']
+// ['interfaces', 'Interfaces'],
+// ['types', 'Types'],
+// ['enums', 'Enums'],
+// ['classes', 'Classes'],
+// ['functions', 'Functions'],
+// ['variables', 'Constants']
 // ];

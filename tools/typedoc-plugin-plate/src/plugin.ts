@@ -1,11 +1,15 @@
-import { Application, ParameterType, Renderer } from "typedoc";
-import { Options, OptionsReader } from 'typedoc';
-import { Theme } from "./theme";
+//
+// Copyright 2022 DXOS.org
+//
+
+import { Application, Options, OptionsReader } from 'typedoc';
+
+import { Theme } from './theme';
 
 export class ForceThemeOptionsReader implements OptionsReader {
   priority = 1000;
   name = 'plate-force-theme-options-reader';
-  read(container: Options) {
+  read (container: Options) {
     if (container.getValue('theme') === 'default') {
       container.setValue('theme', 'plate');
     }
@@ -21,4 +25,4 @@ export const load = (app: Application) => {
   //   type: ParameterType.Boolean,
   //   defaultValue: false,
   // });
-}
+};

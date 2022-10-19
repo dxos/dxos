@@ -12,49 +12,48 @@
  *       - ...
  */
 
+//
+// Copyright 2022 DXOS.org
+//
+
 import {
   Theme as ThemeBase,
   Renderer,
   PageEvent,
   RendererEvent,
   Reflection,
-  UrlMapping,
-  ProjectReflection,
-} from "typedoc";
-
-import { executeDirectoryTemplate } from "@dxos/plate";
-import path from "path";
-
-import { Input } from "./template/api";
+  ProjectReflection
+} from 'typedoc';
 
 export class Theme extends ThemeBase {
   private renderer: Renderer;
   private outputDirectory: string;
-  constructor(renderer: Renderer) {
+  constructor (renderer: Renderer) {
     super(renderer);
     this.renderer = renderer;
-    this.outputDirectory = "";
+    this.outputDirectory = '';
     this.listenTo(this.owner, {
       [RendererEvent.BEGIN]: this.onBeginRenderer
     });
   }
 
-  render(page: PageEvent<Reflection>): string {
-    const content = (page.template(page) as string) ?? "";
+  render (page: PageEvent<Reflection>): string {
+    const content = (page.template(page) as string) ?? '';
     return (
-      content.replace(/[\r\n]{3,}/g, "\n\n").replace(/^\s+|\s+$/g, "") + "\n"
+      content.replace(/[\r\n]{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '') + '\n'
     );
   }
 
-  onBeginRenderer(event: RendererEvent) {
+  onBeginRenderer (event: RendererEvent) {
     this.outputDirectory = event.outputDirectory;
   }
+
   /**
    * This should return the output file mappings but doesnt work well with our plate package because typedoc does not allow this to be async. a pnpm patch can work but is annoying.
    * @param project the project reflection
    * @returns a list of UrlMappings (or a promise of this)
    */
-  getUrls(project: ProjectReflection) {
+  getUrls (project: ProjectReflection) {
     return [];
     // const files = await executeDirectoryTemplate<Input>({
     //   templateDirectory: path.resolve(__dirname, "template/api"),

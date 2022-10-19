@@ -8,8 +8,15 @@ Install using package manager of choice `npm`,`yarn`,`pnpm`:
 npm install --save @dxos/echo
 ```
 Alternatively, include from CDN:
-```html
-<script src="https://jsdelivr..."/>
+```html{3}
+<html>
+  <head>
+    <script src="https://jsdelivr..."></script>
+  </head>
+  <body>
+  </body>
+</html>
+
 ```
 Create a new client object like this:
 @[code](snippets/create-client.ts)
