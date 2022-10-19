@@ -64,7 +64,7 @@ describe('FeedWrapper', function () {
 
   it('appends blocks with encoding', async function () {
     const numBlocks = 10;
-    const builder = new TestBuilder();
+    const builder = new TestItemBuilder();
     const feedFactory = builder.createFeedFactory();
     const key = await builder.keyring!.createKey();
     const feed = new FeedWrapper<TestItem>(feedFactory.createFeed(key, {
@@ -151,6 +151,7 @@ describe('FeedWrapper', function () {
         for (const i of Array.from(Array(numBlocks).keys())) {
           const block = {
             id: String(i + 1),
+            index: i,
             value: faker.lorem.sentence()
           };
 

@@ -19,7 +19,7 @@ export class FeedWrapper<T extends {}> {
   private readonly _binder = createBinder(this._hypercore);
 
   constructor (
-    private _hypercore: Hypercore,
+    private _hypercore: Hypercore<T>,
     private _key: PublicKey // TODO(burdon): Required since currently patching the key inside factory.
   ) {
     assert(this._hypercore);
