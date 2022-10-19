@@ -73,7 +73,7 @@ export class ControlPipeline {
 
   async start () {
     log('Starting control pipeline');
-    setImmediate(async () => {
+    setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {
         try {
           log('Processing message', { msg });

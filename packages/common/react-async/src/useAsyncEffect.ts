@@ -31,7 +31,6 @@ import { useEffect } from 'react';
  * @param deps
  */
 // TODO(burdon): Creade useAsyncMemo?
-// TODO(burdon): Replace setImmediate everywhere (approx 30 places).
 export const useAsyncEffect = <T> (
   callback: (isMounted: () => boolean) => Promise<T> | undefined,
   destructor?: ((value?: T) => void) | any[],

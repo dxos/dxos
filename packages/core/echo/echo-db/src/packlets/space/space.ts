@@ -220,7 +220,7 @@ export class Space {
     }
 
     // Start message processing loop.
-    setImmediate(async () => {
+    setTimeout(async () => {
       assert(this._dataPipeline);
       for await (const msg of this._dataPipeline.consume()) {
         const { key: feedKey, seq, data } = msg;

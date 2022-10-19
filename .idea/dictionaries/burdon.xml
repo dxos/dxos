@@ -4,14 +4,32 @@
       <w>deno</w>
       <w>dmaretskyi</w>
       <w>hypercore</w>
+      <w>hypertrie</w>
       <w>kodama</w>
+      <w>nanoerror</w>
       <w>nanomessage</w>
+      <w>nanoresource</w>
       <w>onauthenticate</w>
+      <w>onchannelclose</w>
+      <w>ondata</w>
+      <w>ondiscoverykey</w>
+      <w>onextension</w>
       <w>onfeedauthenticate</w>
-      <w>onwait</w>
+      <w>onhandshake</w>
+      <w>onhave</w>
+      <w>onoptions</w>
+      <w>onrequest</w>
+      <w>onstatus</w>
+      <w>onunhave</w>
+      <w>onunwant</w>
+      <w>onwant</w>
+      <w>reopenable</w>
       <w>ridoculous</w>
+      <w>seedphrase</w>
+      <w>statable</w>
       <w>streamx</w>
       <w>testutils</w>
+      <w>truncatable</w>
       <w>undownload</w>
     </words>
   </dictionary>

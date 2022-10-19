@@ -18,7 +18,7 @@ const TestApp = () => {
   const [types, setTypes] = useState<RegistryType[]>([]);
 
   useEffect(() => {
-    setImmediate(async () => {
+    setTimeout(async () => {
       const types = await registry.listTypeRecords();
       setTypes(types);
     });

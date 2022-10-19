@@ -4,7 +4,7 @@
 
 ## Hierarchy
 
-- `ProtocolStreamCtorOpts`
+- `ProtocolStreamOptions`
 
   ↳ **`ProtocolStreamOptions`**
 
@@ -16,7 +16,7 @@
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.encrypted
+ProtocolStream.ProtocolStreamOptions.encrypted
 
 #### Defined in
 
@@ -61,7 +61,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.keyPair
+ProtocolStream.ProtocolStreamOptions.keyPair
 
 #### Defined in
 
@@ -77,7 +77,7 @@ Signal to the other peer that you want to keep this stream open forever.
 
 #### Overrides
 
-ProtocolStream.ProtocolStreamCtorOpts.live
+ProtocolStream.ProtocolStreamOptions.live
 
 #### Defined in
 
@@ -91,7 +91,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.noise
+ProtocolStream.ProtocolStreamOptions.noise
 
 #### Defined in
 
@@ -120,7 +120,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.onauthenticate
+ProtocolStream.ProtocolStreamOptions.onauthenticate
 
 #### Defined in
 
@@ -149,7 +149,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.onchannelclose
+ProtocolStream.ProtocolStreamOptions.onchannelclose
 
 #### Defined in
 
@@ -177,7 +177,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.ondiscoverykey
+ProtocolStream.ProtocolStreamOptions.ondiscoverykey
 
 #### Defined in
 
@@ -205,7 +205,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.onhandshake
+ProtocolStream.ProtocolStreamOptions.onhandshake
 
 #### Defined in
 
@@ -219,7 +219,7 @@ ___
 
 #### Inherited from
 
-ProtocolStream.ProtocolStreamCtorOpts.timeout
+ProtocolStream.ProtocolStreamOptions.timeout
 
 #### Defined in
 

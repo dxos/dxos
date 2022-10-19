@@ -20,6 +20,7 @@ describe('replication', function () {
 
     // Some storage drivers may break when there are multiple storage instances.
     const storage = createStorage();
+    const keyring = new Keyring();
 
     // Creates an appropriate persistent storage for the browser: IDB in Chrome or File storage in Firefox.
     const feedStore1 = new FeedStore({

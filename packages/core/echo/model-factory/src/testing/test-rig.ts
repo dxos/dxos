@@ -91,11 +91,11 @@ export class TestRig<M extends Model<any>> {
     peer.mutations.push(message);
 
     // Process this mutation locally immediately.
-    setImmediate(() => peer.processMutation(message));
+    setTimeout(() => peer.processMutation(message));
 
     // Process the message later, after resolving mutation-write promise. Doing otherwise breaks the model.
     if (this._replicating) {
-      setImmediate(() => this._replicate());
+      setTimeout(() => this._replicate());
     }
 
     this._replicationFinished.reset();
