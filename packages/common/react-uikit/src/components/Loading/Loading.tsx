@@ -36,8 +36,12 @@ const sizeMap = new Map<LoadingSize, string>([
   [LoadingSize.xl, 'w-16 h-16']
 ]);
 
-export const Loading = ({ size, color, className, labelTKey }: LoadingProps) => {
-  const { t } = useTranslation();
+export const UntranslatedLoading = ({
+  size,
+  color,
+  className,
+  label
+}: Omit<LoadingProps, 'labelTKey'> & { label: string }) => {
   const labelId = useId('loading-label');
   const sizeClassName = sizeMap.get(size || LoadingSize.md);
   return (
@@ -64,7 +68,17 @@ export const Loading = ({ size, color, className, labelTKey }: LoadingProps) => 
           fill='currentFill'
         />
       </svg>
-      <span className='sr-only' id={labelId}>{t(labelTKey ?? 'generic loading label')}</span>
+      <span className='sr-only' id={labelId}>{label}</span>
     </div>
+  );
+};
+
+export const Loading = ({ labelTKey, ...props }: LoadingProps) => {
+  const { t } = useTranslation();
+  return (
+    <UntranslatedLoading
+      {...props}
+      label={t(labelTKey ?? 'generic loading label')}
+    />
   );
 };

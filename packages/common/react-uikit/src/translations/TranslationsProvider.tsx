@@ -6,8 +6,7 @@ import i18Next from 'i18next';
 import React, { PropsWithChildren, ReactNode, Suspense } from 'react';
 import { initReactI18next, useTranslation } from 'react-i18next';
 
-import { Loading } from '@dxos/react-ui';
-
+import { UntranslatedLoading } from '../components';
 import * as enUS from './locales/en-US';
 
 export const resources = {
@@ -29,16 +28,8 @@ export const TranslationsProvider = ({
   const { t: _t } = useTranslation();
   return (
     <Suspense
-      fallback={
-        fallback || (
-          <>
-            <Loading labelId='loading--translations' />
-            <span id='loading--translations' className='sr-only'>
-              {enUS.translation['loading translations']}
-            </span>
-          </>
-        )
-      }
+      fallback={fallback ??
+        <UntranslatedLoading label={enUS.translation['loading translations']} />}
     >
       {children}
     </Suspense>
