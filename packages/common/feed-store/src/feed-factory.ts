@@ -63,7 +63,7 @@ export class FeedFactory<T = {}> {
 
     const opts = Object.assign({}, this._hypercoreOptions, {
       // TODO(burdon): Test if can omit (given crypto signer) in v10.
-      secretKey: (this._signer && options?.writable) ? Buffer.from('dummy') : undefined,
+      secretKey: (this._signer && options?.writable) ? Buffer.from('secret') : undefined,
       crypto: this._signer ? createCrypto(this._signer, publicKey) : undefined
     }, options);
 

@@ -20,7 +20,7 @@ import { ReplicatorPlugin } from './replicator-plugin';
 import { SpaceProtocol } from './space-protocol';
 
 describe('space/replicator-plugin', function () {
-  // TODO(burdon): Exact same test from space-protocol.browser.test
+  // TODO(burdon): Exact same code as space-protocol.browser.test
   it.only('replicates a feed', async function () {
     const signalContext = new MemorySignalManagerContext();
     const topic = PublicKey.random();
@@ -74,9 +74,11 @@ describe('space/replicator-plugin', function () {
       })
     });
 
+    const keyring2 = new Keyring();
     const feedStore2 = new FeedStore({
       factory: new FeedFactory({
         root: createStorage({ type: StorageType.RAM }).createDirectory(),
+        signer: keyring2,
         hypercore: {
           valueEncoding
         }
@@ -92,11 +94,14 @@ describe('space/replicator-plugin', function () {
     await replicator2.addFeed(feed2);
 
     await waitForExpect(() => {
+      // Received message appended before replication.
       expect(feed2.properties.length).toEqual(1);
     });
 
     await feed1.append({ timeframe: new Timeframe() });
+
     await waitForExpect(() => {
+      // Received message appended after replication.
       expect(feed2.properties.length).toEqual(2);
     });
   });

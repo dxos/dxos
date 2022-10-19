@@ -37,7 +37,6 @@ export type FeedStoreOptions = {
   hypercore?: HypercoreConstructor
 }
 
-// TODO(burdon): Document.
 const patchBufferCodec = (encoding: ValueEncoding): ValueEncoding => {
   if (typeof encoding === 'string') {
     return encoding;

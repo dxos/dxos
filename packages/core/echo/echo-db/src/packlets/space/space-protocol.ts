@@ -17,6 +17,9 @@ export interface SwarmIdentity {
   credentialAuthenticator: AuthVerifier
 }
 
+/**
+ * Manages hypercore protocol stream creation and joining swarms.
+ */
 export class SpaceProtocol {
   private readonly _presence: PresencePlugin;
   private readonly _authenticator: AuthPlugin;
@@ -39,14 +42,15 @@ export class SpaceProtocol {
   }
 
   async start () {
+    // TODO(burdon): Document why empty buffer.
+    const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
+
     // TODO(burdon): Move to config (with sensible defaults).
     const topologyConfig = {
       originateConnections: 4,
       maxPeers: 10,
       sampleSize: 20
     };
-
-    const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
     await this._networkManager.joinProtocolSwarm({
       protocol: ({ channel, initiator }) => this._createProtocol(credentials, { channel, initiator }),
@@ -75,18 +79,15 @@ export class SpaceProtocol {
       },
 
       discoveryKey: channel,
-
-      discoveryToPublicKey: (dk: any) => {
-        if (!PublicKey.from(dk).equals(this._discoveryKey)) {
+      discoveryToPublicKey: (discoveryKey: any) => {
+        if (!PublicKey.from(discoveryKey).equals(this._discoveryKey)) {
           return undefined;
         }
 
         // TODO(dmaretskyi): Why does this do side effects?
         // TODO(burdon): Remove need for external closure (ie, pass object to this callback).
         protocol.setContext({ topic: this._discoveryKey.toHex() });
-
-        // TODO(burdon): IMPORTANT: inconsistent use of toHex and asBuffer.
-        //  - Need to progressively clean-up all uses of Keys via Typescript.
+        // TODO(burdon): Inconsistent use of toHex vs asBuffer?
         return this._discoveryKey.asBuffer();
       },
 
