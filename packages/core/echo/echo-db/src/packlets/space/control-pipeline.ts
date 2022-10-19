@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { PartyStateMachine, PartyState, MemberInfo, FeedInfo } from '@dxos/credentials';
 import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -31,6 +32,8 @@ export class ControlPipeline {
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
 
+  private readonly _genesisTrigger = new Trigger();
+
   constructor ({
     spaceKey,
     genesisFeed,
@@ -38,7 +41,7 @@ export class ControlPipeline {
     initialTimeframe
   }: ControlPipelineParams) {
     this._pipeline = new Pipeline(initialTimeframe);
-    this._pipeline.addFeed(genesisFeed);
+    this._pipeline.addFeed(genesisFeed).then(() => this._genesisTrigger.wake(), err => log.catch(err));
 
     this._partyStateMachine = new PartyStateMachine(spaceKey);
     this._partyStateMachine.onFeedAdmitted.set(async info => {
@@ -46,7 +49,8 @@ export class ControlPipeline {
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         try {
           const feed = await feedProvider(info.key);
-          this._pipeline.addFeed(feed);
+          await this._genesisTrigger.wait();
+          await this._pipeline.addFeed(feed);
         } catch (err: any) {
           log.catch(err);
         }
@@ -72,6 +76,7 @@ export class ControlPipeline {
   }
 
   async start () {
+    await this._genesisTrigger.wait();
     log('Starting control pipeline');
     setTimeout(async () => {
       for await (const msg of this._pipeline.consume()) {

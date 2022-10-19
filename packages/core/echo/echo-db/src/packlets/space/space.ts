@@ -4,7 +4,7 @@
 
 import assert from 'assert';
 
-import { synchronized } from '@dxos/async';
+import { synchronized, Trigger } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
 import { FeedWrapper, createMappedFeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -61,6 +61,7 @@ export class Space {
 
   private _isOpen = false;
   private _dataPipeline?: Pipeline;
+  private readonly _dataTrigger = new Trigger();
   private _databaseBackend?: FeedDatabaseBackend;
   private _database?: Database;
 
@@ -99,7 +100,7 @@ export class Space {
           return;
         }
 
-        this._dataPipeline.addFeed(await feedProvider(info.key));
+        this._dataPipeline.addFeed(await feedProvider(info.key)).then(() => this._dataTrigger.wake(), err => log.catch(err));
       }
 
       if (!info.key.equals(genesisFeed.key)) {
@@ -186,6 +187,7 @@ export class Space {
 
   // TODO(burdon): Is this re-entrant? Should objects like Database be reconstructed?
   private async _openDataPipeline () {
+    await this._dataTrigger.wait();
     assert(!this._dataPipeline, 'Data pipeline already initialized.');
 
     // Create pipeline.
@@ -193,7 +195,7 @@ export class Space {
       this._dataPipeline = new Pipeline(new Timeframe());
       this._dataPipeline.setWriteFeed(this._dataFeed);
       for (const feed of this._controlPipeline.partyState.feeds.values()) {
-        this._dataPipeline.addFeed(await this._feedProvider(feed.key));
+        await this._dataPipeline.addFeed(await this._feedProvider(feed.key));
       }
     }
 
