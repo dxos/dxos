@@ -50,7 +50,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    dxosPlugin(__dirname),
+    dxosPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -80,6 +80,6 @@ export default defineConfig({
     })
   ],
   worker: {
-    plugins: [dxosPlugin(__dirname)]
+    plugins: [dxosPlugin()]
   }
 });
