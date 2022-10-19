@@ -808,6 +808,57 @@ importers:
       vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
       webpack: 5.74.0
 
+  packages/common/react-uikit:
+    specifiers:
+      '@babel/core': ^7.18.13
+      '@dxos/react-ui': workspace:*
+      '@dxos/vite-plugin': workspace:*
+      '@storybook/addon-actions': ^6.5.10
+      '@storybook/addon-essentials': ^6.5.10
+      '@storybook/addon-interactions': ^6.5.10
+      '@storybook/addon-links': ^6.5.10
+      '@storybook/builder-vite': ^0.2.2
+      '@storybook/react': ^6.5.10
+      '@types/react': ^18.0.21
+      '@types/react-dom': ^18.0.6
+      '@vitejs/plugin-react': ^2.0.1
+      alea: ^1.0.1
+      classnames: ^2.3.2
+      i18next: ^21.10.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      react-i18next: ^11.18.6
+      require-from-string: ^2.0.2
+      storybook-dark-mode: ^1.1.2
+      typescript: ^4.7.2
+      vite: 3.0.9
+      webpack: ^5.74.0
+    dependencies:
+      alea: 1.0.1
+      classnames: 2.3.2
+      i18next: 21.10.0
+      react-i18next: 11.18.6_vfm63zmruocgezzfl2v26zlzpy
+    devDependencies:
+      '@babel/core': 7.19.3
+      '@dxos/react-ui': link:../react-ui
+      '@dxos/vite-plugin': link:../../../tools/vite-plugin
+      '@storybook/addon-actions': 6.5.12_biqbaboplfbrettd7655fr4n2y
+      '@storybook/addon-essentials': 6.5.12_3p653sd7wbas6bt56x6fq4qjje
+      '@storybook/addon-interactions': 6.5.12_335cwx3de7hzzvfoyjqbus3zhu
+      '@storybook/addon-links': 6.5.12_biqbaboplfbrettd7655fr4n2y
+      '@storybook/builder-vite': 0.2.4_dl3ezfnnzbjinzfwgq5invcp5m
+      '@storybook/react': 6.5.12_d7ghb6gundohlket5z4nfe6al4
+      '@types/react': 18.0.21
+      '@types/react-dom': 18.0.6
+      '@vitejs/plugin-react': 2.1.0_vite@3.0.9
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      require-from-string: 2.0.2
+      storybook-dark-mode: 1.1.2_biqbaboplfbrettd7655fr4n2y
+      typescript: 4.8.4
+      vite: 3.0.9_sn4pdpxxcdbczqmgzem6dbvc7e
+      webpack: 5.74.0
+
   packages/common/shims:
     specifiers: {}
 
@@ -4137,7 +4188,7 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.12.9
-      '@babel/helper-plugin-utils': 7.10.4
+      '@babel/helper-plugin-utils': 7.19.0
       '@babel/plugin-syntax-object-rest-spread': 7.8.3_@babel+core@7.12.9
       '@babel/plugin-transform-parameters': 7.18.8_@babel+core@7.12.9
     dev: true
@@ -5147,7 +5198,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.19.4
       '@types/react': 18.0.21
-      clsx: 1.1.0
+      clsx: 1.2.1
       focus-lock: 0.8.1
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -5982,7 +6033,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
       '@types/yargs': 16.0.4
       chalk: 4.1.2
 
@@ -12009,7 +12060,7 @@ packages:
     resolution: {integrity: sha512-l6NQsDDyQUVeoTynNpC9uRvCUint/gSUXQA2euwmTuWGvPY5LSDUu6tkCtJB2SvGQlJQzLaKqcGZP4//7EDveA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 16.11.66
+      '@types/node': 18.11.0
     dev: true
 
   /@types/got/8.3.6:
@@ -14684,7 +14735,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       ansi-align: 3.0.1
-      camelcase: 6.2.0
+      camelcase: 6.3.0
       chalk: 4.1.2
       cli-boxes: 2.2.1
       string-width: 4.2.3
@@ -14974,7 +15025,7 @@ packages:
       mississippi: 3.0.0
       mkdirp: 0.5.6
       move-concurrently: 1.0.1
-      promise-inflight: 1.0.1_bluebird@3.7.2
+      promise-inflight: 1.0.1
       rimraf: 2.7.1
       ssri: 6.0.2
       unique-filename: 1.1.1
@@ -18446,7 +18497,7 @@ packages:
       eslint-scope: 7.1.1
       eslint-utils: 3.0.0_eslint@8.4.1
       eslint-visitor-keys: 3.3.0
-      espree: 9.2.0
+      espree: 9.4.0
       esquery: 1.4.0
       esutils: 2.0.3
       fast-deep-equal: 3.1.3
@@ -20619,6 +20670,12 @@ packages:
       terser: 4.8.1
     dev: true
 
+  /html-parse-stringify/3.0.1:
+    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
+    dependencies:
+      void-elements: 3.1.0
+    dev: false
+
   /html-tags/3.2.0:
     resolution: {integrity: sha512-vy7ClnArOZwCnqZgvv+ddgHgJiAFXe3Ge9ML5/mBctVJoUoYPCdxVucOywjDARn6CVoh3dRSFdPHy2sX80L0Wg==}
     engines: {node: '>=8'}
@@ -20903,6 +20960,12 @@ packages:
   /hyperlinker/1.0.0:
     resolution: {integrity: sha512-Ty8UblRWFEcfSuIaajM34LdPXIhbs1ajEX/BBPv24J+enSVaEVY63xQ6lTO9VRYS5LAoghIG0IDJ+p+IPzKUQQ==}
     engines: {node: '>=4'}
+
+  /i18next/21.10.0:
+    resolution: {integrity: sha512-YeuIBmFsGjUfO3qBmMOc0rQaun4mIpGKET5WDwvu8lU7gvwpcariZLNtL0Fzj+zazcHUrlXHiptcFhBMFaxzfg==}
+    dependencies:
+      '@babel/runtime': 7.19.4
+    dev: false
 
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -26748,17 +26811,6 @@ packages:
       bluebird:
         optional: true
 
-  /promise-inflight/1.0.1_bluebird@3.7.2:
-    resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}
-    peerDependencies:
-      bluebird: '*'
-    peerDependenciesMeta:
-      bluebird:
-        optional: true
-    dependencies:
-      bluebird: 3.7.2
-    dev: true
-
   /promise-retry/2.0.1:
     resolution: {integrity: sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==}
     engines: {node: '>=10'}
@@ -27356,6 +27408,26 @@ packages:
       react-dom: 18.2.0_react@18.2.0
       react-is: 17.0.2
     dev: true
+
+  /react-i18next/11.18.6_vfm63zmruocgezzfl2v26zlzpy:
+    resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
+    peerDependencies:
+      i18next: '>= 19.0.0'
+      react: '>= 16.8.0'
+      react-dom: '*'
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.19.4
+      html-parse-stringify: 3.0.1
+      i18next: 21.10.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+    dev: false
 
   /react-inspector/5.1.1_react@18.2.0:
     resolution: {integrity: sha512-GURDaYzoLbW8pMGXwYPDBIv6nqei4kK7LPRZ9q9HCZF54wqXz/dnylBp/kfE9XmekBhHvLDdcYeyIwSrvtOiWg==}
@@ -31401,6 +31473,11 @@ packages:
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
     dev: true
+
+  /void-elements/3.1.0:
+    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
+    engines: {node: '>=0.10.0'}
+    dev: false
 
   /vscode-oniguruma/1.6.2:
     resolution: {integrity: sha512-KH8+KKov5eS/9WhofZR8M8dMHWN2gTxjMsG4jd04YhpbPR91fUj7rYQ2/XjeHCJWbg7X++ApRIU9NUwM2vTvLA==}
