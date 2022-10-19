@@ -8,3 +8,6 @@ export * from './Group';
 export * from './Heading';
 export * from './Input';
 export * from './Main';
+export * from './Dialog';
+export * from './Tooltip';
+export * from './UiProvider';
