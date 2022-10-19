@@ -33,7 +33,7 @@ describe('FeedSetIterator', function () {
     const feeds = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
-      iterator.addFeed(feed);
+      await iterator.addFeed(feed);
       return feed;
     }));
 
@@ -77,7 +77,7 @@ describe('FeedSetIterator', function () {
       const writers = await Promise.all(Array.from(Array(numFeeds)).map(async () => {
         const key = await builder.keyring.createKey();
         const feed = await feedStore.openFeed(key, { writable: true });
-        iterator.addFeed(feed);
+        await iterator.addFeed(feed);
         feedKeys.push(feed.key);
         return createFeedWriter(feed);
       }));

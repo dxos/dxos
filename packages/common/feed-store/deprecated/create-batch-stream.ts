@@ -42,9 +42,7 @@ export const createBatchStream = (
   let first = true;
   let firstSyncEnd = end;
 
-  const range2 = await feed.download({ start, end, linear: true });
-
-  const read = (size: any, cb?: any) => {
+  const read = async (size: any, cb?: any) => {
     if (!feed.opened) {
       return open(size, cb);
     }
@@ -78,7 +76,7 @@ export const createBatchStream = (
 
     if (batch === 1) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err: any, data: any) => {
+      await feed.get(seq, opts, (err: any, data: any) => {
         if (err) {
           return cb(err);
         }
@@ -97,7 +95,7 @@ export const createBatchStream = (
 
     if (!feed.downloaded(start, batchEnd)) {
       seq = setStart(start + 1);
-      feed.get(seq, opts, (err, data) => {
+      await feed.get(seq, opts, (err, data) => {
         if (err) {
           return cb(err);
         }
@@ -138,13 +136,13 @@ export const createBatchStream = (
     range = null;
   };
 
-  const open = (size: any, cb: (err: Error) => void) => {
+  const open = async (size: any, cb: (err: Error) => void) => {
     feed.ready(err => {
       if (err) {
         return cb(err);
       }
 
-      read(size, cb);
+      await read(size, cb);
     });
   };
 

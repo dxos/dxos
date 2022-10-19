@@ -23,7 +23,7 @@ describe('pipeline/Pipeline', function () {
     for (const feedIdx in range(numFeeds)) {
       const key = await builder.keyring.createKey();
       const feed = await feedStore.openFeed(key, { writable: true });
-      pipeline.addFeed(feed);
+      await pipeline.addFeed(feed);
 
       setTimeout(async () => {
         for (const msgIdx in range(messagesPerFeed)) {
@@ -43,7 +43,7 @@ describe('pipeline/Pipeline', function () {
     // Local feed.
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    pipeline.addFeed(feed);
+    await pipeline.addFeed(feed);
     pipeline.setWriteFeed(feed);
 
     for (const msgIdx in range(messagesPerFeed)) {
