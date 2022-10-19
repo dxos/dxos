@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui",
+  "name": "@dxos/react-uikit",
   "version": "1.0.0",
-  "description": "Vite plugin which configures a low-level design system for DXOS.",
+  "description": "A React component library for DXOS",
   "license": "MIT",
   "author": "DXOS.org",
   "main": "dist/src/index.js",
@@ -14,25 +14,18 @@
     "access": "public"
   },
   "dependencies": {
-    "@fontsource/fira-code": "^4.5.12",
-    "@fontsource/roboto-flex": "^4.5.2",
-    "@fontsource/space-grotesk": "^4.5.10",
-    "@headlessui/react": "^1.7.3",
-    "@radix-ui/react-dialog": "^1.0.0",
-    "@tailwindcss/forms": "^0.5.3",
     "alea": "^1.0.1",
-    "autoprefixer": "^10.4.12",
     "classnames": "^2.3.2",
-    "phosphor-react": "^1.4.1",
-    "postcss": "^8.4.17",
-    "tailwindcss": "^3.1.8",
-    "tailwindcss-radix": "^2.6.0"
+    "i18next": "^21.10.0",
+    "react-i18next": "^11.18.6"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "@dxos/vite-plugin": "workspace:*",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

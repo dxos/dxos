@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React from 'react';
 
-import { templateForComponent } from '../../dev-util';
+import { templateForComponent } from '../../testing';
 import { Group, GroupProps } from './Group';
 
 export default {

@@ -2,7 +2,7 @@ const { mergeConfig } = require('vite');
 const { resolve } = require('path');
 
 const { dxosPlugin } = require('@dxos/vite-plugin');
-const { themePlugin } = require('../dist/src/plugin.js');
+const { themePlugin } = require('@dxos/react-ui/plugin');
 
 module.exports = {
   stories: [
@@ -13,7 +13,7 @@ module.exports = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    'storybook-dark-mode',
+    'storybook-dark-mode'
   ],
   framework: '@storybook/react',
   core: {
@@ -27,7 +27,9 @@ module.exports = {
     optimizeDeps: {
       force: true,
       include: [
-        'storybook-dark-mode'
+        '@dxos/react-ui',
+        'storybook-dark-mode',
+        'i18next'
       ]
     },
     build: {
@@ -40,6 +42,6 @@ module.exports = {
     },
     plugins: [dxosPlugin(), themePlugin({
       content: [resolve(__dirname, '../src') + '/**/*.{ts,tsx,js,jsx}']
-    })],
+    })]
   })
 };
