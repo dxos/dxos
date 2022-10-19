@@ -3,3 +3,4 @@
 //
 
 export * from './ButtonProps';
+export * from './ValidationValence';

@@ -5,20 +5,23 @@
 import cx from 'classnames';
 import React, {
   ChangeEvent,
-  ReactNode,
   ComponentProps,
+  ReactNode,
   useCallback,
   useState,
   useTransition
 } from 'react';
 
 import { useId } from '../../hooks';
+import { ValidationValence } from '../../props';
 import {
   defaultDescription,
   defaultDisabled,
   defaultFocus,
   defaultHover,
-  defaultPlaceholder
+  defaultPlaceholder,
+  valenceColorText,
+  valenceInputBorder
 } from '../../styles';
 
 export enum InputSize {
@@ -36,6 +39,8 @@ export interface InputProps
   onChange?: (value: string) => void
   disabled?: boolean
   size?: InputSize
+  validationMessage?: ReactNode
+  validationValence?: ValidationValence
 }
 
 const sizeMap = new Map<InputSize, string>([
@@ -48,16 +53,20 @@ export const Input = ({
   labelVisuallyHidden,
   placeholder,
   description,
+  descriptionVisuallyHidden,
   required,
   initialValue,
   onChange,
   disabled,
   className,
   size,
+  validationMessage,
+  validationValence,
   ...inputProps
 }: InputProps) => {
   const inputId = inputProps.id || useId('input');
   const descriptionId = useId('input-description');
+  const validationId = useId('input-validation');
 
   const [_isPending, startTransition] = useTransition();
 
@@ -69,19 +78,23 @@ export const Input = ({
     (e: ChangeEvent<HTMLInputElement>) => {
       const nextValue = e.target?.value || '';
       setInternalValue(nextValue);
-      onChange && startTransition(() => {
-        onChange(nextValue);
-      });
+      onChange &&
+        startTransition(() => {
+          onChange(nextValue);
+        });
     },
     [onChange]
   );
+
+  const isInvalid =
+    !!validationMessage && validationValence === ValidationValence.error;
 
   return (
     <div className={cx('my-4', className)} role='none'>
       <label
         htmlFor={inputId}
         className={cx(
-          'block mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-300',
+          'block mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100',
           labelVisuallyHidden && 'sr-only'
         )}
       >
@@ -95,19 +108,42 @@ export const Input = ({
           defaultPlaceholder,
           defaultHover({ disabled }),
           sizeMap.get(size || InputSize.md),
-          'bg-white/50 border border-neutral-300 text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:border-neutral-600 dark:text-white',
+          'bg-white/50 border text-neutral-900 text-sm rounded-lg block w-full px-2.5 py-2 dark:bg-neutral-700/50 dark:text-white',
+          valenceInputBorder(validationMessage ? validationValence : undefined),
           disabled && defaultDisabled
         )}
         {...(required && { required: true })}
         {...(disabled && { disabled: true })}
         {...(placeholder && { placeholder })}
         {...(description && { 'aria-describedby': descriptionId })}
+        {...(isInvalid && {
+          'aria-invalid': 'true',
+          'aria-errormessage': validationId
+        })}
         value={internalValue}
         onChange={onInternalChange}
       />
-      {description && (
-        <p className={cx(defaultDescription, 'mt-1')}>
-          {description}
+      {(description || validationMessage) && (
+        <p
+          {...(!isInvalid && { id: descriptionId })}
+          className={cx(
+            descriptionVisuallyHidden && !isInvalid && 'sr-only'
+          )}
+        >
+          {validationMessage && (
+            <span
+              id={validationId}
+              className={valenceColorText(validationValence)}
+            >
+              {validationMessage}{' '}
+            </span>
+          )}
+          <span
+            {...(isInvalid && { id: descriptionId })}
+            className={cx(defaultDescription, descriptionVisuallyHidden && 'sr-only')}
+          >
+            {description}
+          </span>
         </p>
       )}
     </div>

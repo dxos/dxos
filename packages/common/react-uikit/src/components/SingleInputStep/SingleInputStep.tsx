@@ -22,7 +22,7 @@ type TKey = Parameters<TFunction>[0];
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'>,
-    Pick<InputProps, 'autoComplete' | 'type'> {
+    Pick<InputProps, 'autoComplete' | 'type' | 'min' | 'max' | 'minLength' | 'maxLength' | 'pattern'> {
   rootLabelTKey: TKey
   inputLabelTKey: TKey
   onChange: (value: string) => void
@@ -48,6 +48,11 @@ export const SingleInputStep = ({
   inputPlaceholderTKey,
   autoComplete,
   type,
+  min,
+  max,
+  minLength,
+  maxLength,
+  pattern,
   ...groupProps
 }: SingleInputStepProps) => {
   const { t } = useTranslation();
@@ -69,7 +74,12 @@ export const SingleInputStep = ({
         label={t(inputLabelTKey)}
         {...{
           autoComplete,
-          type
+          type,
+          min,
+          max,
+          minLength,
+          maxLength,
+          pattern
         }}
         {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })}
         {...(pending && { disabled: true })}
