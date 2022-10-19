@@ -5,6 +5,8 @@
 import '@dxosTheme';
 import React from 'react';
 
+import { ValidationValence } from '@dxos/react-ui';
+
 import { templateForComponent } from '../../testing';
 import { SingleInputStep, SingleInputStepProps } from './SingleInputStep';
 
@@ -59,5 +61,20 @@ export const RestoreProfile = () => (
     onChange={() => {}}
     onClickNext={() => {}}
     onClickBack={() => {}}
+  />
+);
+
+export const RestoreProfileWithError = () => (
+  <Template
+    rootLabelTKey='recover profile label'
+    inputLabelTKey='seed phrase label'
+    inputPlaceholderTKey='seed phrase placeholder'
+    nextTKey='validate seed phrase label'
+    onChange={() => {}}
+    onClickNext={() => {}}
+    onClickBack={() => {}}
+    validationMessage='This only has 3 of the required 24 words'
+    validationValence={ValidationValence.error}
+    initialValue='squirrels potatoes dolphins'
   />
 );

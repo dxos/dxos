@@ -22,7 +22,20 @@ type TKey = Parameters<TFunction>[0];
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'>,
-    Pick<InputProps, 'autoComplete' | 'type' | 'min' | 'max' | 'minLength' | 'maxLength' | 'pattern'> {
+    Pick<
+      InputProps,
+      | 'initialValue'
+      | 'validationMessage'
+      | 'validationValence'
+      | 'required'
+      | 'autoComplete'
+      | 'type'
+      | 'min'
+      | 'max'
+      | 'minLength'
+      | 'maxLength'
+      | 'pattern'
+    > {
   rootLabelTKey: TKey
   inputLabelTKey: TKey
   onChange: (value: string) => void
@@ -46,6 +59,10 @@ export const SingleInputStep = ({
   nextTKey = 'next label',
   loadingTKey = 'generic loading label',
   inputPlaceholderTKey,
+  initialValue,
+  validationMessage,
+  validationValence,
+  required,
   autoComplete,
   type,
   min,
@@ -73,6 +90,10 @@ export const SingleInputStep = ({
         size={InputSize.lg}
         label={t(inputLabelTKey)}
         {...{
+          initialValue,
+          validationMessage,
+          validationValence,
+          required,
           autoComplete,
           type,
           min,
