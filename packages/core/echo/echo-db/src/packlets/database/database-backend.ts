@@ -16,6 +16,7 @@ import { DataMirror } from './data-mirror';
 import { DataServiceHost } from './data-service-host';
 import { EchoProcessor, ItemDemuxer, ItemDemuxerOptions } from './item-demuxer';
 import { ItemManager } from './item-manager';
+import { SubscriptionGroup } from '@dxos/util';
 
 const log = debug('dxos:echo-db:database-backend');
 
@@ -99,6 +100,7 @@ export class FeedDatabaseBackend implements DatabaseBackend {
  */
 export class RemoteDatabaseBackend implements DatabaseBackend {
   private _itemManager!: ItemManager;
+  private readonly _subscriptions = new SubscriptionGroup();
 
   constructor (
     private readonly _service: DataService,
@@ -114,11 +116,19 @@ export class RemoteDatabaseBackend implements DatabaseBackend {
 
     const dataMirror = new DataMirror(this._itemManager, this._service, this._partyKey);
 
+    this._subscriptions.push(modelFactory.registered.on(async model => {
+      for (const item of this._itemManager.getUninitializedEntities()) {
+        if (item._stateManager.modelType === model.meta.type) {
+          await this._itemManager.initializeModel(item.id);
+        }
+      }
+    }));
+
     dataMirror.open();
   }
 
   async close (): Promise<void> {
-    // Do nothing for now.
+    this._subscriptions.unsubscribe();
   }
 
   getWriteStream (): FeedWriter<EchoEnvelope> | undefined {
