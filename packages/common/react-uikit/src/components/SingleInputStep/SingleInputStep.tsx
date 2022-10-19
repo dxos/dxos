@@ -13,12 +13,11 @@ import {
   Input,
   InputProps,
   InputSize,
-  Loading,
-  LoadingColor,
   useId
 } from '@dxos/react-ui';
 
-import { TKey } from '../../types/TFunction';
+import { TKey } from '../../types';
+import { Loading, LoadingColor } from '../Loading';
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {
@@ -74,7 +73,6 @@ export const SingleInputStep = ({
       <div role='none' className='flex gap-4 justify-end items-center'>
         <div role='none' className={cx(!pending && 'hidden')}>
           <Loading
-            labelId={loadingId}
             color={LoadingColor.neutral}
             className='p-0 ml-0'
           />

@@ -7,5 +7,4 @@ export * from './CompoundButton';
 export * from './Group';
 export * from './Heading';
 export * from './Input';
-export * from './Loading';
 export * from './Main';

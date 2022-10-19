@@ -3,4 +3,5 @@
 //
 
 export * from './AuthChoices';
+export * from './Loading';
 export * from './SingleInputStep';
