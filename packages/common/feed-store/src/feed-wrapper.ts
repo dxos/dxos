@@ -15,7 +15,7 @@ import { FeedWriter } from './feed-writer';
 /**
  * Async feed wrapper.
  */
-export class FeedWrapper<T> {
+export class FeedWrapper<T = any> {
   private readonly _binder = createBinder(this._hypercore);
 
   constructor (

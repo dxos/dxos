@@ -73,7 +73,7 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
 /**
  * Iterator that reads blocks from a single feed.
  */
-export class FeedIterator<T> extends AbstractFeedIterator<T> {
+export class FeedIterator<T = any> extends AbstractFeedIterator<T> {
   private readonly _queue: FeedQueue<T>;
 
   constructor (

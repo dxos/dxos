@@ -26,7 +26,7 @@ export type FeedOptions = HypercoreOptions & {
 /**
  * Hypercore factory.
  */
-export class FeedFactory<T> {
+export class FeedFactory<T = any> {
   private readonly _storage: (publicKey: PublicKey) => RandomAccessStorageConstructor;
 
   private readonly _root: Directory;
