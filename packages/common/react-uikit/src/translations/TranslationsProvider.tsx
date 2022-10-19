@@ -24,8 +24,23 @@ export const i18n = i18Next.use(initReactI18next).init({
 
 export const TranslationsProvider = ({
   children,
-  fallback = <Loading />
+  fallback
 }: PropsWithChildren<{ fallback?: ReactNode }>) => {
   const { t: _t } = useTranslation();
-  return <Suspense fallback={fallback}>{children}</Suspense>;
+  return (
+    <Suspense
+      fallback={
+        fallback || (
+          <>
+            <Loading labelId='loading--translations' />
+            <span id='loading--translations' className='sr-only'>
+              {enUS.translation['loading translations']}
+            </span>
+          </>
+        )
+      }
+    >
+      {children}
+    </Suspense>
+  );
 };
