@@ -19,7 +19,7 @@ import { codec } from '../common';
 import { mapFeedIndexesToTimeframe } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';
 
-describe.only('space/control-pipeline', function () {
+describe('space/control-pipeline', function () {
   it('admits feeds', async function () {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();

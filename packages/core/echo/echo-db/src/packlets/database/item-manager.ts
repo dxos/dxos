@@ -8,13 +8,14 @@ import assert from 'node:assert';
 import { Event, trigger } from '@dxos/async';
 import { createId } from '@dxos/crypto';
 import { timed } from '@dxos/debug';
-import { FeedWriter, createMappedFeedWriter } from '@dxos/feed-store';
+import { FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { Model, ModelFactory, ModelMessage, ModelType, StateManager } from '@dxos/model-factory';
 import { ItemID, ItemType } from '@dxos/protocols';
 import { EchoEnvelope } from '@dxos/protocols/proto/dxos/echo/feed';
 import { ModelSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 
+import { createMappedFeedWriter } from '../common';
 import { UnknownModelError } from '../errors';
 import { Entity } from './entity';
 import { Item } from './item';

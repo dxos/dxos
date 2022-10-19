@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import { latch } from '@dxos/async';
 
 import { FeedIterator } from './feed-iterator';
-import { createFeedWriter } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
 describe('FeedIterator', function () {
@@ -20,7 +19,7 @@ describe('FeedIterator', function () {
     const feedStore = builder.createFeedStore();
     const key = await builder.keyring.createKey();
     const feed = await feedStore.openFeed(key, { writable: true });
-    const writer = createFeedWriter(feed);
+    const writer = feed.createFeedWriter();
 
     const iterator = new FeedIterator(feed);
     await iterator.start();

@@ -10,6 +10,8 @@ import { createReadable } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
 import { createBinder } from '@dxos/util';
 
+import { FeedWriter } from './feed-writer';
+
 /**
  * Async feed wrapper.
  */
@@ -40,6 +42,18 @@ export class FeedWrapper<T = {}> {
   createReadableStream (): Readable {
     const feedStream = this._hypercore.createReadStream({ live: true });
     return createReadable(feedStream);
+  }
+
+  createFeedWriter (): FeedWriter<T> {
+    return {
+      write: async (data: T) => {
+        const seq = await this.append(data);
+        return {
+          feedKey: this.key,
+          seq
+        };
+      }
+    };
   }
 
   on = this._binder.fn(this._hypercore.on);

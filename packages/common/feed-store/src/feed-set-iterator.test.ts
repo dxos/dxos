@@ -11,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { FeedBlockSelector, FeedSetIterator } from './feed-set-iterator';
-import { createFeedWriter } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
 // Random selector.
@@ -50,7 +49,8 @@ describe('FeedSetIterator', function () {
 
       // Write block.
       setTimeout(async () => {
-        await builder.generator.writeBlocks(createFeedWriter(faker.random.arrayElement(feeds)));
+        const feed = faker.random.arrayElement(feeds);
+        await builder.generator.writeBlocks(feed.createFeedWriter());
       }, 10);
     }
 
@@ -79,7 +79,7 @@ describe('FeedSetIterator', function () {
         const feed = await feedStore.openFeed(key, { writable: true });
         iterator.addFeed(feed);
         feedKeys.push(feed.key);
-        return createFeedWriter(feed);
+        return feed.createFeedWriter();
       }));
 
       expect(iterator.size).to.eq(numFeeds);

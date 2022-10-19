@@ -3,3 +3,4 @@
 //
 
 export { codec } from './codec';
+export * from './feeds';

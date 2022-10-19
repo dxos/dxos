@@ -6,7 +6,7 @@ import assert from 'assert';
 
 import { synchronized } from '@dxos/async';
 import { failUndefined } from '@dxos/debug';
-import { FeedWrapper, createMappedFeedWriter } from '@dxos/feed-store';
+import { FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { NetworkManager, Plugin } from '@dxos/network-manager';
@@ -16,6 +16,7 @@ import { AdmittedFeed, Credential } from '@dxos/protocols/proto/dxos/halo/creden
 import { Timeframe } from '@dxos/timeframe';
 import { AsyncCallback, Callback } from '@dxos/util';
 
+import { createMappedFeedWriter } from '../common';
 import { Database, DatabaseBackend, FeedDatabaseBackend } from '../database';
 import { Pipeline, PipelineAccessor } from '../pipeline';
 import { ControlPipeline } from './control-pipeline';

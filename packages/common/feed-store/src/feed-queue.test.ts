@@ -8,7 +8,6 @@ import { latch, promiseTimeout } from '@dxos/async';
 
 import { FeedQueue } from './feed-queue';
 import { FeedWrapper } from './feed-wrapper';
-import { createFeedWriter } from './feed-writer';
 import { TestItemBuilder } from './testing';
 
 describe('FeedQueue', function () {
@@ -50,7 +49,7 @@ describe('FeedQueue', function () {
 
       // Write blocks.
       setTimeout(async () => {
-        await builder.generator.writeBlocks(createFeedWriter(feed), { count: numBlocks });
+        await builder.generator.writeBlocks(feed.createFeedWriter(), { count: numBlocks });
         expect(feed.properties.length).to.eq(numBlocks);
         expect(queue.length).to.eq(numBlocks);
       }, 100); // Make sure reader waits.
@@ -73,7 +72,7 @@ describe('FeedQueue', function () {
 
     {
       // Write blocks.
-      await builder.generator.writeBlocks(createFeedWriter(feed), { count: numBlocks });
+      await builder.generator.writeBlocks(feed.createFeedWriter(), { count: numBlocks });
       expect(feed.properties.length).to.eq(numBlocks);
       expect(queue.length).to.eq(numBlocks);
 

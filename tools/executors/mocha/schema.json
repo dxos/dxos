@@ -68,7 +68,7 @@
     },
     "forceExit": {
       "type": "boolean",
-      "description": "Force Moch to quit after tests complete",
+      "description": "Force Mocha to quit after tests complete",
       "default": false
     },
     "domRequired": {

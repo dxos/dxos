@@ -4,13 +4,14 @@
 
 import assert from 'assert';
 
-import { createFeedWriter, FeedSetIterator, FeedWrapper, FeedWriter, createMappedFeedWriter } from '@dxos/feed-store';
+import { FeedSetIterator, FeedWrapper, FeedWriter } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedMessageBlock, TypedMessage } from '@dxos/protocols';
 import { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 
+import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { mapFeedIndexesToTimeframe, mapTimeframeToFeedIndexes, TimeframeClock } from './timeframe-clock';
 
@@ -118,11 +119,10 @@ export class Pipeline implements PipelineAccessor {
     assert(!this._writer, 'Writer already set.');
     assert(feed.properties.writable, 'Feed must be writable.');
 
-    const writer = createFeedWriter<FeedMessage>(feed);
     this._writer = createMappedFeedWriter<TypedMessage, FeedMessage>((data: TypedMessage) => ({
       timeframe: this._timeframeClock.timeframe,
       payload: data
-    }), writer);
+    }), feed.createFeedWriter());
   }
 
   async start () {
