@@ -31,7 +31,7 @@ export type FormatParts = {
 }
 
 export const DEFAULT_FORMATTER = ({ path, line, level, message, context }: FormatParts): (string | undefined)[] => ([
-  chalk.grey(`${path}:${line}`), // Don't truncate for terminal output.
+  path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined, // Don't truncate for terminal output.
   chalk[LEVEL_COLORS[level]](LogLevel[level]),
   message,
   context
