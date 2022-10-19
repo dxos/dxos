@@ -7,7 +7,7 @@ import assert from 'assert';
 import { Event, EventSubscriptions } from '@dxos/async';
 import { FeedBlock as HypercoreFeedBlock } from '@dxos/hypercore';
 import { PublicKey } from '@dxos/keys';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 
 import { AbstractFeedIterator } from './feed-iterator';
 import { FeedQueue, Trigger } from './feed-queue';
@@ -51,8 +51,6 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
   ) {
     super();
     assert(_selector);
-
-    (this._trigger as any).label = 'iterator';
   }
 
   get size () {
@@ -98,14 +96,18 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
     }
   }
 
+  // TODO(burdon): Review.
+  //  https://github.com/dxos/dxos/pull/1670#discussion_r999289501
   override async _nextBlock (): Promise<FeedBlock<T> | undefined> {
     while (this._running) {
       const queues = Array.from(this._feedQueues.values());
-      const blocks = queues.map(queue => queue.peek()).filter(Boolean) as FeedBlock<T>[];
+      const blocks = queues.map(queue => queue.peek()).filter(isNotNullOrUndefined);
       if (blocks.length) {
         // Get selected block from candidates.
         const idx = this._selector(blocks);
-        if (idx !== undefined) {
+        if (idx === undefined) {
+          this.stalled.emit(this);
+        } else {
           if (idx >= blocks.length) {
             throw new Error(`Index out of bounds: ${idx} of ${blocks.length}`);
           }
@@ -118,13 +120,8 @@ export class FeedSetIterator<T = {}> extends AbstractFeedIterator<T> {
         }
       }
 
-      try {
-        // Wait until new feed added or new block.
-        await this._trigger.wait();
-      } catch (err) {
-        // TODO(burdon): Stalled should only be triggered if we know there's unconsumed data.
-        this.stalled.emit(this);
-      }
+      // Wait until new feed added or new block.
+      await this._trigger.wait();
     }
   }
 }

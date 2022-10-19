@@ -28,6 +28,8 @@ export class Trigger<T = void> {
   /**
    * Wait until wake is called, with optional timeout.
    */
+  // TODO(burdon): Don't return promise each time.
+  //  https://github.com/dxos/dxos/pull/1670#discussion_r999270202
   async wait (timeout: number = this._timeout): Promise<T> {
     return new Promise((resolve, reject) => {
       this._waiters.push((value?: T) => {

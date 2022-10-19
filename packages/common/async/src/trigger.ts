@@ -14,6 +14,7 @@ export function trigger <T> (timeout?: number): [() => Promise<T>, (arg: T) => v
     if (timeout) {
       setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
     }
+
     callback = resolve;
   });
 

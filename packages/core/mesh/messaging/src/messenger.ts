@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 
+import { EventSubscriptions } from '@dxos/async';
 import { Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -29,7 +30,10 @@ export interface MessengerOptions {
 export class Messenger {
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
-  private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(({ peerId, payloadType }) => peerId.toHex() + payloadType);
+  private readonly _listeners = new ComplexMap<{ peerId: PublicKey, payloadType: string }, Set<OnMessage>>(
+    ({ peerId, payloadType }) => peerId.toHex() + payloadType
+  );
+
   // peerId => listeners set
   private readonly _defaultListeners = new ComplexMap<PublicKey, Set<OnMessage>>(PublicKey.hash);
 

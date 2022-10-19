@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Trigger } from '@dxos/async';
 import { FeedBlock } from '@dxos/hypercore';
 import { log } from '@dxos/log';
 
@@ -12,6 +13,7 @@ import { FeedWrapper } from './feed-wrapper';
  * Base class for an async iterable feed.
  */
 export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<FeedBlock<T>> {
+  private readonly _stopTrigger = new Trigger();
   protected _running = false;
 
   get running () {
@@ -27,6 +29,7 @@ export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<Feed
   async stop () {
     log('stopping...');
     this._running = false;
+    this._stopTrigger.wake();
   }
 
   async open () {
@@ -47,7 +50,13 @@ export abstract class AbstractFeedIterator<T = {}> implements AsyncIterable<Feed
 
   async * _generator () {
     while (this._running) {
-      const block = await this._nextBlock();
+      // TODO(burdon): Promise.race with stop trigger.
+      //  https://github.com/dxos/dxos/pull/1670#discussion_r999298039
+      const block = await Promise.race([
+        this._stopTrigger.wait(),
+        this._nextBlock()
+      ]);
+
       if (!block) {
         break;
       }
