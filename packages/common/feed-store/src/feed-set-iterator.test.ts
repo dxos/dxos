@@ -18,7 +18,7 @@ import { TestItemBuilder } from './testing';
 const randomFeedBlockSelector: FeedBlockSelector<any> = (blocks: FeedBlock<any>[]) =>
   faker.datatype.number({ min: 0, max: blocks.length - 1 });
 
-describe.only('FeedSetIterator', function () {
+describe('FeedSetIterator', function () {
   const builder = new TestItemBuilder();
 
   // TODO(burdon): Create randomized setTimeout to test race conditions.

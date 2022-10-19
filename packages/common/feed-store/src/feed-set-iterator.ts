@@ -27,7 +27,6 @@ export type FeedIndex = {
 
 export type FeedSetIteratorOptions = {
   // TODO(burdon): Should we remove this and assume the feeds are positioned before adding?
-  //  Currently does not use this.
   start?: FeedIndex[]
   timeout?: number
 }

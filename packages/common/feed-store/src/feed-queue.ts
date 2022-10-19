@@ -12,23 +12,27 @@ import { log } from '@dxos/log';
 
 import { FeedWrapper } from './feed-wrapper';
 
+type Callback<T> = (value?: T) => void
+
 /**
- * Blocks until awakened.
+ * Enables blocked listeners to be awakened.
  */
 // TODO(burdon): Factor out to @dxos/async.
 export class Trigger<T = void> {
-  _wake?: (value?: T) => void;
+  private readonly _waiters: Callback<T>[] = [];
 
   constructor (
     private readonly _timeout: number = 0
   ) {}
 
+  /**
+   * Wait until wake is called.
+   */
   async wait (timeout: number = this._timeout): Promise<T> {
     return new Promise((resolve, reject) => {
-      this._wake = (value?: T) => {
+      this._waiters.push((value?: T) => {
         resolve(value as T);
-        this._wake = undefined;
-      };
+      });
 
       if (timeout) {
         setTimeout(() => {
@@ -38,8 +42,14 @@ export class Trigger<T = void> {
     });
   }
 
+  /**
+   * Wake blocked caller if any.
+   */
   wake (value?: T) {
-    this._wake?.(value);
+    // Copy to avoid race conditions.
+    const waiters = [...this._waiters];
+    this._waiters.length = 0;
+    waiters.forEach(item => item(value));
   }
 }
 
