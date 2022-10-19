@@ -12,7 +12,8 @@ import {
   GroupProps,
   HeadingProps,
   Input,
-  InputProps
+  InputProps,
+  InputSize
 } from '@dxos/react-ui';
 
 type TKey = Parameters<TFunction>[0]
@@ -54,7 +55,7 @@ export const SingleInputStep = ({
       {...groupProps}
       className={cx('p-4 pt-5 rounded-2xl', groupProps.className)}
     >
-      <Input size='lg' label={t(inputLabelTKey)} {...{ autoComplete, type }} {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })} onChange={onChange} />
+      <Input size={InputSize.lg} label={t(inputLabelTKey)} {...{ autoComplete, type }} {...(inputPlaceholderTKey && { placeholder: t(inputPlaceholderTKey) })} onChange={onChange} />
       <div role='none' className='flex gap-4 justify-end'>
         {onClickBack && <Button onClick={onClickBack}>{t(backTKey)}</Button>}
         <Button variant='primary' onClick={onClickNext}>{t(nextTKey)}</Button>

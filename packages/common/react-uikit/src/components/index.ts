@@ -3,4 +3,4 @@
 //
 
 export * from './AuthChoices/AuthChoices';
-export * from './CreateProfile/CreateProfile';
+export * from './SingleInputStep/SingleInputStep';
