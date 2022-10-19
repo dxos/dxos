@@ -1,3 +1,0 @@
-runtime:
-  client:
-    remoteSource: http://localhost:3967/headless.html
