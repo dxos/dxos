@@ -18,7 +18,7 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
-        "outputPath": "packages/devtools/devtools/out/dxos/storybook/halo",
+        "outputPath": "packages/devtools/devtools/out/dxos/storybook/devtools",
         "config": {
           "configFolder": "packages/devtools/devtools/.storybook"
         }
