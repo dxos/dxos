@@ -4,7 +4,7 @@
 
 import cx from 'classnames';
 import React from 'react';
-import { TFunction, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 import {
   Button,
@@ -18,7 +18,7 @@ import {
   useId
 } from '@dxos/react-ui';
 
-type TKey = Parameters<TFunction>[0];
+import { TKey } from '../../types/TFunction';
 
 export interface SingleInputStepProps
   extends Omit<GroupProps, 'label' | 'onChange'> {

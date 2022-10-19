@@ -4,36 +4,29 @@
 
 import cx from 'classnames';
 import React from 'react';
-import { TFunction, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 import {
   CaretRight,
   CompoundButton,
   Group,
   GroupProps,
-  HeadingProps,
   Plus,
   QrCode,
   Textbox
 } from '@dxos/react-ui';
 
+import { TKey } from '../../types/TFunction';
+
 export interface AuthChoicesProps extends Omit<GroupProps, 'label'> {
-  label?: HeadingProps
+  rootLabelTKey?: TKey
   onClickCreate?: () => void
   onClickInviteDevice?: () => void
   onClickRecover?: () => void
 }
 
-const AuthChoicesDefaultLabel = (t: TFunction): HeadingProps => {
-  return {
-    level: 1,
-    className: 'mb-4',
-    children: t('auth choices label')
-  };
-};
-
 export const AuthChoices = ({
-  label,
+  rootLabelTKey,
   onClickCreate,
   onClickInviteDevice,
   onClickRecover,
@@ -44,7 +37,11 @@ export const AuthChoices = ({
   return (
     <Group
       elevation={5}
-      label={label || AuthChoicesDefaultLabel(t)}
+      label={{
+        level: 1,
+        className: 'mb-4',
+        children: t(rootLabelTKey ?? 'auth choices label')
+      }}
       {...groupProps}
       className={cx('p-6 rounded-3xl', groupProps.className)}>
       <div role='none' className='flex flex-col gap-2 mt-4'>
